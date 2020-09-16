@@ -74,12 +74,12 @@ func (c *Athena) BatchGetNamedQueryRequest(input *BatchGetNamedQueryInput) (req 
 // See the AWS API reference guide for Amazon Athena's
 // API operation BatchGetNamedQuery for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -163,12 +163,12 @@ func (c *Athena) BatchGetQueryExecutionRequest(input *BatchGetQueryExecutionInpu
 // See the AWS API reference guide for Amazon Athena's
 // API operation BatchGetQueryExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -189,6 +189,92 @@ func (c *Athena) BatchGetQueryExecution(input *BatchGetQueryExecutionInput) (*Ba
 // for more information on using Contexts.
 func (c *Athena) BatchGetQueryExecutionWithContext(ctx aws.Context, input *BatchGetQueryExecutionInput, opts ...request.Option) (*BatchGetQueryExecutionOutput, error) {
 	req, out := c.BatchGetQueryExecutionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateDataCatalog = "CreateDataCatalog"
+
+// CreateDataCatalogRequest generates a "aws/request.Request" representing the
+// client's request for the CreateDataCatalog operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateDataCatalog for more information on using the CreateDataCatalog
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateDataCatalogRequest method.
+//    req, resp := client.CreateDataCatalogRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/CreateDataCatalog
+func (c *Athena) CreateDataCatalogRequest(input *CreateDataCatalogInput) (req *request.Request, output *CreateDataCatalogOutput) {
+	op := &request.Operation{
+		Name:       opCreateDataCatalog,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateDataCatalogInput{}
+	}
+
+	output = &CreateDataCatalogOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// CreateDataCatalog API operation for Amazon Athena.
+//
+// Creates (registers) a data catalog with the specified name and properties.
+// Catalogs created are visible to all users of the same AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Athena's
+// API operation CreateDataCatalog for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerException
+//   Indicates a platform issue, which may be due to a transient condition or
+//   outage.
+//
+//   * InvalidRequestException
+//   Indicates that something is wrong with the input to the request. For example,
+//   a required parameter may be missing or out of range.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/CreateDataCatalog
+func (c *Athena) CreateDataCatalog(input *CreateDataCatalogInput) (*CreateDataCatalogOutput, error) {
+	req, out := c.CreateDataCatalogRequest(input)
+	return out, req.Send()
+}
+
+// CreateDataCatalogWithContext is the same as CreateDataCatalog with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateDataCatalog for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Athena) CreateDataCatalogWithContext(ctx aws.Context, input *CreateDataCatalogInput, opts ...request.Option) (*CreateDataCatalogOutput, error) {
+	req, out := c.CreateDataCatalogRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -252,12 +338,12 @@ func (c *Athena) CreateNamedQueryRequest(input *CreateNamedQueryInput) (req *req
 // See the AWS API reference guide for Amazon Athena's
 // API operation CreateNamedQuery for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -337,12 +423,12 @@ func (c *Athena) CreateWorkGroupRequest(input *CreateWorkGroupInput) (req *reque
 // See the AWS API reference guide for Amazon Athena's
 // API operation CreateWorkGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -363,6 +449,91 @@ func (c *Athena) CreateWorkGroup(input *CreateWorkGroupInput) (*CreateWorkGroupO
 // for more information on using Contexts.
 func (c *Athena) CreateWorkGroupWithContext(ctx aws.Context, input *CreateWorkGroupInput, opts ...request.Option) (*CreateWorkGroupOutput, error) {
 	req, out := c.CreateWorkGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteDataCatalog = "DeleteDataCatalog"
+
+// DeleteDataCatalogRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteDataCatalog operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteDataCatalog for more information on using the DeleteDataCatalog
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteDataCatalogRequest method.
+//    req, resp := client.DeleteDataCatalogRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/DeleteDataCatalog
+func (c *Athena) DeleteDataCatalogRequest(input *DeleteDataCatalogInput) (req *request.Request, output *DeleteDataCatalogOutput) {
+	op := &request.Operation{
+		Name:       opDeleteDataCatalog,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteDataCatalogInput{}
+	}
+
+	output = &DeleteDataCatalogOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteDataCatalog API operation for Amazon Athena.
+//
+// Deletes a data catalog.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Athena's
+// API operation DeleteDataCatalog for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerException
+//   Indicates a platform issue, which may be due to a transient condition or
+//   outage.
+//
+//   * InvalidRequestException
+//   Indicates that something is wrong with the input to the request. For example,
+//   a required parameter may be missing or out of range.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/DeleteDataCatalog
+func (c *Athena) DeleteDataCatalog(input *DeleteDataCatalogInput) (*DeleteDataCatalogOutput, error) {
+	req, out := c.DeleteDataCatalogRequest(input)
+	return out, req.Send()
+}
+
+// DeleteDataCatalogWithContext is the same as DeleteDataCatalog with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteDataCatalog for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Athena) DeleteDataCatalogWithContext(ctx aws.Context, input *DeleteDataCatalogInput, opts ...request.Option) (*DeleteDataCatalogOutput, error) {
+	req, out := c.DeleteDataCatalogRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -427,12 +598,12 @@ func (c *Athena) DeleteNamedQueryRequest(input *DeleteNamedQueryInput) (req *req
 // See the AWS API reference guide for Amazon Athena's
 // API operation DeleteNamedQuery for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -513,12 +684,12 @@ func (c *Athena) DeleteWorkGroupRequest(input *DeleteWorkGroupInput) (req *reque
 // See the AWS API reference guide for Amazon Athena's
 // API operation DeleteWorkGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -539,6 +710,181 @@ func (c *Athena) DeleteWorkGroup(input *DeleteWorkGroupInput) (*DeleteWorkGroupO
 // for more information on using Contexts.
 func (c *Athena) DeleteWorkGroupWithContext(ctx aws.Context, input *DeleteWorkGroupInput, opts ...request.Option) (*DeleteWorkGroupOutput, error) {
 	req, out := c.DeleteWorkGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetDataCatalog = "GetDataCatalog"
+
+// GetDataCatalogRequest generates a "aws/request.Request" representing the
+// client's request for the GetDataCatalog operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetDataCatalog for more information on using the GetDataCatalog
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetDataCatalogRequest method.
+//    req, resp := client.GetDataCatalogRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetDataCatalog
+func (c *Athena) GetDataCatalogRequest(input *GetDataCatalogInput) (req *request.Request, output *GetDataCatalogOutput) {
+	op := &request.Operation{
+		Name:       opGetDataCatalog,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetDataCatalogInput{}
+	}
+
+	output = &GetDataCatalogOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetDataCatalog API operation for Amazon Athena.
+//
+// Returns the specified data catalog.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Athena's
+// API operation GetDataCatalog for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerException
+//   Indicates a platform issue, which may be due to a transient condition or
+//   outage.
+//
+//   * InvalidRequestException
+//   Indicates that something is wrong with the input to the request. For example,
+//   a required parameter may be missing or out of range.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetDataCatalog
+func (c *Athena) GetDataCatalog(input *GetDataCatalogInput) (*GetDataCatalogOutput, error) {
+	req, out := c.GetDataCatalogRequest(input)
+	return out, req.Send()
+}
+
+// GetDataCatalogWithContext is the same as GetDataCatalog with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetDataCatalog for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Athena) GetDataCatalogWithContext(ctx aws.Context, input *GetDataCatalogInput, opts ...request.Option) (*GetDataCatalogOutput, error) {
+	req, out := c.GetDataCatalogRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetDatabase = "GetDatabase"
+
+// GetDatabaseRequest generates a "aws/request.Request" representing the
+// client's request for the GetDatabase operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetDatabase for more information on using the GetDatabase
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetDatabaseRequest method.
+//    req, resp := client.GetDatabaseRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetDatabase
+func (c *Athena) GetDatabaseRequest(input *GetDatabaseInput) (req *request.Request, output *GetDatabaseOutput) {
+	op := &request.Operation{
+		Name:       opGetDatabase,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetDatabaseInput{}
+	}
+
+	output = &GetDatabaseOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetDatabase API operation for Amazon Athena.
+//
+// Returns a database object for the specfied database and data catalog.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Athena's
+// API operation GetDatabase for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerException
+//   Indicates a platform issue, which may be due to a transient condition or
+//   outage.
+//
+//   * InvalidRequestException
+//   Indicates that something is wrong with the input to the request. For example,
+//   a required parameter may be missing or out of range.
+//
+//   * MetadataException
+//   An exception that Athena received when it called a custom metastore. Occurs
+//   if the error is not caused by user input (InvalidRequestException) or from
+//   the Athena platform (InternalServerException). For example, if a user-created
+//   Lambda function is missing permissions, the Lambda 4XX exception is returned
+//   in a MetadataException.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetDatabase
+func (c *Athena) GetDatabase(input *GetDatabaseInput) (*GetDatabaseOutput, error) {
+	req, out := c.GetDatabaseRequest(input)
+	return out, req.Send()
+}
+
+// GetDatabaseWithContext is the same as GetDatabase with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetDatabase for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Athena) GetDatabaseWithContext(ctx aws.Context, input *GetDatabaseInput, opts ...request.Option) (*GetDatabaseOutput, error) {
+	req, out := c.GetDatabaseRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -598,12 +944,12 @@ func (c *Athena) GetNamedQueryRequest(input *GetNamedQueryInput) (req *request.R
 // See the AWS API reference guide for Amazon Athena's
 // API operation GetNamedQuery for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -684,12 +1030,12 @@ func (c *Athena) GetQueryExecutionRequest(input *GetQueryExecutionInput) (req *r
 // See the AWS API reference guide for Amazon Athena's
 // API operation GetQueryExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -765,10 +1111,21 @@ func (c *Athena) GetQueryResultsRequest(input *GetQueryResultsInput) (req *reque
 
 // GetQueryResults API operation for Amazon Athena.
 //
-// Returns the results of a single query execution specified by QueryExecutionId
-// if you have access to the workgroup in which the query ran. This request
-// does not execute the query but returns results. Use StartQueryExecution to
-// run a query.
+// Streams the results of a single query execution specified by QueryExecutionId
+// from the Athena query results location in Amazon S3. For more information,
+// see Query Results (https://docs.aws.amazon.com/athena/latest/ug/querying.html)
+// in the Amazon Athena User Guide. This request does not execute the query
+// but returns results. Use StartQueryExecution to run a query.
+//
+// To stream query results successfully, the IAM principal with permission to
+// call GetQueryResults also must have permissions to the Amazon S3 GetObject
+// action for the Athena query results location.
+//
+// IAM principals with permission to the Amazon S3 GetObject action for the
+// query results location are able to retrieve query results from Amazon S3
+// even if permission to the GetQueryResults action is denied. To restrict user
+// or role access, ensure that Amazon S3 permissions to the Athena query location
+// are denied.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -777,12 +1134,12 @@ func (c *Athena) GetQueryResultsRequest(input *GetQueryResultsInput) (req *reque
 // See the AWS API reference guide for Amazon Athena's
 // API operation GetQueryResults for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -851,11 +1208,104 @@ func (c *Athena) GetQueryResultsPagesWithContext(ctx aws.Context, input *GetQuer
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetQueryResultsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetQueryResultsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
+}
+
+const opGetTableMetadata = "GetTableMetadata"
+
+// GetTableMetadataRequest generates a "aws/request.Request" representing the
+// client's request for the GetTableMetadata operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetTableMetadata for more information on using the GetTableMetadata
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetTableMetadataRequest method.
+//    req, resp := client.GetTableMetadataRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetTableMetadata
+func (c *Athena) GetTableMetadataRequest(input *GetTableMetadataInput) (req *request.Request, output *GetTableMetadataOutput) {
+	op := &request.Operation{
+		Name:       opGetTableMetadata,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetTableMetadataInput{}
+	}
+
+	output = &GetTableMetadataOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetTableMetadata API operation for Amazon Athena.
+//
+// Returns table metadata for the specified catalog, database, and table.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Athena's
+// API operation GetTableMetadata for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerException
+//   Indicates a platform issue, which may be due to a transient condition or
+//   outage.
+//
+//   * InvalidRequestException
+//   Indicates that something is wrong with the input to the request. For example,
+//   a required parameter may be missing or out of range.
+//
+//   * MetadataException
+//   An exception that Athena received when it called a custom metastore. Occurs
+//   if the error is not caused by user input (InvalidRequestException) or from
+//   the Athena platform (InternalServerException). For example, if a user-created
+//   Lambda function is missing permissions, the Lambda 4XX exception is returned
+//   in a MetadataException.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/GetTableMetadata
+func (c *Athena) GetTableMetadata(input *GetTableMetadataInput) (*GetTableMetadataOutput, error) {
+	req, out := c.GetTableMetadataRequest(input)
+	return out, req.Send()
+}
+
+// GetTableMetadataWithContext is the same as GetTableMetadata with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetTableMetadata for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Athena) GetTableMetadataWithContext(ctx aws.Context, input *GetTableMetadataInput, opts ...request.Option) (*GetTableMetadataOutput, error) {
+	req, out := c.GetTableMetadataRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetWorkGroup = "GetWorkGroup"
@@ -911,12 +1361,12 @@ func (c *Athena) GetWorkGroupRequest(input *GetWorkGroupInput) (req *request.Req
 // See the AWS API reference guide for Amazon Athena's
 // API operation GetWorkGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -940,6 +1390,297 @@ func (c *Athena) GetWorkGroupWithContext(ctx aws.Context, input *GetWorkGroupInp
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+const opListDataCatalogs = "ListDataCatalogs"
+
+// ListDataCatalogsRequest generates a "aws/request.Request" representing the
+// client's request for the ListDataCatalogs operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListDataCatalogs for more information on using the ListDataCatalogs
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListDataCatalogsRequest method.
+//    req, resp := client.ListDataCatalogsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListDataCatalogs
+func (c *Athena) ListDataCatalogsRequest(input *ListDataCatalogsInput) (req *request.Request, output *ListDataCatalogsOutput) {
+	op := &request.Operation{
+		Name:       opListDataCatalogs,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListDataCatalogsInput{}
+	}
+
+	output = &ListDataCatalogsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListDataCatalogs API operation for Amazon Athena.
+//
+// Lists the data catalogs in the current AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Athena's
+// API operation ListDataCatalogs for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerException
+//   Indicates a platform issue, which may be due to a transient condition or
+//   outage.
+//
+//   * InvalidRequestException
+//   Indicates that something is wrong with the input to the request. For example,
+//   a required parameter may be missing or out of range.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListDataCatalogs
+func (c *Athena) ListDataCatalogs(input *ListDataCatalogsInput) (*ListDataCatalogsOutput, error) {
+	req, out := c.ListDataCatalogsRequest(input)
+	return out, req.Send()
+}
+
+// ListDataCatalogsWithContext is the same as ListDataCatalogs with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListDataCatalogs for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Athena) ListDataCatalogsWithContext(ctx aws.Context, input *ListDataCatalogsInput, opts ...request.Option) (*ListDataCatalogsOutput, error) {
+	req, out := c.ListDataCatalogsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListDataCatalogsPages iterates over the pages of a ListDataCatalogs operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListDataCatalogs method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListDataCatalogs operation.
+//    pageNum := 0
+//    err := client.ListDataCatalogsPages(params,
+//        func(page *athena.ListDataCatalogsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Athena) ListDataCatalogsPages(input *ListDataCatalogsInput, fn func(*ListDataCatalogsOutput, bool) bool) error {
+	return c.ListDataCatalogsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListDataCatalogsPagesWithContext same as ListDataCatalogsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Athena) ListDataCatalogsPagesWithContext(ctx aws.Context, input *ListDataCatalogsInput, fn func(*ListDataCatalogsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListDataCatalogsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListDataCatalogsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListDataCatalogsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
+const opListDatabases = "ListDatabases"
+
+// ListDatabasesRequest generates a "aws/request.Request" representing the
+// client's request for the ListDatabases operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListDatabases for more information on using the ListDatabases
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListDatabasesRequest method.
+//    req, resp := client.ListDatabasesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListDatabases
+func (c *Athena) ListDatabasesRequest(input *ListDatabasesInput) (req *request.Request, output *ListDatabasesOutput) {
+	op := &request.Operation{
+		Name:       opListDatabases,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListDatabasesInput{}
+	}
+
+	output = &ListDatabasesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListDatabases API operation for Amazon Athena.
+//
+// Lists the databases in the specified data catalog.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Athena's
+// API operation ListDatabases for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerException
+//   Indicates a platform issue, which may be due to a transient condition or
+//   outage.
+//
+//   * InvalidRequestException
+//   Indicates that something is wrong with the input to the request. For example,
+//   a required parameter may be missing or out of range.
+//
+//   * MetadataException
+//   An exception that Athena received when it called a custom metastore. Occurs
+//   if the error is not caused by user input (InvalidRequestException) or from
+//   the Athena platform (InternalServerException). For example, if a user-created
+//   Lambda function is missing permissions, the Lambda 4XX exception is returned
+//   in a MetadataException.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListDatabases
+func (c *Athena) ListDatabases(input *ListDatabasesInput) (*ListDatabasesOutput, error) {
+	req, out := c.ListDatabasesRequest(input)
+	return out, req.Send()
+}
+
+// ListDatabasesWithContext is the same as ListDatabases with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListDatabases for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Athena) ListDatabasesWithContext(ctx aws.Context, input *ListDatabasesInput, opts ...request.Option) (*ListDatabasesOutput, error) {
+	req, out := c.ListDatabasesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListDatabasesPages iterates over the pages of a ListDatabases operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListDatabases method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListDatabases operation.
+//    pageNum := 0
+//    err := client.ListDatabasesPages(params,
+//        func(page *athena.ListDatabasesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Athena) ListDatabasesPages(input *ListDatabasesInput, fn func(*ListDatabasesOutput, bool) bool) error {
+	return c.ListDatabasesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListDatabasesPagesWithContext same as ListDatabasesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Athena) ListDatabasesPagesWithContext(ctx aws.Context, input *ListDatabasesInput, fn func(*ListDatabasesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListDatabasesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListDatabasesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListDatabasesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListNamedQueries = "ListNamedQueries"
@@ -993,7 +1734,8 @@ func (c *Athena) ListNamedQueriesRequest(input *ListNamedQueriesInput) (req *req
 // ListNamedQueries API operation for Amazon Athena.
 //
 // Provides a list of available query IDs only for queries saved in the specified
-// workgroup. Requires that you have access to the workgroup.
+// workgroup. Requires that you have access to the specified workgroup. If a
+// workgroup is not specified, lists the saved queries for the primary workgroup.
 //
 // For code samples using the AWS SDK for Java, see Examples and Code Samples
 // (http://docs.aws.amazon.com/athena/latest/ug/code-samples.html) in the Amazon
@@ -1006,12 +1748,12 @@ func (c *Athena) ListNamedQueriesRequest(input *ListNamedQueriesInput) (req *req
 // See the AWS API reference guide for Amazon Athena's
 // API operation ListNamedQueries for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -1080,10 +1822,12 @@ func (c *Athena) ListNamedQueriesPagesWithContext(ctx aws.Context, input *ListNa
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListNamedQueriesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListNamedQueriesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1138,8 +1882,9 @@ func (c *Athena) ListQueryExecutionsRequest(input *ListQueryExecutionsInput) (re
 // ListQueryExecutions API operation for Amazon Athena.
 //
 // Provides a list of available query execution IDs for the queries in the specified
-// workgroup. Requires you to have access to the workgroup in which the queries
-// ran.
+// workgroup. If a workgroup is not specified, returns a list of query execution
+// IDs for the primary workgroup. Requires you to have access to the workgroup
+// in which the queries ran.
 //
 // For code samples using the AWS SDK for Java, see Examples and Code Samples
 // (http://docs.aws.amazon.com/athena/latest/ug/code-samples.html) in the Amazon
@@ -1152,12 +1897,12 @@ func (c *Athena) ListQueryExecutionsRequest(input *ListQueryExecutionsInput) (re
 // See the AWS API reference guide for Amazon Athena's
 // API operation ListQueryExecutions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -1226,10 +1971,161 @@ func (c *Athena) ListQueryExecutionsPagesWithContext(ctx aws.Context, input *Lis
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListQueryExecutionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListQueryExecutionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
+	return p.Err()
+}
+
+const opListTableMetadata = "ListTableMetadata"
+
+// ListTableMetadataRequest generates a "aws/request.Request" representing the
+// client's request for the ListTableMetadata operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTableMetadata for more information on using the ListTableMetadata
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTableMetadataRequest method.
+//    req, resp := client.ListTableMetadataRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListTableMetadata
+func (c *Athena) ListTableMetadataRequest(input *ListTableMetadataInput) (req *request.Request, output *ListTableMetadataOutput) {
+	op := &request.Operation{
+		Name:       opListTableMetadata,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListTableMetadataInput{}
+	}
+
+	output = &ListTableMetadataOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTableMetadata API operation for Amazon Athena.
+//
+// Lists the metadata for the tables in the specified data catalog database.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Athena's
+// API operation ListTableMetadata for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerException
+//   Indicates a platform issue, which may be due to a transient condition or
+//   outage.
+//
+//   * InvalidRequestException
+//   Indicates that something is wrong with the input to the request. For example,
+//   a required parameter may be missing or out of range.
+//
+//   * MetadataException
+//   An exception that Athena received when it called a custom metastore. Occurs
+//   if the error is not caused by user input (InvalidRequestException) or from
+//   the Athena platform (InternalServerException). For example, if a user-created
+//   Lambda function is missing permissions, the Lambda 4XX exception is returned
+//   in a MetadataException.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListTableMetadata
+func (c *Athena) ListTableMetadata(input *ListTableMetadataInput) (*ListTableMetadataOutput, error) {
+	req, out := c.ListTableMetadataRequest(input)
+	return out, req.Send()
+}
+
+// ListTableMetadataWithContext is the same as ListTableMetadata with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTableMetadata for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Athena) ListTableMetadataWithContext(ctx aws.Context, input *ListTableMetadataInput, opts ...request.Option) (*ListTableMetadataOutput, error) {
+	req, out := c.ListTableMetadataRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListTableMetadataPages iterates over the pages of a ListTableMetadata operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListTableMetadata method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListTableMetadata operation.
+//    pageNum := 0
+//    err := client.ListTableMetadataPages(params,
+//        func(page *athena.ListTableMetadataOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Athena) ListTableMetadataPages(input *ListTableMetadataInput, fn func(*ListTableMetadataOutput, bool) bool) error {
+	return c.ListTableMetadataPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListTableMetadataPagesWithContext same as ListTableMetadataPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Athena) ListTableMetadataPagesWithContext(ctx aws.Context, input *ListTableMetadataInput, fn func(*ListTableMetadataOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListTableMetadataInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListTableMetadataRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListTableMetadataOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
 	return p.Err()
 }
 
@@ -1264,6 +2160,12 @@ func (c *Athena) ListTagsForResourceRequest(input *ListTagsForResourceInput) (re
 		Name:       opListTagsForResource,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1277,7 +2179,7 @@ func (c *Athena) ListTagsForResourceRequest(input *ListTagsForResourceInput) (re
 
 // ListTagsForResource API operation for Amazon Athena.
 //
-// Lists the tags associated with this workgroup.
+// Lists the tags associated with an Athena workgroup or data catalog resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1286,16 +2188,16 @@ func (c *Athena) ListTagsForResourceRequest(input *ListTagsForResourceInput) (re
 // See the AWS API reference guide for Amazon Athena's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   A resource, such as a workgroup, was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListTagsForResource
@@ -1318,6 +2220,58 @@ func (c *Athena) ListTagsForResourceWithContext(ctx aws.Context, input *ListTags
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListTagsForResourcePages iterates over the pages of a ListTagsForResource operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListTagsForResource method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListTagsForResource operation.
+//    pageNum := 0
+//    err := client.ListTagsForResourcePages(params,
+//        func(page *athena.ListTagsForResourceOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Athena) ListTagsForResourcePages(input *ListTagsForResourceInput, fn func(*ListTagsForResourceOutput, bool) bool) error {
+	return c.ListTagsForResourcePagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListTagsForResourcePagesWithContext same as ListTagsForResourcePages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Athena) ListTagsForResourcePagesWithContext(ctx aws.Context, input *ListTagsForResourceInput, fn func(*ListTagsForResourceOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListTagsForResourceInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListTagsForResourceRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListTagsForResourceOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListWorkGroups = "ListWorkGroups"
@@ -1379,12 +2333,12 @@ func (c *Athena) ListWorkGroupsRequest(input *ListWorkGroupsInput) (req *request
 // See the AWS API reference guide for Amazon Athena's
 // API operation ListWorkGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -1453,10 +2407,12 @@ func (c *Athena) ListWorkGroupsPagesWithContext(ctx aws.Context, input *ListWork
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListWorkGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListWorkGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1505,11 +2461,10 @@ func (c *Athena) StartQueryExecutionRequest(input *StartQueryExecutionInput) (re
 // StartQueryExecution API operation for Amazon Athena.
 //
 // Runs the SQL query statements contained in the Query. Requires you to have
-// access to the workgroup in which the query ran.
-//
-// For code samples using the AWS SDK for Java, see Examples and Code Samples
-// (http://docs.aws.amazon.com/athena/latest/ug/code-samples.html) in the Amazon
-// Athena User Guide.
+// access to the workgroup in which the query ran. Running queries against an
+// external catalog requires GetDataCatalog permission to the catalog. For code
+// samples using the AWS SDK for Java, see Examples and Code Samples (http://docs.aws.amazon.com/athena/latest/ug/code-samples.html)
+// in the Amazon Athena User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1518,16 +2473,16 @@ func (c *Athena) StartQueryExecutionRequest(input *StartQueryExecutionInput) (re
 // See the AWS API reference guide for Amazon Athena's
 // API operation StartQueryExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Indicates that the request was throttled.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/StartQueryExecution
@@ -1611,12 +2566,12 @@ func (c *Athena) StopQueryExecutionRequest(input *StopQueryExecutionInput) (req 
 // See the AWS API reference guide for Amazon Athena's
 // API operation StopQueryExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -1687,19 +2642,18 @@ func (c *Athena) TagResourceRequest(input *TagResourceInput) (req *request.Reque
 
 // TagResource API operation for Amazon Athena.
 //
-// Adds one or more tags to the resource, such as a workgroup. A tag is a label
-// that you assign to an AWS Athena resource (a workgroup). Each tag consists
-// of a key and an optional value, both of which you define. Tags enable you
-// to categorize resources (workgroups) in Athena, for example, by purpose,
-// owner, or environment. Use a consistent set of tag keys to make it easier
-// to search and filter workgroups in your account. For best practices, see
-// AWS Tagging Strategies (https://aws.amazon.com/answers/account-management/aws-tagging-strategies/).
-// The key length is from 1 (minimum) to 128 (maximum) Unicode characters in
-// UTF-8. The tag value length is from 0 (minimum) to 256 (maximum) Unicode
-// characters in UTF-8. You can use letters and numbers representable in UTF-8,
-// and the following characters: + - = . _ : / @. Tag keys and values are case-sensitive.
-// Tag keys must be unique per resource. If you specify more than one, separate
-// them by commas.
+// Adds one or more tags to an Athena resource. A tag is a label that you assign
+// to a resource. In Athena, a resource can be a workgroup or data catalog.
+// Each tag consists of a key and an optional value, both of which you define.
+// For example, you can use tags to categorize Athena workgroups or data catalogs
+// by purpose, owner, or environment. Use a consistent set of tag keys to make
+// it easier to search and filter workgroups or data catalogs in your account.
+// For best practices, see Tagging Best Practices (https://aws.amazon.com/answers/account-management/aws-tagging-strategies/).
+// Tag keys can be from 1 to 128 UTF-8 Unicode characters, and tag values can
+// be from 0 to 256 UTF-8 Unicode characters. Tags can use letters and numbers
+// representable in UTF-8, and the following characters: + - = . _ : / @. Tag
+// keys and values are case-sensitive. Tag keys must be unique per resource.
+// If you specify more than one tag, separate them by commas.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1708,16 +2662,16 @@ func (c *Athena) TagResourceRequest(input *TagResourceInput) (req *request.Reque
 // See the AWS API reference guide for Amazon Athena's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   A resource, such as a workgroup, was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/TagResource
@@ -1787,9 +2741,7 @@ func (c *Athena) UntagResourceRequest(input *UntagResourceInput) (req *request.R
 
 // UntagResource API operation for Amazon Athena.
 //
-// Removes one or more tags from the workgroup resource. Takes as an input a
-// list of TagKey Strings separated by commas, and removes their tags at the
-// same time.
+// Removes one or more tags from a data catalog or workgroup resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1798,16 +2750,16 @@ func (c *Athena) UntagResourceRequest(input *UntagResourceInput) (req *request.R
 // See the AWS API reference guide for Amazon Athena's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   A resource, such as a workgroup, was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/UntagResource
@@ -1827,6 +2779,91 @@ func (c *Athena) UntagResource(input *UntagResourceInput) (*UntagResourceOutput,
 // for more information on using Contexts.
 func (c *Athena) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
 	req, out := c.UntagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateDataCatalog = "UpdateDataCatalog"
+
+// UpdateDataCatalogRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateDataCatalog operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateDataCatalog for more information on using the UpdateDataCatalog
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateDataCatalogRequest method.
+//    req, resp := client.UpdateDataCatalogRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/UpdateDataCatalog
+func (c *Athena) UpdateDataCatalogRequest(input *UpdateDataCatalogInput) (req *request.Request, output *UpdateDataCatalogOutput) {
+	op := &request.Operation{
+		Name:       opUpdateDataCatalog,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateDataCatalogInput{}
+	}
+
+	output = &UpdateDataCatalogOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateDataCatalog API operation for Amazon Athena.
+//
+// Updates the data catalog that has the specified name.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Athena's
+// API operation UpdateDataCatalog for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerException
+//   Indicates a platform issue, which may be due to a transient condition or
+//   outage.
+//
+//   * InvalidRequestException
+//   Indicates that something is wrong with the input to the request. For example,
+//   a required parameter may be missing or out of range.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/UpdateDataCatalog
+func (c *Athena) UpdateDataCatalog(input *UpdateDataCatalogInput) (*UpdateDataCatalogOutput, error) {
+	req, out := c.UpdateDataCatalogRequest(input)
+	return out, req.Send()
+}
+
+// UpdateDataCatalogWithContext is the same as UpdateDataCatalog with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateDataCatalog for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Athena) UpdateDataCatalogWithContext(ctx aws.Context, input *UpdateDataCatalogInput, opts ...request.Option) (*UpdateDataCatalogOutput, error) {
+	req, out := c.UpdateDataCatalogRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1887,12 +2924,12 @@ func (c *Athena) UpdateWorkGroupRequest(input *UpdateWorkGroupInput) (req *reque
 // See the AWS API reference guide for Amazon Athena's
 // API operation UpdateWorkGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -2064,6 +3101,50 @@ func (s *BatchGetQueryExecutionOutput) SetUnprocessedQueryExecutionIds(v []*Unpr
 	return s
 }
 
+// Contains metadata for a column in a table.
+type Column struct {
+	_ struct{} `type:"structure"`
+
+	// Optional information about the column.
+	Comment *string `type:"string"`
+
+	// The name of the column.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// The data type of the column.
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s Column) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Column) GoString() string {
+	return s.String()
+}
+
+// SetComment sets the Comment field's value.
+func (s *Column) SetComment(v string) *Column {
+	s.Comment = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *Column) SetName(v string) *Column {
+	s.Name = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *Column) SetType(v string) *Column {
+	s.Type = &v
+	return s
+}
+
 // Information about the columns in a query execution result.
 type ColumnInfo struct {
 	_ struct{} `type:"structure"`
@@ -2173,6 +3254,132 @@ func (s *ColumnInfo) SetTableName(v string) *ColumnInfo {
 func (s *ColumnInfo) SetType(v string) *ColumnInfo {
 	s.Type = &v
 	return s
+}
+
+type CreateDataCatalogInput struct {
+	_ struct{} `type:"structure"`
+
+	// A description of the data catalog to be created.
+	Description *string `min:"1" type:"string"`
+
+	// The name of the data catalog to create. The catalog name must be unique for
+	// the AWS account and can use a maximum of 128 alphanumeric, underscore, at
+	// sign, or hyphen characters.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// Specifies the Lambda function or functions to use for creating the data catalog.
+	// This is a mapping whose values depend on the catalog type.
+	//
+	//    * For the HIVE data catalog type, use the following syntax. The metadata-function
+	//    parameter is required. The sdk-version parameter is optional and defaults
+	//    to the currently supported version. metadata-function=lambda_arn, sdk-version=version_number
+	//
+	//    * For the LAMBDA data catalog type, use one of the following sets of required
+	//    parameters, but not both. If you have one Lambda function that processes
+	//    metadata and another for reading the actual data, use the following syntax.
+	//    Both parameters are required. metadata-function=lambda_arn, record-function=lambda_arn
+	//    If you have a composite Lambda function that processes both metadata and
+	//    data, use the following syntax to specify your Lambda function. function=lambda_arn
+	//
+	//    * The GLUE type has no parameters.
+	Parameters map[string]*string `type:"map"`
+
+	// A list of comma separated tags to add to the data catalog that is created.
+	Tags []*Tag `type:"list"`
+
+	// The type of data catalog to create: LAMBDA for a federated catalog, GLUE
+	// for AWS Glue Catalog, or HIVE for an external hive metastore.
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true" enum:"DataCatalogType"`
+}
+
+// String returns the string representation
+func (s CreateDataCatalogInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateDataCatalogInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateDataCatalogInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateDataCatalogInput"}
+	if s.Description != nil && len(*s.Description) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Description", 1))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDescription sets the Description field's value.
+func (s *CreateDataCatalogInput) SetDescription(v string) *CreateDataCatalogInput {
+	s.Description = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CreateDataCatalogInput) SetName(v string) *CreateDataCatalogInput {
+	s.Name = &v
+	return s
+}
+
+// SetParameters sets the Parameters field's value.
+func (s *CreateDataCatalogInput) SetParameters(v map[string]*string) *CreateDataCatalogInput {
+	s.Parameters = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateDataCatalogInput) SetTags(v []*Tag) *CreateDataCatalogInput {
+	s.Tags = v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *CreateDataCatalogInput) SetType(v string) *CreateDataCatalogInput {
+	s.Type = &v
+	return s
+}
+
+type CreateDataCatalogOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateDataCatalogOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateDataCatalogOutput) GoString() string {
+	return s.String()
 }
 
 type CreateNamedQueryInput struct {
@@ -2333,8 +3540,7 @@ type CreateWorkGroupInput struct {
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
 
-	// One or more tags, separated by commas, that you want to attach to the workgroup
-	// as you create it.
+	// A list of comma separated tags to add to the workgroup that is created.
 	Tags []*Tag `type:"list"`
 }
 
@@ -2414,6 +3620,156 @@ func (s CreateWorkGroupOutput) GoString() string {
 	return s.String()
 }
 
+// Contains information about a data catalog in an AWS account.
+type DataCatalog struct {
+	_ struct{} `type:"structure"`
+
+	// An optional description of the data catalog.
+	Description *string `min:"1" type:"string"`
+
+	// The name of the data catalog. The catalog name must be unique for the AWS
+	// account and can use a maximum of 128 alphanumeric, underscore, at sign, or
+	// hyphen characters.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// Specifies the Lambda function or functions to use for the data catalog. This
+	// is a mapping whose values depend on the catalog type.
+	//
+	//    * For the HIVE data catalog type, use the following syntax. The metadata-function
+	//    parameter is required. The sdk-version parameter is optional and defaults
+	//    to the currently supported version. metadata-function=lambda_arn, sdk-version=version_number
+	//
+	//    * For the LAMBDA data catalog type, use one of the following sets of required
+	//    parameters, but not both. If you have one Lambda function that processes
+	//    metadata and another for reading the actual data, use the following syntax.
+	//    Both parameters are required. metadata-function=lambda_arn, record-function=lambda_arn
+	//    If you have a composite Lambda function that processes both metadata and
+	//    data, use the following syntax to specify your Lambda function. function=lambda_arn
+	//
+	//    * The GLUE type has no parameters.
+	Parameters map[string]*string `type:"map"`
+
+	// The type of data catalog: LAMBDA for a federated catalog, GLUE for AWS Glue
+	// Catalog, or HIVE for an external hive metastore.
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true" enum:"DataCatalogType"`
+}
+
+// String returns the string representation
+func (s DataCatalog) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DataCatalog) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *DataCatalog) SetDescription(v string) *DataCatalog {
+	s.Description = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *DataCatalog) SetName(v string) *DataCatalog {
+	s.Name = &v
+	return s
+}
+
+// SetParameters sets the Parameters field's value.
+func (s *DataCatalog) SetParameters(v map[string]*string) *DataCatalog {
+	s.Parameters = v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *DataCatalog) SetType(v string) *DataCatalog {
+	s.Type = &v
+	return s
+}
+
+// The summary information for the data catalog, which includes its name and
+// type.
+type DataCatalogSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the data catalog.
+	CatalogName *string `min:"1" type:"string"`
+
+	// The data catalog type.
+	Type *string `type:"string" enum:"DataCatalogType"`
+}
+
+// String returns the string representation
+func (s DataCatalogSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DataCatalogSummary) GoString() string {
+	return s.String()
+}
+
+// SetCatalogName sets the CatalogName field's value.
+func (s *DataCatalogSummary) SetCatalogName(v string) *DataCatalogSummary {
+	s.CatalogName = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *DataCatalogSummary) SetType(v string) *DataCatalogSummary {
+	s.Type = &v
+	return s
+}
+
+// Contains metadata information for a database in a data catalog.
+type Database struct {
+	_ struct{} `type:"structure"`
+
+	// An optional description of the database.
+	Description *string `min:"1" type:"string"`
+
+	// The name of the database.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// A set of custom key/value pairs.
+	Parameters map[string]*string `type:"map"`
+}
+
+// String returns the string representation
+func (s Database) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Database) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *Database) SetDescription(v string) *Database {
+	s.Description = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *Database) SetName(v string) *Database {
+	s.Name = &v
+	return s
+}
+
+// SetParameters sets the Parameters field's value.
+func (s *Database) SetParameters(v map[string]*string) *Database {
+	s.Parameters = v
+	return s
+}
+
 // A piece of data (a field in the table).
 type Datum struct {
 	_ struct{} `type:"structure"`
@@ -2436,6 +3792,61 @@ func (s Datum) GoString() string {
 func (s *Datum) SetVarCharValue(v string) *Datum {
 	s.VarCharValue = &v
 	return s
+}
+
+type DeleteDataCatalogInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the data catalog to delete.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteDataCatalogInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteDataCatalogInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteDataCatalogInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteDataCatalogInput"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *DeleteDataCatalogInput) SetName(v string) *DeleteDataCatalogInput {
+	s.Name = &v
+	return s
+}
+
+type DeleteDataCatalogOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteDataCatalogOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteDataCatalogOutput) GoString() string {
+	return s.String()
 }
 
 type DeleteNamedQueryInput struct {
@@ -2592,6 +4003,151 @@ func (s *EncryptionConfiguration) SetKmsKey(v string) *EncryptionConfiguration {
 	return s
 }
 
+type GetDataCatalogInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the data catalog to return.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetDataCatalogInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDataCatalogInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetDataCatalogInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetDataCatalogInput"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *GetDataCatalogInput) SetName(v string) *GetDataCatalogInput {
+	s.Name = &v
+	return s
+}
+
+type GetDataCatalogOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The data catalog returned.
+	DataCatalog *DataCatalog `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetDataCatalogOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDataCatalogOutput) GoString() string {
+	return s.String()
+}
+
+// SetDataCatalog sets the DataCatalog field's value.
+func (s *GetDataCatalogOutput) SetDataCatalog(v *DataCatalog) *GetDataCatalogOutput {
+	s.DataCatalog = v
+	return s
+}
+
+type GetDatabaseInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the data catalog that contains the database to return.
+	//
+	// CatalogName is a required field
+	CatalogName *string `min:"1" type:"string" required:"true"`
+
+	// The name of the database to return.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetDatabaseInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDatabaseInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetDatabaseInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetDatabaseInput"}
+	if s.CatalogName == nil {
+		invalidParams.Add(request.NewErrParamRequired("CatalogName"))
+	}
+	if s.CatalogName != nil && len(*s.CatalogName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogName", 1))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogName sets the CatalogName field's value.
+func (s *GetDatabaseInput) SetCatalogName(v string) *GetDatabaseInput {
+	s.CatalogName = &v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *GetDatabaseInput) SetDatabaseName(v string) *GetDatabaseInput {
+	s.DatabaseName = &v
+	return s
+}
+
+type GetDatabaseOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The database returned.
+	Database *Database `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetDatabaseOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDatabaseOutput) GoString() string {
+	return s.String()
+}
+
+// SetDatabase sets the Database field's value.
+func (s *GetDatabaseOutput) SetDatabase(v *Database) *GetDatabaseOutput {
+	s.Database = v
+	return s
+}
+
 type GetNamedQueryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2718,10 +4274,12 @@ type GetQueryResultsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The maximum number of results (rows) to return in this request.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"1" type:"integer"`
 
-	// The token that specifies where to start pagination if a previous request
-	// was truncated.
+	// A token generated by the Athena service that specifies where to continue
+	// pagination if a previous request was truncated. To obtain the next set of
+	// pages, pass in the NextToken from the response object of the previous page
+	// call.
 	NextToken *string `min:"1" type:"string"`
 
 	// The unique ID of the query execution.
@@ -2743,6 +4301,9 @@ func (s GetQueryResultsInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *GetQueryResultsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetQueryResultsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
 	if s.NextToken != nil && len(*s.NextToken) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
@@ -2777,7 +4338,10 @@ func (s *GetQueryResultsInput) SetQueryExecutionId(v string) *GetQueryResultsInp
 type GetQueryResultsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A token to be used by the next request if this request is truncated.
+	// A token generated by the Athena service that specifies where to continue
+	// pagination if a previous request was truncated. To obtain the next set of
+	// pages, pass in the NextToken from the response object of the previous page
+	// call.
 	NextToken *string `min:"1" type:"string"`
 
 	// The results of the query execution.
@@ -2812,6 +4376,105 @@ func (s *GetQueryResultsOutput) SetResultSet(v *ResultSet) *GetQueryResultsOutpu
 // SetUpdateCount sets the UpdateCount field's value.
 func (s *GetQueryResultsOutput) SetUpdateCount(v int64) *GetQueryResultsOutput {
 	s.UpdateCount = &v
+	return s
+}
+
+type GetTableMetadataInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the data catalog that contains the database and table metadata
+	// to return.
+	//
+	// CatalogName is a required field
+	CatalogName *string `min:"1" type:"string" required:"true"`
+
+	// The name of the database that contains the table metadata to return.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// The name of the table for which metadata is returned.
+	//
+	// TableName is a required field
+	TableName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetTableMetadataInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetTableMetadataInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetTableMetadataInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetTableMetadataInput"}
+	if s.CatalogName == nil {
+		invalidParams.Add(request.NewErrParamRequired("CatalogName"))
+	}
+	if s.CatalogName != nil && len(*s.CatalogName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogName", 1))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogName sets the CatalogName field's value.
+func (s *GetTableMetadataInput) SetCatalogName(v string) *GetTableMetadataInput {
+	s.CatalogName = &v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *GetTableMetadataInput) SetDatabaseName(v string) *GetTableMetadataInput {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *GetTableMetadataInput) SetTableName(v string) *GetTableMetadataInput {
+	s.TableName = &v
+	return s
+}
+
+type GetTableMetadataOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An object that contains table metadata.
+	TableMetadata *TableMetadata `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetTableMetadataOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetTableMetadataOutput) GoString() string {
+	return s.String()
+}
+
+// SetTableMetadata sets the TableMetadata field's value.
+func (s *GetTableMetadataOutput) SetTableMetadata(v *TableMetadata) *GetTableMetadataOutput {
+	s.TableMetadata = v
 	return s
 }
 
@@ -2876,17 +4539,328 @@ func (s *GetWorkGroupOutput) SetWorkGroup(v *WorkGroup) *GetWorkGroupOutput {
 	return s
 }
 
+// Indicates a platform issue, which may be due to a transient condition or
+// outage.
+type InternalServerException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerException(v protocol.ResponseMetadata) error {
+	return &InternalServerException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InternalServerException) Code() string {
+	return "InternalServerException"
+}
+
+// Message returns the exception's message.
+func (s *InternalServerException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InternalServerException) OrigErr() error {
+	return nil
+}
+
+func (s *InternalServerException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InternalServerException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InternalServerException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Indicates that something is wrong with the input to the request. For example,
+// a required parameter may be missing or out of range.
+type InvalidRequestException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// The error code returned when the query execution failed to process, or when
+	// the processing request for the named query failed.
+	AthenaErrorCode *string `min:"1" type:"string"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
+	return &InvalidRequestException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidRequestException) Code() string {
+	return "InvalidRequestException"
+}
+
+// Message returns the exception's message.
+func (s *InvalidRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidRequestException) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidRequestException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+type ListDataCatalogsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the maximum number of data catalogs to return.
+	MaxResults *int64 `min:"2" type:"integer"`
+
+	// A token generated by the Athena service that specifies where to continue
+	// pagination if a previous request was truncated. To obtain the next set of
+	// pages, pass in the NextToken from the response object of the previous page
+	// call.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListDataCatalogsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDataCatalogsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListDataCatalogsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListDataCatalogsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 2 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 2))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListDataCatalogsInput) SetMaxResults(v int64) *ListDataCatalogsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListDataCatalogsInput) SetNextToken(v string) *ListDataCatalogsInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListDataCatalogsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A summary list of data catalogs.
+	DataCatalogsSummary []*DataCatalogSummary `type:"list"`
+
+	// A token generated by the Athena service that specifies where to continue
+	// pagination if a previous request was truncated. To obtain the next set of
+	// pages, pass in the NextToken from the response object of the previous page
+	// call.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListDataCatalogsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDataCatalogsOutput) GoString() string {
+	return s.String()
+}
+
+// SetDataCatalogsSummary sets the DataCatalogsSummary field's value.
+func (s *ListDataCatalogsOutput) SetDataCatalogsSummary(v []*DataCatalogSummary) *ListDataCatalogsOutput {
+	s.DataCatalogsSummary = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListDataCatalogsOutput) SetNextToken(v string) *ListDataCatalogsOutput {
+	s.NextToken = &v
+	return s
+}
+
+type ListDatabasesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the data catalog that contains the databases to return.
+	//
+	// CatalogName is a required field
+	CatalogName *string `min:"1" type:"string" required:"true"`
+
+	// Specifies the maximum number of results to return.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// A token generated by the Athena service that specifies where to continue
+	// pagination if a previous request was truncated. To obtain the next set of
+	// pages, pass in the NextToken from the response object of the previous page
+	// call.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListDatabasesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDatabasesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListDatabasesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListDatabasesInput"}
+	if s.CatalogName == nil {
+		invalidParams.Add(request.NewErrParamRequired("CatalogName"))
+	}
+	if s.CatalogName != nil && len(*s.CatalogName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogName", 1))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogName sets the CatalogName field's value.
+func (s *ListDatabasesInput) SetCatalogName(v string) *ListDatabasesInput {
+	s.CatalogName = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListDatabasesInput) SetMaxResults(v int64) *ListDatabasesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListDatabasesInput) SetNextToken(v string) *ListDatabasesInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListDatabasesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of databases from a data catalog.
+	DatabaseList []*Database `type:"list"`
+
+	// A token generated by the Athena service that specifies where to continue
+	// pagination if a previous request was truncated. To obtain the next set of
+	// pages, pass in the NextToken from the response object of the previous page
+	// call.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListDatabasesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDatabasesOutput) GoString() string {
+	return s.String()
+}
+
+// SetDatabaseList sets the DatabaseList field's value.
+func (s *ListDatabasesOutput) SetDatabaseList(v []*Database) *ListDatabasesOutput {
+	s.DatabaseList = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListDatabasesOutput) SetNextToken(v string) *ListDatabasesOutput {
+	s.NextToken = &v
+	return s
+}
+
 type ListNamedQueriesInput struct {
 	_ struct{} `type:"structure"`
 
 	// The maximum number of queries to return in this request.
 	MaxResults *int64 `type:"integer"`
 
-	// The token that specifies where to start pagination if a previous request
-	// was truncated.
+	// A token generated by the Athena service that specifies where to continue
+	// pagination if a previous request was truncated. To obtain the next set of
+	// pages, pass in the NextToken from the response object of the previous page
+	// call.
 	NextToken *string `min:"1" type:"string"`
 
 	// The name of the workgroup from which the named queries are being returned.
+	// If a workgroup is not specified, the saved queries for the primary workgroup
+	// are returned.
 	WorkGroup *string `type:"string"`
 }
 
@@ -2937,7 +4911,10 @@ type ListNamedQueriesOutput struct {
 	// The list of unique query IDs.
 	NamedQueryIds []*string `min:"1" type:"list"`
 
-	// A token to be used by the next request if this request is truncated.
+	// A token generated by the Athena service that specifies where to continue
+	// pagination if a previous request was truncated. To obtain the next set of
+	// pages, pass in the NextToken from the response object of the previous page
+	// call.
 	NextToken *string `min:"1" type:"string"`
 }
 
@@ -2969,11 +4946,15 @@ type ListQueryExecutionsInput struct {
 	// The maximum number of query executions to return in this request.
 	MaxResults *int64 `type:"integer"`
 
-	// The token that specifies where to start pagination if a previous request
-	// was truncated.
+	// A token generated by the Athena service that specifies where to continue
+	// pagination if a previous request was truncated. To obtain the next set of
+	// pages, pass in the NextToken from the response object of the previous page
+	// call.
 	NextToken *string `min:"1" type:"string"`
 
-	// The name of the workgroup from which queries are being returned.
+	// The name of the workgroup from which queries are being returned. If a workgroup
+	// is not specified, a list of available query execution IDs for the queries
+	// in the primary workgroup is returned.
 	WorkGroup *string `type:"string"`
 }
 
@@ -3050,19 +5031,149 @@ func (s *ListQueryExecutionsOutput) SetQueryExecutionIds(v []*string) *ListQuery
 	return s
 }
 
+type ListTableMetadataInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the data catalog for which table metadata should be returned.
+	//
+	// CatalogName is a required field
+	CatalogName *string `min:"1" type:"string" required:"true"`
+
+	// The name of the database for which table metadata should be returned.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// A regex filter that pattern-matches table names. If no expression is supplied,
+	// metadata for all tables are listed.
+	Expression *string `type:"string"`
+
+	// Specifies the maximum number of results to return.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// A token generated by the Athena service that specifies where to continue
+	// pagination if a previous request was truncated. To obtain the next set of
+	// pages, pass in the NextToken from the response object of the previous page
+	// call.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListTableMetadataInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTableMetadataInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTableMetadataInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTableMetadataInput"}
+	if s.CatalogName == nil {
+		invalidParams.Add(request.NewErrParamRequired("CatalogName"))
+	}
+	if s.CatalogName != nil && len(*s.CatalogName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogName", 1))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogName sets the CatalogName field's value.
+func (s *ListTableMetadataInput) SetCatalogName(v string) *ListTableMetadataInput {
+	s.CatalogName = &v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *ListTableMetadataInput) SetDatabaseName(v string) *ListTableMetadataInput {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetExpression sets the Expression field's value.
+func (s *ListTableMetadataInput) SetExpression(v string) *ListTableMetadataInput {
+	s.Expression = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListTableMetadataInput) SetMaxResults(v int64) *ListTableMetadataInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListTableMetadataInput) SetNextToken(v string) *ListTableMetadataInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListTableMetadataOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A token generated by the Athena service that specifies where to continue
+	// pagination if a previous request was truncated. To obtain the next set of
+	// pages, pass in the NextToken from the response object of the previous page
+	// call.
+	NextToken *string `min:"1" type:"string"`
+
+	// A list of table metadata.
+	TableMetadataList []*TableMetadata `type:"list"`
+}
+
+// String returns the string representation
+func (s ListTableMetadataOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTableMetadataOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListTableMetadataOutput) SetNextToken(v string) *ListTableMetadataOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTableMetadataList sets the TableMetadataList field's value.
+func (s *ListTableMetadataOutput) SetTableMetadataList(v []*TableMetadata) *ListTableMetadataOutput {
+	s.TableMetadataList = v
+	return s
+}
+
 type ListTagsForResourceInput struct {
 	_ struct{} `type:"structure"`
 
 	// The maximum number of results to be returned per request that lists the tags
-	// for the workgroup resource.
+	// for the resource.
 	MaxResults *int64 `min:"75" type:"integer"`
 
 	// The token for the next set of results, or null if there are no additional
-	// results for this request, where the request lists the tags for the workgroup
-	// resource with the specified ARN.
+	// results for this request, where the request lists the tags for the resource
+	// with the specified ARN.
 	NextToken *string `min:"1" type:"string"`
 
-	// Lists the tags for the workgroup resource with the specified ARN.
+	// Lists the tags for the resource with the specified ARN.
 	//
 	// ResourceARN is a required field
 	ResourceARN *string `min:"1" type:"string" required:"true"`
@@ -3124,7 +5235,7 @@ type ListTagsForResourceOutput struct {
 	// A token to be used by the next request if this request is truncated.
 	NextToken *string `min:"1" type:"string"`
 
-	// The list of tags associated with this workgroup.
+	// The list of tags associated with the specified resource.
 	Tags []*Tag `type:"list"`
 }
 
@@ -3156,7 +5267,10 @@ type ListWorkGroupsInput struct {
 	// The maximum number of workgroups to return in this request.
 	MaxResults *int64 `min:"1" type:"integer"`
 
-	// A token to be used by the next request if this request is truncated.
+	// A token generated by the Athena service that specifies where to continue
+	// pagination if a previous request was truncated. To obtain the next set of
+	// pages, pass in the NextToken from the response object of the previous page
+	// call.
 	NextToken *string `min:"1" type:"string"`
 }
 
@@ -3201,7 +5315,10 @@ func (s *ListWorkGroupsInput) SetNextToken(v string) *ListWorkGroupsInput {
 type ListWorkGroupsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A token to be used by the next request if this request is truncated.
+	// A token generated by the Athena service that specifies where to continue
+	// pagination if a previous request was truncated. To obtain the next set of
+	// pages, pass in the NextToken from the response object of the previous page
+	// call.
 	NextToken *string `min:"1" type:"string"`
 
 	// The list of workgroups, including their names, descriptions, creation times,
@@ -3229,6 +5346,66 @@ func (s *ListWorkGroupsOutput) SetNextToken(v string) *ListWorkGroupsOutput {
 func (s *ListWorkGroupsOutput) SetWorkGroups(v []*WorkGroupSummary) *ListWorkGroupsOutput {
 	s.WorkGroups = v
 	return s
+}
+
+// An exception that Athena received when it called a custom metastore. Occurs
+// if the error is not caused by user input (InvalidRequestException) or from
+// the Athena platform (InternalServerException). For example, if a user-created
+// Lambda function is missing permissions, the Lambda 4XX exception is returned
+// in a MetadataException.
+type MetadataException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s MetadataException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MetadataException) GoString() string {
+	return s.String()
+}
+
+func newErrorMetadataException(v protocol.ResponseMetadata) error {
+	return &MetadataException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *MetadataException) Code() string {
+	return "MetadataException"
+}
+
+// Message returns the exception's message.
+func (s *MetadataException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *MetadataException) OrigErr() error {
+	return nil
+}
+
+func (s *MetadataException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *MetadataException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *MetadataException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A query, where QueryString is the list of SQL query statements that comprise
@@ -3333,8 +5510,9 @@ type QueryExecution struct {
 	// and DML, such as SHOW CREATE TABLE, or DESCRIBE <table>.
 	StatementType *string `type:"string" enum:"StatementType"`
 
-	// The amount of data scanned during the query execution and the amount of time
-	// that it took to execute, and the type of statement that was run.
+	// Query execution statistics, such as the amount of data scanned, the amount
+	// of time that the query took to process, and the type of statement that was
+	// run.
 	Statistics *QueryExecutionStatistics `type:"structure"`
 
 	// The completion date, current state, submission time, and state change reason
@@ -3403,11 +5581,14 @@ func (s *QueryExecution) SetWorkGroup(v string) *QueryExecution {
 	return s
 }
 
-// The database in which the query execution occurs.
+// The database and data catalog context in which the query execution occurs.
 type QueryExecutionContext struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the database.
+	// The name of the data catalog used in the query execution.
+	Catalog *string `min:"1" type:"string"`
+
+	// The name of the database used in the query execution.
 	Database *string `min:"1" type:"string"`
 }
 
@@ -3424,6 +5605,9 @@ func (s QueryExecutionContext) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *QueryExecutionContext) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "QueryExecutionContext"}
+	if s.Catalog != nil && len(*s.Catalog) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Catalog", 1))
+	}
 	if s.Database != nil && len(*s.Database) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Database", 1))
 	}
@@ -3432,6 +5616,12 @@ func (s *QueryExecutionContext) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCatalog sets the Catalog field's value.
+func (s *QueryExecutionContext) SetCatalog(v string) *QueryExecutionContext {
+	s.Catalog = &v
+	return s
 }
 
 // SetDatabase sets the Database field's value.
@@ -3445,11 +5635,39 @@ func (s *QueryExecutionContext) SetDatabase(v string) *QueryExecutionContext {
 type QueryExecutionStatistics struct {
 	_ struct{} `type:"structure"`
 
+	// The location and file name of a data manifest file. The manifest file is
+	// saved to the Athena query results location in Amazon S3. The manifest file
+	// tracks files that the query wrote to Amazon S3. If the query fails, the manifest
+	// file also tracks files that the query intended to write. The manifest is
+	// useful for identifying orphaned files resulting from a failed query. For
+	// more information, see Working with Query Results, Output Files, and Query
+	// History (https://docs.aws.amazon.com/athena/latest/ug/querying.html) in the
+	// Amazon Athena User Guide.
+	DataManifestLocation *string `type:"string"`
+
 	// The number of bytes in the data that was queried.
 	DataScannedInBytes *int64 `type:"long"`
 
 	// The number of milliseconds that the query took to execute.
 	EngineExecutionTimeInMillis *int64 `type:"long"`
+
+	// The number of milliseconds that Athena took to plan the query processing
+	// flow. This includes the time spent retrieving table partitions from the data
+	// source. Note that because the query engine performs the query planning, query
+	// planning time is a subset of engine processing time.
+	QueryPlanningTimeInMillis *int64 `type:"long"`
+
+	// The number of milliseconds that the query was in your query queue waiting
+	// for resources. Note that if transient errors occur, Athena might automatically
+	// add the query back to the queue.
+	QueryQueueTimeInMillis *int64 `type:"long"`
+
+	// The number of milliseconds that Athena took to finalize and publish the query
+	// results after the query engine finished running the query.
+	ServiceProcessingTimeInMillis *int64 `type:"long"`
+
+	// The number of milliseconds that Athena took to run the query.
+	TotalExecutionTimeInMillis *int64 `type:"long"`
 }
 
 // String returns the string representation
@@ -3460,6 +5678,12 @@ func (s QueryExecutionStatistics) String() string {
 // GoString returns the string representation
 func (s QueryExecutionStatistics) GoString() string {
 	return s.String()
+}
+
+// SetDataManifestLocation sets the DataManifestLocation field's value.
+func (s *QueryExecutionStatistics) SetDataManifestLocation(v string) *QueryExecutionStatistics {
+	s.DataManifestLocation = &v
+	return s
 }
 
 // SetDataScannedInBytes sets the DataScannedInBytes field's value.
@@ -3474,6 +5698,30 @@ func (s *QueryExecutionStatistics) SetEngineExecutionTimeInMillis(v int64) *Quer
 	return s
 }
 
+// SetQueryPlanningTimeInMillis sets the QueryPlanningTimeInMillis field's value.
+func (s *QueryExecutionStatistics) SetQueryPlanningTimeInMillis(v int64) *QueryExecutionStatistics {
+	s.QueryPlanningTimeInMillis = &v
+	return s
+}
+
+// SetQueryQueueTimeInMillis sets the QueryQueueTimeInMillis field's value.
+func (s *QueryExecutionStatistics) SetQueryQueueTimeInMillis(v int64) *QueryExecutionStatistics {
+	s.QueryQueueTimeInMillis = &v
+	return s
+}
+
+// SetServiceProcessingTimeInMillis sets the ServiceProcessingTimeInMillis field's value.
+func (s *QueryExecutionStatistics) SetServiceProcessingTimeInMillis(v int64) *QueryExecutionStatistics {
+	s.ServiceProcessingTimeInMillis = &v
+	return s
+}
+
+// SetTotalExecutionTimeInMillis sets the TotalExecutionTimeInMillis field's value.
+func (s *QueryExecutionStatistics) SetTotalExecutionTimeInMillis(v int64) *QueryExecutionStatistics {
+	s.TotalExecutionTimeInMillis = &v
+	return s
+}
+
 // The completion date, current state, submission time, and state change reason
 // (if applicable) for the query execution.
 type QueryExecutionStatus struct {
@@ -3482,12 +5730,16 @@ type QueryExecutionStatus struct {
 	// The date and time that the query completed.
 	CompletionDateTime *time.Time `type:"timestamp"`
 
-	// The state of query execution. QUEUED state is listed but is not used by Athena
-	// and is reserved for future use. RUNNING indicates that the query has been
-	// submitted to the service, and Athena will execute the query as soon as resources
-	// are available. SUCCEEDED indicates that the query completed without errors.
-	// FAILED indicates that the query experienced an error and did not complete
-	// processing. CANCELLED indicates that a user input interrupted query execution.
+	// The state of query execution. QUEUED indicates that the query has been submitted
+	// to the service, and Athena will execute the query as soon as resources are
+	// available. RUNNING indicates that the query is in execution phase. SUCCEEDED
+	// indicates that the query completed without errors. FAILED indicates that
+	// the query experienced an error and did not complete processing. CANCELLED
+	// indicates that a user input interrupted query execution.
+	//
+	// Athena automatically retries your queries in cases of certain transient errors.
+	// As a result, you may see the query state transition from RUNNING or FAILED
+	// to QUEUED.
 	State *string `type:"string" enum:"QueryExecutionState"`
 
 	// Further detail about the status of the query.
@@ -3531,11 +5783,68 @@ func (s *QueryExecutionStatus) SetSubmissionDateTime(v time.Time) *QueryExecutio
 	return s
 }
 
+// A resource, such as a workgroup, was not found.
+type ResourceNotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	ResourceName *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // The location in Amazon S3 where query results are stored and the encryption
 // option, if any, used for query results. These are known as "client-side settings".
 // If workgroup settings override client-side settings, then the query uses
-// the location for the query results and the encryption configuration that
-// are specified for the workgroup.
+// the workgroup settings.
 type ResultConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -3549,12 +5858,13 @@ type ResultConfiguration struct {
 	EncryptionConfiguration *EncryptionConfiguration `type:"structure"`
 
 	// The location in Amazon S3 where your query results are stored, such as s3://path/to/query/bucket/.
-	// For more information, see Queries and Query Result Files. (https://docs.aws.amazon.com/athena/latest/ug/querying.html)
+	// To run the query, you must specify the query results location using one of
+	// the ways: either for individual queries using either this setting (client-side),
+	// or in the workgroup, using WorkGroupConfiguration. If none of them is set,
+	// Athena issues an error that no output location is provided. For more information,
+	// see Query Results (https://docs.aws.amazon.com/athena/latest/ug/querying.html).
 	// If workgroup settings override client-side settings, then the query uses
-	// the location for the query results and the encryption configuration that
-	// are specified for the workgroup. The "workgroup settings override" is specified
-	// in EnforceWorkGroupConfiguration (true/false) in the WorkGroupConfiguration.
-	// See WorkGroupConfiguration$EnforceWorkGroupConfiguration.
+	// the settings specified for the workgroup. See WorkGroupConfiguration$EnforceWorkGroupConfiguration.
 	OutputLocation *string `type:"string"`
 }
 
@@ -3604,7 +5914,7 @@ type ResultConfigurationUpdates struct {
 	EncryptionConfiguration *EncryptionConfiguration `type:"structure"`
 
 	// The location in Amazon S3 where your query results are stored, such as s3://path/to/query/bucket/.
-	// For more information, see Queries and Query Result Files. (https://docs.aws.amazon.com/athena/latest/ug/querying.html)
+	// For more information, see Query Results (https://docs.aws.amazon.com/athena/latest/ug/querying.html)
 	// If workgroup settings override client-side settings, then the query uses
 	// the location for the query results and the encryption configuration that
 	// are specified for the workgroup. The "workgroup settings override" is specified
@@ -3681,7 +5991,7 @@ func (s *ResultConfigurationUpdates) SetRemoveOutputLocation(v bool) *ResultConf
 }
 
 // The metadata and rows that comprise a query result set. The metadata describes
-// the column structure and data types.
+// the column structure and data types. To return a ResultSet object, use GetQueryResults.
 type ResultSet struct {
 	_ struct{} `type:"structure"`
 
@@ -3716,7 +6026,7 @@ func (s *ResultSet) SetRows(v []*Row) *ResultSet {
 }
 
 // The metadata that describes the column structure and data types of a table
-// of query results.
+// of query results. To return a ResultSetMetadata object, use GetQueryResults.
 type ResultSetMetadata struct {
 	_ struct{} `type:"structure"`
 
@@ -3925,16 +6235,97 @@ func (s StopQueryExecutionOutput) GoString() string {
 	return s.String()
 }
 
-// A tag that you can add to a resource. A tag is a label that you assign to
-// an AWS Athena resource (a workgroup). Each tag consists of a key and an optional
-// value, both of which you define. Tags enable you to categorize workgroups
-// in Athena, for example, by purpose, owner, or environment. Use a consistent
-// set of tag keys to make it easier to search and filter workgroups in your
-// account. The maximum tag key length is 128 Unicode characters in UTF-8. The
-// maximum tag value length is 256 Unicode characters in UTF-8. You can use
-// letters and numbers representable in UTF-8, and the following characters:
-// + - = . _ : / @. Tag keys and values are case-sensitive. Tag keys must be
-// unique per resource.
+// Contains metadata for a table.
+type TableMetadata struct {
+	_ struct{} `type:"structure"`
+
+	// A list of the columns in the table.
+	Columns []*Column `type:"list"`
+
+	// The time that the table was created.
+	CreateTime *time.Time `type:"timestamp"`
+
+	// The last time the table was accessed.
+	LastAccessTime *time.Time `type:"timestamp"`
+
+	// The name of the table.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// A set of custom key/value pairs for table properties.
+	Parameters map[string]*string `type:"map"`
+
+	// A list of the partition keys in the table.
+	PartitionKeys []*Column `type:"list"`
+
+	// The type of table. In Athena, only EXTERNAL_TABLE is supported.
+	TableType *string `type:"string"`
+}
+
+// String returns the string representation
+func (s TableMetadata) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TableMetadata) GoString() string {
+	return s.String()
+}
+
+// SetColumns sets the Columns field's value.
+func (s *TableMetadata) SetColumns(v []*Column) *TableMetadata {
+	s.Columns = v
+	return s
+}
+
+// SetCreateTime sets the CreateTime field's value.
+func (s *TableMetadata) SetCreateTime(v time.Time) *TableMetadata {
+	s.CreateTime = &v
+	return s
+}
+
+// SetLastAccessTime sets the LastAccessTime field's value.
+func (s *TableMetadata) SetLastAccessTime(v time.Time) *TableMetadata {
+	s.LastAccessTime = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *TableMetadata) SetName(v string) *TableMetadata {
+	s.Name = &v
+	return s
+}
+
+// SetParameters sets the Parameters field's value.
+func (s *TableMetadata) SetParameters(v map[string]*string) *TableMetadata {
+	s.Parameters = v
+	return s
+}
+
+// SetPartitionKeys sets the PartitionKeys field's value.
+func (s *TableMetadata) SetPartitionKeys(v []*Column) *TableMetadata {
+	s.PartitionKeys = v
+	return s
+}
+
+// SetTableType sets the TableType field's value.
+func (s *TableMetadata) SetTableType(v string) *TableMetadata {
+	s.TableType = &v
+	return s
+}
+
+// A label that you assign to a resource. In Athena, a resource can be a workgroup
+// or data catalog. Each tag consists of a key and an optional value, both of
+// which you define. For example, you can use tags to categorize Athena workgroups
+// or data catalogs by purpose, owner, or environment. Use a consistent set
+// of tag keys to make it easier to search and filter workgroups or data catalogs
+// in your account. For best practices, see Tagging Best Practices (https://aws.amazon.com/answers/account-management/aws-tagging-strategies/).
+// Tag keys can be from 1 to 128 UTF-8 Unicode characters, and tag values can
+// be from 0 to 256 UTF-8 Unicode characters. Tags can use letters and numbers
+// representable in UTF-8, and the following characters: + - = . _ : / @. Tag
+// keys and values are case-sensitive. Tag keys must be unique per resource.
+// If you specify more than one tag, separate them by commas.
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -3988,14 +6379,14 @@ func (s *Tag) SetValue(v string) *Tag {
 type TagResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// Requests that one or more tags are added to the resource (such as a workgroup)
-	// for the specified ARN.
+	// Specifies the ARN of the Athena resource (workgroup or data catalog) to which
+	// tags are to be added.
 	//
 	// ResourceARN is a required field
 	ResourceARN *string `min:"1" type:"string" required:"true"`
 
-	// One or more tags, separated by commas, to be added to the resource, such
-	// as a workgroup.
+	// A collection of one or more tags, separated by commas, to be added to an
+	// Athena workgroup or data catalog resource.
 	//
 	// Tags is a required field
 	Tags []*Tag `type:"list" required:"true"`
@@ -4064,6 +6455,66 @@ func (s TagResourceOutput) String() string {
 // GoString returns the string representation
 func (s TagResourceOutput) GoString() string {
 	return s.String()
+}
+
+// Indicates that the request was throttled.
+type TooManyRequestsException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The reason for the query throttling, for example, when it exceeds the concurrent
+	// query limit.
+	Reason *string `type:"string" enum:"ThrottleReason"`
+}
+
+// String returns the string representation
+func (s TooManyRequestsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyRequestsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyRequestsException(v protocol.ResponseMetadata) error {
+	return &TooManyRequestsException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *TooManyRequestsException) Code() string {
+	return "TooManyRequestsException"
+}
+
+// Message returns the exception's message.
+func (s *TooManyRequestsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *TooManyRequestsException) OrigErr() error {
+	return nil
+}
+
+func (s *TooManyRequestsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *TooManyRequestsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *TooManyRequestsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Information about a named query ID that could not be processed.
@@ -4156,13 +6607,13 @@ func (s *UnprocessedQueryExecutionId) SetQueryExecutionId(v string) *Unprocessed
 type UntagResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// Removes one or more tags from the workgroup resource for the specified ARN.
+	// Specifies the ARN of the resource from which tags are to be removed.
 	//
 	// ResourceARN is a required field
 	ResourceARN *string `min:"1" type:"string" required:"true"`
 
-	// Removes the tags associated with one or more tag keys from the workgroup
-	// resource.
+	// A comma-separated list of one or more tag keys whose tags are to be removed
+	// from the specified resource.
 	//
 	// TagKeys is a required field
 	TagKeys []*string `type:"list" required:"true"`
@@ -4220,6 +6671,113 @@ func (s UntagResourceOutput) String() string {
 
 // GoString returns the string representation
 func (s UntagResourceOutput) GoString() string {
+	return s.String()
+}
+
+type UpdateDataCatalogInput struct {
+	_ struct{} `type:"structure"`
+
+	// New or modified text that describes the data catalog.
+	Description *string `min:"1" type:"string"`
+
+	// The name of the data catalog to update. The catalog name must be unique for
+	// the AWS account and can use a maximum of 128 alphanumeric, underscore, at
+	// sign, or hyphen characters.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// Specifies the Lambda function or functions to use for updating the data catalog.
+	// This is a mapping whose values depend on the catalog type.
+	//
+	//    * For the HIVE data catalog type, use the following syntax. The metadata-function
+	//    parameter is required. The sdk-version parameter is optional and defaults
+	//    to the currently supported version. metadata-function=lambda_arn, sdk-version=version_number
+	//
+	//    * For the LAMBDA data catalog type, use one of the following sets of required
+	//    parameters, but not both. If you have one Lambda function that processes
+	//    metadata and another for reading the actual data, use the following syntax.
+	//    Both parameters are required. metadata-function=lambda_arn, record-function=lambda_arn
+	//    If you have a composite Lambda function that processes both metadata and
+	//    data, use the following syntax to specify your Lambda function. function=lambda_arn
+	//
+	//    * The GLUE type has no parameters.
+	Parameters map[string]*string `type:"map"`
+
+	// Specifies the type of data catalog to update. Specify LAMBDA for a federated
+	// catalog, GLUE for AWS Glue Catalog, or HIVE for an external hive metastore.
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true" enum:"DataCatalogType"`
+}
+
+// String returns the string representation
+func (s UpdateDataCatalogInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateDataCatalogInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateDataCatalogInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateDataCatalogInput"}
+	if s.Description != nil && len(*s.Description) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Description", 1))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDescription sets the Description field's value.
+func (s *UpdateDataCatalogInput) SetDescription(v string) *UpdateDataCatalogInput {
+	s.Description = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateDataCatalogInput) SetName(v string) *UpdateDataCatalogInput {
+	s.Name = &v
+	return s
+}
+
+// SetParameters sets the Parameters field's value.
+func (s *UpdateDataCatalogInput) SetParameters(v map[string]*string) *UpdateDataCatalogInput {
+	s.Parameters = v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *UpdateDataCatalogInput) SetType(v string) *UpdateDataCatalogInput {
+	s.Type = &v
+	return s
+}
+
+type UpdateDataCatalogOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateDataCatalogOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateDataCatalogOutput) GoString() string {
 	return s.String()
 }
 
@@ -4323,8 +6881,8 @@ type WorkGroup struct {
 	// S3 where query results are stored, the encryption configuration, if any,
 	// used for query results; whether the Amazon CloudWatch Metrics are enabled
 	// for the workgroup; whether workgroup settings override client-side settings;
-	// and the data usage limit for the amount of data scanned per query, if it
-	// is specified. The workgroup settings override is specified in EnforceWorkGroupConfiguration
+	// and the data usage limits for the amount of data scanned per query or per
+	// workgroup. The workgroup settings override is specified in EnforceWorkGroupConfiguration
 	// (true/false) in the WorkGroupConfiguration. See WorkGroupConfiguration$EnforceWorkGroupConfiguration.
 	Configuration *WorkGroupConfiguration `type:"structure"`
 
@@ -4387,7 +6945,7 @@ func (s *WorkGroup) SetState(v string) *WorkGroup {
 // S3 where query results are stored, the encryption option, if any, used for
 // query results, whether the Amazon CloudWatch Metrics are enabled for the
 // workgroup and whether workgroup settings override query settings, and the
-// data usage limit for the amount of data scanned per query, if it is specified.
+// data usage limits for the amount of data scanned per query or per workgroup.
 // The workgroup settings override is specified in EnforceWorkGroupConfiguration
 // (true/false) in the WorkGroupConfiguration. See WorkGroupConfiguration$EnforceWorkGroupConfiguration.
 type WorkGroupConfiguration struct {
@@ -4405,9 +6963,22 @@ type WorkGroupConfiguration struct {
 	// Indicates that the Amazon CloudWatch metrics are enabled for the workgroup.
 	PublishCloudWatchMetricsEnabled *bool `type:"boolean"`
 
+	// If set to true, allows members assigned to a workgroup to reference Amazon
+	// S3 Requester Pays buckets in queries. If set to false, workgroup members
+	// cannot query data from Requester Pays buckets, and queries that retrieve
+	// data from Requester Pays buckets cause an error. The default is false. For
+	// more information about Requester Pays buckets, see Requester Pays Buckets
+	// (https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html)
+	// in the Amazon Simple Storage Service Developer Guide.
+	RequesterPaysEnabled *bool `type:"boolean"`
+
 	// The configuration for the workgroup, which includes the location in Amazon
 	// S3 where query results are stored and the encryption option, if any, used
-	// for query results.
+	// for query results. To run the query, you must specify the query results location
+	// using one of the ways: either in the workgroup using this setting, or for
+	// individual queries (client-side), using ResultConfiguration$OutputLocation.
+	// If none of them is set, Athena issues an error that no output location is
+	// provided. For more information, see Query Results (https://docs.aws.amazon.com/athena/latest/ug/querying.html).
 	ResultConfiguration *ResultConfiguration `type:"structure"`
 }
 
@@ -4457,6 +7028,12 @@ func (s *WorkGroupConfiguration) SetPublishCloudWatchMetricsEnabled(v bool) *Wor
 	return s
 }
 
+// SetRequesterPaysEnabled sets the RequesterPaysEnabled field's value.
+func (s *WorkGroupConfiguration) SetRequesterPaysEnabled(v bool) *WorkGroupConfiguration {
+	s.RequesterPaysEnabled = &v
+	return s
+}
+
 // SetResultConfiguration sets the ResultConfiguration field's value.
 func (s *WorkGroupConfiguration) SetResultConfiguration(v *ResultConfiguration) *WorkGroupConfiguration {
 	s.ResultConfiguration = v
@@ -4486,6 +7063,15 @@ type WorkGroupConfigurationUpdates struct {
 
 	// Indicates that the data usage control limit per query is removed. WorkGroupConfiguration$BytesScannedCutoffPerQuery
 	RemoveBytesScannedCutoffPerQuery *bool `type:"boolean"`
+
+	// If set to true, allows members assigned to a workgroup to specify Amazon
+	// S3 Requester Pays buckets in queries. If set to false, workgroup members
+	// cannot query data from Requester Pays buckets, and queries that retrieve
+	// data from Requester Pays buckets cause an error. The default is false. For
+	// more information about Requester Pays buckets, see Requester Pays Buckets
+	// (https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html)
+	// in the Amazon Simple Storage Service Developer Guide.
+	RequesterPaysEnabled *bool `type:"boolean"`
 
 	// The result configuration information about the queries in this workgroup
 	// that will be updated. Includes the updated results location and an updated
@@ -4542,6 +7128,12 @@ func (s *WorkGroupConfigurationUpdates) SetPublishCloudWatchMetricsEnabled(v boo
 // SetRemoveBytesScannedCutoffPerQuery sets the RemoveBytesScannedCutoffPerQuery field's value.
 func (s *WorkGroupConfigurationUpdates) SetRemoveBytesScannedCutoffPerQuery(v bool) *WorkGroupConfigurationUpdates {
 	s.RemoveBytesScannedCutoffPerQuery = &v
+	return s
+}
+
+// SetRequesterPaysEnabled sets the RequesterPaysEnabled field's value.
+func (s *WorkGroupConfigurationUpdates) SetRequesterPaysEnabled(v bool) *WorkGroupConfigurationUpdates {
+	s.RequesterPaysEnabled = &v
 	return s
 }
 
@@ -4614,6 +7206,35 @@ const (
 	ColumnNullableUnknown = "UNKNOWN"
 )
 
+// ColumnNullable_Values returns all elements of the ColumnNullable enum
+func ColumnNullable_Values() []string {
+	return []string{
+		ColumnNullableNotNull,
+		ColumnNullableNullable,
+		ColumnNullableUnknown,
+	}
+}
+
+const (
+	// DataCatalogTypeLambda is a DataCatalogType enum value
+	DataCatalogTypeLambda = "LAMBDA"
+
+	// DataCatalogTypeGlue is a DataCatalogType enum value
+	DataCatalogTypeGlue = "GLUE"
+
+	// DataCatalogTypeHive is a DataCatalogType enum value
+	DataCatalogTypeHive = "HIVE"
+)
+
+// DataCatalogType_Values returns all elements of the DataCatalogType enum
+func DataCatalogType_Values() []string {
+	return []string{
+		DataCatalogTypeLambda,
+		DataCatalogTypeGlue,
+		DataCatalogTypeHive,
+	}
+}
+
 const (
 	// EncryptionOptionSseS3 is a EncryptionOption enum value
 	EncryptionOptionSseS3 = "SSE_S3"
@@ -4624,6 +7245,15 @@ const (
 	// EncryptionOptionCseKms is a EncryptionOption enum value
 	EncryptionOptionCseKms = "CSE_KMS"
 )
+
+// EncryptionOption_Values returns all elements of the EncryptionOption enum
+func EncryptionOption_Values() []string {
+	return []string{
+		EncryptionOptionSseS3,
+		EncryptionOptionSseKms,
+		EncryptionOptionCseKms,
+	}
+}
 
 const (
 	// QueryExecutionStateQueued is a QueryExecutionState enum value
@@ -4642,6 +7272,17 @@ const (
 	QueryExecutionStateCancelled = "CANCELLED"
 )
 
+// QueryExecutionState_Values returns all elements of the QueryExecutionState enum
+func QueryExecutionState_Values() []string {
+	return []string{
+		QueryExecutionStateQueued,
+		QueryExecutionStateRunning,
+		QueryExecutionStateSucceeded,
+		QueryExecutionStateFailed,
+		QueryExecutionStateCancelled,
+	}
+}
+
 const (
 	// StatementTypeDdl is a StatementType enum value
 	StatementTypeDdl = "DDL"
@@ -4653,12 +7294,28 @@ const (
 	StatementTypeUtility = "UTILITY"
 )
 
+// StatementType_Values returns all elements of the StatementType enum
+func StatementType_Values() []string {
+	return []string{
+		StatementTypeDdl,
+		StatementTypeDml,
+		StatementTypeUtility,
+	}
+}
+
 // The reason for the query throttling, for example, when it exceeds the concurrent
 // query limit.
 const (
 	// ThrottleReasonConcurrentQueryLimitExceeded is a ThrottleReason enum value
 	ThrottleReasonConcurrentQueryLimitExceeded = "CONCURRENT_QUERY_LIMIT_EXCEEDED"
 )
+
+// ThrottleReason_Values returns all elements of the ThrottleReason enum
+func ThrottleReason_Values() []string {
+	return []string{
+		ThrottleReasonConcurrentQueryLimitExceeded,
+	}
+}
 
 const (
 	// WorkGroupStateEnabled is a WorkGroupState enum value
@@ -4667,3 +7324,11 @@ const (
 	// WorkGroupStateDisabled is a WorkGroupState enum value
 	WorkGroupStateDisabled = "DISABLED"
 )
+
+// WorkGroupState_Values returns all elements of the WorkGroupState enum
+func WorkGroupState_Values() []string {
+	return []string{
+		WorkGroupStateEnabled,
+		WorkGroupStateDisabled,
+	}
+}

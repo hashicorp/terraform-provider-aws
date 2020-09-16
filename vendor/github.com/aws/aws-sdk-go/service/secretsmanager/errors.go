@@ -2,6 +2,10 @@
 
 package secretsmanager
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeDecryptionFailure for service response error code
@@ -73,6 +77,12 @@ const (
 	// The request failed because you did not complete all the prerequisite steps.
 	ErrCodePreconditionNotMetException = "PreconditionNotMetException"
 
+	// ErrCodePublicPolicyException for service response error code
+	// "PublicPolicyException".
+	//
+	// The resource policy did not prevent broad access to the secret.
+	ErrCodePublicPolicyException = "PublicPolicyException"
+
 	// ErrCodeResourceExistsException for service response error code
 	// "ResourceExistsException".
 	//
@@ -85,3 +95,18 @@ const (
 	// We can't find the resource that you asked for.
 	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"DecryptionFailure":                newErrorDecryptionFailure,
+	"EncryptionFailure":                newErrorEncryptionFailure,
+	"InternalServiceError":             newErrorInternalServiceError,
+	"InvalidNextTokenException":        newErrorInvalidNextTokenException,
+	"InvalidParameterException":        newErrorInvalidParameterException,
+	"InvalidRequestException":          newErrorInvalidRequestException,
+	"LimitExceededException":           newErrorLimitExceededException,
+	"MalformedPolicyDocumentException": newErrorMalformedPolicyDocumentException,
+	"PreconditionNotMetException":      newErrorPreconditionNotMetException,
+	"PublicPolicyException":            newErrorPublicPolicyException,
+	"ResourceExistsException":          newErrorResourceExistsException,
+	"ResourceNotFoundException":        newErrorResourceNotFoundException,
+}

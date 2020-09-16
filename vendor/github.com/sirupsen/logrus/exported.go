@@ -1,6 +1,7 @@
 package logrus
 
 import (
+	"context"
 	"io"
 	"time"
 )
@@ -22,6 +23,12 @@ func SetOutput(out io.Writer) {
 // SetFormatter sets the standard logger formatter.
 func SetFormatter(formatter Formatter) {
 	std.SetFormatter(formatter)
+}
+
+// SetReportCaller sets whether the standard logger will include the calling
+// method as a field.
+func SetReportCaller(include bool) {
+	std.SetReportCaller(include)
 }
 
 // SetLevel sets the standard logger level.
@@ -49,6 +56,11 @@ func WithError(err error) *Entry {
 	return std.WithField(ErrorKey, err)
 }
 
+// WithContext creates an entry from the standard logger and adds a context to it.
+func WithContext(ctx context.Context) *Entry {
+	return std.WithContext(ctx)
+}
+
 // WithField creates an entry from the standard logger and adds a field to
 // it. If you want multiple fields, use `WithFields`.
 //
@@ -68,13 +80,18 @@ func WithFields(fields Fields) *Entry {
 	return std.WithFields(fields)
 }
 
-// WithTime creats an entry from the standard logger and overrides the time of
+// WithTime creates an entry from the standard logger and overrides the time of
 // logs generated with it.
 //
 // Note that it doesn't log until you call Debug, Print, Info, Warn, Fatal
 // or Panic on the Entry it returns.
 func WithTime(t time.Time) *Entry {
 	return std.WithTime(t)
+}
+
+// Trace logs a message at level Trace on the standard logger.
+func Trace(args ...interface{}) {
+	std.Trace(args...)
 }
 
 // Debug logs a message at level Debug on the standard logger.
@@ -117,6 +134,11 @@ func Fatal(args ...interface{}) {
 	std.Fatal(args...)
 }
 
+// Tracef logs a message at level Trace on the standard logger.
+func Tracef(format string, args ...interface{}) {
+	std.Tracef(format, args...)
+}
+
 // Debugf logs a message at level Debug on the standard logger.
 func Debugf(format string, args ...interface{}) {
 	std.Debugf(format, args...)
@@ -155,6 +177,11 @@ func Panicf(format string, args ...interface{}) {
 // Fatalf logs a message at level Fatal on the standard logger then the process will exit with status set to 1.
 func Fatalf(format string, args ...interface{}) {
 	std.Fatalf(format, args...)
+}
+
+// Traceln logs a message at level Trace on the standard logger.
+func Traceln(args ...interface{}) {
+	std.Traceln(args...)
 }
 
 // Debugln logs a message at level Debug on the standard logger.

@@ -377,6 +377,91 @@ func (c *ElastiCache) BatchStopUpdateActionWithContext(ctx aws.Context, input *B
 	return out, req.Send()
 }
 
+const opCompleteMigration = "CompleteMigration"
+
+// CompleteMigrationRequest generates a "aws/request.Request" representing the
+// client's request for the CompleteMigration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CompleteMigration for more information on using the CompleteMigration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CompleteMigrationRequest method.
+//    req, resp := client.CompleteMigrationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/CompleteMigration
+func (c *ElastiCache) CompleteMigrationRequest(input *CompleteMigrationInput) (req *request.Request, output *CompleteMigrationOutput) {
+	op := &request.Operation{
+		Name:       opCompleteMigration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CompleteMigrationInput{}
+	}
+
+	output = &CompleteMigrationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CompleteMigration API operation for Amazon ElastiCache.
+//
+// Complete the migration of data.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon ElastiCache's
+// API operation CompleteMigration for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeReplicationGroupNotFoundFault "ReplicationGroupNotFoundFault"
+//   The specified replication group does not exist.
+//
+//   * ErrCodeInvalidReplicationGroupStateFault "InvalidReplicationGroupState"
+//   The requested replication group is not in the available state.
+//
+//   * ErrCodeReplicationGroupNotUnderMigrationFault "ReplicationGroupNotUnderMigrationFault"
+//   The designated replication group is not available for data migration.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/CompleteMigration
+func (c *ElastiCache) CompleteMigration(input *CompleteMigrationInput) (*CompleteMigrationOutput, error) {
+	req, out := c.CompleteMigrationRequest(input)
+	return out, req.Send()
+}
+
+// CompleteMigrationWithContext is the same as CompleteMigration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CompleteMigration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElastiCache) CompleteMigrationWithContext(ctx aws.Context, input *CompleteMigrationInput, opts ...request.Option) (*CompleteMigrationOutput, error) {
+	req, out := c.CompleteMigrationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCopySnapshot = "CopySnapshot"
 
 // CopySnapshotRequest generates a "aws/request.Request" representing the
@@ -954,6 +1039,106 @@ func (c *ElastiCache) CreateCacheSubnetGroupWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
+const opCreateGlobalReplicationGroup = "CreateGlobalReplicationGroup"
+
+// CreateGlobalReplicationGroupRequest generates a "aws/request.Request" representing the
+// client's request for the CreateGlobalReplicationGroup operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateGlobalReplicationGroup for more information on using the CreateGlobalReplicationGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateGlobalReplicationGroupRequest method.
+//    req, resp := client.CreateGlobalReplicationGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/CreateGlobalReplicationGroup
+func (c *ElastiCache) CreateGlobalReplicationGroupRequest(input *CreateGlobalReplicationGroupInput) (req *request.Request, output *CreateGlobalReplicationGroupOutput) {
+	op := &request.Operation{
+		Name:       opCreateGlobalReplicationGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateGlobalReplicationGroupInput{}
+	}
+
+	output = &CreateGlobalReplicationGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateGlobalReplicationGroup API operation for Amazon ElastiCache.
+//
+// Global Datastore for Redis offers fully managed, fast, reliable and secure
+// cross-region replication. Using Global Datastore for Redis, you can create
+// cross-region read replica clusters for ElastiCache for Redis to enable low-latency
+// reads and disaster recovery across regions. For more information, see Replication
+// Across Regions Using Global Datastore (/AmazonElastiCache/latest/red-ug/Redis-Global-Clusters.html).
+//
+//    * The GlobalReplicationGroupIdSuffix is the name of the Global Datastore.
+//
+//    * The PrimaryReplicationGroupId represents the name of the primary cluster
+//    that accepts writes and will replicate updates to the secondary cluster.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon ElastiCache's
+// API operation CreateGlobalReplicationGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeReplicationGroupNotFoundFault "ReplicationGroupNotFoundFault"
+//   The specified replication group does not exist.
+//
+//   * ErrCodeInvalidReplicationGroupStateFault "InvalidReplicationGroupState"
+//   The requested replication group is not in the available state.
+//
+//   * ErrCodeGlobalReplicationGroupAlreadyExistsFault "GlobalReplicationGroupAlreadyExistsFault"
+//   The Global Datastore name already exists.
+//
+//   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
+//   The value for a parameter is invalid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/CreateGlobalReplicationGroup
+func (c *ElastiCache) CreateGlobalReplicationGroup(input *CreateGlobalReplicationGroupInput) (*CreateGlobalReplicationGroupOutput, error) {
+	req, out := c.CreateGlobalReplicationGroupRequest(input)
+	return out, req.Send()
+}
+
+// CreateGlobalReplicationGroupWithContext is the same as CreateGlobalReplicationGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateGlobalReplicationGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElastiCache) CreateGlobalReplicationGroupWithContext(ctx aws.Context, input *CreateGlobalReplicationGroupInput, opts ...request.Option) (*CreateGlobalReplicationGroupOutput, error) {
+	req, out := c.CreateGlobalReplicationGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateReplicationGroup = "CreateReplicationGroup"
 
 // CreateReplicationGroupRequest generates a "aws/request.Request" representing the
@@ -1001,6 +1186,9 @@ func (c *ElastiCache) CreateReplicationGroupRequest(input *CreateReplicationGrou
 // Creates a Redis (cluster mode disabled) or a Redis (cluster mode enabled)
 // replication group.
 //
+// This API can be used to create a standalone regional replication group or
+// a secondary replication group associated with a Global Datastore.
+//
 // A Redis (cluster mode disabled) replication group is a collection of clusters,
 // where one of the clusters is a read/write primary and the others are read-only
 // replicas. Writes to the primary are asynchronously propagated to the replicas.
@@ -1013,11 +1201,9 @@ func (c *ElastiCache) CreateReplicationGroupRequest(input *CreateReplicationGrou
 //
 // When a Redis (cluster mode disabled) replication group has been successfully
 // created, you can add one or more read replicas to it, up to a total of 5
-// read replicas. You cannot alter a Redis (cluster mode enabled) replication
-// group after it has been created. However, if you need to increase or decrease
-// the number of node groups (console: shards), you can avail yourself of ElastiCache
-// for Redis' enhanced backup and restore. For more information, see Restoring
-// From a Backup with Cluster Resizing (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/backups-restoring.html)
+// read replicas. If you need to increase or decrease the number of node groups
+// (console: shards), you can avail yourself of ElastiCache for Redis' scaling.
+// For more information, see Scaling ElastiCache for Redis Clusters (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Scaling.html)
 // in the ElastiCache User Guide.
 //
 // This operation is valid for Redis only.
@@ -1080,6 +1266,12 @@ func (c *ElastiCache) CreateReplicationGroupRequest(input *CreateReplicationGrou
 //   The request cannot be processed because it would exceed the maximum allowed
 //   number of node groups (shards) in a single replication group. The default
 //   maximum is 90
+//
+//   * ErrCodeGlobalReplicationGroupNotFoundFault "GlobalReplicationGroupNotFoundFault"
+//   The Global Datastore does not exist
+//
+//   * ErrCodeInvalidGlobalReplicationGroupStateFault "InvalidGlobalReplicationGroupState"
+//   The Global Datastore is not available or in primary-only state.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
 //   The value for a parameter is invalid.
@@ -1224,6 +1416,94 @@ func (c *ElastiCache) CreateSnapshotWithContext(ctx aws.Context, input *CreateSn
 	return out, req.Send()
 }
 
+const opDecreaseNodeGroupsInGlobalReplicationGroup = "DecreaseNodeGroupsInGlobalReplicationGroup"
+
+// DecreaseNodeGroupsInGlobalReplicationGroupRequest generates a "aws/request.Request" representing the
+// client's request for the DecreaseNodeGroupsInGlobalReplicationGroup operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DecreaseNodeGroupsInGlobalReplicationGroup for more information on using the DecreaseNodeGroupsInGlobalReplicationGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DecreaseNodeGroupsInGlobalReplicationGroupRequest method.
+//    req, resp := client.DecreaseNodeGroupsInGlobalReplicationGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/DecreaseNodeGroupsInGlobalReplicationGroup
+func (c *ElastiCache) DecreaseNodeGroupsInGlobalReplicationGroupRequest(input *DecreaseNodeGroupsInGlobalReplicationGroupInput) (req *request.Request, output *DecreaseNodeGroupsInGlobalReplicationGroupOutput) {
+	op := &request.Operation{
+		Name:       opDecreaseNodeGroupsInGlobalReplicationGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DecreaseNodeGroupsInGlobalReplicationGroupInput{}
+	}
+
+	output = &DecreaseNodeGroupsInGlobalReplicationGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DecreaseNodeGroupsInGlobalReplicationGroup API operation for Amazon ElastiCache.
+//
+// Decreases the number of node groups in a Global Datastore
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon ElastiCache's
+// API operation DecreaseNodeGroupsInGlobalReplicationGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeGlobalReplicationGroupNotFoundFault "GlobalReplicationGroupNotFoundFault"
+//   The Global Datastore does not exist
+//
+//   * ErrCodeInvalidGlobalReplicationGroupStateFault "InvalidGlobalReplicationGroupState"
+//   The Global Datastore is not available or in primary-only state.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
+//   The value for a parameter is invalid.
+//
+//   * ErrCodeInvalidParameterCombinationException "InvalidParameterCombination"
+//   Two or more incompatible parameters were specified.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/DecreaseNodeGroupsInGlobalReplicationGroup
+func (c *ElastiCache) DecreaseNodeGroupsInGlobalReplicationGroup(input *DecreaseNodeGroupsInGlobalReplicationGroupInput) (*DecreaseNodeGroupsInGlobalReplicationGroupOutput, error) {
+	req, out := c.DecreaseNodeGroupsInGlobalReplicationGroupRequest(input)
+	return out, req.Send()
+}
+
+// DecreaseNodeGroupsInGlobalReplicationGroupWithContext is the same as DecreaseNodeGroupsInGlobalReplicationGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DecreaseNodeGroupsInGlobalReplicationGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElastiCache) DecreaseNodeGroupsInGlobalReplicationGroupWithContext(ctx aws.Context, input *DecreaseNodeGroupsInGlobalReplicationGroupInput, opts ...request.Option) (*DecreaseNodeGroupsInGlobalReplicationGroupOutput, error) {
+	req, out := c.DecreaseNodeGroupsInGlobalReplicationGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDecreaseReplicaCount = "DecreaseReplicaCount"
 
 // DecreaseReplicaCountRequest generates a "aws/request.Request" representing the
@@ -1268,7 +1548,7 @@ func (c *ElastiCache) DecreaseReplicaCountRequest(input *DecreaseReplicaCountInp
 
 // DecreaseReplicaCount API operation for Amazon ElastiCache.
 //
-// Dynamically decreases the number of replics in a Redis (cluster mode disabled)
+// Dynamically decreases the number of replicas in a Redis (cluster mode disabled)
 // replication group or the number of replica nodes in one or more node groups
 // (shards) of a Redis (cluster mode enabled) replication group. This operation
 // is performed with no cluster down time.
@@ -1736,6 +2016,105 @@ func (c *ElastiCache) DeleteCacheSubnetGroupWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
+const opDeleteGlobalReplicationGroup = "DeleteGlobalReplicationGroup"
+
+// DeleteGlobalReplicationGroupRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteGlobalReplicationGroup operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteGlobalReplicationGroup for more information on using the DeleteGlobalReplicationGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteGlobalReplicationGroupRequest method.
+//    req, resp := client.DeleteGlobalReplicationGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/DeleteGlobalReplicationGroup
+func (c *ElastiCache) DeleteGlobalReplicationGroupRequest(input *DeleteGlobalReplicationGroupInput) (req *request.Request, output *DeleteGlobalReplicationGroupOutput) {
+	op := &request.Operation{
+		Name:       opDeleteGlobalReplicationGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteGlobalReplicationGroupInput{}
+	}
+
+	output = &DeleteGlobalReplicationGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteGlobalReplicationGroup API operation for Amazon ElastiCache.
+//
+// Deleting a Global Datastore is a two-step process:
+//
+//    * First, you must DisassociateGlobalReplicationGroup to remove the secondary
+//    clusters in the Global Datastore.
+//
+//    * Once the Global Datastore contains only the primary cluster, you can
+//    use DeleteGlobalReplicationGroup API to delete the Global Datastore while
+//    retainining the primary cluster using Retain…= true.
+//
+// Since the Global Datastore has only a primary cluster, you can delete the
+// Global Datastore while retaining the primary by setting RetainPrimaryCluster=true.
+//
+// When you receive a successful response from this operation, Amazon ElastiCache
+// immediately begins deleting the selected resources; you cannot cancel or
+// revert this operation.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon ElastiCache's
+// API operation DeleteGlobalReplicationGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeGlobalReplicationGroupNotFoundFault "GlobalReplicationGroupNotFoundFault"
+//   The Global Datastore does not exist
+//
+//   * ErrCodeInvalidGlobalReplicationGroupStateFault "InvalidGlobalReplicationGroupState"
+//   The Global Datastore is not available or in primary-only state.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
+//   The value for a parameter is invalid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/DeleteGlobalReplicationGroup
+func (c *ElastiCache) DeleteGlobalReplicationGroup(input *DeleteGlobalReplicationGroupInput) (*DeleteGlobalReplicationGroupOutput, error) {
+	req, out := c.DeleteGlobalReplicationGroupRequest(input)
+	return out, req.Send()
+}
+
+// DeleteGlobalReplicationGroupWithContext is the same as DeleteGlobalReplicationGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteGlobalReplicationGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElastiCache) DeleteGlobalReplicationGroupWithContext(ctx aws.Context, input *DeleteGlobalReplicationGroupInput, opts ...request.Option) (*DeleteGlobalReplicationGroupOutput, error) {
+	req, out := c.DeleteGlobalReplicationGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteReplicationGroup = "DeleteReplicationGroup"
 
 // DeleteReplicationGroupRequest generates a "aws/request.Request" representing the
@@ -2100,10 +2479,12 @@ func (c *ElastiCache) DescribeCacheClustersPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeCacheClustersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeCacheClustersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2230,10 +2611,12 @@ func (c *ElastiCache) DescribeCacheEngineVersionsPagesWithContext(ctx aws.Contex
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeCacheEngineVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeCacheEngineVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2374,10 +2757,12 @@ func (c *ElastiCache) DescribeCacheParameterGroupsPagesWithContext(ctx aws.Conte
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeCacheParameterGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeCacheParameterGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2516,10 +2901,12 @@ func (c *ElastiCache) DescribeCacheParametersPagesWithContext(ctx aws.Context, i
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeCacheParametersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeCacheParametersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2660,10 +3047,12 @@ func (c *ElastiCache) DescribeCacheSecurityGroupsPagesWithContext(ctx aws.Contex
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeCacheSecurityGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeCacheSecurityGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2799,10 +3188,12 @@ func (c *ElastiCache) DescribeCacheSubnetGroupsPagesWithContext(ctx aws.Context,
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeCacheSubnetGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeCacheSubnetGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2938,10 +3329,12 @@ func (c *ElastiCache) DescribeEngineDefaultParametersPagesWithContext(ctx aws.Co
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEngineDefaultParametersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEngineDefaultParametersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3081,10 +3474,156 @@ func (c *ElastiCache) DescribeEventsPagesWithContext(ctx aws.Context, input *Des
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEventsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEventsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
+	return p.Err()
+}
+
+const opDescribeGlobalReplicationGroups = "DescribeGlobalReplicationGroups"
+
+// DescribeGlobalReplicationGroupsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeGlobalReplicationGroups operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeGlobalReplicationGroups for more information on using the DescribeGlobalReplicationGroups
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeGlobalReplicationGroupsRequest method.
+//    req, resp := client.DescribeGlobalReplicationGroupsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/DescribeGlobalReplicationGroups
+func (c *ElastiCache) DescribeGlobalReplicationGroupsRequest(input *DescribeGlobalReplicationGroupsInput) (req *request.Request, output *DescribeGlobalReplicationGroupsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeGlobalReplicationGroups,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "MaxRecords",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribeGlobalReplicationGroupsInput{}
+	}
+
+	output = &DescribeGlobalReplicationGroupsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeGlobalReplicationGroups API operation for Amazon ElastiCache.
+//
+// Returns information about a particular global replication group. If no identifier
+// is specified, returns information about all Global Datastores.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon ElastiCache's
+// API operation DescribeGlobalReplicationGroups for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeGlobalReplicationGroupNotFoundFault "GlobalReplicationGroupNotFoundFault"
+//   The Global Datastore does not exist
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
+//   The value for a parameter is invalid.
+//
+//   * ErrCodeInvalidParameterCombinationException "InvalidParameterCombination"
+//   Two or more incompatible parameters were specified.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/DescribeGlobalReplicationGroups
+func (c *ElastiCache) DescribeGlobalReplicationGroups(input *DescribeGlobalReplicationGroupsInput) (*DescribeGlobalReplicationGroupsOutput, error) {
+	req, out := c.DescribeGlobalReplicationGroupsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeGlobalReplicationGroupsWithContext is the same as DescribeGlobalReplicationGroups with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeGlobalReplicationGroups for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElastiCache) DescribeGlobalReplicationGroupsWithContext(ctx aws.Context, input *DescribeGlobalReplicationGroupsInput, opts ...request.Option) (*DescribeGlobalReplicationGroupsOutput, error) {
+	req, out := c.DescribeGlobalReplicationGroupsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribeGlobalReplicationGroupsPages iterates over the pages of a DescribeGlobalReplicationGroups operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeGlobalReplicationGroups method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeGlobalReplicationGroups operation.
+//    pageNum := 0
+//    err := client.DescribeGlobalReplicationGroupsPages(params,
+//        func(page *elasticache.DescribeGlobalReplicationGroupsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ElastiCache) DescribeGlobalReplicationGroupsPages(input *DescribeGlobalReplicationGroupsInput, fn func(*DescribeGlobalReplicationGroupsOutput, bool) bool) error {
+	return c.DescribeGlobalReplicationGroupsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeGlobalReplicationGroupsPagesWithContext same as DescribeGlobalReplicationGroupsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElastiCache) DescribeGlobalReplicationGroupsPagesWithContext(ctx aws.Context, input *DescribeGlobalReplicationGroupsInput, fn func(*DescribeGlobalReplicationGroupsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeGlobalReplicationGroupsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeGlobalReplicationGroupsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeGlobalReplicationGroupsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
 	return p.Err()
 }
 
@@ -3226,10 +3765,12 @@ func (c *ElastiCache) DescribeReplicationGroupsPagesWithContext(ctx aws.Context,
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReplicationGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReplicationGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3368,10 +3909,12 @@ func (c *ElastiCache) DescribeReservedCacheNodesPagesWithContext(ctx aws.Context
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReservedCacheNodesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReservedCacheNodesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3509,10 +4052,12 @@ func (c *ElastiCache) DescribeReservedCacheNodesOfferingsPagesWithContext(ctx aw
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReservedCacheNodesOfferingsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReservedCacheNodesOfferingsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3650,10 +4195,12 @@ func (c *ElastiCache) DescribeServiceUpdatesPagesWithContext(ctx aws.Context, in
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeServiceUpdatesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeServiceUpdatesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3799,10 +4346,12 @@ func (c *ElastiCache) DescribeSnapshotsPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeSnapshotsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeSnapshotsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3937,11 +4486,278 @@ func (c *ElastiCache) DescribeUpdateActionsPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeUpdateActionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeUpdateActionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
+}
+
+const opDisassociateGlobalReplicationGroup = "DisassociateGlobalReplicationGroup"
+
+// DisassociateGlobalReplicationGroupRequest generates a "aws/request.Request" representing the
+// client's request for the DisassociateGlobalReplicationGroup operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DisassociateGlobalReplicationGroup for more information on using the DisassociateGlobalReplicationGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DisassociateGlobalReplicationGroupRequest method.
+//    req, resp := client.DisassociateGlobalReplicationGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/DisassociateGlobalReplicationGroup
+func (c *ElastiCache) DisassociateGlobalReplicationGroupRequest(input *DisassociateGlobalReplicationGroupInput) (req *request.Request, output *DisassociateGlobalReplicationGroupOutput) {
+	op := &request.Operation{
+		Name:       opDisassociateGlobalReplicationGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DisassociateGlobalReplicationGroupInput{}
+	}
+
+	output = &DisassociateGlobalReplicationGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DisassociateGlobalReplicationGroup API operation for Amazon ElastiCache.
+//
+// Remove a secondary cluster from the Global Datastore using the Global Datastore
+// name. The secondary cluster will no longer receive updates from the primary
+// cluster, but will remain as a standalone cluster in that AWS region.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon ElastiCache's
+// API operation DisassociateGlobalReplicationGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeGlobalReplicationGroupNotFoundFault "GlobalReplicationGroupNotFoundFault"
+//   The Global Datastore does not exist
+//
+//   * ErrCodeInvalidGlobalReplicationGroupStateFault "InvalidGlobalReplicationGroupState"
+//   The Global Datastore is not available or in primary-only state.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
+//   The value for a parameter is invalid.
+//
+//   * ErrCodeInvalidParameterCombinationException "InvalidParameterCombination"
+//   Two or more incompatible parameters were specified.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/DisassociateGlobalReplicationGroup
+func (c *ElastiCache) DisassociateGlobalReplicationGroup(input *DisassociateGlobalReplicationGroupInput) (*DisassociateGlobalReplicationGroupOutput, error) {
+	req, out := c.DisassociateGlobalReplicationGroupRequest(input)
+	return out, req.Send()
+}
+
+// DisassociateGlobalReplicationGroupWithContext is the same as DisassociateGlobalReplicationGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DisassociateGlobalReplicationGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElastiCache) DisassociateGlobalReplicationGroupWithContext(ctx aws.Context, input *DisassociateGlobalReplicationGroupInput, opts ...request.Option) (*DisassociateGlobalReplicationGroupOutput, error) {
+	req, out := c.DisassociateGlobalReplicationGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opFailoverGlobalReplicationGroup = "FailoverGlobalReplicationGroup"
+
+// FailoverGlobalReplicationGroupRequest generates a "aws/request.Request" representing the
+// client's request for the FailoverGlobalReplicationGroup operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See FailoverGlobalReplicationGroup for more information on using the FailoverGlobalReplicationGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the FailoverGlobalReplicationGroupRequest method.
+//    req, resp := client.FailoverGlobalReplicationGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/FailoverGlobalReplicationGroup
+func (c *ElastiCache) FailoverGlobalReplicationGroupRequest(input *FailoverGlobalReplicationGroupInput) (req *request.Request, output *FailoverGlobalReplicationGroupOutput) {
+	op := &request.Operation{
+		Name:       opFailoverGlobalReplicationGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &FailoverGlobalReplicationGroupInput{}
+	}
+
+	output = &FailoverGlobalReplicationGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// FailoverGlobalReplicationGroup API operation for Amazon ElastiCache.
+//
+// Used to failover the primary region to a selected secondary region. The selected
+// secondary region will become primary, and all other clusters will become
+// secondary.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon ElastiCache's
+// API operation FailoverGlobalReplicationGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeGlobalReplicationGroupNotFoundFault "GlobalReplicationGroupNotFoundFault"
+//   The Global Datastore does not exist
+//
+//   * ErrCodeInvalidGlobalReplicationGroupStateFault "InvalidGlobalReplicationGroupState"
+//   The Global Datastore is not available or in primary-only state.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
+//   The value for a parameter is invalid.
+//
+//   * ErrCodeInvalidParameterCombinationException "InvalidParameterCombination"
+//   Two or more incompatible parameters were specified.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/FailoverGlobalReplicationGroup
+func (c *ElastiCache) FailoverGlobalReplicationGroup(input *FailoverGlobalReplicationGroupInput) (*FailoverGlobalReplicationGroupOutput, error) {
+	req, out := c.FailoverGlobalReplicationGroupRequest(input)
+	return out, req.Send()
+}
+
+// FailoverGlobalReplicationGroupWithContext is the same as FailoverGlobalReplicationGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See FailoverGlobalReplicationGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElastiCache) FailoverGlobalReplicationGroupWithContext(ctx aws.Context, input *FailoverGlobalReplicationGroupInput, opts ...request.Option) (*FailoverGlobalReplicationGroupOutput, error) {
+	req, out := c.FailoverGlobalReplicationGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opIncreaseNodeGroupsInGlobalReplicationGroup = "IncreaseNodeGroupsInGlobalReplicationGroup"
+
+// IncreaseNodeGroupsInGlobalReplicationGroupRequest generates a "aws/request.Request" representing the
+// client's request for the IncreaseNodeGroupsInGlobalReplicationGroup operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See IncreaseNodeGroupsInGlobalReplicationGroup for more information on using the IncreaseNodeGroupsInGlobalReplicationGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the IncreaseNodeGroupsInGlobalReplicationGroupRequest method.
+//    req, resp := client.IncreaseNodeGroupsInGlobalReplicationGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/IncreaseNodeGroupsInGlobalReplicationGroup
+func (c *ElastiCache) IncreaseNodeGroupsInGlobalReplicationGroupRequest(input *IncreaseNodeGroupsInGlobalReplicationGroupInput) (req *request.Request, output *IncreaseNodeGroupsInGlobalReplicationGroupOutput) {
+	op := &request.Operation{
+		Name:       opIncreaseNodeGroupsInGlobalReplicationGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &IncreaseNodeGroupsInGlobalReplicationGroupInput{}
+	}
+
+	output = &IncreaseNodeGroupsInGlobalReplicationGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// IncreaseNodeGroupsInGlobalReplicationGroup API operation for Amazon ElastiCache.
+//
+// Increase the number of node groups in the Global Datastore
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon ElastiCache's
+// API operation IncreaseNodeGroupsInGlobalReplicationGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeGlobalReplicationGroupNotFoundFault "GlobalReplicationGroupNotFoundFault"
+//   The Global Datastore does not exist
+//
+//   * ErrCodeInvalidGlobalReplicationGroupStateFault "InvalidGlobalReplicationGroupState"
+//   The Global Datastore is not available or in primary-only state.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
+//   The value for a parameter is invalid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/IncreaseNodeGroupsInGlobalReplicationGroup
+func (c *ElastiCache) IncreaseNodeGroupsInGlobalReplicationGroup(input *IncreaseNodeGroupsInGlobalReplicationGroupInput) (*IncreaseNodeGroupsInGlobalReplicationGroupOutput, error) {
+	req, out := c.IncreaseNodeGroupsInGlobalReplicationGroupRequest(input)
+	return out, req.Send()
+}
+
+// IncreaseNodeGroupsInGlobalReplicationGroupWithContext is the same as IncreaseNodeGroupsInGlobalReplicationGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See IncreaseNodeGroupsInGlobalReplicationGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElastiCache) IncreaseNodeGroupsInGlobalReplicationGroupWithContext(ctx aws.Context, input *IncreaseNodeGroupsInGlobalReplicationGroupInput, opts ...request.Option) (*IncreaseNodeGroupsInGlobalReplicationGroupOutput, error) {
+	req, out := c.IncreaseNodeGroupsInGlobalReplicationGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opIncreaseReplicaCount = "IncreaseReplicaCount"
@@ -4034,6 +4850,9 @@ func (c *ElastiCache) IncreaseReplicaCountRequest(input *IncreaseReplicaCountInp
 //   * ErrCodeNoOperationFault "NoOperationFault"
 //   The operation was not performed because no changes were required.
 //
+//   * ErrCodeInvalidKMSKeyFault "InvalidKMSKeyFault"
+//   The KMS key supplied is not valid.
+//
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
 //   The value for a parameter is invalid.
 //
@@ -4107,10 +4926,10 @@ func (c *ElastiCache) ListAllowedNodeTypeModificationsRequest(input *ListAllowed
 // ListAllowedNodeTypeModifications API operation for Amazon ElastiCache.
 //
 // Lists all available node types that you can scale your Redis cluster's or
-// replication group's current node type up to.
+// replication group's current node type.
 //
 // When you use the ModifyCacheCluster or ModifyReplicationGroup operations
-// to scale up your cluster or replication group, the value of the CacheNodeType
+// to scale your cluster or replication group, the value of the CacheNodeType
 // parameter must be one of the node types returned by this operation.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4436,6 +5255,9 @@ func (c *ElastiCache) ModifyCacheParameterGroupRequest(input *ModifyCacheParamet
 //   * ErrCodeInvalidParameterCombinationException "InvalidParameterCombination"
 //   Two or more incompatible parameters were specified.
 //
+//   * ErrCodeInvalidGlobalReplicationGroupStateFault "InvalidGlobalReplicationGroupState"
+//   The Global Datastore is not available or in primary-only state.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/ModifyCacheParameterGroup
 func (c *ElastiCache) ModifyCacheParameterGroup(input *ModifyCacheParameterGroupInput) (*CacheParameterGroupNameMessage, error) {
 	req, out := c.ModifyCacheParameterGroupRequest(input)
@@ -4548,6 +5370,91 @@ func (c *ElastiCache) ModifyCacheSubnetGroupWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
+const opModifyGlobalReplicationGroup = "ModifyGlobalReplicationGroup"
+
+// ModifyGlobalReplicationGroupRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyGlobalReplicationGroup operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyGlobalReplicationGroup for more information on using the ModifyGlobalReplicationGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyGlobalReplicationGroupRequest method.
+//    req, resp := client.ModifyGlobalReplicationGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/ModifyGlobalReplicationGroup
+func (c *ElastiCache) ModifyGlobalReplicationGroupRequest(input *ModifyGlobalReplicationGroupInput) (req *request.Request, output *ModifyGlobalReplicationGroupOutput) {
+	op := &request.Operation{
+		Name:       opModifyGlobalReplicationGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyGlobalReplicationGroupInput{}
+	}
+
+	output = &ModifyGlobalReplicationGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyGlobalReplicationGroup API operation for Amazon ElastiCache.
+//
+// Modifies the settings for a Global Datastore.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon ElastiCache's
+// API operation ModifyGlobalReplicationGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeGlobalReplicationGroupNotFoundFault "GlobalReplicationGroupNotFoundFault"
+//   The Global Datastore does not exist
+//
+//   * ErrCodeInvalidGlobalReplicationGroupStateFault "InvalidGlobalReplicationGroupState"
+//   The Global Datastore is not available or in primary-only state.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
+//   The value for a parameter is invalid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/ModifyGlobalReplicationGroup
+func (c *ElastiCache) ModifyGlobalReplicationGroup(input *ModifyGlobalReplicationGroupInput) (*ModifyGlobalReplicationGroupOutput, error) {
+	req, out := c.ModifyGlobalReplicationGroupRequest(input)
+	return out, req.Send()
+}
+
+// ModifyGlobalReplicationGroupWithContext is the same as ModifyGlobalReplicationGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyGlobalReplicationGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElastiCache) ModifyGlobalReplicationGroupWithContext(ctx aws.Context, input *ModifyGlobalReplicationGroupInput, opts ...request.Option) (*ModifyGlobalReplicationGroupOutput, error) {
+	req, out := c.ModifyGlobalReplicationGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opModifyReplicationGroup = "ModifyReplicationGroup"
 
 // ModifyReplicationGroupRequest generates a "aws/request.Request" representing the
@@ -4593,10 +5500,6 @@ func (c *ElastiCache) ModifyReplicationGroupRequest(input *ModifyReplicationGrou
 // ModifyReplicationGroup API operation for Amazon ElastiCache.
 //
 // Modifies the settings for a replication group.
-//
-// For Redis (cluster mode enabled) clusters, this operation cannot be used
-// to change a cluster's node type or engine version. For more information,
-// see:
 //
 //    * Scaling for Amazon ElastiCache for Redis (cluster mode enabled) (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/scaling-redis-cluster-mode-enabled.html)
 //    in the ElastiCache User Guide
@@ -4652,6 +5555,9 @@ func (c *ElastiCache) ModifyReplicationGroupRequest(input *ModifyReplicationGrou
 //
 //   * ErrCodeInvalidVPCNetworkStateFault "InvalidVPCNetworkStateFault"
 //   The VPC network is in an invalid state.
+//
+//   * ErrCodeInvalidKMSKeyFault "InvalidKMSKeyFault"
+//   The KMS key supplied is not valid.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
 //   The value for a parameter is invalid.
@@ -4761,6 +5667,9 @@ func (c *ElastiCache) ModifyReplicationGroupShardConfigurationRequest(input *Mod
 //   * ErrCodeNodeQuotaForCustomerExceededFault "NodeQuotaForCustomerExceeded"
 //   The request cannot be processed because it would exceed the allowed number
 //   of cache nodes per customer.
+//
+//   * ErrCodeInvalidKMSKeyFault "InvalidKMSKeyFault"
+//   The KMS key supplied is not valid.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
 //   The value for a parameter is invalid.
@@ -4877,6 +5786,92 @@ func (c *ElastiCache) PurchaseReservedCacheNodesOffering(input *PurchaseReserved
 // for more information on using Contexts.
 func (c *ElastiCache) PurchaseReservedCacheNodesOfferingWithContext(ctx aws.Context, input *PurchaseReservedCacheNodesOfferingInput, opts ...request.Option) (*PurchaseReservedCacheNodesOfferingOutput, error) {
 	req, out := c.PurchaseReservedCacheNodesOfferingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opRebalanceSlotsInGlobalReplicationGroup = "RebalanceSlotsInGlobalReplicationGroup"
+
+// RebalanceSlotsInGlobalReplicationGroupRequest generates a "aws/request.Request" representing the
+// client's request for the RebalanceSlotsInGlobalReplicationGroup operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RebalanceSlotsInGlobalReplicationGroup for more information on using the RebalanceSlotsInGlobalReplicationGroup
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RebalanceSlotsInGlobalReplicationGroupRequest method.
+//    req, resp := client.RebalanceSlotsInGlobalReplicationGroupRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/RebalanceSlotsInGlobalReplicationGroup
+func (c *ElastiCache) RebalanceSlotsInGlobalReplicationGroupRequest(input *RebalanceSlotsInGlobalReplicationGroupInput) (req *request.Request, output *RebalanceSlotsInGlobalReplicationGroupOutput) {
+	op := &request.Operation{
+		Name:       opRebalanceSlotsInGlobalReplicationGroup,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &RebalanceSlotsInGlobalReplicationGroupInput{}
+	}
+
+	output = &RebalanceSlotsInGlobalReplicationGroupOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// RebalanceSlotsInGlobalReplicationGroup API operation for Amazon ElastiCache.
+//
+// Redistribute slots to ensure uniform distribution across existing shards
+// in the cluster.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon ElastiCache's
+// API operation RebalanceSlotsInGlobalReplicationGroup for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeGlobalReplicationGroupNotFoundFault "GlobalReplicationGroupNotFoundFault"
+//   The Global Datastore does not exist
+//
+//   * ErrCodeInvalidGlobalReplicationGroupStateFault "InvalidGlobalReplicationGroupState"
+//   The Global Datastore is not available or in primary-only state.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
+//   The value for a parameter is invalid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/RebalanceSlotsInGlobalReplicationGroup
+func (c *ElastiCache) RebalanceSlotsInGlobalReplicationGroup(input *RebalanceSlotsInGlobalReplicationGroupInput) (*RebalanceSlotsInGlobalReplicationGroupOutput, error) {
+	req, out := c.RebalanceSlotsInGlobalReplicationGroupRequest(input)
+	return out, req.Send()
+}
+
+// RebalanceSlotsInGlobalReplicationGroupWithContext is the same as RebalanceSlotsInGlobalReplicationGroup with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RebalanceSlotsInGlobalReplicationGroup for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElastiCache) RebalanceSlotsInGlobalReplicationGroupWithContext(ctx aws.Context, input *RebalanceSlotsInGlobalReplicationGroupInput, opts ...request.Option) (*RebalanceSlotsInGlobalReplicationGroupOutput, error) {
+	req, out := c.RebalanceSlotsInGlobalReplicationGroupRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5139,6 +6134,9 @@ func (c *ElastiCache) ResetCacheParameterGroupRequest(input *ResetCacheParameter
 //   * ErrCodeInvalidParameterCombinationException "InvalidParameterCombination"
 //   Two or more incompatible parameters were specified.
 //
+//   * ErrCodeInvalidGlobalReplicationGroupStateFault "InvalidGlobalReplicationGroupState"
+//   The Global Datastore is not available or in primary-only state.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/ResetCacheParameterGroup
 func (c *ElastiCache) ResetCacheParameterGroup(input *ResetCacheParameterGroupInput) (*CacheParameterGroupNameMessage, error) {
 	req, out := c.ResetCacheParameterGroupRequest(input)
@@ -5255,6 +6253,94 @@ func (c *ElastiCache) RevokeCacheSecurityGroupIngressWithContext(ctx aws.Context
 	return out, req.Send()
 }
 
+const opStartMigration = "StartMigration"
+
+// StartMigrationRequest generates a "aws/request.Request" representing the
+// client's request for the StartMigration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartMigration for more information on using the StartMigration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartMigrationRequest method.
+//    req, resp := client.StartMigrationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/StartMigration
+func (c *ElastiCache) StartMigrationRequest(input *StartMigrationInput) (req *request.Request, output *StartMigrationOutput) {
+	op := &request.Operation{
+		Name:       opStartMigration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StartMigrationInput{}
+	}
+
+	output = &StartMigrationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartMigration API operation for Amazon ElastiCache.
+//
+// Start the migration of data.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon ElastiCache's
+// API operation StartMigration for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeReplicationGroupNotFoundFault "ReplicationGroupNotFoundFault"
+//   The specified replication group does not exist.
+//
+//   * ErrCodeInvalidReplicationGroupStateFault "InvalidReplicationGroupState"
+//   The requested replication group is not in the available state.
+//
+//   * ErrCodeReplicationGroupAlreadyUnderMigrationFault "ReplicationGroupAlreadyUnderMigrationFault"
+//   The targeted replication group is not available.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
+//   The value for a parameter is invalid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/StartMigration
+func (c *ElastiCache) StartMigration(input *StartMigrationInput) (*StartMigrationOutput, error) {
+	req, out := c.StartMigrationRequest(input)
+	return out, req.Send()
+}
+
+// StartMigrationWithContext is the same as StartMigration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartMigration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElastiCache) StartMigrationWithContext(ctx aws.Context, input *StartMigrationInput, opts ...request.Option) (*StartMigrationOutput, error) {
+	req, out := c.StartMigrationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opTestFailover = "TestFailover"
 
 // TestFailoverRequest generates a "aws/request.Request" representing the
@@ -5329,7 +6415,7 @@ func (c *ElastiCache) TestFailoverRequest(input *TestFailoverInput) (req *reques
 //    in the ElastiCache User Guide DescribeEvents (https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeEvents.html)
 //    in the ElastiCache API Reference
 //
-// Also see, Testing Multi-AZ with Automatic Failover (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/AutoFailover.html#auto-failover-test)
+// Also see, Testing Multi-AZ (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/AutoFailover.html#auto-failover-test)
 // in the ElastiCache User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -5359,6 +6445,9 @@ func (c *ElastiCache) TestFailoverRequest(input *TestFailoverInput) (req *reques
 //
 //   * ErrCodeTestFailoverNotAvailableFault "TestFailoverNotAvailableFault"
 //   The TestFailover action is not available.
+//
+//   * ErrCodeInvalidKMSKeyFault "InvalidKMSKeyFault"
+//   The KMS key supplied is not valid.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
 //   The value for a parameter is invalid.
@@ -5574,10 +6663,11 @@ func (s *AvailabilityZone) SetName(v string) *AvailabilityZone {
 type BatchApplyUpdateActionInput struct {
 	_ struct{} `type:"structure"`
 
+	// The cache cluster IDs
+	CacheClusterIds []*string `type:"list"`
+
 	// The replication group IDs
-	//
-	// ReplicationGroupIds is a required field
-	ReplicationGroupIds []*string `type:"list" required:"true"`
+	ReplicationGroupIds []*string `type:"list"`
 
 	// The unique ID of the service update
 	//
@@ -5598,9 +6688,6 @@ func (s BatchApplyUpdateActionInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *BatchApplyUpdateActionInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "BatchApplyUpdateActionInput"}
-	if s.ReplicationGroupIds == nil {
-		invalidParams.Add(request.NewErrParamRequired("ReplicationGroupIds"))
-	}
 	if s.ServiceUpdateName == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServiceUpdateName"))
 	}
@@ -5609,6 +6696,12 @@ func (s *BatchApplyUpdateActionInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCacheClusterIds sets the CacheClusterIds field's value.
+func (s *BatchApplyUpdateActionInput) SetCacheClusterIds(v []*string) *BatchApplyUpdateActionInput {
+	s.CacheClusterIds = v
+	return s
 }
 
 // SetReplicationGroupIds sets the ReplicationGroupIds field's value.
@@ -5658,10 +6751,11 @@ func (s *BatchApplyUpdateActionOutput) SetUnprocessedUpdateActions(v []*Unproces
 type BatchStopUpdateActionInput struct {
 	_ struct{} `type:"structure"`
 
+	// The cache cluster IDs
+	CacheClusterIds []*string `type:"list"`
+
 	// The replication group IDs
-	//
-	// ReplicationGroupIds is a required field
-	ReplicationGroupIds []*string `type:"list" required:"true"`
+	ReplicationGroupIds []*string `type:"list"`
 
 	// The unique ID of the service update
 	//
@@ -5682,9 +6776,6 @@ func (s BatchStopUpdateActionInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *BatchStopUpdateActionInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "BatchStopUpdateActionInput"}
-	if s.ReplicationGroupIds == nil {
-		invalidParams.Add(request.NewErrParamRequired("ReplicationGroupIds"))
-	}
 	if s.ServiceUpdateName == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServiceUpdateName"))
 	}
@@ -5693,6 +6784,12 @@ func (s *BatchStopUpdateActionInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCacheClusterIds sets the CacheClusterIds field's value.
+func (s *BatchStopUpdateActionInput) SetCacheClusterIds(v []*string) *BatchStopUpdateActionInput {
+	s.CacheClusterIds = v
+	return s
 }
 
 // SetReplicationGroupIds sets the ReplicationGroupIds field's value.
@@ -5743,6 +6840,9 @@ func (s *BatchStopUpdateActionOutput) SetUnprocessedUpdateActions(v []*Unprocess
 type CacheCluster struct {
 	_ struct{} `type:"structure"`
 
+	// The ARN (Amazon Resource Name) of the cache cluster.
+	ARN *string `type:"string"`
+
 	// A flag that enables encryption at-rest when set to true.
 	//
 	// You cannot modify the value of AtRestEncryptionEnabled after the cluster
@@ -5759,6 +6859,9 @@ type CacheCluster struct {
 	//
 	// Default: false
 	AuthTokenEnabled *bool `type:"boolean"`
+
+	// The date the auth token was last modified
+	AuthTokenLastModifiedDate *time.Time `type:"timestamp"`
 
 	// This parameter is currently disabled.
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
@@ -5784,11 +6887,11 @@ type CacheCluster struct {
 	//    * General purpose: Current generation: M5 node types: cache.m5.large,
 	//    cache.m5.xlarge, cache.m5.2xlarge, cache.m5.4xlarge, cache.m5.12xlarge,
 	//    cache.m5.24xlarge M4 node types: cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge,
-	//    cache.m4.4xlarge, cache.m4.10xlarge T2 node types: cache.t2.micro, cache.t2.small,
-	//    cache.t2.medium Previous generation: (not recommended) T1 node types:
-	//    cache.t1.micro M1 node types: cache.m1.small, cache.m1.medium, cache.m1.large,
-	//    cache.m1.xlarge M3 node types: cache.m3.medium, cache.m3.large, cache.m3.xlarge,
-	//    cache.m3.2xlarge
+	//    cache.m4.4xlarge, cache.m4.10xlarge T3 node types: cache.t3.micro, cache.t3.small,
+	//    cache.t3.medium T2 node types: cache.t2.micro, cache.t2.small, cache.t2.medium
+	//    Previous generation: (not recommended) T1 node types: cache.t1.micro M1
+	//    node types: cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
+	//    M3 node types: cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
 	//
 	//    * Compute optimized: Previous generation: (not recommended) C1 node types:
 	//    cache.c1.xlarge
@@ -5928,6 +7031,12 @@ func (s CacheCluster) GoString() string {
 	return s.String()
 }
 
+// SetARN sets the ARN field's value.
+func (s *CacheCluster) SetARN(v string) *CacheCluster {
+	s.ARN = &v
+	return s
+}
+
 // SetAtRestEncryptionEnabled sets the AtRestEncryptionEnabled field's value.
 func (s *CacheCluster) SetAtRestEncryptionEnabled(v bool) *CacheCluster {
 	s.AtRestEncryptionEnabled = &v
@@ -5937,6 +7046,12 @@ func (s *CacheCluster) SetAtRestEncryptionEnabled(v bool) *CacheCluster {
 // SetAuthTokenEnabled sets the AuthTokenEnabled field's value.
 func (s *CacheCluster) SetAuthTokenEnabled(v bool) *CacheCluster {
 	s.AuthTokenEnabled = &v
+	return s
+}
+
+// SetAuthTokenLastModifiedDate sets the AuthTokenLastModifiedDate field's value.
+func (s *CacheCluster) SetAuthTokenLastModifiedDate(v time.Time) *CacheCluster {
+	s.AuthTokenLastModifiedDate = &v
 	return s
 }
 
@@ -6152,11 +7267,11 @@ func (s *CacheEngineVersion) SetEngineVersion(v string) *CacheEngineVersion {
 //    * General purpose: Current generation: M5 node types: cache.m5.large,
 //    cache.m5.xlarge, cache.m5.2xlarge, cache.m5.4xlarge, cache.m5.12xlarge,
 //    cache.m5.24xlarge M4 node types: cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge,
-//    cache.m4.4xlarge, cache.m4.10xlarge T2 node types: cache.t2.micro, cache.t2.small,
-//    cache.t2.medium Previous generation: (not recommended) T1 node types:
-//    cache.t1.micro M1 node types: cache.m1.small, cache.m1.medium, cache.m1.large,
-//    cache.m1.xlarge M3 node types: cache.m3.medium, cache.m3.large, cache.m3.xlarge,
-//    cache.m3.2xlarge
+//    cache.m4.4xlarge, cache.m4.10xlarge T3 node types: cache.t3.micro, cache.t3.small,
+//    cache.t3.medium T2 node types: cache.t2.micro, cache.t2.small, cache.t2.medium
+//    Previous generation: (not recommended) T1 node types: cache.t1.micro M1
+//    node types: cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
+//    M3 node types: cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
 //
 //    * Compute optimized: Previous generation: (not recommended) C1 node types:
 //    cache.c1.xlarge
@@ -6190,7 +7305,8 @@ type CacheNode struct {
 	// cache node used in a customer's AWS account.
 	CacheNodeId *string `type:"string"`
 
-	// The current state of this cache node.
+	// The current state of this cache node, one of the following values: available,
+	// creating, rebooting, or deleting.
 	CacheNodeStatus *string `type:"string"`
 
 	// The Availability Zone where this node was created and now resides.
@@ -6395,9 +7511,100 @@ func (s *CacheNodeTypeSpecificValue) SetValue(v string) *CacheNodeTypeSpecificVa
 	return s
 }
 
+// The status of the service update on the cache node
+type CacheNodeUpdateStatus struct {
+	_ struct{} `type:"structure"`
+
+	// The node ID of the cache cluster
+	CacheNodeId *string `type:"string"`
+
+	// The deletion date of the node
+	NodeDeletionDate *time.Time `type:"timestamp"`
+
+	// The end date of the update for a node
+	NodeUpdateEndDate *time.Time `type:"timestamp"`
+
+	// Reflects whether the update was initiated by the customer or automatically
+	// applied
+	NodeUpdateInitiatedBy *string `type:"string" enum:"NodeUpdateInitiatedBy"`
+
+	// The date when the update is triggered
+	NodeUpdateInitiatedDate *time.Time `type:"timestamp"`
+
+	// The start date of the update for a node
+	NodeUpdateStartDate *time.Time `type:"timestamp"`
+
+	// The update status of the node
+	NodeUpdateStatus *string `type:"string" enum:"NodeUpdateStatus"`
+
+	// The date when the NodeUpdateStatus was last modified>
+	NodeUpdateStatusModifiedDate *time.Time `type:"timestamp"`
+}
+
+// String returns the string representation
+func (s CacheNodeUpdateStatus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CacheNodeUpdateStatus) GoString() string {
+	return s.String()
+}
+
+// SetCacheNodeId sets the CacheNodeId field's value.
+func (s *CacheNodeUpdateStatus) SetCacheNodeId(v string) *CacheNodeUpdateStatus {
+	s.CacheNodeId = &v
+	return s
+}
+
+// SetNodeDeletionDate sets the NodeDeletionDate field's value.
+func (s *CacheNodeUpdateStatus) SetNodeDeletionDate(v time.Time) *CacheNodeUpdateStatus {
+	s.NodeDeletionDate = &v
+	return s
+}
+
+// SetNodeUpdateEndDate sets the NodeUpdateEndDate field's value.
+func (s *CacheNodeUpdateStatus) SetNodeUpdateEndDate(v time.Time) *CacheNodeUpdateStatus {
+	s.NodeUpdateEndDate = &v
+	return s
+}
+
+// SetNodeUpdateInitiatedBy sets the NodeUpdateInitiatedBy field's value.
+func (s *CacheNodeUpdateStatus) SetNodeUpdateInitiatedBy(v string) *CacheNodeUpdateStatus {
+	s.NodeUpdateInitiatedBy = &v
+	return s
+}
+
+// SetNodeUpdateInitiatedDate sets the NodeUpdateInitiatedDate field's value.
+func (s *CacheNodeUpdateStatus) SetNodeUpdateInitiatedDate(v time.Time) *CacheNodeUpdateStatus {
+	s.NodeUpdateInitiatedDate = &v
+	return s
+}
+
+// SetNodeUpdateStartDate sets the NodeUpdateStartDate field's value.
+func (s *CacheNodeUpdateStatus) SetNodeUpdateStartDate(v time.Time) *CacheNodeUpdateStatus {
+	s.NodeUpdateStartDate = &v
+	return s
+}
+
+// SetNodeUpdateStatus sets the NodeUpdateStatus field's value.
+func (s *CacheNodeUpdateStatus) SetNodeUpdateStatus(v string) *CacheNodeUpdateStatus {
+	s.NodeUpdateStatus = &v
+	return s
+}
+
+// SetNodeUpdateStatusModifiedDate sets the NodeUpdateStatusModifiedDate field's value.
+func (s *CacheNodeUpdateStatus) SetNodeUpdateStatusModifiedDate(v time.Time) *CacheNodeUpdateStatus {
+	s.NodeUpdateStatusModifiedDate = &v
+	return s
+}
+
 // Represents the output of a CreateCacheParameterGroup operation.
 type CacheParameterGroup struct {
 	_ struct{} `type:"structure"`
+
+	// The ARN (Amazon Resource Name) of the cache parameter group.
+	ARN *string `type:"string"`
 
 	// The name of the cache parameter group family that this cache parameter group
 	// is compatible with.
@@ -6411,6 +7618,9 @@ type CacheParameterGroup struct {
 
 	// The description for this cache parameter group.
 	Description *string `type:"string"`
+
+	// Indicates whether the parameter group is associated with a Global Datastore
+	IsGlobal *bool `type:"boolean"`
 }
 
 // String returns the string representation
@@ -6421,6 +7631,12 @@ func (s CacheParameterGroup) String() string {
 // GoString returns the string representation
 func (s CacheParameterGroup) GoString() string {
 	return s.String()
+}
+
+// SetARN sets the ARN field's value.
+func (s *CacheParameterGroup) SetARN(v string) *CacheParameterGroup {
+	s.ARN = &v
+	return s
 }
 
 // SetCacheParameterGroupFamily sets the CacheParameterGroupFamily field's value.
@@ -6438,6 +7654,12 @@ func (s *CacheParameterGroup) SetCacheParameterGroupName(v string) *CacheParamet
 // SetDescription sets the Description field's value.
 func (s *CacheParameterGroup) SetDescription(v string) *CacheParameterGroup {
 	s.Description = &v
+	return s
+}
+
+// SetIsGlobal sets the IsGlobal field's value.
+func (s *CacheParameterGroup) SetIsGlobal(v bool) *CacheParameterGroup {
+	s.IsGlobal = &v
 	return s
 }
 
@@ -6522,6 +7744,9 @@ func (s *CacheParameterGroupStatus) SetParameterApplyStatus(v string) *CachePara
 type CacheSecurityGroup struct {
 	_ struct{} `type:"structure"`
 
+	// The ARN (Amazon Resource Name) of the cache security group.
+	ARN *string `type:"string"`
+
 	// The name of the cache security group.
 	CacheSecurityGroupName *string `type:"string"`
 
@@ -6544,6 +7769,12 @@ func (s CacheSecurityGroup) String() string {
 // GoString returns the string representation
 func (s CacheSecurityGroup) GoString() string {
 	return s.String()
+}
+
+// SetARN sets the ARN field's value.
+func (s *CacheSecurityGroup) SetARN(v string) *CacheSecurityGroup {
+	s.ARN = &v
+	return s
 }
 
 // SetCacheSecurityGroupName sets the CacheSecurityGroupName field's value.
@@ -6613,6 +7844,9 @@ func (s *CacheSecurityGroupMembership) SetStatus(v string) *CacheSecurityGroupMe
 type CacheSubnetGroup struct {
 	_ struct{} `type:"structure"`
 
+	// The ARN (Amazon Resource Name) of the cache subnet group.
+	ARN *string `type:"string"`
+
 	// The description of the cache subnet group.
 	CacheSubnetGroupDescription *string `type:"string"`
 
@@ -6635,6 +7869,12 @@ func (s CacheSubnetGroup) String() string {
 // GoString returns the string representation
 func (s CacheSubnetGroup) GoString() string {
 	return s.String()
+}
+
+// SetARN sets the ARN field's value.
+func (s *CacheSubnetGroup) SetARN(v string) *CacheSubnetGroup {
+	s.ARN = &v
+	return s
 }
 
 // SetCacheSubnetGroupDescription sets the CacheSubnetGroupDescription field's value.
@@ -6661,6 +7901,78 @@ func (s *CacheSubnetGroup) SetVpcId(v string) *CacheSubnetGroup {
 	return s
 }
 
+type CompleteMigrationInput struct {
+	_ struct{} `type:"structure"`
+
+	// Forces the migration to stop without ensuring that data is in sync. It is
+	// recommended to use this option only to abort the migration and not recommended
+	// when application wants to continue migration to ElastiCache.
+	Force *bool `type:"boolean"`
+
+	// The ID of the replication group to which data is being migrated.
+	//
+	// ReplicationGroupId is a required field
+	ReplicationGroupId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CompleteMigrationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CompleteMigrationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CompleteMigrationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CompleteMigrationInput"}
+	if s.ReplicationGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReplicationGroupId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetForce sets the Force field's value.
+func (s *CompleteMigrationInput) SetForce(v bool) *CompleteMigrationInput {
+	s.Force = &v
+	return s
+}
+
+// SetReplicationGroupId sets the ReplicationGroupId field's value.
+func (s *CompleteMigrationInput) SetReplicationGroupId(v string) *CompleteMigrationInput {
+	s.ReplicationGroupId = &v
+	return s
+}
+
+type CompleteMigrationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Contains all of the attributes of a specific Redis replication group.
+	ReplicationGroup *ReplicationGroup `type:"structure"`
+}
+
+// String returns the string representation
+func (s CompleteMigrationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CompleteMigrationOutput) GoString() string {
+	return s.String()
+}
+
+// SetReplicationGroup sets the ReplicationGroup field's value.
+func (s *CompleteMigrationOutput) SetReplicationGroup(v *ReplicationGroup) *CompleteMigrationOutput {
+	s.ReplicationGroup = v
+	return s
+}
+
 // Node group (shard) configuration options when adding or removing replicas.
 // Each node group (shard) configuration has the following members: NodeGroupId,
 // NewReplicaCount, and PreferredAvailabilityZones.
@@ -6673,8 +7985,7 @@ type ConfigureShard struct {
 	//
 	// The minimum number of replicas in a shard or replication group is:
 	//
-	//    * Redis (cluster mode disabled) If Multi-AZ with Automatic Failover is
-	//    enabled: 1 If Multi-AZ with Automatic Failover is not enable: 0
+	//    * Redis (cluster mode disabled) If Multi-AZ: 1 If Multi-AZ: 0
 	//
 	//    * Redis (cluster mode enabled): 0 (though you will not be able to failover
 	//    to a replica if your primary node fails)
@@ -6749,6 +8060,9 @@ func (s *ConfigureShard) SetPreferredAvailabilityZones(v []*string) *ConfigureSh
 type CopySnapshotInput struct {
 	_ struct{} `type:"structure"`
 
+	// The ID of the KMS key used to encrypt the target snapshot.
+	KmsKeyId *string `type:"string"`
+
 	// The name of an existing snapshot from which to make a copy.
 	//
 	// SourceSnapshotName is a required field
@@ -6798,6 +8112,12 @@ func (s *CopySnapshotInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *CopySnapshotInput) SetKmsKeyId(v string) *CopySnapshotInput {
+	s.KmsKeyId = &v
+	return s
 }
 
 // SetSourceSnapshotName sets the SourceSnapshotName field's value.
@@ -6864,7 +8184,9 @@ type CreateCacheClusterInput struct {
 	//
 	//    * Must be at least 16 characters and no more than 128 characters in length.
 	//
-	//    * Cannot contain any of the following characters: '/', '"', or '@'.
+	//    * The only permitted printable special characters are !, &, #, $, ^, <,
+	//    >, and -. Other printable special characters cannot be used in the AUTH
+	//    token.
 	//
 	// For more information, see AUTH password (http://redis.io/commands/AUTH) at
 	// http://redis.io/commands/AUTH.
@@ -6878,7 +8200,7 @@ type CreateCacheClusterInput struct {
 	//
 	// Constraints:
 	//
-	//    * A name must contain from 1 to 20 alphanumeric characters or hyphens.
+	//    * A name must contain from 1 to 50 alphanumeric characters or hyphens.
 	//
 	//    * The first character must be a letter.
 	//
@@ -6896,11 +8218,11 @@ type CreateCacheClusterInput struct {
 	//    * General purpose: Current generation: M5 node types: cache.m5.large,
 	//    cache.m5.xlarge, cache.m5.2xlarge, cache.m5.4xlarge, cache.m5.12xlarge,
 	//    cache.m5.24xlarge M4 node types: cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge,
-	//    cache.m4.4xlarge, cache.m4.10xlarge T2 node types: cache.t2.micro, cache.t2.small,
-	//    cache.t2.medium Previous generation: (not recommended) T1 node types:
-	//    cache.t1.micro M1 node types: cache.m1.small, cache.m1.medium, cache.m1.large,
-	//    cache.m1.xlarge M3 node types: cache.m3.medium, cache.m3.large, cache.m3.xlarge,
-	//    cache.m3.2xlarge
+	//    cache.m4.4xlarge, cache.m4.10xlarge T3 node types: cache.t3.micro, cache.t3.small,
+	//    cache.t3.medium T2 node types: cache.t2.micro, cache.t2.small, cache.t2.medium
+	//    Previous generation: (not recommended) T1 node types: cache.t1.micro M1
+	//    node types: cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
+	//    M3 node types: cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
 	//
 	//    * Compute optimized: Previous generation: (not recommended) C1 node types:
 	//    cache.c1.xlarge
@@ -6984,9 +8306,9 @@ type CreateCacheClusterInput struct {
 
 	// The EC2 Availability Zone in which the cluster is created.
 	//
-	// All nodes belonging to this Memcached cluster are placed in the preferred
-	// Availability Zone. If you want to create your nodes across multiple Availability
-	// Zones, use PreferredAvailabilityZones.
+	// All nodes belonging to this cluster are placed in the preferred Availability
+	// Zone. If you want to create your nodes across multiple Availability Zones,
+	// use PreferredAvailabilityZones.
 	//
 	// Default: System chosen Availability Zone.
 	PreferredAvailabilityZone *string `type:"string"`
@@ -7559,6 +8881,98 @@ func (s *CreateCacheSubnetGroupOutput) SetCacheSubnetGroup(v *CacheSubnetGroup) 
 	return s
 }
 
+type CreateGlobalReplicationGroupInput struct {
+	_ struct{} `type:"structure"`
+
+	// Provides details of the Global Datastore
+	GlobalReplicationGroupDescription *string `type:"string"`
+
+	// The suffix name of a Global Datastore. The suffix guarantees uniqueness of
+	// the Global Datastore name across multiple regions.
+	//
+	// GlobalReplicationGroupIdSuffix is a required field
+	GlobalReplicationGroupIdSuffix *string `type:"string" required:"true"`
+
+	// The name of the primary cluster that accepts writes and will replicate updates
+	// to the secondary cluster.
+	//
+	// PrimaryReplicationGroupId is a required field
+	PrimaryReplicationGroupId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateGlobalReplicationGroupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateGlobalReplicationGroupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateGlobalReplicationGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateGlobalReplicationGroupInput"}
+	if s.GlobalReplicationGroupIdSuffix == nil {
+		invalidParams.Add(request.NewErrParamRequired("GlobalReplicationGroupIdSuffix"))
+	}
+	if s.PrimaryReplicationGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PrimaryReplicationGroupId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGlobalReplicationGroupDescription sets the GlobalReplicationGroupDescription field's value.
+func (s *CreateGlobalReplicationGroupInput) SetGlobalReplicationGroupDescription(v string) *CreateGlobalReplicationGroupInput {
+	s.GlobalReplicationGroupDescription = &v
+	return s
+}
+
+// SetGlobalReplicationGroupIdSuffix sets the GlobalReplicationGroupIdSuffix field's value.
+func (s *CreateGlobalReplicationGroupInput) SetGlobalReplicationGroupIdSuffix(v string) *CreateGlobalReplicationGroupInput {
+	s.GlobalReplicationGroupIdSuffix = &v
+	return s
+}
+
+// SetPrimaryReplicationGroupId sets the PrimaryReplicationGroupId field's value.
+func (s *CreateGlobalReplicationGroupInput) SetPrimaryReplicationGroupId(v string) *CreateGlobalReplicationGroupInput {
+	s.PrimaryReplicationGroupId = &v
+	return s
+}
+
+type CreateGlobalReplicationGroupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Consists of a primary cluster that accepts writes and an associated secondary
+	// cluster that resides in a different AWS region. The secondary cluster accepts
+	// only reads. The primary cluster automatically replicates updates to the secondary
+	// cluster.
+	//
+	//    * The GlobalReplicationGroupIdSuffix represents the name of the Global
+	//    Datastore, which is what you use to associate a secondary cluster.
+	GlobalReplicationGroup *GlobalReplicationGroup `type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateGlobalReplicationGroupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateGlobalReplicationGroupOutput) GoString() string {
+	return s.String()
+}
+
+// SetGlobalReplicationGroup sets the GlobalReplicationGroup field's value.
+func (s *CreateGlobalReplicationGroupOutput) SetGlobalReplicationGroup(v *GlobalReplicationGroup) *CreateGlobalReplicationGroupOutput {
+	s.GlobalReplicationGroup = v
+	return s
+}
+
 // Represents the input of a CreateReplicationGroup operation.
 type CreateReplicationGroupInput struct {
 	_ struct{} `type:"structure"`
@@ -7590,7 +9004,9 @@ type CreateReplicationGroupInput struct {
 	//
 	//    * Must be at least 16 characters and no more than 128 characters in length.
 	//
-	//    * Cannot contain any of the following characters: '/', '"', or '@'.
+	//    * The only permitted printable special characters are !, &, #, $, ^, <,
+	//    >, and -. Other printable special characters cannot be used in the AUTH
+	//    token.
 	//
 	// For more information, see AUTH password (http://redis.io/commands/AUTH) at
 	// http://redis.io/commands/AUTH.
@@ -7602,22 +9018,10 @@ type CreateReplicationGroupInput struct {
 	// Specifies whether a read-only replica is automatically promoted to read/write
 	// primary if the existing primary fails.
 	//
-	// If true, Multi-AZ is enabled for this replication group. If false, Multi-AZ
-	// is disabled for this replication group.
-	//
 	// AutomaticFailoverEnabled must be enabled for Redis (cluster mode enabled)
 	// replication groups.
 	//
 	// Default: false
-	//
-	// Amazon ElastiCache for Redis does not support Multi-AZ with automatic failover
-	// on:
-	//
-	//    * Redis versions earlier than 2.8.6.
-	//
-	//    * Redis (cluster mode disabled): T1 node types.
-	//
-	//    * Redis (cluster mode enabled): T1 node types.
 	AutomaticFailoverEnabled *bool `type:"boolean"`
 
 	// The compute and memory capacity of the nodes in the node group (shard).
@@ -7629,11 +9033,11 @@ type CreateReplicationGroupInput struct {
 	//    * General purpose: Current generation: M5 node types: cache.m5.large,
 	//    cache.m5.xlarge, cache.m5.2xlarge, cache.m5.4xlarge, cache.m5.12xlarge,
 	//    cache.m5.24xlarge M4 node types: cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge,
-	//    cache.m4.4xlarge, cache.m4.10xlarge T2 node types: cache.t2.micro, cache.t2.small,
-	//    cache.t2.medium Previous generation: (not recommended) T1 node types:
-	//    cache.t1.micro M1 node types: cache.m1.small, cache.m1.medium, cache.m1.large,
-	//    cache.m1.xlarge M3 node types: cache.m3.medium, cache.m3.large, cache.m3.xlarge,
-	//    cache.m3.2xlarge
+	//    cache.m4.4xlarge, cache.m4.10xlarge T3 node types: cache.t3.micro, cache.t3.small,
+	//    cache.t3.medium T2 node types: cache.t2.micro, cache.t2.small, cache.t2.medium
+	//    Previous generation: (not recommended) T1 node types: cache.t1.micro M1
+	//    node types: cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
+	//    M3 node types: cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
 	//
 	//    * Compute optimized: Previous generation: (not recommended) C1 node types:
 	//    cache.c1.xlarge
@@ -7700,16 +9104,26 @@ type CreateReplicationGroupInput struct {
 	// engine version.
 	EngineVersion *string `type:"string"`
 
+	// The name of the Global Datastore
+	GlobalReplicationGroupId *string `type:"string"`
+
+	// The ID of the KMS key used to encrypt the disk in the cluster.
+	KmsKeyId *string `type:"string"`
+
+	// A flag indicating if you have Multi-AZ enabled to enhance fault tolerance.
+	// For more information, see Minimizing Downtime: Multi-AZ (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/AutoFailover.html).
+	MultiAZEnabled *bool `type:"boolean"`
+
 	// A list of node group (shard) configuration options. Each node group (shard)
 	// configuration has the following members: PrimaryAvailabilityZone, ReplicaAvailabilityZones,
 	// ReplicaCount, and Slots.
 	//
 	// If you're creating a Redis (cluster mode disabled) or a Redis (cluster mode
 	// enabled) replication group, you can use this parameter to individually configure
-	// each node group (shard), or you can omit this parameter. However, when seeding
-	// a Redis (cluster mode enabled) cluster from a S3 rdb file, you must configure
-	// each node group (shard) using this parameter because you must specify the
-	// slots for each node group.
+	// each node group (shard), or you can omit this parameter. However, it is required
+	// when seeding a Redis (cluster mode enabled) cluster from a S3 rdb file. You
+	// must configure each node group (shard) using this parameter because you must
+	// specify the slots for each node group.
 	NodeGroupConfiguration []*NodeGroupConfiguration `locationNameList:"NodeGroupConfiguration" type:"list"`
 
 	// The Amazon Resource Name (ARN) of the Amazon Simple Notification Service
@@ -7807,7 +9221,7 @@ type CreateReplicationGroupInput struct {
 	//
 	// Constraints:
 	//
-	//    * A name must contain from 1 to 20 alphanumeric characters or hyphens.
+	//    * A name must contain from 1 to 40 alphanumeric characters or hyphens.
 	//
 	//    * The first character must be a letter.
 	//
@@ -7866,8 +9280,8 @@ type CreateReplicationGroupInput struct {
 	// to true when you create a cluster.
 	//
 	// This parameter is valid only if the Engine parameter is redis, the EngineVersion
-	// parameter is 3.2.6 or 4.x, and the cluster is being created in an Amazon
-	// VPC.
+	// parameter is 3.2.6, 4.x or later, and the cluster is being created in an
+	// Amazon VPC.
 	//
 	// If you enable in-transit encryption, you must also specify a value for CacheSubnetGroup.
 	//
@@ -7974,6 +9388,24 @@ func (s *CreateReplicationGroupInput) SetEngine(v string) *CreateReplicationGrou
 // SetEngineVersion sets the EngineVersion field's value.
 func (s *CreateReplicationGroupInput) SetEngineVersion(v string) *CreateReplicationGroupInput {
 	s.EngineVersion = &v
+	return s
+}
+
+// SetGlobalReplicationGroupId sets the GlobalReplicationGroupId field's value.
+func (s *CreateReplicationGroupInput) SetGlobalReplicationGroupId(v string) *CreateReplicationGroupInput {
+	s.GlobalReplicationGroupId = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *CreateReplicationGroupInput) SetKmsKeyId(v string) *CreateReplicationGroupInput {
+	s.KmsKeyId = &v
+	return s
+}
+
+// SetMultiAZEnabled sets the MultiAZEnabled field's value.
+func (s *CreateReplicationGroupInput) SetMultiAZEnabled(v bool) *CreateReplicationGroupInput {
+	s.MultiAZEnabled = &v
 	return s
 }
 
@@ -8116,6 +9548,9 @@ type CreateSnapshotInput struct {
 	// cluster.
 	CacheClusterId *string `type:"string"`
 
+	// The ID of the KMS key used to encrypt the snapshot.
+	KmsKeyId *string `type:"string"`
+
 	// The identifier of an existing replication group. The snapshot is created
 	// from this replication group.
 	ReplicationGroupId *string `type:"string"`
@@ -8155,6 +9590,12 @@ func (s *CreateSnapshotInput) SetCacheClusterId(v string) *CreateSnapshotInput {
 	return s
 }
 
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *CreateSnapshotInput) SetKmsKeyId(v string) *CreateSnapshotInput {
+	s.KmsKeyId = &v
+	return s
+}
+
 // SetReplicationGroupId sets the ReplicationGroupId field's value.
 func (s *CreateSnapshotInput) SetReplicationGroupId(v string) *CreateSnapshotInput {
 	s.ReplicationGroupId = &v
@@ -8191,6 +9632,162 @@ func (s *CreateSnapshotOutput) SetSnapshot(v *Snapshot) *CreateSnapshotOutput {
 	return s
 }
 
+// The endpoint from which data should be migrated.
+type CustomerNodeEndpoint struct {
+	_ struct{} `type:"structure"`
+
+	// The address of the node endpoint
+	Address *string `type:"string"`
+
+	// The port of the node endpoint
+	Port *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s CustomerNodeEndpoint) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CustomerNodeEndpoint) GoString() string {
+	return s.String()
+}
+
+// SetAddress sets the Address field's value.
+func (s *CustomerNodeEndpoint) SetAddress(v string) *CustomerNodeEndpoint {
+	s.Address = &v
+	return s
+}
+
+// SetPort sets the Port field's value.
+func (s *CustomerNodeEndpoint) SetPort(v int64) *CustomerNodeEndpoint {
+	s.Port = &v
+	return s
+}
+
+type DecreaseNodeGroupsInGlobalReplicationGroupInput struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates that the shard reconfiguration process begins immediately. At present,
+	// the only permitted value for this parameter is true.
+	//
+	// ApplyImmediately is a required field
+	ApplyImmediately *bool `type:"boolean" required:"true"`
+
+	// If the value of NodeGroupCount is less than the current number of node groups
+	// (shards), then either NodeGroupsToRemove or NodeGroupsToRetain is required.
+	// NodeGroupsToRemove is a list of NodeGroupIds to remove from the cluster.
+	// ElastiCache for Redis will attempt to remove all node groups listed by NodeGroupsToRemove
+	// from the cluster.
+	GlobalNodeGroupsToRemove []*string `locationNameList:"GlobalNodeGroupId" type:"list"`
+
+	// If the value of NodeGroupCount is less than the current number of node groups
+	// (shards), then either NodeGroupsToRemove or NodeGroupsToRetain is required.
+	// NodeGroupsToRemove is a list of NodeGroupIds to remove from the cluster.
+	// ElastiCache for Redis will attempt to remove all node groups listed by NodeGroupsToRemove
+	// from the cluster.
+	GlobalNodeGroupsToRetain []*string `locationNameList:"GlobalNodeGroupId" type:"list"`
+
+	// The name of the Global Datastore
+	//
+	// GlobalReplicationGroupId is a required field
+	GlobalReplicationGroupId *string `type:"string" required:"true"`
+
+	// The number of node groups (shards) that results from the modification of
+	// the shard configuration
+	//
+	// NodeGroupCount is a required field
+	NodeGroupCount *int64 `type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s DecreaseNodeGroupsInGlobalReplicationGroupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DecreaseNodeGroupsInGlobalReplicationGroupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DecreaseNodeGroupsInGlobalReplicationGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DecreaseNodeGroupsInGlobalReplicationGroupInput"}
+	if s.ApplyImmediately == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApplyImmediately"))
+	}
+	if s.GlobalReplicationGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("GlobalReplicationGroupId"))
+	}
+	if s.NodeGroupCount == nil {
+		invalidParams.Add(request.NewErrParamRequired("NodeGroupCount"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApplyImmediately sets the ApplyImmediately field's value.
+func (s *DecreaseNodeGroupsInGlobalReplicationGroupInput) SetApplyImmediately(v bool) *DecreaseNodeGroupsInGlobalReplicationGroupInput {
+	s.ApplyImmediately = &v
+	return s
+}
+
+// SetGlobalNodeGroupsToRemove sets the GlobalNodeGroupsToRemove field's value.
+func (s *DecreaseNodeGroupsInGlobalReplicationGroupInput) SetGlobalNodeGroupsToRemove(v []*string) *DecreaseNodeGroupsInGlobalReplicationGroupInput {
+	s.GlobalNodeGroupsToRemove = v
+	return s
+}
+
+// SetGlobalNodeGroupsToRetain sets the GlobalNodeGroupsToRetain field's value.
+func (s *DecreaseNodeGroupsInGlobalReplicationGroupInput) SetGlobalNodeGroupsToRetain(v []*string) *DecreaseNodeGroupsInGlobalReplicationGroupInput {
+	s.GlobalNodeGroupsToRetain = v
+	return s
+}
+
+// SetGlobalReplicationGroupId sets the GlobalReplicationGroupId field's value.
+func (s *DecreaseNodeGroupsInGlobalReplicationGroupInput) SetGlobalReplicationGroupId(v string) *DecreaseNodeGroupsInGlobalReplicationGroupInput {
+	s.GlobalReplicationGroupId = &v
+	return s
+}
+
+// SetNodeGroupCount sets the NodeGroupCount field's value.
+func (s *DecreaseNodeGroupsInGlobalReplicationGroupInput) SetNodeGroupCount(v int64) *DecreaseNodeGroupsInGlobalReplicationGroupInput {
+	s.NodeGroupCount = &v
+	return s
+}
+
+type DecreaseNodeGroupsInGlobalReplicationGroupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Consists of a primary cluster that accepts writes and an associated secondary
+	// cluster that resides in a different AWS region. The secondary cluster accepts
+	// only reads. The primary cluster automatically replicates updates to the secondary
+	// cluster.
+	//
+	//    * The GlobalReplicationGroupIdSuffix represents the name of the Global
+	//    Datastore, which is what you use to associate a secondary cluster.
+	GlobalReplicationGroup *GlobalReplicationGroup `type:"structure"`
+}
+
+// String returns the string representation
+func (s DecreaseNodeGroupsInGlobalReplicationGroupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DecreaseNodeGroupsInGlobalReplicationGroupOutput) GoString() string {
+	return s.String()
+}
+
+// SetGlobalReplicationGroup sets the GlobalReplicationGroup field's value.
+func (s *DecreaseNodeGroupsInGlobalReplicationGroupOutput) SetGlobalReplicationGroup(v *GlobalReplicationGroup) *DecreaseNodeGroupsInGlobalReplicationGroupOutput {
+	s.GlobalReplicationGroup = v
+	return s
+}
+
 type DecreaseReplicaCountInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8208,8 +9805,8 @@ type DecreaseReplicaCountInput struct {
 	//
 	// The minimum number of replicas in a shard or replication group is:
 	//
-	//    * Redis (cluster mode disabled) If Multi-AZ with Automatic Failover is
-	//    enabled: 1 If Multi-AZ with Automatic Failover is not enabled: 0
+	//    * Redis (cluster mode disabled) If Multi-AZ is enabled: 1 If Multi-AZ
+	//    is not enabled: 0
 	//
 	//    * Redis (cluster mode enabled): 0 (though you will not be able to failover
 	//    to a replica if your primary node fails)
@@ -8556,6 +10153,87 @@ func (s DeleteCacheSubnetGroupOutput) String() string {
 // GoString returns the string representation
 func (s DeleteCacheSubnetGroupOutput) GoString() string {
 	return s.String()
+}
+
+type DeleteGlobalReplicationGroupInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Global Datastore
+	//
+	// GlobalReplicationGroupId is a required field
+	GlobalReplicationGroupId *string `type:"string" required:"true"`
+
+	// The primary replication group is retained as a standalone replication group.
+	//
+	// RetainPrimaryReplicationGroup is a required field
+	RetainPrimaryReplicationGroup *bool `type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteGlobalReplicationGroupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteGlobalReplicationGroupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteGlobalReplicationGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteGlobalReplicationGroupInput"}
+	if s.GlobalReplicationGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("GlobalReplicationGroupId"))
+	}
+	if s.RetainPrimaryReplicationGroup == nil {
+		invalidParams.Add(request.NewErrParamRequired("RetainPrimaryReplicationGroup"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGlobalReplicationGroupId sets the GlobalReplicationGroupId field's value.
+func (s *DeleteGlobalReplicationGroupInput) SetGlobalReplicationGroupId(v string) *DeleteGlobalReplicationGroupInput {
+	s.GlobalReplicationGroupId = &v
+	return s
+}
+
+// SetRetainPrimaryReplicationGroup sets the RetainPrimaryReplicationGroup field's value.
+func (s *DeleteGlobalReplicationGroupInput) SetRetainPrimaryReplicationGroup(v bool) *DeleteGlobalReplicationGroupInput {
+	s.RetainPrimaryReplicationGroup = &v
+	return s
+}
+
+type DeleteGlobalReplicationGroupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Consists of a primary cluster that accepts writes and an associated secondary
+	// cluster that resides in a different AWS region. The secondary cluster accepts
+	// only reads. The primary cluster automatically replicates updates to the secondary
+	// cluster.
+	//
+	//    * The GlobalReplicationGroupIdSuffix represents the name of the Global
+	//    Datastore, which is what you use to associate a secondary cluster.
+	GlobalReplicationGroup *GlobalReplicationGroup `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteGlobalReplicationGroupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteGlobalReplicationGroupOutput) GoString() string {
+	return s.String()
+}
+
+// SetGlobalReplicationGroup sets the GlobalReplicationGroup field's value.
+func (s *DeleteGlobalReplicationGroupOutput) SetGlobalReplicationGroup(v *GlobalReplicationGroup) *DeleteGlobalReplicationGroupOutput {
+	s.GlobalReplicationGroup = v
+	return s
 }
 
 // Represents the input of a DeleteReplicationGroup operation.
@@ -9528,6 +11206,95 @@ func (s *DescribeEventsOutput) SetMarker(v string) *DescribeEventsOutput {
 	return s
 }
 
+type DescribeGlobalReplicationGroupsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Global Datastore
+	GlobalReplicationGroupId *string `type:"string"`
+
+	// An optional marker returned from a prior request. Use this marker for pagination
+	// of results from this operation. If this parameter is specified, the response
+	// includes only records beyond the marker, up to the value specified by MaxRecords.
+	Marker *string `type:"string"`
+
+	// The maximum number of records to include in the response. If more records
+	// exist than the specified MaxRecords value, a marker is included in the response
+	// so that the remaining results can be retrieved.
+	MaxRecords *int64 `type:"integer"`
+
+	// Returns the list of members that comprise the Global Datastore.
+	ShowMemberInfo *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s DescribeGlobalReplicationGroupsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeGlobalReplicationGroupsInput) GoString() string {
+	return s.String()
+}
+
+// SetGlobalReplicationGroupId sets the GlobalReplicationGroupId field's value.
+func (s *DescribeGlobalReplicationGroupsInput) SetGlobalReplicationGroupId(v string) *DescribeGlobalReplicationGroupsInput {
+	s.GlobalReplicationGroupId = &v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeGlobalReplicationGroupsInput) SetMarker(v string) *DescribeGlobalReplicationGroupsInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxRecords sets the MaxRecords field's value.
+func (s *DescribeGlobalReplicationGroupsInput) SetMaxRecords(v int64) *DescribeGlobalReplicationGroupsInput {
+	s.MaxRecords = &v
+	return s
+}
+
+// SetShowMemberInfo sets the ShowMemberInfo field's value.
+func (s *DescribeGlobalReplicationGroupsInput) SetShowMemberInfo(v bool) *DescribeGlobalReplicationGroupsInput {
+	s.ShowMemberInfo = &v
+	return s
+}
+
+type DescribeGlobalReplicationGroupsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates the slot configuration and global identifier for each slice group.
+	GlobalReplicationGroups []*GlobalReplicationGroup `locationNameList:"GlobalReplicationGroup" type:"list"`
+
+	// An optional marker returned from a prior request. Use this marker for pagination
+	// of results from this operation. If this parameter is specified, the response
+	// includes only records beyond the marker, up to the value specified by MaxRecords.
+	// >
+	Marker *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeGlobalReplicationGroupsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeGlobalReplicationGroupsOutput) GoString() string {
+	return s.String()
+}
+
+// SetGlobalReplicationGroups sets the GlobalReplicationGroups field's value.
+func (s *DescribeGlobalReplicationGroupsOutput) SetGlobalReplicationGroups(v []*GlobalReplicationGroup) *DescribeGlobalReplicationGroupsOutput {
+	s.GlobalReplicationGroups = v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeGlobalReplicationGroupsOutput) SetMarker(v string) *DescribeGlobalReplicationGroupsOutput {
+	s.Marker = &v
+	return s
+}
+
 // Represents the input of a DescribeReplicationGroups operation.
 type DescribeReplicationGroupsInput struct {
 	_ struct{} `type:"structure"`
@@ -9630,11 +11397,11 @@ type DescribeReservedCacheNodesInput struct {
 	//    * General purpose: Current generation: M5 node types: cache.m5.large,
 	//    cache.m5.xlarge, cache.m5.2xlarge, cache.m5.4xlarge, cache.m5.12xlarge,
 	//    cache.m5.24xlarge M4 node types: cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge,
-	//    cache.m4.4xlarge, cache.m4.10xlarge T2 node types: cache.t2.micro, cache.t2.small,
-	//    cache.t2.medium Previous generation: (not recommended) T1 node types:
-	//    cache.t1.micro M1 node types: cache.m1.small, cache.m1.medium, cache.m1.large,
-	//    cache.m1.xlarge M3 node types: cache.m3.medium, cache.m3.large, cache.m3.xlarge,
-	//    cache.m3.2xlarge
+	//    cache.m4.4xlarge, cache.m4.10xlarge T3 node types: cache.t3.micro, cache.t3.small,
+	//    cache.t3.medium T2 node types: cache.t2.micro, cache.t2.small, cache.t2.medium
+	//    Previous generation: (not recommended) T1 node types: cache.t1.micro M1
+	//    node types: cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
+	//    M3 node types: cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
 	//
 	//    * Compute optimized: Previous generation: (not recommended) C1 node types:
 	//    cache.c1.xlarge
@@ -9770,11 +11537,11 @@ type DescribeReservedCacheNodesOfferingsInput struct {
 	//    * General purpose: Current generation: M5 node types: cache.m5.large,
 	//    cache.m5.xlarge, cache.m5.2xlarge, cache.m5.4xlarge, cache.m5.12xlarge,
 	//    cache.m5.24xlarge M4 node types: cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge,
-	//    cache.m4.4xlarge, cache.m4.10xlarge T2 node types: cache.t2.micro, cache.t2.small,
-	//    cache.t2.medium Previous generation: (not recommended) T1 node types:
-	//    cache.t1.micro M1 node types: cache.m1.small, cache.m1.medium, cache.m1.large,
-	//    cache.m1.xlarge M3 node types: cache.m3.medium, cache.m3.large, cache.m3.xlarge,
-	//    cache.m3.2xlarge
+	//    cache.m4.4xlarge, cache.m4.10xlarge T3 node types: cache.t3.micro, cache.t3.small,
+	//    cache.t3.medium T2 node types: cache.t2.micro, cache.t2.small, cache.t2.medium
+	//    Previous generation: (not recommended) T1 node types: cache.t1.micro M1
+	//    node types: cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
+	//    M3 node types: cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
 	//
 	//    * Compute optimized: Previous generation: (not recommended) C1 node types:
 	//    cache.c1.xlarge
@@ -10174,6 +11941,12 @@ func (s *DescribeSnapshotsOutput) SetSnapshots(v []*Snapshot) *DescribeSnapshots
 type DescribeUpdateActionsInput struct {
 	_ struct{} `type:"structure"`
 
+	// The cache cluster IDs
+	CacheClusterIds []*string `type:"list"`
+
+	// The Elasticache engine to which the update applies. Either Redis or Memcached
+	Engine *string `type:"string"`
+
 	// An optional marker returned from a prior request. Use this marker for pagination
 	// of results from this operation. If this parameter is specified, the response
 	// includes only records beyond the marker, up to the value specified by MaxRecords.
@@ -10210,6 +11983,18 @@ func (s DescribeUpdateActionsInput) String() string {
 // GoString returns the string representation
 func (s DescribeUpdateActionsInput) GoString() string {
 	return s.String()
+}
+
+// SetCacheClusterIds sets the CacheClusterIds field's value.
+func (s *DescribeUpdateActionsInput) SetCacheClusterIds(v []*string) *DescribeUpdateActionsInput {
+	s.CacheClusterIds = v
+	return s
+}
+
+// SetEngine sets the Engine field's value.
+func (s *DescribeUpdateActionsInput) SetEngine(v string) *DescribeUpdateActionsInput {
+	s.Engine = &v
+	return s
 }
 
 // SetMarker sets the Marker field's value.
@@ -10291,6 +12076,101 @@ func (s *DescribeUpdateActionsOutput) SetMarker(v string) *DescribeUpdateActions
 // SetUpdateActions sets the UpdateActions field's value.
 func (s *DescribeUpdateActionsOutput) SetUpdateActions(v []*UpdateAction) *DescribeUpdateActionsOutput {
 	s.UpdateActions = v
+	return s
+}
+
+type DisassociateGlobalReplicationGroupInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Global Datastore
+	//
+	// GlobalReplicationGroupId is a required field
+	GlobalReplicationGroupId *string `type:"string" required:"true"`
+
+	// The name of the secondary cluster you wish to remove from the Global Datastore
+	//
+	// ReplicationGroupId is a required field
+	ReplicationGroupId *string `type:"string" required:"true"`
+
+	// The AWS region of secondary cluster you wish to remove from the Global Datastore
+	//
+	// ReplicationGroupRegion is a required field
+	ReplicationGroupRegion *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DisassociateGlobalReplicationGroupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateGlobalReplicationGroupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DisassociateGlobalReplicationGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DisassociateGlobalReplicationGroupInput"}
+	if s.GlobalReplicationGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("GlobalReplicationGroupId"))
+	}
+	if s.ReplicationGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReplicationGroupId"))
+	}
+	if s.ReplicationGroupRegion == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReplicationGroupRegion"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGlobalReplicationGroupId sets the GlobalReplicationGroupId field's value.
+func (s *DisassociateGlobalReplicationGroupInput) SetGlobalReplicationGroupId(v string) *DisassociateGlobalReplicationGroupInput {
+	s.GlobalReplicationGroupId = &v
+	return s
+}
+
+// SetReplicationGroupId sets the ReplicationGroupId field's value.
+func (s *DisassociateGlobalReplicationGroupInput) SetReplicationGroupId(v string) *DisassociateGlobalReplicationGroupInput {
+	s.ReplicationGroupId = &v
+	return s
+}
+
+// SetReplicationGroupRegion sets the ReplicationGroupRegion field's value.
+func (s *DisassociateGlobalReplicationGroupInput) SetReplicationGroupRegion(v string) *DisassociateGlobalReplicationGroupInput {
+	s.ReplicationGroupRegion = &v
+	return s
+}
+
+type DisassociateGlobalReplicationGroupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Consists of a primary cluster that accepts writes and an associated secondary
+	// cluster that resides in a different AWS region. The secondary cluster accepts
+	// only reads. The primary cluster automatically replicates updates to the secondary
+	// cluster.
+	//
+	//    * The GlobalReplicationGroupIdSuffix represents the name of the Global
+	//    Datastore, which is what you use to associate a secondary cluster.
+	GlobalReplicationGroup *GlobalReplicationGroup `type:"structure"`
+}
+
+// String returns the string representation
+func (s DisassociateGlobalReplicationGroupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateGlobalReplicationGroupOutput) GoString() string {
+	return s.String()
+}
+
+// SetGlobalReplicationGroup sets the GlobalReplicationGroup field's value.
+func (s *DisassociateGlobalReplicationGroupOutput) SetGlobalReplicationGroup(v *GlobalReplicationGroup) *DisassociateGlobalReplicationGroupOutput {
+	s.GlobalReplicationGroup = v
 	return s
 }
 
@@ -10481,6 +12361,498 @@ func (s *Event) SetSourceType(v string) *Event {
 	return s
 }
 
+type FailoverGlobalReplicationGroupInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Global Datastore
+	//
+	// GlobalReplicationGroupId is a required field
+	GlobalReplicationGroupId *string `type:"string" required:"true"`
+
+	// The AWS region of the primary cluster of the Global Datastore
+	//
+	// PrimaryRegion is a required field
+	PrimaryRegion *string `type:"string" required:"true"`
+
+	// The name of the primary replication group
+	//
+	// PrimaryReplicationGroupId is a required field
+	PrimaryReplicationGroupId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s FailoverGlobalReplicationGroupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FailoverGlobalReplicationGroupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *FailoverGlobalReplicationGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "FailoverGlobalReplicationGroupInput"}
+	if s.GlobalReplicationGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("GlobalReplicationGroupId"))
+	}
+	if s.PrimaryRegion == nil {
+		invalidParams.Add(request.NewErrParamRequired("PrimaryRegion"))
+	}
+	if s.PrimaryReplicationGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PrimaryReplicationGroupId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGlobalReplicationGroupId sets the GlobalReplicationGroupId field's value.
+func (s *FailoverGlobalReplicationGroupInput) SetGlobalReplicationGroupId(v string) *FailoverGlobalReplicationGroupInput {
+	s.GlobalReplicationGroupId = &v
+	return s
+}
+
+// SetPrimaryRegion sets the PrimaryRegion field's value.
+func (s *FailoverGlobalReplicationGroupInput) SetPrimaryRegion(v string) *FailoverGlobalReplicationGroupInput {
+	s.PrimaryRegion = &v
+	return s
+}
+
+// SetPrimaryReplicationGroupId sets the PrimaryReplicationGroupId field's value.
+func (s *FailoverGlobalReplicationGroupInput) SetPrimaryReplicationGroupId(v string) *FailoverGlobalReplicationGroupInput {
+	s.PrimaryReplicationGroupId = &v
+	return s
+}
+
+type FailoverGlobalReplicationGroupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Consists of a primary cluster that accepts writes and an associated secondary
+	// cluster that resides in a different AWS region. The secondary cluster accepts
+	// only reads. The primary cluster automatically replicates updates to the secondary
+	// cluster.
+	//
+	//    * The GlobalReplicationGroupIdSuffix represents the name of the Global
+	//    Datastore, which is what you use to associate a secondary cluster.
+	GlobalReplicationGroup *GlobalReplicationGroup `type:"structure"`
+}
+
+// String returns the string representation
+func (s FailoverGlobalReplicationGroupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FailoverGlobalReplicationGroupOutput) GoString() string {
+	return s.String()
+}
+
+// SetGlobalReplicationGroup sets the GlobalReplicationGroup field's value.
+func (s *FailoverGlobalReplicationGroupOutput) SetGlobalReplicationGroup(v *GlobalReplicationGroup) *FailoverGlobalReplicationGroupOutput {
+	s.GlobalReplicationGroup = v
+	return s
+}
+
+// Indicates the slot configuration and global identifier for a slice group.
+type GlobalNodeGroup struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the global node group
+	GlobalNodeGroupId *string `type:"string"`
+
+	// The keyspace for this node group
+	Slots *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GlobalNodeGroup) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GlobalNodeGroup) GoString() string {
+	return s.String()
+}
+
+// SetGlobalNodeGroupId sets the GlobalNodeGroupId field's value.
+func (s *GlobalNodeGroup) SetGlobalNodeGroupId(v string) *GlobalNodeGroup {
+	s.GlobalNodeGroupId = &v
+	return s
+}
+
+// SetSlots sets the Slots field's value.
+func (s *GlobalNodeGroup) SetSlots(v string) *GlobalNodeGroup {
+	s.Slots = &v
+	return s
+}
+
+// Consists of a primary cluster that accepts writes and an associated secondary
+// cluster that resides in a different AWS region. The secondary cluster accepts
+// only reads. The primary cluster automatically replicates updates to the secondary
+// cluster.
+//
+//    * The GlobalReplicationGroupIdSuffix represents the name of the Global
+//    Datastore, which is what you use to associate a secondary cluster.
+type GlobalReplicationGroup struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN (Amazon Resource Name) of the global replication group.
+	ARN *string `type:"string"`
+
+	// A flag that enables encryption at rest when set to true.
+	//
+	// You cannot modify the value of AtRestEncryptionEnabled after the replication
+	// group is created. To enable encryption at rest on a replication group you
+	// must set AtRestEncryptionEnabled to true when you create the replication
+	// group.
+	//
+	// Required: Only available when creating a replication group in an Amazon VPC
+	// using redis version 3.2.6, 4.x or later.
+	AtRestEncryptionEnabled *bool `type:"boolean"`
+
+	// A flag that enables using an AuthToken (password) when issuing Redis commands.
+	//
+	// Default: false
+	AuthTokenEnabled *bool `type:"boolean"`
+
+	// The cache node type of the Global Datastore
+	CacheNodeType *string `type:"string"`
+
+	// A flag that indicates whether the Global Datastore is cluster enabled.
+	ClusterEnabled *bool `type:"boolean"`
+
+	// The Elasticache engine. For Redis only.
+	Engine *string `type:"string"`
+
+	// The Elasticache Redis engine version. For preview, it is Redis version 5.0.5
+	// only.
+	EngineVersion *string `type:"string"`
+
+	// Indicates the slot configuration and global identifier for each slice group.
+	GlobalNodeGroups []*GlobalNodeGroup `locationNameList:"GlobalNodeGroup" type:"list"`
+
+	// The optional description of the Global Datastore
+	GlobalReplicationGroupDescription *string `type:"string"`
+
+	// The name of the Global Datastore
+	GlobalReplicationGroupId *string `type:"string"`
+
+	// The replication groups that comprise the Global Datastore.
+	Members []*GlobalReplicationGroupMember `locationNameList:"GlobalReplicationGroupMember" type:"list"`
+
+	// The status of the Global Datastore
+	Status *string `type:"string"`
+
+	// A flag that enables in-transit encryption when set to true. You cannot modify
+	// the value of TransitEncryptionEnabled after the cluster is created. To enable
+	// in-transit encryption on a cluster you must set TransitEncryptionEnabled
+	// to true when you create a cluster.
+	TransitEncryptionEnabled *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s GlobalReplicationGroup) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GlobalReplicationGroup) GoString() string {
+	return s.String()
+}
+
+// SetARN sets the ARN field's value.
+func (s *GlobalReplicationGroup) SetARN(v string) *GlobalReplicationGroup {
+	s.ARN = &v
+	return s
+}
+
+// SetAtRestEncryptionEnabled sets the AtRestEncryptionEnabled field's value.
+func (s *GlobalReplicationGroup) SetAtRestEncryptionEnabled(v bool) *GlobalReplicationGroup {
+	s.AtRestEncryptionEnabled = &v
+	return s
+}
+
+// SetAuthTokenEnabled sets the AuthTokenEnabled field's value.
+func (s *GlobalReplicationGroup) SetAuthTokenEnabled(v bool) *GlobalReplicationGroup {
+	s.AuthTokenEnabled = &v
+	return s
+}
+
+// SetCacheNodeType sets the CacheNodeType field's value.
+func (s *GlobalReplicationGroup) SetCacheNodeType(v string) *GlobalReplicationGroup {
+	s.CacheNodeType = &v
+	return s
+}
+
+// SetClusterEnabled sets the ClusterEnabled field's value.
+func (s *GlobalReplicationGroup) SetClusterEnabled(v bool) *GlobalReplicationGroup {
+	s.ClusterEnabled = &v
+	return s
+}
+
+// SetEngine sets the Engine field's value.
+func (s *GlobalReplicationGroup) SetEngine(v string) *GlobalReplicationGroup {
+	s.Engine = &v
+	return s
+}
+
+// SetEngineVersion sets the EngineVersion field's value.
+func (s *GlobalReplicationGroup) SetEngineVersion(v string) *GlobalReplicationGroup {
+	s.EngineVersion = &v
+	return s
+}
+
+// SetGlobalNodeGroups sets the GlobalNodeGroups field's value.
+func (s *GlobalReplicationGroup) SetGlobalNodeGroups(v []*GlobalNodeGroup) *GlobalReplicationGroup {
+	s.GlobalNodeGroups = v
+	return s
+}
+
+// SetGlobalReplicationGroupDescription sets the GlobalReplicationGroupDescription field's value.
+func (s *GlobalReplicationGroup) SetGlobalReplicationGroupDescription(v string) *GlobalReplicationGroup {
+	s.GlobalReplicationGroupDescription = &v
+	return s
+}
+
+// SetGlobalReplicationGroupId sets the GlobalReplicationGroupId field's value.
+func (s *GlobalReplicationGroup) SetGlobalReplicationGroupId(v string) *GlobalReplicationGroup {
+	s.GlobalReplicationGroupId = &v
+	return s
+}
+
+// SetMembers sets the Members field's value.
+func (s *GlobalReplicationGroup) SetMembers(v []*GlobalReplicationGroupMember) *GlobalReplicationGroup {
+	s.Members = v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *GlobalReplicationGroup) SetStatus(v string) *GlobalReplicationGroup {
+	s.Status = &v
+	return s
+}
+
+// SetTransitEncryptionEnabled sets the TransitEncryptionEnabled field's value.
+func (s *GlobalReplicationGroup) SetTransitEncryptionEnabled(v bool) *GlobalReplicationGroup {
+	s.TransitEncryptionEnabled = &v
+	return s
+}
+
+// The name of the Global Datastore and role of this replication group in the
+// Global Datastore.
+type GlobalReplicationGroupInfo struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Global Datastore
+	GlobalReplicationGroupId *string `type:"string"`
+
+	// The role of the replication group in a Global Datastore. Can be primary or
+	// secondary.
+	GlobalReplicationGroupMemberRole *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GlobalReplicationGroupInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GlobalReplicationGroupInfo) GoString() string {
+	return s.String()
+}
+
+// SetGlobalReplicationGroupId sets the GlobalReplicationGroupId field's value.
+func (s *GlobalReplicationGroupInfo) SetGlobalReplicationGroupId(v string) *GlobalReplicationGroupInfo {
+	s.GlobalReplicationGroupId = &v
+	return s
+}
+
+// SetGlobalReplicationGroupMemberRole sets the GlobalReplicationGroupMemberRole field's value.
+func (s *GlobalReplicationGroupInfo) SetGlobalReplicationGroupMemberRole(v string) *GlobalReplicationGroupInfo {
+	s.GlobalReplicationGroupMemberRole = &v
+	return s
+}
+
+// A member of a Global Datastore. It contains the Replication Group Id, the
+// AWS region and the role of the replication group.
+type GlobalReplicationGroupMember struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether automatic failover is enabled for the replication group.
+	AutomaticFailover *string `type:"string" enum:"AutomaticFailoverStatus"`
+
+	// The replication group id of the Global Datastore member.
+	ReplicationGroupId *string `type:"string"`
+
+	// The AWS region of the Global Datastore member.
+	ReplicationGroupRegion *string `type:"string"`
+
+	// Indicates the role of the replication group, primary or secondary.
+	Role *string `type:"string"`
+
+	// The status of the membership of the replication group.
+	Status *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GlobalReplicationGroupMember) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GlobalReplicationGroupMember) GoString() string {
+	return s.String()
+}
+
+// SetAutomaticFailover sets the AutomaticFailover field's value.
+func (s *GlobalReplicationGroupMember) SetAutomaticFailover(v string) *GlobalReplicationGroupMember {
+	s.AutomaticFailover = &v
+	return s
+}
+
+// SetReplicationGroupId sets the ReplicationGroupId field's value.
+func (s *GlobalReplicationGroupMember) SetReplicationGroupId(v string) *GlobalReplicationGroupMember {
+	s.ReplicationGroupId = &v
+	return s
+}
+
+// SetReplicationGroupRegion sets the ReplicationGroupRegion field's value.
+func (s *GlobalReplicationGroupMember) SetReplicationGroupRegion(v string) *GlobalReplicationGroupMember {
+	s.ReplicationGroupRegion = &v
+	return s
+}
+
+// SetRole sets the Role field's value.
+func (s *GlobalReplicationGroupMember) SetRole(v string) *GlobalReplicationGroupMember {
+	s.Role = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *GlobalReplicationGroupMember) SetStatus(v string) *GlobalReplicationGroupMember {
+	s.Status = &v
+	return s
+}
+
+type IncreaseNodeGroupsInGlobalReplicationGroupInput struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates that the process begins immediately. At present, the only permitted
+	// value for this parameter is true.
+	//
+	// ApplyImmediately is a required field
+	ApplyImmediately *bool `type:"boolean" required:"true"`
+
+	// The name of the Global Datastore
+	//
+	// GlobalReplicationGroupId is a required field
+	GlobalReplicationGroupId *string `type:"string" required:"true"`
+
+	// The number of node groups you wish to add
+	//
+	// NodeGroupCount is a required field
+	NodeGroupCount *int64 `type:"integer" required:"true"`
+
+	// Describes the replication group IDs, the AWS regions where they are stored
+	// and the shard configuration for each that comprise the Global Datastore
+	RegionalConfigurations []*RegionalConfiguration `locationNameList:"RegionalConfiguration" type:"list"`
+}
+
+// String returns the string representation
+func (s IncreaseNodeGroupsInGlobalReplicationGroupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IncreaseNodeGroupsInGlobalReplicationGroupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *IncreaseNodeGroupsInGlobalReplicationGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "IncreaseNodeGroupsInGlobalReplicationGroupInput"}
+	if s.ApplyImmediately == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApplyImmediately"))
+	}
+	if s.GlobalReplicationGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("GlobalReplicationGroupId"))
+	}
+	if s.NodeGroupCount == nil {
+		invalidParams.Add(request.NewErrParamRequired("NodeGroupCount"))
+	}
+	if s.RegionalConfigurations != nil {
+		for i, v := range s.RegionalConfigurations {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "RegionalConfigurations", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApplyImmediately sets the ApplyImmediately field's value.
+func (s *IncreaseNodeGroupsInGlobalReplicationGroupInput) SetApplyImmediately(v bool) *IncreaseNodeGroupsInGlobalReplicationGroupInput {
+	s.ApplyImmediately = &v
+	return s
+}
+
+// SetGlobalReplicationGroupId sets the GlobalReplicationGroupId field's value.
+func (s *IncreaseNodeGroupsInGlobalReplicationGroupInput) SetGlobalReplicationGroupId(v string) *IncreaseNodeGroupsInGlobalReplicationGroupInput {
+	s.GlobalReplicationGroupId = &v
+	return s
+}
+
+// SetNodeGroupCount sets the NodeGroupCount field's value.
+func (s *IncreaseNodeGroupsInGlobalReplicationGroupInput) SetNodeGroupCount(v int64) *IncreaseNodeGroupsInGlobalReplicationGroupInput {
+	s.NodeGroupCount = &v
+	return s
+}
+
+// SetRegionalConfigurations sets the RegionalConfigurations field's value.
+func (s *IncreaseNodeGroupsInGlobalReplicationGroupInput) SetRegionalConfigurations(v []*RegionalConfiguration) *IncreaseNodeGroupsInGlobalReplicationGroupInput {
+	s.RegionalConfigurations = v
+	return s
+}
+
+type IncreaseNodeGroupsInGlobalReplicationGroupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Consists of a primary cluster that accepts writes and an associated secondary
+	// cluster that resides in a different AWS region. The secondary cluster accepts
+	// only reads. The primary cluster automatically replicates updates to the secondary
+	// cluster.
+	//
+	//    * The GlobalReplicationGroupIdSuffix represents the name of the Global
+	//    Datastore, which is what you use to associate a secondary cluster.
+	GlobalReplicationGroup *GlobalReplicationGroup `type:"structure"`
+}
+
+// String returns the string representation
+func (s IncreaseNodeGroupsInGlobalReplicationGroupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IncreaseNodeGroupsInGlobalReplicationGroupOutput) GoString() string {
+	return s.String()
+}
+
+// SetGlobalReplicationGroup sets the GlobalReplicationGroup field's value.
+func (s *IncreaseNodeGroupsInGlobalReplicationGroupOutput) SetGlobalReplicationGroup(v *GlobalReplicationGroup) *IncreaseNodeGroupsInGlobalReplicationGroupOutput {
+	s.GlobalReplicationGroup = v
+	return s
+}
+
 type IncreaseReplicaCountInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10639,6 +13011,12 @@ type ListAllowedNodeTypeModificationsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// A string list, each element of which specifies a cache node type which you
+	// can use to scale your cluster or replication group. When scaling down a Redis
+	// cluster or replication group using ModifyCacheCluster or ModifyReplicationGroup,
+	// use a value from this list for the CacheNodeType parameter.
+	ScaleDownModifications []*string `type:"list"`
+
+	// A string list, each element of which specifies a cache node type which you
 	// can use to scale your cluster or replication group.
 	//
 	// When scaling up a Redis cluster or replication group using ModifyCacheCluster
@@ -10655,6 +13033,12 @@ func (s ListAllowedNodeTypeModificationsOutput) String() string {
 // GoString returns the string representation
 func (s ListAllowedNodeTypeModificationsOutput) GoString() string {
 	return s.String()
+}
+
+// SetScaleDownModifications sets the ScaleDownModifications field's value.
+func (s *ListAllowedNodeTypeModificationsOutput) SetScaleDownModifications(v []*string) *ListAllowedNodeTypeModificationsOutput {
+	s.ScaleDownModifications = v
+	return s
 }
 
 // SetScaleUpModifications sets the ScaleUpModifications field's value.
@@ -10722,10 +13106,7 @@ type ModifyCacheClusterInput struct {
 	// in different Availability Zones. If cross-az is specified, existing Memcached
 	// nodes remain in their current Availability Zone.
 	//
-	// Only newly created nodes are located in different Availability Zones. For
-	// instructions on how to move existing Memcached nodes to different Availability
-	// Zones, see the Availability Zone Considerations section of Cache Node Considerations
-	// for Memcached (https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/CacheNodes.SupportedTypes.html).
+	// Only newly created nodes are located in different Availability Zones.
 	AZMode *string `type:"string" enum:"AZMode"`
 
 	// If true, this parameter causes the modifications in this request and any
@@ -10742,6 +13123,29 @@ type ModifyCacheClusterInput struct {
 	//
 	// Default: false
 	ApplyImmediately *bool `type:"boolean"`
+
+	// Reserved parameter. The password used to access a password protected server.
+	// This parameter must be specified with the auth-token-update parameter. Password
+	// constraints:
+	//
+	//    * Must be only printable ASCII characters
+	//
+	//    * Must be at least 16 characters and no more than 128 characters in length
+	//
+	//    * Cannot contain any of the following characters: '/', '"', or '@', '%'
+	//
+	// For more information, see AUTH password at AUTH (http://redis.io/commands/AUTH).
+	AuthToken *string `type:"string"`
+
+	// Specifies the strategy to use to update the AUTH token. This parameter must
+	// be specified with the auth-token parameter. Possible values:
+	//
+	//    * Rotate
+	//
+	//    * Set
+	//
+	// For more information, see Authenticating Users with Redis AUTH (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/auth.html)
+	AuthTokenUpdateStrategy *string `type:"string" enum:"AuthTokenUpdateStrategyType"`
 
 	// This parameter is currently disabled.
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
@@ -10959,6 +13363,18 @@ func (s *ModifyCacheClusterInput) SetAZMode(v string) *ModifyCacheClusterInput {
 // SetApplyImmediately sets the ApplyImmediately field's value.
 func (s *ModifyCacheClusterInput) SetApplyImmediately(v bool) *ModifyCacheClusterInput {
 	s.ApplyImmediately = &v
+	return s
+}
+
+// SetAuthToken sets the AuthToken field's value.
+func (s *ModifyCacheClusterInput) SetAuthToken(v string) *ModifyCacheClusterInput {
+	s.AuthToken = &v
+	return s
+}
+
+// SetAuthTokenUpdateStrategy sets the AuthTokenUpdateStrategy field's value.
+func (s *ModifyCacheClusterInput) SetAuthTokenUpdateStrategy(v string) *ModifyCacheClusterInput {
+	s.AuthTokenUpdateStrategy = &v
 	return s
 }
 
@@ -11219,6 +13635,127 @@ func (s *ModifyCacheSubnetGroupOutput) SetCacheSubnetGroup(v *CacheSubnetGroup) 
 	return s
 }
 
+type ModifyGlobalReplicationGroupInput struct {
+	_ struct{} `type:"structure"`
+
+	// This parameter causes the modifications in this request and any pending modifications
+	// to be applied, asynchronously and as soon as possible. Modifications to Global
+	// Replication Groups cannot be requested to be applied in PreferredMaintenceWindow.
+	//
+	// ApplyImmediately is a required field
+	ApplyImmediately *bool `type:"boolean" required:"true"`
+
+	// Determines whether a read replica is automatically promoted to read/write
+	// primary if the existing primary encounters a failure.
+	AutomaticFailoverEnabled *bool `type:"boolean"`
+
+	// A valid cache node type that you want to scale this Global Datastore to.
+	CacheNodeType *string `type:"string"`
+
+	// The upgraded version of the cache engine to be run on the clusters in the
+	// Global Datastore.
+	EngineVersion *string `type:"string"`
+
+	// A description of the Global Datastore
+	GlobalReplicationGroupDescription *string `type:"string"`
+
+	// The name of the Global Datastore
+	//
+	// GlobalReplicationGroupId is a required field
+	GlobalReplicationGroupId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ModifyGlobalReplicationGroupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyGlobalReplicationGroupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyGlobalReplicationGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyGlobalReplicationGroupInput"}
+	if s.ApplyImmediately == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApplyImmediately"))
+	}
+	if s.GlobalReplicationGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("GlobalReplicationGroupId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApplyImmediately sets the ApplyImmediately field's value.
+func (s *ModifyGlobalReplicationGroupInput) SetApplyImmediately(v bool) *ModifyGlobalReplicationGroupInput {
+	s.ApplyImmediately = &v
+	return s
+}
+
+// SetAutomaticFailoverEnabled sets the AutomaticFailoverEnabled field's value.
+func (s *ModifyGlobalReplicationGroupInput) SetAutomaticFailoverEnabled(v bool) *ModifyGlobalReplicationGroupInput {
+	s.AutomaticFailoverEnabled = &v
+	return s
+}
+
+// SetCacheNodeType sets the CacheNodeType field's value.
+func (s *ModifyGlobalReplicationGroupInput) SetCacheNodeType(v string) *ModifyGlobalReplicationGroupInput {
+	s.CacheNodeType = &v
+	return s
+}
+
+// SetEngineVersion sets the EngineVersion field's value.
+func (s *ModifyGlobalReplicationGroupInput) SetEngineVersion(v string) *ModifyGlobalReplicationGroupInput {
+	s.EngineVersion = &v
+	return s
+}
+
+// SetGlobalReplicationGroupDescription sets the GlobalReplicationGroupDescription field's value.
+func (s *ModifyGlobalReplicationGroupInput) SetGlobalReplicationGroupDescription(v string) *ModifyGlobalReplicationGroupInput {
+	s.GlobalReplicationGroupDescription = &v
+	return s
+}
+
+// SetGlobalReplicationGroupId sets the GlobalReplicationGroupId field's value.
+func (s *ModifyGlobalReplicationGroupInput) SetGlobalReplicationGroupId(v string) *ModifyGlobalReplicationGroupInput {
+	s.GlobalReplicationGroupId = &v
+	return s
+}
+
+type ModifyGlobalReplicationGroupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Consists of a primary cluster that accepts writes and an associated secondary
+	// cluster that resides in a different AWS region. The secondary cluster accepts
+	// only reads. The primary cluster automatically replicates updates to the secondary
+	// cluster.
+	//
+	//    * The GlobalReplicationGroupIdSuffix represents the name of the Global
+	//    Datastore, which is what you use to associate a secondary cluster.
+	GlobalReplicationGroup *GlobalReplicationGroup `type:"structure"`
+}
+
+// String returns the string representation
+func (s ModifyGlobalReplicationGroupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyGlobalReplicationGroupOutput) GoString() string {
+	return s.String()
+}
+
+// SetGlobalReplicationGroup sets the GlobalReplicationGroup field's value.
+func (s *ModifyGlobalReplicationGroupOutput) SetGlobalReplicationGroup(v *GlobalReplicationGroup) *ModifyGlobalReplicationGroupOutput {
+	s.GlobalReplicationGroup = v
+	return s
+}
+
 // Represents the input of a ModifyReplicationGroups operation.
 type ModifyReplicationGroupInput struct {
 	_ struct{} `type:"structure"`
@@ -11236,6 +13773,29 @@ type ModifyReplicationGroupInput struct {
 	// Default: false
 	ApplyImmediately *bool `type:"boolean"`
 
+	// Reserved parameter. The password used to access a password protected server.
+	// This parameter must be specified with the auth-token-update-strategy parameter.
+	// Password constraints:
+	//
+	//    * Must be only printable ASCII characters
+	//
+	//    * Must be at least 16 characters and no more than 128 characters in length
+	//
+	//    * Cannot contain any of the following characters: '/', '"', or '@', '%'
+	//
+	// For more information, see AUTH password at AUTH (http://redis.io/commands/AUTH).
+	AuthToken *string `type:"string"`
+
+	// Specifies the strategy to use to update the AUTH token. This parameter must
+	// be specified with the auth-token parameter. Possible values:
+	//
+	//    * Rotate
+	//
+	//    * Set
+	//
+	// For more information, see Authenticating Users with Redis AUTH (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/auth.html)
+	AuthTokenUpdateStrategy *string `type:"string" enum:"AuthTokenUpdateStrategyType"`
+
 	// This parameter is currently disabled.
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
 
@@ -11243,15 +13803,6 @@ type ModifyReplicationGroupInput struct {
 	// primary if the existing primary encounters a failure.
 	//
 	// Valid values: true | false
-	//
-	// Amazon ElastiCache for Redis does not support Multi-AZ with automatic failover
-	// on:
-	//
-	//    * Redis versions earlier than 2.8.6.
-	//
-	//    * Redis (cluster mode disabled): T1 node types.
-	//
-	//    * Redis (cluster mode enabled): T1 node types.
 	AutomaticFailoverEnabled *bool `type:"boolean"`
 
 	// A valid cache node type that you want to scale this replication group to.
@@ -11282,6 +13833,10 @@ type ModifyReplicationGroupInput struct {
 	// an earlier engine version, you must delete the existing replication group
 	// and create it anew with the earlier engine version.
 	EngineVersion *string `type:"string"`
+
+	// A flag indicating if you have Multi-AZ enabled to enhance fault tolerance.
+	// For more information, see Minimizing Downtime: Multi-AZ (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/AutoFailover.html).
+	MultiAZEnabled *bool `type:"boolean"`
 
 	// Deprecated. This parameter is not used.
 	//
@@ -11397,6 +13952,18 @@ func (s *ModifyReplicationGroupInput) SetApplyImmediately(v bool) *ModifyReplica
 	return s
 }
 
+// SetAuthToken sets the AuthToken field's value.
+func (s *ModifyReplicationGroupInput) SetAuthToken(v string) *ModifyReplicationGroupInput {
+	s.AuthToken = &v
+	return s
+}
+
+// SetAuthTokenUpdateStrategy sets the AuthTokenUpdateStrategy field's value.
+func (s *ModifyReplicationGroupInput) SetAuthTokenUpdateStrategy(v string) *ModifyReplicationGroupInput {
+	s.AuthTokenUpdateStrategy = &v
+	return s
+}
+
 // SetAutoMinorVersionUpgrade sets the AutoMinorVersionUpgrade field's value.
 func (s *ModifyReplicationGroupInput) SetAutoMinorVersionUpgrade(v bool) *ModifyReplicationGroupInput {
 	s.AutoMinorVersionUpgrade = &v
@@ -11430,6 +13997,12 @@ func (s *ModifyReplicationGroupInput) SetCacheSecurityGroupNames(v []*string) *M
 // SetEngineVersion sets the EngineVersion field's value.
 func (s *ModifyReplicationGroupInput) SetEngineVersion(v string) *ModifyReplicationGroupInput {
 	s.EngineVersion = &v
+	return s
+}
+
+// SetMultiAZEnabled sets the MultiAZEnabled field's value.
+func (s *ModifyReplicationGroupInput) SetMultiAZEnabled(v bool) *ModifyReplicationGroupInput {
+	s.MultiAZEnabled = &v
 	return s
 }
 
@@ -11697,7 +14270,8 @@ type NodeGroup struct {
 	// The keyspace for this node group (shard).
 	Slots *string `type:"string"`
 
-	// The current state of this replication group - creating, available, etc.
+	// The current state of this replication group - creating, available, modifying,
+	// deleting.
 	Status *string `type:"string"`
 }
 
@@ -12277,6 +14851,9 @@ func (s *ParameterNameValue) SetParameterValue(v string) *ParameterNameValue {
 type PendingModifiedValues struct {
 	_ struct{} `type:"structure"`
 
+	// The auth token status
+	AuthTokenStatus *string `type:"string" enum:"AuthTokenUpdateStatus"`
+
 	// A list of cache node IDs that are being removed (or will be removed) from
 	// the cluster. A node ID is a 4-digit numeric identifier (0001, 0002, etc.).
 	CacheNodeIdsToRemove []*string `locationNameList:"CacheNodeId" type:"list"`
@@ -12302,6 +14879,12 @@ func (s PendingModifiedValues) String() string {
 // GoString returns the string representation
 func (s PendingModifiedValues) GoString() string {
 	return s.String()
+}
+
+// SetAuthTokenStatus sets the AuthTokenStatus field's value.
+func (s *PendingModifiedValues) SetAuthTokenStatus(v string) *PendingModifiedValues {
+	s.AuthTokenStatus = &v
+	return s
 }
 
 // SetCacheNodeIdsToRemove sets the CacheNodeIdsToRemove field's value.
@@ -12332,6 +14915,9 @@ func (s *PendingModifiedValues) SetNumCacheNodes(v int64) *PendingModifiedValues
 type ProcessedUpdateAction struct {
 	_ struct{} `type:"structure"`
 
+	// The ID of the cache cluster
+	CacheClusterId *string `type:"string"`
+
 	// The ID of the replication group
 	ReplicationGroupId *string `type:"string"`
 
@@ -12350,6 +14936,12 @@ func (s ProcessedUpdateAction) String() string {
 // GoString returns the string representation
 func (s ProcessedUpdateAction) GoString() string {
 	return s.String()
+}
+
+// SetCacheClusterId sets the CacheClusterId field's value.
+func (s *ProcessedUpdateAction) SetCacheClusterId(v string) *ProcessedUpdateAction {
+	s.CacheClusterId = &v
+	return s
 }
 
 // SetReplicationGroupId sets the ReplicationGroupId field's value.
@@ -12457,6 +15049,87 @@ func (s PurchaseReservedCacheNodesOfferingOutput) GoString() string {
 // SetReservedCacheNode sets the ReservedCacheNode field's value.
 func (s *PurchaseReservedCacheNodesOfferingOutput) SetReservedCacheNode(v *ReservedCacheNode) *PurchaseReservedCacheNodesOfferingOutput {
 	s.ReservedCacheNode = v
+	return s
+}
+
+type RebalanceSlotsInGlobalReplicationGroupInput struct {
+	_ struct{} `type:"structure"`
+
+	// If True, redistribution is applied immediately.
+	//
+	// ApplyImmediately is a required field
+	ApplyImmediately *bool `type:"boolean" required:"true"`
+
+	// The name of the Global Datastore
+	//
+	// GlobalReplicationGroupId is a required field
+	GlobalReplicationGroupId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RebalanceSlotsInGlobalReplicationGroupInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RebalanceSlotsInGlobalReplicationGroupInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RebalanceSlotsInGlobalReplicationGroupInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RebalanceSlotsInGlobalReplicationGroupInput"}
+	if s.ApplyImmediately == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApplyImmediately"))
+	}
+	if s.GlobalReplicationGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("GlobalReplicationGroupId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApplyImmediately sets the ApplyImmediately field's value.
+func (s *RebalanceSlotsInGlobalReplicationGroupInput) SetApplyImmediately(v bool) *RebalanceSlotsInGlobalReplicationGroupInput {
+	s.ApplyImmediately = &v
+	return s
+}
+
+// SetGlobalReplicationGroupId sets the GlobalReplicationGroupId field's value.
+func (s *RebalanceSlotsInGlobalReplicationGroupInput) SetGlobalReplicationGroupId(v string) *RebalanceSlotsInGlobalReplicationGroupInput {
+	s.GlobalReplicationGroupId = &v
+	return s
+}
+
+type RebalanceSlotsInGlobalReplicationGroupOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Consists of a primary cluster that accepts writes and an associated secondary
+	// cluster that resides in a different AWS region. The secondary cluster accepts
+	// only reads. The primary cluster automatically replicates updates to the secondary
+	// cluster.
+	//
+	//    * The GlobalReplicationGroupIdSuffix represents the name of the Global
+	//    Datastore, which is what you use to associate a secondary cluster.
+	GlobalReplicationGroup *GlobalReplicationGroup `type:"structure"`
+}
+
+// String returns the string representation
+func (s RebalanceSlotsInGlobalReplicationGroupOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RebalanceSlotsInGlobalReplicationGroupOutput) GoString() string {
+	return s.String()
+}
+
+// SetGlobalReplicationGroup sets the GlobalReplicationGroup field's value.
+func (s *RebalanceSlotsInGlobalReplicationGroupOutput) SetGlobalReplicationGroup(v *GlobalReplicationGroup) *RebalanceSlotsInGlobalReplicationGroupOutput {
+	s.GlobalReplicationGroup = v
 	return s
 }
 
@@ -12571,6 +15244,84 @@ func (s *RecurringCharge) SetRecurringChargeFrequency(v string) *RecurringCharge
 	return s
 }
 
+// A list of the replication groups
+type RegionalConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the secondary cluster
+	//
+	// ReplicationGroupId is a required field
+	ReplicationGroupId *string `type:"string" required:"true"`
+
+	// The AWS region where the cluster is stored
+	//
+	// ReplicationGroupRegion is a required field
+	ReplicationGroupRegion *string `type:"string" required:"true"`
+
+	// A list of PreferredAvailabilityZones objects that specifies the configuration
+	// of a node group in the resharded cluster.
+	//
+	// ReshardingConfiguration is a required field
+	ReshardingConfiguration []*ReshardingConfiguration `locationNameList:"ReshardingConfiguration" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s RegionalConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RegionalConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RegionalConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RegionalConfiguration"}
+	if s.ReplicationGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReplicationGroupId"))
+	}
+	if s.ReplicationGroupRegion == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReplicationGroupRegion"))
+	}
+	if s.ReshardingConfiguration == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReshardingConfiguration"))
+	}
+	if s.ReshardingConfiguration != nil {
+		for i, v := range s.ReshardingConfiguration {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ReshardingConfiguration", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetReplicationGroupId sets the ReplicationGroupId field's value.
+func (s *RegionalConfiguration) SetReplicationGroupId(v string) *RegionalConfiguration {
+	s.ReplicationGroupId = &v
+	return s
+}
+
+// SetReplicationGroupRegion sets the ReplicationGroupRegion field's value.
+func (s *RegionalConfiguration) SetReplicationGroupRegion(v string) *RegionalConfiguration {
+	s.ReplicationGroupRegion = &v
+	return s
+}
+
+// SetReshardingConfiguration sets the ReshardingConfiguration field's value.
+func (s *RegionalConfiguration) SetReshardingConfiguration(v []*ReshardingConfiguration) *RegionalConfiguration {
+	s.ReshardingConfiguration = v
+	return s
+}
+
 // Represents the input of a RemoveTagsFromResource operation.
 type RemoveTagsFromResourceInput struct {
 	_ struct{} `type:"structure"`
@@ -12633,6 +15384,9 @@ func (s *RemoveTagsFromResourceInput) SetTagKeys(v []*string) *RemoveTagsFromRes
 type ReplicationGroup struct {
 	_ struct{} `type:"structure"`
 
+	// The ARN (Amazon Resource Name) of the replication group.
+	ARN *string `type:"string"`
+
 	// A flag that enables encryption at-rest when set to true.
 	//
 	// You cannot modify the value of AtRestEncryptionEnabled after the cluster
@@ -12650,17 +15404,10 @@ type ReplicationGroup struct {
 	// Default: false
 	AuthTokenEnabled *bool `type:"boolean"`
 
-	// Indicates the status of Multi-AZ with automatic failover for this Redis replication
-	// group.
-	//
-	// Amazon ElastiCache for Redis does not support Multi-AZ with automatic failover
-	// on:
-	//
-	//    * Redis versions earlier than 2.8.6.
-	//
-	//    * Redis (cluster mode disabled): T1 node types.
-	//
-	//    * Redis (cluster mode enabled): T1 node types.
+	// The date the auth token was last modified
+	AuthTokenLastModifiedDate *time.Time `type:"timestamp"`
+
+	// Indicates the status of automatic failover for this Redis replication group.
 	AutomaticFailover *string `type:"string" enum:"AutomaticFailoverStatus"`
 
 	// The name of the compute and memory capacity node type for each node in the
@@ -12681,8 +15428,19 @@ type ReplicationGroup struct {
 	// The user supplied description of the replication group.
 	Description *string `type:"string"`
 
+	// The name of the Global Datastore and role of this replication group in the
+	// Global Datastore.
+	GlobalReplicationGroupInfo *GlobalReplicationGroupInfo `type:"structure"`
+
+	// The ID of the KMS key used to encrypt the disk in the cluster.
+	KmsKeyId *string `type:"string"`
+
 	// The names of all the cache clusters that are part of this replication group.
 	MemberClusters []*string `locationNameList:"ClusterId" type:"list"`
+
+	// A flag indicating if you have Multi-AZ enabled to enhance fault tolerance.
+	// For more information, see Minimizing Downtime: Multi-AZ (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/AutoFailover.html)
+	MultiAZ *string `type:"string" enum:"MultiAZStatus"`
 
 	// A list of node groups in this replication group. For Redis (cluster mode
 	// disabled) replication groups, this is a single-element list. For Redis (cluster
@@ -12747,6 +15505,12 @@ func (s ReplicationGroup) GoString() string {
 	return s.String()
 }
 
+// SetARN sets the ARN field's value.
+func (s *ReplicationGroup) SetARN(v string) *ReplicationGroup {
+	s.ARN = &v
+	return s
+}
+
 // SetAtRestEncryptionEnabled sets the AtRestEncryptionEnabled field's value.
 func (s *ReplicationGroup) SetAtRestEncryptionEnabled(v bool) *ReplicationGroup {
 	s.AtRestEncryptionEnabled = &v
@@ -12756,6 +15520,12 @@ func (s *ReplicationGroup) SetAtRestEncryptionEnabled(v bool) *ReplicationGroup 
 // SetAuthTokenEnabled sets the AuthTokenEnabled field's value.
 func (s *ReplicationGroup) SetAuthTokenEnabled(v bool) *ReplicationGroup {
 	s.AuthTokenEnabled = &v
+	return s
+}
+
+// SetAuthTokenLastModifiedDate sets the AuthTokenLastModifiedDate field's value.
+func (s *ReplicationGroup) SetAuthTokenLastModifiedDate(v time.Time) *ReplicationGroup {
+	s.AuthTokenLastModifiedDate = &v
 	return s
 }
 
@@ -12789,9 +15559,27 @@ func (s *ReplicationGroup) SetDescription(v string) *ReplicationGroup {
 	return s
 }
 
+// SetGlobalReplicationGroupInfo sets the GlobalReplicationGroupInfo field's value.
+func (s *ReplicationGroup) SetGlobalReplicationGroupInfo(v *GlobalReplicationGroupInfo) *ReplicationGroup {
+	s.GlobalReplicationGroupInfo = v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *ReplicationGroup) SetKmsKeyId(v string) *ReplicationGroup {
+	s.KmsKeyId = &v
+	return s
+}
+
 // SetMemberClusters sets the MemberClusters field's value.
 func (s *ReplicationGroup) SetMemberClusters(v []*string) *ReplicationGroup {
 	s.MemberClusters = v
+	return s
+}
+
+// SetMultiAZ sets the MultiAZ field's value.
+func (s *ReplicationGroup) SetMultiAZ(v string) *ReplicationGroup {
+	s.MultiAZ = &v
 	return s
 }
 
@@ -12848,17 +15636,10 @@ func (s *ReplicationGroup) SetTransitEncryptionEnabled(v bool) *ReplicationGroup
 type ReplicationGroupPendingModifiedValues struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates the status of Multi-AZ with automatic failover for this Redis replication
-	// group.
-	//
-	// Amazon ElastiCache for Redis does not support Multi-AZ with automatic failover
-	// on:
-	//
-	//    * Redis versions earlier than 2.8.6.
-	//
-	//    * Redis (cluster mode disabled): T1 node types.
-	//
-	//    * Redis (cluster mode enabled): T1 node types.
+	// The auth token status
+	AuthTokenStatus *string `type:"string" enum:"AuthTokenUpdateStatus"`
+
+	// Indicates the status of automatic failover for this Redis replication group.
 	AutomaticFailoverStatus *string `type:"string" enum:"PendingAutomaticFailoverStatus"`
 
 	// The primary cluster ID that is applied immediately (if --apply-immediately
@@ -12877,6 +15658,12 @@ func (s ReplicationGroupPendingModifiedValues) String() string {
 // GoString returns the string representation
 func (s ReplicationGroupPendingModifiedValues) GoString() string {
 	return s.String()
+}
+
+// SetAuthTokenStatus sets the AuthTokenStatus field's value.
+func (s *ReplicationGroupPendingModifiedValues) SetAuthTokenStatus(v string) *ReplicationGroupPendingModifiedValues {
+	s.AuthTokenStatus = &v
+	return s
 }
 
 // SetAutomaticFailoverStatus sets the AutomaticFailoverStatus field's value.
@@ -12913,11 +15700,11 @@ type ReservedCacheNode struct {
 	//    * General purpose: Current generation: M5 node types: cache.m5.large,
 	//    cache.m5.xlarge, cache.m5.2xlarge, cache.m5.4xlarge, cache.m5.12xlarge,
 	//    cache.m5.24xlarge M4 node types: cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge,
-	//    cache.m4.4xlarge, cache.m4.10xlarge T2 node types: cache.t2.micro, cache.t2.small,
-	//    cache.t2.medium Previous generation: (not recommended) T1 node types:
-	//    cache.t1.micro M1 node types: cache.m1.small, cache.m1.medium, cache.m1.large,
-	//    cache.m1.xlarge M3 node types: cache.m3.medium, cache.m3.large, cache.m3.xlarge,
-	//    cache.m3.2xlarge
+	//    cache.m4.4xlarge, cache.m4.10xlarge T3 node types: cache.t3.micro, cache.t3.small,
+	//    cache.t3.medium T2 node types: cache.t2.micro, cache.t2.small, cache.t2.medium
+	//    Previous generation: (not recommended) T1 node types: cache.t1.micro M1
+	//    node types: cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
+	//    M3 node types: cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
 	//
 	//    * Compute optimized: Previous generation: (not recommended) C1 node types:
 	//    cache.c1.xlarge
@@ -13079,11 +15866,11 @@ type ReservedCacheNodesOffering struct {
 	//    * General purpose: Current generation: M5 node types: cache.m5.large,
 	//    cache.m5.xlarge, cache.m5.2xlarge, cache.m5.4xlarge, cache.m5.12xlarge,
 	//    cache.m5.24xlarge M4 node types: cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge,
-	//    cache.m4.4xlarge, cache.m4.10xlarge T2 node types: cache.t2.micro, cache.t2.small,
-	//    cache.t2.medium Previous generation: (not recommended) T1 node types:
-	//    cache.t1.micro M1 node types: cache.m1.small, cache.m1.medium, cache.m1.large,
-	//    cache.m1.xlarge M3 node types: cache.m3.medium, cache.m3.large, cache.m3.xlarge,
-	//    cache.m3.2xlarge
+	//    cache.m4.4xlarge, cache.m4.10xlarge T3 node types: cache.t3.micro, cache.t3.small,
+	//    cache.t3.medium T2 node types: cache.t2.micro, cache.t2.small, cache.t2.medium
+	//    Previous generation: (not recommended) T1 node types: cache.t1.micro M1
+	//    node types: cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
+	//    M3 node types: cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
 	//
 	//    * Compute optimized: Previous generation: (not recommended) C1 node types:
 	//    cache.c1.xlarge
@@ -13464,10 +16251,11 @@ type ServiceUpdate struct {
 	// recommended apply-by date has expired.
 	AutoUpdateAfterRecommendedApplyByDate *bool `type:"boolean"`
 
-	// The Redis engine to which the service update applies
+	// The Elasticache engine to which the update applies. Either Redis or Memcached
 	Engine *string `type:"string"`
 
-	// The Redis engine version to which the service update applies
+	// The Elasticache engine version to which the update applies. Either Redis
+	// or Memcached engine version
 	EngineVersion *string `type:"string"`
 
 	// The estimated length of time the service update will take
@@ -13611,20 +16399,14 @@ func (s *SlotMigration) SetProgressPercentage(v float64) *SlotMigration {
 type Snapshot struct {
 	_ struct{} `type:"structure"`
 
+	// The ARN (Amazon Resource Name) of the snapshot.
+	ARN *string `type:"string"`
+
 	// This parameter is currently disabled.
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
 
-	// Indicates the status of Multi-AZ with automatic failover for the source Redis
-	// replication group.
-	//
-	// Amazon ElastiCache for Redis does not support Multi-AZ with automatic failover
-	// on:
-	//
-	//    * Redis versions earlier than 2.8.6.
-	//
-	//    * Redis (cluster mode disabled): T1 node types.
-	//
-	//    * Redis (cluster mode enabled): T1 node types.
+	// Indicates the status of automatic failover for the source Redis replication
+	// group.
 	AutomaticFailover *string `type:"string" enum:"AutomaticFailoverStatus"`
 
 	// The date and time when the source cluster was created.
@@ -13642,11 +16424,11 @@ type Snapshot struct {
 	//    * General purpose: Current generation: M5 node types: cache.m5.large,
 	//    cache.m5.xlarge, cache.m5.2xlarge, cache.m5.4xlarge, cache.m5.12xlarge,
 	//    cache.m5.24xlarge M4 node types: cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge,
-	//    cache.m4.4xlarge, cache.m4.10xlarge T2 node types: cache.t2.micro, cache.t2.small,
-	//    cache.t2.medium Previous generation: (not recommended) T1 node types:
-	//    cache.t1.micro M1 node types: cache.m1.small, cache.m1.medium, cache.m1.large,
-	//    cache.m1.xlarge M3 node types: cache.m3.medium, cache.m3.large, cache.m3.xlarge,
-	//    cache.m3.2xlarge
+	//    cache.m4.4xlarge, cache.m4.10xlarge T3 node types: cache.t3.micro, cache.t3.small,
+	//    cache.t3.medium T2 node types: cache.t2.micro, cache.t2.small, cache.t2.medium
+	//    Previous generation: (not recommended) T1 node types: cache.t1.micro M1
+	//    node types: cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
+	//    M3 node types: cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
 	//
 	//    * Compute optimized: Previous generation: (not recommended) C1 node types:
 	//    cache.c1.xlarge
@@ -13682,6 +16464,9 @@ type Snapshot struct {
 
 	// The version of the cache engine version that is used by the source cluster.
 	EngineVersion *string `type:"string"`
+
+	// The ID of the KMS key used to encrypt the snapshot.
+	KmsKeyId *string `type:"string"`
 
 	// A list of the cache nodes in the source cluster.
 	NodeSnapshots []*NodeSnapshot `locationNameList:"NodeSnapshot" type:"list"`
@@ -13779,6 +16564,12 @@ func (s Snapshot) GoString() string {
 	return s.String()
 }
 
+// SetARN sets the ARN field's value.
+func (s *Snapshot) SetARN(v string) *Snapshot {
+	s.ARN = &v
+	return s
+}
+
 // SetAutoMinorVersionUpgrade sets the AutoMinorVersionUpgrade field's value.
 func (s *Snapshot) SetAutoMinorVersionUpgrade(v bool) *Snapshot {
 	s.AutoMinorVersionUpgrade = &v
@@ -13830,6 +16621,12 @@ func (s *Snapshot) SetEngine(v string) *Snapshot {
 // SetEngineVersion sets the EngineVersion field's value.
 func (s *Snapshot) SetEngineVersion(v string) *Snapshot {
 	s.EngineVersion = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *Snapshot) SetKmsKeyId(v string) *Snapshot {
+	s.KmsKeyId = &v
 	return s
 }
 
@@ -13920,6 +16717,82 @@ func (s *Snapshot) SetTopicArn(v string) *Snapshot {
 // SetVpcId sets the VpcId field's value.
 func (s *Snapshot) SetVpcId(v string) *Snapshot {
 	s.VpcId = &v
+	return s
+}
+
+type StartMigrationInput struct {
+	_ struct{} `type:"structure"`
+
+	// List of endpoints from which data should be migrated. For Redis (cluster
+	// mode disabled), list should have only one element.
+	//
+	// CustomerNodeEndpointList is a required field
+	CustomerNodeEndpointList []*CustomerNodeEndpoint `type:"list" required:"true"`
+
+	// The ID of the replication group to which data should be migrated.
+	//
+	// ReplicationGroupId is a required field
+	ReplicationGroupId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StartMigrationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartMigrationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartMigrationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartMigrationInput"}
+	if s.CustomerNodeEndpointList == nil {
+		invalidParams.Add(request.NewErrParamRequired("CustomerNodeEndpointList"))
+	}
+	if s.ReplicationGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReplicationGroupId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCustomerNodeEndpointList sets the CustomerNodeEndpointList field's value.
+func (s *StartMigrationInput) SetCustomerNodeEndpointList(v []*CustomerNodeEndpoint) *StartMigrationInput {
+	s.CustomerNodeEndpointList = v
+	return s
+}
+
+// SetReplicationGroupId sets the ReplicationGroupId field's value.
+func (s *StartMigrationInput) SetReplicationGroupId(v string) *StartMigrationInput {
+	s.ReplicationGroupId = &v
+	return s
+}
+
+type StartMigrationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Contains all of the attributes of a specific Redis replication group.
+	ReplicationGroup *ReplicationGroup `type:"structure"`
+}
+
+// String returns the string representation
+func (s StartMigrationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartMigrationOutput) GoString() string {
+	return s.String()
+}
+
+// SetReplicationGroup sets the ReplicationGroup field's value.
+func (s *StartMigrationOutput) SetReplicationGroup(v *ReplicationGroup) *StartMigrationOutput {
+	s.ReplicationGroup = v
 	return s
 }
 
@@ -14138,6 +17011,9 @@ func (s *TimeRangeFilter) SetStartTime(v time.Time) *TimeRangeFilter {
 type UnprocessedUpdateAction struct {
 	_ struct{} `type:"structure"`
 
+	// The ID of the cache cluster
+	CacheClusterId *string `type:"string"`
+
 	// The error message that describes the reason the request was not processed
 	ErrorMessage *string `type:"string"`
 
@@ -14159,6 +17035,12 @@ func (s UnprocessedUpdateAction) String() string {
 // GoString returns the string representation
 func (s UnprocessedUpdateAction) GoString() string {
 	return s.String()
+}
+
+// SetCacheClusterId sets the CacheClusterId field's value.
+func (s *UnprocessedUpdateAction) SetCacheClusterId(v string) *UnprocessedUpdateAction {
+	s.CacheClusterId = &v
+	return s
 }
 
 // SetErrorMessage sets the ErrorMessage field's value.
@@ -14188,6 +17070,15 @@ func (s *UnprocessedUpdateAction) SetServiceUpdateName(v string) *UnprocessedUpd
 // The status of the service update for a specific replication group
 type UpdateAction struct {
 	_ struct{} `type:"structure"`
+
+	// The ID of the cache cluster
+	CacheClusterId *string `type:"string"`
+
+	// The status of the service update on the cache node
+	CacheNodeUpdateStatus []*CacheNodeUpdateStatus `locationNameList:"CacheNodeUpdateStatus" type:"list"`
+
+	// The Elasticache engine to which the update applies. Either Redis or Memcached
+	Engine *string `type:"string"`
 
 	// The estimated length of time for the update to complete
 	EstimatedUpdateTime *string `type:"string"`
@@ -14245,6 +17136,24 @@ func (s UpdateAction) String() string {
 // GoString returns the string representation
 func (s UpdateAction) GoString() string {
 	return s.String()
+}
+
+// SetCacheClusterId sets the CacheClusterId field's value.
+func (s *UpdateAction) SetCacheClusterId(v string) *UpdateAction {
+	s.CacheClusterId = &v
+	return s
+}
+
+// SetCacheNodeUpdateStatus sets the CacheNodeUpdateStatus field's value.
+func (s *UpdateAction) SetCacheNodeUpdateStatus(v []*CacheNodeUpdateStatus) *UpdateAction {
+	s.CacheNodeUpdateStatus = v
+	return s
+}
+
+// SetEngine sets the Engine field's value.
+func (s *UpdateAction) SetEngine(v string) *UpdateAction {
+	s.Engine = &v
+	return s
 }
 
 // SetEstimatedUpdateTime sets the EstimatedUpdateTime field's value.
@@ -14339,6 +17248,46 @@ const (
 	AZModeCrossAz = "cross-az"
 )
 
+// AZMode_Values returns all elements of the AZMode enum
+func AZMode_Values() []string {
+	return []string{
+		AZModeSingleAz,
+		AZModeCrossAz,
+	}
+}
+
+const (
+	// AuthTokenUpdateStatusSetting is a AuthTokenUpdateStatus enum value
+	AuthTokenUpdateStatusSetting = "SETTING"
+
+	// AuthTokenUpdateStatusRotating is a AuthTokenUpdateStatus enum value
+	AuthTokenUpdateStatusRotating = "ROTATING"
+)
+
+// AuthTokenUpdateStatus_Values returns all elements of the AuthTokenUpdateStatus enum
+func AuthTokenUpdateStatus_Values() []string {
+	return []string{
+		AuthTokenUpdateStatusSetting,
+		AuthTokenUpdateStatusRotating,
+	}
+}
+
+const (
+	// AuthTokenUpdateStrategyTypeSet is a AuthTokenUpdateStrategyType enum value
+	AuthTokenUpdateStrategyTypeSet = "SET"
+
+	// AuthTokenUpdateStrategyTypeRotate is a AuthTokenUpdateStrategyType enum value
+	AuthTokenUpdateStrategyTypeRotate = "ROTATE"
+)
+
+// AuthTokenUpdateStrategyType_Values returns all elements of the AuthTokenUpdateStrategyType enum
+func AuthTokenUpdateStrategyType_Values() []string {
+	return []string{
+		AuthTokenUpdateStrategyTypeSet,
+		AuthTokenUpdateStrategyTypeRotate,
+	}
+}
+
 const (
 	// AutomaticFailoverStatusEnabled is a AutomaticFailoverStatus enum value
 	AutomaticFailoverStatusEnabled = "enabled"
@@ -14353,6 +17302,16 @@ const (
 	AutomaticFailoverStatusDisabling = "disabling"
 )
 
+// AutomaticFailoverStatus_Values returns all elements of the AutomaticFailoverStatus enum
+func AutomaticFailoverStatus_Values() []string {
+	return []string{
+		AutomaticFailoverStatusEnabled,
+		AutomaticFailoverStatusDisabled,
+		AutomaticFailoverStatusEnabling,
+		AutomaticFailoverStatusDisabling,
+	}
+}
+
 const (
 	// ChangeTypeImmediate is a ChangeType enum value
 	ChangeTypeImmediate = "immediate"
@@ -14361,6 +17320,30 @@ const (
 	ChangeTypeRequiresReboot = "requires-reboot"
 )
 
+// ChangeType_Values returns all elements of the ChangeType enum
+func ChangeType_Values() []string {
+	return []string{
+		ChangeTypeImmediate,
+		ChangeTypeRequiresReboot,
+	}
+}
+
+const (
+	// MultiAZStatusEnabled is a MultiAZStatus enum value
+	MultiAZStatusEnabled = "enabled"
+
+	// MultiAZStatusDisabled is a MultiAZStatus enum value
+	MultiAZStatusDisabled = "disabled"
+)
+
+// MultiAZStatus_Values returns all elements of the MultiAZStatus enum
+func MultiAZStatus_Values() []string {
+	return []string{
+		MultiAZStatusEnabled,
+		MultiAZStatusDisabled,
+	}
+}
+
 const (
 	// NodeUpdateInitiatedBySystem is a NodeUpdateInitiatedBy enum value
 	NodeUpdateInitiatedBySystem = "system"
@@ -14368,6 +17351,14 @@ const (
 	// NodeUpdateInitiatedByCustomer is a NodeUpdateInitiatedBy enum value
 	NodeUpdateInitiatedByCustomer = "customer"
 )
+
+// NodeUpdateInitiatedBy_Values returns all elements of the NodeUpdateInitiatedBy enum
+func NodeUpdateInitiatedBy_Values() []string {
+	return []string{
+		NodeUpdateInitiatedBySystem,
+		NodeUpdateInitiatedByCustomer,
+	}
+}
 
 const (
 	// NodeUpdateStatusNotApplied is a NodeUpdateStatus enum value
@@ -14389,6 +17380,18 @@ const (
 	NodeUpdateStatusComplete = "complete"
 )
 
+// NodeUpdateStatus_Values returns all elements of the NodeUpdateStatus enum
+func NodeUpdateStatus_Values() []string {
+	return []string{
+		NodeUpdateStatusNotApplied,
+		NodeUpdateStatusWaitingToStart,
+		NodeUpdateStatusInProgress,
+		NodeUpdateStatusStopping,
+		NodeUpdateStatusStopped,
+		NodeUpdateStatusComplete,
+	}
+}
+
 const (
 	// PendingAutomaticFailoverStatusEnabled is a PendingAutomaticFailoverStatus enum value
 	PendingAutomaticFailoverStatusEnabled = "enabled"
@@ -14396,6 +17399,14 @@ const (
 	// PendingAutomaticFailoverStatusDisabled is a PendingAutomaticFailoverStatus enum value
 	PendingAutomaticFailoverStatusDisabled = "disabled"
 )
+
+// PendingAutomaticFailoverStatus_Values returns all elements of the PendingAutomaticFailoverStatus enum
+func PendingAutomaticFailoverStatus_Values() []string {
+	return []string{
+		PendingAutomaticFailoverStatusEnabled,
+		PendingAutomaticFailoverStatusDisabled,
+	}
+}
 
 const (
 	// ServiceUpdateSeverityCritical is a ServiceUpdateSeverity enum value
@@ -14411,6 +17422,16 @@ const (
 	ServiceUpdateSeverityLow = "low"
 )
 
+// ServiceUpdateSeverity_Values returns all elements of the ServiceUpdateSeverity enum
+func ServiceUpdateSeverity_Values() []string {
+	return []string{
+		ServiceUpdateSeverityCritical,
+		ServiceUpdateSeverityImportant,
+		ServiceUpdateSeverityMedium,
+		ServiceUpdateSeverityLow,
+	}
+}
+
 const (
 	// ServiceUpdateStatusAvailable is a ServiceUpdateStatus enum value
 	ServiceUpdateStatusAvailable = "available"
@@ -14422,10 +17443,26 @@ const (
 	ServiceUpdateStatusExpired = "expired"
 )
 
+// ServiceUpdateStatus_Values returns all elements of the ServiceUpdateStatus enum
+func ServiceUpdateStatus_Values() []string {
+	return []string{
+		ServiceUpdateStatusAvailable,
+		ServiceUpdateStatusCancelled,
+		ServiceUpdateStatusExpired,
+	}
+}
+
 const (
 	// ServiceUpdateTypeSecurityUpdate is a ServiceUpdateType enum value
 	ServiceUpdateTypeSecurityUpdate = "security-update"
 )
+
+// ServiceUpdateType_Values returns all elements of the ServiceUpdateType enum
+func ServiceUpdateType_Values() []string {
+	return []string{
+		ServiceUpdateTypeSecurityUpdate,
+	}
+}
 
 const (
 	// SlaMetYes is a SlaMet enum value
@@ -14437,6 +17474,15 @@ const (
 	// SlaMetNA is a SlaMet enum value
 	SlaMetNA = "n/a"
 )
+
+// SlaMet_Values returns all elements of the SlaMet enum
+func SlaMet_Values() []string {
+	return []string{
+		SlaMetYes,
+		SlaMetNo,
+		SlaMetNA,
+	}
+}
 
 const (
 	// SourceTypeCacheCluster is a SourceType enum value
@@ -14454,6 +17500,17 @@ const (
 	// SourceTypeReplicationGroup is a SourceType enum value
 	SourceTypeReplicationGroup = "replication-group"
 )
+
+// SourceType_Values returns all elements of the SourceType enum
+func SourceType_Values() []string {
+	return []string{
+		SourceTypeCacheCluster,
+		SourceTypeCacheParameterGroup,
+		SourceTypeCacheSecurityGroup,
+		SourceTypeCacheSubnetGroup,
+		SourceTypeReplicationGroup,
+	}
+}
 
 const (
 	// UpdateActionStatusNotApplied is a UpdateActionStatus enum value
@@ -14473,4 +17530,28 @@ const (
 
 	// UpdateActionStatusComplete is a UpdateActionStatus enum value
 	UpdateActionStatusComplete = "complete"
+
+	// UpdateActionStatusScheduling is a UpdateActionStatus enum value
+	UpdateActionStatusScheduling = "scheduling"
+
+	// UpdateActionStatusScheduled is a UpdateActionStatus enum value
+	UpdateActionStatusScheduled = "scheduled"
+
+	// UpdateActionStatusNotApplicable is a UpdateActionStatus enum value
+	UpdateActionStatusNotApplicable = "not-applicable"
 )
+
+// UpdateActionStatus_Values returns all elements of the UpdateActionStatus enum
+func UpdateActionStatus_Values() []string {
+	return []string{
+		UpdateActionStatusNotApplied,
+		UpdateActionStatusWaitingToStart,
+		UpdateActionStatusInProgress,
+		UpdateActionStatusStopping,
+		UpdateActionStatusStopped,
+		UpdateActionStatusComplete,
+		UpdateActionStatusScheduling,
+		UpdateActionStatusScheduled,
+		UpdateActionStatusNotApplicable,
+	}
+}

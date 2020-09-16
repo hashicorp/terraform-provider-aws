@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_saml_provider"
-sidebar_current: "docs-aws-resource-iam-saml-provider"
 description: |-
   Provides an IAM SAML provider.
 ---
@@ -15,7 +15,7 @@ Provides an IAM SAML provider.
 ```hcl
 resource "aws_iam_saml_provider" "default" {
   name                   = "myprovider"
-  saml_metadata_document = "${file("saml-metadata.xml")}"
+  saml_metadata_document = file("saml-metadata.xml")
 }
 ```
 

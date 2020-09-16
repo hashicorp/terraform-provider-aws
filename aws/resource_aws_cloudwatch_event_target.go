@@ -7,13 +7,13 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsCloudWatchEventTarget() *schema.Resource {
@@ -215,6 +215,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 						"input_paths": {
 							Type:     schema.TypeMap,
 							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"input_template": {
 							Type:         schema.TypeString,
@@ -382,16 +383,21 @@ func resourceAwsCloudWatchEventTargetUpdate(d *schema.ResourceData, meta interfa
 func resourceAwsCloudWatchEventTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
-	input := events.RemoveTargetsInput{
+	input := &events.RemoveTargetsInput{
 		Ids:  []*string{aws.String(d.Get("target_id").(string))},
 		Rule: aws.String(d.Get("rule").(string)),
 	}
-	log.Printf("[INFO] Deleting CloudWatch Event Target: %s", input)
-	_, err := conn.RemoveTargets(&input)
+
+	output, err := conn.RemoveTargets(input)
+
 	if err != nil {
-		return fmt.Errorf("Error deleting CloudWatch Event Target: %s", err)
+		return fmt.Errorf("error deleting CloudWatch Event Target (%s): %s", d.Id(), err)
 	}
-	log.Println("[INFO] CloudWatch Event Target deleted")
+
+	if output != nil && len(output.FailedEntries) > 0 && output.FailedEntries[0] != nil {
+		failedEntry := output.FailedEntries[0]
+		return fmt.Errorf("error deleting CloudWatch Event Target (%s): failure entry: %s: %s", d.Id(), aws.StringValue(failedEntry.ErrorCode), aws.StringValue(failedEntry.ErrorMessage))
+	}
 
 	return nil
 }

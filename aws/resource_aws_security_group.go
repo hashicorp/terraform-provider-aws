@@ -13,20 +13,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
 func resourceAwsSecurityGroup() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsSecurityGroupCreate,
 		Read:   resourceAwsSecurityGroupRead,
 		Update: resourceAwsSecurityGroupUpdate,
 		Delete: resourceAwsSecurityGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsSecurityGroupImportState,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -240,18 +243,15 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 		securityGroupOpts.VpcId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("tags"); ok {
+		securityGroupOpts.TagSpecifications = ec2TagSpecificationsFromMap(v.(map[string]interface{}), ec2.ResourceTypeSecurityGroup)
+	}
+
 	if v := d.Get("description"); v != nil {
 		securityGroupOpts.Description = aws.String(v.(string))
 	}
 
-	var groupName string
-	if v, ok := d.GetOk("name"); ok {
-		groupName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		groupName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		groupName = resource.UniqueId()
-	}
+	groupName := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
 	securityGroupOpts.GroupName = aws.String(groupName)
 
 	var err error
@@ -272,10 +272,6 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf(
 			"Error waiting for Security Group (%s) to become available: %s",
 			d.Id(), err)
-	}
-
-	if err := setTags(conn, d); err != nil {
-		return err
 	}
 
 	// AWS defaults all Security Groups to have an ALLOW ALL egress rule. Here we
@@ -341,6 +337,7 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	var sgRaw interface{}
 	var err error
@@ -384,8 +381,9 @@ func resourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("arn", sgArn.String())
 	d.Set("description", sg.Description)
 	d.Set("name", sg.GroupName)
-	d.Set("vpc_id", sg.VpcId)
+	d.Set("name_prefix", aws.StringValue(naming.NamePrefixFromName(aws.StringValue(sg.GroupName))))
 	d.Set("owner_id", sg.OwnerId)
+	d.Set("vpc_id", sg.VpcId)
 
 	if err := d.Set("ingress", ingressRules); err != nil {
 		log.Printf("[WARN] Error setting Ingress rule set for (%s): %s", d.Id(), err)
@@ -395,7 +393,10 @@ func resourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) erro
 		log.Printf("[WARN] Error setting Egress rule set for (%s): %s", d.Id(), err)
 	}
 
-	d.Set("tags", tagsToMap(sg.Tags))
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(sg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
 }
 
@@ -433,11 +434,12 @@ func resourceAwsSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if !d.IsNewResource() {
-		if err := setTags(conn, d); err != nil {
-			return err
+	if d.HasChange("tags") && !d.IsNewResource() {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EC2 Security Group (%s) tags: %s", d.Id(), err)
 		}
-		d.SetPartial("tags")
 	}
 
 	return resourceAwsSecurityGroupRead(d, meta)
@@ -448,8 +450,8 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Security Group destroy: %v", d.Id())
 
-	if err := deleteLingeringLambdaENIs(conn, d, "group-id"); err != nil {
-		return fmt.Errorf("Failed to delete Lambda ENIs: %s", err)
+	if err := deleteLingeringLambdaENIs(conn, "group-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error deleting Lambda ENIs using Security Group (%s): %s", d.Id(), err)
 	}
 
 	// conditionally revoke rules first before attempting to delete the group
@@ -471,7 +473,7 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 				// If it is a dependency violation, we want to retry
 				return resource.RetryableError(err)
 			}
-			resource.NonRetryableError(err)
+			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -1402,98 +1404,72 @@ func sgProtocolIntegers() map[string]int {
 
 // The AWS Lambda service creates ENIs behind the scenes and keeps these around for a while
 // which would prevent SGs attached to such ENIs from being destroyed
-func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData, filterName string) error {
-	// Here we carefully find the offenders
-	params := &ec2.DescribeNetworkInterfacesInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String(filterName),
-				Values: []*string{aws.String(d.Id())},
-			},
-			{
-				Name:   aws.String("description"),
-				Values: []*string{aws.String("AWS Lambda VPC ENI: *")},
-			},
-		},
+func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, timeout time.Duration) error {
+	// AWS Lambda service team confirms P99 deletion time of ~35 minutes. Buffer for safety.
+	if minimumTimeout := 45 * time.Minute; timeout < minimumTimeout {
+		timeout = minimumTimeout
 	}
-	networkInterfaceResp, err := conn.DescribeNetworkInterfaces(params)
 
-	if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
-		return nil
-	}
+	resp, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
+		Filters: buildEC2AttributeFilterList(map[string]string{
+			filterName:    resourceId,
+			"description": "AWS Lambda VPC ENI*",
+		}),
+	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error describing ENIs: %s", err)
 	}
 
-	// Then we detach and finally delete those
-	v := networkInterfaceResp.NetworkInterfaces
-	for _, eni := range v {
-		if eni.Attachment != nil {
-			detachNetworkInterfaceParams := &ec2.DetachNetworkInterfaceInput{
-				AttachmentId: eni.Attachment.AttachmentId,
-			}
-			_, detachNetworkInterfaceErr := conn.DetachNetworkInterface(detachNetworkInterfaceParams)
+	for _, eni := range resp.NetworkInterfaces {
+		eniId := aws.StringValue(eni.NetworkInterfaceId)
 
-			if isAWSErr(detachNetworkInterfaceErr, "InvalidNetworkInterfaceID.NotFound", "") {
-				return nil
-			}
-
-			if detachNetworkInterfaceErr != nil {
-				return detachNetworkInterfaceErr
-			}
-
-			log.Printf("[DEBUG] Waiting for ENI (%s) to become detached", *eni.NetworkInterfaceId)
+		if eni.Attachment != nil && aws.StringValue(eni.Attachment.InstanceOwnerId) == "amazon-aws" {
+			// Hyperplane attached ENI.
+			// Wait for it to be moved into a removable state.
 			stateConf := &resource.StateChangeConf{
-				Pending: []string{"true"},
-				Target:  []string{"false"},
-				Refresh: networkInterfaceAttachedRefreshFunc(conn, *eni.NetworkInterfaceId),
-				Timeout: d.Timeout(schema.TimeoutDelete),
+				Pending: []string{
+					ec2.NetworkInterfaceStatusInUse,
+				},
+				Target: []string{
+					ec2.NetworkInterfaceStatusAvailable,
+				},
+				Refresh:    networkInterfaceStateRefresh(conn, eniId),
+				Timeout:    timeout,
+				Delay:      10 * time.Second,
+				MinTimeout: 10 * time.Second,
+				// Handle EC2 ENI eventual consistency. It can take up to 3 minutes.
+				ContinuousTargetOccurence: 18,
+				NotFoundChecks:            1,
 			}
-			if _, err := stateConf.WaitForState(); err != nil {
-				return fmt.Errorf(
-					"Error waiting for ENI (%s) to become detached: %s", *eni.NetworkInterfaceId, err)
+
+			eniRaw, err := stateConf.WaitForState()
+
+			if isResourceNotFoundError(err) {
+				continue
 			}
+
+			if err != nil {
+				return fmt.Errorf("error waiting for Lambda V2N ENI (%s) to become available for detachment: %s", eniId, err)
+			}
+
+			eni = eniRaw.(*ec2.NetworkInterface)
 		}
 
-		deleteNetworkInterfaceParams := &ec2.DeleteNetworkInterfaceInput{
-			NetworkInterfaceId: eni.NetworkInterfaceId,
-		}
-		_, deleteNetworkInterfaceErr := conn.DeleteNetworkInterface(deleteNetworkInterfaceParams)
+		err = detachNetworkInterface(conn, eni, timeout)
 
-		if isAWSErr(deleteNetworkInterfaceErr, "InvalidNetworkInterfaceID.NotFound", "") {
-			return nil
+		if err != nil {
+			return fmt.Errorf("error detaching Lambda ENI (%s): %s", eniId, err)
 		}
 
-		if deleteNetworkInterfaceErr != nil {
-			return deleteNetworkInterfaceErr
+		err = deleteNetworkInterface(conn, eniId)
+
+		if err != nil {
+			return fmt.Errorf("error deleting Lambda ENI (%s): %s", eniId, err)
 		}
 	}
 
 	return nil
-}
-
-func networkInterfaceAttachedRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-
-		describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
-			NetworkInterfaceIds: []*string{aws.String(id)},
-		}
-		describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
-
-		if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
-			return 42, "false", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		eni := describeResp.NetworkInterfaces[0]
-		hasAttachment := strconv.FormatBool(eni.Attachment != nil)
-		log.Printf("[DEBUG] ENI %s has attachment state %s", id, hasAttachment)
-		return eni, hasAttachment, nil
-	}
 }
 
 func initSecurityGroupRule(ruleMap map[string]map[string]interface{}, perm *ec2.IpPermission, desc string) map[string]interface{} {

@@ -1,4 +1,5 @@
 ---
+subcategory: "Cognito"
 layout: "aws"
 page_title: "AWS: aws_cognito_identity_provider"
 side_bar_current: "docs-aws-resource-cognito-identity-provider"
@@ -19,7 +20,7 @@ resource "aws_cognito_user_pool" "example" {
 }
 
 resource "aws_cognito_identity_provider" "example_provider" {
-  user_pool_id  = "${aws_cognito_user_pool.example.id}"
+  user_pool_id  = aws_cognito_user_pool.example.id
   provider_name = "Google"
   provider_type = "Google"
 

@@ -3,14 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -57,8 +56,9 @@ func testSweepCloudWatchEventTargets(region string) error {
 
 				for _, target := range listTargetsByRuleOutput.Targets {
 					removeTargetsInput := &events.RemoveTargetsInput{
-						Ids:  []*string{target.Id},
-						Rule: rule.Name,
+						Ids:   []*string{target.Id},
+						Rule:  rule.Name,
+						Force: aws.Bool(true),
 					}
 					targetID := aws.StringValue(target.Id)
 
@@ -89,6 +89,8 @@ func testSweepCloudWatchEventTargets(region string) error {
 }
 
 func TestAccAWSCloudWatchEventTarget_basic(t *testing.T) {
+	resourceName := "aws_cloudwatch_event_target.test"
+
 	var target events.Target
 	rName1 := acctest.RandString(5)
 	rName2 := acctest.RandString(5)
@@ -106,27 +108,25 @@ func TestAccAWSCloudWatchEventTarget_basic(t *testing.T) {
 			{
 				Config: testAccAWSCloudWatchEventTargetConfig(ruleName, snsTopicName1, targetID1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists("aws_cloudwatch_event_target.moobar", &target),
-					resource.TestCheckResourceAttr("aws_cloudwatch_event_target.moobar", "rule", ruleName),
-					resource.TestCheckResourceAttr("aws_cloudwatch_event_target.moobar", "target_id", targetID1),
-					resource.TestMatchResourceAttr("aws_cloudwatch_event_target.moobar", "arn",
-						regexp.MustCompile(fmt.Sprintf(":%s$", snsTopicName1))),
+					testAccCheckCloudWatchEventTargetExists(resourceName, &target),
+					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "target_id", targetID1),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
 				),
 			},
 			{
 				Config: testAccAWSCloudWatchEventTargetConfig(ruleName, snsTopicName2, targetID2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists("aws_cloudwatch_event_target.moobar", &target),
-					resource.TestCheckResourceAttr("aws_cloudwatch_event_target.moobar", "rule", ruleName),
-					resource.TestCheckResourceAttr("aws_cloudwatch_event_target.moobar", "target_id", targetID2),
-					resource.TestMatchResourceAttr("aws_cloudwatch_event_target.moobar", "arn",
-						regexp.MustCompile(fmt.Sprintf(":%s$", snsTopicName2))),
+					testAccCheckCloudWatchEventTargetExists(resourceName, &target),
+					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "target_id", targetID2),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
 				),
 			},
 			{
-				ResourceName:      "aws_cloudwatch_event_target.moobar",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc("aws_cloudwatch_event_target.moobar"),
+				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -134,6 +134,8 @@ func TestAccAWSCloudWatchEventTarget_basic(t *testing.T) {
 }
 
 func TestAccAWSCloudWatchEventTarget_missingTargetId(t *testing.T) {
+	resourceName := "aws_cloudwatch_event_target.test"
+
 	var target events.Target
 	rName := acctest.RandString(5)
 	ruleName := fmt.Sprintf("tf-acc-cw-event-rule-missing-target-id-%s", rName)
@@ -147,16 +149,15 @@ func TestAccAWSCloudWatchEventTarget_missingTargetId(t *testing.T) {
 			{
 				Config: testAccAWSCloudWatchEventTargetConfigMissingTargetId(ruleName, snsTopicName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists("aws_cloudwatch_event_target.moobar", &target),
-					resource.TestCheckResourceAttr("aws_cloudwatch_event_target.moobar", "rule", ruleName),
-					resource.TestMatchResourceAttr("aws_cloudwatch_event_target.moobar", "arn",
-						regexp.MustCompile(fmt.Sprintf(":%s$", snsTopicName))),
+					testAccCheckCloudWatchEventTargetExists(resourceName, &target),
+					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
 				),
 			},
 			{
-				ResourceName:      "aws_cloudwatch_event_target.moobar",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc("aws_cloudwatch_event_target.moobar"),
+				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -164,6 +165,7 @@ func TestAccAWSCloudWatchEventTarget_missingTargetId(t *testing.T) {
 }
 
 func TestAccAWSCloudWatchEventTarget_full(t *testing.T) {
+	resourceName := "aws_cloudwatch_event_target.test"
 	var target events.Target
 	rName := acctest.RandString(5)
 	ruleName := fmt.Sprintf("tf-acc-cw-event-rule-full-%s", rName)
@@ -178,19 +180,18 @@ func TestAccAWSCloudWatchEventTarget_full(t *testing.T) {
 			{
 				Config: testAccAWSCloudWatchEventTargetConfig_full(ruleName, targetID, ssmDocumentName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventTargetExists("aws_cloudwatch_event_target.foobar", &target),
-					resource.TestCheckResourceAttr("aws_cloudwatch_event_target.foobar", "rule", ruleName),
-					resource.TestCheckResourceAttr("aws_cloudwatch_event_target.foobar", "target_id", targetID),
-					resource.TestMatchResourceAttr("aws_cloudwatch_event_target.foobar", "arn",
-						regexp.MustCompile("^arn:aws:kinesis:.*:stream/tf_ssm_Document")),
-					resource.TestCheckResourceAttr("aws_cloudwatch_event_target.foobar", "input", "{ \"source\": [\"aws.cloudtrail\"] }\n"),
-					resource.TestCheckResourceAttr("aws_cloudwatch_event_target.foobar", "input_path", ""),
+					testAccCheckCloudWatchEventTargetExists(resourceName, &target),
+					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_kinesis_stream.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "input", "{ \"source\": [\"aws.cloudtrail\"] }\n"),
+					resource.TestCheckResourceAttr(resourceName, "input_path", ""),
 				),
 			},
 			{
-				ResourceName:      "aws_cloudwatch_event_target.foobar",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc("aws_cloudwatch_event_target.foobar"),
+				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -425,18 +426,18 @@ func testAccAWSCloudWatchEventTargetImportStateIdFunc(resourceName string) resou
 
 func testAccAWSCloudWatchEventTargetConfig(ruleName, snsTopicName, targetID string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_rule" "foo" {
+resource "aws_cloudwatch_event_rule" "test" {
   name                = "%s"
   schedule_expression = "rate(1 hour)"
 }
 
-resource "aws_cloudwatch_event_target" "moobar" {
-  rule      = "${aws_cloudwatch_event_rule.foo.name}"
+resource "aws_cloudwatch_event_target" "test" {
+  rule      = aws_cloudwatch_event_rule.test.name
   target_id = "%s"
-  arn       = "${aws_sns_topic.moon.arn}"
+  arn       = aws_sns_topic.test.arn
 }
 
-resource "aws_sns_topic" "moon" {
+resource "aws_sns_topic" "test" {
   name = "%s"
 }
 `, ruleName, targetID, snsTopicName)
@@ -444,17 +445,17 @@ resource "aws_sns_topic" "moon" {
 
 func testAccAWSCloudWatchEventTargetConfigMissingTargetId(ruleName, snsTopicName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_rule" "foo" {
+resource "aws_cloudwatch_event_rule" "test" {
   name                = "%s"
   schedule_expression = "rate(1 hour)"
 }
 
-resource "aws_cloudwatch_event_target" "moobar" {
-  rule = "${aws_cloudwatch_event_rule.foo.name}"
-  arn  = "${aws_sns_topic.moon.arn}"
+resource "aws_cloudwatch_event_target" "test" {
+  rule = aws_cloudwatch_event_rule.test.name
+  arn  = aws_sns_topic.test.arn
 }
 
-resource "aws_sns_topic" "moon" {
+resource "aws_sns_topic" "test" {
   name = "%s"
 }
 `, ruleName, snsTopicName)
@@ -462,10 +463,10 @@ resource "aws_sns_topic" "moon" {
 
 func testAccAWSCloudWatchEventTargetConfig_full(ruleName, targetName, rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_rule" "foo" {
+resource "aws_cloudwatch_event_rule" "test" {
   name                = "%s"
   schedule_expression = "rate(1 hour)"
-  role_arn            = "${aws_iam_role.role.arn}"
+  role_arn            = aws_iam_role.role.arn
 }
 
 resource "aws_iam_role" "role" {
@@ -490,7 +491,7 @@ POLICY
 
 resource "aws_iam_role_policy" "test_policy" {
   name = "%s_policy"
-  role = "${aws_iam_role.role.id}"
+  role = aws_iam_role.role.id
 
   policy = <<EOF
 {
@@ -511,18 +512,19 @@ resource "aws_iam_role_policy" "test_policy" {
 EOF
 }
 
-resource "aws_cloudwatch_event_target" "foobar" {
-  rule      = "${aws_cloudwatch_event_rule.foo.name}"
+resource "aws_cloudwatch_event_target" "test" {
+  rule      = aws_cloudwatch_event_rule.test.name
   target_id = "%s"
 
   input = <<INPUT
 { "source": ["aws.cloudtrail"] }
 INPUT
 
-  arn = "${aws_kinesis_stream.test_stream.arn}"
+
+  arn = aws_kinesis_stream.test.arn
 }
 
-resource "aws_kinesis_stream" "test_stream" {
+resource "aws_kinesis_stream" "test" {
   name        = "%s_kinesis_test"
   shard_count = 1
 }
@@ -531,7 +533,7 @@ resource "aws_kinesis_stream" "test_stream" {
 
 func testAccAWSCloudWatchEventTargetConfigSsmDocument(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_document" "foo" {
+resource "aws_ssm_document" "test" {
   name          = "%s"
   document_type = "Command"
 
@@ -570,9 +572,9 @@ PATTERN
 }
 
 resource "aws_cloudwatch_event_target" "test" {
-  arn      = "${aws_ssm_document.foo.arn}"
-  rule     = "${aws_cloudwatch_event_rule.console.id}"
-  role_arn = "${aws_iam_role.test_role.arn}"
+  arn      = aws_ssm_document.test.arn
+  rule     = aws_cloudwatch_event_rule.console.id
+  role_arn = aws_iam_role.test_role.arn
 
   run_command_targets {
     key    = "tag:Name"
@@ -602,7 +604,7 @@ EOF
 
 resource "aws_iam_role_policy" "test_policy" {
   name = "%s"
-  role = "${aws_iam_role.test_role.id}"
+  role = aws_iam_role.test_role.id
 
   policy = <<EOF
 {
@@ -636,22 +638,22 @@ resource "aws_vpc" "vpc" {
 }
 
 resource "aws_subnet" "subnet" {
-  vpc_id     = "${aws_vpc.vpc.id}"
+  vpc_id     = aws_vpc.vpc.id
   cidr_block = "10.1.1.0/24"
 }
 
 resource "aws_cloudwatch_event_target" "test" {
-  arn      = "${aws_ecs_cluster.test.id}"
-  rule     = "${aws_cloudwatch_event_rule.schedule.id}"
-  role_arn = "${aws_iam_role.test_role.arn}"
+  arn      = aws_ecs_cluster.test.id
+  rule     = aws_cloudwatch_event_rule.schedule.id
+  role_arn = aws_iam_role.test_role.arn
 
   ecs_target {
     task_count          = 1
-    task_definition_arn = "${aws_ecs_task_definition.task.arn}"
+    task_definition_arn = aws_ecs_task_definition.task.arn
     launch_type         = "FARGATE"
 
     network_configuration {
-      subnets = ["${aws_subnet.subnet.id}"]
+      subnets = [aws_subnet.subnet.id]
     }
   }
 }
@@ -678,7 +680,7 @@ EOF
 
 resource "aws_iam_role_policy" "test_policy" {
   name = "%s"
-  role = "${aws_iam_role.test_role.id}"
+  role = aws_iam_role.test_role.id
 
   policy = <<EOF
 {
@@ -738,21 +740,21 @@ resource "aws_vpc" "vpc" {
 }
 
 resource "aws_subnet" "subnet" {
-  vpc_id     = "${aws_vpc.vpc.id}"
+  vpc_id     = aws_vpc.vpc.id
   cidr_block = "10.1.1.0/24"
 }
 
 resource "aws_cloudwatch_event_target" "test" {
-  arn      = "${aws_ecs_cluster.test.id}"
-  rule     = "${aws_cloudwatch_event_rule.schedule.id}"
-  role_arn = "${aws_iam_role.test_role.arn}"
+  arn      = aws_ecs_cluster.test.id
+  rule     = aws_cloudwatch_event_rule.schedule.id
+  role_arn = aws_iam_role.test_role.arn
 
   ecs_target {
-    task_definition_arn = "${aws_ecs_task_definition.task.arn}"
+    task_definition_arn = aws_ecs_task_definition.task.arn
     launch_type         = "FARGATE"
 
     network_configuration {
-      subnets = ["${aws_subnet.subnet.id}"]
+      subnets = [aws_subnet.subnet.id]
     }
   }
 }
@@ -779,7 +781,7 @@ EOF
 
 resource "aws_iam_role_policy" "test_policy" {
   name = "%[1]s"
-  role = "${aws_iam_role.test_role.id}"
+  role = aws_iam_role.test_role.id
 
   policy = <<EOF
 {
@@ -834,19 +836,19 @@ resource "aws_cloudwatch_event_rule" "cloudwatch_event_rule" {
 }
 
 resource "aws_cloudwatch_event_target" "test" {
-  arn      = "${aws_batch_job_queue.batch_job_queue.arn}"
-  rule     = "${aws_cloudwatch_event_rule.cloudwatch_event_rule.id}"
-  role_arn = "${aws_iam_role.event_iam_role.arn}"
+  arn      = aws_batch_job_queue.batch_job_queue.arn
+  rule     = aws_cloudwatch_event_rule.cloudwatch_event_rule.id
+  role_arn = aws_iam_role.event_iam_role.arn
 
   batch_target {
-    job_definition = "${aws_batch_job_definition.batch_job_definition.arn}"
+    job_definition = aws_batch_job_definition.batch_job_definition.arn
     job_name       = "%[1]s"
   }
 
   depends_on = [
-    "aws_batch_job_queue.batch_job_queue",
-    "aws_batch_job_definition.batch_job_definition",
-    "aws_iam_role.event_iam_role",
+    aws_batch_job_queue.batch_job_queue,
+    aws_batch_job_definition.batch_job_definition,
+    aws_iam_role.event_iam_role,
   ]
 }
 
@@ -889,13 +891,13 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_policy_attachment" {
-  role       = "${aws_iam_role.ecs_iam_role.name}"
+  role       = aws_iam_role.ecs_iam_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
 }
 
 resource "aws_iam_instance_profile" "iam_instance_profile" {
   name = "ecs_%[1]s"
-  role = "${aws_iam_role.ecs_iam_role.name}"
+  role = aws_iam_role.ecs_iam_role.name
 }
 
 resource "aws_iam_role" "batch_iam_role" {
@@ -918,7 +920,7 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "batch_policy_attachment" {
-  role       = "${aws_iam_role.batch_iam_role.name}"
+  role       = aws_iam_role.batch_iam_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole"
 }
 
@@ -931,7 +933,7 @@ resource "aws_vpc" "vpc" {
 }
 
 resource "aws_subnet" "subnet" {
-  vpc_id     = "${aws_vpc.vpc.id}"
+  vpc_id     = aws_vpc.vpc.id
   cidr_block = "10.1.1.0/24"
 }
 
@@ -939,7 +941,7 @@ resource "aws_batch_compute_environment" "batch_compute_environment" {
   compute_environment_name = "%[1]s"
 
   compute_resources {
-    instance_role = "${aws_iam_instance_profile.iam_instance_profile.arn}"
+    instance_role = aws_iam_instance_profile.iam_instance_profile.arn
 
     instance_type = [
       "c4.large",
@@ -949,26 +951,26 @@ resource "aws_batch_compute_environment" "batch_compute_environment" {
     min_vcpus = 0
 
     security_group_ids = [
-      "${aws_security_group.security_group.id}",
+      aws_security_group.security_group.id,
     ]
 
     subnets = [
-      "${aws_subnet.subnet.id}",
+      aws_subnet.subnet.id,
     ]
 
     type = "EC2"
   }
 
-  service_role = "${aws_iam_role.batch_iam_role.arn}"
+  service_role = aws_iam_role.batch_iam_role.arn
   type         = "MANAGED"
-  depends_on   = ["aws_iam_role_policy_attachment.batch_policy_attachment"]
+  depends_on   = [aws_iam_role_policy_attachment.batch_policy_attachment]
 }
 
 resource "aws_batch_job_queue" "batch_job_queue" {
   name                 = "%[1]s"
   state                = "ENABLED"
   priority             = 1
-  compute_environments = ["${aws_batch_compute_environment.batch_compute_environment.arn}"]
+  compute_environments = [aws_batch_compute_environment.batch_compute_environment.arn]
 }
 
 resource "aws_batch_job_definition" "batch_job_definition" {
@@ -987,6 +989,7 @@ resource "aws_batch_job_definition" "batch_job_definition" {
     "ulimits": [ ]
 }
 CONTAINER_PROPERTIES
+
 }
 `, rName)
 }
@@ -1000,9 +1003,9 @@ resource "aws_cloudwatch_event_rule" "cloudwatch_event_rule" {
 }
 
 resource "aws_cloudwatch_event_target" "test" {
-  arn      = "${aws_kinesis_stream.kinesis_stream.arn}"
-  rule     = "${aws_cloudwatch_event_rule.cloudwatch_event_rule.id}"
-  role_arn = "${aws_iam_role.iam_role.arn}"
+  arn      = aws_kinesis_stream.kinesis_stream.arn
+  rule     = aws_cloudwatch_event_rule.cloudwatch_event_rule.id
+  role_arn = aws_iam_role.iam_role.arn
 
   kinesis_target {
     partition_key_path = "$.detail"
@@ -1044,8 +1047,8 @@ resource "aws_cloudwatch_event_rule" "cloudwatch_event_rule" {
 }
 
 resource "aws_cloudwatch_event_target" "test" {
-  arn  = "${aws_sqs_queue.sqs_queue.arn}"
-  rule = "${aws_cloudwatch_event_rule.cloudwatch_event_rule.id}"
+  arn  = aws_sqs_queue.sqs_queue.arn
+  rule = aws_cloudwatch_event_rule.cloudwatch_event_rule.id
 
   sqs_target {
     message_group_id = "event_group"
@@ -1084,10 +1087,10 @@ EOF
 resource "aws_lambda_function" "lambda" {
   function_name    = "tf_acc_input_transformer"
   filename         = "test-fixtures/lambdatest.zip"
-  source_code_hash = "${filebase64sha256("test-fixtures/lambdatest.zip")}"
-  role             = "${aws_iam_role.iam_for_lambda.arn}"
+  source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
+  role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs8.10"
+  runtime          = "nodejs12.x"
 }
 
 resource "aws_cloudwatch_event_rule" "schedule" {
@@ -1098,8 +1101,8 @@ resource "aws_cloudwatch_event_rule" "schedule" {
 }
 
 resource "aws_cloudwatch_event_target" "test" {
-  arn  = "${aws_lambda_function.lambda.arn}"
-  rule = "${aws_cloudwatch_event_rule.schedule.id}"
+  arn  = aws_lambda_function.lambda.arn
+  rule = aws_cloudwatch_event_rule.schedule.id
 
   input_transformer {
     input_paths = {
@@ -1115,6 +1118,7 @@ resource "aws_cloudwatch_event_target" "test" {
   "detail": {}
 }
 EOF
+
   }
 }
 `, rName)

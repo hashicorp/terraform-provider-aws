@@ -6,40 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediastore"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSMediaStoreContainerPolicy_basic(t *testing.T) {
 	rname := acctest.RandString(5)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaStore(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsMediaStoreContainerPolicyDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccMediaStoreContainerPolicyConfig(rname, acctest.RandString(5)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMediaStoreContainerPolicyExists("aws_media_store_container_policy.test"),
-					resource.TestCheckResourceAttrSet("aws_media_store_container_policy.test", "container_name"),
-					resource.TestCheckResourceAttrSet("aws_media_store_container_policy.test", "policy"),
-				),
-			},
-			{
-				Config: testAccMediaStoreContainerPolicyConfig(rname, acctest.RandString(5)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMediaStoreContainerPolicyExists("aws_media_store_container_policy.test"),
-					resource.TestCheckResourceAttrSet("aws_media_store_container_policy.test", "container_name"),
-					resource.TestCheckResourceAttrSet("aws_media_store_container_policy.test", "policy"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSMediaStoreContainerPolicy_import(t *testing.T) {
 	resourceName := "aws_media_store_container_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -48,12 +21,25 @@ func TestAccAWSMediaStoreContainerPolicy_import(t *testing.T) {
 		CheckDestroy: testAccCheckAwsMediaStoreContainerPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMediaStoreContainerPolicyConfig(acctest.RandString(5), acctest.RandString(5)),
+				Config: testAccMediaStoreContainerPolicyConfig(rname, acctest.RandString(5)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMediaStoreContainerPolicyExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "container_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMediaStoreContainerPolicyConfig(rname, acctest.RandString(5)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMediaStoreContainerPolicyExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "container_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+				),
 			},
 		},
 	})
@@ -120,21 +106,29 @@ resource "aws_media_store_container" "test" {
 }
 
 resource "aws_media_store_container_policy" "test" {
-  container_name = "${aws_media_store_container.test.name}"
+  container_name = aws_media_store_container.test.name
 
   policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Statement": [{
-    "Sid": "%s",
-    "Action": [ "mediastore:*" ],
-    "Principal": {"AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
-    "Effect": "Allow",
-    "Resource": "arn:aws:mediastore:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:container/${aws_media_store_container.test.name}/*",
-    "Condition": {
-      "Bool": { "aws:SecureTransport": "true" }
+  "Statement": [
+    {
+      "Sid": "%s",
+      "Action": [
+        "mediastore:*"
+      ],
+      "Principal": {
+        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      },
+      "Effect": "Allow",
+      "Resource": "arn:aws:mediastore:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:container/${aws_media_store_container.test.name}/*",
+      "Condition": {
+        "Bool": {
+          "aws:SecureTransport": "true"
+        }
+      }
     }
-  }]
+  ]
 }
 EOF
 }

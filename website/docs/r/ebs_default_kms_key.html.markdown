@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ebs_default_kms_key"
-sidebar_current: "docs-aws-ebs-default-kms-key"
 description: |-
   Manages the default customer master key (CMK) that your AWS account uses to encrypt EBS volumes.
 ---
@@ -21,7 +21,7 @@ By using the `aws_ebs_default_kms_key` resource, you can specify a customer-mana
 
 ```hcl
 resource "aws_ebs_default_kms_key" "example" {
-  key_arn = "${aws_kms_key.example.arn}"
+  key_arn = aws_kms_key.example.arn
 }
 ```
 

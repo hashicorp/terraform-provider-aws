@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -30,7 +30,11 @@ func testSweepIamServiceLinkedRoles(region string) error {
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String("/aws-service-role/"),
 	}
-	customSuffixRegex := regexp.MustCompile(`_tf-acc-test-\d+$`)
+
+	// include generic service role names created by:
+	// TestAccAWSIAMServiceLinkedRole_basic
+	// TestAccAWSIAMServiceLinkedRole_CustomSuffix_DiffSuppressFunc
+	customSuffixRegex := regexp.MustCompile(`_?(tf-acc-test-\d+|ServiceRoleFor(ApplicationAutoScaling_CustomResource|ElasticBeanstalk))$`)
 	err = conn.ListRolesPages(input, func(page *iam.ListRolesOutput, lastPage bool) bool {
 		if len(page.Roles) == 0 {
 			log.Printf("[INFO] No IAM Service Roles to sweep")
@@ -167,6 +171,7 @@ func TestAccAWSIAMServiceLinkedRole_basic(t *testing.T) {
 					testAccCheckAWSIAMServiceLinkedRoleExists(resourceName),
 					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("role%s%s", path, name)),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_name", awsServiceName),
+					testAccCheckResourceAttrRfc3339(resourceName, "create_date"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "path", path),

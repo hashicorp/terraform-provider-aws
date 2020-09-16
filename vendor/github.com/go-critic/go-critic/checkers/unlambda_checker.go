@@ -4,28 +4,28 @@ import (
 	"go/ast"
 	"go/types"
 
-	"github.com/go-lintpack/lintpack"
-	"github.com/go-lintpack/lintpack/astwalk"
+	"github.com/go-critic/go-critic/checkers/internal/astwalk"
+	"github.com/go-critic/go-critic/framework/linter"
 	"github.com/go-toolsmith/astcast"
 	"github.com/go-toolsmith/astequal"
 )
 
 func init() {
-	var info lintpack.CheckerInfo
+	var info linter.CheckerInfo
 	info.Name = "unlambda"
 	info.Tags = []string{"style"}
 	info.Summary = "Detects function literals that can be simplified"
 	info.Before = `func(x int) int { return fn(x) }`
 	info.After = `fn`
 
-	collection.AddChecker(&info, func(ctx *lintpack.CheckerContext) lintpack.FileWalker {
+	collection.AddChecker(&info, func(ctx *linter.CheckerContext) linter.FileWalker {
 		return astwalk.WalkerForExpr(&unlambdaChecker{ctx: ctx})
 	})
 }
 
 type unlambdaChecker struct {
 	astwalk.WalkHandler
-	ctx *lintpack.CheckerContext
+	ctx *linter.CheckerContext
 }
 
 func (c *unlambdaChecker) VisitExpr(x ast.Expr) {
@@ -46,6 +46,12 @@ func (c *unlambdaChecker) VisitExpr(x ast.Expr) {
 	}
 	if isBuiltin(callable) {
 		return // See #762
+	}
+	if id, ok := result.Fun.(*ast.Ident); ok {
+		obj := c.ctx.TypesInfo.ObjectOf(id)
+		if _, ok := obj.(*types.Var); ok {
+			return // See #888
+		}
 	}
 	fnType := c.ctx.TypesInfo.TypeOf(fn)
 	resultType := c.ctx.TypesInfo.TypeOf(result.Fun)

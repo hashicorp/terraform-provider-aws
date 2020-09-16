@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_ipv4_cidr_block_association"
-sidebar_current: "docs-aws-resource-vpc-ipv4-cidr-block-association"
 description: |-
   Associate additional IPv4 CIDR blocks with a VPC
 ---
@@ -21,7 +21,7 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
-  vpc_id     = "${aws_vpc.main.id}"
+  vpc_id     = aws_vpc.main.id
   cidr_block = "172.2.0.0/16"
 }
 ```

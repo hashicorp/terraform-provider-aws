@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediapackage"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSMediaPackageChannel_basic(t *testing.T) {
@@ -200,8 +200,8 @@ resource "aws_media_package_channel" "test" {
   channel_id = "%[1]s"
 
   tags = {
-	  Name = "%[1]s"
-	  %[2]s = "%[3]s"
+    Name  = "%[1]s"
+    %[2]s = "%[3]s"
   }
 }
 `, rName, key, value)

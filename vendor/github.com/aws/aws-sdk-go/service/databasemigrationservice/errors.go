@@ -2,6 +2,10 @@
 
 package databasemigrationservice
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeAccessDeniedFault for service response error code
@@ -48,6 +52,13 @@ const (
 	//
 	// The specified master key (CMK) isn't enabled.
 	ErrCodeKMSDisabledFault = "KMSDisabledFault"
+
+	// ErrCodeKMSFault for service response error code
+	// "KMSFault".
+	//
+	// An AWS Key Management Service (AWS KMS) error is preventing access to AWS
+	// KMS.
+	ErrCodeKMSFault = "KMSFault"
 
 	// ErrCodeKMSInvalidStateFault for service response error code
 	// "KMSInvalidStateFault".
@@ -98,6 +109,18 @@ const (
 	// The quota for this resource quota has been exceeded.
 	ErrCodeResourceQuotaExceededFault = "ResourceQuotaExceededFault"
 
+	// ErrCodeS3AccessDeniedFault for service response error code
+	// "S3AccessDeniedFault".
+	//
+	// Insufficient privileges are preventing access to an Amazon S3 object.
+	ErrCodeS3AccessDeniedFault = "S3AccessDeniedFault"
+
+	// ErrCodeS3ResourceNotFoundFault for service response error code
+	// "S3ResourceNotFoundFault".
+	//
+	// A specified Amazon S3 bucket, bucket folder, or other object can't be found.
+	ErrCodeS3ResourceNotFoundFault = "S3ResourceNotFoundFault"
+
 	// ErrCodeSNSInvalidTopicFault for service response error code
 	// "SNSInvalidTopicFault".
 	//
@@ -128,3 +151,29 @@ const (
 	// An upgrade dependency is preventing the database migration.
 	ErrCodeUpgradeDependencyFailureFault = "UpgradeDependencyFailureFault"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AccessDeniedFault":                           newErrorAccessDeniedFault,
+	"InsufficientResourceCapacityFault":           newErrorInsufficientResourceCapacityFault,
+	"InvalidCertificateFault":                     newErrorInvalidCertificateFault,
+	"InvalidResourceStateFault":                   newErrorInvalidResourceStateFault,
+	"InvalidSubnet":                               newErrorInvalidSubnet,
+	"KMSAccessDeniedFault":                        newErrorKMSAccessDeniedFault,
+	"KMSDisabledFault":                            newErrorKMSDisabledFault,
+	"KMSFault":                                    newErrorKMSFault,
+	"KMSInvalidStateFault":                        newErrorKMSInvalidStateFault,
+	"KMSKeyNotAccessibleFault":                    newErrorKMSKeyNotAccessibleFault,
+	"KMSNotFoundFault":                            newErrorKMSNotFoundFault,
+	"KMSThrottlingFault":                          newErrorKMSThrottlingFault,
+	"ReplicationSubnetGroupDoesNotCoverEnoughAZs": newErrorReplicationSubnetGroupDoesNotCoverEnoughAZs,
+	"ResourceAlreadyExistsFault":                  newErrorResourceAlreadyExistsFault,
+	"ResourceNotFoundFault":                       newErrorResourceNotFoundFault,
+	"ResourceQuotaExceededFault":                  newErrorResourceQuotaExceededFault,
+	"S3AccessDeniedFault":                         newErrorS3AccessDeniedFault,
+	"S3ResourceNotFoundFault":                     newErrorS3ResourceNotFoundFault,
+	"SNSInvalidTopicFault":                        newErrorSNSInvalidTopicFault,
+	"SNSNoAuthorizationFault":                     newErrorSNSNoAuthorizationFault,
+	"StorageQuotaExceededFault":                   newErrorStorageQuotaExceededFault,
+	"SubnetAlreadyInUse":                          newErrorSubnetAlreadyInUse,
+	"UpgradeDependencyFailureFault":               newErrorUpgradeDependencyFailureFault,
+}

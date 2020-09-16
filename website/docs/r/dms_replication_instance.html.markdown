@@ -1,7 +1,7 @@
 ---
+subcategory: "Database Migration Service (DMS)"
 layout: "aws"
 page_title: "AWS: aws_dms_replication_instance"
-sidebar_current: "docs-aws-resource-dms-replication-instance"
 description: |-
   Provides a DMS (Data Migration Service) replication instance resource.
 ---
@@ -32,33 +32,33 @@ data "aws_iam_policy_document" "dms_assume_role" {
 }
 
 resource "aws_iam_role" "dms-access-for-endpoint" {
-  assume_role_policy = "${data.aws_iam_policy_document.dms_assume_role.json}"
+  assume_role_policy = data.aws_iam_policy_document.dms_assume_role.json
   name               = "dms-access-for-endpoint"
 }
 
 resource "aws_iam_role_policy_attachment" "dms-access-for-endpoint-AmazonDMSRedshiftS3Role" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonDMSRedshiftS3Role"
-  role       = "${aws_iam_role.dms-access-for-endpoint.name}"
+  role       = aws_iam_role.dms-access-for-endpoint.name
 }
 
 resource "aws_iam_role" "dms-cloudwatch-logs-role" {
-  assume_role_policy = "${data.aws_iam_policy_document.dms_assume_role.json}"
+  assume_role_policy = data.aws_iam_policy_document.dms_assume_role.json
   name               = "dms-cloudwatch-logs-role"
 }
 
 resource "aws_iam_role_policy_attachment" "dms-cloudwatch-logs-role-AmazonDMSCloudWatchLogsRole" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonDMSCloudWatchLogsRole"
-  role       = "${aws_iam_role.dms-cloudwatch-logs-role.name}"
+  role       = aws_iam_role.dms-cloudwatch-logs-role.name
 }
 
 resource "aws_iam_role" "dms-vpc-role" {
-  assume_role_policy = "${data.aws_iam_policy_document.dms_assume_role.json}"
+  assume_role_policy = data.aws_iam_policy_document.dms_assume_role.json
   name               = "dms-vpc-role"
 }
 
 resource "aws_iam_role_policy_attachment" "dms-vpc-role-AmazonDMSVPCManagementRole" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonDMSVPCManagementRole"
-  role       = "${aws_iam_role.dms-vpc-role.name}"
+  role       = aws_iam_role.dms-vpc-role.name
 }
 
 # Create a new replication instance
@@ -67,14 +67,14 @@ resource "aws_dms_replication_instance" "test" {
   apply_immediately            = true
   auto_minor_version_upgrade   = true
   availability_zone            = "us-west-2c"
-  engine_version               = "1.9.0"
+  engine_version               = "3.1.4"
   kms_key_arn                  = "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"
   multi_az                     = false
   preferred_maintenance_window = "sun:10:30-sun:14:30"
   publicly_accessible          = true
   replication_instance_class   = "dms.t2.micro"
   replication_instance_id      = "test-dms-replication-instance-tf"
-  replication_subnet_group_id  = "${aws_dms_replication_subnet_group.test-dms-replication-subnet-group-tf.id}"
+  replication_subnet_group_id  = aws_dms_replication_subnet_group.test-dms-replication-subnet-group-tf.id
 
   tags = {
     Name = "test"
@@ -91,6 +91,7 @@ resource "aws_dms_replication_instance" "test" {
 The following arguments are supported:
 
 * `allocated_storage` - (Optional, Default: 50, Min: 5, Max: 6144) The amount of storage (in gigabytes) to be initially allocated for the replication instance.
+* `allow_major_version_upgrade` - (Optional, Default: false) Indicates that major version upgrades are allowed.
 * `apply_immediately` - (Optional, Default: false) Indicates whether the changes should be applied immediately or during the next maintenance window. Only used when updating an existing resource.
 * `auto_minor_version_upgrade` - (Optional, Default: false) Indicates that minor engine upgrades will be applied automatically to the replication instance during the maintenance window.
 * `availability_zone` - (Optional) The EC2 Availability Zone that the replication instance will be created in.
@@ -114,7 +115,7 @@ The following arguments are supported:
     - Cannot contain two consecutive hyphens.
 
 * `replication_subnet_group_id` - (Optional) A subnet group to associate with the replication instance.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 * `vpc_security_group_ids` - (Optional) A list of VPC security group IDs to be used with the replication instance. The VPC security groups must work with the VPC containing the replication instance.
 
 ## Attributes Reference
@@ -125,7 +126,6 @@ In addition to all arguments above, the following attributes are exported:
 * `replication_instance_private_ips` -  A list of the private IP addresses of the replication instance.
 * `replication_instance_public_ips` - A list of the public IP addresses of the replication instance.
 
-<a id="timeouts"></a>
 ## Timeouts
 
 `aws_dms_replication_instance` provides the following

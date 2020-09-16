@@ -6,13 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSDmsCertificateBasic(t *testing.T) {
+func TestAccAWSDmsCertificate_basic(t *testing.T) {
 	resourceName := "aws_dms_certificate.dms_certificate"
 	randId := acctest.RandString(8)
 

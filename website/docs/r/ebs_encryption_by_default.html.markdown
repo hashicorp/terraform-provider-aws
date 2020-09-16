@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ebs_encryption_by_default"
-sidebar_current: "docs-aws-ebs-encryption-by-default"
 description: |-
   Manages whether default EBS encryption is enabled for your AWS account in the current AWS region.
 ---

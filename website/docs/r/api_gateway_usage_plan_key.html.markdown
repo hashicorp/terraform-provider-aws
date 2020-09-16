@@ -1,7 +1,7 @@
 ---
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_usage_plan_key"
-sidebar_current: "docs-aws-resource-api-gateway-usage-plan-key"
 description: |-
   Provides an API Gateway Usage Plan Key.
 ---
@@ -23,8 +23,8 @@ resource "aws_api_gateway_usage_plan" "myusageplan" {
   name = "my_usage_plan"
 
   api_stages {
-    api_id = "${aws_api_gateway_rest_api.test.id}"
-    stage  = "${aws_api_gateway_deployment.foo.stage_name}"
+    api_id = aws_api_gateway_rest_api.test.id
+    stage  = aws_api_gateway_deployment.foo.stage_name
   }
 }
 
@@ -33,9 +33,9 @@ resource "aws_api_gateway_api_key" "mykey" {
 }
 
 resource "aws_api_gateway_usage_plan_key" "main" {
-  key_id        = "${aws_api_gateway_api_key.mykey.id}"
+  key_id        = aws_api_gateway_api_key.mykey.id
   key_type      = "API_KEY"
-  usage_plan_id = "${aws_api_gateway_usage_plan.myusageplan.id}"
+  usage_plan_id = aws_api_gateway_usage_plan.myusageplan.id
 }
 ```
 
@@ -57,3 +57,11 @@ In addition to all arguments above, the following attributes are exported:
 * `usage_plan_id` - The ID of the API resource
 * `name` - The name of a usage plan key.
 * `value` - The value of a usage plan key.
+
+## Import
+
+AWS API Gateway Usage Plan Key can be imported using the `USAGE-PLAN-ID/USAGE-PLAN-KEY-ID`, e.g.
+
+```sh
+$ terraform import aws_api_gateway_usage_plan_key.key 12345abcde/zzz
+```

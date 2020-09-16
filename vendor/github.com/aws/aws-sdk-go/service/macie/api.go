@@ -57,7 +57,8 @@ func (c *Macie) AssociateMemberAccountRequest(input *AssociateMemberAccountInput
 
 // AssociateMemberAccount API operation for Amazon Macie.
 //
-// Associates a specified AWS account with Amazon Macie as a member account.
+// Associates a specified AWS account with Amazon Macie Classic as a member
+// account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -66,16 +67,16 @@ func (c *Macie) AssociateMemberAccountRequest(input *AssociateMemberAccountInput
 // See the AWS API reference guide for Amazon Macie's
 // API operation AssociateMemberAccount for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The request was rejected because an invalid or out-of-range value was supplied
 //   for an input parameter.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request was rejected because it attempted to create resources beyond
 //   the current AWS account limits. The error code describes the limit exceeded.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   Internal server error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/macie-2017-12-19/AssociateMemberAccount
@@ -144,11 +145,11 @@ func (c *Macie) AssociateS3ResourcesRequest(input *AssociateS3ResourcesInput) (r
 
 // AssociateS3Resources API operation for Amazon Macie.
 //
-// Associates specified S3 resources with Amazon Macie for monitoring and data
-// classification. If memberAccountId isn't specified, the action associates
-// specified S3 resources with Macie for the current master account. If memberAccountId
-// is specified, the action associates specified S3 resources with Macie for
-// the specified member account.
+// Associates specified S3 resources with Amazon Macie Classic for monitoring
+// and data classification. If memberAccountId isn't specified, the action associates
+// specified S3 resources with Macie Classic for the current master account.
+// If memberAccountId is specified, the action associates specified S3 resources
+// with Macie Classic for the specified member account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -157,19 +158,19 @@ func (c *Macie) AssociateS3ResourcesRequest(input *AssociateS3ResourcesInput) (r
 // See the AWS API reference guide for Amazon Macie's
 // API operation AssociateS3Resources for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The request was rejected because an invalid or out-of-range value was supplied
 //   for an input parameter.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have required permissions to access the requested resource.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request was rejected because it attempted to create resources beyond
 //   the current AWS account limits. The error code describes the limit exceeded.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   Internal server error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/macie-2017-12-19/AssociateS3Resources
@@ -239,7 +240,7 @@ func (c *Macie) DisassociateMemberAccountRequest(input *DisassociateMemberAccoun
 
 // DisassociateMemberAccount API operation for Amazon Macie.
 //
-// Removes the specified member account from Amazon Macie.
+// Removes the specified member account from Amazon Macie Classic.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -248,12 +249,12 @@ func (c *Macie) DisassociateMemberAccountRequest(input *DisassociateMemberAccoun
 // See the AWS API reference guide for Amazon Macie's
 // API operation DisassociateMemberAccount for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The request was rejected because an invalid or out-of-range value was supplied
 //   for an input parameter.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   Internal server error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/macie-2017-12-19/DisassociateMemberAccount
@@ -322,10 +323,11 @@ func (c *Macie) DisassociateS3ResourcesRequest(input *DisassociateS3ResourcesInp
 
 // DisassociateS3Resources API operation for Amazon Macie.
 //
-// Removes specified S3 resources from being monitored by Amazon Macie. If memberAccountId
-// isn't specified, the action removes specified S3 resources from Macie for
-// the current master account. If memberAccountId is specified, the action removes
-// specified S3 resources from Macie for the specified member account.
+// Removes specified S3 resources from being monitored by Amazon Macie Classic.
+// If memberAccountId isn't specified, the action removes specified S3 resources
+// from Macie Classic for the current master account. If memberAccountId is
+// specified, the action removes specified S3 resources from Macie Classic for
+// the specified member account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -334,15 +336,15 @@ func (c *Macie) DisassociateS3ResourcesRequest(input *DisassociateS3ResourcesInp
 // See the AWS API reference guide for Amazon Macie's
 // API operation DisassociateS3Resources for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The request was rejected because an invalid or out-of-range value was supplied
 //   for an input parameter.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have required permissions to access the requested resource.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   Internal server error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/macie-2017-12-19/DisassociateS3Resources
@@ -417,8 +419,8 @@ func (c *Macie) ListMemberAccountsRequest(input *ListMemberAccountsInput) (req *
 
 // ListMemberAccounts API operation for Amazon Macie.
 //
-// Lists all Amazon Macie member accounts for the current Amazon Macie master
-// account.
+// Lists all Amazon Macie Classic member accounts for the current Amazon Macie
+// Classic master account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -427,11 +429,11 @@ func (c *Macie) ListMemberAccountsRequest(input *ListMemberAccountsInput) (req *
 // See the AWS API reference guide for Amazon Macie's
 // API operation ListMemberAccounts for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   Internal server error.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The request was rejected because an invalid or out-of-range value was supplied
 //   for an input parameter.
 //
@@ -500,10 +502,12 @@ func (c *Macie) ListMemberAccountsPagesWithContext(ctx aws.Context, input *ListM
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListMemberAccountsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListMemberAccountsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -557,11 +561,11 @@ func (c *Macie) ListS3ResourcesRequest(input *ListS3ResourcesInput) (req *reques
 
 // ListS3Resources API operation for Amazon Macie.
 //
-// Lists all the S3 resources associated with Amazon Macie. If memberAccountId
+// Lists all the S3 resources associated with Amazon Macie Classic. If memberAccountId
 // isn't specified, the action lists the S3 resources associated with Amazon
-// Macie for the current master account. If memberAccountId is specified, the
-// action lists the S3 resources associated with Amazon Macie for the specified
-// member account.
+// Macie Classic for the current master account. If memberAccountId is specified,
+// the action lists the S3 resources associated with Amazon Macie Classic for
+// the specified member account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -570,15 +574,15 @@ func (c *Macie) ListS3ResourcesRequest(input *ListS3ResourcesInput) (req *reques
 // See the AWS API reference guide for Amazon Macie's
 // API operation ListS3Resources for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The request was rejected because an invalid or out-of-range value was supplied
 //   for an input parameter.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have required permissions to access the requested resource.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   Internal server error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/macie-2017-12-19/ListS3Resources
@@ -646,10 +650,12 @@ func (c *Macie) ListS3ResourcesPagesWithContext(ctx aws.Context, input *ListS3Re
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListS3ResourcesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListS3ResourcesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -699,9 +705,9 @@ func (c *Macie) UpdateS3ResourcesRequest(input *UpdateS3ResourcesInput) (req *re
 //
 // Updates the classification types for the specified S3 resources. If memberAccountId
 // isn't specified, the action updates the classification types of the S3 resources
-// associated with Amazon Macie for the current master account. If memberAccountId
+// associated with Amazon Macie Classic for the current master account. If memberAccountId
 // is specified, the action updates the classification types of the S3 resources
-// associated with Amazon Macie for the specified member account.
+// associated with Amazon Macie Classic for the specified member account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -710,15 +716,15 @@ func (c *Macie) UpdateS3ResourcesRequest(input *UpdateS3ResourcesInput) (req *re
 // See the AWS API reference guide for Amazon Macie's
 // API operation UpdateS3Resources for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The request was rejected because an invalid or out-of-range value was supplied
 //   for an input parameter.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have required permissions to access the requested resource.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   Internal server error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/macie-2017-12-19/UpdateS3Resources
@@ -743,11 +749,70 @@ func (c *Macie) UpdateS3ResourcesWithContext(ctx aws.Context, input *UpdateS3Res
 	return out, req.Send()
 }
 
+// You do not have required permissions to access the requested resource.
+type AccessDeniedException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	// Resource type that caused the exception
+	ResourceType *string `locationName:"resourceType" type:"string"`
+}
+
+// String returns the string representation
+func (s AccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &AccessDeniedException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *AccessDeniedException) Code() string {
+	return "AccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s *AccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *AccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s *AccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *AccessDeniedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *AccessDeniedException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 type AssociateMemberAccountInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the AWS account that you want to associate with Amazon Macie as
-	// a member account.
+	// The ID of the AWS account that you want to associate with Amazon Macie Classic
+	// as a member account.
 	//
 	// MemberAccountId is a required field
 	MemberAccountId *string `locationName:"memberAccountId" type:"string" required:"true"`
@@ -799,12 +864,12 @@ func (s AssociateMemberAccountOutput) GoString() string {
 type AssociateS3ResourcesInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the Amazon Macie member account whose resources you want to associate
-	// with Macie.
+	// The ID of the Amazon Macie Classic member account whose resources you want
+	// to associate with Macie Classic.
 	MemberAccountId *string `locationName:"memberAccountId" type:"string"`
 
-	// The S3 resources that you want to associate with Amazon Macie for monitoring
-	// and data classification.
+	// The S3 resources that you want to associate with Amazon Macie Classic for
+	// monitoring and data classification.
 	//
 	// S3Resources is a required field
 	S3Resources []*S3ResourceClassification `locationName:"s3Resources" type:"list" required:"true"`
@@ -858,8 +923,8 @@ func (s *AssociateS3ResourcesInput) SetS3Resources(v []*S3ResourceClassification
 type AssociateS3ResourcesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// S3 resources that couldn't be associated with Amazon Macie. An error code
-	// and an error message are provided for each failed item.
+	// S3 resources that couldn't be associated with Amazon Macie Classic. An error
+	// code and an error message are provided for each failed item.
 	FailedS3Resources []*FailedS3Resource `locationName:"failedS3Resources" type:"list"`
 }
 
@@ -879,13 +944,14 @@ func (s *AssociateS3ResourcesOutput) SetFailedS3Resources(v []*FailedS3Resource)
 	return s
 }
 
-// The classification type that Amazon Macie applies to the associated S3 resources.
+// The classification type that Amazon Macie Classic applies to the associated
+// S3 resources.
 type ClassificationType struct {
 	_ struct{} `type:"structure"`
 
 	// A continuous classification of the objects that are added to a specified
-	// S3 bucket. Amazon Macie begins performing continuous classification after
-	// a bucket is successfully associated with Amazon Macie.
+	// S3 bucket. Amazon Macie Classic begins performing continuous classification
+	// after a bucket is successfully associated with Amazon Macie Classic.
 	//
 	// Continuous is a required field
 	Continuous *string `locationName:"continuous" type:"string" required:"true" enum:"S3ContinuousClassificationType"`
@@ -935,15 +1001,15 @@ func (s *ClassificationType) SetOneTime(v string) *ClassificationType {
 	return s
 }
 
-// The classification type that Amazon Macie applies to the associated S3 resources.
-// At least one of the classification types (oneTime or continuous) must be
-// specified.
+// The classification type that Amazon Macie Classic applies to the associated
+// S3 resources. At least one of the classification types (oneTime or continuous)
+// must be specified.
 type ClassificationTypeUpdate struct {
 	_ struct{} `type:"structure"`
 
 	// A continuous classification of the objects that are added to a specified
-	// S3 bucket. Amazon Macie begins performing continuous classification after
-	// a bucket is successfully associated with Amazon Macie.
+	// S3 bucket. Amazon Macie Classic begins performing continuous classification
+	// after a bucket is successfully associated with Amazon Macie Classic.
 	Continuous *string `locationName:"continuous" type:"string" enum:"S3ContinuousClassificationType"`
 
 	// A one-time classification of all of the existing objects in a specified S3
@@ -976,7 +1042,7 @@ func (s *ClassificationTypeUpdate) SetOneTime(v string) *ClassificationTypeUpdat
 type DisassociateMemberAccountInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the member account that you want to remove from Amazon Macie.
+	// The ID of the member account that you want to remove from Amazon Macie Classic.
 	//
 	// MemberAccountId is a required field
 	MemberAccountId *string `locationName:"memberAccountId" type:"string" required:"true"`
@@ -1029,13 +1095,13 @@ type DisassociateS3ResourcesInput struct {
 	_ struct{} `type:"structure"`
 
 	// The S3 resources (buckets or prefixes) that you want to remove from being
-	// monitored and classified by Amazon Macie.
+	// monitored and classified by Amazon Macie Classic.
 	//
 	// AssociatedS3Resources is a required field
 	AssociatedS3Resources []*S3Resource `locationName:"associatedS3Resources" type:"list" required:"true"`
 
-	// The ID of the Amazon Macie member account whose resources you want to remove
-	// from being monitored by Amazon Macie.
+	// The ID of the Amazon Macie Classic member account whose resources you want
+	// to remove from being monitored by Amazon Macie Classic.
 	MemberAccountId *string `locationName:"memberAccountId" type:"string"`
 }
 
@@ -1088,8 +1154,8 @@ type DisassociateS3ResourcesOutput struct {
 	_ struct{} `type:"structure"`
 
 	// S3 resources that couldn't be removed from being monitored and classified
-	// by Amazon Macie. An error code and an error message are provided for each
-	// failed item.
+	// by Amazon Macie Classic. An error code and an error message are provided
+	// for each failed item.
 	FailedS3Resources []*FailedS3Resource `locationName:"failedS3Resources" type:"list"`
 }
 
@@ -1151,6 +1217,191 @@ func (s *FailedS3Resource) SetFailedItem(v *S3Resource) *FailedS3Resource {
 	return s
 }
 
+// Internal server error.
+type InternalException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// Error code for the exception
+	ErrorCode *string `locationName:"errorCode" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalException(v protocol.ResponseMetadata) error {
+	return &InternalException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InternalException) Code() string {
+	return "InternalException"
+}
+
+// Message returns the exception's message.
+func (s *InternalException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InternalException) OrigErr() error {
+	return nil
+}
+
+func (s *InternalException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InternalException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InternalException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The request was rejected because an invalid or out-of-range value was supplied
+// for an input parameter.
+type InvalidInputException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// Error code for the exception
+	ErrorCode *string `locationName:"errorCode" type:"string"`
+
+	// Field that has invalid input
+	FieldName *string `locationName:"fieldName" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidInputException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidInputException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidInputException(v protocol.ResponseMetadata) error {
+	return &InvalidInputException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidInputException) Code() string {
+	return "InvalidInputException"
+}
+
+// Message returns the exception's message.
+func (s *InvalidInputException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidInputException) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidInputException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidInputException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidInputException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The request was rejected because it attempted to create resources beyond
+// the current AWS account limits. The error code describes the limit exceeded.
+type LimitExceededException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// Error code for the exception
+	ErrorCode *string `locationName:"errorCode" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	// Resource type that caused the exception
+	ResourceType *string `locationName:"resourceType" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s *LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s *LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 type ListMemberAccountsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1190,8 +1441,8 @@ func (s *ListMemberAccountsInput) SetNextToken(v string) *ListMemberAccountsInpu
 type ListMemberAccountsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of the Amazon Macie member accounts returned by the action. The current
-	// master account is also included in this list.
+	// A list of the Amazon Macie Classic member accounts returned by the action.
+	// The current master account is also included in this list.
 	MemberAccounts []*MemberAccount `locationName:"memberAccounts" type:"list"`
 
 	// When a response is generated, if there is more data to be listed, this parameter
@@ -1230,8 +1481,8 @@ type ListS3ResourcesInput struct {
 	// in the response. The default value is 250.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// The Amazon Macie member account ID whose associated S3 resources you want
-	// to list.
+	// The Amazon Macie Classic member account ID whose associated S3 resources
+	// you want to list.
 	MemberAccountId *string `locationName:"memberAccountId" type:"string"`
 
 	// Use this parameter when paginating results. Set its value to null on your
@@ -1304,11 +1555,11 @@ func (s *ListS3ResourcesOutput) SetS3Resources(v []*S3ResourceClassification) *L
 	return s
 }
 
-// Contains information about the Amazon Macie member account.
+// Contains information about the Amazon Macie Classic member account.
 type MemberAccount struct {
 	_ struct{} `type:"structure"`
 
-	// The AWS account ID of the Amazon Macie member account.
+	// The AWS account ID of the Amazon Macie Classic member account.
 	AccountId *string `locationName:"accountId" type:"string"`
 }
 
@@ -1378,25 +1629,26 @@ func (s *S3Resource) SetPrefix(v string) *S3Resource {
 	return s
 }
 
-// The S3 resources that you want to associate with Amazon Macie for monitoring
-// and data classification. This data type is used as a request parameter in
-// the AssociateS3Resources action and a response parameter in the ListS3Resources
+// The S3 resources that you want to associate with Amazon Macie Classic for
+// monitoring and data classification. This data type is used as a request parameter
+// in the AssociateS3Resources action and a response parameter in the ListS3Resources
 // action.
 type S3ResourceClassification struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the S3 bucket that you want to associate with Amazon Macie.
+	// The name of the S3 bucket that you want to associate with Amazon Macie Classic.
 	//
 	// BucketName is a required field
 	BucketName *string `locationName:"bucketName" type:"string" required:"true"`
 
 	// The classification type that you want to specify for the resource associated
-	// with Amazon Macie.
+	// with Amazon Macie Classic.
 	//
 	// ClassificationType is a required field
 	ClassificationType *ClassificationType `locationName:"classificationType" type:"structure" required:"true"`
 
-	// The prefix of the S3 bucket that you want to associate with Amazon Macie.
+	// The prefix of the S3 bucket that you want to associate with Amazon Macie
+	// Classic.
 	Prefix *string `locationName:"prefix" type:"string"`
 }
 
@@ -1460,7 +1712,7 @@ type S3ResourceClassificationUpdate struct {
 	BucketName *string `locationName:"bucketName" type:"string" required:"true"`
 
 	// The classification type that you want to update for the resource associated
-	// with Amazon Macie.
+	// with Amazon Macie Classic.
 	//
 	// ClassificationTypeUpdate is a required field
 	ClassificationTypeUpdate *ClassificationTypeUpdate `locationName:"classificationTypeUpdate" type:"structure" required:"true"`
@@ -1516,8 +1768,8 @@ func (s *S3ResourceClassificationUpdate) SetPrefix(v string) *S3ResourceClassifi
 type UpdateS3ResourcesInput struct {
 	_ struct{} `type:"structure"`
 
-	// The AWS ID of the Amazon Macie member account whose S3 resources' classification
-	// types you want to update.
+	// The AWS ID of the Amazon Macie Classic member account whose S3 resources'
+	// classification types you want to update.
 	MemberAccountId *string `locationName:"memberAccountId" type:"string"`
 
 	// The S3 resources whose classification types you want to update.
@@ -1600,6 +1852,13 @@ const (
 	S3ContinuousClassificationTypeFull = "FULL"
 )
 
+// S3ContinuousClassificationType_Values returns all elements of the S3ContinuousClassificationType enum
+func S3ContinuousClassificationType_Values() []string {
+	return []string{
+		S3ContinuousClassificationTypeFull,
+	}
+}
+
 const (
 	// S3OneTimeClassificationTypeFull is a S3OneTimeClassificationType enum value
 	S3OneTimeClassificationTypeFull = "FULL"
@@ -1607,3 +1866,11 @@ const (
 	// S3OneTimeClassificationTypeNone is a S3OneTimeClassificationType enum value
 	S3OneTimeClassificationTypeNone = "NONE"
 )
+
+// S3OneTimeClassificationType_Values returns all elements of the S3OneTimeClassificationType enum
+func S3OneTimeClassificationType_Values() []string {
+	return []string{
+		S3OneTimeClassificationTypeFull,
+		S3OneTimeClassificationTypeNone,
+	}
+}

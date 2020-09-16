@@ -10,8 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 // add sweeper to delete known test vpcs
@@ -39,51 +42,63 @@ func testSweepVPCs(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).ec2conn
+	input := &ec2.DescribeVpcsInput{}
+	var sweeperErrs *multierror.Error
 
-	req := &ec2.DescribeVpcsInput{}
-	resp, err := conn.DescribeVpcs(req)
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 VPC sweep for %s: %s", region, err)
-			return nil
+	err = conn.DescribeVpcsPages(input, func(page *ec2.DescribeVpcsOutput, lastPage bool) bool {
+		for _, vpc := range page.Vpcs {
+			if vpc == nil {
+				continue
+			}
+
+			id := aws.StringValue(vpc.VpcId)
+			input := &ec2.DeleteVpcInput{
+				VpcId: vpc.VpcId,
+			}
+
+			if aws.BoolValue(vpc.IsDefault) {
+				log.Printf("[DEBUG] Skipping default EC2 VPC: %s", id)
+				continue
+			}
+
+			log.Printf("[INFO] Deleting EC2 VPC: %s", id)
+
+			// Handle EC2 eventual consistency
+			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+				_, err := conn.DeleteVpc(input)
+				if isAWSErr(err, "DependencyViolation", "") {
+					return resource.RetryableError(err)
+				}
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
+				return nil
+			})
+
+			if isResourceTimeoutError(err) {
+				_, err = conn.DeleteVpc(input)
+			}
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting EC2 VPC (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			}
 		}
-		return fmt.Errorf("Error describing vpcs: %s", err)
-	}
 
-	if len(resp.Vpcs) == 0 {
-		log.Print("[DEBUG] No aws vpcs to sweep")
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 VPC sweep for %s: %s", region, err)
 		return nil
 	}
 
-	for _, vpc := range resp.Vpcs {
-		if aws.BoolValue(vpc.IsDefault) {
-			log.Printf("[DEBUG] Skipping Default VPC: %s", aws.StringValue(vpc.VpcId))
-			continue
-		}
-
-		input := &ec2.DeleteVpcInput{
-			VpcId: vpc.VpcId,
-		}
-		log.Printf("[DEBUG] Deleting VPC: %s", input)
-
-		// Handle EC2 eventual consistency
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			_, err := conn.DeleteVpc(input)
-			if isAWSErr(err, "DependencyViolation", "") {
-				return resource.RetryableError(err)
-			}
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-
-		if err != nil {
-			return fmt.Errorf("Error deleting VPC (%s): %s", aws.StringValue(vpc.VpcId), err)
-		}
+	if err != nil {
+		return fmt.Errorf("Error describing vpcs: %s", err)
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSVpc_basic(t *testing.T) {
@@ -101,6 +116,7 @@ func TestAccAWSVpc_basic(t *testing.T) {
 					testAccCheckVpcExists(resourceName, &vpc),
 					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc/vpc-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
 					resource.TestMatchResourceAttr(resourceName, "default_route_table_id", regexp.MustCompile(`^rtb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
@@ -137,6 +153,36 @@ func TestAccAWSVpc_disappears(t *testing.T) {
 					testAccCheckVpcDisappears(&vpc),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSVpc_ignoreTags(t *testing.T) {
+	var providers []*schema.Provider
+	var vpc ec2.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSVPCConfigTags1("key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(resourceName, &vpc),
+					testAccCheckVpcUpdateTags(&vpc, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config:   testAccProviderConfigIgnoreTagsKeyPrefixes1("ignorekey") + testAccAWSVPCConfigTags1("key1", "value1"),
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccProviderConfigIgnoreTagsKeys1("ignorekey1") + testAccAWSVPCConfigTags1("key1", "value1"),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -245,12 +291,11 @@ func TestAccAWSVpc_tags(t *testing.T) {
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcConfigTags,
+				Config: testAccAWSVPCConfigTags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists(resourceName, &vpc),
-					testAccCheckVpcCidr(&vpc, "10.1.0.0/16"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
-					testAccCheckTags(&vpc.Tags, "foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -259,11 +304,20 @@ func TestAccAWSVpc_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVpcConfigTagsUpdate,
+				Config: testAccAWSVPCConfigTags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists(resourceName, &vpc),
-					testAccCheckTags(&vpc.Tags, "foo", ""),
-					testAccCheckTags(&vpc.Tags, "bar", "baz"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSVPCConfigTags1("key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -330,6 +384,14 @@ func testAccCheckVpcDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckVpcUpdateTags(vpc *ec2.Vpc, oldTags, newTags map[string]string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		return keyvaluetags.Ec2UpdateTags(conn, aws.StringValue(vpc.VpcId), oldTags, newTags)
+	}
 }
 
 func testAccCheckVpcCidr(vpc *ec2.Vpc, expected string) resource.TestCheckFunc {
@@ -510,10 +572,7 @@ func TestAccAWSVpc_classiclinkDnsSupportOptionSet(t *testing.T) {
 
 const testAccVpcConfig = `
 resource "aws_vpc" "test" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-vpc"
-	}
+  cidr_block = "10.1.0.0/16"
 }
 `
 
@@ -532,83 +591,93 @@ resource "aws_vpc" "test" {
 
 const testAccVpcConfigUpdate = `
 resource "aws_vpc" "test" {
-	cidr_block = "10.1.0.0/16"
-	enable_dns_hostnames = true
-	tags = {
-		Name = "terraform-testacc-vpc"
-	}
+  cidr_block           = "10.1.0.0/16"
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "terraform-testacc-vpc"
+  }
 }
 `
 
-const testAccVpcConfigTags = `
+func testAccAWSVPCConfigTags1(tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-	cidr_block = "10.1.0.0/16"
+  cidr_block = "10.1.0.0/16"
 
-	tags = {
-		foo = "bar"
-		Name = "terraform-testacc-vpc-tags"
-	}
+  tags = {
+    %[1]q = %[2]q
+  }
 }
-`
+`, tagKey1, tagValue1)
+}
 
-const testAccVpcConfigTagsUpdate = `
+func testAccAWSVPCConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-	cidr_block = "10.1.0.0/16"
+  cidr_block = "10.1.0.0/16"
 
-	tags = {
-		bar = "baz"
-		Name = "terraform-testacc-vpc-tags"
-	}
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
 }
-`
+`, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
 const testAccVpcDedicatedConfig = `
 resource "aws_vpc" "test" {
-	instance_tenancy = "dedicated"
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-vpc-dedicated"
-	}
+  instance_tenancy = "dedicated"
+  cidr_block       = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-vpc-dedicated"
+  }
 }
 `
 
 const testAccVpcConfig_BothDnsOptions = `
 resource "aws_vpc" "test" {
-	cidr_block = "10.2.0.0/16"
-	enable_dns_hostnames = true
-	enable_dns_support = true
-	tags = {
-		Name = "terraform-testacc-vpc-both-dns-opts"
-	}
+  cidr_block           = "10.2.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name = "terraform-testacc-vpc-both-dns-opts"
+  }
 }
 `
 
 const testAccVpcConfig_DisabledDnsSupport = `
 resource "aws_vpc" "test" {
-	cidr_block = "10.2.0.0/16"
-	enable_dns_support = false
-	tags = {
-		Name = "terraform-testacc-vpc-disabled-dns-support"
-	}
+  cidr_block         = "10.2.0.0/16"
+  enable_dns_support = false
+
+  tags = {
+    Name = "terraform-testacc-vpc-disabled-dns-support"
+  }
 }
 `
 
 const testAccVpcConfig_ClassiclinkOption = `
 resource "aws_vpc" "test" {
-	cidr_block = "172.2.0.0/16"
-	enable_classiclink = true
-	tags = {
-		Name = "terraform-testacc-vpc-classic-link"
-	}
+  cidr_block         = "172.2.0.0/16"
+  enable_classiclink = true
+
+  tags = {
+    Name = "terraform-testacc-vpc-classic-link"
+  }
 }
 `
 
 const testAccVpcConfig_ClassiclinkDnsSupportOption = `
 resource "aws_vpc" "test" {
-	cidr_block = "172.2.0.0/16"
-	enable_classiclink = true
-	enable_classiclink_dns_support = true
-	tags = {
-		Name = "terraform-testacc-vpc-classic-link-support"
-	}
+  cidr_block                     = "172.2.0.0/16"
+  enable_classiclink             = true
+  enable_classiclink_dns_support = true
+
+  tags = {
+    Name = "terraform-testacc-vpc-classic-link-support"
+  }
 }
 `

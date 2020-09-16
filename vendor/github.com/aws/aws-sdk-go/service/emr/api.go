@@ -69,11 +69,11 @@ func (c *EMR) AddInstanceFleetRequest(input *AddInstanceFleetInput) (req *reques
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation AddInstanceFleet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/AddInstanceFleet
@@ -151,8 +151,8 @@ func (c *EMR) AddInstanceGroupsRequest(input *AddInstanceGroupsInput) (req *requ
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation AddInstanceGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   Indicates that an error occurred while processing the request and that the
 //   request was not completed.
 //
@@ -253,8 +253,8 @@ func (c *EMR) AddJobFlowStepsRequest(input *AddJobFlowStepsInput) (req *request.
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation AddJobFlowSteps for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   Indicates that an error occurred while processing the request and that the
 //   request was not completed.
 //
@@ -336,11 +336,11 @@ func (c *EMR) AddTagsRequest(input *AddTagsInput) (req *request.Request, output 
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation AddTags for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/AddTags
@@ -422,12 +422,12 @@ func (c *EMR) CancelStepsRequest(input *CancelStepsInput) (req *request.Request,
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation CancelSteps for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   Indicates that an error occurred while processing the request and that the
 //   request was not completed.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/CancelSteps
@@ -506,11 +506,11 @@ func (c *EMR) CreateSecurityConfigurationRequest(input *CreateSecurityConfigurat
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation CreateSecurityConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/CreateSecurityConfiguration
@@ -589,11 +589,11 @@ func (c *EMR) DeleteSecurityConfigurationRequest(input *DeleteSecurityConfigurat
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation DeleteSecurityConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/DeleteSecurityConfiguration
@@ -672,11 +672,11 @@ func (c *EMR) DescribeClusterRequest(input *DescribeClusterInput) (req *request.
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation DescribeCluster for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/DescribeCluster
@@ -778,8 +778,8 @@ func (c *EMR) DescribeJobFlowsRequest(input *DescribeJobFlowsInput) (req *reques
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation DescribeJobFlows for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   Indicates that an error occurred while processing the request and that the
 //   request was not completed.
 //
@@ -804,6 +804,89 @@ func (c *EMR) DescribeJobFlows(input *DescribeJobFlowsInput) (*DescribeJobFlowsO
 // Deprecated: DescribeJobFlowsWithContext has been deprecated
 func (c *EMR) DescribeJobFlowsWithContext(ctx aws.Context, input *DescribeJobFlowsInput, opts ...request.Option) (*DescribeJobFlowsOutput, error) {
 	req, out := c.DescribeJobFlowsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeNotebookExecution = "DescribeNotebookExecution"
+
+// DescribeNotebookExecutionRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeNotebookExecution operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeNotebookExecution for more information on using the DescribeNotebookExecution
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeNotebookExecutionRequest method.
+//    req, resp := client.DescribeNotebookExecutionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/DescribeNotebookExecution
+func (c *EMR) DescribeNotebookExecutionRequest(input *DescribeNotebookExecutionInput) (req *request.Request, output *DescribeNotebookExecutionOutput) {
+	op := &request.Operation{
+		Name:       opDescribeNotebookExecution,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeNotebookExecutionInput{}
+	}
+
+	output = &DescribeNotebookExecutionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeNotebookExecution API operation for Amazon Elastic MapReduce.
+//
+// Provides details of a notebook execution.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation DescribeNotebookExecution for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerError
+//   Indicates that an error occurred while processing the request and that the
+//   request was not completed.
+//
+//   * InvalidRequestException
+//   This exception occurs when there is something wrong with user input.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/DescribeNotebookExecution
+func (c *EMR) DescribeNotebookExecution(input *DescribeNotebookExecutionInput) (*DescribeNotebookExecutionOutput, error) {
+	req, out := c.DescribeNotebookExecutionRequest(input)
+	return out, req.Send()
+}
+
+// DescribeNotebookExecutionWithContext is the same as DescribeNotebookExecution with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeNotebookExecution for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) DescribeNotebookExecutionWithContext(ctx aws.Context, input *DescribeNotebookExecutionInput, opts ...request.Option) (*DescribeNotebookExecutionOutput, error) {
+	req, out := c.DescribeNotebookExecutionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -863,11 +946,11 @@ func (c *EMR) DescribeSecurityConfigurationRequest(input *DescribeSecurityConfig
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation DescribeSecurityConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/DescribeSecurityConfiguration
@@ -945,11 +1028,11 @@ func (c *EMR) DescribeStepRequest(input *DescribeStepInput) (req *request.Reques
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation DescribeStep for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/DescribeStep
@@ -969,6 +1052,165 @@ func (c *EMR) DescribeStep(input *DescribeStepInput) (*DescribeStepOutput, error
 // for more information on using Contexts.
 func (c *EMR) DescribeStepWithContext(ctx aws.Context, input *DescribeStepInput, opts ...request.Option) (*DescribeStepOutput, error) {
 	req, out := c.DescribeStepRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetBlockPublicAccessConfiguration = "GetBlockPublicAccessConfiguration"
+
+// GetBlockPublicAccessConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the GetBlockPublicAccessConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetBlockPublicAccessConfiguration for more information on using the GetBlockPublicAccessConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetBlockPublicAccessConfigurationRequest method.
+//    req, resp := client.GetBlockPublicAccessConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/GetBlockPublicAccessConfiguration
+func (c *EMR) GetBlockPublicAccessConfigurationRequest(input *GetBlockPublicAccessConfigurationInput) (req *request.Request, output *GetBlockPublicAccessConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opGetBlockPublicAccessConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetBlockPublicAccessConfigurationInput{}
+	}
+
+	output = &GetBlockPublicAccessConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetBlockPublicAccessConfiguration API operation for Amazon Elastic MapReduce.
+//
+// Returns the Amazon EMR block public access configuration for your AWS account
+// in the current Region. For more information see Configure Block Public Access
+// for Amazon EMR (https://docs.aws.amazon.com/emr/latest/ManagementGuide/configure-block-public-access.html)
+// in the Amazon EMR Management Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation GetBlockPublicAccessConfiguration for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerException
+//   This exception occurs when there is an internal failure in the EMR service.
+//
+//   * InvalidRequestException
+//   This exception occurs when there is something wrong with user input.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/GetBlockPublicAccessConfiguration
+func (c *EMR) GetBlockPublicAccessConfiguration(input *GetBlockPublicAccessConfigurationInput) (*GetBlockPublicAccessConfigurationOutput, error) {
+	req, out := c.GetBlockPublicAccessConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// GetBlockPublicAccessConfigurationWithContext is the same as GetBlockPublicAccessConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetBlockPublicAccessConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) GetBlockPublicAccessConfigurationWithContext(ctx aws.Context, input *GetBlockPublicAccessConfigurationInput, opts ...request.Option) (*GetBlockPublicAccessConfigurationOutput, error) {
+	req, out := c.GetBlockPublicAccessConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetManagedScalingPolicy = "GetManagedScalingPolicy"
+
+// GetManagedScalingPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the GetManagedScalingPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetManagedScalingPolicy for more information on using the GetManagedScalingPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetManagedScalingPolicyRequest method.
+//    req, resp := client.GetManagedScalingPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/GetManagedScalingPolicy
+func (c *EMR) GetManagedScalingPolicyRequest(input *GetManagedScalingPolicyInput) (req *request.Request, output *GetManagedScalingPolicyOutput) {
+	op := &request.Operation{
+		Name:       opGetManagedScalingPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetManagedScalingPolicyInput{}
+	}
+
+	output = &GetManagedScalingPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetManagedScalingPolicy API operation for Amazon Elastic MapReduce.
+//
+// Fetches the attached managed scaling policy for an Amazon EMR cluster.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation GetManagedScalingPolicy for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/GetManagedScalingPolicy
+func (c *EMR) GetManagedScalingPolicy(input *GetManagedScalingPolicyInput) (*GetManagedScalingPolicyOutput, error) {
+	req, out := c.GetManagedScalingPolicyRequest(input)
+	return out, req.Send()
+}
+
+// GetManagedScalingPolicyWithContext is the same as GetManagedScalingPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetManagedScalingPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) GetManagedScalingPolicyWithContext(ctx aws.Context, input *GetManagedScalingPolicyInput, opts ...request.Option) (*GetManagedScalingPolicyOutput, error) {
+	req, out := c.GetManagedScalingPolicyRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1033,11 +1275,11 @@ func (c *EMR) ListBootstrapActionsRequest(input *ListBootstrapActionsInput) (req
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation ListBootstrapActions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ListBootstrapActions
@@ -1105,10 +1347,12 @@ func (c *EMR) ListBootstrapActionsPagesWithContext(ctx aws.Context, input *ListB
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListBootstrapActionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListBootstrapActionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1175,11 +1419,11 @@ func (c *EMR) ListClustersRequest(input *ListClustersInput) (req *request.Reques
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation ListClusters for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ListClusters
@@ -1247,10 +1491,12 @@ func (c *EMR) ListClustersPagesWithContext(ctx aws.Context, input *ListClustersI
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListClustersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListClustersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1316,11 +1562,11 @@ func (c *EMR) ListInstanceFleetsRequest(input *ListInstanceFleetsInput) (req *re
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation ListInstanceFleets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ListInstanceFleets
@@ -1388,10 +1634,12 @@ func (c *EMR) ListInstanceFleetsPagesWithContext(ctx aws.Context, input *ListIns
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListInstanceFleetsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListInstanceFleetsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1454,11 +1702,11 @@ func (c *EMR) ListInstanceGroupsRequest(input *ListInstanceGroupsInput) (req *re
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation ListInstanceGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ListInstanceGroups
@@ -1526,10 +1774,12 @@ func (c *EMR) ListInstanceGroupsPagesWithContext(ctx aws.Context, input *ListIns
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListInstanceGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListInstanceGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1595,11 +1845,11 @@ func (c *EMR) ListInstancesRequest(input *ListInstancesInput) (req *request.Requ
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation ListInstances for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ListInstances
@@ -1667,10 +1917,156 @@ func (c *EMR) ListInstancesPagesWithContext(ctx aws.Context, input *ListInstance
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListInstancesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListInstancesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
+	return p.Err()
+}
+
+const opListNotebookExecutions = "ListNotebookExecutions"
+
+// ListNotebookExecutionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListNotebookExecutions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListNotebookExecutions for more information on using the ListNotebookExecutions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListNotebookExecutionsRequest method.
+//    req, resp := client.ListNotebookExecutionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ListNotebookExecutions
+func (c *EMR) ListNotebookExecutionsRequest(input *ListNotebookExecutionsInput) (req *request.Request, output *ListNotebookExecutionsOutput) {
+	op := &request.Operation{
+		Name:       opListNotebookExecutions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListNotebookExecutionsInput{}
+	}
+
+	output = &ListNotebookExecutionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListNotebookExecutions API operation for Amazon Elastic MapReduce.
+//
+// Provides summaries of all notebook executions. You can filter the list based
+// on multiple criteria such as status, time range, and editor id. Returns a
+// maximum of 50 notebook executions and a marker to track the paging of a longer
+// notebook execution list across multiple ListNotebookExecution calls.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation ListNotebookExecutions for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerError
+//   Indicates that an error occurred while processing the request and that the
+//   request was not completed.
+//
+//   * InvalidRequestException
+//   This exception occurs when there is something wrong with user input.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ListNotebookExecutions
+func (c *EMR) ListNotebookExecutions(input *ListNotebookExecutionsInput) (*ListNotebookExecutionsOutput, error) {
+	req, out := c.ListNotebookExecutionsRequest(input)
+	return out, req.Send()
+}
+
+// ListNotebookExecutionsWithContext is the same as ListNotebookExecutions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListNotebookExecutions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) ListNotebookExecutionsWithContext(ctx aws.Context, input *ListNotebookExecutionsInput, opts ...request.Option) (*ListNotebookExecutionsOutput, error) {
+	req, out := c.ListNotebookExecutionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListNotebookExecutionsPages iterates over the pages of a ListNotebookExecutions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListNotebookExecutions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListNotebookExecutions operation.
+//    pageNum := 0
+//    err := client.ListNotebookExecutionsPages(params,
+//        func(page *emr.ListNotebookExecutionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *EMR) ListNotebookExecutionsPages(input *ListNotebookExecutionsInput, fn func(*ListNotebookExecutionsOutput, bool) bool) error {
+	return c.ListNotebookExecutionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListNotebookExecutionsPagesWithContext same as ListNotebookExecutionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) ListNotebookExecutionsPagesWithContext(ctx aws.Context, input *ListNotebookExecutionsInput, fn func(*ListNotebookExecutionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListNotebookExecutionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListNotebookExecutionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListNotebookExecutionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
 	return p.Err()
 }
 
@@ -1736,11 +2132,11 @@ func (c *EMR) ListSecurityConfigurationsRequest(input *ListSecurityConfiguration
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation ListSecurityConfigurations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ListSecurityConfigurations
@@ -1808,10 +2204,12 @@ func (c *EMR) ListSecurityConfigurationsPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListSecurityConfigurationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListSecurityConfigurationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1866,7 +2264,8 @@ func (c *EMR) ListStepsRequest(input *ListStepsInput) (req *request.Request, out
 // ListSteps API operation for Amazon Elastic MapReduce.
 //
 // Provides a list of steps for the cluster in reverse order unless you specify
-// stepIds with the request.
+// stepIds with the request of filter by StepStates. You can specify a maximum
+// of ten stepIDs.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1875,11 +2274,11 @@ func (c *EMR) ListStepsRequest(input *ListStepsInput) (req *request.Request, out
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation ListSteps for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ListSteps
@@ -1947,11 +2346,97 @@ func (c *EMR) ListStepsPagesWithContext(ctx aws.Context, input *ListStepsInput, 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListStepsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListStepsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
+}
+
+const opModifyCluster = "ModifyCluster"
+
+// ModifyClusterRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyCluster operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyCluster for more information on using the ModifyCluster
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyClusterRequest method.
+//    req, resp := client.ModifyClusterRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ModifyCluster
+func (c *EMR) ModifyClusterRequest(input *ModifyClusterInput) (req *request.Request, output *ModifyClusterOutput) {
+	op := &request.Operation{
+		Name:       opModifyCluster,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyClusterInput{}
+	}
+
+	output = &ModifyClusterOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyCluster API operation for Amazon Elastic MapReduce.
+//
+// Modifies the number of steps that can be executed concurrently for the cluster
+// specified using ClusterID.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation ModifyCluster for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerError
+//   Indicates that an error occurred while processing the request and that the
+//   request was not completed.
+//
+//   * InvalidRequestException
+//   This exception occurs when there is something wrong with user input.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ModifyCluster
+func (c *EMR) ModifyCluster(input *ModifyClusterInput) (*ModifyClusterOutput, error) {
+	req, out := c.ModifyClusterRequest(input)
+	return out, req.Send()
+}
+
+// ModifyClusterWithContext is the same as ModifyCluster with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyCluster for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) ModifyClusterWithContext(ctx aws.Context, input *ModifyClusterInput, opts ...request.Option) (*ModifyClusterOutput, error) {
+	req, out := c.ModifyClusterRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opModifyInstanceFleet = "ModifyInstanceFleet"
@@ -2013,11 +2498,11 @@ func (c *EMR) ModifyInstanceFleetRequest(input *ModifyInstanceFleetInput) (req *
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation ModifyInstanceFleet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ModifyInstanceFleet
@@ -2099,8 +2584,8 @@ func (c *EMR) ModifyInstanceGroupsRequest(input *ModifyInstanceGroupsInput) (req
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation ModifyInstanceGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   Indicates that an error occurred while processing the request and that the
 //   request was not completed.
 //
@@ -2203,6 +2688,170 @@ func (c *EMR) PutAutoScalingPolicyWithContext(ctx aws.Context, input *PutAutoSca
 	return out, req.Send()
 }
 
+const opPutBlockPublicAccessConfiguration = "PutBlockPublicAccessConfiguration"
+
+// PutBlockPublicAccessConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the PutBlockPublicAccessConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutBlockPublicAccessConfiguration for more information on using the PutBlockPublicAccessConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutBlockPublicAccessConfigurationRequest method.
+//    req, resp := client.PutBlockPublicAccessConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/PutBlockPublicAccessConfiguration
+func (c *EMR) PutBlockPublicAccessConfigurationRequest(input *PutBlockPublicAccessConfigurationInput) (req *request.Request, output *PutBlockPublicAccessConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opPutBlockPublicAccessConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutBlockPublicAccessConfigurationInput{}
+	}
+
+	output = &PutBlockPublicAccessConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// PutBlockPublicAccessConfiguration API operation for Amazon Elastic MapReduce.
+//
+// Creates or updates an Amazon EMR block public access configuration for your
+// AWS account in the current Region. For more information see Configure Block
+// Public Access for Amazon EMR (https://docs.aws.amazon.com/emr/latest/ManagementGuide/configure-block-public-access.html)
+// in the Amazon EMR Management Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation PutBlockPublicAccessConfiguration for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerException
+//   This exception occurs when there is an internal failure in the EMR service.
+//
+//   * InvalidRequestException
+//   This exception occurs when there is something wrong with user input.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/PutBlockPublicAccessConfiguration
+func (c *EMR) PutBlockPublicAccessConfiguration(input *PutBlockPublicAccessConfigurationInput) (*PutBlockPublicAccessConfigurationOutput, error) {
+	req, out := c.PutBlockPublicAccessConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// PutBlockPublicAccessConfigurationWithContext is the same as PutBlockPublicAccessConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutBlockPublicAccessConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) PutBlockPublicAccessConfigurationWithContext(ctx aws.Context, input *PutBlockPublicAccessConfigurationInput, opts ...request.Option) (*PutBlockPublicAccessConfigurationOutput, error) {
+	req, out := c.PutBlockPublicAccessConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutManagedScalingPolicy = "PutManagedScalingPolicy"
+
+// PutManagedScalingPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the PutManagedScalingPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutManagedScalingPolicy for more information on using the PutManagedScalingPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutManagedScalingPolicyRequest method.
+//    req, resp := client.PutManagedScalingPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/PutManagedScalingPolicy
+func (c *EMR) PutManagedScalingPolicyRequest(input *PutManagedScalingPolicyInput) (req *request.Request, output *PutManagedScalingPolicyOutput) {
+	op := &request.Operation{
+		Name:       opPutManagedScalingPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutManagedScalingPolicyInput{}
+	}
+
+	output = &PutManagedScalingPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// PutManagedScalingPolicy API operation for Amazon Elastic MapReduce.
+//
+// Creates or updates a managed scaling policy for an Amazon EMR cluster. The
+// managed scaling policy defines the limits for resources, such as EC2 instances
+// that can be added or terminated from a cluster. The policy only applies to
+// the core and task nodes. The master node cannot be scaled after initial configuration.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation PutManagedScalingPolicy for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/PutManagedScalingPolicy
+func (c *EMR) PutManagedScalingPolicy(input *PutManagedScalingPolicyInput) (*PutManagedScalingPolicyOutput, error) {
+	req, out := c.PutManagedScalingPolicyRequest(input)
+	return out, req.Send()
+}
+
+// PutManagedScalingPolicyWithContext is the same as PutManagedScalingPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutManagedScalingPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) PutManagedScalingPolicyWithContext(ctx aws.Context, input *PutManagedScalingPolicyInput, opts ...request.Option) (*PutManagedScalingPolicyOutput, error) {
+	req, out := c.PutManagedScalingPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opRemoveAutoScalingPolicy = "RemoveAutoScalingPolicy"
 
 // RemoveAutoScalingPolicyRequest generates a "aws/request.Request" representing the
@@ -2279,6 +2928,81 @@ func (c *EMR) RemoveAutoScalingPolicyWithContext(ctx aws.Context, input *RemoveA
 	return out, req.Send()
 }
 
+const opRemoveManagedScalingPolicy = "RemoveManagedScalingPolicy"
+
+// RemoveManagedScalingPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the RemoveManagedScalingPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RemoveManagedScalingPolicy for more information on using the RemoveManagedScalingPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RemoveManagedScalingPolicyRequest method.
+//    req, resp := client.RemoveManagedScalingPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/RemoveManagedScalingPolicy
+func (c *EMR) RemoveManagedScalingPolicyRequest(input *RemoveManagedScalingPolicyInput) (req *request.Request, output *RemoveManagedScalingPolicyOutput) {
+	op := &request.Operation{
+		Name:       opRemoveManagedScalingPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &RemoveManagedScalingPolicyInput{}
+	}
+
+	output = &RemoveManagedScalingPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// RemoveManagedScalingPolicy API operation for Amazon Elastic MapReduce.
+//
+// Removes a managed scaling policy from a specified EMR cluster.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation RemoveManagedScalingPolicy for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/RemoveManagedScalingPolicy
+func (c *EMR) RemoveManagedScalingPolicy(input *RemoveManagedScalingPolicyInput) (*RemoveManagedScalingPolicyOutput, error) {
+	req, out := c.RemoveManagedScalingPolicyRequest(input)
+	return out, req.Send()
+}
+
+// RemoveManagedScalingPolicyWithContext is the same as RemoveManagedScalingPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RemoveManagedScalingPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) RemoveManagedScalingPolicyWithContext(ctx aws.Context, input *RemoveManagedScalingPolicyInput, opts ...request.Option) (*RemoveManagedScalingPolicyOutput, error) {
+	req, out := c.RemoveManagedScalingPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opRemoveTags = "RemoveTags"
 
 // RemoveTagsRequest generates a "aws/request.Request" representing the
@@ -2337,11 +3061,11 @@ func (c *EMR) RemoveTagsRequest(input *RemoveTagsInput) (req *request.Request, o
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation RemoveTags for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   This exception occurs when there is an internal failure in the EMR service.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   This exception occurs when there is something wrong with user input.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/RemoveTags
@@ -2445,8 +3169,8 @@ func (c *EMR) RunJobFlowRequest(input *RunJobFlowInput) (req *request.Request, o
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation RunJobFlow for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   Indicates that an error occurred while processing the request and that the
 //   request was not completed.
 //
@@ -2542,8 +3266,8 @@ func (c *EMR) SetTerminationProtectionRequest(input *SetTerminationProtectionInp
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation SetTerminationProtection for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   Indicates that an error occurred while processing the request and that the
 //   request was not completed.
 //
@@ -2614,12 +3338,15 @@ func (c *EMR) SetVisibleToAllUsersRequest(input *SetVisibleToAllUsersInput) (req
 
 // SetVisibleToAllUsers API operation for Amazon Elastic MapReduce.
 //
-// Sets whether all AWS Identity and Access Management (IAM) users under your
-// account can access the specified clusters (job flows). This action works
-// on running clusters. You can also set the visibility of a cluster when you
-// launch it using the VisibleToAllUsers parameter of RunJobFlow. The SetVisibleToAllUsers
-// action can be called only by an IAM user who created the cluster or the AWS
-// account that owns the cluster.
+// Sets the Cluster$VisibleToAllUsers value, which determines whether the cluster
+// is visible to all IAM users of the AWS account associated with the cluster.
+// Only the IAM user who created the cluster or the AWS account root user can
+// call this action. The default value, true, indicates that all IAM users in
+// the AWS account can perform cluster actions if they have the proper IAM policy
+// permissions. If set to false, only the IAM user that created the cluster
+// can perform actions. This action works on running clusters. You can override
+// the default true setting when you create a cluster by using the VisibleToAllUsers
+// parameter with RunJobFlow.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2628,8 +3355,8 @@ func (c *EMR) SetVisibleToAllUsersRequest(input *SetVisibleToAllUsersInput) (req
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation SetVisibleToAllUsers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   Indicates that an error occurred while processing the request and that the
 //   request was not completed.
 //
@@ -2650,6 +3377,172 @@ func (c *EMR) SetVisibleToAllUsers(input *SetVisibleToAllUsersInput) (*SetVisibl
 // for more information on using Contexts.
 func (c *EMR) SetVisibleToAllUsersWithContext(ctx aws.Context, input *SetVisibleToAllUsersInput, opts ...request.Option) (*SetVisibleToAllUsersOutput, error) {
 	req, out := c.SetVisibleToAllUsersRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opStartNotebookExecution = "StartNotebookExecution"
+
+// StartNotebookExecutionRequest generates a "aws/request.Request" representing the
+// client's request for the StartNotebookExecution operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartNotebookExecution for more information on using the StartNotebookExecution
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartNotebookExecutionRequest method.
+//    req, resp := client.StartNotebookExecutionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/StartNotebookExecution
+func (c *EMR) StartNotebookExecutionRequest(input *StartNotebookExecutionInput) (req *request.Request, output *StartNotebookExecutionOutput) {
+	op := &request.Operation{
+		Name:       opStartNotebookExecution,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StartNotebookExecutionInput{}
+	}
+
+	output = &StartNotebookExecutionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartNotebookExecution API operation for Amazon Elastic MapReduce.
+//
+// Starts a notebook execution.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation StartNotebookExecution for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerException
+//   This exception occurs when there is an internal failure in the EMR service.
+//
+//   * InvalidRequestException
+//   This exception occurs when there is something wrong with user input.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/StartNotebookExecution
+func (c *EMR) StartNotebookExecution(input *StartNotebookExecutionInput) (*StartNotebookExecutionOutput, error) {
+	req, out := c.StartNotebookExecutionRequest(input)
+	return out, req.Send()
+}
+
+// StartNotebookExecutionWithContext is the same as StartNotebookExecution with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartNotebookExecution for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) StartNotebookExecutionWithContext(ctx aws.Context, input *StartNotebookExecutionInput, opts ...request.Option) (*StartNotebookExecutionOutput, error) {
+	req, out := c.StartNotebookExecutionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opStopNotebookExecution = "StopNotebookExecution"
+
+// StopNotebookExecutionRequest generates a "aws/request.Request" representing the
+// client's request for the StopNotebookExecution operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StopNotebookExecution for more information on using the StopNotebookExecution
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StopNotebookExecutionRequest method.
+//    req, resp := client.StopNotebookExecutionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/StopNotebookExecution
+func (c *EMR) StopNotebookExecutionRequest(input *StopNotebookExecutionInput) (req *request.Request, output *StopNotebookExecutionOutput) {
+	op := &request.Operation{
+		Name:       opStopNotebookExecution,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StopNotebookExecutionInput{}
+	}
+
+	output = &StopNotebookExecutionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// StopNotebookExecution API operation for Amazon Elastic MapReduce.
+//
+// Stops a notebook execution.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation StopNotebookExecution for usage and error information.
+//
+// Returned Error Types:
+//   * InternalServerError
+//   Indicates that an error occurred while processing the request and that the
+//   request was not completed.
+//
+//   * InvalidRequestException
+//   This exception occurs when there is something wrong with user input.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/StopNotebookExecution
+func (c *EMR) StopNotebookExecution(input *StopNotebookExecutionInput) (*StopNotebookExecutionOutput, error) {
+	req, out := c.StopNotebookExecutionRequest(input)
+	return out, req.Send()
+}
+
+// StopNotebookExecutionWithContext is the same as StopNotebookExecution with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StopNotebookExecution for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) StopNotebookExecutionWithContext(ctx aws.Context, input *StopNotebookExecutionInput, opts ...request.Option) (*StopNotebookExecutionOutput, error) {
+	req, out := c.StopNotebookExecutionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2718,8 +3611,8 @@ func (c *EMR) TerminateJobFlowsRequest(input *TerminateJobFlowsInput) (req *requ
 // See the AWS API reference guide for Amazon Elastic MapReduce's
 // API operation TerminateJobFlows for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerError "InternalServerError"
+// Returned Error Types:
+//   * InternalServerError
 //   Indicates that an error occurred while processing the request and that the
 //   request was not completed.
 //
@@ -2805,6 +3698,9 @@ func (s *AddInstanceFleetInput) SetInstanceFleet(v *InstanceFleetConfig) *AddIns
 type AddInstanceFleetOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name of the cluster.
+	ClusterArn *string `min:"20" type:"string"`
+
 	// The unique identifier of the cluster.
 	ClusterId *string `type:"string"`
 
@@ -2820,6 +3716,12 @@ func (s AddInstanceFleetOutput) String() string {
 // GoString returns the string representation
 func (s AddInstanceFleetOutput) GoString() string {
 	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *AddInstanceFleetOutput) SetClusterArn(v string) *AddInstanceFleetOutput {
+	s.ClusterArn = &v
+	return s
 }
 
 // SetClusterId sets the ClusterId field's value.
@@ -2901,6 +3803,9 @@ func (s *AddInstanceGroupsInput) SetJobFlowId(v string) *AddInstanceGroupsInput 
 type AddInstanceGroupsOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name of the cluster.
+	ClusterArn *string `min:"20" type:"string"`
+
 	// Instance group IDs of the newly created instance groups.
 	InstanceGroupIds []*string `type:"list"`
 
@@ -2916,6 +3821,12 @@ func (s AddInstanceGroupsOutput) String() string {
 // GoString returns the string representation
 func (s AddInstanceGroupsOutput) GoString() string {
 	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *AddInstanceGroupsOutput) SetClusterArn(v string) *AddInstanceGroupsOutput {
+	s.ClusterArn = &v
+	return s
 }
 
 // SetInstanceGroupIds sets the InstanceGroupIds field's value.
@@ -3341,6 +4252,117 @@ func (s *AutoScalingPolicyStatus) SetStateChangeReason(v *AutoScalingPolicyState
 	return s
 }
 
+// A configuration for Amazon EMR block public access. When BlockPublicSecurityGroupRules
+// is set to true, Amazon EMR prevents cluster creation if one of the cluster's
+// security groups has a rule that allows inbound traffic from 0.0.0.0/0 or
+// ::/0 on a port, unless the port is specified as an exception using PermittedPublicSecurityGroupRuleRanges.
+type BlockPublicAccessConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether EMR block public access is enabled (true) or disabled (false).
+	// By default, the value is false for accounts that have created EMR clusters
+	// before July 2019. For accounts created after this, the default is true.
+	//
+	// BlockPublicSecurityGroupRules is a required field
+	BlockPublicSecurityGroupRules *bool `type:"boolean" required:"true"`
+
+	// Specifies ports and port ranges that are permitted to have security group
+	// rules that allow inbound traffic from all public sources. For example, if
+	// Port 23 (Telnet) is specified for PermittedPublicSecurityGroupRuleRanges,
+	// Amazon EMR allows cluster creation if a security group associated with the
+	// cluster has a rule that allows inbound traffic on Port 23 from IPv4 0.0.0.0/0
+	// or IPv6 port ::/0 as the source.
+	//
+	// By default, Port 22, which is used for SSH access to the cluster EC2 instances,
+	// is in the list of PermittedPublicSecurityGroupRuleRanges.
+	PermittedPublicSecurityGroupRuleRanges []*PortRange `type:"list"`
+}
+
+// String returns the string representation
+func (s BlockPublicAccessConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BlockPublicAccessConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BlockPublicAccessConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BlockPublicAccessConfiguration"}
+	if s.BlockPublicSecurityGroupRules == nil {
+		invalidParams.Add(request.NewErrParamRequired("BlockPublicSecurityGroupRules"))
+	}
+	if s.PermittedPublicSecurityGroupRuleRanges != nil {
+		for i, v := range s.PermittedPublicSecurityGroupRuleRanges {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "PermittedPublicSecurityGroupRuleRanges", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBlockPublicSecurityGroupRules sets the BlockPublicSecurityGroupRules field's value.
+func (s *BlockPublicAccessConfiguration) SetBlockPublicSecurityGroupRules(v bool) *BlockPublicAccessConfiguration {
+	s.BlockPublicSecurityGroupRules = &v
+	return s
+}
+
+// SetPermittedPublicSecurityGroupRuleRanges sets the PermittedPublicSecurityGroupRuleRanges field's value.
+func (s *BlockPublicAccessConfiguration) SetPermittedPublicSecurityGroupRuleRanges(v []*PortRange) *BlockPublicAccessConfiguration {
+	s.PermittedPublicSecurityGroupRuleRanges = v
+	return s
+}
+
+// Properties that describe the AWS principal that created the BlockPublicAccessConfiguration
+// using the PutBlockPublicAccessConfiguration action as well as the date and
+// time that the configuration was created. Each time a configuration for block
+// public access is updated, Amazon EMR updates this metadata.
+type BlockPublicAccessConfigurationMetadata struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name that created or last modified the configuration.
+	//
+	// CreatedByArn is a required field
+	CreatedByArn *string `min:"20" type:"string" required:"true"`
+
+	// The date and time that the configuration was created.
+	//
+	// CreationDateTime is a required field
+	CreationDateTime *time.Time `type:"timestamp" required:"true"`
+}
+
+// String returns the string representation
+func (s BlockPublicAccessConfigurationMetadata) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BlockPublicAccessConfigurationMetadata) GoString() string {
+	return s.String()
+}
+
+// SetCreatedByArn sets the CreatedByArn field's value.
+func (s *BlockPublicAccessConfigurationMetadata) SetCreatedByArn(v string) *BlockPublicAccessConfigurationMetadata {
+	s.CreatedByArn = &v
+	return s
+}
+
+// SetCreationDateTime sets the CreationDateTime field's value.
+func (s *BlockPublicAccessConfigurationMetadata) SetCreationDateTime(v time.Time) *BlockPublicAccessConfigurationMetadata {
+	s.CreationDateTime = &v
+	return s
+}
+
 // Configuration of a bootstrap action.
 type BootstrapActionConfig struct {
 	_ struct{} `type:"structure"`
@@ -3472,11 +4494,19 @@ type CancelStepsInput struct {
 
 	// The ClusterID for which specified steps will be canceled. Use RunJobFlow
 	// and ListClusters to get ClusterIDs.
-	ClusterId *string `type:"string"`
+	//
+	// ClusterId is a required field
+	ClusterId *string `type:"string" required:"true"`
+
+	// The option to choose for cancelling RUNNING steps. By default, the value
+	// is SEND_INTERRUPT.
+	StepCancellationOption *string `type:"string" enum:"StepCancellationOption"`
 
 	// The list of StepIDs to cancel. Use ListSteps to get steps and their states
 	// for the specified cluster.
-	StepIds []*string `type:"list"`
+	//
+	// StepIds is a required field
+	StepIds []*string `type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -3489,9 +4519,31 @@ func (s CancelStepsInput) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CancelStepsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CancelStepsInput"}
+	if s.ClusterId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterId"))
+	}
+	if s.StepIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("StepIds"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetClusterId sets the ClusterId field's value.
 func (s *CancelStepsInput) SetClusterId(v string) *CancelStepsInput {
 	s.ClusterId = &v
+	return s
+}
+
+// SetStepCancellationOption sets the StepCancellationOption field's value.
+func (s *CancelStepsInput) SetStepCancellationOption(v string) *CancelStepsInput {
+	s.StepCancellationOption = &v
 	return s
 }
 
@@ -3541,8 +4593,8 @@ type CloudWatchAlarmDefinition struct {
 	// A CloudWatch metric dimension.
 	Dimensions []*MetricDimension `type:"list"`
 
-	// The number of periods, expressed in seconds using Period, during which the
-	// alarm condition must exist before the alarm triggers automatic scaling activity.
+	// The number of periods, in five-minute increments, during which the alarm
+	// condition must exist before the alarm triggers automatic scaling activity.
 	// The default value is 1.
 	EvaluationPeriods *int64 `type:"integer"`
 
@@ -3677,6 +4729,9 @@ type Cluster struct {
 	// Specifies whether the cluster should terminate after completing all steps.
 	AutoTerminate *bool `type:"boolean"`
 
+	// The Amazon Resource Name of the cluster.
+	ClusterArn *string `min:"20" type:"string"`
+
 	// Applies only to Amazon EMR releases 4.x and later. The list of Configurations
 	// supplied to the EMR cluster.
 	Configurations []*Configuration `type:"list"`
@@ -3711,6 +4766,11 @@ type Cluster struct {
 	// in the EMR Management Guide.
 	KerberosAttributes *KerberosAttributes `type:"structure"`
 
+	// The AWS KMS customer master key (CMK) used for encrypting log files. This
+	// attribute is only available with EMR version 5.30.0 and later, excluding
+	// EMR 6.0.0.
+	LogEncryptionKmsKeyId *string `type:"string"`
+
 	// The path to the Amazon S3 location where logs for this cluster are stored.
 	LogUri *string `type:"string"`
 
@@ -3729,13 +4789,16 @@ type Cluster struct {
 	// the actual billing rate.
 	NormalizedInstanceHours *int64 `type:"integer"`
 
+	// The Amazon Resource Name (ARN) of the Outpost where the cluster is launched.
+	OutpostArn *string `type:"string"`
+
 	// The Amazon EMR release label, which determines the version of open-source
 	// application packages installed on the cluster. Release labels are in the
-	// form emr-x.x.x, where x.x.x is an Amazon EMR release version, for example,
-	// emr-5.14.0. For more information about Amazon EMR release versions and included
-	// application versions and features, see https://docs.aws.amazon.com/emr/latest/ReleaseGuide/
+	// form emr-x.x.x, where x.x.x is an Amazon EMR release version such as emr-5.14.0.
+	// For more information about Amazon EMR release versions and included application
+	// versions and features, see https://docs.aws.amazon.com/emr/latest/ReleaseGuide/
 	// (https://docs.aws.amazon.com/emr/latest/ReleaseGuide/). The release label
-	// applies only to Amazon EMR releases versions 4.x and later. Earlier versions
+	// applies only to Amazon EMR releases version 4.0 and later. Earlier versions
 	// use AmiVersion.
 	ReleaseLabel *string `type:"string"`
 
@@ -3774,6 +4837,9 @@ type Cluster struct {
 	// The current status details about the cluster.
 	Status *ClusterStatus `type:"structure"`
 
+	// Specifies the number of steps that can be executed concurrently.
+	StepConcurrencyLevel *int64 `type:"integer"`
+
 	// A list of tags associated with a cluster.
 	Tags []*Tag `type:"list"`
 
@@ -3783,11 +4849,13 @@ type Cluster struct {
 	TerminationProtected *bool `type:"boolean"`
 
 	// Indicates whether the cluster is visible to all IAM users of the AWS account
-	// associated with the cluster. If this value is set to true, all IAM users
-	// of that AWS account can view and manage the cluster if they have the proper
-	// policy permissions set. If this value is false, only the IAM user that created
-	// the cluster can view and manage it. This value can be changed using the SetVisibleToAllUsers
-	// action.
+	// associated with the cluster. The default value, true, indicates that all
+	// IAM users in the AWS account can perform cluster actions if they have the
+	// proper IAM policy permissions. If this value is false, only the IAM user
+	// that created the cluster can perform actions. This value can be changed on
+	// a running cluster by using the SetVisibleToAllUsers action. You can override
+	// the default value of true when you create a cluster by using the VisibleToAllUsers
+	// parameter of the RunJobFlow action.
 	VisibleToAllUsers *bool `type:"boolean"`
 }
 
@@ -3816,6 +4884,12 @@ func (s *Cluster) SetAutoScalingRole(v string) *Cluster {
 // SetAutoTerminate sets the AutoTerminate field's value.
 func (s *Cluster) SetAutoTerminate(v bool) *Cluster {
 	s.AutoTerminate = &v
+	return s
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *Cluster) SetClusterArn(v string) *Cluster {
+	s.ClusterArn = &v
 	return s
 }
 
@@ -3861,6 +4935,12 @@ func (s *Cluster) SetKerberosAttributes(v *KerberosAttributes) *Cluster {
 	return s
 }
 
+// SetLogEncryptionKmsKeyId sets the LogEncryptionKmsKeyId field's value.
+func (s *Cluster) SetLogEncryptionKmsKeyId(v string) *Cluster {
+	s.LogEncryptionKmsKeyId = &v
+	return s
+}
+
 // SetLogUri sets the LogUri field's value.
 func (s *Cluster) SetLogUri(v string) *Cluster {
 	s.LogUri = &v
@@ -3882,6 +4962,12 @@ func (s *Cluster) SetName(v string) *Cluster {
 // SetNormalizedInstanceHours sets the NormalizedInstanceHours field's value.
 func (s *Cluster) SetNormalizedInstanceHours(v int64) *Cluster {
 	s.NormalizedInstanceHours = &v
+	return s
+}
+
+// SetOutpostArn sets the OutpostArn field's value.
+func (s *Cluster) SetOutpostArn(v string) *Cluster {
+	s.OutpostArn = &v
 	return s
 }
 
@@ -3930,6 +5016,12 @@ func (s *Cluster) SetServiceRole(v string) *Cluster {
 // SetStatus sets the Status field's value.
 func (s *Cluster) SetStatus(v *ClusterStatus) *Cluster {
 	s.Status = v
+	return s
+}
+
+// SetStepConcurrencyLevel sets the StepConcurrencyLevel field's value.
+func (s *Cluster) SetStepConcurrencyLevel(v int64) *Cluster {
+	s.StepConcurrencyLevel = &v
 	return s
 }
 
@@ -4031,6 +5123,9 @@ func (s *ClusterStatus) SetTimeline(v *ClusterTimeline) *ClusterStatus {
 type ClusterSummary struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name of the cluster.
+	ClusterArn *string `min:"20" type:"string"`
+
 	// The unique identifier for the cluster.
 	Id *string `type:"string"`
 
@@ -4045,6 +5140,9 @@ type ClusterSummary struct {
 	// the actual billing rate.
 	NormalizedInstanceHours *int64 `type:"integer"`
 
+	// The Amazon Resource Name (ARN) of the Outpost where the cluster is launched.
+	OutpostArn *string `type:"string"`
+
 	// The details about the current status of the cluster.
 	Status *ClusterStatus `type:"structure"`
 }
@@ -4057,6 +5155,12 @@ func (s ClusterSummary) String() string {
 // GoString returns the string representation
 func (s ClusterSummary) GoString() string {
 	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *ClusterSummary) SetClusterArn(v string) *ClusterSummary {
+	s.ClusterArn = &v
+	return s
 }
 
 // SetId sets the Id field's value.
@@ -4074,6 +5178,12 @@ func (s *ClusterSummary) SetName(v string) *ClusterSummary {
 // SetNormalizedInstanceHours sets the NormalizedInstanceHours field's value.
 func (s *ClusterSummary) SetNormalizedInstanceHours(v int64) *ClusterSummary {
 	s.NormalizedInstanceHours = &v
+	return s
+}
+
+// SetOutpostArn sets the OutpostArn field's value.
+func (s *ClusterSummary) SetOutpostArn(v string) *ClusterSummary {
+	s.OutpostArn = &v
 	return s
 }
 
@@ -4164,6 +5274,110 @@ func (s *Command) SetName(v string) *Command {
 // SetScriptPath sets the ScriptPath field's value.
 func (s *Command) SetScriptPath(v string) *Command {
 	s.ScriptPath = &v
+	return s
+}
+
+// The EC2 unit limits for a managed scaling policy. The managed scaling activity
+// of a cluster can not be above or below these limits. The limit only applies
+// to the core and task nodes. The master node cannot be scaled after initial
+// configuration.
+type ComputeLimits struct {
+	_ struct{} `type:"structure"`
+
+	// The upper boundary of EC2 units. It is measured through VCPU cores or instances
+	// for instance groups and measured through units for instance fleets. Managed
+	// scaling activities are not allowed beyond this boundary. The limit only applies
+	// to the core and task nodes. The master node cannot be scaled after initial
+	// configuration.
+	//
+	// MaximumCapacityUnits is a required field
+	MaximumCapacityUnits *int64 `type:"integer" required:"true"`
+
+	// The upper boundary of EC2 units for core node type in a cluster. It is measured
+	// through VCPU cores or instances for instance groups and measured through
+	// units for instance fleets. The core units are not allowed to scale beyond
+	// this boundary. The parameter is used to split capacity allocation between
+	// core and task nodes.
+	MaximumCoreCapacityUnits *int64 `type:"integer"`
+
+	// The upper boundary of On-Demand EC2 units. It is measured through VCPU cores
+	// or instances for instance groups and measured through units for instance
+	// fleets. The On-Demand units are not allowed to scale beyond this boundary.
+	// The parameter is used to split capacity allocation between On-Demand and
+	// Spot instances.
+	MaximumOnDemandCapacityUnits *int64 `type:"integer"`
+
+	// The lower boundary of EC2 units. It is measured through VCPU cores or instances
+	// for instance groups and measured through units for instance fleets. Managed
+	// scaling activities are not allowed beyond this boundary. The limit only applies
+	// to the core and task nodes. The master node cannot be scaled after initial
+	// configuration.
+	//
+	// MinimumCapacityUnits is a required field
+	MinimumCapacityUnits *int64 `type:"integer" required:"true"`
+
+	// The unit type used for specifying a managed scaling policy.
+	//
+	// UnitType is a required field
+	UnitType *string `type:"string" required:"true" enum:"ComputeLimitsUnitType"`
+}
+
+// String returns the string representation
+func (s ComputeLimits) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ComputeLimits) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ComputeLimits) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ComputeLimits"}
+	if s.MaximumCapacityUnits == nil {
+		invalidParams.Add(request.NewErrParamRequired("MaximumCapacityUnits"))
+	}
+	if s.MinimumCapacityUnits == nil {
+		invalidParams.Add(request.NewErrParamRequired("MinimumCapacityUnits"))
+	}
+	if s.UnitType == nil {
+		invalidParams.Add(request.NewErrParamRequired("UnitType"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaximumCapacityUnits sets the MaximumCapacityUnits field's value.
+func (s *ComputeLimits) SetMaximumCapacityUnits(v int64) *ComputeLimits {
+	s.MaximumCapacityUnits = &v
+	return s
+}
+
+// SetMaximumCoreCapacityUnits sets the MaximumCoreCapacityUnits field's value.
+func (s *ComputeLimits) SetMaximumCoreCapacityUnits(v int64) *ComputeLimits {
+	s.MaximumCoreCapacityUnits = &v
+	return s
+}
+
+// SetMaximumOnDemandCapacityUnits sets the MaximumOnDemandCapacityUnits field's value.
+func (s *ComputeLimits) SetMaximumOnDemandCapacityUnits(v int64) *ComputeLimits {
+	s.MaximumOnDemandCapacityUnits = &v
+	return s
+}
+
+// SetMinimumCapacityUnits sets the MinimumCapacityUnits field's value.
+func (s *ComputeLimits) SetMinimumCapacityUnits(v int64) *ComputeLimits {
+	s.MinimumCapacityUnits = &v
+	return s
+}
+
+// SetUnitType sets the UnitType field's value.
+func (s *ComputeLimits) SetUnitType(v string) *ComputeLimits {
+	s.UnitType = &v
 	return s
 }
 
@@ -4494,6 +5708,67 @@ func (s DescribeJobFlowsOutput) GoString() string {
 // SetJobFlows sets the JobFlows field's value.
 func (s *DescribeJobFlowsOutput) SetJobFlows(v []*JobFlowDetail) *DescribeJobFlowsOutput {
 	s.JobFlows = v
+	return s
+}
+
+type DescribeNotebookExecutionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier of the notebook execution.
+	//
+	// NotebookExecutionId is a required field
+	NotebookExecutionId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeNotebookExecutionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeNotebookExecutionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeNotebookExecutionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeNotebookExecutionInput"}
+	if s.NotebookExecutionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("NotebookExecutionId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNotebookExecutionId sets the NotebookExecutionId field's value.
+func (s *DescribeNotebookExecutionInput) SetNotebookExecutionId(v string) *DescribeNotebookExecutionInput {
+	s.NotebookExecutionId = &v
+	return s
+}
+
+type DescribeNotebookExecutionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Properties of the notebook execution.
+	NotebookExecution *NotebookExecution `type:"structure"`
+}
+
+// String returns the string representation
+func (s DescribeNotebookExecutionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeNotebookExecutionOutput) GoString() string {
+	return s.String()
+}
+
+// SetNotebookExecution sets the NotebookExecution field's value.
+func (s *DescribeNotebookExecutionOutput) SetNotebookExecution(v *NotebookExecution) *DescribeNotebookExecutionOutput {
+	s.NotebookExecution = v
 	return s
 }
 
@@ -4849,14 +6124,9 @@ type Ec2InstanceAttributes struct {
 	// the master node as a user named "hadoop".
 	Ec2KeyName *string `type:"string"`
 
-	// To launch the cluster in Amazon VPC, set this parameter to the identifier
-	// of the Amazon VPC subnet where you want the cluster to launch. If you do
-	// not specify this value, the cluster is launched in the normal AWS cloud,
-	// outside of a VPC.
-	//
-	// Amazon VPC currently does not support cluster compute quadruple extra large
-	// (cc1.4xlarge) instances. Thus, you cannot specify the cc1.4xlarge instance
-	// type for nodes of a cluster launched in a VPC.
+	// Set this parameter to the identifier of the Amazon VPC subnet where you want
+	// the cluster to launch. If you do not specify this value, and your account
+	// supports EC2-Classic, the cluster launches in EC2-Classic.
 	Ec2SubnetId *string `type:"string"`
 
 	// The identifier of the Amazon EC2 security group for the master node.
@@ -4884,7 +6154,7 @@ type Ec2InstanceAttributes struct {
 	// EC2 cluster instances. Subnets must exist within the same VPC. Amazon EMR
 	// chooses the EC2 subnet with the best fit from among the list of RequestedEc2SubnetIds,
 	// and then launches all cluster instances within that Subnet. If this value
-	// is not specified, and the account and region support EC2-Classic networks,
+	// is not specified, and the account and Region support EC2-Classic networks,
 	// the cluster launches instances in the EC2-Classic network and uses RequestedEc2AvailabilityZones
 	// instead of this setting. If EC2-Classic is not supported, and no Subnet is
 	// specified, Amazon EMR chooses the subnet for you. RequestedEc2SubnetIDs and
@@ -4972,6 +6242,68 @@ func (s *Ec2InstanceAttributes) SetServiceAccessSecurityGroup(v string) *Ec2Inst
 	return s
 }
 
+// Specifies the execution engine (cluster) to run the notebook and perform
+// the notebook execution, for example, an EMR cluster.
+type ExecutionEngineConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier of the execution engine. For an EMR cluster, this is
+	// the cluster ID.
+	//
+	// Id is a required field
+	Id *string `type:"string" required:"true"`
+
+	// An optional unique ID of an EC2 security group to associate with the master
+	// instance of the EMR cluster for this notebook execution. For more information
+	// see Specifying EC2 Security Groups for EMR Notebooks (https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-managed-notebooks-security-groups.html)
+	// in the EMR Management Guide.
+	MasterInstanceSecurityGroupId *string `type:"string"`
+
+	// The type of execution engine. A value of EMR specifies an EMR cluster.
+	Type *string `type:"string" enum:"ExecutionEngineType"`
+}
+
+// String returns the string representation
+func (s ExecutionEngineConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExecutionEngineConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ExecutionEngineConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ExecutionEngineConfig"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId sets the Id field's value.
+func (s *ExecutionEngineConfig) SetId(v string) *ExecutionEngineConfig {
+	s.Id = &v
+	return s
+}
+
+// SetMasterInstanceSecurityGroupId sets the MasterInstanceSecurityGroupId field's value.
+func (s *ExecutionEngineConfig) SetMasterInstanceSecurityGroupId(v string) *ExecutionEngineConfig {
+	s.MasterInstanceSecurityGroupId = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *ExecutionEngineConfig) SetType(v string) *ExecutionEngineConfig {
+	s.Type = &v
+	return s
+}
+
 // The details of the step failure. The service attempts to detect the root
 // cause for many common failures.
 type FailureDetails struct {
@@ -5017,6 +6349,135 @@ func (s *FailureDetails) SetMessage(v string) *FailureDetails {
 // SetReason sets the Reason field's value.
 func (s *FailureDetails) SetReason(v string) *FailureDetails {
 	s.Reason = &v
+	return s
+}
+
+type GetBlockPublicAccessConfigurationInput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetBlockPublicAccessConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetBlockPublicAccessConfigurationInput) GoString() string {
+	return s.String()
+}
+
+type GetBlockPublicAccessConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A configuration for Amazon EMR block public access. The configuration applies
+	// to all clusters created in your account for the current Region. The configuration
+	// specifies whether block public access is enabled. If block public access
+	// is enabled, security groups associated with the cluster cannot have rules
+	// that allow inbound traffic from 0.0.0.0/0 or ::/0 on a port, unless the port
+	// is specified as an exception using PermittedPublicSecurityGroupRuleRanges
+	// in the BlockPublicAccessConfiguration. By default, Port 22 (SSH) is an exception,
+	// and public access is allowed on this port. You can change this by updating
+	// the block public access configuration to remove the exception.
+	//
+	// For accounts that created clusters in a Region before November 25, 2019,
+	// block public access is disabled by default in that Region. To use this feature,
+	// you must manually enable and configure it. For accounts that did not create
+	// an EMR cluster in a Region before this date, block public access is enabled
+	// by default in that Region.
+	//
+	// BlockPublicAccessConfiguration is a required field
+	BlockPublicAccessConfiguration *BlockPublicAccessConfiguration `type:"structure" required:"true"`
+
+	// Properties that describe the AWS principal that created the BlockPublicAccessConfiguration
+	// using the PutBlockPublicAccessConfiguration action as well as the date and
+	// time that the configuration was created. Each time a configuration for block
+	// public access is updated, Amazon EMR updates this metadata.
+	//
+	// BlockPublicAccessConfigurationMetadata is a required field
+	BlockPublicAccessConfigurationMetadata *BlockPublicAccessConfigurationMetadata `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s GetBlockPublicAccessConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetBlockPublicAccessConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetBlockPublicAccessConfiguration sets the BlockPublicAccessConfiguration field's value.
+func (s *GetBlockPublicAccessConfigurationOutput) SetBlockPublicAccessConfiguration(v *BlockPublicAccessConfiguration) *GetBlockPublicAccessConfigurationOutput {
+	s.BlockPublicAccessConfiguration = v
+	return s
+}
+
+// SetBlockPublicAccessConfigurationMetadata sets the BlockPublicAccessConfigurationMetadata field's value.
+func (s *GetBlockPublicAccessConfigurationOutput) SetBlockPublicAccessConfigurationMetadata(v *BlockPublicAccessConfigurationMetadata) *GetBlockPublicAccessConfigurationOutput {
+	s.BlockPublicAccessConfigurationMetadata = v
+	return s
+}
+
+type GetManagedScalingPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the ID of the cluster for which the managed scaling policy will
+	// be fetched.
+	//
+	// ClusterId is a required field
+	ClusterId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetManagedScalingPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetManagedScalingPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetManagedScalingPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetManagedScalingPolicyInput"}
+	if s.ClusterId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterId sets the ClusterId field's value.
+func (s *GetManagedScalingPolicyInput) SetClusterId(v string) *GetManagedScalingPolicyInput {
+	s.ClusterId = &v
+	return s
+}
+
+type GetManagedScalingPolicyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the managed scaling policy that is attached to an Amazon EMR cluster.
+	ManagedScalingPolicy *ManagedScalingPolicy `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetManagedScalingPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetManagedScalingPolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetManagedScalingPolicy sets the ManagedScalingPolicy field's value.
+func (s *GetManagedScalingPolicyOutput) SetManagedScalingPolicy(v *ManagedScalingPolicy) *GetManagedScalingPolicyOutput {
+	s.ManagedScalingPolicy = v
 	return s
 }
 
@@ -5617,18 +7078,25 @@ func (s *InstanceFleetModifyConfig) SetTargetSpotCapacity(v int64) *InstanceFlee
 }
 
 // The launch specification for Spot instances in the fleet, which determines
-// the defined duration and provisioning timeout behavior.
+// the defined duration, provisioning timeout behavior, and allocation strategy.
 //
 // The instance fleet configuration is available only in Amazon EMR versions
-// 4.8.0 and later, excluding 5.0.x versions.
+// 4.8.0 and later, excluding 5.0.x versions. On-Demand and Spot instance allocation
+// strategies are available in Amazon EMR version 5.12.1 and later.
 type InstanceFleetProvisioningSpecifications struct {
 	_ struct{} `type:"structure"`
 
-	// The launch specification for Spot instances in the fleet, which determines
-	// the defined duration and provisioning timeout behavior.
+	// The launch specification for On-Demand instances in the instance fleet, which
+	// determines the allocation strategy.
 	//
-	// SpotSpecification is a required field
-	SpotSpecification *SpotProvisioningSpecification `type:"structure" required:"true"`
+	// The instance fleet configuration is available only in Amazon EMR versions
+	// 4.8.0 and later, excluding 5.0.x versions. On-Demand instances allocation
+	// strategy is available in Amazon EMR version 5.12.1 and later.
+	OnDemandSpecification *OnDemandProvisioningSpecification `type:"structure"`
+
+	// The launch specification for Spot instances in the fleet, which determines
+	// the defined duration, provisioning timeout behavior, and allocation strategy.
+	SpotSpecification *SpotProvisioningSpecification `type:"structure"`
 }
 
 // String returns the string representation
@@ -5644,8 +7112,10 @@ func (s InstanceFleetProvisioningSpecifications) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *InstanceFleetProvisioningSpecifications) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "InstanceFleetProvisioningSpecifications"}
-	if s.SpotSpecification == nil {
-		invalidParams.Add(request.NewErrParamRequired("SpotSpecification"))
+	if s.OnDemandSpecification != nil {
+		if err := s.OnDemandSpecification.Validate(); err != nil {
+			invalidParams.AddNested("OnDemandSpecification", err.(request.ErrInvalidParams))
+		}
 	}
 	if s.SpotSpecification != nil {
 		if err := s.SpotSpecification.Validate(); err != nil {
@@ -5657,6 +7127,12 @@ func (s *InstanceFleetProvisioningSpecifications) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetOnDemandSpecification sets the OnDemandSpecification field's value.
+func (s *InstanceFleetProvisioningSpecifications) SetOnDemandSpecification(v *OnDemandProvisioningSpecification) *InstanceFleetProvisioningSpecifications {
+	s.OnDemandSpecification = v
+	return s
 }
 
 // SetSpotSpecification sets the SpotSpecification field's value.
@@ -5824,12 +7300,9 @@ type InstanceGroup struct {
 	// of a CloudWatch metric. See PutAutoScalingPolicy.
 	AutoScalingPolicy *AutoScalingPolicyDescription `type:"structure"`
 
-	// The maximum Spot price your are willing to pay for EC2 instances.
-	//
-	// An optional, nullable field that applies if the MarketType for the instance
-	// group is specified as SPOT. Specify the maximum spot price in USD. If the
-	// value is NULL and SPOT is specified, the maximum Spot price is set equal
-	// to the On-Demand price.
+	// The bid price for each EC2 Spot instance type as defined by InstanceType.
+	// Expressed in USD. If neither BidPrice nor BidPriceAsPercentageOfOnDemandPrice
+	// is provided, BidPriceAsPercentageOfOnDemandPrice defaults to 100%.
 	BidPrice *string `type:"string"`
 
 	//
@@ -6011,12 +7484,9 @@ type InstanceGroupConfig struct {
 	// of a CloudWatch metric. See PutAutoScalingPolicy.
 	AutoScalingPolicy *AutoScalingPolicy `type:"structure"`
 
-	// The maximum Spot price your are willing to pay for EC2 instances.
-	//
-	// An optional, nullable field that applies if the MarketType for the instance
-	// group is specified as SPOT. Specify the maximum spot price in USD. If the
-	// value is NULL and SPOT is specified, the maximum Spot price is set equal
-	// to the On-Demand price.
+	// The bid price for each EC2 Spot instance type as defined by InstanceType.
+	// Expressed in USD. If neither BidPrice nor BidPriceAsPercentageOfOnDemandPrice
+	// is provided, BidPriceAsPercentageOfOnDemandPrice defaults to 100%.
 	BidPrice *string `type:"string"`
 
 	//
@@ -6153,11 +7623,9 @@ func (s *InstanceGroupConfig) SetName(v string) *InstanceGroupConfig {
 type InstanceGroupDetail struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum Spot price your are willing to pay for EC2 instances.
-	//
-	// An optional, nullable field that applies if the MarketType for the instance
-	// group is specified as SPOT. Specified in USD. If the value is NULL and SPOT
-	// is specified, the maximum Spot price is set equal to the On-Demand price.
+	// The bid price for each EC2 Spot instance type as defined by InstanceType.
+	// Expressed in USD. If neither BidPrice nor BidPriceAsPercentageOfOnDemandPrice
+	// is provided, BidPriceAsPercentageOfOnDemandPrice defaults to 100%.
 	BidPrice *string `type:"string"`
 
 	// The date/time the instance group was created.
@@ -6862,6 +8330,180 @@ func (s *InstanceTypeSpecification) SetWeightedCapacity(v int64) *InstanceTypeSp
 	return s
 }
 
+// Indicates that an error occurred while processing the request and that the
+// request was not completed.
+type InternalServerError struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerError) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerError(v protocol.ResponseMetadata) error {
+	return &InternalServerError{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InternalServerError) Code() string {
+	return "InternalServerError"
+}
+
+// Message returns the exception's message.
+func (s *InternalServerError) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InternalServerError) OrigErr() error {
+	return nil
+}
+
+func (s *InternalServerError) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InternalServerError) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InternalServerError) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// This exception occurs when there is an internal failure in the EMR service.
+type InternalServerException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// The message associated with the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerException(v protocol.ResponseMetadata) error {
+	return &InternalServerException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InternalServerException) Code() string {
+	return "InternalServerException"
+}
+
+// Message returns the exception's message.
+func (s *InternalServerException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InternalServerException) OrigErr() error {
+	return nil
+}
+
+func (s *InternalServerException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InternalServerException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InternalServerException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// This exception occurs when there is something wrong with user input.
+type InvalidRequestException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// The error code associated with the exception.
+	ErrorCode *string `min:"1" type:"string"`
+
+	// The message associated with the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
+	return &InvalidRequestException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidRequestException) Code() string {
+	return "InvalidRequestException"
+}
+
+// Message returns the exception's message.
+func (s *InvalidRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidRequestException) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidRequestException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // A description of a cluster (job flow).
 type JobFlowDetail struct {
 	_ struct{} `type:"structure"`
@@ -6898,6 +8540,11 @@ type JobFlowDetail struct {
 	// of the job flow assume this role.
 	JobFlowRole *string `type:"string"`
 
+	// The AWS KMS customer master key (CMK) used for encrypting log files. This
+	// attribute is only available with EMR version 5.30.0 and later, excluding
+	// EMR 6.0.0.
+	LogEncryptionKmsKeyId *string `type:"string"`
+
 	// The location in Amazon S3 where log files for the job are stored.
 	LogUri *string `type:"string"`
 
@@ -6932,12 +8579,14 @@ type JobFlowDetail struct {
 	// is empty.
 	SupportedProducts []*string `type:"list"`
 
-	// Specifies whether the cluster is visible to all IAM users of the AWS account
-	// associated with the cluster. If this value is set to true, all IAM users
-	// of that AWS account can view and (if they have the proper policy permissions
-	// set) manage the cluster. If it is set to false, only the IAM user that created
-	// the cluster can view and manage it. This value can be changed using the SetVisibleToAllUsers
-	// action.
+	// Indicates whether the cluster is visible to all IAM users of the AWS account
+	// associated with the cluster. The default value, true, indicates that all
+	// IAM users in the AWS account can perform cluster actions if they have the
+	// proper IAM policy permissions. If this value is false, only the IAM user
+	// that created the cluster can perform actions. This value can be changed on
+	// a running cluster by using the SetVisibleToAllUsers action. You can override
+	// the default value of true when you create a cluster by using the VisibleToAllUsers
+	// parameter of the RunJobFlow action.
 	VisibleToAllUsers *bool `type:"boolean"`
 }
 
@@ -6990,6 +8639,12 @@ func (s *JobFlowDetail) SetJobFlowId(v string) *JobFlowDetail {
 // SetJobFlowRole sets the JobFlowRole field's value.
 func (s *JobFlowDetail) SetJobFlowRole(v string) *JobFlowDetail {
 	s.JobFlowRole = &v
+	return s
+}
+
+// SetLogEncryptionKmsKeyId sets the LogEncryptionKmsKeyId field's value.
+func (s *JobFlowDetail) SetLogEncryptionKmsKeyId(v string) *JobFlowDetail {
+	s.LogEncryptionKmsKeyId = &v
 	return s
 }
 
@@ -7131,14 +8786,8 @@ type JobFlowInstancesConfig struct {
 	// Applies to clusters that use the uniform instance group configuration. To
 	// launch the cluster in Amazon Virtual Private Cloud (Amazon VPC), set this
 	// parameter to the identifier of the Amazon VPC subnet where you want the cluster
-	// to launch. If you do not specify this value, the cluster launches in the
-	// normal Amazon Web Services cloud, outside of an Amazon VPC, if the account
-	// launching the cluster supports EC2 Classic networks in the region where the
-	// cluster launches.
-	//
-	// Amazon VPC currently does not support cluster compute quadruple extra large
-	// (cc1.4xlarge) instances. Thus you cannot specify the cc1.4xlarge instance
-	// type for clusters launched in an Amazon VPC.
+	// to launch. If you do not specify this value and your account supports EC2-Classic,
+	// the cluster launches in EC2-Classic.
 	Ec2SubnetId *string `type:"string"`
 
 	// Applies to clusters that use the instance fleet configuration. When multiple
@@ -8077,6 +9726,126 @@ func (s *ListInstancesOutput) SetMarker(v string) *ListInstancesOutput {
 	return s
 }
 
+type ListNotebookExecutionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique ID of the editor associated with the notebook execution.
+	EditorId *string `type:"string"`
+
+	// The beginning of time range filter for listing notebook executions. The default
+	// is the timestamp of 30 days ago.
+	From *time.Time `type:"timestamp"`
+
+	// The pagination token, returned by a previous ListNotebookExecutions call,
+	// that indicates the start of the list for this ListNotebookExecutions call.
+	Marker *string `type:"string"`
+
+	// The status filter for listing notebook executions.
+	//
+	//    * START_PENDING indicates that the cluster has received the execution
+	//    request but execution has not begun.
+	//
+	//    * STARTING indicates that the execution is starting on the cluster.
+	//
+	//    * RUNNING indicates that the execution is being processed by the cluster.
+	//
+	//    * FINISHING indicates that execution processing is in the final stages.
+	//
+	//    * FINISHED indicates that the execution has completed without error.
+	//
+	//    * FAILING indicates that the execution is failing and will not finish
+	//    successfully.
+	//
+	//    * FAILED indicates that the execution failed.
+	//
+	//    * STOP_PENDING indicates that the cluster has received a StopNotebookExecution
+	//    request and the stop is pending.
+	//
+	//    * STOPPING indicates that the cluster is in the process of stopping the
+	//    execution as a result of a StopNotebookExecution request.
+	//
+	//    * STOPPED indicates that the execution stopped because of a StopNotebookExecution
+	//    request.
+	Status *string `type:"string" enum:"NotebookExecutionStatus"`
+
+	// The end of time range filter for listing notebook executions. The default
+	// is the current timestamp.
+	To *time.Time `type:"timestamp"`
+}
+
+// String returns the string representation
+func (s ListNotebookExecutionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListNotebookExecutionsInput) GoString() string {
+	return s.String()
+}
+
+// SetEditorId sets the EditorId field's value.
+func (s *ListNotebookExecutionsInput) SetEditorId(v string) *ListNotebookExecutionsInput {
+	s.EditorId = &v
+	return s
+}
+
+// SetFrom sets the From field's value.
+func (s *ListNotebookExecutionsInput) SetFrom(v time.Time) *ListNotebookExecutionsInput {
+	s.From = &v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *ListNotebookExecutionsInput) SetMarker(v string) *ListNotebookExecutionsInput {
+	s.Marker = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *ListNotebookExecutionsInput) SetStatus(v string) *ListNotebookExecutionsInput {
+	s.Status = &v
+	return s
+}
+
+// SetTo sets the To field's value.
+func (s *ListNotebookExecutionsInput) SetTo(v time.Time) *ListNotebookExecutionsInput {
+	s.To = &v
+	return s
+}
+
+type ListNotebookExecutionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A pagination token that a subsequent ListNotebookExecutions can use to determine
+	// the next set of results to retrieve.
+	Marker *string `type:"string"`
+
+	// A list of notebook executions.
+	NotebookExecutions []*NotebookExecutionSummary `type:"list"`
+}
+
+// String returns the string representation
+func (s ListNotebookExecutionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListNotebookExecutionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetMarker sets the Marker field's value.
+func (s *ListNotebookExecutionsOutput) SetMarker(v string) *ListNotebookExecutionsOutput {
+	s.Marker = &v
+	return s
+}
+
+// SetNotebookExecutions sets the NotebookExecutions field's value.
+func (s *ListNotebookExecutionsOutput) SetNotebookExecutions(v []*NotebookExecutionSummary) *ListNotebookExecutionsOutput {
+	s.NotebookExecutions = v
+	return s
+}
+
 type ListSecurityConfigurationsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8146,7 +9915,9 @@ type ListStepsInput struct {
 	// The pagination token that indicates the next set of results to retrieve.
 	Marker *string `type:"string"`
 
-	// The filter to limit the step list based on the identifier of the steps.
+	// The filter to limit the step list based on the identifier of the steps. You
+	// can specify a maximum of ten Step IDs. The character constraint applies to
+	// the overall length of the array.
 	StepIds []*string `type:"list"`
 
 	// The filter to limit the step list based on certain states.
@@ -8234,6 +10005,51 @@ func (s *ListStepsOutput) SetSteps(v []*StepSummary) *ListStepsOutput {
 	return s
 }
 
+// Managed scaling policy for an Amazon EMR cluster. The policy specifies the
+// limits for resources that can be added or terminated from a cluster. The
+// policy only applies to the core and task nodes. The master node cannot be
+// scaled after initial configuration.
+type ManagedScalingPolicy struct {
+	_ struct{} `type:"structure"`
+
+	// The EC2 unit limits for a managed scaling policy. The managed scaling activity
+	// of a cluster is not allowed to go above or below these limits. The limit
+	// only applies to the core and task nodes. The master node cannot be scaled
+	// after initial configuration.
+	ComputeLimits *ComputeLimits `type:"structure"`
+}
+
+// String returns the string representation
+func (s ManagedScalingPolicy) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ManagedScalingPolicy) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ManagedScalingPolicy) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ManagedScalingPolicy"}
+	if s.ComputeLimits != nil {
+		if err := s.ComputeLimits.Validate(); err != nil {
+			invalidParams.AddNested("ComputeLimits", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetComputeLimits sets the ComputeLimits field's value.
+func (s *ManagedScalingPolicy) SetComputeLimits(v *ComputeLimits) *ManagedScalingPolicy {
+	s.ComputeLimits = v
+	return s
+}
+
 // A CloudWatch dimension, which is specified using a Key (known as a Name in
 // CloudWatch), Value pair. By default, Amazon EMR uses one dimension whose
 // Key is JobFlowID and Value is a variable representing the cluster ID, which
@@ -8268,6 +10084,77 @@ func (s *MetricDimension) SetKey(v string) *MetricDimension {
 // SetValue sets the Value field's value.
 func (s *MetricDimension) SetValue(v string) *MetricDimension {
 	s.Value = &v
+	return s
+}
+
+type ModifyClusterInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier of the cluster.
+	//
+	// ClusterId is a required field
+	ClusterId *string `type:"string" required:"true"`
+
+	// The number of steps that can be executed concurrently. You can specify a
+	// maximum of 256 steps.
+	StepConcurrencyLevel *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s ModifyClusterInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyClusterInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyClusterInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyClusterInput"}
+	if s.ClusterId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterId sets the ClusterId field's value.
+func (s *ModifyClusterInput) SetClusterId(v string) *ModifyClusterInput {
+	s.ClusterId = &v
+	return s
+}
+
+// SetStepConcurrencyLevel sets the StepConcurrencyLevel field's value.
+func (s *ModifyClusterInput) SetStepConcurrencyLevel(v int64) *ModifyClusterInput {
+	s.StepConcurrencyLevel = &v
+	return s
+}
+
+type ModifyClusterOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The number of steps that can be executed concurrently.
+	StepConcurrencyLevel *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s ModifyClusterOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyClusterOutput) GoString() string {
+	return s.String()
+}
+
+// SetStepConcurrencyLevel sets the StepConcurrencyLevel field's value.
+func (s *ModifyClusterOutput) SetStepConcurrencyLevel(v int64) *ModifyClusterOutput {
+	s.StepConcurrencyLevel = &v
 	return s
 }
 
@@ -8409,6 +10296,310 @@ func (s ModifyInstanceGroupsOutput) GoString() string {
 	return s.String()
 }
 
+// A notebook execution. An execution is a specific instance that an EMR Notebook
+// is run using the StartNotebookExecution action.
+type NotebookExecution struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the notebook execution.
+	Arn *string `type:"string"`
+
+	// The unique identifier of the EMR Notebook that is used for the notebook execution.
+	EditorId *string `type:"string"`
+
+	// The timestamp when notebook execution ended.
+	EndTime *time.Time `type:"timestamp"`
+
+	// The execution engine, such as an EMR cluster, used to run the EMR notebook
+	// and perform the notebook execution.
+	ExecutionEngine *ExecutionEngineConfig `type:"structure"`
+
+	// The reason for the latest status change of the notebook execution.
+	LastStateChangeReason *string `type:"string"`
+
+	// The unique identifier of a notebook execution.
+	NotebookExecutionId *string `type:"string"`
+
+	// A name for the notebook execution.
+	NotebookExecutionName *string `type:"string"`
+
+	// The unique identifier of the EC2 security group associated with the EMR Notebook
+	// instance. For more information see Specifying EC2 Security Groups for EMR
+	// Notebooks (https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-managed-notebooks-security-groups.html)
+	// in the EMR Management Guide.
+	NotebookInstanceSecurityGroupId *string `type:"string"`
+
+	// Input parameters in JSON format passed to the EMR Notebook at runtime for
+	// execution.
+	NotebookParams *string `type:"string"`
+
+	// The location of the notebook execution's output file in Amazon S3.
+	OutputNotebookURI *string `type:"string"`
+
+	// The timestamp when notebook execution started.
+	StartTime *time.Time `type:"timestamp"`
+
+	// The status of the notebook execution.
+	//
+	//    * START_PENDING indicates that the cluster has received the execution
+	//    request but execution has not begun.
+	//
+	//    * STARTING indicates that the execution is starting on the cluster.
+	//
+	//    * RUNNING indicates that the execution is being processed by the cluster.
+	//
+	//    * FINISHING indicates that execution processing is in the final stages.
+	//
+	//    * FINISHED indicates that the execution has completed without error.
+	//
+	//    * FAILING indicates that the execution is failing and will not finish
+	//    successfully.
+	//
+	//    * FAILED indicates that the execution failed.
+	//
+	//    * STOP_PENDING indicates that the cluster has received a StopNotebookExecution
+	//    request and the stop is pending.
+	//
+	//    * STOPPING indicates that the cluster is in the process of stopping the
+	//    execution as a result of a StopNotebookExecution request.
+	//
+	//    * STOPPED indicates that the execution stopped because of a StopNotebookExecution
+	//    request.
+	Status *string `type:"string" enum:"NotebookExecutionStatus"`
+
+	// A list of tags associated with a notebook execution. Tags are user-defined
+	// key value pairs that consist of a required key string with a maximum of 128
+	// characters and an optional value string with a maximum of 256 characters.
+	Tags []*Tag `type:"list"`
+}
+
+// String returns the string representation
+func (s NotebookExecution) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotebookExecution) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *NotebookExecution) SetArn(v string) *NotebookExecution {
+	s.Arn = &v
+	return s
+}
+
+// SetEditorId sets the EditorId field's value.
+func (s *NotebookExecution) SetEditorId(v string) *NotebookExecution {
+	s.EditorId = &v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *NotebookExecution) SetEndTime(v time.Time) *NotebookExecution {
+	s.EndTime = &v
+	return s
+}
+
+// SetExecutionEngine sets the ExecutionEngine field's value.
+func (s *NotebookExecution) SetExecutionEngine(v *ExecutionEngineConfig) *NotebookExecution {
+	s.ExecutionEngine = v
+	return s
+}
+
+// SetLastStateChangeReason sets the LastStateChangeReason field's value.
+func (s *NotebookExecution) SetLastStateChangeReason(v string) *NotebookExecution {
+	s.LastStateChangeReason = &v
+	return s
+}
+
+// SetNotebookExecutionId sets the NotebookExecutionId field's value.
+func (s *NotebookExecution) SetNotebookExecutionId(v string) *NotebookExecution {
+	s.NotebookExecutionId = &v
+	return s
+}
+
+// SetNotebookExecutionName sets the NotebookExecutionName field's value.
+func (s *NotebookExecution) SetNotebookExecutionName(v string) *NotebookExecution {
+	s.NotebookExecutionName = &v
+	return s
+}
+
+// SetNotebookInstanceSecurityGroupId sets the NotebookInstanceSecurityGroupId field's value.
+func (s *NotebookExecution) SetNotebookInstanceSecurityGroupId(v string) *NotebookExecution {
+	s.NotebookInstanceSecurityGroupId = &v
+	return s
+}
+
+// SetNotebookParams sets the NotebookParams field's value.
+func (s *NotebookExecution) SetNotebookParams(v string) *NotebookExecution {
+	s.NotebookParams = &v
+	return s
+}
+
+// SetOutputNotebookURI sets the OutputNotebookURI field's value.
+func (s *NotebookExecution) SetOutputNotebookURI(v string) *NotebookExecution {
+	s.OutputNotebookURI = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *NotebookExecution) SetStartTime(v time.Time) *NotebookExecution {
+	s.StartTime = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *NotebookExecution) SetStatus(v string) *NotebookExecution {
+	s.Status = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *NotebookExecution) SetTags(v []*Tag) *NotebookExecution {
+	s.Tags = v
+	return s
+}
+
+type NotebookExecutionSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier of the editor associated with the notebook execution.
+	EditorId *string `type:"string"`
+
+	// The timestamp when notebook execution started.
+	EndTime *time.Time `type:"timestamp"`
+
+	// The unique identifier of the notebook execution.
+	NotebookExecutionId *string `type:"string"`
+
+	// The name of the notebook execution.
+	NotebookExecutionName *string `type:"string"`
+
+	// The timestamp when notebook execution started.
+	StartTime *time.Time `type:"timestamp"`
+
+	// The status of the notebook execution.
+	//
+	//    * START_PENDING indicates that the cluster has received the execution
+	//    request but execution has not begun.
+	//
+	//    * STARTING indicates that the execution is starting on the cluster.
+	//
+	//    * RUNNING indicates that the execution is being processed by the cluster.
+	//
+	//    * FINISHING indicates that execution processing is in the final stages.
+	//
+	//    * FINISHED indicates that the execution has completed without error.
+	//
+	//    * FAILING indicates that the execution is failing and will not finish
+	//    successfully.
+	//
+	//    * FAILED indicates that the execution failed.
+	//
+	//    * STOP_PENDING indicates that the cluster has received a StopNotebookExecution
+	//    request and the stop is pending.
+	//
+	//    * STOPPING indicates that the cluster is in the process of stopping the
+	//    execution as a result of a StopNotebookExecution request.
+	//
+	//    * STOPPED indicates that the execution stopped because of a StopNotebookExecution
+	//    request.
+	Status *string `type:"string" enum:"NotebookExecutionStatus"`
+}
+
+// String returns the string representation
+func (s NotebookExecutionSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotebookExecutionSummary) GoString() string {
+	return s.String()
+}
+
+// SetEditorId sets the EditorId field's value.
+func (s *NotebookExecutionSummary) SetEditorId(v string) *NotebookExecutionSummary {
+	s.EditorId = &v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *NotebookExecutionSummary) SetEndTime(v time.Time) *NotebookExecutionSummary {
+	s.EndTime = &v
+	return s
+}
+
+// SetNotebookExecutionId sets the NotebookExecutionId field's value.
+func (s *NotebookExecutionSummary) SetNotebookExecutionId(v string) *NotebookExecutionSummary {
+	s.NotebookExecutionId = &v
+	return s
+}
+
+// SetNotebookExecutionName sets the NotebookExecutionName field's value.
+func (s *NotebookExecutionSummary) SetNotebookExecutionName(v string) *NotebookExecutionSummary {
+	s.NotebookExecutionName = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *NotebookExecutionSummary) SetStartTime(v time.Time) *NotebookExecutionSummary {
+	s.StartTime = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *NotebookExecutionSummary) SetStatus(v string) *NotebookExecutionSummary {
+	s.Status = &v
+	return s
+}
+
+// The launch specification for On-Demand instances in the instance fleet, which
+// determines the allocation strategy.
+//
+// The instance fleet configuration is available only in Amazon EMR versions
+// 4.8.0 and later, excluding 5.0.x versions. On-Demand instances allocation
+// strategy is available in Amazon EMR version 5.12.1 and later.
+type OnDemandProvisioningSpecification struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the strategy to use in launching On-Demand instance fleets. Currently,
+	// the only option is lowest-price (the default), which launches the lowest
+	// price first.
+	//
+	// AllocationStrategy is a required field
+	AllocationStrategy *string `type:"string" required:"true" enum:"OnDemandProvisioningAllocationStrategy"`
+}
+
+// String returns the string representation
+func (s OnDemandProvisioningSpecification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OnDemandProvisioningSpecification) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OnDemandProvisioningSpecification) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OnDemandProvisioningSpecification"}
+	if s.AllocationStrategy == nil {
+		invalidParams.Add(request.NewErrParamRequired("AllocationStrategy"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAllocationStrategy sets the AllocationStrategy field's value.
+func (s *OnDemandProvisioningSpecification) SetAllocationStrategy(v string) *OnDemandProvisioningSpecification {
+	s.AllocationStrategy = &v
+	return s
+}
+
 // The Amazon EC2 Availability Zone configuration of the cluster (job flow).
 type PlacementType struct {
 	_ struct{} `type:"structure"`
@@ -8447,6 +10638,62 @@ func (s *PlacementType) SetAvailabilityZone(v string) *PlacementType {
 // SetAvailabilityZones sets the AvailabilityZones field's value.
 func (s *PlacementType) SetAvailabilityZones(v []*string) *PlacementType {
 	s.AvailabilityZones = v
+	return s
+}
+
+// A list of port ranges that are permitted to allow inbound traffic from all
+// public IP addresses. To specify a single port, use the same value for MinRange
+// and MaxRange.
+type PortRange struct {
+	_ struct{} `type:"structure"`
+
+	// The smallest port number in a specified range of port numbers.
+	MaxRange *int64 `type:"integer"`
+
+	// The smallest port number in a specified range of port numbers.
+	//
+	// MinRange is a required field
+	MinRange *int64 `type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s PortRange) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PortRange) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PortRange) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PortRange"}
+	if s.MaxRange != nil && *s.MaxRange < -1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxRange", -1))
+	}
+	if s.MinRange == nil {
+		invalidParams.Add(request.NewErrParamRequired("MinRange"))
+	}
+	if s.MinRange != nil && *s.MinRange < -1 {
+		invalidParams.Add(request.NewErrParamMinValue("MinRange", -1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxRange sets the MaxRange field's value.
+func (s *PortRange) SetMaxRange(v int64) *PortRange {
+	s.MaxRange = &v
+	return s
+}
+
+// SetMinRange sets the MinRange field's value.
+func (s *PortRange) SetMinRange(v int64) *PortRange {
+	s.MinRange = &v
 	return s
 }
 
@@ -8529,6 +10776,9 @@ type PutAutoScalingPolicyOutput struct {
 	// The automatic scaling policy definition.
 	AutoScalingPolicy *AutoScalingPolicyDescription `type:"structure"`
 
+	// The Amazon Resource Name of the cluster.
+	ClusterArn *string `min:"20" type:"string"`
+
 	// Specifies the ID of a cluster. The instance group to which the automatic
 	// scaling policy is applied is within this cluster.
 	ClusterId *string `type:"string"`
@@ -8553,6 +10803,12 @@ func (s *PutAutoScalingPolicyOutput) SetAutoScalingPolicy(v *AutoScalingPolicyDe
 	return s
 }
 
+// SetClusterArn sets the ClusterArn field's value.
+func (s *PutAutoScalingPolicyOutput) SetClusterArn(v string) *PutAutoScalingPolicyOutput {
+	s.ClusterArn = &v
+	return s
+}
+
 // SetClusterId sets the ClusterId field's value.
 func (s *PutAutoScalingPolicyOutput) SetClusterId(v string) *PutAutoScalingPolicyOutput {
 	s.ClusterId = &v
@@ -8563,6 +10819,148 @@ func (s *PutAutoScalingPolicyOutput) SetClusterId(v string) *PutAutoScalingPolic
 func (s *PutAutoScalingPolicyOutput) SetInstanceGroupId(v string) *PutAutoScalingPolicyOutput {
 	s.InstanceGroupId = &v
 	return s
+}
+
+type PutBlockPublicAccessConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// A configuration for Amazon EMR block public access. The configuration applies
+	// to all clusters created in your account for the current Region. The configuration
+	// specifies whether block public access is enabled. If block public access
+	// is enabled, security groups associated with the cluster cannot have rules
+	// that allow inbound traffic from 0.0.0.0/0 or ::/0 on a port, unless the port
+	// is specified as an exception using PermittedPublicSecurityGroupRuleRanges
+	// in the BlockPublicAccessConfiguration. By default, Port 22 (SSH) is an exception,
+	// and public access is allowed on this port. You can change this by updating
+	// BlockPublicSecurityGroupRules to remove the exception.
+	//
+	// For accounts that created clusters in a Region before November 25, 2019,
+	// block public access is disabled by default in that Region. To use this feature,
+	// you must manually enable and configure it. For accounts that did not create
+	// an EMR cluster in a Region before this date, block public access is enabled
+	// by default in that Region.
+	//
+	// BlockPublicAccessConfiguration is a required field
+	BlockPublicAccessConfiguration *BlockPublicAccessConfiguration `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s PutBlockPublicAccessConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutBlockPublicAccessConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutBlockPublicAccessConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutBlockPublicAccessConfigurationInput"}
+	if s.BlockPublicAccessConfiguration == nil {
+		invalidParams.Add(request.NewErrParamRequired("BlockPublicAccessConfiguration"))
+	}
+	if s.BlockPublicAccessConfiguration != nil {
+		if err := s.BlockPublicAccessConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("BlockPublicAccessConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBlockPublicAccessConfiguration sets the BlockPublicAccessConfiguration field's value.
+func (s *PutBlockPublicAccessConfigurationInput) SetBlockPublicAccessConfiguration(v *BlockPublicAccessConfiguration) *PutBlockPublicAccessConfigurationInput {
+	s.BlockPublicAccessConfiguration = v
+	return s
+}
+
+type PutBlockPublicAccessConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s PutBlockPublicAccessConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutBlockPublicAccessConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+type PutManagedScalingPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the ID of an EMR cluster where the managed scaling policy is attached.
+	//
+	// ClusterId is a required field
+	ClusterId *string `type:"string" required:"true"`
+
+	// Specifies the constraints for the managed scaling policy.
+	//
+	// ManagedScalingPolicy is a required field
+	ManagedScalingPolicy *ManagedScalingPolicy `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s PutManagedScalingPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutManagedScalingPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutManagedScalingPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutManagedScalingPolicyInput"}
+	if s.ClusterId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterId"))
+	}
+	if s.ManagedScalingPolicy == nil {
+		invalidParams.Add(request.NewErrParamRequired("ManagedScalingPolicy"))
+	}
+	if s.ManagedScalingPolicy != nil {
+		if err := s.ManagedScalingPolicy.Validate(); err != nil {
+			invalidParams.AddNested("ManagedScalingPolicy", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterId sets the ClusterId field's value.
+func (s *PutManagedScalingPolicyInput) SetClusterId(v string) *PutManagedScalingPolicyInput {
+	s.ClusterId = &v
+	return s
+}
+
+// SetManagedScalingPolicy sets the ManagedScalingPolicy field's value.
+func (s *PutManagedScalingPolicyInput) SetManagedScalingPolicy(v *ManagedScalingPolicy) *PutManagedScalingPolicyInput {
+	s.ManagedScalingPolicy = v
+	return s
+}
+
+type PutManagedScalingPolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s PutManagedScalingPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutManagedScalingPolicyOutput) GoString() string {
+	return s.String()
 }
 
 type RemoveAutoScalingPolicyInput struct {
@@ -8629,6 +11027,59 @@ func (s RemoveAutoScalingPolicyOutput) String() string {
 
 // GoString returns the string representation
 func (s RemoveAutoScalingPolicyOutput) GoString() string {
+	return s.String()
+}
+
+type RemoveManagedScalingPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the ID of the cluster from which the managed scaling policy will
+	// be removed.
+	//
+	// ClusterId is a required field
+	ClusterId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RemoveManagedScalingPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RemoveManagedScalingPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RemoveManagedScalingPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RemoveManagedScalingPolicyInput"}
+	if s.ClusterId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterId sets the ClusterId field's value.
+func (s *RemoveManagedScalingPolicyInput) SetClusterId(v string) *RemoveManagedScalingPolicyInput {
+	s.ClusterId = &v
+	return s
+}
+
+type RemoveManagedScalingPolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s RemoveManagedScalingPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RemoveManagedScalingPolicyOutput) GoString() string {
 	return s.String()
 }
 
@@ -8765,9 +11216,17 @@ type RunJobFlowInput struct {
 	// in the EMR Management Guide.
 	KerberosAttributes *KerberosAttributes `type:"structure"`
 
+	// The AWS KMS customer master key (CMK) used for encrypting log files. If a
+	// value is not provided, the logs will remain encrypted by AES-256. This attribute
+	// is only available with EMR version 5.30.0 and later, excluding EMR 6.0.0.
+	LogEncryptionKmsKeyId *string `type:"string"`
+
 	// The location in Amazon S3 to write the log files of the job flow. If a value
 	// is not provided, logs are not created.
 	LogUri *string `type:"string"`
+
+	// The specified managed scaling policy for an Amazon EMR cluster.
+	ManagedScalingPolicy *ManagedScalingPolicy `type:"structure"`
 
 	// The name of the job flow.
 	//
@@ -8805,11 +11264,11 @@ type RunJobFlowInput struct {
 
 	// The Amazon EMR release label, which determines the version of open-source
 	// application packages installed on the cluster. Release labels are in the
-	// form emr-x.x.x, where x.x.x is an Amazon EMR release version, for example,
-	// emr-5.14.0. For more information about Amazon EMR release versions and included
-	// application versions and features, see https://docs.aws.amazon.com/emr/latest/ReleaseGuide/
+	// form emr-x.x.x, where x.x.x is an Amazon EMR release version such as emr-5.14.0.
+	// For more information about Amazon EMR release versions and included application
+	// versions and features, see https://docs.aws.amazon.com/emr/latest/ReleaseGuide/
 	// (https://docs.aws.amazon.com/emr/latest/ReleaseGuide/). The release label
-	// applies only to Amazon EMR releases versions 4.x and later. Earlier versions
+	// applies only to Amazon EMR releases version 4.0 and later. Earlier versions
 	// use AmiVersion.
 	ReleaseLabel *string `type:"string"`
 
@@ -8841,6 +11300,10 @@ type RunJobFlowInput struct {
 	// resources on your behalf.
 	ServiceRole *string `type:"string"`
 
+	// Specifies the number of steps that can be executed concurrently. The default
+	// value is 1. The maximum value is 256.
+	StepConcurrencyLevel *int64 `type:"integer"`
+
 	// A list of steps to run.
 	Steps []*StepConfig `type:"list"`
 
@@ -8860,11 +11323,10 @@ type RunJobFlowInput struct {
 	// A list of tags to associate with a cluster and propagate to Amazon EC2 instances.
 	Tags []*Tag `type:"list"`
 
-	// Whether the cluster is visible to all IAM users of the AWS account associated
-	// with the cluster. If this value is set to true, all IAM users of that AWS
-	// account can view and (if they have the proper policy permissions set) manage
-	// the cluster. If it is set to false, only the IAM user that created the cluster
-	// can view and manage it.
+	// A value of true indicates that all IAM users in the AWS account can perform
+	// cluster actions if they have the proper IAM policy permissions. This is the
+	// default. A value of false indicates that only the IAM user who created the
+	// cluster can perform actions.
 	VisibleToAllUsers *bool `type:"boolean"`
 }
 
@@ -8905,6 +11367,11 @@ func (s *RunJobFlowInput) Validate() error {
 	if s.KerberosAttributes != nil {
 		if err := s.KerberosAttributes.Validate(); err != nil {
 			invalidParams.AddNested("KerberosAttributes", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.ManagedScalingPolicy != nil {
+		if err := s.ManagedScalingPolicy.Validate(); err != nil {
+			invalidParams.AddNested("ManagedScalingPolicy", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.Steps != nil {
@@ -8990,9 +11457,21 @@ func (s *RunJobFlowInput) SetKerberosAttributes(v *KerberosAttributes) *RunJobFl
 	return s
 }
 
+// SetLogEncryptionKmsKeyId sets the LogEncryptionKmsKeyId field's value.
+func (s *RunJobFlowInput) SetLogEncryptionKmsKeyId(v string) *RunJobFlowInput {
+	s.LogEncryptionKmsKeyId = &v
+	return s
+}
+
 // SetLogUri sets the LogUri field's value.
 func (s *RunJobFlowInput) SetLogUri(v string) *RunJobFlowInput {
 	s.LogUri = &v
+	return s
+}
+
+// SetManagedScalingPolicy sets the ManagedScalingPolicy field's value.
+func (s *RunJobFlowInput) SetManagedScalingPolicy(v *ManagedScalingPolicy) *RunJobFlowInput {
+	s.ManagedScalingPolicy = v
 	return s
 }
 
@@ -9038,6 +11517,12 @@ func (s *RunJobFlowInput) SetServiceRole(v string) *RunJobFlowInput {
 	return s
 }
 
+// SetStepConcurrencyLevel sets the StepConcurrencyLevel field's value.
+func (s *RunJobFlowInput) SetStepConcurrencyLevel(v int64) *RunJobFlowInput {
+	s.StepConcurrencyLevel = &v
+	return s
+}
+
 // SetSteps sets the Steps field's value.
 func (s *RunJobFlowInput) SetSteps(v []*StepConfig) *RunJobFlowInput {
 	s.Steps = v
@@ -9066,6 +11551,9 @@ func (s *RunJobFlowInput) SetVisibleToAllUsers(v bool) *RunJobFlowInput {
 type RunJobFlowOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name of the cluster.
+	ClusterArn *string `min:"20" type:"string"`
+
 	// An unique identifier for the job flow.
 	JobFlowId *string `type:"string"`
 }
@@ -9078,6 +11566,12 @@ func (s RunJobFlowOutput) String() string {
 // GoString returns the string representation
 func (s RunJobFlowOutput) GoString() string {
 	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *RunJobFlowOutput) SetClusterArn(v string) *RunJobFlowOutput {
+	s.ClusterArn = &v
+	return s
 }
 
 // SetJobFlowId sets the JobFlowId field's value.
@@ -9493,16 +11987,15 @@ func (s SetTerminationProtectionOutput) GoString() string {
 type SetVisibleToAllUsersInput struct {
 	_ struct{} `type:"structure"`
 
-	// Identifiers of the job flows to receive the new visibility setting.
+	// The unique identifier of the job flow (cluster).
 	//
 	// JobFlowIds is a required field
 	JobFlowIds []*string `type:"list" required:"true"`
 
-	// Whether the specified clusters are visible to all IAM users of the AWS account
-	// associated with the cluster. If this value is set to True, all IAM users
-	// of that AWS account can view and, if they have the proper IAM policy permissions
-	// set, manage the clusters. If it is set to False, only the IAM user that created
-	// a cluster can view and manage it.
+	// A value of true indicates that all IAM users in the AWS account can perform
+	// cluster actions if they have the proper IAM policy permissions. This is the
+	// default. A value of false indicates that only the IAM user who created the
+	// cluster can perform actions.
 	//
 	// VisibleToAllUsers is a required field
 	VisibleToAllUsers *bool `type:"boolean" required:"true"`
@@ -9674,12 +12167,20 @@ func (s *SimpleScalingPolicyConfiguration) SetScalingAdjustment(v int64) *Simple
 }
 
 // The launch specification for Spot instances in the instance fleet, which
-// determines the defined duration and provisioning timeout behavior.
+// determines the defined duration, provisioning timeout behavior, and allocation
+// strategy.
 //
 // The instance fleet configuration is available only in Amazon EMR versions
-// 4.8.0 and later, excluding 5.0.x versions.
+// 4.8.0 and later, excluding 5.0.x versions. Spot instance allocation strategy
+// is available in Amazon EMR version 5.12.1 and later.
 type SpotProvisioningSpecification struct {
 	_ struct{} `type:"structure"`
+
+	// Specifies the strategy to use in launching Spot instance fleets. Currently,
+	// the only option is capacity-optimized (the default), which launches instances
+	// from Spot instance pools with optimal capacity for the number of instances
+	// that are launching.
+	AllocationStrategy *string `type:"string" enum:"SpotProvisioningAllocationStrategy"`
 
 	// The defined duration for Spot instances (also known as Spot blocks) in minutes.
 	// When specified, the Spot instance does not terminate before the defined duration
@@ -9736,6 +12237,12 @@ func (s *SpotProvisioningSpecification) Validate() error {
 	return nil
 }
 
+// SetAllocationStrategy sets the AllocationStrategy field's value.
+func (s *SpotProvisioningSpecification) SetAllocationStrategy(v string) *SpotProvisioningSpecification {
+	s.AllocationStrategy = &v
+	return s
+}
+
 // SetBlockDurationMinutes sets the BlockDurationMinutes field's value.
 func (s *SpotProvisioningSpecification) SetBlockDurationMinutes(v int64) *SpotProvisioningSpecification {
 	s.BlockDurationMinutes = &v
@@ -9751,6 +12258,160 @@ func (s *SpotProvisioningSpecification) SetTimeoutAction(v string) *SpotProvisio
 // SetTimeoutDurationMinutes sets the TimeoutDurationMinutes field's value.
 func (s *SpotProvisioningSpecification) SetTimeoutDurationMinutes(v int64) *SpotProvisioningSpecification {
 	s.TimeoutDurationMinutes = &v
+	return s
+}
+
+type StartNotebookExecutionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier of the EMR Notebook to use for notebook execution.
+	//
+	// EditorId is a required field
+	EditorId *string `type:"string" required:"true"`
+
+	// Specifies the execution engine (cluster) that runs the notebook execution.
+	//
+	// ExecutionEngine is a required field
+	ExecutionEngine *ExecutionEngineConfig `type:"structure" required:"true"`
+
+	// An optional name for the notebook execution.
+	NotebookExecutionName *string `type:"string"`
+
+	// The unique identifier of the Amazon EC2 security group to associate with
+	// the EMR Notebook for this notebook execution.
+	NotebookInstanceSecurityGroupId *string `type:"string"`
+
+	// Input parameters in JSON format passed to the EMR Notebook at runtime for
+	// execution.
+	NotebookParams *string `type:"string"`
+
+	// The path and file name of the notebook file for this execution, relative
+	// to the path specified for the EMR Notebook. For example, if you specify a
+	// path of s3://MyBucket/MyNotebooks when you create an EMR Notebook for a notebook
+	// with an ID of e-ABCDEFGHIJK1234567890ABCD (the EditorID of this request),
+	// and you specify a RelativePath of my_notebook_executions/notebook_execution.ipynb,
+	// the location of the file for the notebook execution is s3://MyBucket/MyNotebooks/e-ABCDEFGHIJK1234567890ABCD/my_notebook_executions/notebook_execution.ipynb.
+	//
+	// RelativePath is a required field
+	RelativePath *string `type:"string" required:"true"`
+
+	// The name or ARN of the IAM role that is used as the service role for Amazon
+	// EMR (the EMR role) for the notebook execution.
+	//
+	// ServiceRole is a required field
+	ServiceRole *string `type:"string" required:"true"`
+
+	// A list of tags associated with a notebook execution. Tags are user-defined
+	// key value pairs that consist of a required key string with a maximum of 128
+	// characters and an optional value string with a maximum of 256 characters.
+	Tags []*Tag `type:"list"`
+}
+
+// String returns the string representation
+func (s StartNotebookExecutionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartNotebookExecutionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartNotebookExecutionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartNotebookExecutionInput"}
+	if s.EditorId == nil {
+		invalidParams.Add(request.NewErrParamRequired("EditorId"))
+	}
+	if s.ExecutionEngine == nil {
+		invalidParams.Add(request.NewErrParamRequired("ExecutionEngine"))
+	}
+	if s.RelativePath == nil {
+		invalidParams.Add(request.NewErrParamRequired("RelativePath"))
+	}
+	if s.ServiceRole == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServiceRole"))
+	}
+	if s.ExecutionEngine != nil {
+		if err := s.ExecutionEngine.Validate(); err != nil {
+			invalidParams.AddNested("ExecutionEngine", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEditorId sets the EditorId field's value.
+func (s *StartNotebookExecutionInput) SetEditorId(v string) *StartNotebookExecutionInput {
+	s.EditorId = &v
+	return s
+}
+
+// SetExecutionEngine sets the ExecutionEngine field's value.
+func (s *StartNotebookExecutionInput) SetExecutionEngine(v *ExecutionEngineConfig) *StartNotebookExecutionInput {
+	s.ExecutionEngine = v
+	return s
+}
+
+// SetNotebookExecutionName sets the NotebookExecutionName field's value.
+func (s *StartNotebookExecutionInput) SetNotebookExecutionName(v string) *StartNotebookExecutionInput {
+	s.NotebookExecutionName = &v
+	return s
+}
+
+// SetNotebookInstanceSecurityGroupId sets the NotebookInstanceSecurityGroupId field's value.
+func (s *StartNotebookExecutionInput) SetNotebookInstanceSecurityGroupId(v string) *StartNotebookExecutionInput {
+	s.NotebookInstanceSecurityGroupId = &v
+	return s
+}
+
+// SetNotebookParams sets the NotebookParams field's value.
+func (s *StartNotebookExecutionInput) SetNotebookParams(v string) *StartNotebookExecutionInput {
+	s.NotebookParams = &v
+	return s
+}
+
+// SetRelativePath sets the RelativePath field's value.
+func (s *StartNotebookExecutionInput) SetRelativePath(v string) *StartNotebookExecutionInput {
+	s.RelativePath = &v
+	return s
+}
+
+// SetServiceRole sets the ServiceRole field's value.
+func (s *StartNotebookExecutionInput) SetServiceRole(v string) *StartNotebookExecutionInput {
+	s.ServiceRole = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *StartNotebookExecutionInput) SetTags(v []*Tag) *StartNotebookExecutionInput {
+	s.Tags = v
+	return s
+}
+
+type StartNotebookExecutionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier of the notebook execution.
+	NotebookExecutionId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s StartNotebookExecutionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartNotebookExecutionOutput) GoString() string {
+	return s.String()
+}
+
+// SetNotebookExecutionId sets the NotebookExecutionId field's value.
+func (s *StartNotebookExecutionOutput) SetNotebookExecutionId(v string) *StartNotebookExecutionOutput {
+	s.NotebookExecutionId = &v
 	return s
 }
 
@@ -10176,6 +12837,58 @@ func (s *StepTimeline) SetStartDateTime(v time.Time) *StepTimeline {
 	return s
 }
 
+type StopNotebookExecutionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier of the notebook execution.
+	//
+	// NotebookExecutionId is a required field
+	NotebookExecutionId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StopNotebookExecutionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopNotebookExecutionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StopNotebookExecutionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StopNotebookExecutionInput"}
+	if s.NotebookExecutionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("NotebookExecutionId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNotebookExecutionId sets the NotebookExecutionId field's value.
+func (s *StopNotebookExecutionInput) SetNotebookExecutionId(v string) *StopNotebookExecutionInput {
+	s.NotebookExecutionId = &v
+	return s
+}
+
+type StopNotebookExecutionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s StopNotebookExecutionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopNotebookExecutionOutput) GoString() string {
+	return s.String()
+}
+
 // The list of supported product configurations which allow user-supplied arguments.
 // EMR accepts these arguments and forwards them to the corresponding installation
 // script as bootstrap action arguments.
@@ -10380,6 +13093,16 @@ const (
 	ActionOnFailureContinue = "CONTINUE"
 )
 
+// ActionOnFailure_Values returns all elements of the ActionOnFailure enum
+func ActionOnFailure_Values() []string {
+	return []string{
+		ActionOnFailureTerminateJobFlow,
+		ActionOnFailureTerminateCluster,
+		ActionOnFailureCancelAndWait,
+		ActionOnFailureContinue,
+	}
+}
+
 const (
 	// AdjustmentTypeChangeInCapacity is a AdjustmentType enum value
 	AdjustmentTypeChangeInCapacity = "CHANGE_IN_CAPACITY"
@@ -10390,6 +13113,15 @@ const (
 	// AdjustmentTypeExactCapacity is a AdjustmentType enum value
 	AdjustmentTypeExactCapacity = "EXACT_CAPACITY"
 )
+
+// AdjustmentType_Values returns all elements of the AdjustmentType enum
+func AdjustmentType_Values() []string {
+	return []string{
+		AdjustmentTypeChangeInCapacity,
+		AdjustmentTypePercentChangeInCapacity,
+		AdjustmentTypeExactCapacity,
+	}
+}
 
 const (
 	// AutoScalingPolicyStatePending is a AutoScalingPolicyState enum value
@@ -10411,6 +13143,18 @@ const (
 	AutoScalingPolicyStateFailed = "FAILED"
 )
 
+// AutoScalingPolicyState_Values returns all elements of the AutoScalingPolicyState enum
+func AutoScalingPolicyState_Values() []string {
+	return []string{
+		AutoScalingPolicyStatePending,
+		AutoScalingPolicyStateAttaching,
+		AutoScalingPolicyStateAttached,
+		AutoScalingPolicyStateDetaching,
+		AutoScalingPolicyStateDetached,
+		AutoScalingPolicyStateFailed,
+	}
+}
+
 const (
 	// AutoScalingPolicyStateChangeReasonCodeUserRequest is a AutoScalingPolicyStateChangeReasonCode enum value
 	AutoScalingPolicyStateChangeReasonCodeUserRequest = "USER_REQUEST"
@@ -10422,6 +13166,15 @@ const (
 	AutoScalingPolicyStateChangeReasonCodeCleanupFailure = "CLEANUP_FAILURE"
 )
 
+// AutoScalingPolicyStateChangeReasonCode_Values returns all elements of the AutoScalingPolicyStateChangeReasonCode enum
+func AutoScalingPolicyStateChangeReasonCode_Values() []string {
+	return []string{
+		AutoScalingPolicyStateChangeReasonCodeUserRequest,
+		AutoScalingPolicyStateChangeReasonCodeProvisionFailure,
+		AutoScalingPolicyStateChangeReasonCodeCleanupFailure,
+	}
+}
+
 const (
 	// CancelStepsRequestStatusSubmitted is a CancelStepsRequestStatus enum value
 	CancelStepsRequestStatusSubmitted = "SUBMITTED"
@@ -10429,6 +13182,14 @@ const (
 	// CancelStepsRequestStatusFailed is a CancelStepsRequestStatus enum value
 	CancelStepsRequestStatusFailed = "FAILED"
 )
+
+// CancelStepsRequestStatus_Values returns all elements of the CancelStepsRequestStatus enum
+func CancelStepsRequestStatus_Values() []string {
+	return []string{
+		CancelStepsRequestStatusSubmitted,
+		CancelStepsRequestStatusFailed,
+	}
+}
 
 const (
 	// ClusterStateStarting is a ClusterState enum value
@@ -10452,6 +13213,19 @@ const (
 	// ClusterStateTerminatedWithErrors is a ClusterState enum value
 	ClusterStateTerminatedWithErrors = "TERMINATED_WITH_ERRORS"
 )
+
+// ClusterState_Values returns all elements of the ClusterState enum
+func ClusterState_Values() []string {
+	return []string{
+		ClusterStateStarting,
+		ClusterStateBootstrapping,
+		ClusterStateRunning,
+		ClusterStateWaiting,
+		ClusterStateTerminating,
+		ClusterStateTerminated,
+		ClusterStateTerminatedWithErrors,
+	}
+}
 
 const (
 	// ClusterStateChangeReasonCodeInternalError is a ClusterStateChangeReasonCode enum value
@@ -10479,6 +13253,20 @@ const (
 	ClusterStateChangeReasonCodeAllStepsCompleted = "ALL_STEPS_COMPLETED"
 )
 
+// ClusterStateChangeReasonCode_Values returns all elements of the ClusterStateChangeReasonCode enum
+func ClusterStateChangeReasonCode_Values() []string {
+	return []string{
+		ClusterStateChangeReasonCodeInternalError,
+		ClusterStateChangeReasonCodeValidationError,
+		ClusterStateChangeReasonCodeInstanceFailure,
+		ClusterStateChangeReasonCodeInstanceFleetTimeout,
+		ClusterStateChangeReasonCodeBootstrapFailure,
+		ClusterStateChangeReasonCodeUserRequest,
+		ClusterStateChangeReasonCodeStepFailure,
+		ClusterStateChangeReasonCodeAllStepsCompleted,
+	}
+}
+
 const (
 	// ComparisonOperatorGreaterThanOrEqual is a ComparisonOperator enum value
 	ComparisonOperatorGreaterThanOrEqual = "GREATER_THAN_OR_EQUAL"
@@ -10493,6 +13281,48 @@ const (
 	ComparisonOperatorLessThanOrEqual = "LESS_THAN_OR_EQUAL"
 )
 
+// ComparisonOperator_Values returns all elements of the ComparisonOperator enum
+func ComparisonOperator_Values() []string {
+	return []string{
+		ComparisonOperatorGreaterThanOrEqual,
+		ComparisonOperatorGreaterThan,
+		ComparisonOperatorLessThan,
+		ComparisonOperatorLessThanOrEqual,
+	}
+}
+
+const (
+	// ComputeLimitsUnitTypeInstanceFleetUnits is a ComputeLimitsUnitType enum value
+	ComputeLimitsUnitTypeInstanceFleetUnits = "InstanceFleetUnits"
+
+	// ComputeLimitsUnitTypeInstances is a ComputeLimitsUnitType enum value
+	ComputeLimitsUnitTypeInstances = "Instances"
+
+	// ComputeLimitsUnitTypeVcpu is a ComputeLimitsUnitType enum value
+	ComputeLimitsUnitTypeVcpu = "VCPU"
+)
+
+// ComputeLimitsUnitType_Values returns all elements of the ComputeLimitsUnitType enum
+func ComputeLimitsUnitType_Values() []string {
+	return []string{
+		ComputeLimitsUnitTypeInstanceFleetUnits,
+		ComputeLimitsUnitTypeInstances,
+		ComputeLimitsUnitTypeVcpu,
+	}
+}
+
+const (
+	// ExecutionEngineTypeEmr is a ExecutionEngineType enum value
+	ExecutionEngineTypeEmr = "EMR"
+)
+
+// ExecutionEngineType_Values returns all elements of the ExecutionEngineType enum
+func ExecutionEngineType_Values() []string {
+	return []string{
+		ExecutionEngineTypeEmr,
+	}
+}
+
 const (
 	// InstanceCollectionTypeInstanceFleet is a InstanceCollectionType enum value
 	InstanceCollectionTypeInstanceFleet = "INSTANCE_FLEET"
@@ -10500,6 +13330,14 @@ const (
 	// InstanceCollectionTypeInstanceGroup is a InstanceCollectionType enum value
 	InstanceCollectionTypeInstanceGroup = "INSTANCE_GROUP"
 )
+
+// InstanceCollectionType_Values returns all elements of the InstanceCollectionType enum
+func InstanceCollectionType_Values() []string {
+	return []string{
+		InstanceCollectionTypeInstanceFleet,
+		InstanceCollectionTypeInstanceGroup,
+	}
+}
 
 const (
 	// InstanceFleetStateProvisioning is a InstanceFleetState enum value
@@ -10524,6 +13362,19 @@ const (
 	InstanceFleetStateTerminated = "TERMINATED"
 )
 
+// InstanceFleetState_Values returns all elements of the InstanceFleetState enum
+func InstanceFleetState_Values() []string {
+	return []string{
+		InstanceFleetStateProvisioning,
+		InstanceFleetStateBootstrapping,
+		InstanceFleetStateRunning,
+		InstanceFleetStateResizing,
+		InstanceFleetStateSuspended,
+		InstanceFleetStateTerminating,
+		InstanceFleetStateTerminated,
+	}
+}
+
 const (
 	// InstanceFleetStateChangeReasonCodeInternalError is a InstanceFleetStateChangeReasonCode enum value
 	InstanceFleetStateChangeReasonCodeInternalError = "INTERNAL_ERROR"
@@ -10538,6 +13389,16 @@ const (
 	InstanceFleetStateChangeReasonCodeClusterTerminated = "CLUSTER_TERMINATED"
 )
 
+// InstanceFleetStateChangeReasonCode_Values returns all elements of the InstanceFleetStateChangeReasonCode enum
+func InstanceFleetStateChangeReasonCode_Values() []string {
+	return []string{
+		InstanceFleetStateChangeReasonCodeInternalError,
+		InstanceFleetStateChangeReasonCodeValidationError,
+		InstanceFleetStateChangeReasonCodeInstanceFailure,
+		InstanceFleetStateChangeReasonCodeClusterTerminated,
+	}
+}
+
 const (
 	// InstanceFleetTypeMaster is a InstanceFleetType enum value
 	InstanceFleetTypeMaster = "MASTER"
@@ -10548,6 +13409,15 @@ const (
 	// InstanceFleetTypeTask is a InstanceFleetType enum value
 	InstanceFleetTypeTask = "TASK"
 )
+
+// InstanceFleetType_Values returns all elements of the InstanceFleetType enum
+func InstanceFleetType_Values() []string {
+	return []string{
+		InstanceFleetTypeMaster,
+		InstanceFleetTypeCore,
+		InstanceFleetTypeTask,
+	}
+}
 
 const (
 	// InstanceGroupStateProvisioning is a InstanceGroupState enum value
@@ -10584,6 +13454,23 @@ const (
 	InstanceGroupStateEnded = "ENDED"
 )
 
+// InstanceGroupState_Values returns all elements of the InstanceGroupState enum
+func InstanceGroupState_Values() []string {
+	return []string{
+		InstanceGroupStateProvisioning,
+		InstanceGroupStateBootstrapping,
+		InstanceGroupStateRunning,
+		InstanceGroupStateReconfiguring,
+		InstanceGroupStateResizing,
+		InstanceGroupStateSuspended,
+		InstanceGroupStateTerminating,
+		InstanceGroupStateTerminated,
+		InstanceGroupStateArrested,
+		InstanceGroupStateShuttingDown,
+		InstanceGroupStateEnded,
+	}
+}
+
 const (
 	// InstanceGroupStateChangeReasonCodeInternalError is a InstanceGroupStateChangeReasonCode enum value
 	InstanceGroupStateChangeReasonCodeInternalError = "INTERNAL_ERROR"
@@ -10598,6 +13485,16 @@ const (
 	InstanceGroupStateChangeReasonCodeClusterTerminated = "CLUSTER_TERMINATED"
 )
 
+// InstanceGroupStateChangeReasonCode_Values returns all elements of the InstanceGroupStateChangeReasonCode enum
+func InstanceGroupStateChangeReasonCode_Values() []string {
+	return []string{
+		InstanceGroupStateChangeReasonCodeInternalError,
+		InstanceGroupStateChangeReasonCodeValidationError,
+		InstanceGroupStateChangeReasonCodeInstanceFailure,
+		InstanceGroupStateChangeReasonCodeClusterTerminated,
+	}
+}
+
 const (
 	// InstanceGroupTypeMaster is a InstanceGroupType enum value
 	InstanceGroupTypeMaster = "MASTER"
@@ -10609,6 +13506,15 @@ const (
 	InstanceGroupTypeTask = "TASK"
 )
 
+// InstanceGroupType_Values returns all elements of the InstanceGroupType enum
+func InstanceGroupType_Values() []string {
+	return []string{
+		InstanceGroupTypeMaster,
+		InstanceGroupTypeCore,
+		InstanceGroupTypeTask,
+	}
+}
+
 const (
 	// InstanceRoleTypeMaster is a InstanceRoleType enum value
 	InstanceRoleTypeMaster = "MASTER"
@@ -10619,6 +13525,15 @@ const (
 	// InstanceRoleTypeTask is a InstanceRoleType enum value
 	InstanceRoleTypeTask = "TASK"
 )
+
+// InstanceRoleType_Values returns all elements of the InstanceRoleType enum
+func InstanceRoleType_Values() []string {
+	return []string{
+		InstanceRoleTypeMaster,
+		InstanceRoleTypeCore,
+		InstanceRoleTypeTask,
+	}
+}
 
 const (
 	// InstanceStateAwaitingFulfillment is a InstanceState enum value
@@ -10637,6 +13552,17 @@ const (
 	InstanceStateTerminated = "TERMINATED"
 )
 
+// InstanceState_Values returns all elements of the InstanceState enum
+func InstanceState_Values() []string {
+	return []string{
+		InstanceStateAwaitingFulfillment,
+		InstanceStateProvisioning,
+		InstanceStateBootstrapping,
+		InstanceStateRunning,
+		InstanceStateTerminated,
+	}
+}
+
 const (
 	// InstanceStateChangeReasonCodeInternalError is a InstanceStateChangeReasonCode enum value
 	InstanceStateChangeReasonCodeInternalError = "INTERNAL_ERROR"
@@ -10653,6 +13579,17 @@ const (
 	// InstanceStateChangeReasonCodeClusterTerminated is a InstanceStateChangeReasonCode enum value
 	InstanceStateChangeReasonCodeClusterTerminated = "CLUSTER_TERMINATED"
 )
+
+// InstanceStateChangeReasonCode_Values returns all elements of the InstanceStateChangeReasonCode enum
+func InstanceStateChangeReasonCode_Values() []string {
+	return []string{
+		InstanceStateChangeReasonCodeInternalError,
+		InstanceStateChangeReasonCodeValidationError,
+		InstanceStateChangeReasonCodeInstanceFailure,
+		InstanceStateChangeReasonCodeBootstrapFailure,
+		InstanceStateChangeReasonCodeClusterTerminated,
+	}
+}
 
 // The type of instance.
 const (
@@ -10681,6 +13618,20 @@ const (
 	JobFlowExecutionStateFailed = "FAILED"
 )
 
+// JobFlowExecutionState_Values returns all elements of the JobFlowExecutionState enum
+func JobFlowExecutionState_Values() []string {
+	return []string{
+		JobFlowExecutionStateStarting,
+		JobFlowExecutionStateBootstrapping,
+		JobFlowExecutionStateRunning,
+		JobFlowExecutionStateWaiting,
+		JobFlowExecutionStateShuttingDown,
+		JobFlowExecutionStateTerminated,
+		JobFlowExecutionStateCompleted,
+		JobFlowExecutionStateFailed,
+	}
+}
+
 const (
 	// MarketTypeOnDemand is a MarketType enum value
 	MarketTypeOnDemand = "ON_DEMAND"
@@ -10688,6 +13639,74 @@ const (
 	// MarketTypeSpot is a MarketType enum value
 	MarketTypeSpot = "SPOT"
 )
+
+// MarketType_Values returns all elements of the MarketType enum
+func MarketType_Values() []string {
+	return []string{
+		MarketTypeOnDemand,
+		MarketTypeSpot,
+	}
+}
+
+const (
+	// NotebookExecutionStatusStartPending is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusStartPending = "START_PENDING"
+
+	// NotebookExecutionStatusStarting is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusStarting = "STARTING"
+
+	// NotebookExecutionStatusRunning is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusRunning = "RUNNING"
+
+	// NotebookExecutionStatusFinishing is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusFinishing = "FINISHING"
+
+	// NotebookExecutionStatusFinished is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusFinished = "FINISHED"
+
+	// NotebookExecutionStatusFailing is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusFailing = "FAILING"
+
+	// NotebookExecutionStatusFailed is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusFailed = "FAILED"
+
+	// NotebookExecutionStatusStopPending is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusStopPending = "STOP_PENDING"
+
+	// NotebookExecutionStatusStopping is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusStopping = "STOPPING"
+
+	// NotebookExecutionStatusStopped is a NotebookExecutionStatus enum value
+	NotebookExecutionStatusStopped = "STOPPED"
+)
+
+// NotebookExecutionStatus_Values returns all elements of the NotebookExecutionStatus enum
+func NotebookExecutionStatus_Values() []string {
+	return []string{
+		NotebookExecutionStatusStartPending,
+		NotebookExecutionStatusStarting,
+		NotebookExecutionStatusRunning,
+		NotebookExecutionStatusFinishing,
+		NotebookExecutionStatusFinished,
+		NotebookExecutionStatusFailing,
+		NotebookExecutionStatusFailed,
+		NotebookExecutionStatusStopPending,
+		NotebookExecutionStatusStopping,
+		NotebookExecutionStatusStopped,
+	}
+}
+
+const (
+	// OnDemandProvisioningAllocationStrategyLowestPrice is a OnDemandProvisioningAllocationStrategy enum value
+	OnDemandProvisioningAllocationStrategyLowestPrice = "lowest-price"
+)
+
+// OnDemandProvisioningAllocationStrategy_Values returns all elements of the OnDemandProvisioningAllocationStrategy enum
+func OnDemandProvisioningAllocationStrategy_Values() []string {
+	return []string{
+		OnDemandProvisioningAllocationStrategyLowestPrice,
+	}
+}
 
 const (
 	// RepoUpgradeOnBootSecurity is a RepoUpgradeOnBoot enum value
@@ -10697,6 +13716,14 @@ const (
 	RepoUpgradeOnBootNone = "NONE"
 )
 
+// RepoUpgradeOnBoot_Values returns all elements of the RepoUpgradeOnBoot enum
+func RepoUpgradeOnBoot_Values() []string {
+	return []string{
+		RepoUpgradeOnBootSecurity,
+		RepoUpgradeOnBootNone,
+	}
+}
+
 const (
 	// ScaleDownBehaviorTerminateAtInstanceHour is a ScaleDownBehavior enum value
 	ScaleDownBehaviorTerminateAtInstanceHour = "TERMINATE_AT_INSTANCE_HOUR"
@@ -10705,6 +13732,26 @@ const (
 	ScaleDownBehaviorTerminateAtTaskCompletion = "TERMINATE_AT_TASK_COMPLETION"
 )
 
+// ScaleDownBehavior_Values returns all elements of the ScaleDownBehavior enum
+func ScaleDownBehavior_Values() []string {
+	return []string{
+		ScaleDownBehaviorTerminateAtInstanceHour,
+		ScaleDownBehaviorTerminateAtTaskCompletion,
+	}
+}
+
+const (
+	// SpotProvisioningAllocationStrategyCapacityOptimized is a SpotProvisioningAllocationStrategy enum value
+	SpotProvisioningAllocationStrategyCapacityOptimized = "capacity-optimized"
+)
+
+// SpotProvisioningAllocationStrategy_Values returns all elements of the SpotProvisioningAllocationStrategy enum
+func SpotProvisioningAllocationStrategy_Values() []string {
+	return []string{
+		SpotProvisioningAllocationStrategyCapacityOptimized,
+	}
+}
+
 const (
 	// SpotProvisioningTimeoutActionSwitchToOnDemand is a SpotProvisioningTimeoutAction enum value
 	SpotProvisioningTimeoutActionSwitchToOnDemand = "SWITCH_TO_ON_DEMAND"
@@ -10712,6 +13759,14 @@ const (
 	// SpotProvisioningTimeoutActionTerminateCluster is a SpotProvisioningTimeoutAction enum value
 	SpotProvisioningTimeoutActionTerminateCluster = "TERMINATE_CLUSTER"
 )
+
+// SpotProvisioningTimeoutAction_Values returns all elements of the SpotProvisioningTimeoutAction enum
+func SpotProvisioningTimeoutAction_Values() []string {
+	return []string{
+		SpotProvisioningTimeoutActionSwitchToOnDemand,
+		SpotProvisioningTimeoutActionTerminateCluster,
+	}
+}
 
 const (
 	// StatisticSampleCount is a Statistic enum value
@@ -10729,6 +13784,33 @@ const (
 	// StatisticMaximum is a Statistic enum value
 	StatisticMaximum = "MAXIMUM"
 )
+
+// Statistic_Values returns all elements of the Statistic enum
+func Statistic_Values() []string {
+	return []string{
+		StatisticSampleCount,
+		StatisticAverage,
+		StatisticSum,
+		StatisticMinimum,
+		StatisticMaximum,
+	}
+}
+
+const (
+	// StepCancellationOptionSendInterrupt is a StepCancellationOption enum value
+	StepCancellationOptionSendInterrupt = "SEND_INTERRUPT"
+
+	// StepCancellationOptionTerminateProcess is a StepCancellationOption enum value
+	StepCancellationOptionTerminateProcess = "TERMINATE_PROCESS"
+)
+
+// StepCancellationOption_Values returns all elements of the StepCancellationOption enum
+func StepCancellationOption_Values() []string {
+	return []string{
+		StepCancellationOptionSendInterrupt,
+		StepCancellationOptionTerminateProcess,
+	}
+}
 
 const (
 	// StepExecutionStatePending is a StepExecutionState enum value
@@ -10753,6 +13835,19 @@ const (
 	StepExecutionStateInterrupted = "INTERRUPTED"
 )
 
+// StepExecutionState_Values returns all elements of the StepExecutionState enum
+func StepExecutionState_Values() []string {
+	return []string{
+		StepExecutionStatePending,
+		StepExecutionStateRunning,
+		StepExecutionStateContinue,
+		StepExecutionStateCompleted,
+		StepExecutionStateCancelled,
+		StepExecutionStateFailed,
+		StepExecutionStateInterrupted,
+	}
+}
+
 const (
 	// StepStatePending is a StepState enum value
 	StepStatePending = "PENDING"
@@ -10776,10 +13871,30 @@ const (
 	StepStateInterrupted = "INTERRUPTED"
 )
 
+// StepState_Values returns all elements of the StepState enum
+func StepState_Values() []string {
+	return []string{
+		StepStatePending,
+		StepStateCancelPending,
+		StepStateRunning,
+		StepStateCompleted,
+		StepStateCancelled,
+		StepStateFailed,
+		StepStateInterrupted,
+	}
+}
+
 const (
 	// StepStateChangeReasonCodeNone is a StepStateChangeReasonCode enum value
 	StepStateChangeReasonCodeNone = "NONE"
 )
+
+// StepStateChangeReasonCode_Values returns all elements of the StepStateChangeReasonCode enum
+func StepStateChangeReasonCode_Values() []string {
+	return []string{
+		StepStateChangeReasonCodeNone,
+	}
+}
 
 const (
 	// UnitNone is a Unit enum value
@@ -10863,3 +13978,36 @@ const (
 	// UnitCountPerSecond is a Unit enum value
 	UnitCountPerSecond = "COUNT_PER_SECOND"
 )
+
+// Unit_Values returns all elements of the Unit enum
+func Unit_Values() []string {
+	return []string{
+		UnitNone,
+		UnitSeconds,
+		UnitMicroSeconds,
+		UnitMilliSeconds,
+		UnitBytes,
+		UnitKiloBytes,
+		UnitMegaBytes,
+		UnitGigaBytes,
+		UnitTeraBytes,
+		UnitBits,
+		UnitKiloBits,
+		UnitMegaBits,
+		UnitGigaBits,
+		UnitTeraBits,
+		UnitPercent,
+		UnitCount,
+		UnitBytesPerSecond,
+		UnitKiloBytesPerSecond,
+		UnitMegaBytesPerSecond,
+		UnitGigaBytesPerSecond,
+		UnitTeraBytesPerSecond,
+		UnitBitsPerSecond,
+		UnitKiloBitsPerSecond,
+		UnitMegaBitsPerSecond,
+		UnitGigaBitsPerSecond,
+		UnitTeraBitsPerSecond,
+		UnitCountPerSecond,
+	}
+}

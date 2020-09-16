@@ -7,13 +7,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsLaunchConfiguration() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsLaunchConfigurationRead,
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -98,6 +102,11 @@ func dataSourceAwsLaunchConfiguration() *schema.Resource {
 
 						"device_name": {
 							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"no_device": {
+							Type:     schema.TypeBool,
 							Computed: true,
 						},
 
@@ -214,6 +223,7 @@ func dataSourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface
 	d.Set("key_name", lc.KeyName)
 	d.Set("image_id", lc.ImageId)
 	d.Set("instance_type", lc.InstanceType)
+	d.Set("arn", lc.LaunchConfigurationARN)
 	d.Set("name", lc.LaunchConfigurationName)
 	d.Set("user_data", lc.UserData)
 	d.Set("iam_instance_profile", lc.IamInstanceProfile)

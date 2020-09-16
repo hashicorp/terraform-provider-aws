@@ -7,50 +7,75 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAPIGatewayIntegrationResponse_basic(t *testing.T) {
 	var conf apigateway.IntegrationResponse
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
+	resourceName := "aws_api_gateway_integration_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationResponseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayIntegrationResponseConfig,
+				Config: testAccAWSAPIGatewayIntegrationResponseConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayIntegrationResponseExists("aws_api_gateway_integration_response.test", &conf),
+					testAccCheckAWSAPIGatewayIntegrationResponseExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayIntegrationResponseAttributes(&conf),
 					resource.TestCheckResourceAttr(
-						"aws_api_gateway_integration_response.test", "response_templates.application/json", ""),
+						resourceName, "response_templates.application/json", ""),
 					resource.TestCheckResourceAttr(
-						"aws_api_gateway_integration_response.test", "response_templates.application/xml", "#set($inputRoot = $input.path('$'))\n{ }"),
+						resourceName, "response_templates.application/xml", "#set($inputRoot = $input.path('$'))\n{ }"),
 					resource.TestCheckResourceAttr(
-						"aws_api_gateway_integration_response.test", "content_handling", ""),
+						resourceName, "content_handling", ""),
 				),
 			},
 
 			{
-				Config: testAccAWSAPIGatewayIntegrationResponseConfigUpdate,
+				Config: testAccAWSAPIGatewayIntegrationResponseConfigUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayIntegrationResponseExists("aws_api_gateway_integration_response.test", &conf),
+					testAccCheckAWSAPIGatewayIntegrationResponseExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayIntegrationResponseAttributesUpdate(&conf),
 					resource.TestCheckResourceAttr(
-						"aws_api_gateway_integration_response.test", "response_templates.application/json", "$input.path('$')"),
+						resourceName, "response_templates.application/json", "$input.path('$')"),
 					resource.TestCheckResourceAttr(
-						"aws_api_gateway_integration_response.test", "response_templates.application/xml", ""),
+						resourceName, "response_templates.application/xml", ""),
 					resource.TestCheckResourceAttr(
-						"aws_api_gateway_integration_response.test", "content_handling", "CONVERT_TO_BINARY"),
+						resourceName, "content_handling", "CONVERT_TO_BINARY"),
 				),
 			},
 			{
-				ResourceName:      "aws_api_gateway_integration_response.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayIntegrationResponseImportStateIdFunc("aws_api_gateway_integration_response.test"),
+				ImportStateIdFunc: testAccAWSAPIGatewayIntegrationResponseImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayIntegrationResponse_disappears(t *testing.T) {
+	var conf apigateway.IntegrationResponse
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
+	resourceName := "aws_api_gateway_integration_response.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationResponseDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayIntegrationResponseConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayIntegrationResponseExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayIntegrationResponse(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -110,7 +135,7 @@ func testAccCheckAWSAPIGatewayIntegrationResponseExists(n string, res *apigatewa
 			return fmt.Errorf("No API Gateway Method ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigateway
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetIntegrationResponseInput{
 			HttpMethod: aws.String("GET"),
@@ -130,7 +155,7 @@ func testAccCheckAWSAPIGatewayIntegrationResponseExists(n string, res *apigatewa
 }
 
 func testAccCheckAWSAPIGatewayIntegrationResponseDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigateway
+	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_integration_response" {
@@ -174,21 +199,22 @@ func testAccAWSAPIGatewayIntegrationResponseImportStateIdFunc(resourceName strin
 	}
 }
 
-const testAccAWSAPIGatewayIntegrationResponseConfig = `
+func testAccAWSAPIGatewayIntegrationResponseConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
+  name = "%s"
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "GET"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
   authorization = "NONE"
 
   request_models = {
@@ -197,66 +223,68 @@ resource "aws_api_gateway_method" "test" {
 }
 
 resource "aws_api_gateway_method_response" "error" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
   status_code = "400"
 
   response_models = {
     "application/json" = "Error"
   }
 
-	response_parameters = {
-		"method.response.header.Content-Type" = true
-	}
+  response_parameters = {
+    "method.response.header.Content-Type" = true
+  }
 }
 
 resource "aws_api_gateway_integration" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
 
   request_templates = {
     "application/json" = ""
-    "application/xml" = "#set($inputRoot = $input.path('$'))\n{ }"
+    "application/xml"  = "#set($inputRoot = $input.path('$'))\n{ }"
   }
 
   type = "MOCK"
 }
 
 resource "aws_api_gateway_integration_response" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
-  status_code = "${aws_api_gateway_method_response.error.status_code}"
+  rest_api_id       = aws_api_gateway_rest_api.test.id
+  resource_id       = aws_api_gateway_resource.test.id
+  http_method       = aws_api_gateway_method.test.http_method
+  status_code       = aws_api_gateway_method_response.error.status_code
   selection_pattern = ".*"
 
   response_templates = {
     "application/json" = ""
-    "application/xml" = "#set($inputRoot = $input.path('$'))\n{ }"
+    "application/xml"  = "#set($inputRoot = $input.path('$'))\n{ }"
   }
 
-	response_parameters = {
-		"method.response.header.Content-Type" = "integration.response.body.type"
-	}
+  response_parameters = {
+    "method.response.header.Content-Type" = "integration.response.body.type"
+  }
 }
-`
+`, rName)
+}
 
-const testAccAWSAPIGatewayIntegrationResponseConfigUpdate = `
+func testAccAWSAPIGatewayIntegrationResponseConfigUpdate(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
+  name = "%s"
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "GET"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
   authorization = "NONE"
 
   request_models = {
@@ -265,45 +293,45 @@ resource "aws_api_gateway_method" "test" {
 }
 
 resource "aws_api_gateway_method_response" "error" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
   status_code = "400"
 
   response_models = {
     "application/json" = "Error"
   }
 
-	response_parameters = {
-		"method.response.header.Content-Type" = true
-	}
+  response_parameters = {
+    "method.response.header.Content-Type" = true
+  }
 }
 
 resource "aws_api_gateway_integration" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
 
   request_templates = {
     "application/json" = ""
-    "application/xml" = "#set($inputRoot = $input.path('$'))\n{ }"
+    "application/xml"  = "#set($inputRoot = $input.path('$'))\n{ }"
   }
 
   type = "MOCK"
 }
 
 resource "aws_api_gateway_integration_response" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
-  status_code = "${aws_api_gateway_method_response.error.status_code}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
+  status_code = aws_api_gateway_method_response.error.status_code
 
   response_templates = {
     "application/json" = "$input.path('$')"
-    "application/xml" = ""
+    "application/xml"  = ""
   }
 
   content_handling = "CONVERT_TO_BINARY"
-
 }
-`
+`, rName)
+}

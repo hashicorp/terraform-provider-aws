@@ -1,20 +1,24 @@
 # S019
 
-The S019 analyzer reports cases of schemas including `MaxItems` or
-`MinItems` without `TypeList`, `TypeMap`, or `TypeSet`, which will
-fail schema validation.
+The S019 analyzer reports cases of schemas including `Computed: false`,
+`Optional: false`, or `Required: false` which are extraneous.
 
 ## Flagged Code
 
 ```go
 &schema.Schema{
-    MaxItems: 1,
-    Type:     schema.TypeString,
+    Computed: false,
+    Optional: true,
 }
 
 &schema.Schema{
-    MinItems: 1,
-    Type:     schema.TypeString,
+    Optional: false,
+    Required: true,
+}
+
+&schema.Schema{
+    Computed: true,
+    Required: false,
 }
 ```
 
@@ -22,6 +26,26 @@ fail schema validation.
 
 ```go
 &schema.Schema{
-    Type: schema.TypeString,
+    Optional: true,
+}
+
+&schema.Schema{
+    Required: true,
+}
+
+&schema.Schema{
+    Computed: true,
+}
+```
+
+## Ignoring Reports
+
+Singular reports can be ignored by adding the a `//lintignore:S019` Go code comment at the end of the offending line or on the line immediately proceding, e.g.
+
+```go
+//lintignore:S019
+&schema.Schema{
+    Computed: false,
+    Optional: true,
 }
 ```

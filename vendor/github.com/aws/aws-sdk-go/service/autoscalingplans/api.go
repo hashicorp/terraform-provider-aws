@@ -66,19 +66,19 @@ func (c *AutoScalingPlans) CreateScalingPlanRequest(input *CreateScalingPlanInpu
 // See the AWS API reference guide for AWS Auto Scaling Plans's
 // API operation CreateScalingPlan for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the parameters provided.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Your account exceeded a limit. This exception is thrown when a per-account
 //   resource limit is exceeded.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to a scaling plan that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/autoscaling-plans-2018-01-06/CreateScalingPlan
@@ -163,18 +163,18 @@ func (c *AutoScalingPlans) DeleteScalingPlanRequest(input *DeleteScalingPlanInpu
 // See the AWS API reference guide for AWS Auto Scaling Plans's
 // API operation DeleteScalingPlan for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the parameters provided.
 //
-//   * ErrCodeObjectNotFoundException "ObjectNotFoundException"
+//   * ObjectNotFoundException
 //   The specified object could not be found.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to a scaling plan that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/autoscaling-plans-2018-01-06/DeleteScalingPlan
@@ -252,18 +252,18 @@ func (c *AutoScalingPlans) DescribeScalingPlanResourcesRequest(input *DescribeSc
 // See the AWS API reference guide for AWS Auto Scaling Plans's
 // API operation DescribeScalingPlanResources for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the parameters provided.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The token provided is not valid.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to a scaling plan that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/autoscaling-plans-2018-01-06/DescribeScalingPlanResources
@@ -341,18 +341,18 @@ func (c *AutoScalingPlans) DescribeScalingPlansRequest(input *DescribeScalingPla
 // See the AWS API reference guide for AWS Auto Scaling Plans's
 // API operation DescribeScalingPlans for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the parameters provided.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The token provided is not valid.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to a scaling plan that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/autoscaling-plans-2018-01-06/DescribeScalingPlans
@@ -434,11 +434,11 @@ func (c *AutoScalingPlans) GetScalingPlanResourceForecastDataRequest(input *GetS
 // See the AWS API reference guide for AWS Auto Scaling Plans's
 // API operation GetScalingPlanResourceForecastData for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the parameters provided.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/autoscaling-plans-2018-01-06/GetScalingPlanResourceForecastData
@@ -520,18 +520,18 @@ func (c *AutoScalingPlans) UpdateScalingPlanRequest(input *UpdateScalingPlanInpu
 // See the AWS API reference guide for AWS Auto Scaling Plans's
 // API operation UpdateScalingPlan for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the parameters provided.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to a scaling plan that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
-//   * ErrCodeObjectNotFoundException "ObjectNotFoundException"
+//   * ObjectNotFoundException
 //   The specified object could not be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/autoscaling-plans-2018-01-06/UpdateScalingPlan
@@ -607,6 +607,63 @@ func (s *ApplicationSource) SetCloudFormationStackARN(v string) *ApplicationSour
 func (s *ApplicationSource) SetTagFilters(v []*TagFilter) *ApplicationSource {
 	s.TagFilters = v
 	return s
+}
+
+// Concurrent updates caused an exception, for example, if you request an update
+// to a scaling plan that already has a pending update.
+type ConcurrentUpdateException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConcurrentUpdateException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConcurrentUpdateException) GoString() string {
+	return s.String()
+}
+
+func newErrorConcurrentUpdateException(v protocol.ResponseMetadata) error {
+	return &ConcurrentUpdateException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ConcurrentUpdateException) Code() string {
+	return "ConcurrentUpdateException"
+}
+
+// Message returns the exception's message.
+func (s *ConcurrentUpdateException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ConcurrentUpdateException) OrigErr() error {
+	return nil
+}
+
+func (s *ConcurrentUpdateException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ConcurrentUpdateException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ConcurrentUpdateException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type CreateScalingPlanInput struct {
@@ -1480,6 +1537,175 @@ func (s *GetScalingPlanResourceForecastDataOutput) SetDatapoints(v []*Datapoint)
 	return s
 }
 
+// The service encountered an internal error.
+type InternalServiceException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServiceException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServiceException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServiceException(v protocol.ResponseMetadata) error {
+	return &InternalServiceException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InternalServiceException) Code() string {
+	return "InternalServiceException"
+}
+
+// Message returns the exception's message.
+func (s *InternalServiceException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InternalServiceException) OrigErr() error {
+	return nil
+}
+
+func (s *InternalServiceException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InternalServiceException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InternalServiceException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The token provided is not valid.
+type InvalidNextTokenException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidNextTokenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidNextTokenException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidNextTokenException(v protocol.ResponseMetadata) error {
+	return &InvalidNextTokenException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidNextTokenException) Code() string {
+	return "InvalidNextTokenException"
+}
+
+// Message returns the exception's message.
+func (s *InvalidNextTokenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidNextTokenException) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidNextTokenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidNextTokenException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidNextTokenException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Your account exceeded a limit. This exception is thrown when a per-account
+// resource limit is exceeded.
+type LimitExceededException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s *LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s *LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // Represents a dimension for a customized metric.
 type MetricDimension struct {
 	_ struct{} `type:"structure"`
@@ -1531,6 +1757,62 @@ func (s *MetricDimension) SetName(v string) *MetricDimension {
 func (s *MetricDimension) SetValue(v string) *MetricDimension {
 	s.Value = &v
 	return s
+}
+
+// The specified object could not be found.
+type ObjectNotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ObjectNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ObjectNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorObjectNotFoundException(v protocol.ResponseMetadata) error {
+	return &ObjectNotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ObjectNotFoundException) Code() string {
+	return "ObjectNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *ObjectNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ObjectNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *ObjectNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ObjectNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ObjectNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Represents a predefined metric that can be used for predictive scaling.
@@ -2594,6 +2876,62 @@ func (s UpdateScalingPlanOutput) GoString() string {
 	return s.String()
 }
 
+// An exception was thrown for a validation issue. Review the parameters provided.
+type ValidationException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ValidationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ValidationException) GoString() string {
+	return s.String()
+}
+
+func newErrorValidationException(v protocol.ResponseMetadata) error {
+	return &ValidationException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ValidationException) Code() string {
+	return "ValidationException"
+}
+
+// Message returns the exception's message.
+func (s *ValidationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ValidationException) OrigErr() error {
+	return nil
+}
+
+func (s *ValidationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ValidationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ValidationException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 const (
 	// ForecastDataTypeCapacityForecast is a ForecastDataType enum value
 	ForecastDataTypeCapacityForecast = "CapacityForecast"
@@ -2608,6 +2946,16 @@ const (
 	ForecastDataTypeScheduledActionMaxCapacity = "ScheduledActionMaxCapacity"
 )
 
+// ForecastDataType_Values returns all elements of the ForecastDataType enum
+func ForecastDataType_Values() []string {
+	return []string{
+		ForecastDataTypeCapacityForecast,
+		ForecastDataTypeLoadForecast,
+		ForecastDataTypeScheduledActionMinCapacity,
+		ForecastDataTypeScheduledActionMaxCapacity,
+	}
+}
+
 const (
 	// LoadMetricTypeAsgtotalCpuutilization is a LoadMetricType enum value
 	LoadMetricTypeAsgtotalCpuutilization = "ASGTotalCPUUtilization"
@@ -2621,6 +2969,16 @@ const (
 	// LoadMetricTypeAlbtargetGroupRequestCount is a LoadMetricType enum value
 	LoadMetricTypeAlbtargetGroupRequestCount = "ALBTargetGroupRequestCount"
 )
+
+// LoadMetricType_Values returns all elements of the LoadMetricType enum
+func LoadMetricType_Values() []string {
+	return []string{
+		LoadMetricTypeAsgtotalCpuutilization,
+		LoadMetricTypeAsgtotalNetworkIn,
+		LoadMetricTypeAsgtotalNetworkOut,
+		LoadMetricTypeAlbtargetGroupRequestCount,
+	}
+}
 
 const (
 	// MetricStatisticAverage is a MetricStatistic enum value
@@ -2639,10 +2997,28 @@ const (
 	MetricStatisticSum = "Sum"
 )
 
+// MetricStatistic_Values returns all elements of the MetricStatistic enum
+func MetricStatistic_Values() []string {
+	return []string{
+		MetricStatisticAverage,
+		MetricStatisticMinimum,
+		MetricStatisticMaximum,
+		MetricStatisticSampleCount,
+		MetricStatisticSum,
+	}
+}
+
 const (
 	// PolicyTypeTargetTrackingScaling is a PolicyType enum value
 	PolicyTypeTargetTrackingScaling = "TargetTrackingScaling"
 )
+
+// PolicyType_Values returns all elements of the PolicyType enum
+func PolicyType_Values() []string {
+	return []string{
+		PolicyTypeTargetTrackingScaling,
+	}
+}
 
 const (
 	// PredictiveScalingMaxCapacityBehaviorSetForecastCapacityToMaxCapacity is a PredictiveScalingMaxCapacityBehavior enum value
@@ -2655,6 +3031,15 @@ const (
 	PredictiveScalingMaxCapacityBehaviorSetMaxCapacityAboveForecastCapacity = "SetMaxCapacityAboveForecastCapacity"
 )
 
+// PredictiveScalingMaxCapacityBehavior_Values returns all elements of the PredictiveScalingMaxCapacityBehavior enum
+func PredictiveScalingMaxCapacityBehavior_Values() []string {
+	return []string{
+		PredictiveScalingMaxCapacityBehaviorSetForecastCapacityToMaxCapacity,
+		PredictiveScalingMaxCapacityBehaviorSetMaxCapacityToForecastCapacity,
+		PredictiveScalingMaxCapacityBehaviorSetMaxCapacityAboveForecastCapacity,
+	}
+}
+
 const (
 	// PredictiveScalingModeForecastAndScale is a PredictiveScalingMode enum value
 	PredictiveScalingModeForecastAndScale = "ForecastAndScale"
@@ -2662,6 +3047,14 @@ const (
 	// PredictiveScalingModeForecastOnly is a PredictiveScalingMode enum value
 	PredictiveScalingModeForecastOnly = "ForecastOnly"
 )
+
+// PredictiveScalingMode_Values returns all elements of the PredictiveScalingMode enum
+func PredictiveScalingMode_Values() []string {
+	return []string{
+		PredictiveScalingModeForecastAndScale,
+		PredictiveScalingModeForecastOnly,
+	}
+}
 
 const (
 	// ScalableDimensionAutoscalingAutoScalingGroupDesiredCapacity is a ScalableDimension enum value
@@ -2688,6 +3081,20 @@ const (
 	// ScalableDimensionDynamodbIndexWriteCapacityUnits is a ScalableDimension enum value
 	ScalableDimensionDynamodbIndexWriteCapacityUnits = "dynamodb:index:WriteCapacityUnits"
 )
+
+// ScalableDimension_Values returns all elements of the ScalableDimension enum
+func ScalableDimension_Values() []string {
+	return []string{
+		ScalableDimensionAutoscalingAutoScalingGroupDesiredCapacity,
+		ScalableDimensionEcsServiceDesiredCount,
+		ScalableDimensionEc2SpotFleetRequestTargetCapacity,
+		ScalableDimensionRdsClusterReadReplicaCount,
+		ScalableDimensionDynamodbTableReadCapacityUnits,
+		ScalableDimensionDynamodbTableWriteCapacityUnits,
+		ScalableDimensionDynamodbIndexReadCapacityUnits,
+		ScalableDimensionDynamodbIndexWriteCapacityUnits,
+	}
+}
 
 const (
 	// ScalingMetricTypeAsgaverageCpuutilization is a ScalingMetricType enum value
@@ -2730,6 +3137,25 @@ const (
 	ScalingMetricTypeEc2spotFleetRequestAverageNetworkOut = "EC2SpotFleetRequestAverageNetworkOut"
 )
 
+// ScalingMetricType_Values returns all elements of the ScalingMetricType enum
+func ScalingMetricType_Values() []string {
+	return []string{
+		ScalingMetricTypeAsgaverageCpuutilization,
+		ScalingMetricTypeAsgaverageNetworkIn,
+		ScalingMetricTypeAsgaverageNetworkOut,
+		ScalingMetricTypeDynamoDbreadCapacityUtilization,
+		ScalingMetricTypeDynamoDbwriteCapacityUtilization,
+		ScalingMetricTypeEcsserviceAverageCpuutilization,
+		ScalingMetricTypeEcsserviceAverageMemoryUtilization,
+		ScalingMetricTypeAlbrequestCountPerTarget,
+		ScalingMetricTypeRdsreaderAverageCpuutilization,
+		ScalingMetricTypeRdsreaderAverageDatabaseConnections,
+		ScalingMetricTypeEc2spotFleetRequestAverageCpuutilization,
+		ScalingMetricTypeEc2spotFleetRequestAverageNetworkIn,
+		ScalingMetricTypeEc2spotFleetRequestAverageNetworkOut,
+	}
+}
+
 const (
 	// ScalingPlanStatusCodeActive is a ScalingPlanStatusCode enum value
 	ScalingPlanStatusCodeActive = "Active"
@@ -2756,6 +3182,20 @@ const (
 	ScalingPlanStatusCodeUpdateFailed = "UpdateFailed"
 )
 
+// ScalingPlanStatusCode_Values returns all elements of the ScalingPlanStatusCode enum
+func ScalingPlanStatusCode_Values() []string {
+	return []string{
+		ScalingPlanStatusCodeActive,
+		ScalingPlanStatusCodeActiveWithProblems,
+		ScalingPlanStatusCodeCreationInProgress,
+		ScalingPlanStatusCodeCreationFailed,
+		ScalingPlanStatusCodeDeletionInProgress,
+		ScalingPlanStatusCodeDeletionFailed,
+		ScalingPlanStatusCodeUpdateInProgress,
+		ScalingPlanStatusCodeUpdateFailed,
+	}
+}
+
 const (
 	// ScalingPolicyUpdateBehaviorKeepExternalPolicies is a ScalingPolicyUpdateBehavior enum value
 	ScalingPolicyUpdateBehaviorKeepExternalPolicies = "KeepExternalPolicies"
@@ -2763,6 +3203,14 @@ const (
 	// ScalingPolicyUpdateBehaviorReplaceExternalPolicies is a ScalingPolicyUpdateBehavior enum value
 	ScalingPolicyUpdateBehaviorReplaceExternalPolicies = "ReplaceExternalPolicies"
 )
+
+// ScalingPolicyUpdateBehavior_Values returns all elements of the ScalingPolicyUpdateBehavior enum
+func ScalingPolicyUpdateBehavior_Values() []string {
+	return []string{
+		ScalingPolicyUpdateBehaviorKeepExternalPolicies,
+		ScalingPolicyUpdateBehaviorReplaceExternalPolicies,
+	}
+}
 
 const (
 	// ScalingStatusCodeInactive is a ScalingStatusCode enum value
@@ -2774,6 +3222,15 @@ const (
 	// ScalingStatusCodeActive is a ScalingStatusCode enum value
 	ScalingStatusCodeActive = "Active"
 )
+
+// ScalingStatusCode_Values returns all elements of the ScalingStatusCode enum
+func ScalingStatusCode_Values() []string {
+	return []string{
+		ScalingStatusCodeInactive,
+		ScalingStatusCodePartiallyActive,
+		ScalingStatusCodeActive,
+	}
+}
 
 const (
 	// ServiceNamespaceAutoscaling is a ServiceNamespace enum value
@@ -2791,3 +3248,14 @@ const (
 	// ServiceNamespaceDynamodb is a ServiceNamespace enum value
 	ServiceNamespaceDynamodb = "dynamodb"
 )
+
+// ServiceNamespace_Values returns all elements of the ServiceNamespace enum
+func ServiceNamespace_Values() []string {
+	return []string{
+		ServiceNamespaceAutoscaling,
+		ServiceNamespaceEcs,
+		ServiceNamespaceEc2,
+		ServiceNamespaceRds,
+		ServiceNamespaceDynamodb,
+	}
+}

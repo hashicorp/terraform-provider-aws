@@ -1,7 +1,7 @@
 ---
+subcategory: "SES"
 layout: "aws"
 page_title: "AWS: aws_ses_domain_identity"
-sidebar_current: "docs-aws-resource-ses-domain-identity"
 description: |-
   Provides an SES domain identity resource
 ---
@@ -42,7 +42,7 @@ resource "aws_route53_record" "example_amazonses_verification_record" {
   name    = "_amazonses.example.com"
   type    = "TXT"
   ttl     = "600"
-  records = ["${aws_ses_domain_identity.example.verification_token}"]
+  records = [aws_ses_domain_identity.example.verification_token]
 }
 ```
 

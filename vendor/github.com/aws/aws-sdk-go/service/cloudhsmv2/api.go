@@ -66,23 +66,27 @@ func (c *CloudHSMV2) CopyBackupToRegionRequest(input *CopyBackupToRegionInput) (
 // See the AWS API reference guide for AWS CloudHSM V2's
 // API operation CopyBackupToRegion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCloudHsmInternalFailureException "CloudHsmInternalFailureException"
+// Returned Error Types:
+//   * CloudHsmAccessDeniedException
+//   The request was rejected because the requester does not have permission to
+//   perform the requested operation.
+//
+//   * CloudHsmInternalFailureException
 //   The request was rejected because of an AWS CloudHSM internal failure. The
 //   request can be retried.
 //
-//   * ErrCodeCloudHsmServiceException "CloudHsmServiceException"
-//   The request was rejected because an error occurred.
-//
-//   * ErrCodeCloudHsmResourceNotFoundException "CloudHsmResourceNotFoundException"
-//   The request was rejected because it refers to a resource that cannot be found.
-//
-//   * ErrCodeCloudHsmInvalidRequestException "CloudHsmInvalidRequestException"
+//   * CloudHsmInvalidRequestException
 //   The request was rejected because it is not a valid request.
 //
-//   * ErrCodeCloudHsmAccessDeniedException "CloudHsmAccessDeniedException"
-//   The request was rejected because the requester does not have permission to
-//   perform the requested operation.
+//   * CloudHsmResourceNotFoundException
+//   The request was rejected because it refers to a resource that cannot be found.
+//
+//   * CloudHsmServiceException
+//   The request was rejected because an error occurred.
+//
+//   * CloudHsmTagException
+//   The request was rejected because of a tagging failure. Verify the tag conditions
+//   in all applicable policies, and then retry the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/CopyBackupToRegion
 func (c *CloudHSMV2) CopyBackupToRegion(input *CopyBackupToRegionInput) (*CopyBackupToRegionOutput, error) {
@@ -159,23 +163,27 @@ func (c *CloudHSMV2) CreateClusterRequest(input *CreateClusterInput) (req *reque
 // See the AWS API reference guide for AWS CloudHSM V2's
 // API operation CreateCluster for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCloudHsmInternalFailureException "CloudHsmInternalFailureException"
+// Returned Error Types:
+//   * CloudHsmAccessDeniedException
+//   The request was rejected because the requester does not have permission to
+//   perform the requested operation.
+//
+//   * CloudHsmInternalFailureException
 //   The request was rejected because of an AWS CloudHSM internal failure. The
 //   request can be retried.
 //
-//   * ErrCodeCloudHsmServiceException "CloudHsmServiceException"
-//   The request was rejected because an error occurred.
-//
-//   * ErrCodeCloudHsmResourceNotFoundException "CloudHsmResourceNotFoundException"
-//   The request was rejected because it refers to a resource that cannot be found.
-//
-//   * ErrCodeCloudHsmInvalidRequestException "CloudHsmInvalidRequestException"
+//   * CloudHsmInvalidRequestException
 //   The request was rejected because it is not a valid request.
 //
-//   * ErrCodeCloudHsmAccessDeniedException "CloudHsmAccessDeniedException"
-//   The request was rejected because the requester does not have permission to
-//   perform the requested operation.
+//   * CloudHsmResourceNotFoundException
+//   The request was rejected because it refers to a resource that cannot be found.
+//
+//   * CloudHsmServiceException
+//   The request was rejected because an error occurred.
+//
+//   * CloudHsmTagException
+//   The request was rejected because of a tagging failure. Verify the tag conditions
+//   in all applicable policies, and then retry the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/CreateCluster
 func (c *CloudHSMV2) CreateCluster(input *CreateClusterInput) (*CreateClusterOutput, error) {
@@ -253,21 +261,21 @@ func (c *CloudHSMV2) CreateHsmRequest(input *CreateHsmInput) (req *request.Reque
 // See the AWS API reference guide for AWS CloudHSM V2's
 // API operation CreateHsm for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCloudHsmInternalFailureException "CloudHsmInternalFailureException"
+// Returned Error Types:
+//   * CloudHsmInternalFailureException
 //   The request was rejected because of an AWS CloudHSM internal failure. The
 //   request can be retried.
 //
-//   * ErrCodeCloudHsmServiceException "CloudHsmServiceException"
+//   * CloudHsmServiceException
 //   The request was rejected because an error occurred.
 //
-//   * ErrCodeCloudHsmInvalidRequestException "CloudHsmInvalidRequestException"
+//   * CloudHsmInvalidRequestException
 //   The request was rejected because it is not a valid request.
 //
-//   * ErrCodeCloudHsmResourceNotFoundException "CloudHsmResourceNotFoundException"
+//   * CloudHsmResourceNotFoundException
 //   The request was rejected because it refers to a resource that cannot be found.
 //
-//   * ErrCodeCloudHsmAccessDeniedException "CloudHsmAccessDeniedException"
+//   * CloudHsmAccessDeniedException
 //   The request was rejected because the requester does not have permission to
 //   perform the requested operation.
 //
@@ -338,8 +346,8 @@ func (c *CloudHSMV2) DeleteBackupRequest(input *DeleteBackupInput) (req *request
 // DeleteBackup API operation for AWS CloudHSM V2.
 //
 // Deletes a specified AWS CloudHSM backup. A backup can be restored up to 7
-// days after the DeleteBackup request. For more information on restoring a
-// backup, see RestoreBackup
+// days after the DeleteBackup request is made. For more information on restoring
+// a backup, see RestoreBackup.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -348,23 +356,23 @@ func (c *CloudHSMV2) DeleteBackupRequest(input *DeleteBackupInput) (req *request
 // See the AWS API reference guide for AWS CloudHSM V2's
 // API operation DeleteBackup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCloudHsmInternalFailureException "CloudHsmInternalFailureException"
+// Returned Error Types:
+//   * CloudHsmAccessDeniedException
+//   The request was rejected because the requester does not have permission to
+//   perform the requested operation.
+//
+//   * CloudHsmInternalFailureException
 //   The request was rejected because of an AWS CloudHSM internal failure. The
 //   request can be retried.
 //
-//   * ErrCodeCloudHsmServiceException "CloudHsmServiceException"
-//   The request was rejected because an error occurred.
-//
-//   * ErrCodeCloudHsmResourceNotFoundException "CloudHsmResourceNotFoundException"
-//   The request was rejected because it refers to a resource that cannot be found.
-//
-//   * ErrCodeCloudHsmInvalidRequestException "CloudHsmInvalidRequestException"
+//   * CloudHsmInvalidRequestException
 //   The request was rejected because it is not a valid request.
 //
-//   * ErrCodeCloudHsmAccessDeniedException "CloudHsmAccessDeniedException"
-//   The request was rejected because the requester does not have permission to
-//   perform the requested operation.
+//   * CloudHsmResourceNotFoundException
+//   The request was rejected because it refers to a resource that cannot be found.
+//
+//   * CloudHsmServiceException
+//   The request was rejected because an error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/DeleteBackup
 func (c *CloudHSMV2) DeleteBackup(input *DeleteBackupInput) (*DeleteBackupOutput, error) {
@@ -443,23 +451,27 @@ func (c *CloudHSMV2) DeleteClusterRequest(input *DeleteClusterInput) (req *reque
 // See the AWS API reference guide for AWS CloudHSM V2's
 // API operation DeleteCluster for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCloudHsmInternalFailureException "CloudHsmInternalFailureException"
+// Returned Error Types:
+//   * CloudHsmAccessDeniedException
+//   The request was rejected because the requester does not have permission to
+//   perform the requested operation.
+//
+//   * CloudHsmInternalFailureException
 //   The request was rejected because of an AWS CloudHSM internal failure. The
 //   request can be retried.
 //
-//   * ErrCodeCloudHsmServiceException "CloudHsmServiceException"
-//   The request was rejected because an error occurred.
-//
-//   * ErrCodeCloudHsmResourceNotFoundException "CloudHsmResourceNotFoundException"
-//   The request was rejected because it refers to a resource that cannot be found.
-//
-//   * ErrCodeCloudHsmInvalidRequestException "CloudHsmInvalidRequestException"
+//   * CloudHsmInvalidRequestException
 //   The request was rejected because it is not a valid request.
 //
-//   * ErrCodeCloudHsmAccessDeniedException "CloudHsmAccessDeniedException"
-//   The request was rejected because the requester does not have permission to
-//   perform the requested operation.
+//   * CloudHsmResourceNotFoundException
+//   The request was rejected because it refers to a resource that cannot be found.
+//
+//   * CloudHsmServiceException
+//   The request was rejected because an error occurred.
+//
+//   * CloudHsmTagException
+//   The request was rejected because of a tagging failure. Verify the tag conditions
+//   in all applicable policies, and then retry the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/DeleteCluster
 func (c *CloudHSMV2) DeleteCluster(input *DeleteClusterInput) (*DeleteClusterOutput, error) {
@@ -539,21 +551,21 @@ func (c *CloudHSMV2) DeleteHsmRequest(input *DeleteHsmInput) (req *request.Reque
 // See the AWS API reference guide for AWS CloudHSM V2's
 // API operation DeleteHsm for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCloudHsmInternalFailureException "CloudHsmInternalFailureException"
+// Returned Error Types:
+//   * CloudHsmInternalFailureException
 //   The request was rejected because of an AWS CloudHSM internal failure. The
 //   request can be retried.
 //
-//   * ErrCodeCloudHsmServiceException "CloudHsmServiceException"
+//   * CloudHsmServiceException
 //   The request was rejected because an error occurred.
 //
-//   * ErrCodeCloudHsmResourceNotFoundException "CloudHsmResourceNotFoundException"
+//   * CloudHsmResourceNotFoundException
 //   The request was rejected because it refers to a resource that cannot be found.
 //
-//   * ErrCodeCloudHsmInvalidRequestException "CloudHsmInvalidRequestException"
+//   * CloudHsmInvalidRequestException
 //   The request was rejected because it is not a valid request.
 //
-//   * ErrCodeCloudHsmAccessDeniedException "CloudHsmAccessDeniedException"
+//   * CloudHsmAccessDeniedException
 //   The request was rejected because the requester does not have permission to
 //   perform the requested operation.
 //
@@ -645,23 +657,27 @@ func (c *CloudHSMV2) DescribeBackupsRequest(input *DescribeBackupsInput) (req *r
 // See the AWS API reference guide for AWS CloudHSM V2's
 // API operation DescribeBackups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCloudHsmInternalFailureException "CloudHsmInternalFailureException"
+// Returned Error Types:
+//   * CloudHsmAccessDeniedException
+//   The request was rejected because the requester does not have permission to
+//   perform the requested operation.
+//
+//   * CloudHsmInternalFailureException
 //   The request was rejected because of an AWS CloudHSM internal failure. The
 //   request can be retried.
 //
-//   * ErrCodeCloudHsmServiceException "CloudHsmServiceException"
-//   The request was rejected because an error occurred.
-//
-//   * ErrCodeCloudHsmResourceNotFoundException "CloudHsmResourceNotFoundException"
-//   The request was rejected because it refers to a resource that cannot be found.
-//
-//   * ErrCodeCloudHsmInvalidRequestException "CloudHsmInvalidRequestException"
+//   * CloudHsmInvalidRequestException
 //   The request was rejected because it is not a valid request.
 //
-//   * ErrCodeCloudHsmAccessDeniedException "CloudHsmAccessDeniedException"
-//   The request was rejected because the requester does not have permission to
-//   perform the requested operation.
+//   * CloudHsmResourceNotFoundException
+//   The request was rejected because it refers to a resource that cannot be found.
+//
+//   * CloudHsmServiceException
+//   The request was rejected because an error occurred.
+//
+//   * CloudHsmTagException
+//   The request was rejected because of a tagging failure. Verify the tag conditions
+//   in all applicable policies, and then retry the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/DescribeBackups
 func (c *CloudHSMV2) DescribeBackups(input *DescribeBackupsInput) (*DescribeBackupsOutput, error) {
@@ -728,10 +744,12 @@ func (c *CloudHSMV2) DescribeBackupsPagesWithContext(ctx aws.Context, input *Des
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeBackupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeBackupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -801,20 +819,24 @@ func (c *CloudHSMV2) DescribeClustersRequest(input *DescribeClustersInput) (req 
 // See the AWS API reference guide for AWS CloudHSM V2's
 // API operation DescribeClusters for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCloudHsmInternalFailureException "CloudHsmInternalFailureException"
+// Returned Error Types:
+//   * CloudHsmAccessDeniedException
+//   The request was rejected because the requester does not have permission to
+//   perform the requested operation.
+//
+//   * CloudHsmInternalFailureException
 //   The request was rejected because of an AWS CloudHSM internal failure. The
 //   request can be retried.
 //
-//   * ErrCodeCloudHsmServiceException "CloudHsmServiceException"
-//   The request was rejected because an error occurred.
-//
-//   * ErrCodeCloudHsmInvalidRequestException "CloudHsmInvalidRequestException"
+//   * CloudHsmInvalidRequestException
 //   The request was rejected because it is not a valid request.
 //
-//   * ErrCodeCloudHsmAccessDeniedException "CloudHsmAccessDeniedException"
-//   The request was rejected because the requester does not have permission to
-//   perform the requested operation.
+//   * CloudHsmServiceException
+//   The request was rejected because an error occurred.
+//
+//   * CloudHsmTagException
+//   The request was rejected because of a tagging failure. Verify the tag conditions
+//   in all applicable policies, and then retry the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/DescribeClusters
 func (c *CloudHSMV2) DescribeClusters(input *DescribeClustersInput) (*DescribeClustersOutput, error) {
@@ -881,10 +903,12 @@ func (c *CloudHSMV2) DescribeClustersPagesWithContext(ctx aws.Context, input *De
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeClustersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeClustersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -944,23 +968,23 @@ func (c *CloudHSMV2) InitializeClusterRequest(input *InitializeClusterInput) (re
 // See the AWS API reference guide for AWS CloudHSM V2's
 // API operation InitializeCluster for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCloudHsmInternalFailureException "CloudHsmInternalFailureException"
+// Returned Error Types:
+//   * CloudHsmAccessDeniedException
+//   The request was rejected because the requester does not have permission to
+//   perform the requested operation.
+//
+//   * CloudHsmInternalFailureException
 //   The request was rejected because of an AWS CloudHSM internal failure. The
 //   request can be retried.
 //
-//   * ErrCodeCloudHsmServiceException "CloudHsmServiceException"
-//   The request was rejected because an error occurred.
-//
-//   * ErrCodeCloudHsmResourceNotFoundException "CloudHsmResourceNotFoundException"
-//   The request was rejected because it refers to a resource that cannot be found.
-//
-//   * ErrCodeCloudHsmInvalidRequestException "CloudHsmInvalidRequestException"
+//   * CloudHsmInvalidRequestException
 //   The request was rejected because it is not a valid request.
 //
-//   * ErrCodeCloudHsmAccessDeniedException "CloudHsmAccessDeniedException"
-//   The request was rejected because the requester does not have permission to
-//   perform the requested operation.
+//   * CloudHsmResourceNotFoundException
+//   The request was rejected because it refers to a resource that cannot be found.
+//
+//   * CloudHsmServiceException
+//   The request was rejected because an error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/InitializeCluster
 func (c *CloudHSMV2) InitializeCluster(input *InitializeClusterInput) (*InitializeClusterOutput, error) {
@@ -1049,23 +1073,27 @@ func (c *CloudHSMV2) ListTagsRequest(input *ListTagsInput) (req *request.Request
 // See the AWS API reference guide for AWS CloudHSM V2's
 // API operation ListTags for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCloudHsmInternalFailureException "CloudHsmInternalFailureException"
+// Returned Error Types:
+//   * CloudHsmAccessDeniedException
+//   The request was rejected because the requester does not have permission to
+//   perform the requested operation.
+//
+//   * CloudHsmInternalFailureException
 //   The request was rejected because of an AWS CloudHSM internal failure. The
 //   request can be retried.
 //
-//   * ErrCodeCloudHsmServiceException "CloudHsmServiceException"
-//   The request was rejected because an error occurred.
-//
-//   * ErrCodeCloudHsmResourceNotFoundException "CloudHsmResourceNotFoundException"
-//   The request was rejected because it refers to a resource that cannot be found.
-//
-//   * ErrCodeCloudHsmInvalidRequestException "CloudHsmInvalidRequestException"
+//   * CloudHsmInvalidRequestException
 //   The request was rejected because it is not a valid request.
 //
-//   * ErrCodeCloudHsmAccessDeniedException "CloudHsmAccessDeniedException"
-//   The request was rejected because the requester does not have permission to
-//   perform the requested operation.
+//   * CloudHsmResourceNotFoundException
+//   The request was rejected because it refers to a resource that cannot be found.
+//
+//   * CloudHsmServiceException
+//   The request was rejected because an error occurred.
+//
+//   * CloudHsmTagException
+//   The request was rejected because of a tagging failure. Verify the tag conditions
+//   in all applicable policies, and then retry the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/ListTags
 func (c *CloudHSMV2) ListTags(input *ListTagsInput) (*ListTagsOutput, error) {
@@ -1132,10 +1160,12 @@ func (c *CloudHSMV2) ListTagsPagesWithContext(ctx aws.Context, input *ListTagsIn
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTagsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTagsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1184,7 +1214,7 @@ func (c *CloudHSMV2) RestoreBackupRequest(input *RestoreBackupInput) (req *reque
 // RestoreBackup API operation for AWS CloudHSM V2.
 //
 // Restores a specified AWS CloudHSM backup that is in the PENDING_DELETION
-// state. For more information on deleting a backup, see DeleteBackup.
+// state. For mor information on deleting a backup, see DeleteBackup.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1193,23 +1223,23 @@ func (c *CloudHSMV2) RestoreBackupRequest(input *RestoreBackupInput) (req *reque
 // See the AWS API reference guide for AWS CloudHSM V2's
 // API operation RestoreBackup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCloudHsmInternalFailureException "CloudHsmInternalFailureException"
+// Returned Error Types:
+//   * CloudHsmAccessDeniedException
+//   The request was rejected because the requester does not have permission to
+//   perform the requested operation.
+//
+//   * CloudHsmInternalFailureException
 //   The request was rejected because of an AWS CloudHSM internal failure. The
 //   request can be retried.
 //
-//   * ErrCodeCloudHsmServiceException "CloudHsmServiceException"
-//   The request was rejected because an error occurred.
-//
-//   * ErrCodeCloudHsmResourceNotFoundException "CloudHsmResourceNotFoundException"
-//   The request was rejected because it refers to a resource that cannot be found.
-//
-//   * ErrCodeCloudHsmInvalidRequestException "CloudHsmInvalidRequestException"
+//   * CloudHsmInvalidRequestException
 //   The request was rejected because it is not a valid request.
 //
-//   * ErrCodeCloudHsmAccessDeniedException "CloudHsmAccessDeniedException"
-//   The request was rejected because the requester does not have permission to
-//   perform the requested operation.
+//   * CloudHsmResourceNotFoundException
+//   The request was rejected because it refers to a resource that cannot be found.
+//
+//   * CloudHsmServiceException
+//   The request was rejected because an error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/RestoreBackup
 func (c *CloudHSMV2) RestoreBackup(input *RestoreBackupInput) (*RestoreBackupOutput, error) {
@@ -1287,23 +1317,27 @@ func (c *CloudHSMV2) TagResourceRequest(input *TagResourceInput) (req *request.R
 // See the AWS API reference guide for AWS CloudHSM V2's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCloudHsmInternalFailureException "CloudHsmInternalFailureException"
+// Returned Error Types:
+//   * CloudHsmAccessDeniedException
+//   The request was rejected because the requester does not have permission to
+//   perform the requested operation.
+//
+//   * CloudHsmInternalFailureException
 //   The request was rejected because of an AWS CloudHSM internal failure. The
 //   request can be retried.
 //
-//   * ErrCodeCloudHsmServiceException "CloudHsmServiceException"
-//   The request was rejected because an error occurred.
-//
-//   * ErrCodeCloudHsmResourceNotFoundException "CloudHsmResourceNotFoundException"
-//   The request was rejected because it refers to a resource that cannot be found.
-//
-//   * ErrCodeCloudHsmInvalidRequestException "CloudHsmInvalidRequestException"
+//   * CloudHsmInvalidRequestException
 //   The request was rejected because it is not a valid request.
 //
-//   * ErrCodeCloudHsmAccessDeniedException "CloudHsmAccessDeniedException"
-//   The request was rejected because the requester does not have permission to
-//   perform the requested operation.
+//   * CloudHsmResourceNotFoundException
+//   The request was rejected because it refers to a resource that cannot be found.
+//
+//   * CloudHsmServiceException
+//   The request was rejected because an error occurred.
+//
+//   * CloudHsmTagException
+//   The request was rejected because of a tagging failure. Verify the tag conditions
+//   in all applicable policies, and then retry the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/TagResource
 func (c *CloudHSMV2) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
@@ -1381,23 +1415,27 @@ func (c *CloudHSMV2) UntagResourceRequest(input *UntagResourceInput) (req *reque
 // See the AWS API reference guide for AWS CloudHSM V2's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCloudHsmInternalFailureException "CloudHsmInternalFailureException"
+// Returned Error Types:
+//   * CloudHsmAccessDeniedException
+//   The request was rejected because the requester does not have permission to
+//   perform the requested operation.
+//
+//   * CloudHsmInternalFailureException
 //   The request was rejected because of an AWS CloudHSM internal failure. The
 //   request can be retried.
 //
-//   * ErrCodeCloudHsmServiceException "CloudHsmServiceException"
-//   The request was rejected because an error occurred.
-//
-//   * ErrCodeCloudHsmResourceNotFoundException "CloudHsmResourceNotFoundException"
-//   The request was rejected because it refers to a resource that cannot be found.
-//
-//   * ErrCodeCloudHsmInvalidRequestException "CloudHsmInvalidRequestException"
+//   * CloudHsmInvalidRequestException
 //   The request was rejected because it is not a valid request.
 //
-//   * ErrCodeCloudHsmAccessDeniedException "CloudHsmAccessDeniedException"
-//   The request was rejected because the requester does not have permission to
-//   perform the requested operation.
+//   * CloudHsmResourceNotFoundException
+//   The request was rejected because it refers to a resource that cannot be found.
+//
+//   * CloudHsmServiceException
+//   The request was rejected because an error occurred.
+//
+//   * CloudHsmTagException
+//   The request was rejected because of a tagging failure. Verify the tag conditions
+//   in all applicable policies, and then retry the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/UntagResource
 func (c *CloudHSMV2) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
@@ -1421,7 +1459,12 @@ func (c *CloudHSMV2) UntagResourceWithContext(ctx aws.Context, input *UntagResou
 	return out, req.Send()
 }
 
-// Contains information about a backup of an AWS CloudHSM cluster.
+// Contains information about a backup of an AWS CloudHSM cluster. All backup
+// objects contain the BackupId, BackupState, ClusterId, and CreateTimestamp
+// parameters. Backups that were copied into a destination region additionally
+// contain the CopyTimestamp, SourceBackup, SourceCluster, and SourceRegion
+// paramters. A backup that is pending deletion will include the DeleteTimestamp
+// parameter.
 type Backup struct {
 	_ struct{} `type:"structure"`
 
@@ -1436,6 +1479,7 @@ type Backup struct {
 	// The identifier (ID) of the cluster that was backed up.
 	ClusterId *string `type:"string"`
 
+	// The date and time when the backup was copied from a source backup.
 	CopyTimestamp *time.Time `type:"timestamp"`
 
 	// The date and time when the backup was created.
@@ -1444,11 +1488,19 @@ type Backup struct {
 	// The date and time when the backup will be permanently deleted.
 	DeleteTimestamp *time.Time `type:"timestamp"`
 
+	// The identifier (ID) of the source backup from which the new backup was copied.
 	SourceBackup *string `type:"string"`
 
+	// The identifier (ID) of the cluster containing the source backup from which
+	// the new backup was copied.
 	SourceCluster *string `type:"string"`
 
+	// The AWS Region that contains the source backup from which the new backup
+	// was copied.
 	SourceRegion *string `type:"string"`
+
+	// The list of tags for the backup.
+	TagList []*Tag `min:"1" type:"list"`
 }
 
 // String returns the string representation
@@ -1515,6 +1567,12 @@ func (s *Backup) SetSourceRegion(v string) *Backup {
 	return s
 }
 
+// SetTagList sets the TagList field's value.
+func (s *Backup) SetTagList(v []*Tag) *Backup {
+	s.TagList = v
+	return s
+}
+
 // Contains one or more certificates or a certificate signing request (CSR).
 type Certificates struct {
 	_ struct{} `type:"structure"`
@@ -1577,6 +1635,345 @@ func (s *Certificates) SetManufacturerHardwareCertificate(v string) *Certificate
 	return s
 }
 
+// The request was rejected because the requester does not have permission to
+// perform the requested operation.
+type CloudHsmAccessDeniedException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s CloudHsmAccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CloudHsmAccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorCloudHsmAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &CloudHsmAccessDeniedException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *CloudHsmAccessDeniedException) Code() string {
+	return "CloudHsmAccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s *CloudHsmAccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *CloudHsmAccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s *CloudHsmAccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *CloudHsmAccessDeniedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *CloudHsmAccessDeniedException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The request was rejected because of an AWS CloudHSM internal failure. The
+// request can be retried.
+type CloudHsmInternalFailureException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s CloudHsmInternalFailureException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CloudHsmInternalFailureException) GoString() string {
+	return s.String()
+}
+
+func newErrorCloudHsmInternalFailureException(v protocol.ResponseMetadata) error {
+	return &CloudHsmInternalFailureException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *CloudHsmInternalFailureException) Code() string {
+	return "CloudHsmInternalFailureException"
+}
+
+// Message returns the exception's message.
+func (s *CloudHsmInternalFailureException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *CloudHsmInternalFailureException) OrigErr() error {
+	return nil
+}
+
+func (s *CloudHsmInternalFailureException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *CloudHsmInternalFailureException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *CloudHsmInternalFailureException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The request was rejected because it is not a valid request.
+type CloudHsmInvalidRequestException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s CloudHsmInvalidRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CloudHsmInvalidRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorCloudHsmInvalidRequestException(v protocol.ResponseMetadata) error {
+	return &CloudHsmInvalidRequestException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *CloudHsmInvalidRequestException) Code() string {
+	return "CloudHsmInvalidRequestException"
+}
+
+// Message returns the exception's message.
+func (s *CloudHsmInvalidRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *CloudHsmInvalidRequestException) OrigErr() error {
+	return nil
+}
+
+func (s *CloudHsmInvalidRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *CloudHsmInvalidRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *CloudHsmInvalidRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The request was rejected because it refers to a resource that cannot be found.
+type CloudHsmResourceNotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s CloudHsmResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CloudHsmResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorCloudHsmResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &CloudHsmResourceNotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *CloudHsmResourceNotFoundException) Code() string {
+	return "CloudHsmResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *CloudHsmResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *CloudHsmResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *CloudHsmResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *CloudHsmResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *CloudHsmResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The request was rejected because an error occurred.
+type CloudHsmServiceException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s CloudHsmServiceException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CloudHsmServiceException) GoString() string {
+	return s.String()
+}
+
+func newErrorCloudHsmServiceException(v protocol.ResponseMetadata) error {
+	return &CloudHsmServiceException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *CloudHsmServiceException) Code() string {
+	return "CloudHsmServiceException"
+}
+
+// Message returns the exception's message.
+func (s *CloudHsmServiceException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *CloudHsmServiceException) OrigErr() error {
+	return nil
+}
+
+func (s *CloudHsmServiceException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *CloudHsmServiceException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *CloudHsmServiceException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The request was rejected because of a tagging failure. Verify the tag conditions
+// in all applicable policies, and then retry the request.
+type CloudHsmTagException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s CloudHsmTagException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CloudHsmTagException) GoString() string {
+	return s.String()
+}
+
+func newErrorCloudHsmTagException(v protocol.ResponseMetadata) error {
+	return &CloudHsmTagException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *CloudHsmTagException) Code() string {
+	return "CloudHsmTagException"
+}
+
+// Message returns the exception's message.
+func (s *CloudHsmTagException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *CloudHsmTagException) OrigErr() error {
+	return nil
+}
+
+func (s *CloudHsmTagException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *CloudHsmTagException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *CloudHsmTagException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // Contains information about an AWS CloudHSM cluster.
 type Cluster struct {
 	_ struct{} `type:"structure"`
@@ -1615,8 +2012,12 @@ type Cluster struct {
 	// A description of the cluster's state.
 	StateMessage *string `type:"string"`
 
-	// A map of the cluster's subnets and their corresponding Availability Zones.
+	// A map from availability zone to the cluster’s subnet in that availability
+	// zone.
 	SubnetMapping map[string]*string `type:"map"`
+
+	// The list of tags for the cluster.
+	TagList []*Tag `min:"1" type:"list"`
 
 	// The identifier (ID) of the virtual private cloud (VPC) that contains the
 	// cluster.
@@ -1705,6 +2106,12 @@ func (s *Cluster) SetSubnetMapping(v map[string]*string) *Cluster {
 	return s
 }
 
+// SetTagList sets the TagList field's value.
+func (s *Cluster) SetTagList(v []*Tag) *Cluster {
+	s.TagList = v
+	return s
+}
+
 // SetVpcId sets the VpcId field's value.
 func (s *Cluster) SetVpcId(v string) *Cluster {
 	s.VpcId = &v
@@ -1723,6 +2130,12 @@ type CopyBackupToRegionInput struct {
 	//
 	// DestinationRegion is a required field
 	DestinationRegion *string `type:"string" required:"true"`
+
+	// Tags to apply to the destination backup during creation. If you specify tags,
+	// only these tags will be applied to the destination backup. If you do not
+	// specify tags, the service copies tags from the source backup to the destination
+	// backup.
+	TagList []*Tag `min:"1" type:"list"`
 }
 
 // String returns the string representation
@@ -1744,6 +2157,19 @@ func (s *CopyBackupToRegionInput) Validate() error {
 	if s.DestinationRegion == nil {
 		invalidParams.Add(request.NewErrParamRequired("DestinationRegion"))
 	}
+	if s.TagList != nil && len(s.TagList) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TagList", 1))
+	}
+	if s.TagList != nil {
+		for i, v := range s.TagList {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "TagList", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -1760,6 +2186,12 @@ func (s *CopyBackupToRegionInput) SetBackupId(v string) *CopyBackupToRegionInput
 // SetDestinationRegion sets the DestinationRegion field's value.
 func (s *CopyBackupToRegionInput) SetDestinationRegion(v string) *CopyBackupToRegionInput {
 	s.DestinationRegion = &v
+	return s
+}
+
+// SetTagList sets the TagList field's value.
+func (s *CopyBackupToRegionInput) SetTagList(v []*Tag) *CopyBackupToRegionInput {
+	s.TagList = v
 	return s
 }
 
@@ -1817,6 +2249,9 @@ type CreateClusterInput struct {
 	//
 	// SubnetIds is a required field
 	SubnetIds []*string `min:"1" type:"list" required:"true"`
+
+	// Tags to apply to the CloudHSM cluster during creation.
+	TagList []*Tag `min:"1" type:"list"`
 }
 
 // String returns the string representation
@@ -1841,6 +2276,19 @@ func (s *CreateClusterInput) Validate() error {
 	if s.SubnetIds != nil && len(s.SubnetIds) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("SubnetIds", 1))
 	}
+	if s.TagList != nil && len(s.TagList) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TagList", 1))
+	}
+	if s.TagList != nil {
+		for i, v := range s.TagList {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "TagList", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -1863,6 +2311,12 @@ func (s *CreateClusterInput) SetSourceBackupId(v string) *CreateClusterInput {
 // SetSubnetIds sets the SubnetIds field's value.
 func (s *CreateClusterInput) SetSubnetIds(v []*string) *CreateClusterInput {
 	s.SubnetIds = v
+	return s
+}
+
+// SetTagList sets the TagList field's value.
+func (s *CreateClusterInput) SetTagList(v []*Tag) *CreateClusterInput {
+	s.TagList = v
 	return s
 }
 
@@ -2217,6 +2671,8 @@ type DescribeBackupsInput struct {
 	// value to get more backups.
 	NextToken *string `type:"string"`
 
+	// Designates whether or not to sort the return backups by ascending chronological
+	// order of generation.
 	SortAscending *bool `type:"boolean"`
 }
 
@@ -2400,15 +2856,23 @@ func (s *DescribeClustersOutput) SetNextToken(v string) *DescribeClustersOutput 
 	return s
 }
 
+// Contains information about the backup that will be copied and created by
+// the CopyBackupToRegion operation.
 type DestinationBackup struct {
 	_ struct{} `type:"structure"`
 
+	// The date and time when both the source backup was created.
 	CreateTimestamp *time.Time `type:"timestamp"`
 
+	// The identifier (ID) of the source backup from which the new backup was copied.
 	SourceBackup *string `type:"string"`
 
+	// The identifier (ID) of the cluster containing the source backup from which
+	// the new backup was copied.
 	SourceCluster *string `type:"string"`
 
+	// The AWS region that contains the source backup from which the new backup
+	// was copied.
 	SourceRegion *string `type:"string"`
 }
 
@@ -2553,10 +3017,10 @@ type InitializeClusterInput struct {
 	SignedCert *string `type:"string" required:"true"`
 
 	// The issuing certificate of the issuing certificate authority (CA) that issued
-	// (signed) the cluster certificate. This can be a root (self-signed) certificate
-	// or a certificate chain that begins with the certificate that issued the cluster
-	// certificate and ends with a root certificate. The certificate or certificate
-	// chain must be in PEM format and can contain a maximum of 5000 characters.
+	// (signed) the cluster certificate. You must use a self-signed certificate.
+	// The certificate used to sign the HSM CSR must be directly available, and
+	// thus must be the root certificate. The certificate must be in PEM format
+	// and can contain a maximum of 5000 characters.
 	//
 	// TrustAnchor is a required field
 	TrustAnchor *string `type:"string" required:"true"`
@@ -3012,6 +3476,13 @@ const (
 	BackupPolicyDefault = "DEFAULT"
 )
 
+// BackupPolicy_Values returns all elements of the BackupPolicy enum
+func BackupPolicy_Values() []string {
+	return []string{
+		BackupPolicyDefault,
+	}
+}
+
 const (
 	// BackupStateCreateInProgress is a BackupState enum value
 	BackupStateCreateInProgress = "CREATE_IN_PROGRESS"
@@ -3025,6 +3496,16 @@ const (
 	// BackupStatePendingDeletion is a BackupState enum value
 	BackupStatePendingDeletion = "PENDING_DELETION"
 )
+
+// BackupState_Values returns all elements of the BackupState enum
+func BackupState_Values() []string {
+	return []string{
+		BackupStateCreateInProgress,
+		BackupStateReady,
+		BackupStateDeleted,
+		BackupStatePendingDeletion,
+	}
+}
 
 const (
 	// ClusterStateCreateInProgress is a ClusterState enum value
@@ -3055,6 +3536,21 @@ const (
 	ClusterStateDegraded = "DEGRADED"
 )
 
+// ClusterState_Values returns all elements of the ClusterState enum
+func ClusterState_Values() []string {
+	return []string{
+		ClusterStateCreateInProgress,
+		ClusterStateUninitialized,
+		ClusterStateInitializeInProgress,
+		ClusterStateInitialized,
+		ClusterStateActive,
+		ClusterStateUpdateInProgress,
+		ClusterStateDeleteInProgress,
+		ClusterStateDeleted,
+		ClusterStateDegraded,
+	}
+}
+
 const (
 	// HsmStateCreateInProgress is a HsmState enum value
 	HsmStateCreateInProgress = "CREATE_IN_PROGRESS"
@@ -3071,3 +3567,14 @@ const (
 	// HsmStateDeleted is a HsmState enum value
 	HsmStateDeleted = "DELETED"
 )
+
+// HsmState_Values returns all elements of the HsmState enum
+func HsmState_Values() []string {
+	return []string{
+		HsmStateCreateInProgress,
+		HsmStateActive,
+		HsmStateDegraded,
+		HsmStateDeleteInProgress,
+		HsmStateDeleted,
+	}
+}

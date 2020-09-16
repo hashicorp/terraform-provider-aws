@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAwsApiGatewayApiKey(t *testing.T) {
+func TestAccDataSourceAwsApiGatewayApiKey_basic(t *testing.T) {
 	rName := acctest.RandString(8)
 	resourceName1 := "aws_api_gateway_api_key.example_key"
 	dataSourceName1 := "data.aws_api_gateway_api_key.test_key"
@@ -23,6 +23,11 @@ func TestAccDataSourceAwsApiGatewayApiKey(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName1, "id", dataSourceName1, "id"),
 					resource.TestCheckResourceAttrPair(resourceName1, "name", dataSourceName1, "name"),
 					resource.TestCheckResourceAttrPair(resourceName1, "value", dataSourceName1, "value"),
+					resource.TestCheckResourceAttrPair(resourceName1, "enabled", dataSourceName1, "enabled"),
+					resource.TestCheckResourceAttrPair(resourceName1, "description", dataSourceName1, "description"),
+					resource.TestCheckResourceAttrSet(dataSourceName1, "last_updated_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName1, "created_date"),
+					resource.TestCheckResourceAttr(dataSourceName1, "tags.%", "0"),
 				),
 			},
 		},
@@ -36,7 +41,7 @@ resource "aws_api_gateway_api_key" "example_key" {
 }
 
 data "aws_api_gateway_api_key" "test_key" {
-  id = "${aws_api_gateway_api_key.example_key.id}"
+  id = aws_api_gateway_api_key.example_key.id
 }
 `, r)
 }

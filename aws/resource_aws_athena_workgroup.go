@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsAthenaWorkgroup() *schema.Resource {
@@ -102,7 +103,7 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-z0-9._-]+$`), "must contain only alphanumeric characters, periods, underscores, and hyphens"),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._-]+$`), "must contain only alphanumeric characters, periods, underscores, and hyphens"),
 				),
 			},
 			"state": {
@@ -113,6 +114,11 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 					athena.WorkGroupStateDisabled,
 					athena.WorkGroupStateEnabled,
 				}, false),
+			},
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"tags": tagsSchema(),
 		},
@@ -136,7 +142,7 @@ func resourceAwsAthenaWorkgroupCreate(d *schema.ResourceData, meta interface{}) 
 	// Prevent the below error:
 	// InvalidRequestException: Tags provided upon WorkGroup creation must not be empty
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		input.Tags = tagsFromMapAthena(v)
+		input.Tags = keyvaluetags.New(v).IgnoreAws().AthenaTags()
 	}
 
 	_, err := conn.CreateWorkGroup(input)
@@ -163,6 +169,7 @@ func resourceAwsAthenaWorkgroupCreate(d *schema.ResourceData, meta interface{}) 
 
 func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).athenaconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &athena.GetWorkGroupInput{
 		WorkGroup: aws.String(d.Id()),
@@ -198,15 +205,19 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("name", resp.WorkGroup.Name)
 	d.Set("state", resp.WorkGroup.State)
 
-	err = saveTagsAthena(conn, d, d.Get("arn").(string))
-
-	if isAWSErr(err, athena.ErrCodeInvalidRequestException, "is not found") {
-		log.Printf("[WARN] Athena WorkGroup (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	if v, ok := d.GetOk("force_destroy"); ok {
+		d.Set("force_destroy", v.(bool))
+	} else {
+		d.Set("force_destroy", false)
 	}
 
+	tags, err := keyvaluetags.AthenaListTags(conn, arn.String())
+
 	if err != nil {
+		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -220,6 +231,9 @@ func resourceAwsAthenaWorkgroupDelete(d *schema.ResourceData, meta interface{}) 
 		WorkGroup: aws.String(d.Id()),
 	}
 
+	if v, ok := d.GetOk("force_destroy"); ok {
+		input.RecursiveDeleteOption = aws.Bool(v.(bool))
+	}
 	_, err := conn.DeleteWorkGroup(input)
 
 	if err != nil {
@@ -262,9 +276,8 @@ func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if d.HasChange("tags") {
-		err := setTagsAthena(conn, d, d.Get("arn").(string))
-
-		if err != nil {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.AthenaUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}

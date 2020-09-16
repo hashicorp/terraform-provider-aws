@@ -3,6 +3,8 @@
 package costandusagereportservice
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -63,12 +65,12 @@ func (c *CostandUsageReportService) DeleteReportDefinitionRequest(input *DeleteR
 // See the AWS API reference guide for AWS Cost and Usage Report Service's
 // API operation DeleteReportDefinition for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+// Returned Error Types:
+//   * InternalErrorException
 //   An error on the server occurred during the processing of your request. Try
 //   again later.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The input fails to satisfy the constraints specified by an AWS service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cur-2017-01-06/DeleteReportDefinition
@@ -152,8 +154,8 @@ func (c *CostandUsageReportService) DescribeReportDefinitionsRequest(input *Desc
 // See the AWS API reference guide for AWS Cost and Usage Report Service's
 // API operation DescribeReportDefinitions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalErrorException "InternalErrorException"
+// Returned Error Types:
+//   * InternalErrorException
 //   An error on the server occurred during the processing of your request. Try
 //   again later.
 //
@@ -222,11 +224,97 @@ func (c *CostandUsageReportService) DescribeReportDefinitionsPagesWithContext(ct
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReportDefinitionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReportDefinitionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
+}
+
+const opModifyReportDefinition = "ModifyReportDefinition"
+
+// ModifyReportDefinitionRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyReportDefinition operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyReportDefinition for more information on using the ModifyReportDefinition
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyReportDefinitionRequest method.
+//    req, resp := client.ModifyReportDefinitionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cur-2017-01-06/ModifyReportDefinition
+func (c *CostandUsageReportService) ModifyReportDefinitionRequest(input *ModifyReportDefinitionInput) (req *request.Request, output *ModifyReportDefinitionOutput) {
+	op := &request.Operation{
+		Name:       opModifyReportDefinition,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyReportDefinitionInput{}
+	}
+
+	output = &ModifyReportDefinitionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// ModifyReportDefinition API operation for AWS Cost and Usage Report Service.
+//
+// Allows you to programatically update your report preferences.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Cost and Usage Report Service's
+// API operation ModifyReportDefinition for usage and error information.
+//
+// Returned Error Types:
+//   * InternalErrorException
+//   An error on the server occurred during the processing of your request. Try
+//   again later.
+//
+//   * ValidationException
+//   The input fails to satisfy the constraints specified by an AWS service.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cur-2017-01-06/ModifyReportDefinition
+func (c *CostandUsageReportService) ModifyReportDefinition(input *ModifyReportDefinitionInput) (*ModifyReportDefinitionOutput, error) {
+	req, out := c.ModifyReportDefinitionRequest(input)
+	return out, req.Send()
+}
+
+// ModifyReportDefinitionWithContext is the same as ModifyReportDefinition with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyReportDefinition for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CostandUsageReportService) ModifyReportDefinitionWithContext(ctx aws.Context, input *ModifyReportDefinitionInput, opts ...request.Option) (*ModifyReportDefinitionOutput, error) {
+	req, out := c.ModifyReportDefinitionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opPutReportDefinition = "PutReportDefinition"
@@ -283,20 +371,20 @@ func (c *CostandUsageReportService) PutReportDefinitionRequest(input *PutReportD
 // See the AWS API reference guide for AWS Cost and Usage Report Service's
 // API operation PutReportDefinition for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDuplicateReportNameException "DuplicateReportNameException"
+// Returned Error Types:
+//   * DuplicateReportNameException
 //   A report with the specified name already exists in the account. Specify a
 //   different report name.
 //
-//   * ErrCodeReportLimitReachedException "ReportLimitReachedException"
+//   * ReportLimitReachedException
 //   This account already has five reports defined. To define a new report, you
 //   must delete an existing report.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * InternalErrorException
 //   An error on the server occurred during the processing of your request. Try
 //   again later.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The input fails to satisfy the constraints specified by an AWS service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cur-2017-01-06/PutReportDefinition
@@ -325,7 +413,7 @@ func (c *CostandUsageReportService) PutReportDefinitionWithContext(ctx aws.Conte
 type DeleteReportDefinitionInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the report that you want to create. The name must be unique,
+	// The name of the report that you want to delete. The name must be unique,
 	// is case sensitive, and can't include spaces.
 	ReportName *string `type:"string"`
 }
@@ -447,6 +535,196 @@ func (s *DescribeReportDefinitionsOutput) SetNextToken(v string) *DescribeReport
 func (s *DescribeReportDefinitionsOutput) SetReportDefinitions(v []*ReportDefinition) *DescribeReportDefinitionsOutput {
 	s.ReportDefinitions = v
 	return s
+}
+
+// A report with the specified name already exists in the account. Specify a
+// different report name.
+type DuplicateReportNameException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message to show the detail of the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s DuplicateReportNameException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DuplicateReportNameException) GoString() string {
+	return s.String()
+}
+
+func newErrorDuplicateReportNameException(v protocol.ResponseMetadata) error {
+	return &DuplicateReportNameException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *DuplicateReportNameException) Code() string {
+	return "DuplicateReportNameException"
+}
+
+// Message returns the exception's message.
+func (s *DuplicateReportNameException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *DuplicateReportNameException) OrigErr() error {
+	return nil
+}
+
+func (s *DuplicateReportNameException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *DuplicateReportNameException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *DuplicateReportNameException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// An error on the server occurred during the processing of your request. Try
+// again later.
+type InternalErrorException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message to show the detail of the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalErrorException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalErrorException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalErrorException(v protocol.ResponseMetadata) error {
+	return &InternalErrorException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InternalErrorException) Code() string {
+	return "InternalErrorException"
+}
+
+// Message returns the exception's message.
+func (s *InternalErrorException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InternalErrorException) OrigErr() error {
+	return nil
+}
+
+func (s *InternalErrorException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InternalErrorException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InternalErrorException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+type ModifyReportDefinitionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The definition of AWS Cost and Usage Report. You can specify the report name,
+	// time unit, report format, compression format, S3 bucket, additional artifacts,
+	// and schema elements in the definition.
+	//
+	// ReportDefinition is a required field
+	ReportDefinition *ReportDefinition `type:"structure" required:"true"`
+
+	// The name of the report that you want to create. The name must be unique,
+	// is case sensitive, and can't include spaces.
+	//
+	// ReportName is a required field
+	ReportName *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ModifyReportDefinitionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyReportDefinitionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyReportDefinitionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyReportDefinitionInput"}
+	if s.ReportDefinition == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReportDefinition"))
+	}
+	if s.ReportName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReportName"))
+	}
+	if s.ReportDefinition != nil {
+		if err := s.ReportDefinition.Validate(); err != nil {
+			invalidParams.AddNested("ReportDefinition", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetReportDefinition sets the ReportDefinition field's value.
+func (s *ModifyReportDefinitionInput) SetReportDefinition(v *ReportDefinition) *ModifyReportDefinitionInput {
+	s.ReportDefinition = v
+	return s
+}
+
+// SetReportName sets the ReportName field's value.
+func (s *ModifyReportDefinitionInput) SetReportName(v string) *ModifyReportDefinitionInput {
+	s.ReportName = &v
+	return s
+}
+
+type ModifyReportDefinitionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s ModifyReportDefinitionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyReportDefinitionOutput) GoString() string {
+	return s.String()
 }
 
 // Creates a Cost and Usage Report.
@@ -683,22 +961,131 @@ func (s *ReportDefinition) SetTimeUnit(v string) *ReportDefinition {
 	return s
 }
 
+// This account already has five reports defined. To define a new report, you
+// must delete an existing report.
+type ReportLimitReachedException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message to show the detail of the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ReportLimitReachedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReportLimitReachedException) GoString() string {
+	return s.String()
+}
+
+func newErrorReportLimitReachedException(v protocol.ResponseMetadata) error {
+	return &ReportLimitReachedException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ReportLimitReachedException) Code() string {
+	return "ReportLimitReachedException"
+}
+
+// Message returns the exception's message.
+func (s *ReportLimitReachedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ReportLimitReachedException) OrigErr() error {
+	return nil
+}
+
+func (s *ReportLimitReachedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ReportLimitReachedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ReportLimitReachedException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The input fails to satisfy the constraints specified by an AWS service.
+type ValidationException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message to show the detail of the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ValidationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ValidationException) GoString() string {
+	return s.String()
+}
+
+func newErrorValidationException(v protocol.ResponseMetadata) error {
+	return &ValidationException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ValidationException) Code() string {
+	return "ValidationException"
+}
+
+// Message returns the exception's message.
+func (s *ValidationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ValidationException) OrigErr() error {
+	return nil
+}
+
+func (s *ValidationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ValidationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ValidationException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // The region of the S3 bucket that AWS delivers the report into.
 const (
-	// AWSRegionUsEast1 is a AWSRegion enum value
-	AWSRegionUsEast1 = "us-east-1"
+	// AWSRegionAfSouth1 is a AWSRegion enum value
+	AWSRegionAfSouth1 = "af-south-1"
 
-	// AWSRegionUsWest1 is a AWSRegion enum value
-	AWSRegionUsWest1 = "us-west-1"
+	// AWSRegionApEast1 is a AWSRegion enum value
+	AWSRegionApEast1 = "ap-east-1"
 
-	// AWSRegionUsWest2 is a AWSRegion enum value
-	AWSRegionUsWest2 = "us-west-2"
-
-	// AWSRegionEuCentral1 is a AWSRegion enum value
-	AWSRegionEuCentral1 = "eu-central-1"
-
-	// AWSRegionEuWest1 is a AWSRegion enum value
-	AWSRegionEuWest1 = "eu-west-1"
+	// AWSRegionApSouth1 is a AWSRegion enum value
+	AWSRegionApSouth1 = "ap-south-1"
 
 	// AWSRegionApSoutheast1 is a AWSRegion enum value
 	AWSRegionApSoutheast1 = "ap-southeast-1"
@@ -709,12 +1096,86 @@ const (
 	// AWSRegionApNortheast1 is a AWSRegion enum value
 	AWSRegionApNortheast1 = "ap-northeast-1"
 
-	// AWSRegionEuNorth1 is a AWSRegion enum value
-	AWSRegionEuNorth1 = "eu-north-1"
+	// AWSRegionApNortheast2 is a AWSRegion enum value
+	AWSRegionApNortheast2 = "ap-northeast-2"
 
 	// AWSRegionApNortheast3 is a AWSRegion enum value
 	AWSRegionApNortheast3 = "ap-northeast-3"
+
+	// AWSRegionCaCentral1 is a AWSRegion enum value
+	AWSRegionCaCentral1 = "ca-central-1"
+
+	// AWSRegionEuCentral1 is a AWSRegion enum value
+	AWSRegionEuCentral1 = "eu-central-1"
+
+	// AWSRegionEuWest1 is a AWSRegion enum value
+	AWSRegionEuWest1 = "eu-west-1"
+
+	// AWSRegionEuWest2 is a AWSRegion enum value
+	AWSRegionEuWest2 = "eu-west-2"
+
+	// AWSRegionEuWest3 is a AWSRegion enum value
+	AWSRegionEuWest3 = "eu-west-3"
+
+	// AWSRegionEuNorth1 is a AWSRegion enum value
+	AWSRegionEuNorth1 = "eu-north-1"
+
+	// AWSRegionEuSouth1 is a AWSRegion enum value
+	AWSRegionEuSouth1 = "eu-south-1"
+
+	// AWSRegionMeSouth1 is a AWSRegion enum value
+	AWSRegionMeSouth1 = "me-south-1"
+
+	// AWSRegionSaEast1 is a AWSRegion enum value
+	AWSRegionSaEast1 = "sa-east-1"
+
+	// AWSRegionUsEast1 is a AWSRegion enum value
+	AWSRegionUsEast1 = "us-east-1"
+
+	// AWSRegionUsEast2 is a AWSRegion enum value
+	AWSRegionUsEast2 = "us-east-2"
+
+	// AWSRegionUsWest1 is a AWSRegion enum value
+	AWSRegionUsWest1 = "us-west-1"
+
+	// AWSRegionUsWest2 is a AWSRegion enum value
+	AWSRegionUsWest2 = "us-west-2"
+
+	// AWSRegionCnNorth1 is a AWSRegion enum value
+	AWSRegionCnNorth1 = "cn-north-1"
+
+	// AWSRegionCnNorthwest1 is a AWSRegion enum value
+	AWSRegionCnNorthwest1 = "cn-northwest-1"
 )
+
+// AWSRegion_Values returns all elements of the AWSRegion enum
+func AWSRegion_Values() []string {
+	return []string{
+		AWSRegionAfSouth1,
+		AWSRegionApEast1,
+		AWSRegionApSouth1,
+		AWSRegionApSoutheast1,
+		AWSRegionApSoutheast2,
+		AWSRegionApNortheast1,
+		AWSRegionApNortheast2,
+		AWSRegionApNortheast3,
+		AWSRegionCaCentral1,
+		AWSRegionEuCentral1,
+		AWSRegionEuWest1,
+		AWSRegionEuWest2,
+		AWSRegionEuWest3,
+		AWSRegionEuNorth1,
+		AWSRegionEuSouth1,
+		AWSRegionMeSouth1,
+		AWSRegionSaEast1,
+		AWSRegionUsEast1,
+		AWSRegionUsEast2,
+		AWSRegionUsWest1,
+		AWSRegionUsWest2,
+		AWSRegionCnNorth1,
+		AWSRegionCnNorthwest1,
+	}
+}
 
 // The types of manifest that you want AWS to create for this report.
 const (
@@ -728,6 +1189,15 @@ const (
 	AdditionalArtifactAthena = "ATHENA"
 )
 
+// AdditionalArtifact_Values returns all elements of the AdditionalArtifact enum
+func AdditionalArtifact_Values() []string {
+	return []string{
+		AdditionalArtifactRedshift,
+		AdditionalArtifactQuicksight,
+		AdditionalArtifactAthena,
+	}
+}
+
 // The compression format that AWS uses for the report.
 const (
 	// CompressionFormatZip is a CompressionFormat enum value
@@ -740,6 +1210,15 @@ const (
 	CompressionFormatParquet = "Parquet"
 )
 
+// CompressionFormat_Values returns all elements of the CompressionFormat enum
+func CompressionFormat_Values() []string {
+	return []string{
+		CompressionFormatZip,
+		CompressionFormatGzip,
+		CompressionFormatParquet,
+	}
+}
+
 // The format that AWS saves the report in.
 const (
 	// ReportFormatTextOrcsv is a ReportFormat enum value
@@ -749,6 +1228,14 @@ const (
 	ReportFormatParquet = "Parquet"
 )
 
+// ReportFormat_Values returns all elements of the ReportFormat enum
+func ReportFormat_Values() []string {
+	return []string{
+		ReportFormatTextOrcsv,
+		ReportFormatParquet,
+	}
+}
+
 const (
 	// ReportVersioningCreateNewReport is a ReportVersioning enum value
 	ReportVersioningCreateNewReport = "CREATE_NEW_REPORT"
@@ -757,11 +1244,26 @@ const (
 	ReportVersioningOverwriteReport = "OVERWRITE_REPORT"
 )
 
+// ReportVersioning_Values returns all elements of the ReportVersioning enum
+func ReportVersioning_Values() []string {
+	return []string{
+		ReportVersioningCreateNewReport,
+		ReportVersioningOverwriteReport,
+	}
+}
+
 // Whether or not AWS includes resource IDs in the report.
 const (
 	// SchemaElementResources is a SchemaElement enum value
 	SchemaElementResources = "RESOURCES"
 )
+
+// SchemaElement_Values returns all elements of the SchemaElement enum
+func SchemaElement_Values() []string {
+	return []string{
+		SchemaElementResources,
+	}
+}
 
 // The length of time covered by the report.
 const (
@@ -770,4 +1272,16 @@ const (
 
 	// TimeUnitDaily is a TimeUnit enum value
 	TimeUnitDaily = "DAILY"
+
+	// TimeUnitMonthly is a TimeUnit enum value
+	TimeUnitMonthly = "MONTHLY"
 )
+
+// TimeUnit_Values returns all elements of the TimeUnit enum
+func TimeUnit_Values() []string {
+	return []string{
+		TimeUnitHourly,
+		TimeUnitDaily,
+		TimeUnitMonthly,
+	}
+}

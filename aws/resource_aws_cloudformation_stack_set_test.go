@@ -2,15 +2,72 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_cloudformation_stack_set", &resource.Sweeper{
+		Name: "aws_cloudformation_stack_set",
+		Dependencies: []string{
+			"aws_cloudformation_stack_set_instance",
+		},
+		F: testSweepCloudformationStackSets,
+	})
+}
+
+func testSweepCloudformationStackSets(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*AWSClient).cfconn
+	stackSets, err := listCloudFormationStackSets(conn)
+
+	if testSweepSkipSweepError(err) || isAWSErr(err, "ValidationError", "AWS CloudFormation StackSets is not supported") {
+		log.Printf("[WARN] Skipping CloudFormation StackSet sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudFormation StackSets: %w", err)
+	}
+
+	var sweeperErrs *multierror.Error
+
+	for _, stackSet := range stackSets {
+		input := &cloudformation.DeleteStackSetInput{
+			StackSetName: stackSet.StackSetName,
+		}
+		name := aws.StringValue(stackSet.StackSetName)
+
+		log.Printf("[INFO] Deleting CloudFormation StackSet: %s", name)
+		_, err := conn.DeleteStackSet(input)
+
+		if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
+			continue
+		}
+
+		if err != nil {
+			sweeperErr := fmt.Errorf("error deleting CloudFormation StackSet (%s): %w", name, err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			continue
+		}
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSCloudFormationStackSet_basic(t *testing.T) {
 	var stackSet1 cloudformation.StackSet
@@ -19,7 +76,7 @@ func TestAccAWSCloudFormationStackSet_basic(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
 		Steps: []resource.TestStep{
@@ -58,7 +115,7 @@ func TestAccAWSCloudFormationStackSet_disappears(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
 		Steps: []resource.TestStep{
@@ -82,7 +139,7 @@ func TestAccAWSCloudFormationStackSet_AdministrationRoleArn(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
 		Steps: []resource.TestStep{
@@ -119,7 +176,7 @@ func TestAccAWSCloudFormationStackSet_Description(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
 		Steps: []resource.TestStep{
@@ -156,7 +213,7 @@ func TestAccAWSCloudFormationStackSet_ExecutionRoleName(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
 		Steps: []resource.TestStep{
@@ -194,7 +251,7 @@ func TestAccAWSCloudFormationStackSet_Name(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
 		Steps: []resource.TestStep{
@@ -247,7 +304,7 @@ func TestAccAWSCloudFormationStackSet_Parameters(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
 		Steps: []resource.TestStep{
@@ -297,7 +354,7 @@ func TestAccAWSCloudFormationStackSet_Parameters(t *testing.T) {
 }
 
 func TestAccAWSCloudFormationStackSet_Parameters_Default(t *testing.T) {
-	t.Skip("this resource does not currently ignore unconfigured CloudFormation template parameters with the Default property")
+	TestAccSkip(t, "this resource does not currently ignore unconfigured CloudFormation template parameters with the Default property")
 	// Additional references:
 	//  * https://github.com/hashicorp/terraform/issues/18863
 
@@ -306,7 +363,7 @@ func TestAccAWSCloudFormationStackSet_Parameters_Default(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
 		Steps: []resource.TestStep{
@@ -348,7 +405,7 @@ func TestAccAWSCloudFormationStackSet_Parameters_Default(t *testing.T) {
 }
 
 func TestAccAWSCloudFormationStackSet_Parameters_NoEcho(t *testing.T) {
-	t.Skip("this resource does not currently ignore CloudFormation template parameters with the NoEcho property")
+	TestAccSkip(t, "this resource does not currently ignore CloudFormation template parameters with the NoEcho property")
 	// Additional references:
 	//  * https://github.com/terraform-providers/terraform-provider-aws/issues/55
 
@@ -357,7 +414,7 @@ func TestAccAWSCloudFormationStackSet_Parameters_NoEcho(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
 		Steps: []resource.TestStep{
@@ -396,7 +453,7 @@ func TestAccAWSCloudFormationStackSet_Tags(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
 		Steps: []resource.TestStep{
@@ -451,7 +508,7 @@ func TestAccAWSCloudFormationStackSet_TemplateBody(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
 		Steps: []resource.TestStep{
@@ -488,7 +545,7 @@ func TestAccAWSCloudFormationStackSet_TemplateUrl(t *testing.T) {
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
 		Steps: []resource.TestStep{
@@ -542,7 +599,7 @@ func testAccCheckCloudFormationStackSetExists(resourceName string, stackSet *clo
 		}
 
 		if output == nil || output.StackSet == nil {
-			return fmt.Errorf("CloudFormation Stack Set (%s) not found", rs.Primary.ID)
+			return fmt.Errorf("CloudFormation StackSet (%s) not found", rs.Primary.ID)
 		}
 
 		*stackSet = *output.StackSet
@@ -574,7 +631,7 @@ func testAccCheckAWSCloudFormationStackSetDestroy(s *terraform.State) error {
 		}
 
 		if output != nil && output.StackSet != nil {
-			return fmt.Errorf("CloudFormation Stack Set (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("CloudFormation StackSet (%s) still exists", rs.Primary.ID)
 		}
 	}
 
@@ -598,7 +655,7 @@ func testAccCheckCloudFormationStackSetDisappears(stackSet *cloudformation.Stack
 func testAccCheckCloudFormationStackSetNotRecreated(i, j *cloudformation.StackSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.StackSetId) != aws.StringValue(j.StackSetId) {
-			return fmt.Errorf("CloudFormation Stack Set (%s) recreated", aws.StringValue(i.StackSetName))
+			return fmt.Errorf("CloudFormation StackSet (%s) recreated", aws.StringValue(i.StackSetName))
 		}
 
 		return nil
@@ -608,10 +665,25 @@ func testAccCheckCloudFormationStackSetNotRecreated(i, j *cloudformation.StackSe
 func testAccCheckCloudFormationStackSetRecreated(i, j *cloudformation.StackSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.StackSetId) == aws.StringValue(j.StackSetId) {
-			return fmt.Errorf("CloudFormation Stack Set (%s) not recreated", aws.StringValue(i.StackSetName))
+			return fmt.Errorf("CloudFormation StackSet (%s) not recreated", aws.StringValue(i.StackSetName))
 		}
 
 		return nil
+	}
+}
+
+func testAccPreCheckAWSCloudFormationStackSet(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).cfconn
+
+	input := &cloudformation.ListStackSetsInput{}
+	_, err := conn.ListStackSets(input)
+
+	if testAccPreCheckSkipError(err) || isAWSErr(err, "ValidationError", "AWS CloudFormation StackSets is not supported") {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
@@ -626,8 +698,7 @@ Resources:
     Properties:
       CidrBlock: 10.0.0.0/16
       Tags:
-        -
-          Key: Name
+        - Key: Name
           Value: %[1]q
 Outputs:
   Parameter1Value:
@@ -652,8 +723,7 @@ Resources:
     Properties:
       CidrBlock: 10.0.0.0/16
       Tags:
-        -
-          Key: Name
+        - Key: Name
           Value: %[1]q
 Outputs:
   Parameter1Value:
@@ -679,8 +749,7 @@ Resources:
     Properties:
       CidrBlock: 10.0.0.0/16
       Tags:
-        -
-          Key: Name
+        - Key: Name
           Value: %[1]q
 Outputs:
   Parameter1Value:
@@ -704,8 +773,7 @@ Resources:
     Properties:
       CidrBlock: 10.0.0.0/16
       Tags:
-        -
-          Key: Name
+        - Key: Name
           Value: %[1]q
 Outputs:
   Parameter1Value:
@@ -725,8 +793,7 @@ Resources:
     Properties:
       CidrBlock: 10.0.0.0/16
       Tags:
-        -
-          Key: Name
+        - Key: Name
           Value: %[1]q
 Outputs:
   Region:
@@ -739,17 +806,53 @@ Outputs:
 func testAccAWSCloudFormationStackSetConfigAdministrationRoleArn1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test1" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = "%[1]s1"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = "%[1]s1"
 }
 
 resource "aws_iam_role" "test2" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = "%[1]s2"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = "%[1]s2"
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test1.arn}"
+  administration_role_arn = aws_iam_role.test1.arn
   name                    = %[1]q
 
   template_body = <<TEMPLATE
@@ -762,17 +865,53 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigAdministrationRoleArn2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test1" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = "%[1]s1"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = "%[1]s1"
 }
 
 resource "aws_iam_role" "test2" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = "%[1]s2"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = "%[1]s2"
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test2.arn}"
+  administration_role_arn = aws_iam_role.test2.arn
   name                    = %[1]q
 
   template_body = <<TEMPLATE
@@ -785,12 +924,30 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigDescription(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   description             = %[3]q
   name                    = %[1]q
 
@@ -804,12 +961,30 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigExecutionRoleName(rName, executionRoleName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   execution_role_name     = %[3]q
   name                    = %[1]q
 
@@ -823,12 +998,30 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   template_body = <<TEMPLATE
@@ -841,12 +1034,30 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigParameters1(rName, value1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   parameters = {
@@ -863,12 +1074,30 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigParameters2(rName, value1, value2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   parameters = {
@@ -886,12 +1115,30 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigParametersDefault0(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   template_body = <<TEMPLATE
@@ -904,12 +1151,30 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigParametersDefault1(rName, value1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   parameters = {
@@ -926,12 +1191,30 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigParametersNoEcho1(rName, value1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   parameters = {
@@ -948,12 +1231,30 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigTags1(rName, value1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   tags = {
@@ -970,12 +1271,30 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigTags2(rName, value1, value2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   tags = {
@@ -993,12 +1312,30 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigTemplateBody(rName, templateBody string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
 
   template_body = <<TEMPLATE
@@ -1011,8 +1348,26 @@ TEMPLATE
 func testAccAWSCloudFormationStackSetConfigTemplateUrl1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_s3_bucket" "test" {
@@ -1022,7 +1377,7 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_s3_bucket_object" "test" {
   acl    = "public-read"
-  bucket = "${aws_s3_bucket.test.bucket}"
+  bucket = aws_s3_bucket.test.bucket
 
   content = <<CONTENT
 %[2]s
@@ -1032,7 +1387,7 @@ CONTENT
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
   template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
 }
@@ -1042,8 +1397,26 @@ resource "aws_cloudformation_stack_set" "test" {
 func testAccAWSCloudFormationStackSetConfigTemplateUrl2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"cloudformation.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "cloudformation.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+  name = %[1]q
 }
 
 resource "aws_s3_bucket" "test" {
@@ -1053,7 +1426,7 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_s3_bucket_object" "test" {
   acl    = "public-read"
-  bucket = "${aws_s3_bucket.test.bucket}"
+  bucket = aws_s3_bucket.test.bucket
 
   content = <<CONTENT
 %[2]s
@@ -1063,7 +1436,7 @@ CONTENT
 }
 
 resource "aws_cloudformation_stack_set" "test" {
-  administration_role_arn = "${aws_iam_role.test.arn}"
+  administration_role_arn = aws_iam_role.test.arn
   name                    = %[1]q
   template_url            = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
 }

@@ -1,7 +1,7 @@
 ---
+subcategory: "Redshift"
 layout: "aws"
 page_title: "AWS: aws_redshift_snapshot_schedule_association"
-sidebar_current: "docs-aws-resource-redshift-snapshot-schedule-association"
 description: |-
   Provides an Association Redshift Cluster and Snapshot Schedule resource.
 ---
@@ -21,15 +21,15 @@ resource "aws_redshift_cluster" "default" {
 }
 
 resource "aws_redshift_snapshot_schedule" "default" {
-	identifier = "tf-redshift-snapshot-schedule"
-	definitions = [
-		"rate(12 hours)",
-	]
+  identifier = "tf-redshift-snapshot-schedule"
+  definitions = [
+    "rate(12 hours)",
+  ]
 }
 
 resource "aws_redshift_snapshot_schedule_association" "default" {
-	  cluster_identifier  = "${aws_redshift_cluster.default.id}"
-    schedule_identifier = "${aws_redshift_snapshot_schedule.default.id}"
+  cluster_identifier  = aws_redshift_cluster.default.id
+  schedule_identifier = aws_redshift_snapshot_schedule.default.id
 }
 ```
 

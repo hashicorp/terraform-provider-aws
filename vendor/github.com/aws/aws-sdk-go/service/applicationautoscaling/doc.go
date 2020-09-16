@@ -22,9 +22,15 @@
 //
 //    * Custom resources provided by your own applications or services
 //
+//    * Amazon Comprehend document classification endpoints
+//
+//    * AWS Lambda function provisioned concurrency
+//
+//    * Amazon Keyspaces (for Apache Cassandra) tables
+//
 // API Summary
 //
-// The Application Auto Scaling service API includes two key sets of actions:
+// The Application Auto Scaling service API includes three key sets of actions:
 //
 //    * Register and manage scalable targets - Register AWS or custom resources
 //    as scalable targets (a resource that Application Auto Scaling can scale),
@@ -35,6 +41,13 @@
 //    dynamically scale your resources in response to CloudWatch alarms, schedule
 //    one-time or recurring scaling actions, and retrieve your recent scaling
 //    activity history.
+//
+//    * Suspend and resume scaling - Temporarily suspend and later resume automatic
+//    scaling by calling the RegisterScalableTarget (https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html)
+//    API action for any Application Auto Scaling scalable target. You can suspend
+//    and resume (individually or in combination) scale-out activities that
+//    are triggered by a scaling policy, scale-in activities that are triggered
+//    by a scaling policy, and scheduled scaling.
 //
 // To learn more about Application Auto Scaling, including information about
 // granting IAM users required permissions for Application Auto Scaling actions,

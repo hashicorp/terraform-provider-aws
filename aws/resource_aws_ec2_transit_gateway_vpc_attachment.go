@@ -6,8 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsEc2TransitGatewayVpcAttachment() *schema.Resource {
@@ -45,11 +46,7 @@ func resourceAwsEc2TransitGatewayVpcAttachment() *schema.Resource {
 				MinItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+			"tags": tagsSchema(),
 			"transit_gateway_default_route_table_association": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -92,7 +89,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentCreate(d *schema.ResourceData, met
 		},
 		SubnetIds:         expandStringSet(d.Get("subnet_ids").(*schema.Set)),
 		TransitGatewayId:  aws.String(transitGatewayID),
-		TagSpecifications: expandEc2TransitGatewayAttachmentTagSpecifications(d.Get("tags").(map[string]interface{})),
+		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeTransitGatewayAttachment),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
@@ -133,6 +130,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentCreate(d *schema.ResourceData, met
 
 func resourceAwsEc2TransitGatewayVpcAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	transitGatewayVpcAttachment, err := ec2DescribeTransitGatewayVpcAttachment(conn, d.Id())
 
@@ -197,7 +195,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentRead(d *schema.ResourceData, meta 
 		return fmt.Errorf("error setting subnet_ids: %s", err)
 	}
 
-	if err := d.Set("tags", tagsToMap(transitGatewayVpcAttachment.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayVpcAttachment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -213,7 +211,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentRead(d *schema.ResourceData, meta 
 func resourceAwsEc2TransitGatewayVpcAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if d.HasChange("dns_support") || d.HasChange("ipv6_support") || d.HasChange("subnet_ids") {
+	if d.HasChanges("dns_support", "ipv6_support", "subnet_ids") {
 		input := &ec2.ModifyTransitGatewayVpcAttachmentInput{
 			Options: &ec2.ModifyTransitGatewayVpcAttachmentRequestOptions{
 				DnsSupport:  aws.String(d.Get("dns_support").(string)),
@@ -243,7 +241,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentUpdate(d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("transit_gateway_default_route_table_association") || d.HasChange("transit_gateway_default_route_table_propagation") {
+	if d.HasChanges("transit_gateway_default_route_table_association", "transit_gateway_default_route_table_propagation") {
 		transitGatewayID := d.Get("transit_gateway_id").(string)
 
 		transitGateway, err := ec2DescribeTransitGateway(conn, transitGatewayID)
@@ -269,7 +267,9 @@ func resourceAwsEc2TransitGatewayVpcAttachmentUpdate(d *schema.ResourceData, met
 	}
 
 	if d.HasChange("tags") {
-		if err := setTags(conn, d); err != nil {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Transit Gateway VPC Attachment (%s) tags: %s", d.Id(), err)
 		}
 	}

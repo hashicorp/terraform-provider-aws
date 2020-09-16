@@ -1,7 +1,7 @@
 ---
+subcategory: "SQS"
 layout: "aws"
 page_title: "AWS: aws_sqs_queue"
-sidebar_current: "docs-aws-resource-sqs-queue"
 description: |-
   Provides a SQS resource.
 ---
@@ -17,7 +17,10 @@ resource "aws_sqs_queue" "terraform_queue" {
   max_message_size          = 2048
   message_retention_seconds = 86400
   receive_wait_time_seconds = 10
-  redrive_policy            = "{\"deadLetterTargetArn\":\"${aws_sqs_queue.terraform_queue_deadletter.arn}\",\"maxReceiveCount\":4}"
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.terraform_queue_deadletter.arn
+    maxReceiveCount     = 4
+  })
 
   tags = {
     Environment = "production"
@@ -56,13 +59,13 @@ The following arguments are supported:
 * `max_message_size` - (Optional) The limit of how many bytes a message can contain before Amazon SQS rejects it. An integer from 1024 bytes (1 KiB) up to 262144 bytes (256 KiB). The default for this attribute is 262144 (256 KiB).
 * `delay_seconds` - (Optional) The time in seconds that the delivery of all messages in the queue will be delayed. An integer from 0 to 900 (15 minutes). The default for this attribute is 0 seconds.
 * `receive_wait_time_seconds` - (Optional) The time for which a ReceiveMessage call will wait for a message to arrive (long polling) before returning. An integer from 0 to 20 (seconds). The default for this attribute is 0, meaning that the call will return immediately.
-* `policy` - (Optional) The JSON policy for the SQS queue. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](/docs/providers/aws/guides/iam-policy-documents.html).
+* `policy` - (Optional) The JSON policy for the SQS queue. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 * `redrive_policy` - (Optional) The JSON policy to set up the Dead Letter Queue, see [AWS docs](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/SQSDeadLetterQueue.html). **Note:** when specifying `maxReceiveCount`, you must specify it as an integer (`5`), and not a string (`"5"`).
 * `fifo_queue` - (Optional) Boolean designating a FIFO queue. If not set, it defaults to `false` making it standard.
 * `content_based_deduplication` - (Optional) Enables content-based deduplication for FIFO queues. For more information, see the [related documentation](http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/FIFO-queues.html#FIFO-queues-exactly-once-processing)
 * `kms_master_key_id` - (Optional) The ID of an AWS-managed customer master key (CMK) for Amazon SQS or a custom CMK. For more information, see [Key Terms](http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-server-side-encryption.html#sqs-sse-key-terms).
 * `kms_data_key_reuse_period_seconds` - (Optional) The length of time, in seconds, for which Amazon SQS can reuse a data key to encrypt or decrypt messages before calling AWS KMS again. An integer representing seconds, between 60 seconds (1 minute) and 86,400 seconds (24 hours). The default is 300 (5 minutes).
-* `tags` - (Optional) A mapping of tags to assign to the queue.
+* `tags` - (Optional) A map of tags to assign to the queue.
 
 ## Attributes Reference
 

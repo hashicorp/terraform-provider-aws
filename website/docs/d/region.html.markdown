@@ -1,7 +1,7 @@
 ---
+subcategory: ""
 layout: "aws"
 page_title: "AWS: aws_region"
-sidebar_current: "docs-aws-datasource-region"
 description: |-
     Provides details about a specific service region
 ---

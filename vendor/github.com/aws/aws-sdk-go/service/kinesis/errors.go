@@ -2,6 +2,10 @@
 
 package kinesis
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeExpiredIteratorException for service response error code
@@ -18,6 +22,9 @@ const (
 
 	// ErrCodeInternalFailureException for service response error code
 	// "InternalFailureException".
+	//
+	// The processing of the request failed because of an unknown error, exception,
+	// or failure.
 	ErrCodeInternalFailureException = "InternalFailureException"
 
 	// ErrCodeInvalidArgumentException for service response error code
@@ -46,7 +53,7 @@ const (
 	//
 	// The request was rejected because the state of the specified resource isn't
 	// valid for this request. For more information, see How Key State Affects Use
-	// of a Customer Master Key (http://docs.aws.amazon.com/kms/latest/developerguide/key-state.html)
+	// of a Customer Master Key (https://docs.aws.amazon.com/kms/latest/developerguide/key-state.html)
 	// in the AWS Key Management Service Developer Guide.
 	ErrCodeKMSInvalidStateException = "KMSInvalidStateException"
 
@@ -67,7 +74,7 @@ const (
 	// "KMSThrottlingException".
 	//
 	// The request was denied due to request throttling. For more information about
-	// throttling, see Limits (http://docs.aws.amazon.com/kms/latest/developerguide/limits.html#requests-per-second)
+	// throttling, see Limits (https://docs.aws.amazon.com/kms/latest/developerguide/limits.html#requests-per-second)
 	// in the AWS Key Management Service Developer Guide.
 	ErrCodeKMSThrottlingException = "KMSThrottlingException"
 
@@ -83,9 +90,9 @@ const (
 	//
 	// The request rate for the stream is too high, or the requested data is too
 	// large for the available throughput. Reduce the frequency or size of your
-	// requests. For more information, see Streams Limits (http://docs.aws.amazon.com/kinesis/latest/dev/service-sizes-and-limits.html)
+	// requests. For more information, see Streams Limits (https://docs.aws.amazon.com/kinesis/latest/dev/service-sizes-and-limits.html)
 	// in the Amazon Kinesis Data Streams Developer Guide, and Error Retries and
-	// Exponential Backoff in AWS (http://docs.aws.amazon.com/general/latest/gr/api-retries.html)
+	// Exponential Backoff in AWS (https://docs.aws.amazon.com/general/latest/gr/api-retries.html)
 	// in the AWS General Reference.
 	ErrCodeProvisionedThroughputExceededException = "ProvisionedThroughputExceededException"
 
@@ -103,3 +110,20 @@ const (
 	// correctly.
 	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"ExpiredIteratorException":               newErrorExpiredIteratorException,
+	"ExpiredNextTokenException":              newErrorExpiredNextTokenException,
+	"InternalFailureException":               newErrorInternalFailureException,
+	"InvalidArgumentException":               newErrorInvalidArgumentException,
+	"KMSAccessDeniedException":               newErrorKMSAccessDeniedException,
+	"KMSDisabledException":                   newErrorKMSDisabledException,
+	"KMSInvalidStateException":               newErrorKMSInvalidStateException,
+	"KMSNotFoundException":                   newErrorKMSNotFoundException,
+	"KMSOptInRequired":                       newErrorKMSOptInRequired,
+	"KMSThrottlingException":                 newErrorKMSThrottlingException,
+	"LimitExceededException":                 newErrorLimitExceededException,
+	"ProvisionedThroughputExceededException": newErrorProvisionedThroughputExceededException,
+	"ResourceInUseException":                 newErrorResourceInUseException,
+	"ResourceNotFoundException":              newErrorResourceNotFoundException,
+}

@@ -6,10 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 const neptuneClusterParameterGroupMaxParamsBulkEdit = 20
@@ -89,7 +89,7 @@ func resourceAwsNeptuneClusterParameterGroup() *schema.Resource {
 
 func resourceAwsNeptuneClusterParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
-	tags := tagsFromMapNeptune(d.Get("tags").(map[string]interface{}))
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().NeptuneTags()
 
 	var groupName string
 	if v, ok := d.GetOk("name"); ok {
@@ -123,6 +123,7 @@ func resourceAwsNeptuneClusterParameterGroupCreate(d *schema.ResourceData, meta 
 
 func resourceAwsNeptuneClusterParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	describeOpts := neptune.DescribeDBClusterParameterGroupsInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
@@ -166,15 +167,14 @@ func resourceAwsNeptuneClusterParameterGroupRead(d *schema.ResourceData, meta in
 		return fmt.Errorf("error setting neptune parameter: %s", err)
 	}
 
-	resp, err := conn.ListTagsForResource(&neptune.ListTagsForResourceInput{
-		ResourceName: aws.String(arn),
-	})
+	tags, err := keyvaluetags.NeptuneListTags(conn, d.Get("arn").(string))
+
 	if err != nil {
-		log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
+		return fmt.Errorf("error listing tags for Neptune Cluster Parameter Group (%s): %s", d.Get("arn").(string), err)
 	}
 
-	if err := d.Set("tags", tagsToMapNeptune(resp.TagList)); err != nil {
-		return fmt.Errorf("error setting neptune tags: %s", err)
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -182,8 +182,6 @@ func resourceAwsNeptuneClusterParameterGroupRead(d *schema.ResourceData, meta in
 
 func resourceAwsNeptuneClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
-
-	d.Partial(true)
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -197,10 +195,7 @@ func resourceAwsNeptuneClusterParameterGroupUpdate(d *schema.ResourceData, meta 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		parameters, err := expandNeptuneParameters(ns.Difference(os).List())
-		if err != nil {
-			return err
-		}
+		parameters := expandNeptuneParameters(ns.Difference(os).List())
 
 		if len(parameters) > 0 {
 			// We can only modify 20 parameters at a time, so walk them until
@@ -219,23 +214,21 @@ func resourceAwsNeptuneClusterParameterGroupUpdate(d *schema.ResourceData, meta 
 				}
 
 				log.Printf("[DEBUG] Modify Neptune Cluster Parameter Group: %s", modifyOpts)
-				_, err = conn.ModifyDBClusterParameterGroup(&modifyOpts)
+				_, err := conn.ModifyDBClusterParameterGroup(&modifyOpts)
 				if err != nil {
 					return fmt.Errorf("Error modifying Neptune Cluster Parameter Group: %s", err)
 				}
 			}
-			d.SetPartial("parameter")
 		}
 	}
 
-	arn := d.Get("arn").(string)
-	if err := setTagsNeptune(conn, d, arn); err != nil {
-		return err
-	} else {
-		d.SetPartial("tags")
-	}
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
 
-	d.Partial(false)
+		if err := keyvaluetags.NeptuneUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Neptune Cluster Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
+		}
+	}
 
 	return resourceAwsNeptuneClusterParameterGroupRead(d, meta)
 }

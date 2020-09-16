@@ -1,7 +1,7 @@
 ---
+subcategory: "Neptune"
 layout: "aws"
 page_title: "AWS: aws_neptune_cluster_instance"
-sidebar_current: "docs-aws-resource-neptune-cluster-instance"
 description: |-
   Provides an Neptune Cluster Resource Instance
 ---
@@ -31,7 +31,7 @@ resource "aws_neptune_cluster" "default" {
 
 resource "aws_neptune_cluster_instance" "example" {
   count              = 2
-  cluster_identifier = "${aws_neptune_cluster.default.id}"
+  cluster_identifier = aws_neptune_cluster.default.id
   engine             = "neptune"
   instance_class     = "db.r4.large"
   apply_immediately  = true
@@ -60,7 +60,7 @@ The following arguments are supported:
   Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00".
 * `promotion_tier` - (Optional) Default 0. Failover Priority setting on instance level. The reader who has lower tier has higher priority to get promoter to writer.
 * `publicly_accessible` - (Optional) Bool to control if instance is publicly accessible. Default is `false`.
-* `tags` - (Optional) A mapping of tags to assign to the instance.
+* `tags` - (Optional) A map of tags to assign to the instance.
 
 ## Attributes Reference
 

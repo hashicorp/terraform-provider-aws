@@ -1,7 +1,7 @@
 ---
+subcategory: "Gamelift"
 layout: "aws"
 page_title: "AWS: aws_gamelift_build"
-sidebar_current: "docs-aws-resource-gamelift-build"
 description: |-
   Provides a Gamelift Build resource.
 ---
@@ -18,12 +18,12 @@ resource "aws_gamelift_build" "test" {
   operating_system = "WINDOWS_2012"
 
   storage_location {
-    bucket   = "${aws_s3_bucket.test.bucket}"
-    key      = "${aws_s3_bucket_object.test.key}"
-    role_arn = "${aws_iam_role.test.arn}"
+    bucket   = aws_s3_bucket.test.bucket
+    key      = aws_s3_bucket_object.test.key
+    role_arn = aws_iam_role.test.arn
   }
 
-  depends_on = ["aws_iam_role_policy.test"]
+  depends_on = [aws_iam_role_policy.test]
 }
 ```
 
@@ -35,6 +35,7 @@ The following arguments are supported:
 * `operating_system` - (Required) Operating system that the game server binaries are built to run on. e.g. `WINDOWS_2012` or `AMAZON_LINUX`.
 * `storage_location` - (Required) Information indicating where your game build files are stored. See below.
 * `version` - (Optional) Version that is associated with this build.
+* `tags` - (Optional) Key-value map of resource tags
 
 ### Nested Fields
 
@@ -48,7 +49,9 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Build ID.
+* `id` - Gamelift Build ID.
+* `arn` - Gamelift Build ARN.
+
 
 ## Import
 

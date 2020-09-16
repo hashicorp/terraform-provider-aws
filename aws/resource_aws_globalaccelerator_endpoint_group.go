@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
@@ -45,11 +45,12 @@ func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
 			"health_check_path": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "/",
+				Computed: true,
 			},
 			"health_check_port": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"health_check_protocol": {
 				Type:     schema.TypeString,
@@ -86,6 +87,11 @@ func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
 						"weight": {
 							Type:     schema.TypeInt,
 							Optional: true,
+						},
+						"client_ip_preservation_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -128,8 +134,8 @@ func resourceAwsGlobalAcceleratorEndpointGroupCreate(d *schema.ResourceData, met
 		opts.ThresholdCount = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("traffic_dial_percentage"); ok {
-		opts.TrafficDialPercentage = aws.Float64(v.(float64))
+	if v, ok := d.Get("traffic_dial_percentage").(float64); ok {
+		opts.TrafficDialPercentage = aws.Float64(v)
 	}
 
 	if v, ok := d.GetOk("endpoint_configuration"); ok {
@@ -151,7 +157,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupCreate(d *schema.ResourceData, met
 		return err
 	}
 
-	err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, acceleratorArn)
+	err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, acceleratorArn)
 
 	if err != nil {
 		return err
@@ -213,6 +219,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupExpandEndpointConfigurations(confi
 
 		m.EndpointId = aws.String(configuration["endpoint_id"].(string))
 		m.Weight = aws.Int64(int64(configuration["weight"].(int)))
+		m.ClientIPPreservationEnabled = aws.Bool(configuration["client_ip_preservation_enabled"].(bool))
 
 		out[i] = &m
 	}
@@ -229,6 +236,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupFlattenEndpointDescriptions(config
 
 		m["endpoint_id"] = aws.StringValue(configuration.EndpointId)
 		m["weight"] = aws.Int64Value(configuration.Weight)
+		m["client_ip_preservation_enabled"] = aws.BoolValue(configuration.ClientIPPreservationEnabled)
 
 		out[i] = m
 	}
@@ -279,8 +287,8 @@ func resourceAwsGlobalAcceleratorEndpointGroupUpdate(d *schema.ResourceData, met
 		opts.ThresholdCount = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("traffic_dial_percentage"); ok {
-		opts.TrafficDialPercentage = aws.Float64(v.(float64))
+	if v, ok := d.Get("traffic_dial_percentage").(float64); ok {
+		opts.TrafficDialPercentage = aws.Float64(v)
 	}
 
 	if v, ok := d.GetOk("endpoint_configuration"); ok {
@@ -302,7 +310,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupUpdate(d *schema.ResourceData, met
 		return err
 	}
 
-	err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, acceleratorArn)
+	err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, acceleratorArn)
 
 	if err != nil {
 		return err
@@ -332,7 +340,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupDelete(d *schema.ResourceData, met
 		return err
 	}
 
-	err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, acceleratorArn)
+	err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, acceleratorArn)
 
 	if err != nil {
 		return err

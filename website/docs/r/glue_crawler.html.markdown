@@ -1,7 +1,7 @@
 ---
+subcategory: "Glue"
 layout: "aws"
 page_title: "AWS: aws_glue_crawler"
-sidebar_current: "docs-aws-resource-glue-crawler"
 description: |-
   Manages a Glue Crawler
 ---
@@ -16,9 +16,9 @@ Manages a Glue Crawler. More information can be found in the [AWS Glue Developer
 
 ```hcl
 resource "aws_glue_crawler" "example" {
-  database_name = "${aws_glue_catalog_database.example.name}"
+  database_name = aws_glue_catalog_database.example.name
   name          = "example"
-  role          = "${aws_iam_role.example.arn}"
+  role          = aws_iam_role.example.arn
 
   dynamodb_target {
     path = "table-name"
@@ -30,12 +30,12 @@ resource "aws_glue_crawler" "example" {
 
 ```hcl
 resource "aws_glue_crawler" "example" {
-  database_name = "${aws_glue_catalog_database.example.name}"
+  database_name = aws_glue_catalog_database.example.name
   name          = "example"
-  role          = "${aws_iam_role.example.arn}"
+  role          = aws_iam_role.example.arn
 
   jdbc_target {
-    connection_name = "${aws_glue_connection.example.name}"
+    connection_name = aws_glue_connection.example.name
     path            = "database-name/%"
   }
 }
@@ -45,9 +45,9 @@ resource "aws_glue_crawler" "example" {
 
 ```hcl
 resource "aws_glue_crawler" "example" {
-  database_name = "${aws_glue_catalog_database.example.name}"
+  database_name = aws_glue_catalog_database.example.name
   name          = "example"
-  role          = "${aws_iam_role.example.arn}"
+  role          = aws_iam_role.example.arn
 
   s3_target {
     path = "s3://${aws_s3_bucket.example.bucket}"
@@ -60,13 +60,13 @@ resource "aws_glue_crawler" "example" {
 
 ```hcl
 resource "aws_glue_crawler" "example" {
-  database_name = "${aws_glue_catalog_database.example.name}"
+  database_name = aws_glue_catalog_database.example.name
   name          = "example"
-  role          = "${aws_iam_role.example.arn}"
+  role          = aws_iam_role.example.arn
 
   catalog_target {
-    database_name = "${aws_glue_catalog_database.example.name}"
-    tables = ["${aws_glue_catalog_table.example.name}"]
+    database_name = aws_glue_catalog_database.example.name
+    tables        = [aws_glue_catalog_table.example.name]
   }
 
   schema_change_policy {
@@ -101,8 +101,9 @@ The following arguments are supported:
 * `s3_target` (Optional) List nested Amazon S3 target arguments. See below.
 * `schedule` (Optional) A cron expression used to specify the schedule. For more information, see [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html). For example, to run something every day at 12:15 UTC, you would specify: `cron(15 12 * * ? *)`.
 * `schema_change_policy` (Optional) Policy for the crawler's update and deletion behavior.
-* `table_prefix` (Optional) The table prefix used for catalog tables that are created.
 * `security_configuration` (Optional) The name of Security Configuration to be used by the crawler
+* `table_prefix` (Optional) The table prefix used for catalog tables that are created.
+* `tags` - (Optional) Key-value map of resource tags
 
 ### dynamodb_target Argument Reference
 
@@ -139,7 +140,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Crawler name
-* `arn` - The ARN of the crawler 
+* `arn` - The ARN of the crawler
 
 ## Import
 

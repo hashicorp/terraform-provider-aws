@@ -9,12 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/worklink"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_Basic(t *testing.T) {
-	suffix := randomString(20)
+func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *testing.T) {
+	suffix := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -42,10 +43,10 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_Basic(t *t
 }
 
 func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_DisplayName(t *testing.T) {
-	suffix := randomString(20)
+	suffix := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
-	displayName1 := fmt.Sprintf("tf-website-certificate-%s", randomString(5))
-	displayName2 := fmt.Sprintf("tf-website-certificate-%s", randomString(5))
+	displayName1 := fmt.Sprintf("tf-website-certificate-%s", acctest.RandStringFromCharSet(5, acctest.CharSetAlpha))
+	displayName2 := fmt.Sprintf("tf-website-certificate-%s", acctest.RandStringFromCharSet(5, acctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		Providers:    testAccProviders,
@@ -75,7 +76,7 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_DisplayNam
 }
 
 func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_Disappears(t *testing.T) {
-	suffix := randomString(20)
+	suffix := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -198,8 +199,8 @@ func testAccAWSWorkLinkWebsiteCertificateAuthorityAssociationConfig(r string) st
 %s
 
 resource "aws_worklink_website_certificate_authority_association" "test" {
-  fleet_arn   = "${aws_worklink_fleet.test.arn}"
-  certificate = "${file("test-fixtures/worklink-website-certificate-authority-association.pem")}"
+  fleet_arn   = aws_worklink_fleet.test.arn
+  certificate = file("test-fixtures/worklink-website-certificate-authority-association.pem")
 }
 `, testAccAWSWorkLinkFleetConfig(r))
 }
@@ -209,8 +210,8 @@ func testAccAWSWorkLinkWebsiteCertificateAuthorityAssociationConfigDisplayName(r
 %s
 
 resource "aws_worklink_website_certificate_authority_association" "test" {
-  fleet_arn    = "${aws_worklink_fleet.test.arn}"
-  certificate  = "${file("test-fixtures/worklink-website-certificate-authority-association.pem")}"
+  fleet_arn    = aws_worklink_fleet.test.arn
+  certificate  = file("test-fixtures/worklink-website-certificate-authority-association.pem")
   display_name = "%s"
 }
 `, testAccAWSWorkLinkFleetConfig(r), displayName)

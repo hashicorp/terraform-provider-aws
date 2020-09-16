@@ -3,15 +3,14 @@ package aws
 import (
 	"fmt"
 	"log"
-	"math/rand"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -52,6 +51,39 @@ func testSweepDirectConnectGateways(region string) error {
 				continue
 			}
 
+			var associations bool
+			associationInput := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
+				DirectConnectGatewayId: gateway.DirectConnectGatewayId,
+			}
+
+			for {
+				associationOutput, err := conn.DescribeDirectConnectGatewayAssociations(associationInput)
+
+				if err != nil {
+					return fmt.Errorf("error retrieving Direct Connect Gateway (%s) Associations: %s", id, err)
+				}
+
+				// If associations still remain, its likely that our region is not the home
+				// region of those associations and the previous sweepers skipped them.
+				// When we hit this condition, we skip trying to delete the gateway as it
+				// will go from deleting -> available after a few minutes and timeout.
+				if len(associationOutput.DirectConnectGatewayAssociations) > 0 {
+					associations = true
+					break
+				}
+
+				if aws.StringValue(associationOutput.NextToken) == "" {
+					break
+				}
+
+				associationInput.NextToken = associationOutput.NextToken
+			}
+
+			if associations {
+				log.Printf("[INFO] Skipping Direct Connect Gateway with remaining associations: %s", id)
+				continue
+			}
+
 			input := &directconnect.DeleteDirectConnectGatewayInput{
 				DirectConnectGatewayId: aws.String(id),
 			}
@@ -82,7 +114,7 @@ func testSweepDirectConnectGateways(region string) error {
 	return nil
 }
 
-func TestAccAwsDxGateway_importBasic(t *testing.T) {
+func TestAccAwsDxGateway_basic(t *testing.T) {
 	resourceName := "aws_dx_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -91,9 +123,12 @@ func TestAccAwsDxGateway_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayConfig(acctest.RandString(5), randIntRange(64512, 65534)),
+				Config: testAccDxGatewayConfig(acctest.RandString(5), acctest.RandIntRange(64512, 65534)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxGatewayExists(resourceName),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_account_id"),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -103,17 +138,11 @@ func TestAccAwsDxGateway_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxGateway_importComplex(t *testing.T) {
-	checkFn := func(s []*terraform.InstanceState) error {
-		if len(s) != 3 {
-			return fmt.Errorf("Got %d resources, expected 3. State: %#v", len(s), s)
-		}
-		return nil
-	}
-
+func TestAccAwsDxGateway_complex(t *testing.T) {
 	rName1 := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
 	rName2 := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	resourceName := "aws_dx_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -122,30 +151,15 @@ func TestAccAwsDxGateway_importComplex(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayAssociationConfig_multiVpnGatewaysSingleAccount(rName1, rName2, rBgpAsn),
-			},
-
-			{
-				ResourceName:      "aws_dx_gateway.test",
-				ImportState:       true,
-				ImportStateCheck:  checkFn,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAwsDxGateway_basic(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDxGatewayConfig(acctest.RandString(5), randIntRange(64512, 65534)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxGatewayExists("aws_dx_gateway.test"),
-					testAccCheckResourceAttrAccountID("aws_dx_gateway.test", "owner_account_id"),
+					testAccCheckAwsDxGatewayExists(resourceName),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_account_id"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -194,13 +208,4 @@ resource "aws_dx_gateway" "test" {
   amazon_side_asn = "%d"
 }
 `, rName, rBgpAsn)
-}
-
-// Local copy of acctest.RandIntRange until https://github.com/hashicorp/terraform/pull/17438 is merged.
-func randIntRange(min int, max int) int {
-	rand.Seed(time.Now().UTC().UnixNano())
-	source := rand.New(rand.NewSource(time.Now().UnixNano()))
-	rangeMax := max - min
-
-	return int(source.Int31n(int32(rangeMax))) + min
 }

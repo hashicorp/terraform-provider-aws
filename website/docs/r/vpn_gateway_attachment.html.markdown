@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpn_gateway_attachment"
-sidebar_current: "docs-aws-resource-vpn-gateway-attachment"
 description: |-
   Provides a Virtual Private Gateway attachment resource.
 ---
@@ -29,8 +29,8 @@ resource "aws_vpn_gateway" "vpn" {
 }
 
 resource "aws_vpn_gateway_attachment" "vpn_attachment" {
-  vpc_id         = "${aws_vpc.network.id}"
-  vpn_gateway_id = "${aws_vpn_gateway.vpn.id}"
+  vpc_id         = aws_vpc.network.id
+  vpn_gateway_id = aws_vpn_gateway.vpn.id
 }
 ```
 

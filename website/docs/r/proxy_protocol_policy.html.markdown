@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
 page_title: "AWS: aws_proxy_protocol_policy"
-sidebar_current: "docs-aws-resource-proxy-protocol-policy"
 description: |-
   Provides a proxy protocol policy, which allows an ELB to carry a client connection information to a backend.
 ---
@@ -33,7 +33,7 @@ resource "aws_elb" "lb" {
 }
 
 resource "aws_proxy_protocol_policy" "smtp" {
-  load_balancer  = "${aws_elb.lb.name}"
+  load_balancer  = aws_elb.lb.name
   instance_ports = ["25", "587"]
 }
 ```

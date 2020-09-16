@@ -2,6 +2,10 @@
 
 package cloud9
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeBadRequestException for service response error code
@@ -9,6 +13,12 @@ const (
 	//
 	// The target request is invalid.
 	ErrCodeBadRequestException = "BadRequestException"
+
+	// ErrCodeConcurrentAccessException for service response error code
+	// "ConcurrentAccessException".
+	//
+	// A concurrent access issue occurred.
+	ErrCodeConcurrentAccessException = "ConcurrentAccessException"
 
 	// ErrCodeConflictException for service response error code
 	// "ConflictException".
@@ -46,3 +56,14 @@ const (
 	// Too many service requests were made over the given time period.
 	ErrCodeTooManyRequestsException = "TooManyRequestsException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"BadRequestException":          newErrorBadRequestException,
+	"ConcurrentAccessException":    newErrorConcurrentAccessException,
+	"ConflictException":            newErrorConflictException,
+	"ForbiddenException":           newErrorForbiddenException,
+	"InternalServerErrorException": newErrorInternalServerErrorException,
+	"LimitExceededException":       newErrorLimitExceededException,
+	"NotFoundException":            newErrorNotFoundException,
+	"TooManyRequestsException":     newErrorTooManyRequestsException,
+}

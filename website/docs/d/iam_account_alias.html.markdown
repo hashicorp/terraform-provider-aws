@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_account_alias"
-sidebar_current: "docs-aws-datasource-iam-account-alias"
 description: |-
   Provides the account alias for the AWS account associated with the provider
   connection to AWS.
@@ -18,7 +18,7 @@ for the effective account in which Terraform is working.
 data "aws_iam_account_alias" "current" {}
 
 output "account_id" {
-  value = "${data.aws_iam_account_alias.current.account_alias}"
+  value = data.aws_iam_account_alias.current.account_alias
 }
 ```
 

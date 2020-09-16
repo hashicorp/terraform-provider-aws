@@ -1,7 +1,7 @@
 ---
+subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_key_pair"
-sidebar_current: "docs-aws-resource-lightsail-key-pair"
 description: |-
   Provides an Lightsail Key Pair
 ---
@@ -37,7 +37,7 @@ resource "aws_lightsail_key_pair" "lg_key_pair" {
 ```hcl
 resource "aws_lightsail_key_pair" "lg_key_pair" {
   name       = "importing"
-  public_key = "${file("~/.ssh/id_rsa.pub")}"
+  public_key = file("~/.ssh/id_rsa.pub")
 }
 ```
 

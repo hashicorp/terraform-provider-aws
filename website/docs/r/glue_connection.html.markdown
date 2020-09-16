@@ -1,7 +1,7 @@
 ---
+subcategory: "Glue"
 layout: "aws"
 page_title: "AWS: aws_glue_connection"
-sidebar_current: "docs-aws-resource-glue-connection"
 description: |-
   Provides an Glue Connection resource.
 ---
@@ -41,9 +41,9 @@ resource "aws_glue_connection" "example" {
   name = "example"
 
   physical_connection_requirements {
-    availability_zone      = "${aws_subnet.example.availability_zone}"
-    security_group_id_list = ["${aws_security_group.example.id}"]
-    subnet_id              = "${aws_subnet.example.id}"
+    availability_zone      = aws_subnet.example.availability_zone
+    security_group_id_list = [aws_security_group.example.id]
+    subnet_id              = aws_subnet.example.id
   }
 }
 ```
@@ -54,7 +54,7 @@ The following arguments are supported:
 
 * `catalog_id` – (Optional) The ID of the Data Catalog in which to create the connection. If none is supplied, the AWS account ID is used by default.
 * `connection_properties` – (Required) A map of key-value pairs used as parameters for this connection.
-* `connection_type` – (Optional) The type of the connection. Defaults to `JBDC`.
+* `connection_type` – (Optional) The type of the connection. Supported are: `JDBC`, `MONGODB`, `KAFKA`. Defaults to `JBDC`.
 * `description` – (Optional) Description of the connection.
 * `match_criteria` – (Optional) A list of criteria that can be used in selecting this connection.
 * `name` – (Required) The name of the connection.
@@ -71,6 +71,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Catalog ID and name of the connection
+* `arn` - The ARN of the Glue Connection.
 
 ## Import
 

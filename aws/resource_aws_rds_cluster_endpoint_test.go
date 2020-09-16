@@ -9,10 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSRDSClusterEndpoint_basic(t *testing.T) {
@@ -38,6 +38,8 @@ func TestAccAWSRDSClusterEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(readerResourceName, "endpoint"),
 					testAccMatchResourceAttrRegionalARN(defaultResourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttrSet(defaultResourceName, "endpoint"),
+					resource.TestCheckResourceAttr(defaultResourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(readerResourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -55,9 +57,52 @@ func TestAccAWSRDSClusterEndpoint_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSRDSClusterEndpoint_tags(t *testing.T) {
+	rInt := acctest.RandInt()
+	var customReaderEndpoint rds.DBClusterEndpoint
+	resourceName := "aws_rds_cluster_endpoint.reader"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterEndpointConfigTags1(rInt, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRDSClusterEndpointExists(resourceName, &customReaderEndpoint),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSClusterEndpointConfigTags2(rInt, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRDSClusterEndpointExists(resourceName, &customReaderEndpoint),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSClusterEndpointConfigTags1(rInt, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRDSClusterEndpointExists(resourceName, &customReaderEndpoint),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSRDSClusterEndpointAttributes(v *rds.DBClusterEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if aws.StringValue(v.Endpoint) == "" {
 			return fmt.Errorf("empty endpoint domain")
 		}
@@ -160,11 +205,21 @@ func testAccCheckAWSRDSClusterEndpointExistsWithProvider(resourceName string, en
 	}
 }
 
-func testAccAWSClusterEndpointConfig(n int) string {
-	return fmt.Sprintf(`
+func testAccAWSClusterEndpointConfigBase(n int) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+   engine                     = aws_rds_cluster.default.engine
+   engine_version             = aws_rds_cluster.default.engine_version
+   preferred_instance_classes = ["db.t3.small", "db.t2.small", "db.t3.medium"]
+}
+
 resource "aws_rds_cluster" "default" {
-  cluster_identifier              = "tf-aurora-cluster-%d"
-  availability_zones              = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  cluster_identifier              = "tf-aurora-cluster-%[1]d"
+  availability_zones              = [
+    data.aws_availability_zones.available.names[0],
+    data.aws_availability_zones.available.names[1],
+    data.aws_availability_zones.available.names[2]
+  ]
   database_name                   = "mydb"
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
@@ -174,32 +229,69 @@ resource "aws_rds_cluster" "default" {
 
 resource "aws_rds_cluster_instance" "test1" {
   apply_immediately  = true
-  cluster_identifier = "${aws_rds_cluster.default.id}"
-  identifier         = "tf-aurora-cluster-instance-test1-%d"
-  instance_class     = "db.t2.small"
+  cluster_identifier = aws_rds_cluster.default.id
+  identifier         = "tf-aurora-cluster-instance-test1-%[1]d"
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
 
 resource "aws_rds_cluster_instance" "test2" {
   apply_immediately  = true
-  cluster_identifier = "${aws_rds_cluster.default.id}"
-  identifier         = "tf-aurora-cluster-instance-test2-%d"
-  instance_class     = "db.t2.small"
+  cluster_identifier = aws_rds_cluster.default.id
+  identifier         = "tf-aurora-cluster-instance-test2-%[1]d"
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+}
+`, n))
 }
 
+func testAccAWSClusterEndpointConfig(n int) string {
+	return testAccAWSClusterEndpointConfigBase(n) + fmt.Sprintf(`
 resource "aws_rds_cluster_endpoint" "reader" {
-  cluster_identifier          = "${aws_rds_cluster.default.id}"
-  cluster_endpoint_identifier = "reader-%d"
+  cluster_identifier          = aws_rds_cluster.default.id
+  cluster_endpoint_identifier = "reader-%[1]d"
   custom_endpoint_type        = "READER"
 
-  static_members = ["${aws_rds_cluster_instance.test2.id}"]
+  static_members = [aws_rds_cluster_instance.test2.id]
 }
 
 resource "aws_rds_cluster_endpoint" "default" {
-  cluster_identifier          = "${aws_rds_cluster.default.id}"
-  cluster_endpoint_identifier = "default-%d"
+  cluster_identifier          = aws_rds_cluster.default.id
+  cluster_endpoint_identifier = "default-%[1]d"
   custom_endpoint_type        = "ANY"
 
-  excluded_members = ["${aws_rds_cluster_instance.test2.id}"]
+  excluded_members = [aws_rds_cluster_instance.test2.id]
 }
-`, n, n, n, n, n)
+`, n)
+}
+
+func testAccAWSClusterEndpointConfigTags1(n int, tagKey1, tagValue1 string) string {
+	return testAccAWSClusterEndpointConfigBase(n) + fmt.Sprintf(`
+resource "aws_rds_cluster_endpoint" "reader" {
+  cluster_identifier          = aws_rds_cluster.default.id
+  cluster_endpoint_identifier = "reader-%[1]d"
+  custom_endpoint_type        = "READER"
+
+  static_members = [aws_rds_cluster_instance.test2.id]
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, n, tagKey1, tagValue1)
+}
+
+func testAccAWSClusterEndpointConfigTags2(n int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccAWSClusterEndpointConfigBase(n) + fmt.Sprintf(`
+resource "aws_rds_cluster_endpoint" "reader" {
+  cluster_identifier          = aws_rds_cluster.default.id
+  cluster_endpoint_identifier = "reader-%[1]d"
+  custom_endpoint_type        = "READER"
+
+  static_members = [aws_rds_cluster_instance.test2.id]
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, n, tagKey1, tagValue1, tagKey2, tagValue2)
 }

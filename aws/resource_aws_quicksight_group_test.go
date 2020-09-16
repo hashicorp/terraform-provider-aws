@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -132,7 +132,7 @@ func testAccCheckQuickSightGroupExists(resourceName string, group *quicksight.Gr
 		}
 
 		if output == nil || output.Group == nil {
-			return fmt.Errorf("Quick Sight Group (%s) not found", rs.Primary.ID)
+			return fmt.Errorf("QuickSight Group (%s) not found", rs.Primary.ID)
 		}
 
 		*group = *output.Group
@@ -166,7 +166,7 @@ func testAccCheckQuickSightGroupDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Quick Sight Group '%s' was not deleted properly", rs.Primary.ID)
+		return fmt.Errorf("QuickSight Group '%s' was not deleted properly", rs.Primary.ID)
 	}
 
 	return nil
@@ -210,7 +210,7 @@ func testAccAWSQuickSightGroupConfigWithDescription(rName, description string) s
 data "aws_caller_identity" "current" {}
 
 resource "aws_quicksight_group" "default" {
-  aws_account_id = "${data.aws_caller_identity.current.account_id}"
+  aws_account_id = data.aws_caller_identity.current.account_id
   group_name     = %[1]q
   description    = %[2]q
 }

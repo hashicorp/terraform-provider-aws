@@ -1,7 +1,7 @@
 ---
+subcategory: "Batch"
 layout: "aws"
 page_title: "AWS: aws_batch_job_queue"
-sidebar_current: "docs-aws-resource-batch-job-queue"
 description: |-
   Provides a Batch Job Queue resource.
 ---
@@ -14,10 +14,13 @@ Provides a Batch Job Queue resource.
 
 ```hcl
 resource "aws_batch_job_queue" "test_queue" {
-  name                 = "tf-test-batch-job-queue"
-  state                = "ENABLED"
-  priority             = 1
-  compute_environments = ["${aws_batch_compute_environment.test_environment_1.arn}", "${aws_batch_compute_environment.test_environment_2.arn}"]
+  name     = "tf-test-batch-job-queue"
+  state    = "ENABLED"
+  priority = 1
+  compute_environments = [
+    aws_batch_compute_environment.test_environment_1.arn,
+    aws_batch_compute_environment.test_environment_2.arn,
+  ]
 }
 ```
 
@@ -39,3 +42,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name of the job queue.
+
+## Import
+
+Batch Job Queue can be imported using the `arn`, e.g.
+
+```
+$ terraform import aws_batch_job_queue.test_queue arn:aws:batch:us-east-1:123456789012:job-queue/sample
+```

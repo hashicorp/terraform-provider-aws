@@ -2,10 +2,11 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsVpcEndpointService_gateway(t *testing.T) {
@@ -29,6 +30,7 @@ func TestAccDataSourceAwsVpcEndpointService_gateway(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Gateway"),
 					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
+					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 				),
 			},
 		},
@@ -51,10 +53,11 @@ func TestAccDataSourceAwsVpcEndpointService_interface(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "base_endpoint_dns_names.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "owner", "amazon"),
-					resource.TestCheckResourceAttr(datasourceName, "private_dns_name", fmt.Sprintf("ec2.%s.amazonaws.com", region)),
+					resource.TestCheckResourceAttr(datasourceName, "private_dns_name", fmt.Sprintf("ec2.%s.%s", region, testAccGetPartitionDNSSuffix())),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
-					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
+					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 				),
 			},
 		},
@@ -63,7 +66,7 @@ func TestAccDataSourceAwsVpcEndpointService_interface(t *testing.T) {
 
 func TestAccDataSourceAwsVpcEndpointService_custom(t *testing.T) {
 	datasourceName := "data.aws_vpc_endpoint_service.test"
-	rName := fmt.Sprintf("tf-testacc-vpcesvc-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -80,6 +83,59 @@ func TestAccDataSourceAwsVpcEndpointService_custom(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.Name", rName),
+					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsVpcEndpointService_custom_filter(t *testing.T) {
+	datasourceName := "data.aws_vpc_endpoint_service.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsVpcEndpointServiceCustomConfigFilter(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "true"),
+					resource.TestCheckResourceAttr(datasourceName, "availability_zones.#", "2"),
+					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
+					testAccCheckResourceAttrAccountID(datasourceName, "owner"),
+					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
+					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "tags.Name", rName),
+					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsVpcEndpointService_custom_filter_tags(t *testing.T) {
+	datasourceName := "data.aws_vpc_endpoint_service.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsVpcEndpointServiceCustomConfigFilterTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", "true"),
+					resource.TestCheckResourceAttr(datasourceName, "availability_zones.#", "2"),
+					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
+					testAccCheckResourceAttrAccountID(datasourceName, "owner"),
+					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
+					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "tags.Name", rName),
+					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 				),
 			},
 		},
@@ -100,7 +156,7 @@ data "aws_vpc_endpoint_service" "test" {
 }
 `
 
-func testAccDataSourceAwsVpcEndpointServiceCustomConfig(rName string) string {
+func testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -114,8 +170,8 @@ resource "aws_lb" "test" {
   name = %[1]q
 
   subnets = [
-    "${aws_subnet.test1.id}",
-    "${aws_subnet.test2.id}",
+    aws_subnet.test1.id,
+    aws_subnet.test2.id,
   ]
 
   load_balancer_type         = "network"
@@ -128,12 +184,19 @@ resource "aws_lb" "test" {
   }
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_subnet" "test1" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
@@ -141,9 +204,9 @@ resource "aws_subnet" "test1" {
 }
 
 resource "aws_subnet" "test2" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.2.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
     Name = %[1]q
@@ -154,16 +217,41 @@ resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = true
 
   network_load_balancer_arns = [
-    "${aws_lb.test.id}",
+    aws_lb.test.id,
   ]
 
   tags = {
     Name = %[1]q
   }
 }
-
-data "aws_vpc_endpoint_service" "test" {
-  service_name = "${aws_vpc_endpoint_service.test.service_name}"
-}
 `, rName)
+}
+
+func testAccDataSourceAwsVpcEndpointServiceCustomConfig(rName string) string {
+	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + `
+data "aws_vpc_endpoint_service" "test" {
+  service_name = aws_vpc_endpoint_service.test.service_name
+}
+`
+}
+
+func testAccDataSourceAwsVpcEndpointServiceCustomConfigFilter(rName string) string {
+	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + `
+data "aws_vpc_endpoint_service" "test" {
+  filter {
+    name   = "service-name"
+    values = [aws_vpc_endpoint_service.test.service_name]
+  }
+}
+`
+}
+
+func testAccDataSourceAwsVpcEndpointServiceCustomConfigFilterTags(rName string) string {
+	return testAccDataSourceAwsVpcEndpointServiceCustomConfigBase(rName) + `
+data "aws_vpc_endpoint_service" "test" {
+  tags = {
+    Name = aws_vpc_endpoint_service.test.tags["Name"]
+  }
+}
+`
 }

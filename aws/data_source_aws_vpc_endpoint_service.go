@@ -6,9 +6,11 @@ import (
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsVpcEndpointService() *schema.Resource {
@@ -18,6 +20,10 @@ func dataSourceAwsVpcEndpointService() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"acceptance_required": {
 				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"arn": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"availability_zones": {
@@ -68,25 +74,37 @@ func dataSourceAwsVpcEndpointService() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"filter": dataSourceFiltersSchema(),
 		},
 	}
 }
 
 func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
+	filters, filtersOk := d.GetOk("filter")
+	tags, tagsOk := d.GetOk("tags")
 
 	var serviceName string
+	serviceNameOk := false
 	if v, ok := d.GetOk("service_name"); ok {
 		serviceName = v.(string)
+		serviceNameOk = true
 	} else if v, ok := d.GetOk("service"); ok {
 		serviceName = fmt.Sprintf("com.amazonaws.%s.%s", meta.(*AWSClient).region, v.(string))
-	} else {
-		return fmt.Errorf(
-			"One of ['service', 'service_name'] must be set to query VPC Endpoint Services")
+		serviceNameOk = true
 	}
 
-	req := &ec2.DescribeVpcEndpointServicesInput{
-		ServiceNames: aws.StringSlice([]string{serviceName}),
+	req := &ec2.DescribeVpcEndpointServicesInput{}
+	if filtersOk {
+		req.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+	}
+	if serviceNameOk {
+		req.ServiceNames = aws.StringSlice([]string{serviceName})
+	}
+	if tagsOk {
+		req.Filters = append(req.Filters, ec2TagFiltersFromMap(tags.(map[string]interface{}))...)
 	}
 
 	log.Printf("[DEBUG] Reading VPC Endpoint Service: %s", req)
@@ -120,9 +138,20 @@ func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{
 	}
 
 	sd := resp.ServiceDetails[0]
+	serviceId := aws.StringValue(sd.ServiceId)
 	serviceName = aws.StringValue(sd.ServiceName)
+
 	d.SetId(strconv.Itoa(hashcode.String(serviceName)))
-	d.Set("service_name", serviceName)
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "ec2",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", serviceId),
+	}.String()
+	d.Set("arn", arn)
+
 	d.Set("acceptance_required", sd.AcceptanceRequired)
 	err = d.Set("availability_zones", flattenStringSet(sd.AvailabilityZones))
 	if err != nil {
@@ -135,9 +164,10 @@ func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{
 	d.Set("manages_vpc_endpoints", sd.ManagesVpcEndpoints)
 	d.Set("owner", sd.Owner)
 	d.Set("private_dns_name", sd.PrivateDnsName)
-	d.Set("service_id", sd.ServiceId)
+	d.Set("service_id", serviceId)
+	d.Set("service_name", serviceName)
 	d.Set("service_type", sd.ServiceType[0].ServiceType)
-	err = d.Set("tags", tagsToMap(sd.Tags))
+	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(sd.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 	if err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}

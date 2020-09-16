@@ -6,13 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix = "tf-acc-test"
@@ -21,6 +21,9 @@ func init() {
 	resource.AddTestSweepers("aws_sagemaker_notebook_instance_lifecycle_configuration", &resource.Sweeper{
 		Name: "aws_sagemaker_notebook_instance_lifecycle_configuration",
 		F:    testSweepSagemakerNotebookInstanceLifecycleConfiguration,
+		Dependencies: []string{
+			"aws_sagemaker_notebook_instance",
+		},
 	})
 }
 
@@ -65,7 +68,7 @@ func testSweepSagemakerNotebookInstanceLifecycleConfiguration(region string) err
 	return nil
 }
 
-func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_Basic(t *testing.T) {
+func TestAccAWSSagemakerNotebookInstanceLifecycleConfiguration_basic(t *testing.T) {
 	var lifecycleConfig sagemaker.DescribeNotebookInstanceLifecycleConfigOutput
 	rName := acctest.RandomWithPrefix(SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix)
 	resourceName := "aws_sagemaker_notebook_instance_lifecycle_configuration.test"
@@ -198,8 +201,8 @@ func testAccSagemakerNotebookInstanceLifecycleConfigurationConfig_Update(rName s
 	return fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "test" {
   name      = %q
-  on_create = "${base64encode("echo bla")}"
-  on_start  = "${base64encode("echo blub")}"
+  on_create = base64encode("echo bla")
+  on_start  = base64encode("echo blub")
 }
 `, rName)
 }

@@ -1,7 +1,7 @@
 ---
+subcategory: "IoT"
 layout: "aws"
 page_title: "AWS: aws_iot_certificate"
-sidebar_current: "docs-aws-resource-iot-certificate"
 description: |-
     Creates and manages an AWS IoT certificate.
 ---
@@ -11,14 +11,18 @@ description: |-
 Creates and manages an AWS IoT certificate.
 
 ## Example Usage
+
 ### With CSR
+
 ```hcl
 resource "aws_iot_certificate" "cert" {
-  csr    = "${file("/my/csr.pem")}"
+  csr    = file("/my/csr.pem")
   active = true
 }
 ```
+
 ### Without CSR
+
 ```hcl
 resource "aws_iot_certificate" "cert" {
   active = true

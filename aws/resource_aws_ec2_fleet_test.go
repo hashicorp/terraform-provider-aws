@@ -4,13 +4,15 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSEc2Fleet_basic(t *testing.T) {
@@ -331,7 +333,7 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_InstanceType(t *testing.T)
 }
 
 func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_MaxPrice(t *testing.T) {
-	t.Skip("EC2 API is not correctly returning MaxPrice override")
+	TestAccSkip(t, "EC2 API is not correctly returning MaxPrice override")
 
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
@@ -783,7 +785,6 @@ func TestAccAWSEc2Fleet_Tags(t *testing.T) {
 				Config: testAccAWSEc2FleetConfig_Tags(rName, "key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet2),
-					testAccCheckAWSEc2FleetRecreated(&fleet1, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 				),
@@ -987,6 +988,183 @@ func TestAccAWSEc2Fleet_Type(t *testing.T) {
 	})
 }
 
+// Test for the bug described in https://github.com/terraform-providers/terraform-provider-aws/issues/6777
+func TestAccAWSEc2Fleet_TemplateMultipleNetworkInterfaces(t *testing.T) {
+	var fleet1 ec2.FleetData
+	resourceName := "aws_ec2_fleet.test"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEc2FleetConfig_multipleNetworkInterfaces(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
+					resource.TestCheckResourceAttr(resourceName, "type", "maintain"),
+					testAccCheckAWSEc2FleetHistory(resourceName, "The associatePublicIPAddress parameter cannot be specified when launching with multiple network interfaces"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAWSEc2FleetConfig_multipleNetworkInterfaces(rInt int) string {
+	return fmt.Sprintf(`
+data "aws_ami" "test" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["099720109477"] # Canonical
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.1.0.0/24"
+  vpc_id     = aws_vpc.test.id
+}
+
+resource "aws_security_group" "test" {
+  name        = "security-group-%d"
+  description = "Testacc SSH security group"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 22
+    to_port     = 22
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id       = aws_subnet.test.id
+  security_groups = [aws_security_group.test.id]
+}
+
+resource "aws_launch_template" "test" {
+  name     = "testacc-lt-%d"
+  image_id = data.aws_ami.test.id
+
+  instance_market_options {
+    spot_options {
+      spot_instance_type = "persistent"
+    }
+    market_type = "spot"
+  }
+
+  network_interfaces {
+    device_index          = 0
+    delete_on_termination = true
+    network_interface_id  = aws_network_interface.test.id
+  }
+  network_interfaces {
+    device_index          = 1
+    delete_on_termination = true
+    subnet_id             = aws_subnet.test.id
+  }
+}
+
+resource "aws_ec2_fleet" "test" {
+  terminate_instances = true
+
+  launch_template_config {
+    launch_template_specification {
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
+    }
+
+    # allow to choose from several instance types if there is no spot capacity for some type
+    override {
+      instance_type = "t2.micro"
+    }
+    override {
+      instance_type = "t3.micro"
+    }
+    override {
+      instance_type = "t3.small"
+    }
+  }
+
+  target_capacity_specification {
+    default_target_capacity_type = "spot"
+    total_target_capacity        = 1
+  }
+}
+`, rInt, rInt)
+}
+
+func testAccCheckAWSEc2FleetHistory(resourceName string, errorMsg string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		time.Sleep(time.Minute * 2) // We have to wait a bit for the history to get populated.
+
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No EC2 Fleet ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		input := &ec2.DescribeFleetHistoryInput{
+			FleetId:   aws.String(rs.Primary.ID),
+			StartTime: aws.Time(time.Now().Add(time.Hour * -2)),
+		}
+
+		output, err := conn.DescribeFleetHistory(input)
+
+		if err != nil {
+			return err
+		}
+
+		if output == nil {
+			return fmt.Errorf("EC2 Fleet history not found")
+		}
+
+		if output.HistoryRecords == nil {
+			return fmt.Errorf("No fleet history records found for fleet %s", rs.Primary.ID)
+		}
+
+		for _, record := range output.HistoryRecords {
+			if record == nil {
+				continue
+			}
+			if strings.Contains(aws.StringValue(record.EventInformation.EventDescription), errorMsg) {
+				return fmt.Errorf("Error %s found in fleet history event", errorMsg)
+			}
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckAWSEc2FleetExists(resourceName string, fleet *ec2.FleetData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -1153,7 +1331,7 @@ data "aws_ami" "test" {
 }
 
 resource "aws_launch_template" "test" {
-  image_id      = "${data.aws_ami.test.id}"
+  image_id      = data.aws_ami.test.id
   instance_type = "t3.micro"
   name          = %q
 }
@@ -1167,8 +1345,8 @@ resource "aws_ec2_fleet" "test" {
 
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
   }
 
@@ -1193,13 +1371,13 @@ data "aws_ami" "test" {
 }
 
 resource "aws_launch_template" "test1" {
-  image_id      = "${data.aws_ami.test.id}"
+  image_id      = data.aws_ami.test.id
   instance_type = "t3.micro"
   name          = "%s1"
 }
 
 resource "aws_launch_template" "test2" {
-  image_id      = "${data.aws_ami.test.id}"
+  image_id      = data.aws_ami.test.id
   instance_type = "t3.micro"
   name          = "%s2"
 }
@@ -1207,8 +1385,8 @@ resource "aws_launch_template" "test2" {
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${%s.id}"
-      version            = "${%s.latest_version}"
+      launch_template_id = %s.id
+      version            = %s.latest_version
     }
   }
 
@@ -1233,13 +1411,13 @@ data "aws_ami" "test" {
 }
 
 resource "aws_launch_template" "test1" {
-  image_id      = "${data.aws_ami.test.id}"
+  image_id      = data.aws_ami.test.id
   instance_type = "t3.micro"
   name          = "%s1"
 }
 
 resource "aws_launch_template" "test2" {
-  image_id      = "${data.aws_ami.test.id}"
+  image_id      = data.aws_ami.test.id
   instance_type = "t3.micro"
   name          = "%s2"
 }
@@ -1247,8 +1425,8 @@ resource "aws_launch_template" "test2" {
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
-      launch_template_name = "${%s.name}"
-      version              = "${%s.latest_version}"
+      launch_template_name = %s.name
+      version              = %s.latest_version
     }
   }
 
@@ -1273,7 +1451,7 @@ data "aws_ami" "test" {
 }
 
 resource "aws_launch_template" "test" {
-  image_id      = "${data.aws_ami.test.id}"
+  image_id      = data.aws_ami.test.id
   instance_type = %q
   name          = %q
 }
@@ -1281,8 +1459,8 @@ resource "aws_launch_template" "test" {
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
   }
 
@@ -1296,17 +1474,24 @@ resource "aws_ec2_fleet" "test" {
 
 func testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_AvailabilityZone(rName string, availabilityZoneIndex int) string {
 	return testAccAWSEc2FleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
 
     override {
-      availability_zone = "${data.aws_availability_zones.available.names[%d]}"
+      availability_zone = data.aws_availability_zones.available.names[%d]
     }
   }
 
@@ -1323,8 +1508,8 @@ func testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_InstanceType(rName, 
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
 
     override {
@@ -1345,8 +1530,8 @@ func testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_MaxPrice(rName, maxP
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
 
     override {
@@ -1367,8 +1552,8 @@ func testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_Priority(rName strin
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
 
     override {
@@ -1389,12 +1574,12 @@ func testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_Priority_Multiple(rN
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
 
     override {
-      instance_type = "${aws_launch_template.test.instance_type}"
+      instance_type = aws_launch_template.test.instance_type
       priority      = %d
     }
 
@@ -1422,7 +1607,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "${var.TestAccNameTag}"
+    Name = var.TestAccNameTag
   }
 }
 
@@ -1430,22 +1615,22 @@ resource "aws_subnet" "test" {
   count = 2
 
   cidr_block = "10.1.${count.index}.0/24"
-  vpc_id     = "${aws_vpc.test.id}"
+  vpc_id     = aws_vpc.test.id
 
   tags = {
-    Name = "${var.TestAccNameTag}"
+    Name = var.TestAccNameTag
   }
 }
 
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
 
     override {
-      subnet_id = "${aws_subnet.test.*.id[%d]}"
+      subnet_id = aws_subnet.test.*.id[%d]
     }
   }
 
@@ -1462,8 +1647,8 @@ func testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_WeightedCapacity(rNa
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
 
     override {
@@ -1484,12 +1669,12 @@ func testAccAWSEc2FleetConfig_LaunchTemplateConfig_Override_WeightedCapacity_Mul
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
 
     override {
-      instance_type     = "${aws_launch_template.test.instance_type}"
+      instance_type     = aws_launch_template.test.instance_type
       weighted_capacity = %d
     }
 
@@ -1512,8 +1697,8 @@ func testAccAWSEc2FleetConfig_OnDemandOptions_AllocationStrategy(rName, allocati
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
   }
 
@@ -1536,8 +1721,8 @@ resource "aws_ec2_fleet" "test" {
 
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
   }
 
@@ -1554,8 +1739,8 @@ func testAccAWSEc2FleetConfig_SpotOptions_AllocationStrategy(rName, allocationSt
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
   }
 
@@ -1576,8 +1761,8 @@ func testAccAWSEc2FleetConfig_SpotOptions_InstanceInterruptionBehavior(rName, in
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
   }
 
@@ -1598,8 +1783,8 @@ func testAccAWSEc2FleetConfig_SpotOptions_InstancePoolsToUseCount(rName string, 
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
   }
 
@@ -1620,8 +1805,8 @@ func testAccAWSEc2FleetConfig_Tags(rName, key1, value1 string) string {
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
   }
 
@@ -1642,8 +1827,8 @@ func testAccAWSEc2FleetConfig_TargetCapacitySpecification_DefaultTargetCapacityT
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
   }
 
@@ -1662,8 +1847,8 @@ resource "aws_ec2_fleet" "test" {
 
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
   }
 
@@ -1682,8 +1867,8 @@ resource "aws_ec2_fleet" "test" {
 
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
   }
 
@@ -1702,8 +1887,8 @@ resource "aws_ec2_fleet" "test" {
 
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.test.id}"
-      version            = "${aws_launch_template.test.latest_version}"
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
     }
   }
 

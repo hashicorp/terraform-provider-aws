@@ -10,9 +10,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+)
+
+const (
+	rdsClusterScalingConfiguration_DefaultMinCapacity = 1
+	rdsClusterScalingConfiguration_DefaultMaxCapacity = 16
+	rdsClusterTimeoutDelete                           = 2 * time.Minute
 )
 
 func resourceAwsRDSCluster() *schema.Resource {
@@ -157,15 +164,10 @@ func resourceAwsRDSCluster() *schema.Resource {
 			},
 
 			"scaling_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auto_pause": {
@@ -176,12 +178,12 @@ func resourceAwsRDSCluster() *schema.Resource {
 						"max_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  16,
+							Default:  rdsClusterScalingConfiguration_DefaultMaxCapacity,
 						},
 						"min_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  2,
+							Default:  rdsClusterScalingConfiguration_DefaultMinCapacity,
 						},
 						"seconds_until_auto_pause": {
 							Type:         schema.TypeInt,
@@ -298,7 +300,6 @@ func resourceAwsRDSCluster() *schema.Resource {
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"port": {
@@ -402,6 +403,11 @@ func resourceAwsRDSCluster() *schema.Resource {
 					}, false),
 				},
 			},
+			"enable_http_endpoint": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 
 			"tags": tagsSchema(),
 		},
@@ -419,7 +425,7 @@ func resourceAwsRdsClusterImport(
 
 func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
-	tags := tagsFromMapRDS(d.Get("tags").(map[string]interface{}))
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().RdsTags()
 
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
 	// parameters to correctly apply all settings in one pass. For missing
@@ -447,7 +453,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			DeletionProtection:   aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:               aws.String(d.Get("engine").(string)),
 			EngineMode:           aws.String(d.Get("engine_mode").(string)),
-			ScalingConfiguration: expandRdsScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
+			ScalingConfiguration: expandRdsClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
 			SnapshotIdentifier:   aws.String(d.Get("snapshot_identifier").(string)),
 			Tags:                 tags,
 		}
@@ -535,98 +541,6 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		if err != nil {
 			return fmt.Errorf("Error creating RDS Cluster: %s", err)
 		}
-	} else if _, ok := d.GetOk("replication_source_identifier"); ok {
-		createOpts := &rds.CreateDBClusterInput{
-			CopyTagsToSnapshot:          aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
-			DBClusterIdentifier:         aws.String(identifier),
-			DeletionProtection:          aws.Bool(d.Get("deletion_protection").(bool)),
-			Engine:                      aws.String(d.Get("engine").(string)),
-			EngineMode:                  aws.String(d.Get("engine_mode").(string)),
-			ReplicationSourceIdentifier: aws.String(d.Get("replication_source_identifier").(string)),
-			ScalingConfiguration:        expandRdsScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
-			Tags:                        tags,
-		}
-
-		// Need to check value > 0 due to:
-		// InvalidParameterValue: Backtrack is not enabled for the aurora-postgresql engine.
-		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
-			createOpts.BacktrackWindow = aws.Int64(int64(v.(int)))
-		}
-
-		if attr, ok := d.GetOk("port"); ok {
-			createOpts.Port = aws.Int64(int64(attr.(int)))
-		}
-
-		if attr, ok := d.GetOk("db_subnet_group_name"); ok {
-			createOpts.DBSubnetGroupName = aws.String(attr.(string))
-		}
-
-		if attr, ok := d.GetOk("db_cluster_parameter_group_name"); ok {
-			createOpts.DBClusterParameterGroupName = aws.String(attr.(string))
-		}
-
-		if attr, ok := d.GetOk("engine_version"); ok {
-			createOpts.EngineVersion = aws.String(attr.(string))
-		}
-
-		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			createOpts.VpcSecurityGroupIds = expandStringList(attr.List())
-		}
-
-		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
-			createOpts.AvailabilityZones = expandStringList(attr.List())
-		}
-
-		if v, ok := d.GetOk("backup_retention_period"); ok {
-			createOpts.BackupRetentionPeriod = aws.Int64(int64(v.(int)))
-		}
-
-		if v, ok := d.GetOk("preferred_backup_window"); ok {
-			createOpts.PreferredBackupWindow = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
-			createOpts.PreferredMaintenanceWindow = aws.String(v.(string))
-		}
-
-		if attr, ok := d.GetOk("kms_key_id"); ok {
-			createOpts.KmsKeyId = aws.String(attr.(string))
-		}
-
-		if attr, ok := d.GetOk("source_region"); ok {
-			createOpts.SourceRegion = aws.String(attr.(string))
-		}
-
-		if attr, ok := d.GetOkExists("storage_encrypted"); ok {
-			createOpts.StorageEncrypted = aws.Bool(attr.(bool))
-		}
-
-		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
-			createOpts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
-		}
-
-		log.Printf("[DEBUG] Create RDS Cluster as read replica: %s", createOpts)
-		var resp *rds.CreateDBClusterOutput
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			var err error
-			resp, err = conn.CreateDBCluster(createOpts)
-			if err != nil {
-				if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if isResourceTimeoutError(err) {
-			resp, err = conn.CreateDBCluster(createOpts)
-		}
-		if err != nil {
-			return fmt.Errorf("error creating RDS cluster: %s", err)
-		}
-
-		log.Printf("[DEBUG]: RDS Cluster create response: %s", resp)
-
 	} else if v, ok := d.GetOk("s3_import"); ok {
 		if _, ok := d.GetOk("master_password"); !ok {
 			return fmt.Errorf(`provider.aws: aws_db_instance: %s: "master_password": required field is not set`, d.Get("name").(string))
@@ -746,26 +660,20 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 	} else {
 
-		if _, ok := d.GetOk("global_cluster_identifier"); !ok {
-			if _, ok := d.GetOk("master_password"); !ok {
-				return fmt.Errorf(`provider.aws: aws_db_instance: %s: "master_password": required field is not set`, d.Get("database_name").(string))
-			}
-
-			if _, ok := d.GetOk("master_username"); !ok {
-				return fmt.Errorf(`provider.aws: aws_db_instance: %s: "master_username": required field is not set`, d.Get("database_name").(string))
-			}
-		}
-
 		createOpts := &rds.CreateDBClusterInput{
 			CopyTagsToSnapshot:   aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier:  aws.String(identifier),
 			DeletionProtection:   aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:               aws.String(d.Get("engine").(string)),
 			EngineMode:           aws.String(d.Get("engine_mode").(string)),
-			ScalingConfiguration: expandRdsScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
+			ScalingConfiguration: expandRdsClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
 			Tags:                 tags,
 		}
 
+		// Note: Username and password credentials are required and valid
+		// unless the cluster is a read-replica. This also applies to clusters
+		// within a global cluster. Providing a password and/or username for
+		// a replica will result in an InvalidParameterValue error.
 		if v, ok := d.GetOk("master_password"); ok && v.(string) != "" {
 			createOpts.MasterUserPassword = aws.String(v.(string))
 		}
@@ -774,6 +682,9 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			createOpts.MasterUsername = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("enable_http_endpoint"); ok {
+			createOpts.EnableHttpEndpoint = aws.Bool(v.(bool))
+		}
 		// Need to check value > 0 due to:
 		// InvalidParameterValue: Backtrack is not enabled for the aurora-postgresql engine.
 		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
@@ -840,8 +751,8 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			createOpts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
 		}
 
-		if attr, ok := d.GetOk("scaling_configuration"); ok && len(attr.([]interface{})) > 0 {
-			createOpts.ScalingConfiguration = expandRdsScalingConfiguration(attr.([]interface{}))
+		if attr, ok := d.GetOk("replication_source_identifier"); ok && createOpts.GlobalClusterIdentifier == nil {
+			createOpts.ReplicationSourceIdentifier = aws.String(attr.(string))
 		}
 
 		if attr, ok := d.GetOkExists("storage_encrypted"); ok {
@@ -923,6 +834,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &rds.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(d.Id()),
@@ -1023,6 +935,7 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
+	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
 
 	var vpcg []string
 	for _, g := range dbc.VpcSecurityGroups {
@@ -1032,18 +945,23 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting vpc_security_group_ids: %s", err)
 	}
 
-	// Fetch and save tags
-	if err := saveTagsRDS(conn, d, aws.StringValue(dbc.DBClusterArn)); err != nil {
-		log.Printf("[WARN] Failed to save tags for RDS Cluster (%s): %s", aws.StringValue(dbc.DBClusterIdentifier), err)
+	tags, err := keyvaluetags.RdsListTags(conn, aws.StringValue(dbc.DBClusterArn))
+	if err != nil {
+		return fmt.Errorf("error listing tags for RDS Cluster (%s): %s", aws.StringValue(dbc.DBClusterArn), err)
+	}
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	// Fetch and save Global Cluster if engine mode global
 	d.Set("global_cluster_identifier", "")
 
-	if aws.StringValue(dbc.EngineMode) == "global" {
+	if aws.StringValue(dbc.EngineMode) == "global" || aws.StringValue(dbc.EngineMode) == "provisioned" {
 		globalCluster, err := rdsDescribeGlobalClusterFromDbClusterARN(conn, aws.StringValue(dbc.DBClusterArn))
 
-		if err != nil {
+		// Ignore the following API error for regions/partitions that do not support RDS Global Clusters:
+		// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
+		if err != nil && !isAWSErr(err, "InvalidParameterValue", "Access Denied to API Version: APIGlobalDatabases") {
 			return fmt.Errorf("error reading RDS Global Cluster information for DB Cluster (%s): %s", d.Id(), err)
 		}
 
@@ -1109,7 +1027,6 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("db_cluster_parameter_group_name") {
-		d.SetPartial("db_cluster_parameter_group_name")
 		req.DBClusterParameterGroupName = aws.String(d.Get("db_cluster_parameter_group_name").(string))
 		requestUpdate = true
 	}
@@ -1125,14 +1042,17 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("enabled_cloudwatch_logs_exports") {
-		d.SetPartial("enabled_cloudwatch_logs_exports")
 		req.CloudwatchLogsExportConfiguration = buildCloudwatchLogsExportConfiguration(d)
 		requestUpdate = true
 	}
 
 	if d.HasChange("scaling_configuration") {
-		d.SetPartial("scaling_configuration")
-		req.ScalingConfiguration = expandRdsScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
+		req.ScalingConfiguration = expandRdsClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
+		requestUpdate = true
+	}
+
+	if d.HasChange("enable_http_endpoint") {
+		req.EnableHttpEndpoint = aws.Bool(d.Get("enable_http_endpoint").(bool))
 		requestUpdate = true
 	}
 
@@ -1223,10 +1143,10 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("tags") {
-		if err := setTagsRDS(conn, d, d.Get("arn").(string)); err != nil {
-			return err
-		} else {
-			d.SetPartial("tags")
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
 
@@ -1270,10 +1190,13 @@ func resourceAwsRDSClusterDelete(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] RDS Cluster delete options: %s", deleteOpts)
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(rdsClusterTimeoutDelete, func() *resource.RetryError {
 		_, err := conn.DeleteDBCluster(&deleteOpts)
 		if err != nil {
 			if isAWSErr(err, rds.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, rds.ErrCodeInvalidDBClusterStateFault, "cluster is a part of a global cluster") {
 				return resource.RetryableError(err)
 			}
 			if isAWSErr(err, rds.ErrCodeDBClusterNotFoundFault, "") {

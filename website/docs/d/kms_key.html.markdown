@@ -1,34 +1,34 @@
 ---
+subcategory: "KMS"
 layout: "aws"
 page_title: "AWS: aws_kms_key"
-sidebar_current: "docs-aws-datasource-kms-key"
 description: |-
   Get information on a AWS Key Management Service (KMS) Key
 ---
 
 # aws_kms_key
 
-Use this data source to get detailed information about 
-the specified KMS Key with flexible key id input. 
-This can be useful to reference key alias 
+Use this data source to get detailed information about
+the specified KMS Key with flexible key id input.
+This can be useful to reference key alias
 without having to hard code the ARN as input.
 
 ## Example Usage
 
 ```hcl
-data "aws_kms_key" "foo" {
+data "aws_kms_key" "by_alias" {
   key_id = "alias/my-key"
 }
 
-data "aws_kms_key" "foo" {
+data "aws_kms_key" "by_id" {
   key_id = "1234abcd-12ab-34cd-56ef-1234567890ab"
 }
 
-data "aws_kms_key" "foo" {
+data "aws_kms_key" "by_alias_arn" {
   key_id = "arn:aws:kms:us-east-1:111122223333:alias/my-key"
 }
 
-data "aws_kms_key" "foo" {
+data "aws_kms_key" "by_key_arn" {
   key_id = "arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
 }
 ```
@@ -36,10 +36,10 @@ data "aws_kms_key" "foo" {
 ## Argument Reference
 
 * `key_id` - (Required) Key identifier which can be one of the following format:
-  * Key ID. E.g: `1234abcd-12ab-34cd-56ef-1234567890ab`
-  * Key ARN. E.g.: `arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab`
-  * Alias name. E.g.: `alias/my-key`
-  * Alias ARN: E.g.: `arn:aws:kms:us-east-1:111122223333:alias/my-key`
+    * Key ID. E.g: `1234abcd-12ab-34cd-56ef-1234567890ab`
+    * Key ARN. E.g.: `arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab`
+    * Alias name. E.g.: `alias/my-key`
+    * Alias ARN: E.g.: `arn:aws:kms:us-east-1:111122223333:alias/my-key`
 * `grant_tokens` - (Optional) List of grant tokens
 
 ## Attributes Reference
@@ -54,6 +54,7 @@ data "aws_kms_key" "foo" {
 * `expiration_model`: Specifies whether the Key's key material expires. This value is present only when `origin` is `EXTERNAL`, otherwise this value is empty
 * `key_manager`: The key's manager
 * `key_state`: The state of the key
-* `key_usage`: Currently the only allowed value is `ENCRYPT_DECRYPT`
+* `key_usage`: Specifies the intended use of the key
+* `customer_master_key_spec`: Specifies whether the key contains a symmetric key or an asymmetric key pair and the encryption algorithms or signing algorithms that the key supports
 * `origin`: When this value is `AWS_KMS`, AWS KMS created the key material. When this value is `EXTERNAL`, the key material was imported from your existing key management infrastructure or the CMK lacks key material
 * `valid_to`: The time at which the imported key material expires. This value is present only when `origin` is `EXTERNAL` and whose `expiration_model` is `KEY_MATERIAL_EXPIRES`, otherwise this value is 0

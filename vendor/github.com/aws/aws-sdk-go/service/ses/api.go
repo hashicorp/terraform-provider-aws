@@ -3188,10 +3188,12 @@ func (c *SES) ListCustomVerificationEmailTemplatesPagesWithContext(ctx aws.Conte
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListCustomVerificationEmailTemplatesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListCustomVerificationEmailTemplatesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3322,10 +3324,12 @@ func (c *SES) ListIdentitiesPagesWithContext(ctx aws.Context, input *ListIdentit
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListIdentitiesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListIdentitiesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4561,14 +4565,11 @@ func (c *SES) SendRawEmailRequest(input *SendRawEmailInput) (req *request.Reques
 //    you can pass optional parameters SourceArn, FromArn, and/or ReturnPathArn
 //    to the API, or you can include the following X-headers in the header of
 //    your raw email: X-SES-SOURCE-ARN X-SES-FROM-ARN X-SES-RETURN-PATH-ARN
-//    Do not include these X-headers in the DKIM signature; Amazon SES will
-//    remove them before sending the email. For most common sending authorization
-//    scenarios, we recommend that you specify the SourceIdentityArn parameter
-//    and not the FromIdentityArn or ReturnPathIdentityArn parameters. If you
-//    only specify the SourceIdentityArn parameter, Amazon SES will set the
-//    From and Return Path addresses to the identity specified in SourceIdentityArn.
-//    For more information about sending authorization, see the Using Sending
-//    Authorization with Amazon SES (https://docs.aws.amazon.com/ses/latest/DeveloperGuide/sending-authorization.html)
+//    Don't include these X-headers in the DKIM signature. Amazon SES removes
+//    these before it sends the email. If you only specify the SourceIdentityArn
+//    parameter, Amazon SES sets the From and Return-Path addresses to the same
+//    identity that you specified. For more information about sending authorization,
+//    see the Using Sending Authorization with Amazon SES (https://docs.aws.amazon.com/ses/latest/DeveloperGuide/sending-authorization.html)
 //    in the Amazon SES Developer Guide.
 //
 //    * For every message that you send, the total number of recipients (including
@@ -4909,19 +4910,19 @@ func (c *SES) SetIdentityDkimEnabledRequest(input *SetIdentityDkimEnabledInput) 
 
 // SetIdentityDkimEnabled API operation for Amazon Simple Email Service.
 //
-// Enables or disables Easy DKIM signing of email sent from an identity:
-//
-//    * If Easy DKIM signing is enabled for a domain name identity (such as
-//    example.com), then Amazon SES will DKIM-sign all email sent by addresses
-//    under that domain name (for example, user@example.com).
-//
-//    * If Easy DKIM signing is enabled for an email address, then Amazon SES
-//    will DKIM-sign all email sent by that email address.
+// Enables or disables Easy DKIM signing of email sent from an identity. If
+// Easy DKIM signing is enabled for a domain, then Amazon SES uses DKIM to sign
+// all email that it sends from addresses on that domain. If Easy DKIM signing
+// is enabled for an email address, then Amazon SES uses DKIM to sign all email
+// it sends from that address.
 //
 // For email addresses (for example, user@example.com), you can only enable
-// Easy DKIM signing if the corresponding domain (in this case, example.com)
-// has been set up for Easy DKIM using the AWS Console or the VerifyDomainDkim
-// operation.
+// DKIM signing if the corresponding domain (in this case, example.com) has
+// been set up to use Easy DKIM.
+//
+// You can enable DKIM signing for an identity at any time after you start the
+// verification process for the identity, even if the verification process isn't
+// complete.
 //
 // You can execute this operation no more than once per second.
 //
@@ -9038,13 +9039,13 @@ func (s *DescribeReceiptRuleSetOutput) SetRules(v []*ReceiptRule) *DescribeRecei
 type Destination struct {
 	_ struct{} `type:"structure"`
 
-	// The BCC: field(s) of the message.
+	// The recipients to place on the BCC: line of the message.
 	BccAddresses []*string `type:"list"`
 
-	// The CC: field(s) of the message.
+	// The recipients to place on the CC: line of the message.
 	CcAddresses []*string `type:"list"`
 
-	// The To: field(s) of the message.
+	// The recipients to place on the To: line of the message.
 	ToAddresses []*string `type:"list"`
 }
 
@@ -10418,7 +10419,7 @@ func (s *ListConfigurationSetsOutput) SetNextToken(v string) *ListConfigurationS
 // for your account.
 //
 // For more information about custom verification email templates, see Using
-// Custom Verification Email Templates (ses/latest/DeveloperGuide/custom-verification-emails.html)
+// Custom Verification Email Templates (https://docs.aws.amazon.com/ses/latest/DeveloperGuide/custom-verification-emails.html)
 // in the Amazon SES Developer Guide.
 type ListCustomVerificationEmailTemplatesInput struct {
 	_ struct{} `type:"structure"`
@@ -13963,7 +13964,7 @@ func (s SetReceiptRulePositionOutput) GoString() string {
 type StopAction struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the RuleSet that is being stopped.
+	// The scope of the StopAction. The only acceptable value is RuleSet.
 	//
 	// Scope is a required field
 	Scope *string `type:"string" required:"true" enum:"StopScope"`
@@ -15123,6 +15124,14 @@ const (
 	BehaviorOnMXFailureRejectMessage = "RejectMessage"
 )
 
+// BehaviorOnMXFailure_Values returns all elements of the BehaviorOnMXFailure enum
+func BehaviorOnMXFailure_Values() []string {
+	return []string{
+		BehaviorOnMXFailureUseDefaultValue,
+		BehaviorOnMXFailureRejectMessage,
+	}
+}
+
 const (
 	// BounceTypeDoesNotExist is a BounceType enum value
 	BounceTypeDoesNotExist = "DoesNotExist"
@@ -15142,6 +15151,18 @@ const (
 	// BounceTypeTemporaryFailure is a BounceType enum value
 	BounceTypeTemporaryFailure = "TemporaryFailure"
 )
+
+// BounceType_Values returns all elements of the BounceType enum
+func BounceType_Values() []string {
+	return []string{
+		BounceTypeDoesNotExist,
+		BounceTypeMessageTooLarge,
+		BounceTypeExceededQuota,
+		BounceTypeContentRejected,
+		BounceTypeUndefined,
+		BounceTypeTemporaryFailure,
+	}
+}
 
 const (
 	// BulkEmailStatusSuccess is a BulkEmailStatus enum value
@@ -15187,6 +15208,26 @@ const (
 	BulkEmailStatusFailed = "Failed"
 )
 
+// BulkEmailStatus_Values returns all elements of the BulkEmailStatus enum
+func BulkEmailStatus_Values() []string {
+	return []string{
+		BulkEmailStatusSuccess,
+		BulkEmailStatusMessageRejected,
+		BulkEmailStatusMailFromDomainNotVerified,
+		BulkEmailStatusConfigurationSetDoesNotExist,
+		BulkEmailStatusTemplateDoesNotExist,
+		BulkEmailStatusAccountSuspended,
+		BulkEmailStatusAccountThrottled,
+		BulkEmailStatusAccountDailyQuotaExceeded,
+		BulkEmailStatusInvalidSendingPoolName,
+		BulkEmailStatusAccountSendingPaused,
+		BulkEmailStatusConfigurationSetSendingPaused,
+		BulkEmailStatusInvalidParameterValue,
+		BulkEmailStatusTransientFailure,
+		BulkEmailStatusFailed,
+	}
+}
+
 const (
 	// ConfigurationSetAttributeEventDestinations is a ConfigurationSetAttribute enum value
 	ConfigurationSetAttributeEventDestinations = "eventDestinations"
@@ -15200,6 +15241,16 @@ const (
 	// ConfigurationSetAttributeReputationOptions is a ConfigurationSetAttribute enum value
 	ConfigurationSetAttributeReputationOptions = "reputationOptions"
 )
+
+// ConfigurationSetAttribute_Values returns all elements of the ConfigurationSetAttribute enum
+func ConfigurationSetAttribute_Values() []string {
+	return []string{
+		ConfigurationSetAttributeEventDestinations,
+		ConfigurationSetAttributeTrackingOptions,
+		ConfigurationSetAttributeDeliveryOptions,
+		ConfigurationSetAttributeReputationOptions,
+	}
+}
 
 const (
 	// CustomMailFromStatusPending is a CustomMailFromStatus enum value
@@ -15215,6 +15266,16 @@ const (
 	CustomMailFromStatusTemporaryFailure = "TemporaryFailure"
 )
 
+// CustomMailFromStatus_Values returns all elements of the CustomMailFromStatus enum
+func CustomMailFromStatus_Values() []string {
+	return []string{
+		CustomMailFromStatusPending,
+		CustomMailFromStatusSuccess,
+		CustomMailFromStatusFailed,
+		CustomMailFromStatusTemporaryFailure,
+	}
+}
+
 const (
 	// DimensionValueSourceMessageTag is a DimensionValueSource enum value
 	DimensionValueSourceMessageTag = "messageTag"
@@ -15225,6 +15286,15 @@ const (
 	// DimensionValueSourceLinkTag is a DimensionValueSource enum value
 	DimensionValueSourceLinkTag = "linkTag"
 )
+
+// DimensionValueSource_Values returns all elements of the DimensionValueSource enum
+func DimensionValueSource_Values() []string {
+	return []string{
+		DimensionValueSourceMessageTag,
+		DimensionValueSourceEmailHeader,
+		DimensionValueSourceLinkTag,
+	}
+}
 
 const (
 	// DsnActionFailed is a DsnAction enum value
@@ -15242,6 +15312,17 @@ const (
 	// DsnActionExpanded is a DsnAction enum value
 	DsnActionExpanded = "expanded"
 )
+
+// DsnAction_Values returns all elements of the DsnAction enum
+func DsnAction_Values() []string {
+	return []string{
+		DsnActionFailed,
+		DsnActionDelayed,
+		DsnActionDelivered,
+		DsnActionRelayed,
+		DsnActionExpanded,
+	}
+}
 
 const (
 	// EventTypeSend is a EventType enum value
@@ -15269,6 +15350,20 @@ const (
 	EventTypeRenderingFailure = "renderingFailure"
 )
 
+// EventType_Values returns all elements of the EventType enum
+func EventType_Values() []string {
+	return []string{
+		EventTypeSend,
+		EventTypeReject,
+		EventTypeBounce,
+		EventTypeComplaint,
+		EventTypeDelivery,
+		EventTypeOpen,
+		EventTypeClick,
+		EventTypeRenderingFailure,
+	}
+}
+
 const (
 	// IdentityTypeEmailAddress is a IdentityType enum value
 	IdentityTypeEmailAddress = "EmailAddress"
@@ -15277,6 +15372,14 @@ const (
 	IdentityTypeDomain = "Domain"
 )
 
+// IdentityType_Values returns all elements of the IdentityType enum
+func IdentityType_Values() []string {
+	return []string{
+		IdentityTypeEmailAddress,
+		IdentityTypeDomain,
+	}
+}
+
 const (
 	// InvocationTypeEvent is a InvocationType enum value
 	InvocationTypeEvent = "Event"
@@ -15284,6 +15387,14 @@ const (
 	// InvocationTypeRequestResponse is a InvocationType enum value
 	InvocationTypeRequestResponse = "RequestResponse"
 )
+
+// InvocationType_Values returns all elements of the InvocationType enum
+func InvocationType_Values() []string {
+	return []string{
+		InvocationTypeEvent,
+		InvocationTypeRequestResponse,
+	}
+}
 
 const (
 	// NotificationTypeBounce is a NotificationType enum value
@@ -15296,6 +15407,15 @@ const (
 	NotificationTypeDelivery = "Delivery"
 )
 
+// NotificationType_Values returns all elements of the NotificationType enum
+func NotificationType_Values() []string {
+	return []string{
+		NotificationTypeBounce,
+		NotificationTypeComplaint,
+		NotificationTypeDelivery,
+	}
+}
+
 const (
 	// ReceiptFilterPolicyBlock is a ReceiptFilterPolicy enum value
 	ReceiptFilterPolicyBlock = "Block"
@@ -15303,6 +15423,14 @@ const (
 	// ReceiptFilterPolicyAllow is a ReceiptFilterPolicy enum value
 	ReceiptFilterPolicyAllow = "Allow"
 )
+
+// ReceiptFilterPolicy_Values returns all elements of the ReceiptFilterPolicy enum
+func ReceiptFilterPolicy_Values() []string {
+	return []string{
+		ReceiptFilterPolicyBlock,
+		ReceiptFilterPolicyAllow,
+	}
+}
 
 const (
 	// SNSActionEncodingUtf8 is a SNSActionEncoding enum value
@@ -15312,10 +15440,25 @@ const (
 	SNSActionEncodingBase64 = "Base64"
 )
 
+// SNSActionEncoding_Values returns all elements of the SNSActionEncoding enum
+func SNSActionEncoding_Values() []string {
+	return []string{
+		SNSActionEncodingUtf8,
+		SNSActionEncodingBase64,
+	}
+}
+
 const (
 	// StopScopeRuleSet is a StopScope enum value
 	StopScopeRuleSet = "RuleSet"
 )
+
+// StopScope_Values returns all elements of the StopScope enum
+func StopScope_Values() []string {
+	return []string{
+		StopScopeRuleSet,
+	}
+}
 
 const (
 	// TlsPolicyRequire is a TlsPolicy enum value
@@ -15324,6 +15467,14 @@ const (
 	// TlsPolicyOptional is a TlsPolicy enum value
 	TlsPolicyOptional = "Optional"
 )
+
+// TlsPolicy_Values returns all elements of the TlsPolicy enum
+func TlsPolicy_Values() []string {
+	return []string{
+		TlsPolicyRequire,
+		TlsPolicyOptional,
+	}
+}
 
 const (
 	// VerificationStatusPending is a VerificationStatus enum value
@@ -15341,3 +15492,14 @@ const (
 	// VerificationStatusNotStarted is a VerificationStatus enum value
 	VerificationStatusNotStarted = "NotStarted"
 )
+
+// VerificationStatus_Values returns all elements of the VerificationStatus enum
+func VerificationStatus_Values() []string {
+	return []string{
+		VerificationStatusPending,
+		VerificationStatusSuccess,
+		VerificationStatusFailed,
+		VerificationStatusTemporaryFailure,
+		VerificationStatusNotStarted,
+	}
+}

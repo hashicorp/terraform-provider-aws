@@ -1,7 +1,7 @@
 ---
+subcategory: "ACM PCA"
 layout: "aws"
 page_title: "AWS: aws_acmpca_certificate_authority"
-sidebar_current: "docs-aws-resource-acmpca-certificate-authority"
 description: |-
   Provides a resource to manage AWS Certificate Manager Private Certificate Authorities
 ---
@@ -48,7 +48,7 @@ data "aws_iam_policy_document" "acmpca_bucket_access" {
     ]
 
     resources = [
-      "${aws_s3_bucket.example.arn}",
+      aws_s3_bucket.example.arn,
       "${aws_s3_bucket.example.arn}/*",
     ]
 
@@ -60,8 +60,8 @@ data "aws_iam_policy_document" "acmpca_bucket_access" {
 }
 
 resource "aws_s3_bucket_policy" "example" {
-  bucket = "${aws_s3_bucket.example.id}"
-  policy = "${data.aws_iam_policy_document.acmpca_bucket_access.json}"
+  bucket = aws_s3_bucket.example.id
+  policy = data.aws_iam_policy_document.acmpca_bucket_access.json
 }
 
 resource "aws_acmpca_certificate_authority" "example" {
@@ -79,11 +79,11 @@ resource "aws_acmpca_certificate_authority" "example" {
       custom_cname       = "crl.example.com"
       enabled            = true
       expiration_in_days = 7
-      s3_bucket_name     = "${aws_s3_bucket.example.id}"
+      s3_bucket_name     = aws_s3_bucket.example.id
     }
   }
 
-  depends_on = ["aws_s3_bucket_policy.example"]
+  depends_on = [aws_s3_bucket_policy.example]
 }
 ```
 

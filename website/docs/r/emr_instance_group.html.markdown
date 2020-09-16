@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Map Reduce (EMR)"
 layout: "aws"
 page_title: "AWS: aws_emr_instance_group"
-sidebar_current: "docs-aws-resource-emr-instance-group"
 description: |-
   Provides an Elastic MapReduce Cluster Instance Group
 ---
@@ -19,7 +19,7 @@ Terraform will resize any Instance Group to zero when destroying the resource.
 
 ```hcl
 resource "aws_emr_instance_group" "task" {
-  cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
+  cluster_id     = aws_emr_cluster.tf-test-cluster.id
   instance_count = 1
   instance_type  = "m5.xlarge"
   name           = "my little instance group"
@@ -38,7 +38,30 @@ The following arguments are supported:
 * `ebs_optimized` (Optional) Indicates whether an Amazon EBS volume is EBS-optimized. Changing this forces a new resource to be created.
 * `ebs_config` (Optional) One or more `ebs_config` blocks as defined below. Changing this forces a new resource to be created.
 * `autoscaling_policy` - (Optional) The autoscaling policy document. This is a JSON formatted string. See [EMR Auto Scaling](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-automatic-scaling.html)
+* `configurations_json` - (Optional) A JSON string for supplying list of configurations specific to the EMR instance group. Note that this can only be changed when using EMR release 5.21 or later.
 
+```hcl
+resource "aws_emr_instance_group" "task" {
+  # ... other configuration ...
+
+  configurations_json = <<EOF
+  [
+    {
+      "Classification": "hadoop-env",
+      "Configurations": [
+        {
+          "Classification": "export",
+          "Properties": {
+            "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
+          }
+        }
+      ],
+      "Properties": {}
+    }
+  ]
+EOF
+}
+```
 
 `ebs_config` supports the following:
 

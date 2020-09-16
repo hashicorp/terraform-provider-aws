@@ -1,7 +1,7 @@
 ---
+subcategory: "Lambda"
 layout: "aws"
 page_title: "AWS: aws_lambda_function"
-sidebar_current: "docs-aws-datasource-lambda-function"
 description: |-
   Provides a Lambda Function data source.
 ---
@@ -14,11 +14,11 @@ Provides information about a Lambda Function.
 
 ```hcl
 variable "function_name" {
-  type = "string"
+  type = string
 }
 
 data "aws_lambda_function" "existing" {
-  function_name = "${var.function_name}"
+  function_name = var.function_name
 }
 ```
 
@@ -37,6 +37,7 @@ In addition to all arguments above, the following attributes are exported:
 * `dead_letter_config` - Configure the function's *dead letter queue*.
 * `description` - Description of what your Lambda Function does.
 * `environment` - The Lambda environment's configuration settings.
+* `file_system_config` - The connection settings for an Amazon EFS file system.
 * `handler` - The function entrypoint in your code.
 * `invoke_arn` - The ARN to be used for invoking Lambda Function from API Gateway.
 * `kms_key_arn` - The ARN for the KMS encryption key.
