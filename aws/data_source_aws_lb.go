@@ -62,6 +62,10 @@ func dataSourceAwsLb() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"outpost_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"allocation_id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -131,6 +135,11 @@ func dataSourceAwsLb() *schema.Resource {
 			},
 
 			"ip_address_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"customer_owned_ipv4_pool": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

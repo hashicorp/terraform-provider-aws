@@ -111,6 +111,11 @@ func resourceAwsLb() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						"outpost_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+							Optional: true,
+						},
 						"allocation_id": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -128,6 +133,7 @@ func resourceAwsLb() *schema.Resource {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["outpost_id"].(string)))
 					if m["allocation_id"] != "" {
 						buf.WriteString(fmt.Sprintf("%s-", m["allocation_id"].(string)))
 					}
@@ -210,6 +216,12 @@ func resourceAwsLb() *schema.Resource {
 					elbv2.IpAddressTypeIpv4,
 					elbv2.IpAddressTypeDualstack,
 				}, false),
+			},
+
+			"customer_owned_ipv4_pool": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 
 			"vpc_id": {
@@ -295,6 +307,10 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
 		elbOpts.IpAddressType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("customer_owned_ipv4_pool"); ok {
+		elbOpts.CustomerOwnedIpv4Pool = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] ALB create configuration: %#v", elbOpts)
@@ -700,6 +716,7 @@ func flattenSubnetMappingsFromAvailabilityZones(availabilityZones []*elbv2.Avail
 	for _, availabilityZone := range availabilityZones {
 		m := make(map[string]interface{})
 		m["subnet_id"] = aws.StringValue(availabilityZone.SubnetId)
+		m["outpost_id"] = aws.StringValue(availabilityZone.OutpostId)
 
 		for _, loadBalancerAddress := range availabilityZone.LoadBalancerAddresses {
 			m["allocation_id"] = aws.StringValue(loadBalancerAddress.AllocationId)
@@ -733,13 +750,14 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 	d.Set("arn", lb.LoadBalancerArn)
 	d.Set("arn_suffix", lbSuffixFromARN(lb.LoadBalancerArn))
 	d.Set("name", lb.LoadBalancerName)
-	d.Set("internal", (lb.Scheme != nil && aws.StringValue(lb.Scheme) == "internal"))
+	d.Set("internal", lb.Scheme != nil && aws.StringValue(lb.Scheme) == "internal")
 	d.Set("security_groups", flattenStringList(lb.SecurityGroups))
 	d.Set("vpc_id", lb.VpcId)
 	d.Set("zone_id", lb.CanonicalHostedZoneId)
 	d.Set("dns_name", lb.DNSName)
 	d.Set("ip_address_type", lb.IpAddressType)
 	d.Set("load_balancer_type", lb.Type)
+	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
 
 	if err := d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
 		return fmt.Errorf("error setting subnets: %s", err)
