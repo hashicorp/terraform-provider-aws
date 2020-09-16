@@ -3,11 +3,12 @@ package aws
 import (
 	"fmt"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func dataSourceAwsLexIntent() *schema.Resource {
@@ -46,7 +47,7 @@ func dataSourceAwsLexIntent() *schema.Resource {
 			"version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "$LATEST",
+				Default:  LexIntentVersionLatest,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
 					validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),
@@ -69,9 +70,9 @@ func dataSourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	d.Set("checksum", resp.Checksum)
-	d.Set("created_date", resp.CreatedDate.UTC().String())
+	d.Set("created_date", resp.CreatedDate.Format(time.RFC3339))
 	d.Set("description", resp.Description)
-	d.Set("last_updated_date", resp.LastUpdatedDate.UTC().String())
+	d.Set("last_updated_date", resp.LastUpdatedDate.Format(time.RFC3339))
 	d.Set("name", resp.Name)
 	d.Set("parent_intent_signature", resp.ParentIntentSignature)
 	d.Set("version", resp.Version)

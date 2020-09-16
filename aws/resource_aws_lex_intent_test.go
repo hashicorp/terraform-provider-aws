@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 // Intents can accept a custom SlotType but it must be removed from the Intent before the SlotType can be deleted.
@@ -147,7 +147,7 @@ func testAccCheckAwsLexIntentDestroy(intentName, intentVersion string) resource.
 
 		_, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
 			Name:    aws.String(intentName),
-			Version: aws.String("$LATEST"),
+			Version: aws.String(LexIntentVersionLatest),
 		})
 
 		if err != nil {

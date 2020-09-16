@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAwsLexIntent(t *testing.T) {
+func TestAccDataSourceAwsLexIntent_basic(t *testing.T) {
 	resourceName := "aws_lex_intent.test"
 	dataSourceName := "data." + resourceName
 	testID := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -24,8 +24,10 @@ func TestAccDataSourceAwsLexIntent(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "version", resourceName, "version"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "created_date", resourceName, "created_date"),
+					testAccCheckResourceAttrRfc3339(dataSourceName, "created_date"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "last_updated_date", resourceName, "last_updated_date"),
+					testAccCheckResourceAttrRfc3339(dataSourceName, "last_updated_date"),
 				),
 			},
 		},

@@ -8,9 +8,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+)
+
+const (
+	LexIntentCreateTimeout = 1 * time.Minute
+	LexIntentUpdateTimeout = 1 * time.Minute
+	LexIntentDeleteTimeout = 5 * time.Minute
+	LexIntentVersionLatest = "$LATEST"
 )
 
 // Many of the Lex resources require complex nested objects. Terraform maps only support simple key
@@ -336,8 +343,9 @@ func resourceAwsLexIntent() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Update: schema.DefaultTimeout(time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+			Create: schema.DefaultTimeout(LexIntentCreateTimeout),
+			Update: schema.DefaultTimeout(LexIntentUpdateTimeout),
+			Delete: schema.DefaultTimeout(LexIntentDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -363,7 +371,11 @@ func resourceAwsLexIntent() *schema.Resource {
 			"create_version": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Default:  false,
+			},
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -426,6 +438,10 @@ func resourceAwsLexIntent() *schema.Resource {
 						},
 					},
 				},
+			},
+			"last_updated_date": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -601,7 +617,7 @@ func resourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
 		Name:    aws.String(d.Id()),
-		Version: aws.String("$LATEST"),
+		Version: aws.String(LexIntentVersionLatest),
 	})
 	if isAWSErr(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Intent (%s) not found, removing from state", d.Id())
@@ -613,9 +629,11 @@ func resourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("checksum", resp.Checksum)
+	d.Set("created_date", resp.CreatedDate.Format(time.RFC3339))
 	d.Set("description", resp.Description)
+	d.Set("last_updated_date", resp.LastUpdatedDate.Format(time.RFC3339))
 	d.Set("name", resp.Name)
-	d.Set("version", "$LATEST")
+	d.Set("version", LexIntentVersionLatest)
 
 	if resp.ConclusionStatement != nil {
 		d.Set("conclusion_statement", flattenLexStatement(resp.ConclusionStatement))
