@@ -45,7 +45,7 @@ func dataSourceAwsKmsSecrets() *schema.Resource {
 			"plaintext": {
 				Type:      schema.TypeMap,
 				Computed:  true,
-				Sensitive: true
+				Sensitive: true,
 				Elem:      &schema.Schema{Type: schema.TypeString},
 			},
 		},
