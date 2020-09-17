@@ -1,18 +1,18 @@
-## 3.7.0 (Unreleased)
+## 3.7.0 (September 17, 2020)
 
 FEATURES
 
-* **New Resource:** `aws_config_remediation_configuration` [GH-13884]
+* **New Resource:** `aws_config_remediation_configuration` ([#13884](https://github.com/terraform-providers/terraform-provider-aws/issues/13884))
 
 ENHANCEMENTS
 
-* resource/aws_db_cluster_snapshot: Add plan-time validation for `db_cluster_snapshot_identifier` argument [GH-15132]
-* resource/aws_kinesis_firehose_delivery_stream: Add `server_side_encryption` `key_arn` and `key_type` arguments (support KMS Customer Managed Key encryption) [GH-11954]
+* resource/aws_db_cluster_snapshot: Add plan-time validation for `db_cluster_snapshot_identifier` argument ([#15132](https://github.com/terraform-providers/terraform-provider-aws/issues/15132))
+* resource/aws_kinesis_firehose_delivery_stream: Add `server_side_encryption` `key_arn` and `key_type` arguments (support KMS Customer Managed Key encryption) ([#11954](https://github.com/terraform-providers/terraform-provider-aws/issues/11954))
 
 BUG FIXES
 
-* resource/aws_acm_certificate: Prevent tagging is not permitted on re-import error [GH-15060]
-* resource/aws_cognito_identity_pool: Prevent ordering differences for `openid_connect_provider_arns` argument [GH-15178]
+* resource/aws_acm_certificate: Prevent tagging is not permitted on re-import error ([#15060](https://github.com/terraform-providers/terraform-provider-aws/issues/15060))
+* resource/aws_cognito_identity_pool: Prevent ordering differences for `openid_connect_provider_arns` argument ([#15178](https://github.com/terraform-providers/terraform-provider-aws/issues/15178))
 
 ## 3.6.0 (September 11, 2020)
 
@@ -22,7 +22,7 @@ FEATURES
 
 BUG FIXES
 
-* data-source/aws_kms_secrets: Prevent `plaintext` values to appear in CLI output with Terraform 0.13 [GH-15169]
+* data-source/aws_kms_secrets: Prevent `plaintext` values to appear in CLI output with Terraform 0.13 ([#15169](https://github.com/terraform-providers/terraform-provider-aws/issues/15169))
 * resource/aws_ec2_client_vpn_authorization_rule: Increase active and revoked timeouts from 1 to 5 minutes ([#15037](https://github.com/terraform-providers/terraform-provider-aws/issues/15037))
 
 ## 3.5.0 (September 03, 2020)
