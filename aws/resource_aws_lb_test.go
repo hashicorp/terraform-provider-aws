@@ -1736,13 +1736,13 @@ resource "aws_lb" "lb_test" {
   load_balancer_type = "network"
 
   subnet_mapping {
-    subnet_id     = aws_subnet.public.0.id
-    allocation_id = aws_eip.lb.0.id
+    subnet_id     = aws_subnet.public[0].id
+    allocation_id = aws_eip.lb[0].id
   }
 
   subnet_mapping {
-    subnet_id     = aws_subnet.public.1.id
-    allocation_id = aws_eip.lb.1.id
+    subnet_id     = aws_subnet.public[1].id
+    allocation_id = aws_eip.lb[1].id
   }
 
   depends_on = [aws_internet_gateway.default]
