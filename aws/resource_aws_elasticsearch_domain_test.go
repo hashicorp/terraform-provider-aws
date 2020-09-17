@@ -418,7 +418,7 @@ func TestAccAWSElasticSearchDomain_vpc_update(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainConfig_vpc_update(ri, false),
+				Config: testAccESDomainConfig_vpc_update1(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 					testAccCheckESNumberOfSecurityGroups(1, &domain),
@@ -431,7 +431,7 @@ func TestAccAWSElasticSearchDomain_vpc_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccESDomainConfig_vpc_update(ri, true),
+				Config: testAccESDomainConfig_vpc_update2(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 					testAccCheckESNumberOfSecurityGroups(2, &domain),
@@ -1715,26 +1715,10 @@ resource "aws_elasticsearch_domain" "test" {
 `, randInt)
 }
 
-func testAccESDomainConfig_vpc_update(randInt int, update bool) string {
-	var sg_ids, subnet_string string
-	if update {
-		sg_ids = "${aws_security_group.first.id}\", \"${aws_security_group.second.id}"
-		subnet_string = "second"
-	} else {
-		sg_ids = "${aws_security_group.first.id}"
-		subnet_string = "first"
-	}
-
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccESDomainConfig_vpc_update1(randInt int) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
 resource "aws_vpc" "elasticsearch_in_vpc" {
   cidr_block = "192.168.0.0/22"
 
@@ -1792,7 +1776,7 @@ resource "aws_security_group" "second" {
 }
 
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = "tf-test-%d"
+  domain_name = "tf-test-%[1]d"
 
   ebs_options {
     ebs_enabled = true
@@ -1806,11 +1790,93 @@ resource "aws_elasticsearch_domain" "test" {
   }
 
   vpc_options {
-    security_group_ids = ["%s"]
-    subnet_ids         = [aws_subnet.az1_ % s.id, aws_subnet.az2_ % s.id]
+    security_group_ids = [aws_security_group.first.id]
+    subnet_ids         = [aws_subnet.az1_first.id, aws_subnet.az2_first.id]
   }
 }
-`, randInt, sg_ids, subnet_string, subnet_string)
+`, randInt))
+}
+
+func testAccESDomainConfig_vpc_update2(randInt int) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+resource "aws_vpc" "elasticsearch_in_vpc" {
+  cidr_block = "192.168.0.0/22"
+
+  tags = {
+    Name = "terraform-testacc-elasticsearch-domain-in-vpc-update"
+  }
+}
+
+resource "aws_subnet" "az1_first" {
+  vpc_id            = aws_vpc.elasticsearch_in_vpc.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "192.168.0.0/24"
+
+  tags = {
+    Name = "tf-acc-elasticsearch-domain-in-vpc-update-az1-first"
+  }
+}
+
+resource "aws_subnet" "az2_first" {
+  vpc_id            = aws_vpc.elasticsearch_in_vpc.id
+  availability_zone = data.aws_availability_zones.available.names[1]
+  cidr_block        = "192.168.1.0/24"
+
+  tags = {
+    Name = "tf-acc-elasticsearch-domain-in-vpc-update-az2-first"
+  }
+}
+
+resource "aws_subnet" "az1_second" {
+  vpc_id            = aws_vpc.elasticsearch_in_vpc.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "192.168.2.0/24"
+
+  tags = {
+    Name = "tf-acc-elasticsearch-domain-in-vpc-update-az1-second"
+  }
+}
+
+resource "aws_subnet" "az2_second" {
+  vpc_id            = aws_vpc.elasticsearch_in_vpc.id
+  availability_zone = data.aws_availability_zones.available.names[1]
+  cidr_block        = "192.168.3.0/24"
+
+  tags = {
+    Name = "tf-acc-elasticsearch-domain-in-vpc-update-az2-second"
+  }
+}
+
+resource "aws_security_group" "first" {
+  vpc_id = aws_vpc.elasticsearch_in_vpc.id
+}
+
+resource "aws_security_group" "second" {
+  vpc_id = aws_vpc.elasticsearch_in_vpc.id
+}
+
+resource "aws_elasticsearch_domain" "test" {
+  domain_name = "tf-test-%[1]d"
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  cluster_config {
+    instance_count         = 2
+    zone_awareness_enabled = true
+    instance_type          = "t2.small.elasticsearch"
+  }
+
+  vpc_options {
+    security_group_ids = [aws_security_group.first.id, aws_security_group.second.id]
+    subnet_ids         = [aws_subnet.az1_second.id, aws_subnet.az2_second.id]
+  }
+}
+`, randInt))
 }
 
 func testAccESDomainConfig_internetToVpcEndpoint(randInt int) string {
