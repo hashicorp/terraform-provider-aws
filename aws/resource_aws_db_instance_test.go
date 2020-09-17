@@ -4559,12 +4559,18 @@ resource "aws_db_instance" "bar" {
 
 func testAccAWSDBInstanceConfigEc2Classic(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = "mysql"
+  engine_version             = "5.6.41"
+  preferred_instance_classes = ["db.m3.medium", "db.m3.large", "db.r3.large"]
+}
+
 resource "aws_db_instance" "bar" {
-  identifier           = "foobarbaz-test-terraform-%d"
+  identifier           = "foobarbaz-test-terraform-%[1]d"
   allocated_storage    = 10
-  engine               = "mysql"
-  engine_version       = "5.6"
-  instance_class       = "db.m5.large"
+  engine               = data.aws_rds_orderable_db_instance.test.engine
+  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   name                 = "baz"
   password             = "barbarbarbar"
   username             = "foo"
