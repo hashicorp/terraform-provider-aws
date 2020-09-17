@@ -12,6 +12,7 @@ ENHANCEMENTS
 BUG FIXES
 
 * resource/aws_acm_certificate: Prevent tagging is not permitted on re-import error [GH-15060]
+* resource/aws_cognito_identity_pool: Prevent ordering differences for `openid_connect_provider_arns` argument [GH-15178]
 
 ## 3.6.0 (September 11, 2020)
 
