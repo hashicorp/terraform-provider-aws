@@ -1166,7 +1166,7 @@ func TestAccAWSInstance_instanceProfileChange(t *testing.T) {
 			{
 				Config: testAccInstanceConfigWithInstanceProfile(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStopInstance(&v), // GH-8262
+					testAccCheckStopInstance(&v), // GH-8262: Error on EC2 instance role change when stopped
 				),
 			},
 			{
@@ -4125,10 +4125,8 @@ resource "aws_iam_instance_profile" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-
-  # tflint-ignore: aws_instance_previous_type
-  instance_type        = "m1.small"
+  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type        = "t2.small"
   iam_instance_profile = aws_iam_instance_profile.test.name
 
   tags = {

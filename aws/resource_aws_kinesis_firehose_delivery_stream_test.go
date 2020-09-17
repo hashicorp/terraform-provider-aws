@@ -1166,6 +1166,8 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigEndpointUpdates(
 	})
 }
 
+// This doesn't actually test updating VPC Configuration. It tests changing Elasticsearch configuration
+// when the Kinesis Firehose delivery stream has a VPC Configuration.
 func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchWithVpcConfigUpdates(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 
@@ -1175,12 +1177,6 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchWithVpcConfigUpdates(t
 	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
-	preConfigWithVpc := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchVpcBasic,
-		ri, ri, ri, ri, ri)
-
-	postConfigWithVpc := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
-		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchVpcUpdate,
-			ri, ri, ri, ri, ri)
 
 	updatedElasticSearchConfig := &firehose.ElasticsearchDestinationDescription{
 		BufferingHints: &firehose.ElasticsearchBufferingHints{
@@ -1208,7 +1204,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchWithVpcConfigUpdates(t
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: preConfigWithVpc,
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchVpcBasic(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
@@ -1224,7 +1220,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchWithVpcConfigUpdates(t
 				ImportStateVerify: true,
 			},
 			{
-				Config: postConfigWithVpc,
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchVpcUpdate(funcName, policyName, roleName, ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticSearchConfig, nil),
@@ -2714,16 +2710,19 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 `
 
-var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchVpcBasic = testAccKinesisFirehoseDeliveryStreamBaseElasticsearchVpcConfig + `
+func testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchVpcBasic(ri int) string {
+	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseElasticsearchVpcConfig+`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = [aws_iam_role_policy.firehose-elasticsearch]
 
   name        = "terraform-kinesis-firehose-es-%d"
   destination = "elasticsearch"
+
   s3_configuration {
     role_arn   = aws_iam_role.firehose.arn
     bucket_arn = aws_s3_bucket.bucket.arn
   }
+
   elasticsearch_configuration {
     domain_arn = aws_elasticsearch_domain.test_cluster.arn
     role_arn   = aws_iam_role.firehose.arn
@@ -2737,7 +2736,9 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
   }
 }
-`
+`, ri, ri, ri, ri, ri)
+}
+
 var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchUpdate = testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = [aws_iam_role_policy.firehose-elasticsearch]
@@ -2773,27 +2774,34 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 `
 
-var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchVpcUpdate = testAccKinesisFirehoseDeliveryStreamBaseElasticsearchVpcConfig + `
+func testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchVpcUpdate(funcName, policyName, roleName string, ri int) string {
+	return composeConfig(
+		testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName),
+		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseElasticsearchVpcConfig+`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = [aws_iam_role_policy.firehose-elasticsearch]
 
   name        = "terraform-kinesis-firehose-es-%d"
   destination = "elasticsearch"
+
   s3_configuration {
     role_arn   = aws_iam_role.firehose.arn
     bucket_arn = aws_s3_bucket.bucket.arn
   }
+
   elasticsearch_configuration {
     domain_arn         = aws_elasticsearch_domain.test_cluster.arn
     role_arn           = aws_iam_role.firehose.arn
     index_name         = "test"
     type_name          = "test"
     buffering_interval = 500
+
     vpc_config {
       subnet_ids         = [aws_subnet.first.id, aws_subnet.second.id]
       security_group_ids = [aws_security_group.first.id, aws_security_group.second.id]
       role_arn           = aws_iam_role.firehose.arn
     }
+
     processing_configuration {
       enabled = false
       processors {
@@ -2805,11 +2813,12 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
       }
     }
   }
-}`
+}`, ri, ri, ri, ri, ri))
+}
 
 var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchEndpoint = testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose-elasticsearch"]
+  depends_on = [aws_iam_role_policy.firehose-elasticsearch]
 
   name        = "terraform-kinesis-firehose-es-%d"
   destination = "elasticsearch"
@@ -2829,7 +2838,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchEndpointUpdate = testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose-elasticsearch"]
+  depends_on = [aws_iam_role_policy.firehose-elasticsearch]
 
   name        = "terraform-kinesis-firehose-es-%d"
   destination = "elasticsearch"
