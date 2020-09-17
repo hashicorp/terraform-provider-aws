@@ -32,7 +32,7 @@ func TestAccAWSVpnGatewayAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpnGatewayAttachment_deleted(t *testing.T) {
+func TestAccAWSVpnGatewayAttachment_disappears(t *testing.T) {
 	var v ec2.VpcAttachment
 	resourceName := "aws_vpn_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
