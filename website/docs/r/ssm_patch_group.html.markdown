@@ -35,4 +35,4 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the patch baseline.
+* `id` - The name of the patch group and ID of the patch baseline separated by a comma (`,`).
