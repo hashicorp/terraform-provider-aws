@@ -478,6 +478,14 @@ resource "aws_vpn_gateway" "test" {
 `
 
 const testAccVpnGatewayConfigChangeVPC = `
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-vpn-gateway"
+  }
+}
+
 resource "aws_vpc" "test2" {
   cidr_block = "10.2.0.0/16"
 
