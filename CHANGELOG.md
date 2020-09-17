@@ -7,6 +7,7 @@ FEATURES
 ENHANCEMENTS
 
 * resource/aws_db_cluster_snapshot: Add plan-time validation for `db_cluster_snapshot_identifier` argument [GH-15132]
+* resource/aws_kinesis_firehose_delivery_stream: Add `server_side_encryption` `key_arn` and `key_type` arguments (support KMS Customer Managed Key encryption) [GH-11954]
 
 BUG FIXES
 
