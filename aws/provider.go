@@ -243,6 +243,7 @@ func Provider() *schema.Provider {
 			"aws_efs_mount_target":                           dataSourceAwsEfsMountTarget(),
 			"aws_eip":                                        dataSourceAwsEip(),
 			"aws_eks_cluster":                                dataSourceAwsEksCluster(),
+			"aws_eks_clusters":                               dataSourceAwsEksClusters(),
 			"aws_eks_cluster_auth":                           dataSourceAwsEksClusterAuth(),
 			"aws_elastic_beanstalk_application":              dataSourceAwsElasticBeanstalkApplication(),
 			"aws_elastic_beanstalk_hosted_zone":              dataSourceAwsElasticBeanstalkHostedZone(),
