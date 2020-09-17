@@ -33,21 +33,15 @@ func resourceAwsApiGatewayV2Integration() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"connection_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  apigatewayv2.ConnectionTypeInternet,
-				ValidateFunc: validation.StringInSlice([]string{
-					apigatewayv2.ConnectionTypeInternet,
-					apigatewayv2.ConnectionTypeVpcLink,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      apigatewayv2.ConnectionTypeInternet,
+				ValidateFunc: validation.StringInSlice(apigatewayv2.ConnectionType_Values(), false),
 			},
 			"content_handling_strategy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					apigatewayv2.ContentHandlingStrategyConvertToBinary,
-					apigatewayv2.ContentHandlingStrategyConvertToText,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(apigatewayv2.ContentHandlingStrategy_Values(), false),
 			},
 			"credentials_arn": {
 				Type:         schema.TypeString,
@@ -75,31 +69,27 @@ func resourceAwsApiGatewayV2Integration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"integration_subtype": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 128),
+			},
 			"integration_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					apigatewayv2.IntegrationTypeAws,
-					apigatewayv2.IntegrationTypeAwsProxy,
-					apigatewayv2.IntegrationTypeHttp,
-					apigatewayv2.IntegrationTypeHttpProxy,
-					apigatewayv2.IntegrationTypeMock,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(apigatewayv2.IntegrationType_Values(), false),
 			},
 			"integration_uri": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"passthrough_behavior": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  apigatewayv2.PassthroughBehaviorWhenNoMatch,
-				ValidateFunc: validation.StringInSlice([]string{
-					apigatewayv2.PassthroughBehaviorWhenNoMatch,
-					apigatewayv2.PassthroughBehaviorNever,
-					apigatewayv2.PassthroughBehaviorWhenNoTemplates,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      apigatewayv2.PassthroughBehaviorWhenNoMatch,
+				ValidateFunc: validation.StringInSlice(apigatewayv2.PassthroughBehavior_Values(), false),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Not set for HTTP APIs.
 					if old == "" && new == apigatewayv2.PassthroughBehaviorWhenNoMatch {
@@ -182,6 +172,9 @@ func resourceAwsApiGatewayV2IntegrationCreate(d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("integration_method"); ok {
 		req.IntegrationMethod = aws.String(v.(string))
 	}
+	if v, ok := d.GetOk("integration_subtype"); ok {
+		req.IntegrationSubtype = aws.String(v.(string))
+	}
 	if v, ok := d.GetOk("integration_uri"); ok {
 		req.IntegrationUri = aws.String(v.(string))
 	}
@@ -241,6 +234,7 @@ func resourceAwsApiGatewayV2IntegrationRead(d *schema.ResourceData, meta interfa
 	d.Set("description", resp.Description)
 	d.Set("integration_method", resp.IntegrationMethod)
 	d.Set("integration_response_selection_expression", resp.IntegrationResponseSelectionExpression)
+	d.Set("integration_subtype", resp.IntegrationSubtype)
 	d.Set("integration_type", resp.IntegrationType)
 	d.Set("integration_uri", resp.IntegrationUri)
 	d.Set("passthrough_behavior", resp.PassthroughBehavior)

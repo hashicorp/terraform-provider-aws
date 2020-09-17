@@ -16546,8 +16546,32 @@ type ProvisionedProductAttribute struct {
 	// repeated request.
 	IdempotencyToken *string `min:"1" type:"string"`
 
+	// The record identifier of the last request performed on this provisioned product
+	// of the following types:
+	//
+	//    * ProvisionedProduct
+	//
+	//    * UpdateProvisionedProduct
+	//
+	//    * ExecuteProvisionedProductPlan
+	//
+	//    * TerminateProvisionedProduct
+	LastProvisioningRecordId *string `min:"1" type:"string"`
+
 	// The record identifier of the last request performed on this provisioned product.
 	LastRecordId *string `min:"1" type:"string"`
+
+	// The record identifier of the last successful request performed on this provisioned
+	// product of the following types:
+	//
+	//    * ProvisionedProduct
+	//
+	//    * UpdateProvisionedProduct
+	//
+	//    * ExecuteProvisionedProductPlan
+	//
+	//    * TerminateProvisionedProduct
+	LastSuccessfulProvisioningRecordId *string `min:"1" type:"string"`
 
 	// The user-friendly name of the provisioned product.
 	Name *string `min:"1" type:"string"`
@@ -16559,8 +16583,14 @@ type ProvisionedProductAttribute struct {
 	// The product identifier.
 	ProductId *string `min:"1" type:"string"`
 
+	// The name of the product.
+	ProductName *string `type:"string"`
+
 	// The identifier of the provisioning artifact.
 	ProvisioningArtifactId *string `min:"1" type:"string"`
+
+	// The name of the provisioning artifact.
+	ProvisioningArtifactName *string `type:"string"`
 
 	// The current status of the provisioned product.
 	//
@@ -16636,9 +16666,21 @@ func (s *ProvisionedProductAttribute) SetIdempotencyToken(v string) *Provisioned
 	return s
 }
 
+// SetLastProvisioningRecordId sets the LastProvisioningRecordId field's value.
+func (s *ProvisionedProductAttribute) SetLastProvisioningRecordId(v string) *ProvisionedProductAttribute {
+	s.LastProvisioningRecordId = &v
+	return s
+}
+
 // SetLastRecordId sets the LastRecordId field's value.
 func (s *ProvisionedProductAttribute) SetLastRecordId(v string) *ProvisionedProductAttribute {
 	s.LastRecordId = &v
+	return s
+}
+
+// SetLastSuccessfulProvisioningRecordId sets the LastSuccessfulProvisioningRecordId field's value.
+func (s *ProvisionedProductAttribute) SetLastSuccessfulProvisioningRecordId(v string) *ProvisionedProductAttribute {
+	s.LastSuccessfulProvisioningRecordId = &v
 	return s
 }
 
@@ -16660,9 +16702,21 @@ func (s *ProvisionedProductAttribute) SetProductId(v string) *ProvisionedProduct
 	return s
 }
 
+// SetProductName sets the ProductName field's value.
+func (s *ProvisionedProductAttribute) SetProductName(v string) *ProvisionedProductAttribute {
+	s.ProductName = &v
+	return s
+}
+
 // SetProvisioningArtifactId sets the ProvisioningArtifactId field's value.
 func (s *ProvisionedProductAttribute) SetProvisioningArtifactId(v string) *ProvisionedProductAttribute {
 	s.ProvisioningArtifactId = &v
+	return s
+}
+
+// SetProvisioningArtifactName sets the ProvisioningArtifactName field's value.
+func (s *ProvisionedProductAttribute) SetProvisioningArtifactName(v string) *ProvisionedProductAttribute {
+	s.ProvisioningArtifactName = &v
 	return s
 }
 
@@ -16720,8 +16774,32 @@ type ProvisionedProductDetail struct {
 	// repeated request.
 	IdempotencyToken *string `min:"1" type:"string"`
 
+	// The record identifier of the last request performed on this provisioned product
+	// of the following types:
+	//
+	//    * ProvisionedProduct
+	//
+	//    * UpdateProvisionedProduct
+	//
+	//    * ExecuteProvisionedProductPlan
+	//
+	//    * TerminateProvisionedProduct
+	LastProvisioningRecordId *string `min:"1" type:"string"`
+
 	// The record identifier of the last request performed on this provisioned product.
 	LastRecordId *string `type:"string"`
+
+	// The record identifier of the last successful request performed on this provisioned
+	// product of the following types:
+	//
+	//    * ProvisionedProduct
+	//
+	//    * UpdateProvisionedProduct
+	//
+	//    * ExecuteProvisionedProductPlan
+	//
+	//    * TerminateProvisionedProduct
+	LastSuccessfulProvisioningRecordId *string `min:"1" type:"string"`
 
 	// The user-friendly name of the provisioned product.
 	Name *string `min:"1" type:"string"`
@@ -16796,9 +16874,21 @@ func (s *ProvisionedProductDetail) SetIdempotencyToken(v string) *ProvisionedPro
 	return s
 }
 
+// SetLastProvisioningRecordId sets the LastProvisioningRecordId field's value.
+func (s *ProvisionedProductDetail) SetLastProvisioningRecordId(v string) *ProvisionedProductDetail {
+	s.LastProvisioningRecordId = &v
+	return s
+}
+
 // SetLastRecordId sets the LastRecordId field's value.
 func (s *ProvisionedProductDetail) SetLastRecordId(v string) *ProvisionedProductDetail {
 	s.LastRecordId = &v
+	return s
+}
+
+// SetLastSuccessfulProvisioningRecordId sets the LastSuccessfulProvisioningRecordId field's value.
+func (s *ProvisionedProductDetail) SetLastSuccessfulProvisioningRecordId(v string) *ProvisionedProductDetail {
+	s.LastSuccessfulProvisioningRecordId = &v
 	return s
 }
 
@@ -18802,7 +18892,8 @@ type SearchProvisionedProductsInput struct {
 	//
 	// When the key is SearchQuery, the searchable fields are arn, createdTime,
 	// id, lastRecordId, idempotencyToken, name, physicalId, productId, provisioningArtifact,
-	// type, status, tags, userArn, and userArnSession.
+	// type, status, tags, userArn, userArnSession, lastProvisioningRecordId, lastSuccessfulProvisioningRecordId,
+	// productName, and provisioningArtifactName.
 	//
 	// Example: "SearchQuery":["status:AVAILABLE"]
 	Filters map[string][]*string `type:"map"`

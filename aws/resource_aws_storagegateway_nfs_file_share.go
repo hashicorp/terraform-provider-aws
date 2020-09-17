@@ -188,7 +188,7 @@ func resourceAwsStorageGatewayNfsFileShareCreate(d *schema.ResourceData, meta in
 		Tags:                 keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().StoragegatewayTags(),
 	}
 
-	if v, ok := d.GetOk("kms_key_arn"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("kms_key_arn"); ok {
 		input.KMSKey = aws.String(v.(string))
 	}
 
@@ -311,7 +311,7 @@ func resourceAwsStorageGatewayNfsFileShareUpdate(d *schema.ResourceData, meta in
 			Squash:               aws.String(d.Get("squash").(string)),
 		}
 
-		if v, ok := d.GetOk("kms_key_arn"); ok && v.(string) != "" {
+		if v, ok := d.GetOk("kms_key_arn"); ok {
 			input.KMSKey = aws.String(v.(string))
 		}
 

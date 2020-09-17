@@ -177,11 +177,11 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 		Tags:                 keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().StoragegatewayTags(),
 	}
 
-	if v, ok := d.GetOk("kms_key_arn"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("kms_key_arn"); ok {
 		input.KMSKey = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("audit_destination_arn"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("audit_destination_arn"); ok {
 		input.AuditDestinationARN = aws.String(v.(string))
 	}
 
@@ -311,11 +311,11 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 			CaseSensitivity:      aws.String(d.Get("case_sensitivity").(string)),
 		}
 
-		if v, ok := d.GetOk("kms_key_arn"); ok && v.(string) != "" {
+		if v, ok := d.GetOk("kms_key_arn"); ok {
 			input.KMSKey = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("audit_destination_arn"); ok && v.(string) != "" {
+		if v, ok := d.GetOk("audit_destination_arn"); ok {
 			input.AuditDestinationARN = aws.String(v.(string))
 		}
 

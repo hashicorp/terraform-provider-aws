@@ -5242,7 +5242,7 @@ func (s *CreateBotVersionInput) SetName(v string) *CreateBotVersionInput {
 type CreateBotVersionOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The message that Amazon Lex uses to abort a conversation. For more information,
+	// The message that Amazon Lex uses to cancel a conversation. For more information,
 	// see PutBot.
 	AbortStatement *Statement `locationName:"abortStatement" type:"structure"`
 
@@ -5288,9 +5288,8 @@ type CreateBotVersionOutput struct {
 	// Comprehend for sentiment analysis.
 	DetectSentiment *bool `locationName:"detectSentiment" type:"boolean"`
 
-	// Indicates whether the bot uses the new natural language understanding (NLU)
-	// model or the original NLU. True indicates that the bot is using the new model,
-	// otherwise, false.
+	// Indicates whether the bot uses accuracy improvements. true indicates that
+	// the bot is using the imoprovements, otherwise, false.
 	EnableModelImprovements *bool `locationName:"enableModelImprovements" type:"boolean"`
 
 	// If status is FAILED, Amazon Lex provides the reason that it failed to build
@@ -7325,9 +7324,8 @@ type GetBotOutput struct {
 	// sentiment analysis.
 	DetectSentiment *bool `locationName:"detectSentiment" type:"boolean"`
 
-	// Indicates whether the bot uses the new natural language understanding (NLU)
-	// model or the original NLU. True indicates that the bot is using the new model,
-	// otherwise, false.
+	// Indicates whether the bot uses accuracy improvements. true indicates that
+	// the bot is using the imoprovements, otherwise, false.
 	EnableModelImprovements *bool `locationName:"enableModelImprovements" type:"boolean"`
 
 	// If status is FAILED, Amazon Lex explains why it failed to build the bot.
@@ -7354,8 +7352,9 @@ type GetBotOutput struct {
 	// AMAZON.KendraSearchIntent, or both when returning alternative intents in
 	// a PostContent (https://docs.aws.amazon.com/lex/latest/dg/API_runtime_PostContent.html)
 	// or PostText (https://docs.aws.amazon.com/lex/latest/dg/API_runtime_PostText.html)
-	// response. AMAZON.FallbackIntent and AMAZON.KendraSearchIntent are only inserted
-	// if they are configured for the bot.
+	// response. AMAZON.FallbackIntent is inserted if the confidence score for all
+	// intents is below this value. AMAZON.KendraSearchIntent is only inserted if
+	// it is configured for the bot.
 	NluIntentConfidenceThreshold *float64 `locationName:"nluIntentConfidenceThreshold" type:"double"`
 
 	// The status of the bot.
@@ -10217,7 +10216,7 @@ type PutBotInput struct {
 
 	// When Amazon Lex can't understand the user's input in context, it tries to
 	// elicit the information a few times. After that, Amazon Lex sends the message
-	// defined in abortStatement to the user, and then aborts the conversation.
+	// defined in abortStatement to the user, and then cancels the conversation.
 	// To set the number of retries, use the valueElicitationPrompt field for the
 	// slot type.
 	//
@@ -10230,7 +10229,7 @@ type PutBotInput struct {
 	// the intents. This intent might require the CrustType slot. You specify the
 	// valueElicitationPrompt field when you create the CrustType slot.
 	//
-	// If you have defined a fallback intent the abort statement will not be sent
+	// If you have defined a fallback intent the cancel statement will not be sent
 	// to the user, the fallback intent is used instead. For more information, see
 	// AMAZON.FallbackIntent (https://docs.aws.amazon.com/lex/latest/dg/built-in-intent-fallback.html).
 	AbortStatement *Statement `locationName:"abortStatement" type:"structure"`
@@ -10317,18 +10316,14 @@ type PutBotInput struct {
 	// analysis. If you don't specify detectSentiment, the default is false.
 	DetectSentiment *bool `locationName:"detectSentiment" type:"boolean"`
 
-	// Set to true to enable the use of a new natural language understanding (NLU)
-	// model. Using the new NLU may improve the performance of your bot.
+	// Set to true to enable access to natural language understanding improvements.
 	//
 	// When you set the enableModelImprovements parameter to true you can use the
 	// nluIntentConfidenceThreshold parameter to configure confidence scores. For
 	// more information, see Confidence Scores (https://docs.aws.amazon.com/lex/latest/dg/confidence-scores.html).
 	//
 	// You can only set the enableModelImprovements parameter in certain Regions.
-	// If you set the parameter to true, your bot will use the new NLU. If you set
-	// the parameter to false, your bot will continue to use the original NLU. If
-	// you set the parameter to false after setting it to true, your bot will return
-	// to the original NLU.
+	// If you set the parameter to true, your bot has access to accuracy improvements.
 	//
 	// The Regions where you can set the enableModelImprovements parameter to true
 	// are:
@@ -10400,6 +10395,17 @@ type PutBotInput struct {
 	//
 	// You must set the enableModelImprovements parameter to true to use confidence
 	// scores.
+	//
+	//    * US East (N. Virginia) (us-east-1)
+	//
+	//    * US West (Oregon) (us-west-2)
+	//
+	//    * Asia Pacific (Sydney) (ap-southeast-2)
+	//
+	//    * EU (Ireland) (eu-west-1)
+	//
+	// In other Regions, the enableModelImprovements parameter is set to true by
+	// default.
 	//
 	// For example, suppose a bot is configured with the confidence threshold of
 	// 0.80 and the AMAZON.FallbackIntent. Amazon Lex returns three alternative
@@ -10598,7 +10604,7 @@ func (s *PutBotInput) SetVoiceId(v string) *PutBotInput {
 type PutBotOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The message that Amazon Lex uses to abort a conversation. For more information,
+	// The message that Amazon Lex uses to cancel a conversation. For more information,
 	// see PutBot.
 	AbortStatement *Statement `locationName:"abortStatement" type:"structure"`
 
@@ -10650,9 +10656,8 @@ type PutBotOutput struct {
 	// the request, the detectSentiment field is false in the response.
 	DetectSentiment *bool `locationName:"detectSentiment" type:"boolean"`
 
-	// Indicates whether the bot uses the new natural language understanding (NLU)
-	// model or the original NLU. True indicates that the bot is using the new model,
-	// otherwise, false.
+	// Indicates whether the bot uses accuracy improvements. true indicates that
+	// the bot is using the imoprovements, otherwise, false.
 	EnableModelImprovements *bool `locationName:"enableModelImprovements" type:"boolean"`
 
 	// If status is FAILED, Amazon Lex provides the reason that it failed to build
@@ -10680,8 +10685,9 @@ type PutBotOutput struct {
 	// AMAZON.KendraSearchIntent, or both when returning alternative intents in
 	// a PostContent (https://docs.aws.amazon.com/lex/latest/dg/API_runtime_PostContent.html)
 	// or PostText (https://docs.aws.amazon.com/lex/latest/dg/API_runtime_PostText.html)
-	// response. AMAZON.FallbackIntent and AMAZON.KendraSearchIntent are only inserted
-	// if they are configured for the bot.
+	// response. AMAZON.FallbackIntent is inserted if the confidence score for all
+	// intents is below this value. AMAZON.KendraSearchIntent is only inserted if
+	// it is configured for the bot.
 	NluIntentConfidenceThreshold *float64 `locationName:"nluIntentConfidenceThreshold" type:"double"`
 
 	// When you send a request to create a bot with processBehavior set to BUILD,
@@ -11329,6 +11335,9 @@ type PutSlotTypeInput struct {
 	// type can take. Each value can have a list of synonyms, which are additional
 	// values that help train the machine learning model about the values that it
 	// resolves for a slot.
+	//
+	// A regular expression slot type doesn't require enumeration values. All other
+	// slot types require a list of enumeration values.
 	//
 	// When Amazon Lex resolves a slot value, it generates a resolution list that
 	// contains up to five possible values for the slot. If you are using a Lambda
@@ -12733,6 +12742,9 @@ const (
 
 	// LocaleDeDe is a Locale enum value
 	LocaleDeDe = "de-DE"
+
+	// LocaleEnAu is a Locale enum value
+	LocaleEnAu = "en-AU"
 )
 
 // Locale_Values returns all elements of the Locale enum
@@ -12741,6 +12753,7 @@ func Locale_Values() []string {
 		LocaleEnUs,
 		LocaleEnGb,
 		LocaleDeDe,
+		LocaleEnAu,
 	}
 }
 

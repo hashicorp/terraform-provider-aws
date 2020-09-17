@@ -15,6 +15,31 @@ Use the navigation to the left to read about the available resources.
 
 ## Example Usage
 
+Terraform 0.13 and later:
+
+```hcl
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.0"
+    }
+  }
+}
+
+# Configure the AWS Provider
+provider "aws" {
+  region = "us-east-1"
+}
+
+# Create a VPC
+resource "aws_vpc" "example" {
+  cidr_block = "10.0.0.0/16"
+}
+```
+
+Terraform 0.12 and earlier:
+
 ```hcl
 # Configure the AWS Provider
 provider "aws" {
@@ -191,7 +216,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   potentially end up destroying a live environment). Conflicts with
   `allowed_account_ids`.
 
-* `ignore_tags` - (Optional) Configuration block with resource tag settings to ignore across all resources handled by this provider (except `aws_autoscaling_group` and any individual service tag resources such as `aws_ec2_tag`) for situations where external systems are managing certain resource tags. Arguments to the configuration block are described below in the `ignore_tags` Configuration Block section. See the [Terraform multiple provider instances documentation](/docs/configuration/providers.html#alias-multiple-provider-instances) for more information about additional provider configurations.
+* `ignore_tags` - (Optional) Configuration block with resource tag settings to ignore across all resources handled by this provider (except any individual service tag resources such as `aws_ec2_tag`) for situations where external systems are managing certain resource tags. Arguments to the configuration block are described below in the `ignore_tags` Configuration Block section. See the [Terraform multiple provider instances documentation](/docs/configuration/providers.html#alias-multiple-provider-instances) for more information about additional provider configurations.
 
 * `insecure` - (Optional) Explicitly allow the provider to
   perform "insecure" SSL requests. If omitted, default value is `false`.
@@ -265,6 +290,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
     - [`aws_glue_crawler` resource](/docs/providers/aws/r/glue_crawler.html)
     - [`aws_glue_job` resource](/docs/providers/aws/r/glue_job.html)
     - [`aws_glue_trigger` resource](/docs/providers/aws/r/glue_trigger.html)
+    - [`aws_glue_user_defined_function` resource](/docs/providers/aws/r/glue_user_defined_function.html)
     - [`aws_guardduty_detector` resource](/docs/providers/aws/r/guardduty_detector.html)
     - [`aws_guardduty_ipset` resource](/docs/providers/aws/r/guardduty_ipset.html)
     - [`aws_guardduty_threatintelset` resource](/docs/providers/aws/r/guardduty_threatintelset.html)

@@ -1512,7 +1512,7 @@ func (c *SSM) DeleteInventoryRequest(input *DeleteInventoryInput) (req *request.
 
 // DeleteInventory API operation for Amazon Simple Systems Manager (SSM).
 //
-// Delete a custom inventory type, or the data associated with a custom Inventory
+// Delete a custom inventory type or the data associated with a custom Inventory
 // type. Deleting a custom inventory type is also referred to as deleting a
 // custom inventory schema.
 //
@@ -3707,8 +3707,7 @@ func (c *SSM) DescribeEffectivePatchesForPatchBaselineRequest(input *DescribeEff
 //
 //   * UnsupportedOperatingSystem
 //   The operating systems you specified is not supported, or the operation is
-//   not supported for the operating system. Valid operating systems include:
-//   Windows, AmazonLinux, RedhatEnterpriseLinux, and Ubuntu.
+//   not supported for the operating system.
 //
 //   * InternalServerError
 //   An error occurred on the server side.
@@ -6553,10 +6552,6 @@ func (c *SSM) DescribePatchPropertiesRequest(input *DescribePatchPropertiesInput
 // The following section lists the properties that can be used in filters for
 // each major operating system type:
 //
-// WINDOWS
-//
-// Valid properties: PRODUCT, PRODUCT_FAMILY, CLASSIFICATION, MSRC_SEVERITY
-//
 // AMAZON_LINUX
 //
 // Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
@@ -6565,9 +6560,17 @@ func (c *SSM) DescribePatchPropertiesRequest(input *DescribePatchPropertiesInput
 //
 // Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
 //
-// UBUNTU
+// CENTOS
+//
+// Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
+//
+// DEBIAN
 //
 // Valid properties: PRODUCT, PRIORITY
+//
+// ORACLE_LINUX
+//
+// Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
 //
 // REDHAT_ENTERPRISE_LINUX
 //
@@ -6577,9 +6580,13 @@ func (c *SSM) DescribePatchPropertiesRequest(input *DescribePatchPropertiesInput
 //
 // Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
 //
-// CENTOS
+// UBUNTU
 //
-// Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
+// Valid properties: PRODUCT, PRIORITY
+//
+// WINDOWS
+//
+// Valid properties: PRODUCT, PRODUCT_FAMILY, CLASSIFICATION, MSRC_SEVERITY
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6942,8 +6949,14 @@ func (c *SSM) GetCalendarStateRequest(input *GetCalendarStateInput) (req *reques
 // of the calendar at a specific time, and returns the next time that the Change
 // Calendar state will transition. If you do not specify a time, GetCalendarState
 // assumes the current time. Change Calendar entries have two possible states:
-// OPEN or CLOSED. For more information about Systems Manager Change Calendar,
-// see AWS Systems Manager Change Calendar (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-change-calendar.html)
+// OPEN or CLOSED.
+//
+// If you specify more than one calendar in a request, the command returns the
+// status of OPEN only if all calendars in the request are open. If one or more
+// calendars in the request are closed, the status returned is CLOSED.
+//
+// For more information about Systems Manager Change Calendar, see AWS Systems
+// Manager Change Calendar (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-change-calendar.html)
 // in the AWS Systems Manager User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -7315,8 +7328,7 @@ func (c *SSM) GetDeployablePatchSnapshotForInstanceRequest(input *GetDeployableP
 //
 //   * UnsupportedOperatingSystem
 //   The operating systems you specified is not supported, or the operation is
-//   not supported for the operating system. Valid operating systems include:
-//   Windows, AmazonLinux, RedhatEnterpriseLinux, and Ubuntu.
+//   not supported for the operating system.
 //
 //   * UnsupportedFeatureRequiredException
 //   Microsoft application patching is only available on EC2 instances and advanced
@@ -13515,10 +13527,18 @@ func (c *SSM) UpdateMaintenanceWindowTaskRequest(input *UpdateMaintenanceWindowT
 //
 //    * MaxErrors
 //
-// If a parameter is null, then the corresponding field is not modified. Also,
-// if you set Replace to true, then all fields required by the RegisterTaskWithMaintenanceWindow
-// action are required for this request. Optional fields that aren't specified
-// are set to null.
+// If the value for a parameter in UpdateMaintenanceWindowTask is null, then
+// the corresponding field is not modified. If you set Replace to true, then
+// all fields required by the RegisterTaskWithMaintenanceWindow action are required
+// for this request. Optional fields that aren't specified are set to null.
+//
+// When you update a maintenance window task that has options specified in TaskInvocationParameters,
+// you must provide again all the TaskInvocationParameters values that you want
+// to retain. The values you do not specify again are removed. For example,
+// suppose that when you registered a Run Command task, you specified TaskInvocationParameters
+// values for Comment, NotificationConfig, and OutputS3BucketName. If you update
+// the maintenance window task and specify only a different OutputS3BucketName
+// value, the values for Comment and NotificationConfig are removed.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -20140,7 +20160,7 @@ type DeleteInventoryInput struct {
 	_ struct{} `type:"structure"`
 
 	// User-provided idempotency token.
-	ClientToken *string `min:"1" type:"string" idempotencyToken:"true"`
+	ClientToken *string `type:"string" idempotencyToken:"true"`
 
 	// Use this option to view a summary of the deletion request without deleting
 	// any data or the data type. This option is useful when you only want to understand
@@ -20164,7 +20184,7 @@ type DeleteInventoryInput struct {
 	SchemaDeleteOption *string `type:"string" enum:"InventorySchemaDeleteOption"`
 
 	// The name of the custom inventory type for which you want to delete either
-	// all previously collected data, or the inventory type itself.
+	// all previously collected data or the inventory type itself.
 	//
 	// TypeName is a required field
 	TypeName *string `min:"1" type:"string" required:"true"`
@@ -20183,9 +20203,6 @@ func (s DeleteInventoryInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *DeleteInventoryInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteInventoryInput"}
-	if s.ClientToken != nil && len(*s.ClientToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("ClientToken", 1))
-	}
 	if s.TypeName == nil {
 		invalidParams.Add(request.NewErrParamRequired("TypeName"))
 	}
@@ -25057,16 +25074,59 @@ func (s *DocumentIdentifier) SetVersionName(v string) *DocumentIdentifier {
 //
 // For keys, you can specify one or more tags that have been applied to a document.
 //
-// Other valid values include Owner, Name, PlatformTypes, DocumentType, and
-// TargetType.
+// You can also use AWS-provided keys, some of which have specific allowed values.
+// These keys and their associated values are as follows:
+//
+// DocumentType
+//
+//    * ApplicationConfiguration
+//
+//    * ApplicationConfigurationSchema
+//
+//    * Automation
+//
+//    * ChangeCalendar
+//
+//    * Command
+//
+//    * DeploymentStrategy
+//
+//    * Package
+//
+//    * Policy
+//
+//    * Session
+//
+// Owner
 //
 // Note that only one Owner can be specified in a request. For example: Key=Owner,Values=Self.
 //
-// If you use Name as a key, you can use a name prefix to return a list of documents.
-// For example, in the AWS CLI, to return a list of all documents that begin
-// with Te, run the following command:
+//    * Amazon
+//
+//    * Private
+//
+//    * Public
+//
+//    * Self
+//
+//    * ThirdParty
+//
+// PlatformTypes
+//
+//    * Linux
+//
+//    * Windows
+//
+// Name is another AWS-provided key. If you use Name as a key, you can use a
+// name prefix to return a list of documents. For example, in the AWS CLI, to
+// return a list of all documents that begin with Te, run the following command:
 //
 // aws ssm list-documents --filters Key=Name,Values=Te
+//
+// You can also use the TargetType AWS-provided key. For a list of valid resource
+// type values that can be used with this key, see AWS resource and property
+// types reference (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
+// in the AWS CloudFormation User Guide.
 //
 // If you specify more than two keys, only documents that are identified by
 // all the tags are returned in the results. If you specify more than two values
@@ -25075,7 +25135,7 @@ func (s *DocumentIdentifier) SetVersionName(v string) *DocumentIdentifier {
 //
 // To specify a custom key and value pair, use the format Key=tag:tagName,Values=valueName.
 //
-// For example, if you created a Key called region and are using the AWS CLI
+// For example, if you created a key called region and are using the AWS CLI
 // to call the list-documents command:
 //
 // aws ssm list-documents --filters Key=tag:region,Values=east,west Key=Owner,Values=Self
@@ -28396,6 +28456,12 @@ type GetParametersByPathInput struct {
 	NextToken *string `type:"string"`
 
 	// Filters to limit the request results.
+	//
+	// For GetParametersByPath, the following filter Key names are supported: Type,
+	// KeyId, Label, and DataType.
+	//
+	// The following Key values are not supported for GetParametersByPath: tag,
+	// Name, Path, and Tier.
 	ParameterFilters []*ParameterStringFilter `type:"list"`
 
 	// The hierarchy for the parameter. Hierarchies start with a forward slash (/)
@@ -29838,7 +29904,7 @@ type InstancePatchState struct {
 	// instance was rebooted.
 	InstalledPendingRebootCount *int64 `type:"integer"`
 
-	// The number of instances with patches installed that are specified in a RejectedPatches
+	// The number of patches installed on an instance that are specified in a RejectedPatches
 	// list. Patches with a status of InstalledRejected were typically installed
 	// before they were added to a RejectedPatches list.
 	//
@@ -36712,7 +36778,7 @@ type OpsAggregator struct {
 	Aggregators []*OpsAggregator `min:"1" type:"list"`
 
 	// The name of an OpsItem attribute on which to limit the count of OpsItems.
-	AttributeName *string `type:"string"`
+	AttributeName *string `min:"1" type:"string"`
 
 	// The aggregator filters.
 	Filters []*OpsFilter `min:"1" type:"list"`
@@ -36742,6 +36808,9 @@ func (s *OpsAggregator) Validate() error {
 	}
 	if s.Aggregators != nil && len(s.Aggregators) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Aggregators", 1))
+	}
+	if s.AttributeName != nil && len(*s.AttributeName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AttributeName", 1))
 	}
 	if s.Filters != nil && len(s.Filters) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Filters", 1))
@@ -38394,24 +38463,24 @@ func (s *ParameterPatternMismatchException) RequestID() string {
 }
 
 // One or more filters. Use a filter to return a more specific list of results.
-//
-// The ParameterStringFilter object is used by the DescribeParameters and GetParametersByPath
-// API actions. However, not all of the pattern values listed for Key can be
-// used with both actions.
-//
-// For DescribeActions, all of the listed patterns are valid, with the exception
-// of Label.
-//
-// For GetParametersByPath, the following patterns listed for Key are not valid:
-// Name, Path, and Tier.
-//
-// For examples of CLI commands demonstrating valid parameter filter constructions,
-// see Searching for Systems Manager parameters (https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-search.html)
-// in the AWS Systems Manager User Guide.
 type ParameterStringFilter struct {
 	_ struct{} `type:"structure"`
 
 	// The name of the filter.
+	//
+	// The ParameterStringFilter object is used by the DescribeParameters and GetParametersByPath
+	// API actions. However, not all of the pattern values listed for Key can be
+	// used with both actions.
+	//
+	// For DescribeActions, all of the listed patterns are valid, with the exception
+	// of Label.
+	//
+	// For GetParametersByPath, the following patterns listed for Key are not valid:
+	// tag, Name, Path, and Tier.
+	//
+	// For examples of CLI commands demonstrating valid parameter filter constructions,
+	// see Searching for Systems Manager parameters (https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-search.html)
+	// in the AWS Systems Manager User Guide.
 	//
 	// Key is a required field
 	Key *string `min:"1" type:"string" required:"true"`
@@ -38422,8 +38491,8 @@ type ParameterStringFilter struct {
 	// and OneLevel.)
 	//
 	// For filters used with GetParametersByPath, valid options include Equals and
-	// BeginsWith. (Exception: For filters using the key Label, the only valid option
-	// is Equals.)
+	// BeginsWith. (Exception: For filters using Label as the Key name, the only
+	// valid option is Equals.)
 	Option *string `min:"1" type:"string"`
 
 	// The value you want to search for.
@@ -39987,6 +40056,9 @@ type PutParameterInput struct {
 
 	// The parameter value that you want to add to the system. Standard parameters
 	// have a value limit of 4 KB. Advanced parameters have a value limit of 8 KB.
+	//
+	// Parameters can't be referenced or nested in the values of other parameters.
+	// You can't include {{}} or {{ssm:parameter-name}} in a parameter value.
 	//
 	// Value is a required field
 	Value *string `type:"string" required:"true"`
@@ -44809,8 +44881,7 @@ func (s *UnsupportedInventorySchemaVersionException) RequestID() string {
 }
 
 // The operating systems you specified is not supported, or the operation is
-// not supported for the operating system. Valid operating systems include:
-// Windows, AmazonLinux, RedhatEnterpriseLinux, and Ubuntu.
+// not supported for the operating system.
 type UnsupportedOperatingSystem struct {
 	_            struct{}                  `type:"structure"`
 	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
@@ -46102,7 +46173,7 @@ type UpdateMaintenanceWindowTaskInput struct {
 	// Tasks that have the same priority are scheduled in parallel.
 	Priority *int64 `type:"integer"`
 
-	// If True, then all fields that are required by the RegisterTaskWithMaintenanceWndow
+	// If True, then all fields that are required by the RegisterTaskWithMaintenanceWindow
 	// action are also required for this API request. Optional fields that are not
 	// specified are set to null.
 	Replace *bool `type:"boolean"`
@@ -46131,6 +46202,14 @@ type UpdateMaintenanceWindowTaskInput struct {
 
 	// The parameters that the task should use during execution. Populate only the
 	// fields that match the task type. All other fields should be empty.
+	//
+	// When you update a maintenance window task that has options specified in TaskInvocationParameters,
+	// you must provide again all the TaskInvocationParameters values that you want
+	// to retain. The values you do not specify again are removed. For example,
+	// suppose that when you registered a Run Command task, you specified TaskInvocationParameters
+	// values for Comment, NotificationConfig, and OutputS3BucketName. If you update
+	// the maintenance window task and specify only a different OutputS3BucketName
+	// value, the values for Comment and NotificationConfig are removed.
 	TaskInvocationParameters *MaintenanceWindowTaskInvocationParameters `type:"structure"`
 
 	// The parameters to modify.

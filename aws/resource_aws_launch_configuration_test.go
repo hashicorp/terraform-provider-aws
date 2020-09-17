@@ -700,27 +700,30 @@ resource "aws_launch_configuration" "test" {
 }
 
 func testAccAWSLaunchConfigurationConfigWithEncryptedRootBlockDevice(rInt int) string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		testAccAWSLaunchConfigurationConfig_ami(),
+		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-instance-%d"
+    Name = "terraform-testacc-instance-%[1]d"
   }
 }
 
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
   vpc_id            = aws_vpc.test.id
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name = "terraform-testacc-instance-%d"
+    Name = "terraform-testacc-instance-%[1]d"
   }
 }
 
 resource "aws_launch_configuration" "test" {
-  name_prefix                 = "tf-acc-test-%d"
+  name_prefix                 = "tf-acc-test-%[1]d"
   image_id                    = data.aws_ami.ubuntu.id
   instance_type               = "t3.nano"
   user_data                   = "testtest-user-data"
@@ -732,7 +735,7 @@ resource "aws_launch_configuration" "test" {
     volume_size = 11
   }
 }
-`, rInt, rInt, rInt)
+`, rInt))
 }
 
 func testAccAWSLaunchConfigurationConfig() string {

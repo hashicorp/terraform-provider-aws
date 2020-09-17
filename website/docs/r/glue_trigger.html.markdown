@@ -81,7 +81,7 @@ resource "aws_glue_trigger" "example" {
 }
 ```
 
-### Conditional Trigger with Crawler Condition 
+### Conditional Trigger with Crawler Condition
 
 **Note:** Triggers can have both a crawler action and a crawler condition, just no example provided.
 

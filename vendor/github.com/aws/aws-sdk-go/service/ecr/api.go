@@ -5193,7 +5193,7 @@ type Image struct {
 	// The image manifest associated with the image.
 	ImageManifest *string `locationName:"imageManifest" min:"1" type:"string"`
 
-	// The media type associated with the image manifest.
+	// The manifest media type of the image.
 	ImageManifestMediaType *string `locationName:"imageManifestMediaType" type:"string"`
 
 	// The AWS account ID associated with the registry containing the image.
@@ -5305,8 +5305,14 @@ func (s *ImageAlreadyExistsException) RequestID() string {
 type ImageDetail struct {
 	_ struct{} `type:"structure"`
 
+	// The artifact media type of the image.
+	ArtifactMediaType *string `locationName:"artifactMediaType" type:"string"`
+
 	// The sha256 digest of the image manifest.
 	ImageDigest *string `locationName:"imageDigest" type:"string"`
+
+	// The media type of the image manifest.
+	ImageManifestMediaType *string `locationName:"imageManifestMediaType" type:"string"`
 
 	// The date and time, expressed in standard JavaScript date format, at which
 	// the current image was pushed to the repository.
@@ -5349,9 +5355,21 @@ func (s ImageDetail) GoString() string {
 	return s.String()
 }
 
+// SetArtifactMediaType sets the ArtifactMediaType field's value.
+func (s *ImageDetail) SetArtifactMediaType(v string) *ImageDetail {
+	s.ArtifactMediaType = &v
+	return s
+}
+
 // SetImageDigest sets the ImageDigest field's value.
 func (s *ImageDetail) SetImageDigest(v string) *ImageDetail {
 	s.ImageDigest = &v
+	return s
+}
+
+// SetImageManifestMediaType sets the ImageManifestMediaType field's value.
+func (s *ImageDetail) SetImageManifestMediaType(v string) *ImageDetail {
+	s.ImageManifestMediaType = &v
 	return s
 }
 

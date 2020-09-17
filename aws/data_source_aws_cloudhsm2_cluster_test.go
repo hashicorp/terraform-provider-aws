@@ -59,7 +59,7 @@ resource "aws_subnet" "cloudhsm_v2_test_subnets" {
 
 resource "aws_cloudhsm_v2_cluster" "cluster" {
   hsm_type   = "hsm1.medium"
-  subnet_ids = [aws_subnet.cloudhsm_v2_test_subnets.0.id, aws_subnet.cloudhsm_v2_test_subnets.1.id]
+  subnet_ids = aws_subnet.cloudhsm_v2_test_subnets[*].id
 
   tags = {
     Name = "tf-acc-aws_cloudhsm_v2_cluster-data-source-basic-%d"

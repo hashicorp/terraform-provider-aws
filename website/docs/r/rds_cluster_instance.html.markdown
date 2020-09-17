@@ -94,14 +94,11 @@ In addition to all arguments above, the following attributes are exported:
 * `identifier` - The Instance identifier
 * `id` - The Instance identifier
 * `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
-* `allocated_storage` - The amount of allocated storage
 * `availability_zone` - The availability zone of the instance
 * `endpoint` - The DNS address for this instance. May not be writable
 * `engine` - The database engine
 * `engine_version` - The database engine version
-* `database_name` - The database name
 * `port` - The database port
-* `status` - The RDS instance status
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted.
 * `kms_key_id` - The ARN for the KMS encryption key if one is set to the cluster.
 * `dbi_resource_id` - The region-unique, immutable identifier for the DB instance.

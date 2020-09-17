@@ -291,7 +291,7 @@ resource "aws_api_gateway_api_key" "test" {
   name = %[1]q
 
   tags = {
-	%[2]q = %[3]q
+    %[2]q = %[3]q
   }
 }
 `, rName, tagKey1, tagValue1)
@@ -303,8 +303,8 @@ resource "aws_api_gateway_api_key" "test" {
   name = %[1]q
 
   tags = {
-	%[2]q = %[3]q
-	%[4]q = %[5]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)

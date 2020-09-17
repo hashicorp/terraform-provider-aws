@@ -1179,7 +1179,7 @@ func TestValidateEmrCustomAmiId(t *testing.T) {
 		ErrCount int
 	}{
 		{
-			Value:    "ami-dbcf88b1",
+			Value:    "ami-dbcf88b1", //lintignore:AWSAT002
 			ErrCount: 0,
 		},
 		{
@@ -2285,29 +2285,6 @@ func TestValidateWafMetricName(t *testing.T) {
 		_, errors := validateWafMetricName(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid WAF metric name", v)
-		}
-	}
-}
-
-func TestValidateIamRoleDescription(t *testing.T) {
-	validNames := []string{
-		"This 1s a D3scr!pti0n with weird content: @ #^ù£ê®æ ø]ŒîÏî~ÈÙ£÷=,ë",
-		strings.Repeat("W", 1000),
-	}
-	for _, v := range validNames {
-		_, errors := validateIamRoleDescription(v, "description")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid IAM Role Description: %q", v, errors)
-		}
-	}
-
-	invalidNames := []string{
-		strings.Repeat("W", 1001), // > 1000
-	}
-	for _, v := range invalidNames {
-		_, errors := validateIamRoleDescription(v, "description")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid IAM Role Description", v)
 		}
 	}
 }

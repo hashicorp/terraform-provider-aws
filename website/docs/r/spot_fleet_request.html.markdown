@@ -182,9 +182,9 @@ across different markets and instance types. Conflicts with `launch_template_con
   the Spot pools specified by the Spot fleet request. The default is
   `lowestPrice`.
 * `instance_pools_to_use_count` - (Optional; Default: 1)
-  The number of Spot pools across which to allocate your target Spot capacity. 
-  Valid only when `allocation_strategy` is set to `lowestPrice`. Spot Fleet selects 
-  the cheapest Spot pools and evenly allocates your target Spot capacity across 
+  The number of Spot pools across which to allocate your target Spot capacity.
+  Valid only when `allocation_strategy` is set to `lowestPrice`. Spot Fleet selects
+  the cheapest Spot pools and evenly allocates your target Spot capacity across
   the number of Spot pools that you specify.
 * `excess_capacity_termination_policy` - Indicates whether running Spot
   instances should be terminated if the target capacity of the Spot fleet
@@ -207,7 +207,7 @@ across different markets and instance types. Conflicts with `launch_template_con
 The `launch_template_config` block supports the following:
 
 * `launch_template_specification` - (Required) Launch template specification. See [Launch Template Specification](#launch-template-specification) below for more details.
-* `overrides` - (Optional) One or more override configurations. See [Overrides](#overrides) below for more details. 
+* `overrides` - (Optional) One or more override configurations. See [Overrides](#overrides) below for more details.
 
 ### Launch Template Specification
 
@@ -215,7 +215,7 @@ The `launch_template_config` block supports the following:
 * `name` - The name of the launch template. Conflicts with `id`.
 * `version` - (Optional) Template version. Unlike the autoscaling equivalent, does not support `$Latest` or `$Default`, so use the launch_template resource's attribute, e.g. `"${aws_launch_template.foo.latest_version}"`. It will use the default version if omitted.
 
-    **Note:** The specified launch template can specify only a subset of the 
+    **Note:** The specified launch template can specify only a subset of the
     inputs of [`aws_launch_template`](launch_template.html).  There are limitations on
     what you can specify as spot fleet does not support all the attributes that are supported by autoscaling groups. [AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html#launch-templates-spot-fleet) is currently sparse, but at least `instance_initiated_shutdown_behavior` is confirmed unsupported.
 

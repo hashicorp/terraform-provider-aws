@@ -198,7 +198,6 @@ In addition to all arguments above, the following attributes are exported:
 * `cluster_identifier` - The RDS Cluster Identifier
 * `cluster_resource_id` - The RDS Cluster Resource ID
 * `cluster_members` – List of RDS Instances that are a part of this cluster
-* `allocated_storage` - The amount of allocated storage
 * `availability_zones` - The availability zone of the instance
 * `backup_retention_period` - The backup retention period
 * `preferred_backup_window` - The daily time range during which the backups happen
@@ -208,10 +207,8 @@ In addition to all arguments above, the following attributes are exported:
 load-balanced across replicas
 * `engine` - The database engine
 * `engine_version` - The database engine version
-* `maintenance_window` - The instance maintenance window
 * `database_name` - The database name
 * `port` - The database port
-* `status` - The RDS instance status
 * `master_username` - The master username for the database
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted
 * `replication_source_identifier` - ARN of the source DB cluster or DB instance if this DB cluster is created as a Read Replica.

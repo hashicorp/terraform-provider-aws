@@ -5,7 +5,7 @@
 - [Pull Requests](#pull-requests)
     - [Pull Request Review Process](#pull-request-review-process)
         - [Dependency Updates](#dependency-updates)
-            - [Go Default Version Update](#go-default-version-update)        
+            - [Go Default Version Update](#go-default-version-update)
             - [AWS Go SDK Updates](#aws-go-sdk-updates)
             - [golangci-lint Updates](#golangci-lint-updates)
             - [Terraform Plugin SDK Updates](#terraform-plugin-sdk-updates)
@@ -34,7 +34,7 @@ Incoming issues are classified using labels. These are assigned either by automa
 
 ### Pull Request Review Process
 
-Throughout the review process our first priority is to interact with contributors with kindness, empathy and in accordance with the [Guidelines](https://www.hashicorp.com/community-guidelines) and [Principles](https://www.hashicorp.com/our-principles/) of Hashicorp. 
+Throughout the review process our first priority is to interact with contributors with kindness, empathy and in accordance with the [Guidelines](https://www.hashicorp.com/community-guidelines) and [Principles](https://www.hashicorp.com/our-principles/) of Hashicorp.
 
 Our contributors are often working within the provider as a hobby, or not in their main line of work so we need to give adequate time for response. By default this is two weeks, but it is worth considering taking on the work to complete the PR ourselves if the administrative effort of waiting for a response is greater than just resolving the issues ourselves (Don't wait two weeks, or add a context shift for yourself and the contributor to fix a typo). As long as we use their commits, contributions will be recorded by Github and as always ensure to thank the contributor for their work. Roadmap items are another area where we would consider taking on the work ourselves more quickly in order to meet the commitments made to our users.
 

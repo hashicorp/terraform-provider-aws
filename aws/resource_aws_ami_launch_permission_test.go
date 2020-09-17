@@ -280,13 +280,13 @@ data "aws_region" "current" {}
 resource "aws_ami_copy" "test" {
   description       = %q
   name              = %q
-  source_ami_id     = "${data.aws_ami.amzn-ami-minimal-hvm.id}"
-  source_ami_region = "${data.aws_region.current.name}"
+  source_ami_id     = data.aws_ami.amzn-ami-minimal-hvm.id
+  source_ami_region = data.aws_region.current.name
 }
 
 resource "aws_ami_launch_permission" "test" {
-  account_id = "${data.aws_caller_identity.current.account_id}"
-  image_id   = "${aws_ami_copy.test.id}"
+  account_id = data.aws_caller_identity.current.account_id
+  image_id   = aws_ami_copy.test.id
 }
 `, rName, rName)
 }

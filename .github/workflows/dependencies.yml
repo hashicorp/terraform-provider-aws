@@ -29,7 +29,7 @@ jobs:
           check_duplicate_msg: true
           msg: |-
             Thank you for your contribution! :rocket:
-            
+
             Please note that typically Go dependency changes are handled in this repository by Renovate Bot or the maintainers. This is to prevent pull request merge conflicts and further delay reviews of contributions. Remove any changes to the `go.mod`, `go.sum`, and `vendor/` files and commit them into this pull request.
 
             Additional details:

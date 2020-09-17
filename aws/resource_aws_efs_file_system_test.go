@@ -634,10 +634,10 @@ resource "aws_efs_file_system" "test" {
 func testAccAWSEFSFileSystemConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
-	creation_token = %[1]q
-    tags = {
-      %[2]q = %[3]q
-    }
+  creation_token = %[1]q
+  tags = {
+    %[2]q = %[3]q
+  }
 }
 `, rName, tagKey1, tagValue1)
 }
@@ -645,11 +645,11 @@ resource "aws_efs_file_system" "test" {
 func testAccAWSEFSFileSystemConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
-	creation_token = %[1]q
-    tags = {
-      %[2]q = %[3]q
-      %[4]q = %[5]q
-    }
+  creation_token = %[1]q
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
@@ -735,8 +735,8 @@ resource "aws_efs_file_system" "test" {
 
 const testAccAWSEFSFileSystemConfigWithPerformanceMode = `
 resource "aws_efs_file_system" "test2" {
-	creation_token = "supercalifragilisticexpialidocious"
-	performance_mode = "maxIO"
+  creation_token   = "supercalifragilisticexpialidocious"
+  performance_mode = "maxIO"
 }
 `
 

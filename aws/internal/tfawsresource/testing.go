@@ -133,6 +133,7 @@ func TestCheckTypeSetElemAttr(name, attr, value string) resource.TestCheckFunc {
 // TypeSet.
 //
 // E.g., tfawsresource.TestCheckTypeSetElemAttrPair("aws_autoscaling_group.bar", "availability_zones.*", "data.aws_availability_zones.available", "names.0")
+// E.g., tfawsresource.TestCheckTypeSetElemAttrPair("aws_spot_fleet_request.bar", "launch_specification.*.instance_type", "data.data.aws_ec2_instance_type_offering.available", "instance_type")
 func TestCheckTypeSetElemAttrPair(nameFirst, keyFirst, nameSecond, keySecond string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		isFirst, err := instanceState(s, nameFirst)
@@ -150,7 +151,7 @@ func TestCheckTypeSetElemAttrPair(nameFirst, keyFirst, nameSecond, keySecond str
 			return fmt.Errorf("%s: Attribute %q not set, cannot be checked against TypeSet", nameSecond, keySecond)
 		}
 
-		return testCheckTypeSetElem(isFirst, keyFirst, vSecond)
+		return testCheckTypeSetElemPair(isFirst, keyFirst, vSecond)
 	}
 }
 
@@ -176,6 +177,27 @@ func testCheckTypeSetElem(is *terraform.InstanceState, attr, value string) error
 	if attrParts[len(attrParts)-1] != sentinelIndex {
 		return fmt.Errorf("%q does not end with the special value %q", attr, sentinelIndex)
 	}
+	for stateKey, stateValue := range is.Attributes {
+		if stateValue == value {
+			stateKeyParts := strings.Split(stateKey, ".")
+			if len(stateKeyParts) == len(attrParts) {
+				for i := range attrParts {
+					if attrParts[i] != stateKeyParts[i] && attrParts[i] != sentinelIndex {
+						break
+					}
+					if i == len(attrParts)-1 {
+						return nil
+					}
+				}
+			}
+		}
+	}
+
+	return fmt.Errorf("no TypeSet element %q, with value %q in state: %#v", attr, value, is.Attributes)
+}
+
+func testCheckTypeSetElemPair(is *terraform.InstanceState, attr, value string) error {
+	attrParts := strings.Split(attr, ".")
 	for stateKey, stateValue := range is.Attributes {
 		if stateValue == value {
 			stateKeyParts := strings.Split(stateKey, ".")

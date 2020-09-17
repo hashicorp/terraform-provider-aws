@@ -536,7 +536,7 @@ For example, given this previous configuration:
 resource "aws_dx_lag" "example" {
   name                  = "example"
   connections_bandwidth = "1Gbps"
-  location              = "EqSe2"
+  location              = "EqSe2-EQ"
   number_of_connections = 1
 }
 ```
@@ -547,13 +547,13 @@ An updated configuration:
 resource "aws_dx_connection" "example" {
   name      = "example"
   bandwidth = "1Gbps"
-  location  = "EqSe2"
+  location  = "EqSe2-EQ"
 }
 
 resource "aws_dx_lag" "example" {
   name                  = "example"
   connections_bandwidth = "1Gbps"
-  location              = "EqSe2"
+  location              = "EqSe2-EQ"
 }
 
 resource "aws_dx_connection_association" "example" {
@@ -747,7 +747,7 @@ resource "aws_redshift_cluster" "example" {
 ### Import Change
 
 Previously, importing this resource resulted in an `aws_route` resource for each route, in
-addition to the `aws_route_table`, in the Terraform state. Support for importing `aws_route` resources has been added and importing this resource only adds the `aws_route_table` 
+addition to the `aws_route_table`, in the Terraform state. Support for importing `aws_route` resources has been added and importing this resource only adds the `aws_route_table`
 resource, with in-line routes, to the state.
 
 ## Resource: aws_route53_record

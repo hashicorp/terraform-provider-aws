@@ -188,7 +188,7 @@ resource "aws_appsync_graphql_api" "test" {
 }
 
 resource "aws_appsync_api_key" "test" {
-  api_id      = "${aws_appsync_graphql_api.test.id}"
+  api_id      = aws_appsync_graphql_api.test.id
   description = %q
 }
 `, rName, description)
@@ -202,7 +202,7 @@ resource "aws_appsync_graphql_api" "test" {
 }
 
 resource "aws_appsync_api_key" "test" {
-  api_id  = "${aws_appsync_graphql_api.test.id}"
+  api_id  = aws_appsync_graphql_api.test.id
   expires = %q
 }
 `, rName, expires)
@@ -216,7 +216,7 @@ resource "aws_appsync_graphql_api" "test" {
 }
 
 resource "aws_appsync_api_key" "test" {
-  api_id = "${aws_appsync_graphql_api.test.id}"
+  api_id = aws_appsync_graphql_api.test.id
 }
 `, rName)
 }

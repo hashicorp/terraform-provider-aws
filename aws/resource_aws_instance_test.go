@@ -326,8 +326,7 @@ func TestAccAWSInstance_EbsBlockDevice_KmsKeyArn(t *testing.T) {
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"encrypted": "true",
 					}),
-					// TODO: TypeSet check implement attr pair helper
-					resource.TestCheckResourceAttrPair(resourceName, "ebs_block_device.2634515331.kms_key_id", kmsKeyResourceName, "arn"),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.kms_key_id", kmsKeyResourceName, "arn"),
 				),
 			},
 		},
@@ -923,30 +922,6 @@ func TestAccAWSInstance_ipv6_supportAddressCountWithIpv4(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_multipleRegions(t *testing.T) {
-	var v ec2.Instance
-	resourceName := "aws_instance.test"
-
-	// record the initialized providers so that we can use them to
-	// check for the instances in each region
-	var providers []*schema.Provider
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPartitionPreCheck(t, "aws") },
-		ProviderFactories: testAccProviderFactories(&providers),
-		CheckDestroy:      testAccCheckWithProviders(testAccCheckInstanceDestroyWithProvider, &providers),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfigMultipleRegions,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExistsWithProvider(resourceName, &v, testAccAwsRegionProviderFunc("us-west-2", &providers)),
-					testAccCheckInstanceExistsWithProvider("aws_instance.test2", &v, testAccAwsRegionProviderFunc("us-east-1", &providers)),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -1399,7 +1374,7 @@ func TestAccAWSInstance_rootBlockDeviceMismatch(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccRegionPreCheck(t, "us-west-2") },
+		PreCheck:     func() { testAccPreCheck(t); testAccRegionPreCheck(t, "us-west-2") }, //lintignore:AWSAT003
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -1600,7 +1575,7 @@ func TestAccAWSInstance_EbsRootDevice_ModifyType(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_EbsRootDevice_ModifyIOPS(t *testing.T) {
+func TestAccAWSInstance_EbsRootDevice_ModifyIOPS_Io1(t *testing.T) {
 	var original ec2.Instance
 	var updated ec2.Instance
 	resourceName := "aws_instance.test"
@@ -1608,6 +1583,48 @@ func TestAccAWSInstance_EbsRootDevice_ModifyIOPS(t *testing.T) {
 	volumeSize := "30"
 	deleteOnTermination := "true"
 	volumeType := "io1"
+
+	originalIOPS := "100"
+	updatedIOPS := "200"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEc2InstanceRootBlockDeviceWithIOPS(volumeSize, deleteOnTermination, volumeType, originalIOPS),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &original),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", originalIOPS),
+				),
+			},
+			{
+				Config: testAccAwsEc2InstanceRootBlockDeviceWithIOPS(volumeSize, deleteOnTermination, volumeType, updatedIOPS),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &updated),
+					testAccCheckInstanceNotRecreated(t, &original, &updated),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", updatedIOPS),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_EbsRootDevice_ModifyIOPS_Io2(t *testing.T) {
+	var original ec2.Instance
+	var updated ec2.Instance
+	resourceName := "aws_instance.test"
+
+	volumeSize := "30"
+	deleteOnTermination := "true"
+	volumeType := "io2"
 
 	originalIOPS := "100"
 	updatedIOPS := "200"
@@ -3792,29 +3809,6 @@ resource "aws_instance" "test" {
 `, rName)
 }
 
-const testAccInstanceConfigMultipleRegions = `
-provider "awswest" {
-  region = "us-west-2"
-}
-
-provider "awseast" {
-  region = "us-east-1"
-}
-resource "aws_instance" "test" {
-  # us-west-2
-  provider      = "awswest"
-  ami           = "ami-4fccb37f"
-  instance_type = "m1.small"
-}
-
-resource "aws_instance" "test2" {
-  # us-east-1
-  provider      = "awseast"
-  ami           = "ami-8c6ea9e4"
-  instance_type = "m1.small"
-}
-`
-
 func testAccCheckInstanceConfigTags() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_instance" "test" {
@@ -4275,7 +4269,7 @@ resource "aws_instance" "test" {
     volume_size = 13
   }
 }
-`
+` //lintignore:AWSAT002
 }
 
 func testAccInstanceConfigForceNewAndTagsDrift(rName string) string {
@@ -4896,6 +4890,28 @@ data "aws_ami" "amzn-ami-minimal-pv-ebs" {
   filter {
     name   = "root-device-type"
     values = ["ebs"]
+  }
+}
+`)
+}
+
+// testAccLatestAmazonLinuxPvInstanceStoreAmiConfig returns the configuration for a data source that
+// describes the latest Amazon Linux AMI using PV virtualization and an instance store root device.
+// The data source is named 'amzn-ami-minimal-pv-ebs'.
+func testAccLatestAmazonLinuxPvInstanceStoreAmiConfig() string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-pv-instance-store" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-pv-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["instance-store"]
   }
 }
 `)

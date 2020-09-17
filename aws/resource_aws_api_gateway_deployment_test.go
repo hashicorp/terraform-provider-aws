@@ -19,7 +19,7 @@ func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test-deployment")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
 		Steps: []resource.TestStep{
@@ -49,7 +49,7 @@ func TestAccAWSAPIGatewayDeployment_disappears_RestApi(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test-deployment")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
 		Steps: []resource.TestStep{
@@ -72,7 +72,7 @@ func TestAccAWSAPIGatewayDeployment_Triggers(t *testing.T) {
 	resourceName := "aws_api_gateway_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
 		Steps: []resource.TestStep{
@@ -127,7 +127,7 @@ func TestAccAWSAPIGatewayDeployment_Description(t *testing.T) {
 	resourceName := "aws_api_gateway_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
 		Steps: []resource.TestStep{
@@ -155,7 +155,7 @@ func TestAccAWSAPIGatewayDeployment_StageDescription(t *testing.T) {
 	resourceName := "aws_api_gateway_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
 		Steps: []resource.TestStep{
@@ -177,7 +177,7 @@ func TestAccAWSAPIGatewayDeployment_StageName(t *testing.T) {
 	resourceName := "aws_api_gateway_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
 		Steps: []resource.TestStep{
@@ -204,7 +204,7 @@ func TestAccAWSAPIGatewayDeployment_StageName_EmptyString(t *testing.T) {
 	resourceName := "aws_api_gateway_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
 		Steps: []resource.TestStep{
@@ -224,7 +224,7 @@ func TestAccAWSAPIGatewayDeployment_Variables(t *testing.T) {
 	resourceName := "aws_api_gateway_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
 		Steps: []resource.TestStep{
@@ -356,29 +356,29 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
-  resource_id   = "${aws_api_gateway_resource.test.id}"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 }
 
 resource "aws_api_gateway_method_response" "error" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
   status_code = "400"
 }
 
 resource "aws_api_gateway_integration" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
 
   type                    = "HTTP"
   uri                     = "%s"
@@ -386,10 +386,10 @@ resource "aws_api_gateway_integration" "test" {
 }
 
 resource "aws_api_gateway_integration_response" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_integration.test.http_method}"
-  status_code = "${aws_api_gateway_method_response.error.status_code}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_integration.test.http_method
+  status_code = aws_api_gateway_method_response.error.status_code
 }
 `, uri)
 }
@@ -421,7 +421,7 @@ resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
 
   description = %q
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
 }
 `, description)
 }
@@ -431,7 +431,7 @@ func testAccAWSAPIGatewayDeploymentConfigRequired() string {
 resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
 
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
 }
 `
 }
@@ -441,7 +441,7 @@ func testAccAWSAPIGatewayDeploymentConfigStageDescription(stageDescription strin
 resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
 
-  rest_api_id       = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id       = aws_api_gateway_rest_api.test.id
   stage_description = %q
   stage_name        = "tf-acc-test"
 }
@@ -453,7 +453,7 @@ func testAccAWSAPIGatewayDeploymentConfigStageName(stageName string) string {
 resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
 
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
   stage_name  = %q
 }
 `, stageName)
@@ -464,7 +464,7 @@ func testAccAWSAPIGatewayDeploymentConfigVariables(key1, value1 string) string {
 resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
 
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
 
   variables = {
     %q = %q

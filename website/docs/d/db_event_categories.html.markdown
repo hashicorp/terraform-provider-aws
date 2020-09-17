@@ -10,7 +10,7 @@ description: |-
 
 ## Example Usage
 
-List the event categories of all the RDS resources. 
+List the event categories of all the RDS resources.
 
 ```hcl
 data "aws_db_event_categories" "example" {}

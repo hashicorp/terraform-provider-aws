@@ -575,9 +575,7 @@ resource "aws_iam_role_policy" "test" {
     "Action": "*",
     "Resource": "*"
   }
-}
   EOF
-
 }
 `, role, role)
 }

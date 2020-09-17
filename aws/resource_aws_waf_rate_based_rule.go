@@ -52,7 +52,7 @@ func resourceAwsWafRateBasedRule() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateWafPredicatesType(),
+							ValidateFunc: validation.StringInSlice(waf.PredicateType_Values(), false),
 						},
 					},
 				},
@@ -171,7 +171,7 @@ func resourceAwsWafRateBasedRuleRead(d *schema.ResourceData, meta interface{}) e
 func resourceAwsWafRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
 
-	if d.HasChange("predicates") {
+	if d.HasChanges("predicates", "rate_limit") {
 		o, n := d.GetChange("predicates")
 		oldP, newP := o.(*schema.Set).List(), n.(*schema.Set).List()
 		rateLimit := d.Get("rate_limit")

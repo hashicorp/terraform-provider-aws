@@ -111,8 +111,8 @@ Terraform will autogenerate a name beginning with `tf-lb`.
 * `drop_invalid_header_fields` - (Optional) Indicates whether HTTP headers with header fields that are not valid are removed by the load balancer (true) or routed to targets (false). The default is false. Elastic Load Balancing requires that message header names contain only alphanumeric characters and hyphens. Only valid for Load Balancers of type `application`.
 * `access_logs` - (Optional) An Access Logs block. Access Logs documented below.
 * `subnets` - (Optional) A list of subnet IDs to attach to the LB. Subnets
-cannot be updated for Load Balancers of type `network`. Changing this value 
-for load balancers of type `network` will force a recreation of the resource. 
+cannot be updated for Load Balancers of type `network`. Changing this value
+for load balancers of type `network` will force a recreation of the resource.
 * `subnet_mapping` - (Optional) A subnet mapping block as documented below.
 * `idle_timeout` - (Optional) The time in seconds that the connection is allowed to be idle. Only valid for Load Balancers of type `application`. Default: 60.
 * `enable_deletion_protection` - (Optional) If true, deletion of the load balancer will be disabled via

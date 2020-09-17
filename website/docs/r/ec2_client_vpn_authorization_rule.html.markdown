@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_ec2_client_vpn_authorization_rule
 
-Provides authorization rules for AWS Client VPN endpoints. For more information on usage, please see the 
+Provides authorization rules for AWS Client VPN endpoints. For more information on usage, please see the
 [AWS Client VPN Administrator's Guide](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/what-is.html).
 
 ## Example Usage

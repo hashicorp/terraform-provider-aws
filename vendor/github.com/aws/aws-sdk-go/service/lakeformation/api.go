@@ -2157,6 +2157,35 @@ func (s *DescribeResourceOutput) SetResourceInfo(v *ResourceInfo) *DescribeResou
 	return s
 }
 
+// A structure containing the additional details to be returned in the AdditionalDetails
+// attribute of PrincipalResourcePermissions.
+//
+// If a catalog resource is shared through AWS Resource Access Manager (AWS
+// RAM), then there will exist a corresponding RAM share resource ARN.
+type DetailsMap struct {
+	_ struct{} `type:"structure"`
+
+	// A share resource ARN for a catalog resource shared through AWS Resource Access
+	// Manager (AWS RAM).
+	ResourceShare []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s DetailsMap) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DetailsMap) GoString() string {
+	return s.String()
+}
+
+// SetResourceShare sets the ResourceShare field's value.
+func (s *DetailsMap) SetResourceShare(v []*string) *DetailsMap {
+	s.ResourceShare = v
+	return s
+}
+
 // A specified entity does not exist
 type EntityNotFoundException struct {
 	_            struct{}                  `type:"structure"`
@@ -3035,6 +3064,10 @@ func (s *PrincipalPermissions) SetPrincipal(v *DataLakePrincipal) *PrincipalPerm
 type PrincipalResourcePermissions struct {
 	_ struct{} `type:"structure"`
 
+	// This attribute can be used to return any additional details of PrincipalResourcePermissions.
+	// Currently returns only as a RAM share resource ARN.
+	AdditionalDetails *DetailsMap `type:"structure"`
+
 	// The permissions to be granted or revoked on the resource.
 	Permissions []*string `type:"list"`
 
@@ -3057,6 +3090,12 @@ func (s PrincipalResourcePermissions) String() string {
 // GoString returns the string representation
 func (s PrincipalResourcePermissions) GoString() string {
 	return s.String()
+}
+
+// SetAdditionalDetails sets the AdditionalDetails field's value.
+func (s *PrincipalResourcePermissions) SetAdditionalDetails(v *DetailsMap) *PrincipalResourcePermissions {
+	s.AdditionalDetails = v
+	return s
 }
 
 // SetPermissions sets the Permissions field's value.
