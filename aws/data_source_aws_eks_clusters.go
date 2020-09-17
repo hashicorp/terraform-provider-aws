@@ -188,9 +188,7 @@ func dataSourceAwsEksClustersRead(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Reading ListClusters: %s", params)
 	var clusterNames []*string
 	err := conn.ListClustersPages(params, func(resp *eks.ListClustersOutput, isLast bool) bool {
-		for _, clusterName := range resp.Clusters {
-			clusterNames = append(clusterNames, clusterName)
-		}
+		clusterNames = append(clusterNames, resp.Clusters...)
 		return !isLast
 	})
 	if err != nil {
