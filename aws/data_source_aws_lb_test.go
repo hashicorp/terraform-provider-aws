@@ -256,10 +256,10 @@ resource "aws_vpc" "alb_test" {
 }
 
 resource "aws_subnet" "alb_test" {
-  vpc_id                  = aws_vpc.alb_test.id
-  cidr_block              = "10.0.0.0/24"
-  availability_zone       = data.aws_outposts_outpost.test.availability_zone
-  outpost_arn             = data.aws_outposts_outpost.test.arn
+  vpc_id            = aws_vpc.alb_test.id
+  cidr_block        = "10.0.0.0/24"
+  availability_zone = data.aws_outposts_outpost.test.availability_zone
+  outpost_arn       = data.aws_outposts_outpost.test.arn
 
   tags = {
     Name = "tf-acc-lb-data-source-outpost"

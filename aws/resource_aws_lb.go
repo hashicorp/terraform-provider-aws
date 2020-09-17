@@ -114,7 +114,6 @@ func resourceAwsLb() *schema.Resource {
 						"outpost_id": {
 							Type:     schema.TypeString,
 							Computed: true,
-							Optional: true,
 						},
 						"allocation_id": {
 							Type:     schema.TypeString,
@@ -133,7 +132,6 @@ func resourceAwsLb() *schema.Resource {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["outpost_id"].(string)))
 					if m["allocation_id"] != "" {
 						buf.WriteString(fmt.Sprintf("%s-", m["allocation_id"].(string)))
 					}
