@@ -902,6 +902,40 @@ func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/15115
+func TestAccAWSDynamoDbTable_lsiNonKeyAttributes(t *testing.T) {
+	var conf dynamodb.DescribeTableOutput
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbConfigLsiNonKeyAttributes(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "local_secondary_index.*", map[string]string{
+						"name":                 "TestTableLSI",
+						"non_key_attributes.#": "1",
+						"non_key_attributes.0": "TestNonKeyAttribute",
+						"projection_type":      "INCLUDE",
+						"range_key":            "TestLSIRangeKey",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // https://github.com/terraform-providers/terraform-provider-aws/issues/566
 func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
@@ -2051,6 +2085,40 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, name, attributes)
+}
+
+func testAccAWSDynamoDbConfigLsiNonKeyAttributes(name string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = "%s"
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
+  write_capacity = 1
+  read_capacity  = 1
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestLSIRangeKey"
+    type = "N"
+  }
+
+  local_secondary_index {
+    name               = "TestTableLSI"
+    range_key          = "TestLSIRangeKey"
+    projection_type    = "INCLUDE"
+    non_key_attributes = ["TestNonKeyAttribute"]
+  }
+}
+`, name)
 }
 
 func testAccAWSDynamoDbConfigTimeToLive(rName string, ttlEnabled bool) string {
