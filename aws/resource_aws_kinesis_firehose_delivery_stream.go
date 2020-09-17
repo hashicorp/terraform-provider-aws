@@ -618,11 +618,21 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 	d.Set("name", s.DeliveryStreamName)
 
 	sseOptions := map[string]interface{}{
-		"enabled": false,
+		"enabled":  false,
+		"key_type": firehose.KeyTypeAwsOwnedCmk,
 	}
-	if s.DeliveryStreamEncryptionConfiguration != nil && aws.StringValue(s.DeliveryStreamEncryptionConfiguration.Status) == firehose.DeliveryStreamEncryptionStatusEnabled {
+	if s.DeliveryStreamEncryptionConfiguration != nil &&
+		aws.StringValue(s.DeliveryStreamEncryptionConfiguration.Status) == firehose.DeliveryStreamEncryptionStatusEnabled {
 		sseOptions["enabled"] = true
+
+		if v := s.DeliveryStreamEncryptionConfiguration.KeyARN; v != nil {
+			sseOptions["key_arn"] = aws.StringValue(v)
+		}
+		if v := s.DeliveryStreamEncryptionConfiguration.KeyType; v != nil {
+			sseOptions["key_type"] = aws.StringValue(v)
+		}
 	}
+
 	if err := d.Set("server_side_encryption", []map[string]interface{}{sseOptions}); err != nil {
 		return fmt.Errorf("error setting server_side_encryption: %s", err)
 	}
@@ -725,6 +735,21 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
+						},
+
+						"key_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      firehose.KeyTypeAwsOwnedCmk,
+							ValidateFunc: validation.StringInSlice(firehose.KeyType_Values(), false),
+							RequiredWith: []string{"server_side_encryption.0.enabled"},
+						},
+
+						"key_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+							RequiredWith: []string{"server_side_encryption.0.enabled", "server_side_encryption.0.key_type"},
 						},
 					},
 				},
@@ -2198,9 +2223,12 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 	d.Set("arn", s.DeliveryStreamARN)
 
 	if v, ok := d.GetOk("server_side_encryption"); ok && !isKinesisFirehoseDeliveryStreamOptionDisabled(v) {
-		_, err := conn.StartDeliveryStreamEncryption(&firehose.StartDeliveryStreamEncryptionInput{
-			DeliveryStreamName: aws.String(sn),
-		})
+		startInput := &firehose.StartDeliveryStreamEncryptionInput{
+			DeliveryStreamName:                         aws.String(sn),
+			DeliveryStreamEncryptionConfigurationInput: expandFirehoseDeliveryStreamEncryptionConfigurationInput(v.([]interface{})),
+		}
+
+		_, err := conn.StartDeliveryStreamEncryption(startInput)
 		if err != nil {
 			return fmt.Errorf("error starting Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
 		}
@@ -2347,15 +2375,21 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 				return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) encryption to be disabled: %s", sn, err)
 			}
 		} else {
-			_, err := conn.StartDeliveryStreamEncryption(&firehose.StartDeliveryStreamEncryptionInput{
-				DeliveryStreamName: aws.String(sn),
-			})
+			startInput := &firehose.StartDeliveryStreamEncryptionInput{
+				DeliveryStreamName:                         aws.String(sn),
+				DeliveryStreamEncryptionConfigurationInput: expandFirehoseDeliveryStreamEncryptionConfigurationInput(n.([]interface{})),
+			}
+
+			_, err := conn.StartDeliveryStreamEncryption(startInput)
+
 			if err != nil {
-				return fmt.Errorf("error starting Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
+				return fmt.Errorf(
+					"error starting Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
 			}
 
 			if err := waitForKinesisFirehoseDeliveryStreamSSEEnabled(conn, sn); err != nil {
-				return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) encryption to be enabled: %s", sn, err)
+				return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) "+
+					"encryption to be enabled: %s", sn, err)
 			}
 		}
 	}
@@ -2515,13 +2549,37 @@ func isKinesisFirehoseDeliveryStreamOptionDisabled(v interface{}) bool {
 	if len(options) == 0 || options[0] == nil {
 		return true
 	}
-	m := options[0].(map[string]interface{})
+	optionMap := options[0].(map[string]interface{})
 
 	var enabled bool
 
-	if v, ok := m["enabled"]; ok {
+	if v, ok := optionMap["enabled"]; ok {
 		enabled = v.(bool)
 	}
 
 	return !enabled
+}
+
+func expandFirehoseDeliveryStreamEncryptionConfigurationInput(tfList []interface{}) *firehose.DeliveryStreamEncryptionConfigurationInput {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	apiObject := &firehose.DeliveryStreamEncryptionConfigurationInput{}
+
+	if v, ok := tfMap["key_arn"].(string); ok && v != "" {
+		apiObject.KeyARN = aws.String(v)
+	}
+
+	if v, ok := tfMap["key_type"].(string); ok && v != "" {
+		apiObject.KeyType = aws.String(v)
+	}
+
+	return apiObject
 }
