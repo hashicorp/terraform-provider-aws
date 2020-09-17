@@ -192,7 +192,17 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSE(t *testing.T) {
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName, rInt, false, ""),
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName, rInt, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", "AWS_OWNED_CMK"),
+				),
+			},
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName, rInt, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
@@ -205,25 +215,23 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSE(t *testing.T) {
 				PlanOnly: true,
 			},
 			{
-				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName, rInt, true, "AWS_OWNED_CMK"),
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName, rInt, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.kms_key_type", "AWS_OWNED_CMK"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", "AWS_OWNED_CMK"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSEAndCMK(t *testing.T) {
+func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSEAndKeyArn(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := acctest.RandInt()
 	rName := fmt.Sprintf("terraform-kinesis-firehose-basictest-%d", rInt)
-	config := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_s3basic,
-		rInt, rInt, rInt, rInt) + testAccKinesisFirehoseDeliveryStreamKmsKeyConfig(rName)
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -232,18 +240,18 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSEAndCMK(t *testing.T) 
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSEAndCMK(rName, rInt, true, "CUSTOMER_MANAGED_CMK"),
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSEAndKeyArn(rName, rInt, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.kms_key_type", "CUSTOMER_MANAGED_CMK"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", "aws_kms_key.fh_test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", firehose.KeyTypeCustomerManagedCmk),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.key_arn", "aws_kms_key.test", "arn"),
 				),
 			},
 			{
-				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSEAndCMK(rName, rInt, false, ""),
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName, rInt, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
@@ -252,8 +260,59 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSEAndCMK(t *testing.T) 
 				),
 			},
 			{
-				Config:   config,
-				PlanOnly: true,
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSEAndKeyArn(rName, rInt, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", firehose.KeyTypeCustomerManagedCmk),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.key_arn", "aws_kms_key.test", "arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSEAndKeyType(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rInt := acctest.RandInt()
+	rName := fmt.Sprintf("terraform-kinesis-firehose-basictest-%d", rInt)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSEAndKeyType(rName, rInt, true, firehose.KeyTypeAwsOwnedCmk),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", firehose.KeyTypeAwsOwnedCmk),
+				),
+			},
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName, rInt, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "false"),
+				),
+			},
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSEAndKeyType(rName, rInt, true, firehose.KeyTypeAwsOwnedCmk),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", firehose.KeyTypeAwsOwnedCmk),
+				),
 			},
 		},
 	})
@@ -1833,16 +1892,12 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 `
 
-func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName string, rInt int, sseEnabled bool, kmsType string) string {
-	kmsConfiguration := ""
-	if kmsType == firehose.KeyTypeAwsOwnedCmk {
-		kmsConfiguration = fmt.Sprintf(`kms_key_type = "%s"`, firehose.KeyTypeAwsOwnedCmk)
-	}
+func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName string, rInt int, sseEnabled bool) string {
 	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) +
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
-  name        = "%s"
+  name        = %[1]q
   destination = "s3"
 
   s3_configuration {
@@ -1851,25 +1906,23 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   }
 
   server_side_encryption {
-    enabled = %t
-	%s
+    enabled = %[2]t
   }
 }
-`, rName, sseEnabled, kmsConfiguration)
+`, rName, sseEnabled)
 }
 
-func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSEAndCMK(rName string, rInt int, sseEnabled bool, kmsType string) string {
-	kmsConfiguration := ""
-	if kmsType == firehose.KeyTypeCustomerManagedCmk {
-		kmsConfiguration = fmt.Sprintf(`kms_key_type = "%s"
-kms_key_arn = "${aws_kms_key.fh_test.arn}"`, kmsType)
-	}
+func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSEAndKeyArn(rName string, rInt int, sseEnabled bool) string {
 	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) +
-		testAccKinesisFirehoseDeliveryStreamKmsKeyConfig(rName) +
 		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  description             = %[1]q
+}
+
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
-  name        = "%s"
+  name        = %[1]q
   destination = "s3"
 
   s3_configuration {
@@ -1878,18 +1931,33 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   }
 
   server_side_encryption {
-    enabled = %t
-	%s
+    enabled  = %[2]t
+    key_arn  = aws_kms_key.test.arn
+    key_type = "CUSTOMER_MANAGED_CMK"
   }
 }
-`, rName, sseEnabled, kmsConfiguration)
+`, rName, sseEnabled)
 }
 
-func testAccKinesisFirehoseDeliveryStreamKmsKeyConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "fh_test" {
-  description = "Terraform acc test %s"
-}`, rName)
+func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSEAndKeyType(rName string, rInt int, sseEnabled bool, keyType string) string {
+	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) +
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "s3"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  server_side_encryption {
+    enabled  = %[2]t
+    key_type = %[3]q
+  }
+}
+`, rName, sseEnabled, keyType)
 }
 
 func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTags(rName string, rInt int) string {
