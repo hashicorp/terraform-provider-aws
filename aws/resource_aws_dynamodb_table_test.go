@@ -1145,6 +1145,37 @@ func TestAccAWSDynamoDbTable_attributeUpdate(t *testing.T) {
 	})
 }
 
+func TestAccAWSDynamoDbTable_lsiUpdate(t *testing.T) {
+	var conf dynamodb.DescribeTableOutput
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbConfigLSI(rName, "lsi-original"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{ // Change name of local secondary index
+				Config: testAccAWSDynamoDbConfigLSI(rName, "lsi-changed"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDynamoDbTable_attributeUpdateValidation(t *testing.T) {
 	rName := acctest.RandomWithPrefix("TerraformTestTable-")
 
@@ -2217,4 +2248,37 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, rName))
+}
+
+func testAccAWSDynamoDbConfigLSI(rName, lsiName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = "%s"
+  read_capacity  = 10
+  write_capacity = 10
+  hash_key       = "staticHashKey"
+  range_key      = "staticRangeKey"
+
+  attribute {
+    name = "staticHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "staticRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "staticLSIRangeKey"
+    type = "S"
+  }
+
+  local_secondary_index {
+    name            = "%s"
+    range_key        = "staticLSIRangeKey"
+    projection_type = "KEYS_ONLY"
+  }
+}
+`, rName, lsiName)
 }
