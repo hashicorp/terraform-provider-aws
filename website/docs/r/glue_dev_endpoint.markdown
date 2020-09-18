@@ -16,13 +16,13 @@ Basic usage:
 
 ```hcl
 resource "aws_glue_dev_endpoint" "de" {
-  name = "foo"
-  role_arn = "${aws_iam_role.test.arn}"
+  name     = "foo"
+  role_arn = aws_iam_role.de.arn
 }
 
 resource "aws_iam_role" "de" {
-  name = "AWSGlueServiceRole-foo"
-  assume_role_policy = "${data.aws_iam_policy_document.de.json}"
+  name               = "AWSGlueServiceRole-foo"
+  assume_role_policy = data.aws_iam_policy_document.de.json
 }
 
 data "aws_iam_policy_document" "de" {
@@ -38,7 +38,7 @@ data "aws_iam_policy_document" "de" {
 
 resource "aws_iam_role_policy_attachment" "foo-AWSGlueServiceRole" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
-  role       = "${aws_iam_role.de.name}"
+  role       = aws_iam_role.de.name
 }
 ```
 
