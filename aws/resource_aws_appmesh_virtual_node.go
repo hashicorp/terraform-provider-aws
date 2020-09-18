@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"strings"
@@ -11,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -84,7 +82,6 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 									},
 								},
 							},
-							Set: appmeshVirtualNodeBackendHash,
 						},
 
 						"backend_defaults": {
@@ -242,13 +239,9 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 												},
 
 												"mode": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														appmesh.ListenerTlsModeDisabled,
-														appmesh.ListenerTlsModePermissive,
-														appmesh.ListenerTlsModeStrict,
-													}, false),
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(appmesh.ListenerTlsMode_Values(), false),
 												},
 											},
 										},
@@ -619,50 +612,4 @@ func resourceAwsAppmeshVirtualNodeImport(d *schema.ResourceData, meta interface{
 	d.Set("mesh_name", resp.VirtualNode.MeshName)
 
 	return []*schema.ResourceData{d}, nil
-}
-
-func appmeshVirtualNodeBackendHash(vBackend interface{}) int {
-	var buf bytes.Buffer
-	mBackend := vBackend.(map[string]interface{})
-	if vVirtualService, ok := mBackend["virtual_service"].([]interface{}); ok && len(vVirtualService) > 0 && vVirtualService[0] != nil {
-		mVirtualService := vVirtualService[0].(map[string]interface{})
-		if v, ok := mVirtualService["virtual_service_name"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-		if vClientPolicy, ok := mVirtualService["client_policy"].([]interface{}); ok && len(vClientPolicy) > 0 && vClientPolicy[0] != nil {
-			mClientPolicy := vClientPolicy[0].(map[string]interface{})
-			if vTls, ok := mClientPolicy["tls"].([]interface{}); ok && len(vTls) > 0 && vTls[0] != nil {
-				mTls := vTls[0].(map[string]interface{})
-				if v, ok := mTls["enforce"].(bool); ok {
-					buf.WriteString(fmt.Sprintf("%t-", v))
-				}
-				if v, ok := mTls["ports"].(*schema.Set); ok && v.Len() > 0 {
-					for _, port := range v.List() {
-						buf.WriteString(fmt.Sprintf("%d-", port.(int)))
-					}
-				}
-				if vValidation, ok := mTls["validation"].([]interface{}); ok && len(vValidation) > 0 && vValidation[0] != nil {
-					mValidation := vValidation[0].(map[string]interface{})
-					if vTrust, ok := mValidation["trust"].([]interface{}); ok && len(vTrust) > 0 && vTrust[0] != nil {
-						mTrust := vTrust[0].(map[string]interface{})
-						if vAcm, ok := mTrust["acm"].([]interface{}); ok && len(vAcm) > 0 && vAcm[0] != nil {
-							mAcm := vAcm[0].(map[string]interface{})
-							if v, ok := mAcm["certificate_authority_arns"].(*schema.Set); ok && v.Len() > 0 {
-								for _, arn := range v.List() {
-									buf.WriteString(fmt.Sprintf("%s-", arn.(string)))
-								}
-							}
-						}
-						if vFile, ok := mTrust["file"].([]interface{}); ok && len(vFile) > 0 && vFile[0] != nil {
-							mFile := vFile[0].(map[string]interface{})
-							if v, ok := mFile["certificate_chain"].(string); ok {
-								buf.WriteString(fmt.Sprintf("%s-", v))
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	return hashcode.String(buf.String())
 }

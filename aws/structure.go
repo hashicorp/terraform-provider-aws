@@ -4996,7 +4996,7 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 			vBackends = append(vBackends, mBackend)
 		}
 
-		mSpec["backend"] = schema.NewSet(appmeshVirtualNodeBackendHash, vBackends)
+		mSpec["backend"] = vBackends
 	}
 
 	if backendDefaults := spec.BackendDefaults; backendDefaults != nil {
