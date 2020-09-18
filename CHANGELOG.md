@@ -1,4 +1,10 @@
 ## 3.8.0 (Unreleased)
+
+ENHANCEMENTS
+
+* data-source/aws_lb: Add `customer_owned_ipv4_pool` and `subnet_mapping` `outpost_id` attributes [GH-15170]
+* resource/aws_lb: Add `customer_owned_ipv4_pool` argument and `subnet_mapping` `outpost_id` attribute [GH-15170]
+
 ## 3.7.0 (September 17, 2020)
 
 FEATURES
