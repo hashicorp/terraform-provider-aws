@@ -1459,7 +1459,7 @@ resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = [aws_subnet.alb_test[0].id, aws_subnet.alb_test[1].id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
