@@ -4348,6 +4348,88 @@ func (c *Greengrass) GetSubscriptionDefinitionVersionWithContext(ctx aws.Context
 	return out, req.Send()
 }
 
+const opGetThingRuntimeConfiguration = "GetThingRuntimeConfiguration"
+
+// GetThingRuntimeConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the GetThingRuntimeConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetThingRuntimeConfiguration for more information on using the GetThingRuntimeConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetThingRuntimeConfigurationRequest method.
+//    req, resp := client.GetThingRuntimeConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/greengrass-2017-06-07/GetThingRuntimeConfiguration
+func (c *Greengrass) GetThingRuntimeConfigurationRequest(input *GetThingRuntimeConfigurationInput) (req *request.Request, output *GetThingRuntimeConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opGetThingRuntimeConfiguration,
+		HTTPMethod: "GET",
+		HTTPPath:   "/greengrass/things/{ThingName}/runtimeconfig",
+	}
+
+	if input == nil {
+		input = &GetThingRuntimeConfigurationInput{}
+	}
+
+	output = &GetThingRuntimeConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetThingRuntimeConfiguration API operation for AWS Greengrass.
+//
+// Get the runtime configuration of a thing.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Greengrass's
+// API operation GetThingRuntimeConfiguration for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//   General error information.
+//
+//   * InternalServerErrorException
+//   General error information.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/greengrass-2017-06-07/GetThingRuntimeConfiguration
+func (c *Greengrass) GetThingRuntimeConfiguration(input *GetThingRuntimeConfigurationInput) (*GetThingRuntimeConfigurationOutput, error) {
+	req, out := c.GetThingRuntimeConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// GetThingRuntimeConfigurationWithContext is the same as GetThingRuntimeConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetThingRuntimeConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Greengrass) GetThingRuntimeConfigurationWithContext(ctx aws.Context, input *GetThingRuntimeConfigurationInput, opts ...request.Option) (*GetThingRuntimeConfigurationOutput, error) {
+	req, out := c.GetThingRuntimeConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListBulkDeploymentDetailedReports = "ListBulkDeploymentDetailedReports"
 
 // ListBulkDeploymentDetailedReportsRequest generates a "aws/request.Request" representing the
@@ -7182,6 +7264,89 @@ func (c *Greengrass) UpdateSubscriptionDefinition(input *UpdateSubscriptionDefin
 // for more information on using Contexts.
 func (c *Greengrass) UpdateSubscriptionDefinitionWithContext(ctx aws.Context, input *UpdateSubscriptionDefinitionInput, opts ...request.Option) (*UpdateSubscriptionDefinitionOutput, error) {
 	req, out := c.UpdateSubscriptionDefinitionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateThingRuntimeConfiguration = "UpdateThingRuntimeConfiguration"
+
+// UpdateThingRuntimeConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateThingRuntimeConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateThingRuntimeConfiguration for more information on using the UpdateThingRuntimeConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateThingRuntimeConfigurationRequest method.
+//    req, resp := client.UpdateThingRuntimeConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/greengrass-2017-06-07/UpdateThingRuntimeConfiguration
+func (c *Greengrass) UpdateThingRuntimeConfigurationRequest(input *UpdateThingRuntimeConfigurationInput) (req *request.Request, output *UpdateThingRuntimeConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opUpdateThingRuntimeConfiguration,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/greengrass/things/{ThingName}/runtimeconfig",
+	}
+
+	if input == nil {
+		input = &UpdateThingRuntimeConfigurationInput{}
+	}
+
+	output = &UpdateThingRuntimeConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateThingRuntimeConfiguration API operation for AWS Greengrass.
+//
+// Updates the runtime configuration of a thing.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Greengrass's
+// API operation UpdateThingRuntimeConfiguration for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//   General error information.
+//
+//   * InternalServerErrorException
+//   General error information.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/greengrass-2017-06-07/UpdateThingRuntimeConfiguration
+func (c *Greengrass) UpdateThingRuntimeConfiguration(input *UpdateThingRuntimeConfigurationInput) (*UpdateThingRuntimeConfigurationOutput, error) {
+	req, out := c.UpdateThingRuntimeConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// UpdateThingRuntimeConfigurationWithContext is the same as UpdateThingRuntimeConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateThingRuntimeConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Greengrass) UpdateThingRuntimeConfigurationWithContext(ctx aws.Context, input *UpdateThingRuntimeConfigurationInput, opts ...request.Option) (*UpdateThingRuntimeConfigurationOutput, error) {
+	req, out := c.UpdateThingRuntimeConfigurationRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -13979,6 +14144,69 @@ func (s *GetSubscriptionDefinitionVersionOutput) SetVersion(v string) *GetSubscr
 	return s
 }
 
+type GetThingRuntimeConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// ThingName is a required field
+	ThingName *string `location:"uri" locationName:"ThingName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetThingRuntimeConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetThingRuntimeConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetThingRuntimeConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetThingRuntimeConfigurationInput"}
+	if s.ThingName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThingName"))
+	}
+	if s.ThingName != nil && len(*s.ThingName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThingName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetThingName sets the ThingName field's value.
+func (s *GetThingRuntimeConfigurationInput) SetThingName(v string) *GetThingRuntimeConfigurationInput {
+	s.ThingName = &v
+	return s
+}
+
+// The runtime configuration for a thing.
+type GetThingRuntimeConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Runtime configuration for a thing.
+	RuntimeConfiguration *RuntimeConfiguration `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetThingRuntimeConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetThingRuntimeConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetRuntimeConfiguration sets the RuntimeConfiguration field's value.
+func (s *GetThingRuntimeConfigurationOutput) SetRuntimeConfiguration(v *RuntimeConfiguration) *GetThingRuntimeConfigurationOutput {
+	s.RuntimeConfiguration = v
+	return s
+}
+
 // Information about a certificate authority for a group.
 type GroupCertificateAuthorityProperties struct {
 	_ struct{} `type:"structure"`
@@ -16403,6 +16631,30 @@ func (s *ResourceDownloadOwnerSetting) SetGroupPermission(v string) *ResourceDow
 	return s
 }
 
+// Runtime configuration for a thing.
+type RuntimeConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// Configuration for telemetry service.
+	TelemetryConfiguration *TelemetryConfiguration `type:"structure"`
+}
+
+// String returns the string representation
+func (s RuntimeConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RuntimeConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetTelemetryConfiguration sets the TelemetryConfiguration field's value.
+func (s *RuntimeConfiguration) SetTelemetryConfiguration(v *TelemetryConfiguration) *RuntimeConfiguration {
+	s.TelemetryConfiguration = v
+	return s
+}
+
 // Attributes that define an Amazon S3 machine learning resource.
 type S3MachineLearningModelResourceData struct {
 	_ struct{} `type:"structure"`
@@ -16910,6 +17162,81 @@ func (s TagResourceOutput) String() string {
 // GoString returns the string representation
 func (s TagResourceOutput) GoString() string {
 	return s.String()
+}
+
+// Configuration settings for running telemetry.
+type TelemetryConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// Synchronization status of the device reported configuration with the desired
+	// configuration.
+	ConfigurationSyncStatus *string `type:"string" enum:"ConfigurationSyncStatus"`
+
+	// Configure telemetry to be on or off.
+	//
+	// Telemetry is a required field
+	Telemetry *string `type:"string" required:"true" enum:"Telemetry"`
+}
+
+// String returns the string representation
+func (s TelemetryConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TelemetryConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetConfigurationSyncStatus sets the ConfigurationSyncStatus field's value.
+func (s *TelemetryConfiguration) SetConfigurationSyncStatus(v string) *TelemetryConfiguration {
+	s.ConfigurationSyncStatus = &v
+	return s
+}
+
+// SetTelemetry sets the Telemetry field's value.
+func (s *TelemetryConfiguration) SetTelemetry(v string) *TelemetryConfiguration {
+	s.Telemetry = &v
+	return s
+}
+
+// Configuration settings for running telemetry.
+type TelemetryConfigurationUpdate struct {
+	_ struct{} `type:"structure"`
+
+	// Configure telemetry to be on or off.
+	//
+	// Telemetry is a required field
+	Telemetry *string `type:"string" required:"true" enum:"Telemetry"`
+}
+
+// String returns the string representation
+func (s TelemetryConfigurationUpdate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TelemetryConfigurationUpdate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TelemetryConfigurationUpdate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TelemetryConfigurationUpdate"}
+	if s.Telemetry == nil {
+		invalidParams.Add(request.NewErrParamRequired("Telemetry"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTelemetry sets the Telemetry field's value.
+func (s *TelemetryConfigurationUpdate) SetTelemetry(v string) *TelemetryConfigurationUpdate {
+	s.Telemetry = &v
+	return s
 }
 
 type UntagResourceInput struct {
@@ -17632,6 +17959,73 @@ func (s UpdateSubscriptionDefinitionOutput) GoString() string {
 	return s.String()
 }
 
+type UpdateThingRuntimeConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// Configuration settings for running telemetry.
+	TelemetryConfiguration *TelemetryConfigurationUpdate `type:"structure"`
+
+	// ThingName is a required field
+	ThingName *string `location:"uri" locationName:"ThingName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateThingRuntimeConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateThingRuntimeConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateThingRuntimeConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateThingRuntimeConfigurationInput"}
+	if s.ThingName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThingName"))
+	}
+	if s.ThingName != nil && len(*s.ThingName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThingName", 1))
+	}
+	if s.TelemetryConfiguration != nil {
+		if err := s.TelemetryConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("TelemetryConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTelemetryConfiguration sets the TelemetryConfiguration field's value.
+func (s *UpdateThingRuntimeConfigurationInput) SetTelemetryConfiguration(v *TelemetryConfigurationUpdate) *UpdateThingRuntimeConfigurationInput {
+	s.TelemetryConfiguration = v
+	return s
+}
+
+// SetThingName sets the ThingName field's value.
+func (s *UpdateThingRuntimeConfigurationInput) SetThingName(v string) *UpdateThingRuntimeConfigurationInput {
+	s.ThingName = &v
+	return s
+}
+
+type UpdateThingRuntimeConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateThingRuntimeConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateThingRuntimeConfigurationOutput) GoString() string {
+	return s.String()
+}
+
 // Information about a version.
 type VersionInformation struct {
 	_ struct{} `type:"structure"`
@@ -17713,6 +18107,22 @@ func BulkDeploymentStatus_Values() []string {
 		BulkDeploymentStatusStopping,
 		BulkDeploymentStatusStopped,
 		BulkDeploymentStatusFailed,
+	}
+}
+
+const (
+	// ConfigurationSyncStatusInSync is a ConfigurationSyncStatus enum value
+	ConfigurationSyncStatusInSync = "InSync"
+
+	// ConfigurationSyncStatusOutOfSync is a ConfigurationSyncStatus enum value
+	ConfigurationSyncStatusOutOfSync = "OutOfSync"
+)
+
+// ConfigurationSyncStatus_Values returns all elements of the ConfigurationSyncStatus enum
+func ConfigurationSyncStatus_Values() []string {
+	return []string{
+		ConfigurationSyncStatusInSync,
+		ConfigurationSyncStatusOutOfSync,
 	}
 }
 
@@ -17870,6 +18280,22 @@ func SoftwareToUpdate_Values() []string {
 	return []string{
 		SoftwareToUpdateCore,
 		SoftwareToUpdateOtaAgent,
+	}
+}
+
+const (
+	// TelemetryOn is a Telemetry enum value
+	TelemetryOn = "On"
+
+	// TelemetryOff is a Telemetry enum value
+	TelemetryOff = "Off"
+)
+
+// Telemetry_Values returns all elements of the Telemetry enum
+func Telemetry_Values() []string {
+	return []string{
+		TelemetryOn,
+		TelemetryOff,
 	}
 }
 
