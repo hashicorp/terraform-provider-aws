@@ -71,3 +71,43 @@ func SecurityGroupByID(conn *ec2.EC2, id string) (*ec2.SecurityGroup, error) {
 
 	return result.SecurityGroups[0], nil
 }
+
+// VpnGatewayVpcAttachment returns the attachment between the specified VPN gateway and VPC.
+// Returns nil and potentially an error if no attachment is found.
+func VpnGatewayVpcAttachment(conn *ec2.EC2, vpnGatewayID, vpcID string) (*ec2.VpcAttachment, error) {
+	vpnGateway, err := VpnGatewayByID(conn, vpnGatewayID)
+	if err != nil {
+		return nil, err
+	}
+
+	if vpnGateway == nil {
+		return nil, nil
+	}
+
+	for _, vpcAttachment := range vpnGateway.VpcAttachments {
+		if aws.StringValue(vpcAttachment.VpcId) == vpcID {
+			return vpcAttachment, nil
+		}
+	}
+
+	return nil, nil
+}
+
+// VpnGatewayByID returns the VPN gateway corresponding to the specified identifier.
+// Returns nil and potentially an error if no VPN gateway is found.
+func VpnGatewayByID(conn *ec2.EC2, id string) (*ec2.VpnGateway, error) {
+	input := &ec2.DescribeVpnGatewaysInput{
+		VpnGatewayIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeVpnGateways(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.VpnGateways) == 0 {
+		return nil, nil
+	}
+
+	return output.VpnGateways[0], nil
+}
