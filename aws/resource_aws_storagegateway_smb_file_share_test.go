@@ -657,32 +657,30 @@ func TestAccAWSStorageGatewaySmbFileShare_AdminUserList(t *testing.T) {
 		CheckDestroy: testAccCheckAWSStorageGatewaySmbFileShareDestroy,
 		Steps: []resource.TestStep{
 			{
-				{
-					Config: testAccAWSStorageGatewaySmbFileShareConfig_AdminUserList_Single(rName, "adminuser1"),
-					Check: resource.ComposeTestCheckFunc(
-						testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
-						resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", "1"),
-					),
-				},
-				{
-					Config: testAccAWSStorageGatewaySmbFileShareConfig_AdminUserList_Multiple(rName, "adminuser2", "adminuser3"),
-					Check: resource.ComposeTestCheckFunc(
-						testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
-						resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", "2"),
-					),
-				},
-				{
-					Config: testAccAWSStorageGatewaySmbFileShareConfig_AdminUserList_Single(rName, "adminuser4"),
-					Check: resource.ComposeTestCheckFunc(
-						testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
-						resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", "1"),
-					),
-				},
-				{
-					ResourceName:      resourceName,
-					ImportState:       true,
-					ImportStateVerify: true,
-				},
+				Config: testAccAWSStorageGatewaySmbFileShareConfig_AdminUserList_Single(rName, "adminuser1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSStorageGatewaySmbFileShareConfig_AdminUserList_Multiple(rName, "adminuser2", "adminuser3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSStorageGatewaySmbFileShareConfig_AdminUserList_Single(rName, "adminuser4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewaySmbFileShareExists(resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
