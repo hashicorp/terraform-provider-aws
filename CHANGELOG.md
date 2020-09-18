@@ -7,6 +7,7 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* resource/aws_dynamodb_table: Ensure changes in `name`, `range_key`, `projection_type`, or `non_key_attributes` of a `local_secondary_index` configuration block force resource recreation [GH-12335]
 * resource/aws_vpn_gateway: Increase VPC detachment timeout to 30 minutes [GH-15201]
 * resource/aws_vpn_gateway_attachment: Increase VPC detachment timeout to 30 minutes [GH-15201]
 
