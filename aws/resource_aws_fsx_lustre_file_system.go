@@ -65,7 +65,9 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 				ValidateFunc: validation.IntBetween(1, 512000),
 			},
 			"network_interface_ids": {
-				Type:     schema.TypeSet,
+				// As explained in https://docs.aws.amazon.com/fsx/latest/LustreGuide/mounting-on-premises.html, the first
+				// network_interface_id is the primary one, so ordering matters. Use TypeList instead of TypeSet to preserve it.
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
