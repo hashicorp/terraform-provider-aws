@@ -1,5 +1,9 @@
 ## 3.8.0 (Unreleased)
 
+FEATURES
+
+* **New Resource:** `aws_datasync_location_fsx_windows` ([#12686](https://github.com/terraform-providers/terraform-provider-aws/pull/12686))
+
 ENHANCEMENTS
 
 * resource/aws_fsx_lustre_file_system - add support for backup retention [GH-14446]
