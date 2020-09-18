@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -14,8 +15,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/mitchellh/go-homedir"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
@@ -190,7 +191,7 @@ func resourceAwsS3BucketObject() *schema.Resource {
 			"object_lock_retain_until_date": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.ValidateRFC3339TimeString,
+				ValidateFunc: validation.IsRFC3339Time,
 			},
 		},
 	}
@@ -315,6 +316,7 @@ func resourceAwsS3BucketObjectCreate(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -394,7 +396,7 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
-	if err := d.Set("tags", tags.(keyvaluetags.KeyValueTags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.(keyvaluetags.KeyValueTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -453,7 +455,7 @@ func resourceAwsS3BucketObjectUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if d.HasChange("object_lock_mode") || d.HasChange("object_lock_retain_until_date") {
+	if d.HasChanges("object_lock_mode", "object_lock_retain_until_date") {
 		req := &s3.PutObjectRetentionInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
@@ -524,7 +526,7 @@ func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors [
 	return
 }
 
-func resourceAwsS3BucketObjectCustomizeDiff(d *schema.ResourceDiff, meta interface{}) error {
+func resourceAwsS3BucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	if d.HasChange("etag") {
 		d.SetNewComputed("version_id")
 	}

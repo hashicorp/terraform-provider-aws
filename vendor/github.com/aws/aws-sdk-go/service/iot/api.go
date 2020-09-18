@@ -1417,6 +1417,95 @@ func (c *IoT) ConfirmTopicRuleDestinationWithContext(ctx aws.Context, input *Con
 	return out, req.Send()
 }
 
+const opCreateAuditSuppression = "CreateAuditSuppression"
+
+// CreateAuditSuppressionRequest generates a "aws/request.Request" representing the
+// client's request for the CreateAuditSuppression operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateAuditSuppression for more information on using the CreateAuditSuppression
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateAuditSuppressionRequest method.
+//    req, resp := client.CreateAuditSuppressionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) CreateAuditSuppressionRequest(input *CreateAuditSuppressionInput) (req *request.Request, output *CreateAuditSuppressionOutput) {
+	op := &request.Operation{
+		Name:       opCreateAuditSuppression,
+		HTTPMethod: "POST",
+		HTTPPath:   "/audit/suppressions/create",
+	}
+
+	if input == nil {
+		input = &CreateAuditSuppressionInput{}
+	}
+
+	output = &CreateAuditSuppressionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// CreateAuditSuppression API operation for AWS IoT.
+//
+// Creates a Device Defender audit suppression.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation CreateAuditSuppression for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceAlreadyExistsException
+//   The resource already exists.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * LimitExceededException
+//   A limit has been exceeded.
+//
+func (c *IoT) CreateAuditSuppression(input *CreateAuditSuppressionInput) (*CreateAuditSuppressionOutput, error) {
+	req, out := c.CreateAuditSuppressionRequest(input)
+	return out, req.Send()
+}
+
+// CreateAuditSuppressionWithContext is the same as CreateAuditSuppression with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateAuditSuppression for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) CreateAuditSuppressionWithContext(ctx aws.Context, input *CreateAuditSuppressionInput, opts ...request.Option) (*CreateAuditSuppressionOutput, error) {
+	req, out := c.CreateAuditSuppressionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateAuthorizer = "CreateAuthorizer"
 
 // CreateAuthorizerRequest generates a "aws/request.Request" representing the
@@ -1720,6 +1809,97 @@ func (c *IoT) CreateCertificateFromCsr(input *CreateCertificateFromCsrInput) (*C
 // for more information on using Contexts.
 func (c *IoT) CreateCertificateFromCsrWithContext(ctx aws.Context, input *CreateCertificateFromCsrInput, opts ...request.Option) (*CreateCertificateFromCsrOutput, error) {
 	req, out := c.CreateCertificateFromCsrRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateDimension = "CreateDimension"
+
+// CreateDimensionRequest generates a "aws/request.Request" representing the
+// client's request for the CreateDimension operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateDimension for more information on using the CreateDimension
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateDimensionRequest method.
+//    req, resp := client.CreateDimensionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) CreateDimensionRequest(input *CreateDimensionInput) (req *request.Request, output *CreateDimensionOutput) {
+	op := &request.Operation{
+		Name:       opCreateDimension,
+		HTTPMethod: "POST",
+		HTTPPath:   "/dimensions/{name}",
+	}
+
+	if input == nil {
+		input = &CreateDimensionInput{}
+	}
+
+	output = &CreateDimensionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateDimension API operation for AWS IoT.
+//
+// Create a dimension that you can use to limit the scope of a metric used in
+// a security profile for AWS IoT Device Defender. For example, using a TOPIC_FILTER
+// dimension, you can narrow down the scope of the metric only to MQTT topics
+// whose name match the pattern specified in the dimension.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation CreateDimension for usage and error information.
+//
+// Returned Error Types:
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * LimitExceededException
+//   A limit has been exceeded.
+//
+//   * ResourceAlreadyExistsException
+//   The resource already exists.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+func (c *IoT) CreateDimension(input *CreateDimensionInput) (*CreateDimensionOutput, error) {
+	req, out := c.CreateDimensionRequest(input)
+	return out, req.Send()
+}
+
+// CreateDimensionWithContext is the same as CreateDimension with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateDimension for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) CreateDimensionWithContext(ctx aws.Context, input *CreateDimensionInput, opts ...request.Option) (*CreateDimensionOutput, error) {
+	req, out := c.CreateDimensionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2145,6 +2325,8 @@ func (c *IoT) CreateMitigationActionRequest(input *CreateMitigationActionInput) 
 // CreateMitigationAction API operation for AWS IoT.
 //
 // Defines an action that can be applied to audit findings by using StartAuditMitigationActionsTask.
+// Only certain types of mitigation actions can be applied to specific check
+// names. For more information, see Mitigation actions (https://docs.aws.amazon.com/iot/latest/developerguide/device-defender-mitigation-actions.html).
 // Each mitigation action can apply only one type of change.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3180,7 +3362,7 @@ func (c *IoT) CreateThingRequest(input *CreateThingInput) (req *request.Request,
 // call is made with the same thing name but different configuration a ResourceAlreadyExistsException
 // is thrown.
 //
-// This is a control plane operation. See Authorization (https://docs.aws.amazon.com/iot/latest/developerguide/authorization.html)
+// This is a control plane operation. See Authorization (https://docs.aws.amazon.com/iot/latest/developerguide/iot-authorization.html)
 // for information about authorizing control plane actions.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3277,7 +3459,7 @@ func (c *IoT) CreateThingGroupRequest(input *CreateThingGroupInput) (req *reques
 //
 // Create a thing group.
 //
-// This is a control plane operation. See Authorization (https://docs.aws.amazon.com/iot/latest/developerguide/authorization.html)
+// This is a control plane operation. See Authorization (https://docs.aws.amazon.com/iot/latest/developerguide/iot-authorization.html)
 // for information about authorizing control plane actions.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3685,6 +3867,89 @@ func (c *IoT) DeleteAccountAuditConfigurationWithContext(ctx aws.Context, input 
 	return out, req.Send()
 }
 
+const opDeleteAuditSuppression = "DeleteAuditSuppression"
+
+// DeleteAuditSuppressionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteAuditSuppression operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteAuditSuppression for more information on using the DeleteAuditSuppression
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteAuditSuppressionRequest method.
+//    req, resp := client.DeleteAuditSuppressionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DeleteAuditSuppressionRequest(input *DeleteAuditSuppressionInput) (req *request.Request, output *DeleteAuditSuppressionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteAuditSuppression,
+		HTTPMethod: "POST",
+		HTTPPath:   "/audit/suppressions/delete",
+	}
+
+	if input == nil {
+		input = &DeleteAuditSuppressionInput{}
+	}
+
+	output = &DeleteAuditSuppressionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteAuditSuppression API operation for AWS IoT.
+//
+// Deletes a Device Defender audit suppression.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DeleteAuditSuppression for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) DeleteAuditSuppression(input *DeleteAuditSuppressionInput) (*DeleteAuditSuppressionOutput, error) {
+	req, out := c.DeleteAuditSuppressionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteAuditSuppressionWithContext is the same as DeleteAuditSuppression with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteAuditSuppression for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DeleteAuditSuppressionWithContext(ctx aws.Context, input *DeleteAuditSuppressionInput, opts ...request.Option) (*DeleteAuditSuppressionOutput, error) {
+	req, out := c.DeleteAuditSuppressionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteAuthorizer = "DeleteAuthorizer"
 
 // DeleteAuthorizerRequest generates a "aws/request.Request" representing the
@@ -4060,6 +4325,89 @@ func (c *IoT) DeleteCertificate(input *DeleteCertificateInput) (*DeleteCertifica
 // for more information on using Contexts.
 func (c *IoT) DeleteCertificateWithContext(ctx aws.Context, input *DeleteCertificateInput, opts ...request.Option) (*DeleteCertificateOutput, error) {
 	req, out := c.DeleteCertificateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteDimension = "DeleteDimension"
+
+// DeleteDimensionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteDimension operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteDimension for more information on using the DeleteDimension
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteDimensionRequest method.
+//    req, resp := client.DeleteDimensionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DeleteDimensionRequest(input *DeleteDimensionInput) (req *request.Request, output *DeleteDimensionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteDimension,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/dimensions/{name}",
+	}
+
+	if input == nil {
+		input = &DeleteDimensionInput{}
+	}
+
+	output = &DeleteDimensionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteDimension API operation for AWS IoT.
+//
+// Removes the specified dimension from your AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DeleteDimension for usage and error information.
+//
+// Returned Error Types:
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+func (c *IoT) DeleteDimension(input *DeleteDimensionInput) (*DeleteDimensionOutput, error) {
+	req, out := c.DeleteDimensionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteDimensionWithContext is the same as DeleteDimension with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteDimension for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DeleteDimensionWithContext(ctx aws.Context, input *DeleteDimensionInput, opts ...request.Option) (*DeleteDimensionOutput, error) {
+	req, out := c.DeleteDimensionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -6350,6 +6698,91 @@ func (c *IoT) DescribeAuditMitigationActionsTaskWithContext(ctx aws.Context, inp
 	return out, req.Send()
 }
 
+const opDescribeAuditSuppression = "DescribeAuditSuppression"
+
+// DescribeAuditSuppressionRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAuditSuppression operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeAuditSuppression for more information on using the DescribeAuditSuppression
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeAuditSuppressionRequest method.
+//    req, resp := client.DescribeAuditSuppressionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DescribeAuditSuppressionRequest(input *DescribeAuditSuppressionInput) (req *request.Request, output *DescribeAuditSuppressionOutput) {
+	op := &request.Operation{
+		Name:       opDescribeAuditSuppression,
+		HTTPMethod: "POST",
+		HTTPPath:   "/audit/suppressions/describe",
+	}
+
+	if input == nil {
+		input = &DescribeAuditSuppressionInput{}
+	}
+
+	output = &DescribeAuditSuppressionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeAuditSuppression API operation for AWS IoT.
+//
+// Gets information about a Device Defender audit suppression.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DescribeAuditSuppression for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) DescribeAuditSuppression(input *DescribeAuditSuppressionInput) (*DescribeAuditSuppressionOutput, error) {
+	req, out := c.DescribeAuditSuppressionRequest(input)
+	return out, req.Send()
+}
+
+// DescribeAuditSuppressionWithContext is the same as DescribeAuditSuppression with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAuditSuppression for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DescribeAuditSuppressionWithContext(ctx aws.Context, input *DescribeAuditSuppressionInput, opts ...request.Option) (*DescribeAuditSuppressionOutput, error) {
+	req, out := c.DescribeAuditSuppressionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeAuditTask = "DescribeAuditTask"
 
 // DescribeAuditTaskRequest generates a "aws/request.Request" representing the
@@ -6884,6 +7317,91 @@ func (c *IoT) DescribeDefaultAuthorizerWithContext(ctx aws.Context, input *Descr
 	return out, req.Send()
 }
 
+const opDescribeDimension = "DescribeDimension"
+
+// DescribeDimensionRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeDimension operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeDimension for more information on using the DescribeDimension
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeDimensionRequest method.
+//    req, resp := client.DescribeDimensionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DescribeDimensionRequest(input *DescribeDimensionInput) (req *request.Request, output *DescribeDimensionOutput) {
+	op := &request.Operation{
+		Name:       opDescribeDimension,
+		HTTPMethod: "GET",
+		HTTPPath:   "/dimensions/{name}",
+	}
+
+	if input == nil {
+		input = &DescribeDimensionInput{}
+	}
+
+	output = &DescribeDimensionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeDimension API operation for AWS IoT.
+//
+// Provides details about a dimension that is defined in your AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DescribeDimension for usage and error information.
+//
+// Returned Error Types:
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+func (c *IoT) DescribeDimension(input *DescribeDimensionInput) (*DescribeDimensionOutput, error) {
+	req, out := c.DescribeDimensionRequest(input)
+	return out, req.Send()
+}
+
+// DescribeDimensionWithContext is the same as DescribeDimension with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeDimension for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DescribeDimensionWithContext(ctx aws.Context, input *DescribeDimensionInput, opts ...request.Option) (*DescribeDimensionOutput, error) {
+	req, out := c.DescribeDimensionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeDomainConfiguration = "DescribeDomainConfiguration"
 
 // DescribeDomainConfigurationRequest generates a "aws/request.Request" representing the
@@ -6943,6 +7461,9 @@ func (c *IoT) DescribeDomainConfigurationRequest(input *DescribeDomainConfigurat
 //
 //   * ThrottlingException
 //   The rate exceeds the limit.
+//
+//   * InvalidRequestException
+//   The request is not valid.
 //
 //   * UnauthorizedException
 //   You are not authorized to perform this operation.
@@ -10232,6 +10753,12 @@ func (c *IoT) ListActiveViolationsRequest(input *ListActiveViolationsInput) (req
 		Name:       opListActiveViolations,
 		HTTPMethod: "GET",
 		HTTPPath:   "/active-violations",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -10288,6 +10815,58 @@ func (c *IoT) ListActiveViolationsWithContext(ctx aws.Context, input *ListActive
 	return out, req.Send()
 }
 
+// ListActiveViolationsPages iterates over the pages of a ListActiveViolations operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListActiveViolations method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListActiveViolations operation.
+//    pageNum := 0
+//    err := client.ListActiveViolationsPages(params,
+//        func(page *iot.ListActiveViolationsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListActiveViolationsPages(input *ListActiveViolationsInput, fn func(*ListActiveViolationsOutput, bool) bool) error {
+	return c.ListActiveViolationsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListActiveViolationsPagesWithContext same as ListActiveViolationsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListActiveViolationsPagesWithContext(ctx aws.Context, input *ListActiveViolationsInput, fn func(*ListActiveViolationsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListActiveViolationsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListActiveViolationsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListActiveViolationsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListAttachedPolicies = "ListAttachedPolicies"
 
 // ListAttachedPoliciesRequest generates a "aws/request.Request" representing the
@@ -10317,6 +10896,12 @@ func (c *IoT) ListAttachedPoliciesRequest(input *ListAttachedPoliciesInput) (req
 		Name:       opListAttachedPolicies,
 		HTTPMethod: "POST",
 		HTTPPath:   "/attached-policies/{target}",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"marker"},
+			OutputTokens:    []string{"nextMarker"},
+			LimitToken:      "pageSize",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -10382,6 +10967,58 @@ func (c *IoT) ListAttachedPoliciesWithContext(ctx aws.Context, input *ListAttach
 	return out, req.Send()
 }
 
+// ListAttachedPoliciesPages iterates over the pages of a ListAttachedPolicies operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListAttachedPolicies method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListAttachedPolicies operation.
+//    pageNum := 0
+//    err := client.ListAttachedPoliciesPages(params,
+//        func(page *iot.ListAttachedPoliciesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListAttachedPoliciesPages(input *ListAttachedPoliciesInput, fn func(*ListAttachedPoliciesOutput, bool) bool) error {
+	return c.ListAttachedPoliciesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListAttachedPoliciesPagesWithContext same as ListAttachedPoliciesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListAttachedPoliciesPagesWithContext(ctx aws.Context, input *ListAttachedPoliciesInput, fn func(*ListAttachedPoliciesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListAttachedPoliciesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListAttachedPoliciesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListAttachedPoliciesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListAuditFindings = "ListAuditFindings"
 
 // ListAuditFindingsRequest generates a "aws/request.Request" representing the
@@ -10411,6 +11048,12 @@ func (c *IoT) ListAuditFindingsRequest(input *ListAuditFindingsInput) (req *requ
 		Name:       opListAuditFindings,
 		HTTPMethod: "POST",
 		HTTPPath:   "/audit/findings",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -10466,6 +11109,58 @@ func (c *IoT) ListAuditFindingsWithContext(ctx aws.Context, input *ListAuditFind
 	return out, req.Send()
 }
 
+// ListAuditFindingsPages iterates over the pages of a ListAuditFindings operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListAuditFindings method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListAuditFindings operation.
+//    pageNum := 0
+//    err := client.ListAuditFindingsPages(params,
+//        func(page *iot.ListAuditFindingsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListAuditFindingsPages(input *ListAuditFindingsInput, fn func(*ListAuditFindingsOutput, bool) bool) error {
+	return c.ListAuditFindingsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListAuditFindingsPagesWithContext same as ListAuditFindingsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListAuditFindingsPagesWithContext(ctx aws.Context, input *ListAuditFindingsInput, fn func(*ListAuditFindingsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListAuditFindingsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListAuditFindingsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListAuditFindingsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListAuditMitigationActionsExecutions = "ListAuditMitigationActionsExecutions"
 
 // ListAuditMitigationActionsExecutionsRequest generates a "aws/request.Request" representing the
@@ -10495,6 +11190,12 @@ func (c *IoT) ListAuditMitigationActionsExecutionsRequest(input *ListAuditMitiga
 		Name:       opListAuditMitigationActionsExecutions,
 		HTTPMethod: "GET",
 		HTTPPath:   "/audit/mitigationactions/executions",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -10548,6 +11249,58 @@ func (c *IoT) ListAuditMitigationActionsExecutionsWithContext(ctx aws.Context, i
 	return out, req.Send()
 }
 
+// ListAuditMitigationActionsExecutionsPages iterates over the pages of a ListAuditMitigationActionsExecutions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListAuditMitigationActionsExecutions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListAuditMitigationActionsExecutions operation.
+//    pageNum := 0
+//    err := client.ListAuditMitigationActionsExecutionsPages(params,
+//        func(page *iot.ListAuditMitigationActionsExecutionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListAuditMitigationActionsExecutionsPages(input *ListAuditMitigationActionsExecutionsInput, fn func(*ListAuditMitigationActionsExecutionsOutput, bool) bool) error {
+	return c.ListAuditMitigationActionsExecutionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListAuditMitigationActionsExecutionsPagesWithContext same as ListAuditMitigationActionsExecutionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListAuditMitigationActionsExecutionsPagesWithContext(ctx aws.Context, input *ListAuditMitigationActionsExecutionsInput, fn func(*ListAuditMitigationActionsExecutionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListAuditMitigationActionsExecutionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListAuditMitigationActionsExecutionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListAuditMitigationActionsExecutionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListAuditMitigationActionsTasks = "ListAuditMitigationActionsTasks"
 
 // ListAuditMitigationActionsTasksRequest generates a "aws/request.Request" representing the
@@ -10577,6 +11330,12 @@ func (c *IoT) ListAuditMitigationActionsTasksRequest(input *ListAuditMitigationA
 		Name:       opListAuditMitigationActionsTasks,
 		HTTPMethod: "GET",
 		HTTPPath:   "/audit/mitigationactions/tasks",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -10630,6 +11389,198 @@ func (c *IoT) ListAuditMitigationActionsTasksWithContext(ctx aws.Context, input 
 	return out, req.Send()
 }
 
+// ListAuditMitigationActionsTasksPages iterates over the pages of a ListAuditMitigationActionsTasks operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListAuditMitigationActionsTasks method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListAuditMitigationActionsTasks operation.
+//    pageNum := 0
+//    err := client.ListAuditMitigationActionsTasksPages(params,
+//        func(page *iot.ListAuditMitigationActionsTasksOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListAuditMitigationActionsTasksPages(input *ListAuditMitigationActionsTasksInput, fn func(*ListAuditMitigationActionsTasksOutput, bool) bool) error {
+	return c.ListAuditMitigationActionsTasksPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListAuditMitigationActionsTasksPagesWithContext same as ListAuditMitigationActionsTasksPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListAuditMitigationActionsTasksPagesWithContext(ctx aws.Context, input *ListAuditMitigationActionsTasksInput, fn func(*ListAuditMitigationActionsTasksOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListAuditMitigationActionsTasksInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListAuditMitigationActionsTasksRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListAuditMitigationActionsTasksOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
+const opListAuditSuppressions = "ListAuditSuppressions"
+
+// ListAuditSuppressionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListAuditSuppressions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListAuditSuppressions for more information on using the ListAuditSuppressions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListAuditSuppressionsRequest method.
+//    req, resp := client.ListAuditSuppressionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) ListAuditSuppressionsRequest(input *ListAuditSuppressionsInput) (req *request.Request, output *ListAuditSuppressionsOutput) {
+	op := &request.Operation{
+		Name:       opListAuditSuppressions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/audit/suppressions/list",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListAuditSuppressionsInput{}
+	}
+
+	output = &ListAuditSuppressionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListAuditSuppressions API operation for AWS IoT.
+//
+// Lists your Device Defender audit listings.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation ListAuditSuppressions for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) ListAuditSuppressions(input *ListAuditSuppressionsInput) (*ListAuditSuppressionsOutput, error) {
+	req, out := c.ListAuditSuppressionsRequest(input)
+	return out, req.Send()
+}
+
+// ListAuditSuppressionsWithContext is the same as ListAuditSuppressions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListAuditSuppressions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListAuditSuppressionsWithContext(ctx aws.Context, input *ListAuditSuppressionsInput, opts ...request.Option) (*ListAuditSuppressionsOutput, error) {
+	req, out := c.ListAuditSuppressionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListAuditSuppressionsPages iterates over the pages of a ListAuditSuppressions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListAuditSuppressions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListAuditSuppressions operation.
+//    pageNum := 0
+//    err := client.ListAuditSuppressionsPages(params,
+//        func(page *iot.ListAuditSuppressionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListAuditSuppressionsPages(input *ListAuditSuppressionsInput, fn func(*ListAuditSuppressionsOutput, bool) bool) error {
+	return c.ListAuditSuppressionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListAuditSuppressionsPagesWithContext same as ListAuditSuppressionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListAuditSuppressionsPagesWithContext(ctx aws.Context, input *ListAuditSuppressionsInput, fn func(*ListAuditSuppressionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListAuditSuppressionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListAuditSuppressionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListAuditSuppressionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListAuditTasks = "ListAuditTasks"
 
 // ListAuditTasksRequest generates a "aws/request.Request" representing the
@@ -10659,6 +11610,12 @@ func (c *IoT) ListAuditTasksRequest(input *ListAuditTasksInput) (req *request.Re
 		Name:       opListAuditTasks,
 		HTTPMethod: "GET",
 		HTTPPath:   "/audit/tasks",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -10713,6 +11670,58 @@ func (c *IoT) ListAuditTasksWithContext(ctx aws.Context, input *ListAuditTasksIn
 	return out, req.Send()
 }
 
+// ListAuditTasksPages iterates over the pages of a ListAuditTasks operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListAuditTasks method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListAuditTasks operation.
+//    pageNum := 0
+//    err := client.ListAuditTasksPages(params,
+//        func(page *iot.ListAuditTasksOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListAuditTasksPages(input *ListAuditTasksInput, fn func(*ListAuditTasksOutput, bool) bool) error {
+	return c.ListAuditTasksPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListAuditTasksPagesWithContext same as ListAuditTasksPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListAuditTasksPagesWithContext(ctx aws.Context, input *ListAuditTasksInput, fn func(*ListAuditTasksOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListAuditTasksInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListAuditTasksRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListAuditTasksOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListAuthorizers = "ListAuthorizers"
 
 // ListAuthorizersRequest generates a "aws/request.Request" representing the
@@ -10742,6 +11751,12 @@ func (c *IoT) ListAuthorizersRequest(input *ListAuthorizersInput) (req *request.
 		Name:       opListAuthorizers,
 		HTTPMethod: "GET",
 		HTTPPath:   "/authorizers/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"marker"},
+			OutputTokens:    []string{"nextMarker"},
+			LimitToken:      "pageSize",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -10801,6 +11816,58 @@ func (c *IoT) ListAuthorizersWithContext(ctx aws.Context, input *ListAuthorizers
 	return out, req.Send()
 }
 
+// ListAuthorizersPages iterates over the pages of a ListAuthorizers operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListAuthorizers method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListAuthorizers operation.
+//    pageNum := 0
+//    err := client.ListAuthorizersPages(params,
+//        func(page *iot.ListAuthorizersOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListAuthorizersPages(input *ListAuthorizersInput, fn func(*ListAuthorizersOutput, bool) bool) error {
+	return c.ListAuthorizersPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListAuthorizersPagesWithContext same as ListAuthorizersPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListAuthorizersPagesWithContext(ctx aws.Context, input *ListAuthorizersInput, fn func(*ListAuthorizersOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListAuthorizersInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListAuthorizersRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListAuthorizersOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListBillingGroups = "ListBillingGroups"
 
 // ListBillingGroupsRequest generates a "aws/request.Request" representing the
@@ -10830,6 +11897,12 @@ func (c *IoT) ListBillingGroupsRequest(input *ListBillingGroupsInput) (req *requ
 		Name:       opListBillingGroups,
 		HTTPMethod: "GET",
 		HTTPPath:   "/billing-groups",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -10886,6 +11959,58 @@ func (c *IoT) ListBillingGroupsWithContext(ctx aws.Context, input *ListBillingGr
 	return out, req.Send()
 }
 
+// ListBillingGroupsPages iterates over the pages of a ListBillingGroups operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListBillingGroups method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListBillingGroups operation.
+//    pageNum := 0
+//    err := client.ListBillingGroupsPages(params,
+//        func(page *iot.ListBillingGroupsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListBillingGroupsPages(input *ListBillingGroupsInput, fn func(*ListBillingGroupsOutput, bool) bool) error {
+	return c.ListBillingGroupsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListBillingGroupsPagesWithContext same as ListBillingGroupsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListBillingGroupsPagesWithContext(ctx aws.Context, input *ListBillingGroupsInput, fn func(*ListBillingGroupsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListBillingGroupsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListBillingGroupsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListBillingGroupsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListCACertificates = "ListCACertificates"
 
 // ListCACertificatesRequest generates a "aws/request.Request" representing the
@@ -10915,6 +12040,12 @@ func (c *IoT) ListCACertificatesRequest(input *ListCACertificatesInput) (req *re
 		Name:       opListCACertificates,
 		HTTPMethod: "GET",
 		HTTPPath:   "/cacertificates",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"marker"},
+			OutputTokens:    []string{"nextMarker"},
+			LimitToken:      "pageSize",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -10977,6 +12108,58 @@ func (c *IoT) ListCACertificatesWithContext(ctx aws.Context, input *ListCACertif
 	return out, req.Send()
 }
 
+// ListCACertificatesPages iterates over the pages of a ListCACertificates operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListCACertificates method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListCACertificates operation.
+//    pageNum := 0
+//    err := client.ListCACertificatesPages(params,
+//        func(page *iot.ListCACertificatesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListCACertificatesPages(input *ListCACertificatesInput, fn func(*ListCACertificatesOutput, bool) bool) error {
+	return c.ListCACertificatesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListCACertificatesPagesWithContext same as ListCACertificatesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListCACertificatesPagesWithContext(ctx aws.Context, input *ListCACertificatesInput, fn func(*ListCACertificatesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListCACertificatesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListCACertificatesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListCACertificatesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListCertificates = "ListCertificates"
 
 // ListCertificatesRequest generates a "aws/request.Request" representing the
@@ -11006,6 +12189,12 @@ func (c *IoT) ListCertificatesRequest(input *ListCertificatesInput) (req *reques
 		Name:       opListCertificates,
 		HTTPMethod: "GET",
 		HTTPPath:   "/certificates",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"marker"},
+			OutputTokens:    []string{"nextMarker"},
+			LimitToken:      "pageSize",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -11068,6 +12257,58 @@ func (c *IoT) ListCertificatesWithContext(ctx aws.Context, input *ListCertificat
 	return out, req.Send()
 }
 
+// ListCertificatesPages iterates over the pages of a ListCertificates operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListCertificates method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListCertificates operation.
+//    pageNum := 0
+//    err := client.ListCertificatesPages(params,
+//        func(page *iot.ListCertificatesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListCertificatesPages(input *ListCertificatesInput, fn func(*ListCertificatesOutput, bool) bool) error {
+	return c.ListCertificatesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListCertificatesPagesWithContext same as ListCertificatesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListCertificatesPagesWithContext(ctx aws.Context, input *ListCertificatesInput, fn func(*ListCertificatesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListCertificatesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListCertificatesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListCertificatesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListCertificatesByCA = "ListCertificatesByCA"
 
 // ListCertificatesByCARequest generates a "aws/request.Request" representing the
@@ -11097,6 +12338,12 @@ func (c *IoT) ListCertificatesByCARequest(input *ListCertificatesByCAInput) (req
 		Name:       opListCertificatesByCA,
 		HTTPMethod: "GET",
 		HTTPPath:   "/certificates-by-ca/{caCertificateId}",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"marker"},
+			OutputTokens:    []string{"nextMarker"},
+			LimitToken:      "pageSize",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -11156,6 +12403,198 @@ func (c *IoT) ListCertificatesByCAWithContext(ctx aws.Context, input *ListCertif
 	return out, req.Send()
 }
 
+// ListCertificatesByCAPages iterates over the pages of a ListCertificatesByCA operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListCertificatesByCA method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListCertificatesByCA operation.
+//    pageNum := 0
+//    err := client.ListCertificatesByCAPages(params,
+//        func(page *iot.ListCertificatesByCAOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListCertificatesByCAPages(input *ListCertificatesByCAInput, fn func(*ListCertificatesByCAOutput, bool) bool) error {
+	return c.ListCertificatesByCAPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListCertificatesByCAPagesWithContext same as ListCertificatesByCAPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListCertificatesByCAPagesWithContext(ctx aws.Context, input *ListCertificatesByCAInput, fn func(*ListCertificatesByCAOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListCertificatesByCAInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListCertificatesByCARequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListCertificatesByCAOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
+const opListDimensions = "ListDimensions"
+
+// ListDimensionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListDimensions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListDimensions for more information on using the ListDimensions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListDimensionsRequest method.
+//    req, resp := client.ListDimensionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) ListDimensionsRequest(input *ListDimensionsInput) (req *request.Request, output *ListDimensionsOutput) {
+	op := &request.Operation{
+		Name:       opListDimensions,
+		HTTPMethod: "GET",
+		HTTPPath:   "/dimensions",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListDimensionsInput{}
+	}
+
+	output = &ListDimensionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListDimensions API operation for AWS IoT.
+//
+// List the set of dimensions that are defined for your AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation ListDimensions for usage and error information.
+//
+// Returned Error Types:
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+func (c *IoT) ListDimensions(input *ListDimensionsInput) (*ListDimensionsOutput, error) {
+	req, out := c.ListDimensionsRequest(input)
+	return out, req.Send()
+}
+
+// ListDimensionsWithContext is the same as ListDimensions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListDimensions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListDimensionsWithContext(ctx aws.Context, input *ListDimensionsInput, opts ...request.Option) (*ListDimensionsOutput, error) {
+	req, out := c.ListDimensionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListDimensionsPages iterates over the pages of a ListDimensions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListDimensions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListDimensions operation.
+//    pageNum := 0
+//    err := client.ListDimensionsPages(params,
+//        func(page *iot.ListDimensionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListDimensionsPages(input *ListDimensionsInput, fn func(*ListDimensionsOutput, bool) bool) error {
+	return c.ListDimensionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListDimensionsPagesWithContext same as ListDimensionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListDimensionsPagesWithContext(ctx aws.Context, input *ListDimensionsInput, fn func(*ListDimensionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListDimensionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListDimensionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListDimensionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListDomainConfigurations = "ListDomainConfigurations"
 
 // ListDomainConfigurationsRequest generates a "aws/request.Request" representing the
@@ -11185,6 +12624,12 @@ func (c *IoT) ListDomainConfigurationsRequest(input *ListDomainConfigurationsInp
 		Name:       opListDomainConfigurations,
 		HTTPMethod: "GET",
 		HTTPPath:   "/domainConfigurations",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"marker"},
+			OutputTokens:    []string{"nextMarker"},
+			LimitToken:      "pageSize",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -11247,6 +12692,58 @@ func (c *IoT) ListDomainConfigurationsWithContext(ctx aws.Context, input *ListDo
 	return out, req.Send()
 }
 
+// ListDomainConfigurationsPages iterates over the pages of a ListDomainConfigurations operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListDomainConfigurations method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListDomainConfigurations operation.
+//    pageNum := 0
+//    err := client.ListDomainConfigurationsPages(params,
+//        func(page *iot.ListDomainConfigurationsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListDomainConfigurationsPages(input *ListDomainConfigurationsInput, fn func(*ListDomainConfigurationsOutput, bool) bool) error {
+	return c.ListDomainConfigurationsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListDomainConfigurationsPagesWithContext same as ListDomainConfigurationsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListDomainConfigurationsPagesWithContext(ctx aws.Context, input *ListDomainConfigurationsInput, fn func(*ListDomainConfigurationsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListDomainConfigurationsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListDomainConfigurationsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListDomainConfigurationsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListIndices = "ListIndices"
 
 // ListIndicesRequest generates a "aws/request.Request" representing the
@@ -11276,6 +12773,12 @@ func (c *IoT) ListIndicesRequest(input *ListIndicesInput) (req *request.Request,
 		Name:       opListIndices,
 		HTTPMethod: "GET",
 		HTTPPath:   "/indices",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -11335,6 +12838,58 @@ func (c *IoT) ListIndicesWithContext(ctx aws.Context, input *ListIndicesInput, o
 	return out, req.Send()
 }
 
+// ListIndicesPages iterates over the pages of a ListIndices operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListIndices method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListIndices operation.
+//    pageNum := 0
+//    err := client.ListIndicesPages(params,
+//        func(page *iot.ListIndicesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListIndicesPages(input *ListIndicesInput, fn func(*ListIndicesOutput, bool) bool) error {
+	return c.ListIndicesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListIndicesPagesWithContext same as ListIndicesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListIndicesPagesWithContext(ctx aws.Context, input *ListIndicesInput, fn func(*ListIndicesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListIndicesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListIndicesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListIndicesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListJobExecutionsForJob = "ListJobExecutionsForJob"
 
 // ListJobExecutionsForJobRequest generates a "aws/request.Request" representing the
@@ -11364,6 +12919,12 @@ func (c *IoT) ListJobExecutionsForJobRequest(input *ListJobExecutionsForJobInput
 		Name:       opListJobExecutionsForJob,
 		HTTPMethod: "GET",
 		HTTPPath:   "/jobs/{jobId}/things",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -11420,6 +12981,58 @@ func (c *IoT) ListJobExecutionsForJobWithContext(ctx aws.Context, input *ListJob
 	return out, req.Send()
 }
 
+// ListJobExecutionsForJobPages iterates over the pages of a ListJobExecutionsForJob operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListJobExecutionsForJob method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListJobExecutionsForJob operation.
+//    pageNum := 0
+//    err := client.ListJobExecutionsForJobPages(params,
+//        func(page *iot.ListJobExecutionsForJobOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListJobExecutionsForJobPages(input *ListJobExecutionsForJobInput, fn func(*ListJobExecutionsForJobOutput, bool) bool) error {
+	return c.ListJobExecutionsForJobPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListJobExecutionsForJobPagesWithContext same as ListJobExecutionsForJobPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListJobExecutionsForJobPagesWithContext(ctx aws.Context, input *ListJobExecutionsForJobInput, fn func(*ListJobExecutionsForJobOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListJobExecutionsForJobInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListJobExecutionsForJobRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListJobExecutionsForJobOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListJobExecutionsForThing = "ListJobExecutionsForThing"
 
 // ListJobExecutionsForThingRequest generates a "aws/request.Request" representing the
@@ -11449,6 +13062,12 @@ func (c *IoT) ListJobExecutionsForThingRequest(input *ListJobExecutionsForThingI
 		Name:       opListJobExecutionsForThing,
 		HTTPMethod: "GET",
 		HTTPPath:   "/things/{thingName}/jobs",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -11505,6 +13124,58 @@ func (c *IoT) ListJobExecutionsForThingWithContext(ctx aws.Context, input *ListJ
 	return out, req.Send()
 }
 
+// ListJobExecutionsForThingPages iterates over the pages of a ListJobExecutionsForThing operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListJobExecutionsForThing method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListJobExecutionsForThing operation.
+//    pageNum := 0
+//    err := client.ListJobExecutionsForThingPages(params,
+//        func(page *iot.ListJobExecutionsForThingOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListJobExecutionsForThingPages(input *ListJobExecutionsForThingInput, fn func(*ListJobExecutionsForThingOutput, bool) bool) error {
+	return c.ListJobExecutionsForThingPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListJobExecutionsForThingPagesWithContext same as ListJobExecutionsForThingPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListJobExecutionsForThingPagesWithContext(ctx aws.Context, input *ListJobExecutionsForThingInput, fn func(*ListJobExecutionsForThingOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListJobExecutionsForThingInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListJobExecutionsForThingRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListJobExecutionsForThingOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListJobs = "ListJobs"
 
 // ListJobsRequest generates a "aws/request.Request" representing the
@@ -11534,6 +13205,12 @@ func (c *IoT) ListJobsRequest(input *ListJobsInput) (req *request.Request, outpu
 		Name:       opListJobs,
 		HTTPMethod: "GET",
 		HTTPPath:   "/jobs",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -11590,6 +13267,58 @@ func (c *IoT) ListJobsWithContext(ctx aws.Context, input *ListJobsInput, opts ..
 	return out, req.Send()
 }
 
+// ListJobsPages iterates over the pages of a ListJobs operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListJobs method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListJobs operation.
+//    pageNum := 0
+//    err := client.ListJobsPages(params,
+//        func(page *iot.ListJobsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListJobsPages(input *ListJobsInput, fn func(*ListJobsOutput, bool) bool) error {
+	return c.ListJobsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListJobsPagesWithContext same as ListJobsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListJobsPagesWithContext(ctx aws.Context, input *ListJobsInput, fn func(*ListJobsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListJobsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListJobsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListJobsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListMitigationActions = "ListMitigationActions"
 
 // ListMitigationActionsRequest generates a "aws/request.Request" representing the
@@ -11619,6 +13348,12 @@ func (c *IoT) ListMitigationActionsRequest(input *ListMitigationActionsInput) (r
 		Name:       opListMitigationActions,
 		HTTPMethod: "GET",
 		HTTPPath:   "/mitigationactions/actions",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -11672,6 +13407,58 @@ func (c *IoT) ListMitigationActionsWithContext(ctx aws.Context, input *ListMitig
 	return out, req.Send()
 }
 
+// ListMitigationActionsPages iterates over the pages of a ListMitigationActions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListMitigationActions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListMitigationActions operation.
+//    pageNum := 0
+//    err := client.ListMitigationActionsPages(params,
+//        func(page *iot.ListMitigationActionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListMitigationActionsPages(input *ListMitigationActionsInput, fn func(*ListMitigationActionsOutput, bool) bool) error {
+	return c.ListMitigationActionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListMitigationActionsPagesWithContext same as ListMitigationActionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListMitigationActionsPagesWithContext(ctx aws.Context, input *ListMitigationActionsInput, fn func(*ListMitigationActionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListMitigationActionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListMitigationActionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListMitigationActionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListOTAUpdates = "ListOTAUpdates"
 
 // ListOTAUpdatesRequest generates a "aws/request.Request" representing the
@@ -11701,6 +13488,12 @@ func (c *IoT) ListOTAUpdatesRequest(input *ListOTAUpdatesInput) (req *request.Re
 		Name:       opListOTAUpdates,
 		HTTPMethod: "GET",
 		HTTPPath:   "/otaUpdates",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -11760,6 +13553,58 @@ func (c *IoT) ListOTAUpdatesWithContext(ctx aws.Context, input *ListOTAUpdatesIn
 	return out, req.Send()
 }
 
+// ListOTAUpdatesPages iterates over the pages of a ListOTAUpdates operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListOTAUpdates method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListOTAUpdates operation.
+//    pageNum := 0
+//    err := client.ListOTAUpdatesPages(params,
+//        func(page *iot.ListOTAUpdatesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListOTAUpdatesPages(input *ListOTAUpdatesInput, fn func(*ListOTAUpdatesOutput, bool) bool) error {
+	return c.ListOTAUpdatesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListOTAUpdatesPagesWithContext same as ListOTAUpdatesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListOTAUpdatesPagesWithContext(ctx aws.Context, input *ListOTAUpdatesInput, fn func(*ListOTAUpdatesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListOTAUpdatesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListOTAUpdatesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListOTAUpdatesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListOutgoingCertificates = "ListOutgoingCertificates"
 
 // ListOutgoingCertificatesRequest generates a "aws/request.Request" representing the
@@ -11789,6 +13634,12 @@ func (c *IoT) ListOutgoingCertificatesRequest(input *ListOutgoingCertificatesInp
 		Name:       opListOutgoingCertificates,
 		HTTPMethod: "GET",
 		HTTPPath:   "/certificates-out-going",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"marker"},
+			OutputTokens:    []string{"nextMarker"},
+			LimitToken:      "pageSize",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -11848,6 +13699,58 @@ func (c *IoT) ListOutgoingCertificatesWithContext(ctx aws.Context, input *ListOu
 	return out, req.Send()
 }
 
+// ListOutgoingCertificatesPages iterates over the pages of a ListOutgoingCertificates operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListOutgoingCertificates method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListOutgoingCertificates operation.
+//    pageNum := 0
+//    err := client.ListOutgoingCertificatesPages(params,
+//        func(page *iot.ListOutgoingCertificatesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListOutgoingCertificatesPages(input *ListOutgoingCertificatesInput, fn func(*ListOutgoingCertificatesOutput, bool) bool) error {
+	return c.ListOutgoingCertificatesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListOutgoingCertificatesPagesWithContext same as ListOutgoingCertificatesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListOutgoingCertificatesPagesWithContext(ctx aws.Context, input *ListOutgoingCertificatesInput, fn func(*ListOutgoingCertificatesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListOutgoingCertificatesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListOutgoingCertificatesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListOutgoingCertificatesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListPolicies = "ListPolicies"
 
 // ListPoliciesRequest generates a "aws/request.Request" representing the
@@ -11877,6 +13780,12 @@ func (c *IoT) ListPoliciesRequest(input *ListPoliciesInput) (req *request.Reques
 		Name:       opListPolicies,
 		HTTPMethod: "GET",
 		HTTPPath:   "/policies",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"marker"},
+			OutputTokens:    []string{"nextMarker"},
+			LimitToken:      "pageSize",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -11936,6 +13845,58 @@ func (c *IoT) ListPoliciesWithContext(ctx aws.Context, input *ListPoliciesInput,
 	return out, req.Send()
 }
 
+// ListPoliciesPages iterates over the pages of a ListPolicies operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListPolicies method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListPolicies operation.
+//    pageNum := 0
+//    err := client.ListPoliciesPages(params,
+//        func(page *iot.ListPoliciesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListPoliciesPages(input *ListPoliciesInput, fn func(*ListPoliciesOutput, bool) bool) error {
+	return c.ListPoliciesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListPoliciesPagesWithContext same as ListPoliciesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListPoliciesPagesWithContext(ctx aws.Context, input *ListPoliciesInput, fn func(*ListPoliciesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListPoliciesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListPoliciesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListPoliciesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListPolicyPrincipals = "ListPolicyPrincipals"
 
 // ListPolicyPrincipalsRequest generates a "aws/request.Request" representing the
@@ -11970,6 +13931,12 @@ func (c *IoT) ListPolicyPrincipalsRequest(input *ListPolicyPrincipalsInput) (req
 		Name:       opListPolicyPrincipals,
 		HTTPMethod: "GET",
 		HTTPPath:   "/policy-principals",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"marker"},
+			OutputTokens:    []string{"nextMarker"},
+			LimitToken:      "pageSize",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -12036,6 +14003,62 @@ func (c *IoT) ListPolicyPrincipalsWithContext(ctx aws.Context, input *ListPolicy
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListPolicyPrincipalsPages iterates over the pages of a ListPolicyPrincipals operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListPolicyPrincipals method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListPolicyPrincipals operation.
+//    pageNum := 0
+//    err := client.ListPolicyPrincipalsPages(params,
+//        func(page *iot.ListPolicyPrincipalsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+//
+// Deprecated: ListPolicyPrincipalsPages has been deprecated
+func (c *IoT) ListPolicyPrincipalsPages(input *ListPolicyPrincipalsInput, fn func(*ListPolicyPrincipalsOutput, bool) bool) error {
+	return c.ListPolicyPrincipalsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListPolicyPrincipalsPagesWithContext same as ListPolicyPrincipalsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+//
+// Deprecated: ListPolicyPrincipalsPagesWithContext has been deprecated
+func (c *IoT) ListPolicyPrincipalsPagesWithContext(ctx aws.Context, input *ListPolicyPrincipalsInput, fn func(*ListPolicyPrincipalsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListPolicyPrincipalsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListPolicyPrincipalsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListPolicyPrincipalsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListPolicyVersions = "ListPolicyVersions"
@@ -12163,6 +14186,12 @@ func (c *IoT) ListPrincipalPoliciesRequest(input *ListPrincipalPoliciesInput) (r
 		Name:       opListPrincipalPolicies,
 		HTTPMethod: "GET",
 		HTTPPath:   "/principal-policies",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"marker"},
+			OutputTokens:    []string{"nextMarker"},
+			LimitToken:      "pageSize",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -12232,6 +14261,62 @@ func (c *IoT) ListPrincipalPoliciesWithContext(ctx aws.Context, input *ListPrinc
 	return out, req.Send()
 }
 
+// ListPrincipalPoliciesPages iterates over the pages of a ListPrincipalPolicies operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListPrincipalPolicies method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListPrincipalPolicies operation.
+//    pageNum := 0
+//    err := client.ListPrincipalPoliciesPages(params,
+//        func(page *iot.ListPrincipalPoliciesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+//
+// Deprecated: ListPrincipalPoliciesPages has been deprecated
+func (c *IoT) ListPrincipalPoliciesPages(input *ListPrincipalPoliciesInput, fn func(*ListPrincipalPoliciesOutput, bool) bool) error {
+	return c.ListPrincipalPoliciesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListPrincipalPoliciesPagesWithContext same as ListPrincipalPoliciesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+//
+// Deprecated: ListPrincipalPoliciesPagesWithContext has been deprecated
+func (c *IoT) ListPrincipalPoliciesPagesWithContext(ctx aws.Context, input *ListPrincipalPoliciesInput, fn func(*ListPrincipalPoliciesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListPrincipalPoliciesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListPrincipalPoliciesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListPrincipalPoliciesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListPrincipalThings = "ListPrincipalThings"
 
 // ListPrincipalThingsRequest generates a "aws/request.Request" representing the
@@ -12261,6 +14346,12 @@ func (c *IoT) ListPrincipalThingsRequest(input *ListPrincipalThingsInput) (req *
 		Name:       opListPrincipalThings,
 		HTTPMethod: "GET",
 		HTTPPath:   "/principals/things",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -12325,6 +14416,58 @@ func (c *IoT) ListPrincipalThingsWithContext(ctx aws.Context, input *ListPrincip
 	return out, req.Send()
 }
 
+// ListPrincipalThingsPages iterates over the pages of a ListPrincipalThings operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListPrincipalThings method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListPrincipalThings operation.
+//    pageNum := 0
+//    err := client.ListPrincipalThingsPages(params,
+//        func(page *iot.ListPrincipalThingsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListPrincipalThingsPages(input *ListPrincipalThingsInput, fn func(*ListPrincipalThingsOutput, bool) bool) error {
+	return c.ListPrincipalThingsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListPrincipalThingsPagesWithContext same as ListPrincipalThingsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListPrincipalThingsPagesWithContext(ctx aws.Context, input *ListPrincipalThingsInput, fn func(*ListPrincipalThingsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListPrincipalThingsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListPrincipalThingsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListPrincipalThingsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListProvisioningTemplateVersions = "ListProvisioningTemplateVersions"
 
 // ListProvisioningTemplateVersionsRequest generates a "aws/request.Request" representing the
@@ -12354,6 +14497,12 @@ func (c *IoT) ListProvisioningTemplateVersionsRequest(input *ListProvisioningTem
 		Name:       opListProvisioningTemplateVersions,
 		HTTPMethod: "GET",
 		HTTPPath:   "/provisioning-templates/{templateName}/versions",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -12413,6 +14562,58 @@ func (c *IoT) ListProvisioningTemplateVersionsWithContext(ctx aws.Context, input
 	return out, req.Send()
 }
 
+// ListProvisioningTemplateVersionsPages iterates over the pages of a ListProvisioningTemplateVersions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListProvisioningTemplateVersions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListProvisioningTemplateVersions operation.
+//    pageNum := 0
+//    err := client.ListProvisioningTemplateVersionsPages(params,
+//        func(page *iot.ListProvisioningTemplateVersionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListProvisioningTemplateVersionsPages(input *ListProvisioningTemplateVersionsInput, fn func(*ListProvisioningTemplateVersionsOutput, bool) bool) error {
+	return c.ListProvisioningTemplateVersionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListProvisioningTemplateVersionsPagesWithContext same as ListProvisioningTemplateVersionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListProvisioningTemplateVersionsPagesWithContext(ctx aws.Context, input *ListProvisioningTemplateVersionsInput, fn func(*ListProvisioningTemplateVersionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListProvisioningTemplateVersionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListProvisioningTemplateVersionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListProvisioningTemplateVersionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListProvisioningTemplates = "ListProvisioningTemplates"
 
 // ListProvisioningTemplatesRequest generates a "aws/request.Request" representing the
@@ -12442,6 +14643,12 @@ func (c *IoT) ListProvisioningTemplatesRequest(input *ListProvisioningTemplatesI
 		Name:       opListProvisioningTemplates,
 		HTTPMethod: "GET",
 		HTTPPath:   "/provisioning-templates",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -12498,6 +14705,58 @@ func (c *IoT) ListProvisioningTemplatesWithContext(ctx aws.Context, input *ListP
 	return out, req.Send()
 }
 
+// ListProvisioningTemplatesPages iterates over the pages of a ListProvisioningTemplates operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListProvisioningTemplates method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListProvisioningTemplates operation.
+//    pageNum := 0
+//    err := client.ListProvisioningTemplatesPages(params,
+//        func(page *iot.ListProvisioningTemplatesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListProvisioningTemplatesPages(input *ListProvisioningTemplatesInput, fn func(*ListProvisioningTemplatesOutput, bool) bool) error {
+	return c.ListProvisioningTemplatesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListProvisioningTemplatesPagesWithContext same as ListProvisioningTemplatesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListProvisioningTemplatesPagesWithContext(ctx aws.Context, input *ListProvisioningTemplatesInput, fn func(*ListProvisioningTemplatesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListProvisioningTemplatesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListProvisioningTemplatesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListProvisioningTemplatesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListRoleAliases = "ListRoleAliases"
 
 // ListRoleAliasesRequest generates a "aws/request.Request" representing the
@@ -12527,6 +14786,12 @@ func (c *IoT) ListRoleAliasesRequest(input *ListRoleAliasesInput) (req *request.
 		Name:       opListRoleAliases,
 		HTTPMethod: "GET",
 		HTTPPath:   "/role-aliases",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"marker"},
+			OutputTokens:    []string{"nextMarker"},
+			LimitToken:      "pageSize",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -12586,6 +14851,58 @@ func (c *IoT) ListRoleAliasesWithContext(ctx aws.Context, input *ListRoleAliases
 	return out, req.Send()
 }
 
+// ListRoleAliasesPages iterates over the pages of a ListRoleAliases operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListRoleAliases method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListRoleAliases operation.
+//    pageNum := 0
+//    err := client.ListRoleAliasesPages(params,
+//        func(page *iot.ListRoleAliasesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListRoleAliasesPages(input *ListRoleAliasesInput, fn func(*ListRoleAliasesOutput, bool) bool) error {
+	return c.ListRoleAliasesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListRoleAliasesPagesWithContext same as ListRoleAliasesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListRoleAliasesPagesWithContext(ctx aws.Context, input *ListRoleAliasesInput, fn func(*ListRoleAliasesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListRoleAliasesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListRoleAliasesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListRoleAliasesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListScheduledAudits = "ListScheduledAudits"
 
 // ListScheduledAuditsRequest generates a "aws/request.Request" representing the
@@ -12615,6 +14932,12 @@ func (c *IoT) ListScheduledAuditsRequest(input *ListScheduledAuditsInput) (req *
 		Name:       opListScheduledAudits,
 		HTTPMethod: "GET",
 		HTTPPath:   "/audit/scheduledaudits",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -12668,6 +14991,58 @@ func (c *IoT) ListScheduledAuditsWithContext(ctx aws.Context, input *ListSchedul
 	return out, req.Send()
 }
 
+// ListScheduledAuditsPages iterates over the pages of a ListScheduledAudits operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListScheduledAudits method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListScheduledAudits operation.
+//    pageNum := 0
+//    err := client.ListScheduledAuditsPages(params,
+//        func(page *iot.ListScheduledAuditsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListScheduledAuditsPages(input *ListScheduledAuditsInput, fn func(*ListScheduledAuditsOutput, bool) bool) error {
+	return c.ListScheduledAuditsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListScheduledAuditsPagesWithContext same as ListScheduledAuditsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListScheduledAuditsPagesWithContext(ctx aws.Context, input *ListScheduledAuditsInput, fn func(*ListScheduledAuditsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListScheduledAuditsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListScheduledAuditsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListScheduledAuditsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListSecurityProfiles = "ListSecurityProfiles"
 
 // ListSecurityProfilesRequest generates a "aws/request.Request" representing the
@@ -12697,6 +15072,12 @@ func (c *IoT) ListSecurityProfilesRequest(input *ListSecurityProfilesInput) (req
 		Name:       opListSecurityProfiles,
 		HTTPMethod: "GET",
 		HTTPPath:   "/security-profiles",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -12731,6 +15112,9 @@ func (c *IoT) ListSecurityProfilesRequest(input *ListSecurityProfilesInput) (req
 //   * InternalFailureException
 //   An unexpected error has occurred.
 //
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
 func (c *IoT) ListSecurityProfiles(input *ListSecurityProfilesInput) (*ListSecurityProfilesOutput, error) {
 	req, out := c.ListSecurityProfilesRequest(input)
 	return out, req.Send()
@@ -12750,6 +15134,58 @@ func (c *IoT) ListSecurityProfilesWithContext(ctx aws.Context, input *ListSecuri
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListSecurityProfilesPages iterates over the pages of a ListSecurityProfiles operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListSecurityProfiles method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListSecurityProfiles operation.
+//    pageNum := 0
+//    err := client.ListSecurityProfilesPages(params,
+//        func(page *iot.ListSecurityProfilesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListSecurityProfilesPages(input *ListSecurityProfilesInput, fn func(*ListSecurityProfilesOutput, bool) bool) error {
+	return c.ListSecurityProfilesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListSecurityProfilesPagesWithContext same as ListSecurityProfilesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListSecurityProfilesPagesWithContext(ctx aws.Context, input *ListSecurityProfilesInput, fn func(*ListSecurityProfilesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListSecurityProfilesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListSecurityProfilesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListSecurityProfilesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListSecurityProfilesForTarget = "ListSecurityProfilesForTarget"
@@ -12781,6 +15217,12 @@ func (c *IoT) ListSecurityProfilesForTargetRequest(input *ListSecurityProfilesFo
 		Name:       opListSecurityProfilesForTarget,
 		HTTPMethod: "GET",
 		HTTPPath:   "/security-profiles-for-target",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -12837,6 +15279,58 @@ func (c *IoT) ListSecurityProfilesForTargetWithContext(ctx aws.Context, input *L
 	return out, req.Send()
 }
 
+// ListSecurityProfilesForTargetPages iterates over the pages of a ListSecurityProfilesForTarget operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListSecurityProfilesForTarget method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListSecurityProfilesForTarget operation.
+//    pageNum := 0
+//    err := client.ListSecurityProfilesForTargetPages(params,
+//        func(page *iot.ListSecurityProfilesForTargetOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListSecurityProfilesForTargetPages(input *ListSecurityProfilesForTargetInput, fn func(*ListSecurityProfilesForTargetOutput, bool) bool) error {
+	return c.ListSecurityProfilesForTargetPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListSecurityProfilesForTargetPagesWithContext same as ListSecurityProfilesForTargetPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListSecurityProfilesForTargetPagesWithContext(ctx aws.Context, input *ListSecurityProfilesForTargetInput, fn func(*ListSecurityProfilesForTargetOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListSecurityProfilesForTargetInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListSecurityProfilesForTargetRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListSecurityProfilesForTargetOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListStreams = "ListStreams"
 
 // ListStreamsRequest generates a "aws/request.Request" representing the
@@ -12866,6 +15360,12 @@ func (c *IoT) ListStreamsRequest(input *ListStreamsInput) (req *request.Request,
 		Name:       opListStreams,
 		HTTPMethod: "GET",
 		HTTPPath:   "/streams",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -12925,6 +15425,58 @@ func (c *IoT) ListStreamsWithContext(ctx aws.Context, input *ListStreamsInput, o
 	return out, req.Send()
 }
 
+// ListStreamsPages iterates over the pages of a ListStreams operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListStreams method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListStreams operation.
+//    pageNum := 0
+//    err := client.ListStreamsPages(params,
+//        func(page *iot.ListStreamsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListStreamsPages(input *ListStreamsInput, fn func(*ListStreamsOutput, bool) bool) error {
+	return c.ListStreamsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListStreamsPagesWithContext same as ListStreamsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListStreamsPagesWithContext(ctx aws.Context, input *ListStreamsInput, fn func(*ListStreamsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListStreamsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListStreamsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListStreamsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListTagsForResource = "ListTagsForResource"
 
 // ListTagsForResourceRequest generates a "aws/request.Request" representing the
@@ -12954,6 +15506,12 @@ func (c *IoT) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *
 		Name:       opListTagsForResource,
 		HTTPMethod: "GET",
 		HTTPPath:   "/tags",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -13010,6 +15568,58 @@ func (c *IoT) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsFor
 	return out, req.Send()
 }
 
+// ListTagsForResourcePages iterates over the pages of a ListTagsForResource operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListTagsForResource method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListTagsForResource operation.
+//    pageNum := 0
+//    err := client.ListTagsForResourcePages(params,
+//        func(page *iot.ListTagsForResourceOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListTagsForResourcePages(input *ListTagsForResourceInput, fn func(*ListTagsForResourceOutput, bool) bool) error {
+	return c.ListTagsForResourcePagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListTagsForResourcePagesWithContext same as ListTagsForResourcePages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListTagsForResourcePagesWithContext(ctx aws.Context, input *ListTagsForResourceInput, fn func(*ListTagsForResourceOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListTagsForResourceInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListTagsForResourceRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListTagsForResourceOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListTargetsForPolicy = "ListTargetsForPolicy"
 
 // ListTargetsForPolicyRequest generates a "aws/request.Request" representing the
@@ -13039,6 +15649,12 @@ func (c *IoT) ListTargetsForPolicyRequest(input *ListTargetsForPolicyInput) (req
 		Name:       opListTargetsForPolicy,
 		HTTPMethod: "POST",
 		HTTPPath:   "/policy-targets/{policyName}",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"marker"},
+			OutputTokens:    []string{"nextMarker"},
+			LimitToken:      "pageSize",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -13104,6 +15720,58 @@ func (c *IoT) ListTargetsForPolicyWithContext(ctx aws.Context, input *ListTarget
 	return out, req.Send()
 }
 
+// ListTargetsForPolicyPages iterates over the pages of a ListTargetsForPolicy operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListTargetsForPolicy method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListTargetsForPolicy operation.
+//    pageNum := 0
+//    err := client.ListTargetsForPolicyPages(params,
+//        func(page *iot.ListTargetsForPolicyOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListTargetsForPolicyPages(input *ListTargetsForPolicyInput, fn func(*ListTargetsForPolicyOutput, bool) bool) error {
+	return c.ListTargetsForPolicyPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListTargetsForPolicyPagesWithContext same as ListTargetsForPolicyPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListTargetsForPolicyPagesWithContext(ctx aws.Context, input *ListTargetsForPolicyInput, fn func(*ListTargetsForPolicyOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListTargetsForPolicyInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListTargetsForPolicyRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListTargetsForPolicyOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListTargetsForSecurityProfile = "ListTargetsForSecurityProfile"
 
 // ListTargetsForSecurityProfileRequest generates a "aws/request.Request" representing the
@@ -13133,6 +15801,12 @@ func (c *IoT) ListTargetsForSecurityProfileRequest(input *ListTargetsForSecurity
 		Name:       opListTargetsForSecurityProfile,
 		HTTPMethod: "GET",
 		HTTPPath:   "/security-profiles/{securityProfileName}/targets",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -13190,6 +15864,58 @@ func (c *IoT) ListTargetsForSecurityProfileWithContext(ctx aws.Context, input *L
 	return out, req.Send()
 }
 
+// ListTargetsForSecurityProfilePages iterates over the pages of a ListTargetsForSecurityProfile operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListTargetsForSecurityProfile method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListTargetsForSecurityProfile operation.
+//    pageNum := 0
+//    err := client.ListTargetsForSecurityProfilePages(params,
+//        func(page *iot.ListTargetsForSecurityProfileOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListTargetsForSecurityProfilePages(input *ListTargetsForSecurityProfileInput, fn func(*ListTargetsForSecurityProfileOutput, bool) bool) error {
+	return c.ListTargetsForSecurityProfilePagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListTargetsForSecurityProfilePagesWithContext same as ListTargetsForSecurityProfilePages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListTargetsForSecurityProfilePagesWithContext(ctx aws.Context, input *ListTargetsForSecurityProfileInput, fn func(*ListTargetsForSecurityProfileOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListTargetsForSecurityProfileInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListTargetsForSecurityProfileRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListTargetsForSecurityProfileOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListThingGroups = "ListThingGroups"
 
 // ListThingGroupsRequest generates a "aws/request.Request" representing the
@@ -13219,6 +15945,12 @@ func (c *IoT) ListThingGroupsRequest(input *ListThingGroupsInput) (req *request.
 		Name:       opListThingGroups,
 		HTTPMethod: "GET",
 		HTTPPath:   "/thing-groups",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -13272,6 +16004,58 @@ func (c *IoT) ListThingGroupsWithContext(ctx aws.Context, input *ListThingGroups
 	return out, req.Send()
 }
 
+// ListThingGroupsPages iterates over the pages of a ListThingGroups operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListThingGroups method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListThingGroups operation.
+//    pageNum := 0
+//    err := client.ListThingGroupsPages(params,
+//        func(page *iot.ListThingGroupsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListThingGroupsPages(input *ListThingGroupsInput, fn func(*ListThingGroupsOutput, bool) bool) error {
+	return c.ListThingGroupsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListThingGroupsPagesWithContext same as ListThingGroupsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListThingGroupsPagesWithContext(ctx aws.Context, input *ListThingGroupsInput, fn func(*ListThingGroupsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListThingGroupsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListThingGroupsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListThingGroupsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListThingGroupsForThing = "ListThingGroupsForThing"
 
 // ListThingGroupsForThingRequest generates a "aws/request.Request" representing the
@@ -13301,6 +16085,12 @@ func (c *IoT) ListThingGroupsForThingRequest(input *ListThingGroupsForThingInput
 		Name:       opListThingGroupsForThing,
 		HTTPMethod: "GET",
 		HTTPPath:   "/things/{thingName}/thing-groups",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -13352,6 +16142,58 @@ func (c *IoT) ListThingGroupsForThingWithContext(ctx aws.Context, input *ListThi
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListThingGroupsForThingPages iterates over the pages of a ListThingGroupsForThing operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListThingGroupsForThing method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListThingGroupsForThing operation.
+//    pageNum := 0
+//    err := client.ListThingGroupsForThingPages(params,
+//        func(page *iot.ListThingGroupsForThingOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListThingGroupsForThingPages(input *ListThingGroupsForThingInput, fn func(*ListThingGroupsForThingOutput, bool) bool) error {
+	return c.ListThingGroupsForThingPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListThingGroupsForThingPagesWithContext same as ListThingGroupsForThingPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListThingGroupsForThingPagesWithContext(ctx aws.Context, input *ListThingGroupsForThingInput, fn func(*ListThingGroupsForThingOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListThingGroupsForThingInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListThingGroupsForThingRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListThingGroupsForThingOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListThingPrincipals = "ListThingPrincipals"
@@ -13476,6 +16318,12 @@ func (c *IoT) ListThingRegistrationTaskReportsRequest(input *ListThingRegistrati
 		Name:       opListThingRegistrationTaskReports,
 		HTTPMethod: "GET",
 		HTTPPath:   "/thing-registration-tasks/{taskId}/reports",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -13532,6 +16380,58 @@ func (c *IoT) ListThingRegistrationTaskReportsWithContext(ctx aws.Context, input
 	return out, req.Send()
 }
 
+// ListThingRegistrationTaskReportsPages iterates over the pages of a ListThingRegistrationTaskReports operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListThingRegistrationTaskReports method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListThingRegistrationTaskReports operation.
+//    pageNum := 0
+//    err := client.ListThingRegistrationTaskReportsPages(params,
+//        func(page *iot.ListThingRegistrationTaskReportsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListThingRegistrationTaskReportsPages(input *ListThingRegistrationTaskReportsInput, fn func(*ListThingRegistrationTaskReportsOutput, bool) bool) error {
+	return c.ListThingRegistrationTaskReportsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListThingRegistrationTaskReportsPagesWithContext same as ListThingRegistrationTaskReportsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListThingRegistrationTaskReportsPagesWithContext(ctx aws.Context, input *ListThingRegistrationTaskReportsInput, fn func(*ListThingRegistrationTaskReportsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListThingRegistrationTaskReportsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListThingRegistrationTaskReportsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListThingRegistrationTaskReportsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListThingRegistrationTasks = "ListThingRegistrationTasks"
 
 // ListThingRegistrationTasksRequest generates a "aws/request.Request" representing the
@@ -13561,6 +16461,12 @@ func (c *IoT) ListThingRegistrationTasksRequest(input *ListThingRegistrationTask
 		Name:       opListThingRegistrationTasks,
 		HTTPMethod: "GET",
 		HTTPPath:   "/thing-registration-tasks",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -13617,6 +16523,58 @@ func (c *IoT) ListThingRegistrationTasksWithContext(ctx aws.Context, input *List
 	return out, req.Send()
 }
 
+// ListThingRegistrationTasksPages iterates over the pages of a ListThingRegistrationTasks operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListThingRegistrationTasks method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListThingRegistrationTasks operation.
+//    pageNum := 0
+//    err := client.ListThingRegistrationTasksPages(params,
+//        func(page *iot.ListThingRegistrationTasksOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListThingRegistrationTasksPages(input *ListThingRegistrationTasksInput, fn func(*ListThingRegistrationTasksOutput, bool) bool) error {
+	return c.ListThingRegistrationTasksPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListThingRegistrationTasksPagesWithContext same as ListThingRegistrationTasksPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListThingRegistrationTasksPagesWithContext(ctx aws.Context, input *ListThingRegistrationTasksInput, fn func(*ListThingRegistrationTasksOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListThingRegistrationTasksInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListThingRegistrationTasksRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListThingRegistrationTasksOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListThingTypes = "ListThingTypes"
 
 // ListThingTypesRequest generates a "aws/request.Request" representing the
@@ -13646,6 +16604,12 @@ func (c *IoT) ListThingTypesRequest(input *ListThingTypesInput) (req *request.Re
 		Name:       opListThingTypes,
 		HTTPMethod: "GET",
 		HTTPPath:   "/thing-types",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -13705,6 +16669,58 @@ func (c *IoT) ListThingTypesWithContext(ctx aws.Context, input *ListThingTypesIn
 	return out, req.Send()
 }
 
+// ListThingTypesPages iterates over the pages of a ListThingTypes operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListThingTypes method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListThingTypes operation.
+//    pageNum := 0
+//    err := client.ListThingTypesPages(params,
+//        func(page *iot.ListThingTypesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListThingTypesPages(input *ListThingTypesInput, fn func(*ListThingTypesOutput, bool) bool) error {
+	return c.ListThingTypesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListThingTypesPagesWithContext same as ListThingTypesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListThingTypesPagesWithContext(ctx aws.Context, input *ListThingTypesInput, fn func(*ListThingTypesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListThingTypesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListThingTypesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListThingTypesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListThings = "ListThings"
 
 // ListThingsRequest generates a "aws/request.Request" representing the
@@ -13734,6 +16750,12 @@ func (c *IoT) ListThingsRequest(input *ListThingsInput) (req *request.Request, o
 		Name:       opListThings,
 		HTTPMethod: "GET",
 		HTTPPath:   "/things",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -13751,6 +16773,10 @@ func (c *IoT) ListThingsRequest(input *ListThingsInput) (req *request.Request, o
 // filter your things. For example, calling ListThings with attributeName=Color
 // and attributeValue=Red retrieves all things in the registry that contain
 // an attribute Color with the value Red.
+//
+// You will not be charged for calling this API if an Access denied error is
+// returned. You will also not be charged if no attributes or pagination token
+// was provided in request and no pagination token and no results were returned.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -13796,6 +16822,58 @@ func (c *IoT) ListThingsWithContext(ctx aws.Context, input *ListThingsInput, opt
 	return out, req.Send()
 }
 
+// ListThingsPages iterates over the pages of a ListThings operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListThings method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListThings operation.
+//    pageNum := 0
+//    err := client.ListThingsPages(params,
+//        func(page *iot.ListThingsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListThingsPages(input *ListThingsInput, fn func(*ListThingsOutput, bool) bool) error {
+	return c.ListThingsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListThingsPagesWithContext same as ListThingsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListThingsPagesWithContext(ctx aws.Context, input *ListThingsInput, fn func(*ListThingsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListThingsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListThingsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListThingsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListThingsInBillingGroup = "ListThingsInBillingGroup"
 
 // ListThingsInBillingGroupRequest generates a "aws/request.Request" representing the
@@ -13825,6 +16903,12 @@ func (c *IoT) ListThingsInBillingGroupRequest(input *ListThingsInBillingGroupInp
 		Name:       opListThingsInBillingGroup,
 		HTTPMethod: "GET",
 		HTTPPath:   "/billing-groups/{billingGroupName}/things",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -13881,6 +16965,58 @@ func (c *IoT) ListThingsInBillingGroupWithContext(ctx aws.Context, input *ListTh
 	return out, req.Send()
 }
 
+// ListThingsInBillingGroupPages iterates over the pages of a ListThingsInBillingGroup operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListThingsInBillingGroup method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListThingsInBillingGroup operation.
+//    pageNum := 0
+//    err := client.ListThingsInBillingGroupPages(params,
+//        func(page *iot.ListThingsInBillingGroupOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListThingsInBillingGroupPages(input *ListThingsInBillingGroupInput, fn func(*ListThingsInBillingGroupOutput, bool) bool) error {
+	return c.ListThingsInBillingGroupPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListThingsInBillingGroupPagesWithContext same as ListThingsInBillingGroupPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListThingsInBillingGroupPagesWithContext(ctx aws.Context, input *ListThingsInBillingGroupInput, fn func(*ListThingsInBillingGroupOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListThingsInBillingGroupInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListThingsInBillingGroupRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListThingsInBillingGroupOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListThingsInThingGroup = "ListThingsInThingGroup"
 
 // ListThingsInThingGroupRequest generates a "aws/request.Request" representing the
@@ -13910,6 +17046,12 @@ func (c *IoT) ListThingsInThingGroupRequest(input *ListThingsInThingGroupInput) 
 		Name:       opListThingsInThingGroup,
 		HTTPMethod: "GET",
 		HTTPPath:   "/thing-groups/{thingGroupName}/things",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -13963,6 +17105,58 @@ func (c *IoT) ListThingsInThingGroupWithContext(ctx aws.Context, input *ListThin
 	return out, req.Send()
 }
 
+// ListThingsInThingGroupPages iterates over the pages of a ListThingsInThingGroup operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListThingsInThingGroup method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListThingsInThingGroup operation.
+//    pageNum := 0
+//    err := client.ListThingsInThingGroupPages(params,
+//        func(page *iot.ListThingsInThingGroupOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListThingsInThingGroupPages(input *ListThingsInThingGroupInput, fn func(*ListThingsInThingGroupOutput, bool) bool) error {
+	return c.ListThingsInThingGroupPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListThingsInThingGroupPagesWithContext same as ListThingsInThingGroupPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListThingsInThingGroupPagesWithContext(ctx aws.Context, input *ListThingsInThingGroupInput, fn func(*ListThingsInThingGroupOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListThingsInThingGroupInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListThingsInThingGroupRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListThingsInThingGroupOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListTopicRuleDestinations = "ListTopicRuleDestinations"
 
 // ListTopicRuleDestinationsRequest generates a "aws/request.Request" representing the
@@ -13992,6 +17186,12 @@ func (c *IoT) ListTopicRuleDestinationsRequest(input *ListTopicRuleDestinationsI
 		Name:       opListTopicRuleDestinations,
 		HTTPMethod: "GET",
 		HTTPPath:   "/destinations",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -14048,6 +17248,58 @@ func (c *IoT) ListTopicRuleDestinationsWithContext(ctx aws.Context, input *ListT
 	return out, req.Send()
 }
 
+// ListTopicRuleDestinationsPages iterates over the pages of a ListTopicRuleDestinations operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListTopicRuleDestinations method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListTopicRuleDestinations operation.
+//    pageNum := 0
+//    err := client.ListTopicRuleDestinationsPages(params,
+//        func(page *iot.ListTopicRuleDestinationsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListTopicRuleDestinationsPages(input *ListTopicRuleDestinationsInput, fn func(*ListTopicRuleDestinationsOutput, bool) bool) error {
+	return c.ListTopicRuleDestinationsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListTopicRuleDestinationsPagesWithContext same as ListTopicRuleDestinationsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListTopicRuleDestinationsPagesWithContext(ctx aws.Context, input *ListTopicRuleDestinationsInput, fn func(*ListTopicRuleDestinationsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListTopicRuleDestinationsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListTopicRuleDestinationsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListTopicRuleDestinationsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListTopicRules = "ListTopicRules"
 
 // ListTopicRulesRequest generates a "aws/request.Request" representing the
@@ -14077,6 +17329,12 @@ func (c *IoT) ListTopicRulesRequest(input *ListTopicRulesInput) (req *request.Re
 		Name:       opListTopicRules,
 		HTTPMethod: "GET",
 		HTTPPath:   "/rules",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -14130,6 +17388,58 @@ func (c *IoT) ListTopicRulesWithContext(ctx aws.Context, input *ListTopicRulesIn
 	return out, req.Send()
 }
 
+// ListTopicRulesPages iterates over the pages of a ListTopicRules operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListTopicRules method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListTopicRules operation.
+//    pageNum := 0
+//    err := client.ListTopicRulesPages(params,
+//        func(page *iot.ListTopicRulesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListTopicRulesPages(input *ListTopicRulesInput, fn func(*ListTopicRulesOutput, bool) bool) error {
+	return c.ListTopicRulesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListTopicRulesPagesWithContext same as ListTopicRulesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListTopicRulesPagesWithContext(ctx aws.Context, input *ListTopicRulesInput, fn func(*ListTopicRulesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListTopicRulesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListTopicRulesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListTopicRulesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListV2LoggingLevels = "ListV2LoggingLevels"
 
 // ListV2LoggingLevelsRequest generates a "aws/request.Request" representing the
@@ -14159,6 +17469,12 @@ func (c *IoT) ListV2LoggingLevelsRequest(input *ListV2LoggingLevelsInput) (req *
 		Name:       opListV2LoggingLevels,
 		HTTPMethod: "GET",
 		HTTPPath:   "/v2LoggingLevel",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -14215,6 +17531,58 @@ func (c *IoT) ListV2LoggingLevelsWithContext(ctx aws.Context, input *ListV2Loggi
 	return out, req.Send()
 }
 
+// ListV2LoggingLevelsPages iterates over the pages of a ListV2LoggingLevels operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListV2LoggingLevels method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListV2LoggingLevels operation.
+//    pageNum := 0
+//    err := client.ListV2LoggingLevelsPages(params,
+//        func(page *iot.ListV2LoggingLevelsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListV2LoggingLevelsPages(input *ListV2LoggingLevelsInput, fn func(*ListV2LoggingLevelsOutput, bool) bool) error {
+	return c.ListV2LoggingLevelsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListV2LoggingLevelsPagesWithContext same as ListV2LoggingLevelsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListV2LoggingLevelsPagesWithContext(ctx aws.Context, input *ListV2LoggingLevelsInput, fn func(*ListV2LoggingLevelsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListV2LoggingLevelsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListV2LoggingLevelsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListV2LoggingLevelsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListViolationEvents = "ListViolationEvents"
 
 // ListViolationEventsRequest generates a "aws/request.Request" representing the
@@ -14244,6 +17612,12 @@ func (c *IoT) ListViolationEventsRequest(input *ListViolationEventsInput) (req *
 		Name:       opListViolationEvents,
 		HTTPMethod: "GET",
 		HTTPPath:   "/violation-events",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -14297,6 +17671,58 @@ func (c *IoT) ListViolationEventsWithContext(ctx aws.Context, input *ListViolati
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListViolationEventsPages iterates over the pages of a ListViolationEvents operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListViolationEvents method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListViolationEvents operation.
+//    pageNum := 0
+//    err := client.ListViolationEventsPages(params,
+//        func(page *iot.ListViolationEventsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *IoT) ListViolationEventsPages(input *ListViolationEventsInput, fn func(*ListViolationEventsOutput, bool) bool) error {
+	return c.ListViolationEventsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListViolationEventsPagesWithContext same as ListViolationEventsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListViolationEventsPagesWithContext(ctx aws.Context, input *ListViolationEventsInput, fn func(*ListViolationEventsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListViolationEventsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListViolationEventsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListViolationEventsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opRegisterCACertificate = "RegisterCACertificate"
@@ -14504,6 +17930,103 @@ func (c *IoT) RegisterCertificate(input *RegisterCertificateInput) (*RegisterCer
 // for more information on using Contexts.
 func (c *IoT) RegisterCertificateWithContext(ctx aws.Context, input *RegisterCertificateInput, opts ...request.Option) (*RegisterCertificateOutput, error) {
 	req, out := c.RegisterCertificateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opRegisterCertificateWithoutCA = "RegisterCertificateWithoutCA"
+
+// RegisterCertificateWithoutCARequest generates a "aws/request.Request" representing the
+// client's request for the RegisterCertificateWithoutCA operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RegisterCertificateWithoutCA for more information on using the RegisterCertificateWithoutCA
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RegisterCertificateWithoutCARequest method.
+//    req, resp := client.RegisterCertificateWithoutCARequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) RegisterCertificateWithoutCARequest(input *RegisterCertificateWithoutCAInput) (req *request.Request, output *RegisterCertificateWithoutCAOutput) {
+	op := &request.Operation{
+		Name:       opRegisterCertificateWithoutCA,
+		HTTPMethod: "POST",
+		HTTPPath:   "/certificate/register-no-ca",
+	}
+
+	if input == nil {
+		input = &RegisterCertificateWithoutCAInput{}
+	}
+
+	output = &RegisterCertificateWithoutCAOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// RegisterCertificateWithoutCA API operation for AWS IoT.
+//
+// Register a certificate that does not have a certificate authority (CA).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation RegisterCertificateWithoutCA for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceAlreadyExistsException
+//   The resource already exists.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * CertificateStateException
+//   The certificate operation is not allowed.
+//
+//   * CertificateValidationException
+//   The certificate is invalid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+//   * ServiceUnavailableException
+//   The service is temporarily unavailable.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) RegisterCertificateWithoutCA(input *RegisterCertificateWithoutCAInput) (*RegisterCertificateWithoutCAOutput, error) {
+	req, out := c.RegisterCertificateWithoutCARequest(input)
+	return out, req.Send()
+}
+
+// RegisterCertificateWithoutCAWithContext is the same as RegisterCertificateWithoutCA with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RegisterCertificateWithoutCA for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) RegisterCertificateWithoutCAWithContext(ctx aws.Context, input *RegisterCertificateWithoutCAInput, opts ...request.Option) (*RegisterCertificateWithoutCAOutput, error) {
+	req, out := c.RegisterCertificateWithoutCARequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -14842,6 +18365,10 @@ func (c *IoT) RemoveThingFromThingGroupRequest(input *RemoveThingFromThingGroupI
 // RemoveThingFromThingGroup API operation for AWS IoT.
 //
 // Remove the specified thing from the specified group.
+//
+// You must specify either a thingGroupArn or a thingGroupName to identify the
+// thing group and either a thingArn or a thingName to identify the thing to
+// remove from the thing group.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -16430,6 +19957,92 @@ func (c *IoT) UpdateAccountAuditConfigurationWithContext(ctx aws.Context, input 
 	return out, req.Send()
 }
 
+const opUpdateAuditSuppression = "UpdateAuditSuppression"
+
+// UpdateAuditSuppressionRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateAuditSuppression operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateAuditSuppression for more information on using the UpdateAuditSuppression
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateAuditSuppressionRequest method.
+//    req, resp := client.UpdateAuditSuppressionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) UpdateAuditSuppressionRequest(input *UpdateAuditSuppressionInput) (req *request.Request, output *UpdateAuditSuppressionOutput) {
+	op := &request.Operation{
+		Name:       opUpdateAuditSuppression,
+		HTTPMethod: "PATCH",
+		HTTPPath:   "/audit/suppressions/update",
+	}
+
+	if input == nil {
+		input = &UpdateAuditSuppressionInput{}
+	}
+
+	output = &UpdateAuditSuppressionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateAuditSuppression API operation for AWS IoT.
+//
+// Updates a Device Defender audit suppression.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation UpdateAuditSuppression for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) UpdateAuditSuppression(input *UpdateAuditSuppressionInput) (*UpdateAuditSuppressionOutput, error) {
+	req, out := c.UpdateAuditSuppressionRequest(input)
+	return out, req.Send()
+}
+
+// UpdateAuditSuppressionWithContext is the same as UpdateAuditSuppression with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateAuditSuppression for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) UpdateAuditSuppressionWithContext(ctx aws.Context, input *UpdateAuditSuppressionInput, opts ...request.Option) (*UpdateAuditSuppressionOutput, error) {
+	req, out := c.UpdateAuditSuppressionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateAuthorizer = "UpdateAuthorizer"
 
 // UpdateAuthorizerRequest generates a "aws/request.Request" representing the
@@ -16750,11 +20363,13 @@ func (c *IoT) UpdateCertificateRequest(input *UpdateCertificateInput) (req *requ
 //
 // Updates the status of the specified certificate. This operation is idempotent.
 //
-// Moving a certificate from the ACTIVE state (including REVOKED) will not disconnect
-// currently connected devices, but these devices will be unable to reconnect.
+// Certificates must be in the ACTIVE state to authenticate devices that use
+// a certificate to connect to AWS IoT.
 //
-// The ACTIVE state is required to authenticate devices connecting to AWS IoT
-// using a certificate.
+// Within a few minutes of updating a certificate from the ACTIVE state to any
+// other state, AWS IoT disconnects all devices that used that certificate to
+// connect. Devices cannot use a certificate that is not in the ACTIVE state
+// to reconnect.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -16801,6 +20416,92 @@ func (c *IoT) UpdateCertificate(input *UpdateCertificateInput) (*UpdateCertifica
 // for more information on using Contexts.
 func (c *IoT) UpdateCertificateWithContext(ctx aws.Context, input *UpdateCertificateInput, opts ...request.Option) (*UpdateCertificateOutput, error) {
 	req, out := c.UpdateCertificateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateDimension = "UpdateDimension"
+
+// UpdateDimensionRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateDimension operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateDimension for more information on using the UpdateDimension
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateDimensionRequest method.
+//    req, resp := client.UpdateDimensionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) UpdateDimensionRequest(input *UpdateDimensionInput) (req *request.Request, output *UpdateDimensionOutput) {
+	op := &request.Operation{
+		Name:       opUpdateDimension,
+		HTTPMethod: "PATCH",
+		HTTPPath:   "/dimensions/{name}",
+	}
+
+	if input == nil {
+		input = &UpdateDimensionInput{}
+	}
+
+	output = &UpdateDimensionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateDimension API operation for AWS IoT.
+//
+// Updates the definition for a dimension. You cannot change the type of a dimension
+// after it is created (you can delete it and re-create it).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation UpdateDimension for usage and error information.
+//
+// Returned Error Types:
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * ResourceNotFoundException
+//   The specified resource does not exist.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+func (c *IoT) UpdateDimension(input *UpdateDimensionInput) (*UpdateDimensionOutput, error) {
+	req, out := c.UpdateDimensionRequest(input)
+	return out, req.Send()
+}
+
+// UpdateDimensionWithContext is the same as UpdateDimension with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateDimension for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) UpdateDimensionWithContext(ctx aws.Context, input *UpdateDimensionInput, opts ...request.Option) (*UpdateDimensionOutput, error) {
+	req, out := c.UpdateDimensionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -18229,11 +21930,11 @@ func (c *IoT) ValidateSecurityProfileBehaviorsWithContext(ctx aws.Context, input
 	return out, req.Send()
 }
 
-// Details of abort criteria to abort the job.
+// The criteria that determine when and how a job abort takes place.
 type AbortConfig struct {
 	_ struct{} `type:"structure"`
 
-	// The list of abort criteria to define rules to abort the job.
+	// The list of criteria that determine when and how to abort the job.
 	//
 	// CriteriaList is a required field
 	CriteriaList []*AbortCriteria `locationName:"criteriaList" min:"1" type:"list" required:"true"`
@@ -18281,27 +21982,28 @@ func (s *AbortConfig) SetCriteriaList(v []*AbortCriteria) *AbortConfig {
 	return s
 }
 
-// Details of abort criteria to define rules to abort the job.
+// The criteria that determine when and how a job abort takes place.
 type AbortCriteria struct {
 	_ struct{} `type:"structure"`
 
-	// The type of abort action to initiate a job abort.
+	// The type of job action to take to initiate the job abort.
 	//
 	// Action is a required field
 	Action *string `locationName:"action" type:"string" required:"true" enum:"AbortAction"`
 
-	// The type of job execution failure to define a rule to initiate a job abort.
+	// The type of job execution failures that can initiate a job abort.
 	//
 	// FailureType is a required field
 	FailureType *string `locationName:"failureType" type:"string" required:"true" enum:"JobExecutionFailureType"`
 
-	// Minimum number of executed things before evaluating an abort rule.
+	// The minimum number of things which must receive job execution notifications
+	// before the job can be aborted.
 	//
 	// MinNumberOfExecutedThings is a required field
 	MinNumberOfExecutedThings *int64 `locationName:"minNumberOfExecutedThings" min:"1" type:"integer" required:"true"`
 
-	// The threshold as a percentage of the total number of executed things that
-	// will initiate a job abort.
+	// The minimum percentage of job execution failures that must occur to initiate
+	// the job abort.
 	//
 	// AWS IoT supports up to two digits after the decimal (for example, 10.9 and
 	// 10.99, but not 10.999).
@@ -18442,6 +22144,9 @@ type Action struct {
 	// Change the state of a CloudWatch alarm.
 	CloudwatchAlarm *CloudwatchAlarmAction `locationName:"cloudwatchAlarm" type:"structure"`
 
+	// Send data to CloudWatch Logs.
+	CloudwatchLogs *CloudwatchLogsAction `locationName:"cloudwatchLogs" type:"structure"`
+
 	// Capture a CloudWatch metric.
 	CloudwatchMetric *CloudwatchMetricAction `locationName:"cloudwatchMetric" type:"structure"`
 
@@ -18513,6 +22218,11 @@ func (s *Action) Validate() error {
 	if s.CloudwatchAlarm != nil {
 		if err := s.CloudwatchAlarm.Validate(); err != nil {
 			invalidParams.AddNested("CloudwatchAlarm", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.CloudwatchLogs != nil {
+		if err := s.CloudwatchLogs.Validate(); err != nil {
+			invalidParams.AddNested("CloudwatchLogs", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.CloudwatchMetric != nil {
@@ -18605,6 +22315,12 @@ func (s *Action) Validate() error {
 // SetCloudwatchAlarm sets the CloudwatchAlarm field's value.
 func (s *Action) SetCloudwatchAlarm(v *CloudwatchAlarmAction) *Action {
 	s.CloudwatchAlarm = v
+	return s
+}
+
+// SetCloudwatchLogs sets the CloudwatchLogs field's value.
+func (s *Action) SetCloudwatchLogs(v *CloudwatchLogsAction) *Action {
+	s.CloudwatchLogs = v
 	return s
 }
 
@@ -19403,7 +23119,7 @@ type AttachPolicyInput struct {
 	// PolicyName is a required field
 	PolicyName *string `location:"uri" locationName:"policyName" min:"1" type:"string" required:"true"`
 
-	// The identity (https://docs.aws.amazon.com/iot/latest/developerguide/iot-security-identity.html)
+	// The identity (https://docs.aws.amazon.com/iot/latest/developerguide/security-iam.html)
 	// to which the policy is attached.
 	//
 	// Target is a required field
@@ -19764,6 +23480,10 @@ type AuditCheckDetails struct {
 	// The number of resources that were found noncompliant during the check.
 	NonCompliantResourcesCount *int64 `locationName:"nonCompliantResourcesCount" type:"long"`
 
+	// Describes how many of the non-compliant resources created during the evaluation
+	// of an audit check were marked as suppressed.
+	SuppressedNonCompliantResourcesCount *int64 `locationName:"suppressedNonCompliantResourcesCount" type:"long"`
+
 	// The number of resources on which the check was performed.
 	TotalResourcesCount *int64 `locationName:"totalResourcesCount" type:"long"`
 }
@@ -19808,6 +23528,12 @@ func (s *AuditCheckDetails) SetNonCompliantResourcesCount(v int64) *AuditCheckDe
 	return s
 }
 
+// SetSuppressedNonCompliantResourcesCount sets the SuppressedNonCompliantResourcesCount field's value.
+func (s *AuditCheckDetails) SetSuppressedNonCompliantResourcesCount(v int64) *AuditCheckDetails {
+	s.SuppressedNonCompliantResourcesCount = &v
+	return s
+}
+
 // SetTotalResourcesCount sets the TotalResourcesCount field's value.
 func (s *AuditCheckDetails) SetTotalResourcesCount(v int64) *AuditCheckDetails {
 	s.TotalResourcesCount = &v
@@ -19827,6 +23553,9 @@ type AuditFinding struct {
 
 	// The time the result (finding) was discovered.
 	FindingTime *time.Time `locationName:"findingTime" type:"timestamp"`
+
+	// Indicates whether the audit finding was suppressed or not during reporting.
+	IsSuppressed *bool `locationName:"isSuppressed" type:"boolean"`
 
 	// The resource that was found to be noncompliant with the audit check.
 	NonCompliantResource *NonCompliantResource `locationName:"nonCompliantResource" type:"structure"`
@@ -19875,6 +23604,12 @@ func (s *AuditFinding) SetFindingId(v string) *AuditFinding {
 // SetFindingTime sets the FindingTime field's value.
 func (s *AuditFinding) SetFindingTime(v time.Time) *AuditFinding {
 	s.FindingTime = &v
+	return s
+}
+
+// SetIsSuppressed sets the IsSuppressed field's value.
+func (s *AuditFinding) SetIsSuppressed(v bool) *AuditFinding {
+	s.IsSuppressed = &v
 	return s
 }
 
@@ -20179,6 +23914,73 @@ func (s *AuditNotificationTarget) SetTargetArn(v string) *AuditNotificationTarge
 	return s
 }
 
+// Filters out specific findings of a Device Defender audit.
+type AuditSuppression struct {
+	_ struct{} `type:"structure"`
+
+	// An audit check name. Checks must be enabled for your account. (Use DescribeAccountAuditConfiguration
+	// to see the list of all checks, including those that are enabled or use UpdateAccountAuditConfiguration
+	// to select which checks are enabled.)
+	//
+	// CheckName is a required field
+	CheckName *string `locationName:"checkName" type:"string" required:"true"`
+
+	// The description of the audit suppression.
+	Description *string `locationName:"description" type:"string"`
+
+	// The expiration date (epoch timestamp in seconds) that you want the suppression
+	// to adhere to.
+	ExpirationDate *time.Time `locationName:"expirationDate" type:"timestamp"`
+
+	// Information that identifies the noncompliant resource.
+	//
+	// ResourceIdentifier is a required field
+	ResourceIdentifier *ResourceIdentifier `locationName:"resourceIdentifier" type:"structure" required:"true"`
+
+	// Indicates whether a suppression should exist indefinitely or not.
+	SuppressIndefinitely *bool `locationName:"suppressIndefinitely" type:"boolean"`
+}
+
+// String returns the string representation
+func (s AuditSuppression) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AuditSuppression) GoString() string {
+	return s.String()
+}
+
+// SetCheckName sets the CheckName field's value.
+func (s *AuditSuppression) SetCheckName(v string) *AuditSuppression {
+	s.CheckName = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *AuditSuppression) SetDescription(v string) *AuditSuppression {
+	s.Description = &v
+	return s
+}
+
+// SetExpirationDate sets the ExpirationDate field's value.
+func (s *AuditSuppression) SetExpirationDate(v time.Time) *AuditSuppression {
+	s.ExpirationDate = &v
+	return s
+}
+
+// SetResourceIdentifier sets the ResourceIdentifier field's value.
+func (s *AuditSuppression) SetResourceIdentifier(v *ResourceIdentifier) *AuditSuppression {
+	s.ResourceIdentifier = v
+	return s
+}
+
+// SetSuppressIndefinitely sets the SuppressIndefinitely field's value.
+func (s *AuditSuppression) SetSuppressIndefinitely(v bool) *AuditSuppression {
+	s.SuppressIndefinitely = &v
+	return s
+}
+
 // The audits that were performed.
 type AuditTaskMetadata struct {
 	_ struct{} `type:"structure"`
@@ -20231,7 +24033,9 @@ type AuthInfo struct {
 
 	// The resources for which the principal is being authorized to perform the
 	// specified action.
-	Resources []*string `locationName:"resources" type:"list"`
+	//
+	// Resources is a required field
+	Resources []*string `locationName:"resources" type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -20242,6 +24046,19 @@ func (s AuthInfo) String() string {
 // GoString returns the string representation
 func (s AuthInfo) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AuthInfo) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AuthInfo"}
+	if s.Resources == nil {
+		invalidParams.Add(request.NewErrParamRequired("Resources"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetActionType sets the ActionType field's value.
@@ -20496,9 +24313,154 @@ func (s *AuthorizerSummary) SetAuthorizerName(v string) *AuthorizerSummary {
 	return s
 }
 
+// The criteria that determine when and how a job abort takes place.
+type AwsJobAbortConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The list of criteria that determine when and how to abort the job.
+	//
+	// AbortCriteriaList is a required field
+	AbortCriteriaList []*AwsJobAbortCriteria `locationName:"abortCriteriaList" min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s AwsJobAbortConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsJobAbortConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AwsJobAbortConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AwsJobAbortConfig"}
+	if s.AbortCriteriaList == nil {
+		invalidParams.Add(request.NewErrParamRequired("AbortCriteriaList"))
+	}
+	if s.AbortCriteriaList != nil && len(s.AbortCriteriaList) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AbortCriteriaList", 1))
+	}
+	if s.AbortCriteriaList != nil {
+		for i, v := range s.AbortCriteriaList {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "AbortCriteriaList", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAbortCriteriaList sets the AbortCriteriaList field's value.
+func (s *AwsJobAbortConfig) SetAbortCriteriaList(v []*AwsJobAbortCriteria) *AwsJobAbortConfig {
+	s.AbortCriteriaList = v
+	return s
+}
+
+// The criteria that determine when and how a job abort takes place.
+type AwsJobAbortCriteria struct {
+	_ struct{} `type:"structure"`
+
+	// The type of job action to take to initiate the job abort.
+	//
+	// Action is a required field
+	Action *string `locationName:"action" type:"string" required:"true" enum:"AwsJobAbortCriteriaAbortAction"`
+
+	// The type of job execution failures that can initiate a job abort.
+	//
+	// FailureType is a required field
+	FailureType *string `locationName:"failureType" type:"string" required:"true" enum:"AwsJobAbortCriteriaFailureType"`
+
+	// The minimum number of things which must receive job execution notifications
+	// before the job can be aborted.
+	//
+	// MinNumberOfExecutedThings is a required field
+	MinNumberOfExecutedThings *int64 `locationName:"minNumberOfExecutedThings" min:"1" type:"integer" required:"true"`
+
+	// The minimum percentage of job execution failures that must occur to initiate
+	// the job abort.
+	//
+	// AWS IoT supports up to two digits after the decimal (for example, 10.9 and
+	// 10.99, but not 10.999).
+	//
+	// ThresholdPercentage is a required field
+	ThresholdPercentage *float64 `locationName:"thresholdPercentage" type:"double" required:"true"`
+}
+
+// String returns the string representation
+func (s AwsJobAbortCriteria) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsJobAbortCriteria) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AwsJobAbortCriteria) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AwsJobAbortCriteria"}
+	if s.Action == nil {
+		invalidParams.Add(request.NewErrParamRequired("Action"))
+	}
+	if s.FailureType == nil {
+		invalidParams.Add(request.NewErrParamRequired("FailureType"))
+	}
+	if s.MinNumberOfExecutedThings == nil {
+		invalidParams.Add(request.NewErrParamRequired("MinNumberOfExecutedThings"))
+	}
+	if s.MinNumberOfExecutedThings != nil && *s.MinNumberOfExecutedThings < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MinNumberOfExecutedThings", 1))
+	}
+	if s.ThresholdPercentage == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThresholdPercentage"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAction sets the Action field's value.
+func (s *AwsJobAbortCriteria) SetAction(v string) *AwsJobAbortCriteria {
+	s.Action = &v
+	return s
+}
+
+// SetFailureType sets the FailureType field's value.
+func (s *AwsJobAbortCriteria) SetFailureType(v string) *AwsJobAbortCriteria {
+	s.FailureType = &v
+	return s
+}
+
+// SetMinNumberOfExecutedThings sets the MinNumberOfExecutedThings field's value.
+func (s *AwsJobAbortCriteria) SetMinNumberOfExecutedThings(v int64) *AwsJobAbortCriteria {
+	s.MinNumberOfExecutedThings = &v
+	return s
+}
+
+// SetThresholdPercentage sets the ThresholdPercentage field's value.
+func (s *AwsJobAbortCriteria) SetThresholdPercentage(v float64) *AwsJobAbortCriteria {
+	s.ThresholdPercentage = &v
+	return s
+}
+
 // Configuration for the rollout of OTA updates.
 type AwsJobExecutionsRolloutConfig struct {
 	_ struct{} `type:"structure"`
+
+	// The rate of increase for a job rollout. This parameter allows you to define
+	// an exponential rate increase for a job rollout.
+	ExponentialRate *AwsJobExponentialRolloutRate `locationName:"exponentialRate" type:"structure"`
 
 	// The maximum number of OTA update job executions started per minute.
 	MaximumPerMinute *int64 `locationName:"maximumPerMinute" min:"1" type:"integer"`
@@ -20520,6 +24482,11 @@ func (s *AwsJobExecutionsRolloutConfig) Validate() error {
 	if s.MaximumPerMinute != nil && *s.MaximumPerMinute < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaximumPerMinute", 1))
 	}
+	if s.ExponentialRate != nil {
+		if err := s.ExponentialRate.Validate(); err != nil {
+			invalidParams.AddNested("ExponentialRate", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -20527,9 +24494,97 @@ func (s *AwsJobExecutionsRolloutConfig) Validate() error {
 	return nil
 }
 
+// SetExponentialRate sets the ExponentialRate field's value.
+func (s *AwsJobExecutionsRolloutConfig) SetExponentialRate(v *AwsJobExponentialRolloutRate) *AwsJobExecutionsRolloutConfig {
+	s.ExponentialRate = v
+	return s
+}
+
 // SetMaximumPerMinute sets the MaximumPerMinute field's value.
 func (s *AwsJobExecutionsRolloutConfig) SetMaximumPerMinute(v int64) *AwsJobExecutionsRolloutConfig {
 	s.MaximumPerMinute = &v
+	return s
+}
+
+// The rate of increase for a job rollout. This parameter allows you to define
+// an exponential rate increase for a job rollout.
+type AwsJobExponentialRolloutRate struct {
+	_ struct{} `type:"structure"`
+
+	// The minimum number of things that will be notified of a pending job, per
+	// minute, at the start of the job rollout. This is the initial rate of the
+	// rollout.
+	//
+	// BaseRatePerMinute is a required field
+	BaseRatePerMinute *int64 `locationName:"baseRatePerMinute" min:"1" type:"integer" required:"true"`
+
+	// The rate of increase for a job rollout. The number of things notified is
+	// multiplied by this factor.
+	//
+	// IncrementFactor is a required field
+	IncrementFactor *float64 `locationName:"incrementFactor" type:"double" required:"true"`
+
+	// The criteria to initiate the increase in rate of rollout for a job.
+	//
+	// AWS IoT supports up to one digit after the decimal (for example, 1.5, but
+	// not 1.55).
+	//
+	// RateIncreaseCriteria is a required field
+	RateIncreaseCriteria *AwsJobRateIncreaseCriteria `locationName:"rateIncreaseCriteria" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s AwsJobExponentialRolloutRate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsJobExponentialRolloutRate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AwsJobExponentialRolloutRate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AwsJobExponentialRolloutRate"}
+	if s.BaseRatePerMinute == nil {
+		invalidParams.Add(request.NewErrParamRequired("BaseRatePerMinute"))
+	}
+	if s.BaseRatePerMinute != nil && *s.BaseRatePerMinute < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("BaseRatePerMinute", 1))
+	}
+	if s.IncrementFactor == nil {
+		invalidParams.Add(request.NewErrParamRequired("IncrementFactor"))
+	}
+	if s.RateIncreaseCriteria == nil {
+		invalidParams.Add(request.NewErrParamRequired("RateIncreaseCriteria"))
+	}
+	if s.RateIncreaseCriteria != nil {
+		if err := s.RateIncreaseCriteria.Validate(); err != nil {
+			invalidParams.AddNested("RateIncreaseCriteria", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBaseRatePerMinute sets the BaseRatePerMinute field's value.
+func (s *AwsJobExponentialRolloutRate) SetBaseRatePerMinute(v int64) *AwsJobExponentialRolloutRate {
+	s.BaseRatePerMinute = &v
+	return s
+}
+
+// SetIncrementFactor sets the IncrementFactor field's value.
+func (s *AwsJobExponentialRolloutRate) SetIncrementFactor(v float64) *AwsJobExponentialRolloutRate {
+	s.IncrementFactor = &v
+	return s
+}
+
+// SetRateIncreaseCriteria sets the RateIncreaseCriteria field's value.
+func (s *AwsJobExponentialRolloutRate) SetRateIncreaseCriteria(v *AwsJobRateIncreaseCriteria) *AwsJobExponentialRolloutRate {
+	s.RateIncreaseCriteria = v
 	return s
 }
 
@@ -20560,6 +24615,89 @@ func (s *AwsJobPresignedUrlConfig) SetExpiresInSec(v int64) *AwsJobPresignedUrlC
 	return s
 }
 
+// The criteria to initiate the increase in rate of rollout for a job.
+type AwsJobRateIncreaseCriteria struct {
+	_ struct{} `type:"structure"`
+
+	// When this number of things have been notified, it will initiate an increase
+	// in the rollout rate.
+	NumberOfNotifiedThings *int64 `locationName:"numberOfNotifiedThings" min:"1" type:"integer"`
+
+	// When this number of things have succeeded in their job execution, it will
+	// initiate an increase in the rollout rate.
+	NumberOfSucceededThings *int64 `locationName:"numberOfSucceededThings" min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s AwsJobRateIncreaseCriteria) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsJobRateIncreaseCriteria) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AwsJobRateIncreaseCriteria) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AwsJobRateIncreaseCriteria"}
+	if s.NumberOfNotifiedThings != nil && *s.NumberOfNotifiedThings < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("NumberOfNotifiedThings", 1))
+	}
+	if s.NumberOfSucceededThings != nil && *s.NumberOfSucceededThings < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("NumberOfSucceededThings", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNumberOfNotifiedThings sets the NumberOfNotifiedThings field's value.
+func (s *AwsJobRateIncreaseCriteria) SetNumberOfNotifiedThings(v int64) *AwsJobRateIncreaseCriteria {
+	s.NumberOfNotifiedThings = &v
+	return s
+}
+
+// SetNumberOfSucceededThings sets the NumberOfSucceededThings field's value.
+func (s *AwsJobRateIncreaseCriteria) SetNumberOfSucceededThings(v int64) *AwsJobRateIncreaseCriteria {
+	s.NumberOfSucceededThings = &v
+	return s
+}
+
+// Specifies the amount of time each device has to finish its execution of the
+// job. A timer is started when the job execution status is set to IN_PROGRESS.
+// If the job execution status is not set to another terminal state before the
+// timer expires, it will be automatically set to TIMED_OUT.
+type AwsJobTimeoutConfig struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the amount of time, in minutes, this device has to finish execution
+	// of this job. The timeout interval can be anywhere between 1 minute and 7
+	// days (1 to 10080 minutes). The in progress timer can't be updated and will
+	// apply to all job executions for the job. Whenever a job execution remains
+	// in the IN_PROGRESS status for longer than this interval, the job execution
+	// will fail and switch to the terminal TIMED_OUT status.
+	InProgressTimeoutInMinutes *int64 `locationName:"inProgressTimeoutInMinutes" type:"long"`
+}
+
+// String returns the string representation
+func (s AwsJobTimeoutConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsJobTimeoutConfig) GoString() string {
+	return s.String()
+}
+
+// SetInProgressTimeoutInMinutes sets the InProgressTimeoutInMinutes field's value.
+func (s *AwsJobTimeoutConfig) SetInProgressTimeoutInMinutes(v int64) *AwsJobTimeoutConfig {
+	s.InProgressTimeoutInMinutes = &v
+	return s
+}
+
 // A Device Defender security profile behavior.
 type Behavior struct {
 	_ struct{} `type:"structure"`
@@ -20570,6 +24708,11 @@ type Behavior struct {
 
 	// What is measured by the behavior.
 	Metric *string `locationName:"metric" type:"string"`
+
+	// The dimension for a metric in your behavior. For example, using a TOPIC_FILTER
+	// dimension, you can narrow down the scope of the metric only to MQTT topics
+	// whose name match the pattern specified in the dimension.
+	MetricDimension *MetricDimension `locationName:"metricDimension" type:"structure"`
 
 	// The name you have given to the behavior.
 	//
@@ -20601,6 +24744,11 @@ func (s *Behavior) Validate() error {
 			invalidParams.AddNested("Criteria", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.MetricDimension != nil {
+		if err := s.MetricDimension.Validate(); err != nil {
+			invalidParams.AddNested("MetricDimension", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -20617,6 +24765,12 @@ func (s *Behavior) SetCriteria(v *BehaviorCriteria) *Behavior {
 // SetMetric sets the Metric field's value.
 func (s *Behavior) SetMetric(v string) *Behavior {
 	s.Metric = &v
+	return s
+}
+
+// SetMetricDimension sets the MetricDimension field's value.
+func (s *Behavior) SetMetricDimension(v *MetricDimension) *Behavior {
+	s.MetricDimension = v
 	return s
 }
 
@@ -21347,6 +25501,9 @@ type Certificate struct {
 	// the certificate ID.)
 	CertificateId *string `locationName:"certificateId" min:"64" type:"string"`
 
+	// The mode of the certificate.
+	CertificateMode *string `locationName:"certificateMode" type:"string" enum:"CertificateMode"`
+
 	// The date and time the certificate was created.
 	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
@@ -21378,6 +25535,12 @@ func (s *Certificate) SetCertificateId(v string) *Certificate {
 	return s
 }
 
+// SetCertificateMode sets the CertificateMode field's value.
+func (s *Certificate) SetCertificateMode(v string) *Certificate {
+	s.CertificateMode = &v
+	return s
+}
+
 // SetCreationDate sets the CreationDate field's value.
 func (s *Certificate) SetCreationDate(v time.Time) *Certificate {
 	s.CreationDate = &v
@@ -21394,8 +25557,8 @@ func (s *Certificate) SetStatus(v string) *Certificate {
 // are attempting to register. This is happens when you have registered more
 // than one CA certificate that has the same subject field and public key.
 type CertificateConflictException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -21413,17 +25576,17 @@ func (s CertificateConflictException) GoString() string {
 
 func newErrorCertificateConflictException(v protocol.ResponseMetadata) error {
 	return &CertificateConflictException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s CertificateConflictException) Code() string {
+func (s *CertificateConflictException) Code() string {
 	return "CertificateConflictException"
 }
 
 // Message returns the exception's message.
-func (s CertificateConflictException) Message() string {
+func (s *CertificateConflictException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -21431,22 +25594,22 @@ func (s CertificateConflictException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s CertificateConflictException) OrigErr() error {
+func (s *CertificateConflictException) OrigErr() error {
 	return nil
 }
 
-func (s CertificateConflictException) Error() string {
+func (s *CertificateConflictException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s CertificateConflictException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *CertificateConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s CertificateConflictException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *CertificateConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Describes a certificate.
@@ -21461,6 +25624,9 @@ type CertificateDescription struct {
 
 	// The ID of the certificate.
 	CertificateId *string `locationName:"certificateId" min:"64" type:"string"`
+
+	// The mode of the certificate.
+	CertificateMode *string `locationName:"certificateMode" type:"string" enum:"CertificateMode"`
 
 	// The certificate data, in PEM format.
 	CertificatePem *string `locationName:"certificatePem" min:"1" type:"string"`
@@ -21518,6 +25684,12 @@ func (s *CertificateDescription) SetCertificateArn(v string) *CertificateDescrip
 // SetCertificateId sets the CertificateId field's value.
 func (s *CertificateDescription) SetCertificateId(v string) *CertificateDescription {
 	s.CertificateId = &v
+	return s
+}
+
+// SetCertificateMode sets the CertificateMode field's value.
+func (s *CertificateDescription) SetCertificateMode(v string) *CertificateDescription {
+	s.CertificateMode = &v
 	return s
 }
 
@@ -21583,8 +25755,8 @@ func (s *CertificateDescription) SetValidity(v *CertificateValidity) *Certificat
 
 // The certificate operation is not allowed.
 type CertificateStateException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -21602,17 +25774,17 @@ func (s CertificateStateException) GoString() string {
 
 func newErrorCertificateStateException(v protocol.ResponseMetadata) error {
 	return &CertificateStateException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s CertificateStateException) Code() string {
+func (s *CertificateStateException) Code() string {
 	return "CertificateStateException"
 }
 
 // Message returns the exception's message.
-func (s CertificateStateException) Message() string {
+func (s *CertificateStateException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -21620,28 +25792,28 @@ func (s CertificateStateException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s CertificateStateException) OrigErr() error {
+func (s *CertificateStateException) OrigErr() error {
 	return nil
 }
 
-func (s CertificateStateException) Error() string {
+func (s *CertificateStateException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s CertificateStateException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *CertificateStateException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s CertificateStateException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *CertificateStateException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The certificate is invalid.
 type CertificateValidationException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// Additional information about the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -21659,17 +25831,17 @@ func (s CertificateValidationException) GoString() string {
 
 func newErrorCertificateValidationException(v protocol.ResponseMetadata) error {
 	return &CertificateValidationException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s CertificateValidationException) Code() string {
+func (s *CertificateValidationException) Code() string {
 	return "CertificateValidationException"
 }
 
 // Message returns the exception's message.
-func (s CertificateValidationException) Message() string {
+func (s *CertificateValidationException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -21677,22 +25849,22 @@ func (s CertificateValidationException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s CertificateValidationException) OrigErr() error {
+func (s *CertificateValidationException) OrigErr() error {
 	return nil
 }
 
-func (s CertificateValidationException) Error() string {
+func (s *CertificateValidationException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s CertificateValidationException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *CertificateValidationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s CertificateValidationException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *CertificateValidationException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // When the certificate is valid.
@@ -21834,6 +26006,59 @@ func (s *CloudwatchAlarmAction) SetStateReason(v string) *CloudwatchAlarmAction 
 // SetStateValue sets the StateValue field's value.
 func (s *CloudwatchAlarmAction) SetStateValue(v string) *CloudwatchAlarmAction {
 	s.StateValue = &v
+	return s
+}
+
+// Describes an action that sends data to CloudWatch Logs.
+type CloudwatchLogsAction struct {
+	_ struct{} `type:"structure"`
+
+	// The CloudWatch log group to which the action sends data.
+	//
+	// LogGroupName is a required field
+	LogGroupName *string `locationName:"logGroupName" type:"string" required:"true"`
+
+	// The IAM role that allows access to the CloudWatch log.
+	//
+	// RoleArn is a required field
+	RoleArn *string `locationName:"roleArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CloudwatchLogsAction) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CloudwatchLogsAction) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CloudwatchLogsAction) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CloudwatchLogsAction"}
+	if s.LogGroupName == nil {
+		invalidParams.Add(request.NewErrParamRequired("LogGroupName"))
+	}
+	if s.RoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLogGroupName sets the LogGroupName field's value.
+func (s *CloudwatchLogsAction) SetLogGroupName(v string) *CloudwatchLogsAction {
+	s.LogGroupName = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *CloudwatchLogsAction) SetRoleArn(v string) *CloudwatchLogsAction {
+	s.RoleArn = &v
 	return s
 }
 
@@ -22141,8 +26366,8 @@ func (s ConfirmTopicRuleDestinationOutput) GoString() string {
 // A conflicting resource update exception. This exception is thrown when two
 // pending updates cause a conflict.
 type ConflictingResourceUpdateException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -22160,17 +26385,17 @@ func (s ConflictingResourceUpdateException) GoString() string {
 
 func newErrorConflictingResourceUpdateException(v protocol.ResponseMetadata) error {
 	return &ConflictingResourceUpdateException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ConflictingResourceUpdateException) Code() string {
+func (s *ConflictingResourceUpdateException) Code() string {
 	return "ConflictingResourceUpdateException"
 }
 
 // Message returns the exception's message.
-func (s ConflictingResourceUpdateException) Message() string {
+func (s *ConflictingResourceUpdateException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -22178,22 +26403,134 @@ func (s ConflictingResourceUpdateException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ConflictingResourceUpdateException) OrigErr() error {
+func (s *ConflictingResourceUpdateException) OrigErr() error {
 	return nil
 }
 
-func (s ConflictingResourceUpdateException) Error() string {
+func (s *ConflictingResourceUpdateException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ConflictingResourceUpdateException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ConflictingResourceUpdateException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ConflictingResourceUpdateException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ConflictingResourceUpdateException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+type CreateAuditSuppressionInput struct {
+	_ struct{} `type:"structure"`
+
+	// An audit check name. Checks must be enabled for your account. (Use DescribeAccountAuditConfiguration
+	// to see the list of all checks, including those that are enabled or use UpdateAccountAuditConfiguration
+	// to select which checks are enabled.)
+	//
+	// CheckName is a required field
+	CheckName *string `locationName:"checkName" type:"string" required:"true"`
+
+	// The epoch timestamp in seconds at which this suppression expires.
+	ClientRequestToken *string `locationName:"clientRequestToken" min:"1" type:"string" idempotencyToken:"true"`
+
+	// The description of the audit suppression.
+	Description *string `locationName:"description" type:"string"`
+
+	// The epoch timestamp in seconds at which this suppression expires.
+	ExpirationDate *time.Time `locationName:"expirationDate" type:"timestamp"`
+
+	// Information that identifies the noncompliant resource.
+	//
+	// ResourceIdentifier is a required field
+	ResourceIdentifier *ResourceIdentifier `locationName:"resourceIdentifier" type:"structure" required:"true"`
+
+	// Indicates whether a suppression should exist indefinitely or not.
+	SuppressIndefinitely *bool `locationName:"suppressIndefinitely" type:"boolean"`
+}
+
+// String returns the string representation
+func (s CreateAuditSuppressionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateAuditSuppressionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateAuditSuppressionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateAuditSuppressionInput"}
+	if s.CheckName == nil {
+		invalidParams.Add(request.NewErrParamRequired("CheckName"))
+	}
+	if s.ClientRequestToken != nil && len(*s.ClientRequestToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClientRequestToken", 1))
+	}
+	if s.ResourceIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceIdentifier"))
+	}
+	if s.ResourceIdentifier != nil {
+		if err := s.ResourceIdentifier.Validate(); err != nil {
+			invalidParams.AddNested("ResourceIdentifier", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCheckName sets the CheckName field's value.
+func (s *CreateAuditSuppressionInput) SetCheckName(v string) *CreateAuditSuppressionInput {
+	s.CheckName = &v
+	return s
+}
+
+// SetClientRequestToken sets the ClientRequestToken field's value.
+func (s *CreateAuditSuppressionInput) SetClientRequestToken(v string) *CreateAuditSuppressionInput {
+	s.ClientRequestToken = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *CreateAuditSuppressionInput) SetDescription(v string) *CreateAuditSuppressionInput {
+	s.Description = &v
+	return s
+}
+
+// SetExpirationDate sets the ExpirationDate field's value.
+func (s *CreateAuditSuppressionInput) SetExpirationDate(v time.Time) *CreateAuditSuppressionInput {
+	s.ExpirationDate = &v
+	return s
+}
+
+// SetResourceIdentifier sets the ResourceIdentifier field's value.
+func (s *CreateAuditSuppressionInput) SetResourceIdentifier(v *ResourceIdentifier) *CreateAuditSuppressionInput {
+	s.ResourceIdentifier = v
+	return s
+}
+
+// SetSuppressIndefinitely sets the SuppressIndefinitely field's value.
+func (s *CreateAuditSuppressionInput) SetSuppressIndefinitely(v bool) *CreateAuditSuppressionInput {
+	s.SuppressIndefinitely = &v
+	return s
+}
+
+type CreateAuditSuppressionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateAuditSuppressionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateAuditSuppressionOutput) GoString() string {
+	return s.String()
 }
 
 type CreateAuthorizerInput struct {
@@ -22215,6 +26552,15 @@ type CreateAuthorizerInput struct {
 
 	// The status of the create authorizer request.
 	Status *string `locationName:"status" type:"string" enum:"AuthorizerStatus"`
+
+	// Metadata which can be used to manage the custom authorizer.
+	//
+	// For URI Request parameters use format: ...key1=value1&key2=value2...
+	//
+	// For the CLI command-line parameter use format: &&tags "key1=value1&key2=value2..."
+	//
+	// For the cli-input-json file use format: "tags": "key1=value1&key2=value2..."
+	Tags []*Tag `locationName:"tags" type:"list"`
 
 	// The name of the token key used to extract the token from the HTTP headers.
 	TokenKeyName *string `locationName:"tokenKeyName" min:"1" type:"string"`
@@ -22249,6 +26595,16 @@ func (s *CreateAuthorizerInput) Validate() error {
 	if s.TokenKeyName != nil && len(*s.TokenKeyName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TokenKeyName", 1))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -22277,6 +26633,12 @@ func (s *CreateAuthorizerInput) SetSigningDisabled(v bool) *CreateAuthorizerInpu
 // SetStatus sets the Status field's value.
 func (s *CreateAuthorizerInput) SetStatus(v string) *CreateAuthorizerInput {
 	s.Status = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateAuthorizerInput) SetTags(v []*Tag) *CreateAuthorizerInput {
+	s.Tags = v
 	return s
 }
 
@@ -22357,6 +26719,16 @@ func (s *CreateBillingGroupInput) Validate() error {
 	}
 	if s.BillingGroupName != nil && len(*s.BillingGroupName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("BillingGroupName", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -22519,6 +26891,147 @@ func (s *CreateCertificateFromCsrOutput) SetCertificatePem(v string) *CreateCert
 	return s
 }
 
+type CreateDimensionInput struct {
+	_ struct{} `type:"structure"`
+
+	// Each dimension must have a unique client request token. If you try to create
+	// a new dimension with the same token as a dimension that already exists, an
+	// exception occurs. If you omit this value, AWS SDKs will automatically generate
+	// a unique client request.
+	ClientRequestToken *string `locationName:"clientRequestToken" min:"1" type:"string" idempotencyToken:"true"`
+
+	// A unique identifier for the dimension. Choose something that describes the
+	// type and value to make it easy to remember what it does.
+	//
+	// Name is a required field
+	Name *string `location:"uri" locationName:"name" min:"1" type:"string" required:"true"`
+
+	// Specifies the value or list of values for the dimension. For TOPIC_FILTER
+	// dimensions, this is a pattern used to match the MQTT topic (for example,
+	// "admin/#").
+	//
+	// StringValues is a required field
+	StringValues []*string `locationName:"stringValues" min:"1" type:"list" required:"true"`
+
+	// Metadata that can be used to manage the dimension.
+	Tags []*Tag `locationName:"tags" type:"list"`
+
+	// Specifies the type of dimension. Supported types: TOPIC_FILTER.
+	//
+	// Type is a required field
+	Type *string `locationName:"type" type:"string" required:"true" enum:"DimensionType"`
+}
+
+// String returns the string representation
+func (s CreateDimensionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateDimensionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateDimensionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateDimensionInput"}
+	if s.ClientRequestToken != nil && len(*s.ClientRequestToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClientRequestToken", 1))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.StringValues == nil {
+		invalidParams.Add(request.NewErrParamRequired("StringValues"))
+	}
+	if s.StringValues != nil && len(s.StringValues) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StringValues", 1))
+	}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClientRequestToken sets the ClientRequestToken field's value.
+func (s *CreateDimensionInput) SetClientRequestToken(v string) *CreateDimensionInput {
+	s.ClientRequestToken = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CreateDimensionInput) SetName(v string) *CreateDimensionInput {
+	s.Name = &v
+	return s
+}
+
+// SetStringValues sets the StringValues field's value.
+func (s *CreateDimensionInput) SetStringValues(v []*string) *CreateDimensionInput {
+	s.StringValues = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateDimensionInput) SetTags(v []*Tag) *CreateDimensionInput {
+	s.Tags = v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *CreateDimensionInput) SetType(v string) *CreateDimensionInput {
+	s.Type = &v
+	return s
+}
+
+type CreateDimensionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN (Amazon resource name) of the created dimension.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// A unique identifier for the dimension.
+	Name *string `locationName:"name" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateDimensionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateDimensionOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *CreateDimensionOutput) SetArn(v string) *CreateDimensionOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CreateDimensionOutput) SetName(v string) *CreateDimensionOutput {
+	s.Name = &v
+	return s
+}
+
 type CreateDomainConfigurationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -22539,7 +27052,18 @@ type CreateDomainConfigurationInput struct {
 	ServerCertificateArns []*string `locationName:"serverCertificateArns" type:"list"`
 
 	// The type of service delivered by the endpoint.
+	//
+	// AWS IoT Core currently supports only the DATA service type.
 	ServiceType *string `locationName:"serviceType" type:"string" enum:"ServiceType"`
+
+	// Metadata which can be used to manage the domain configuration.
+	//
+	// For URI Request parameters use format: ...key1=value1&key2=value2...
+	//
+	// For the CLI command-line parameter use format: &&tags "key1=value1&key2=value2..."
+	//
+	// For the cli-input-json file use format: "tags": "key1=value1&key2=value2..."
+	Tags []*Tag `locationName:"tags" type:"list"`
 
 	// The certificate used to validate the server certificate and prove domain
 	// name ownership. This certificate must be signed by a public certificate authority.
@@ -22577,6 +27101,16 @@ func (s *CreateDomainConfigurationInput) Validate() error {
 			invalidParams.AddNested("AuthorizerConfig", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -22611,6 +27145,12 @@ func (s *CreateDomainConfigurationInput) SetServerCertificateArns(v []*string) *
 // SetServiceType sets the ServiceType field's value.
 func (s *CreateDomainConfigurationInput) SetServiceType(v string) *CreateDomainConfigurationInput {
 	s.ServiceType = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateDomainConfigurationInput) SetTags(v []*Tag) *CreateDomainConfigurationInput {
+	s.Tags = v
 	return s
 }
 
@@ -22713,6 +27253,16 @@ func (s *CreateDynamicThingGroupInput) Validate() error {
 	}
 	if s.ThingGroupName != nil && len(*s.ThingGroupName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ThingGroupName", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -22926,6 +27476,16 @@ func (s *CreateJobInput) Validate() error {
 	if s.PresignedUrlConfig != nil {
 		if err := s.PresignedUrlConfig.Validate(); err != nil {
 			invalidParams.AddNested("PresignedUrlConfig", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
 		}
 	}
 
@@ -23174,6 +27734,16 @@ func (s *CreateMitigationActionInput) Validate() error {
 			invalidParams.AddNested("ActionParams", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -23243,11 +27813,20 @@ type CreateOTAUpdateInput struct {
 	// A list of additional OTA update parameters which are name-value pairs.
 	AdditionalParameters map[string]*string `locationName:"additionalParameters" type:"map"`
 
+	// The criteria that determine when and how a job abort takes place.
+	AwsJobAbortConfig *AwsJobAbortConfig `locationName:"awsJobAbortConfig" type:"structure"`
+
 	// Configuration for the rollout of OTA updates.
 	AwsJobExecutionsRolloutConfig *AwsJobExecutionsRolloutConfig `locationName:"awsJobExecutionsRolloutConfig" type:"structure"`
 
 	// Configuration information for pre-signed URLs.
 	AwsJobPresignedUrlConfig *AwsJobPresignedUrlConfig `locationName:"awsJobPresignedUrlConfig" type:"structure"`
+
+	// Specifies the amount of time each device has to finish its execution of the
+	// job. A timer is started when the job execution status is set to IN_PROGRESS.
+	// If the job execution status is not set to another terminal state before the
+	// timer expires, it will be automatically set to TIMED_OUT.
+	AwsJobTimeoutConfig *AwsJobTimeoutConfig `locationName:"awsJobTimeoutConfig" type:"structure"`
 
 	// The description of the OTA update.
 	Description *string `locationName:"description" type:"string"`
@@ -23267,7 +27846,8 @@ type CreateOTAUpdateInput struct {
 	// can choose the protocol.
 	Protocols []*string `locationName:"protocols" min:"1" type:"list"`
 
-	// The IAM role that allows access to the AWS IoT Jobs service.
+	// The IAM role that grants AWS IoT access to the Amazon S3, AWS IoT jobs and
+	// AWS Code Signing resources to create an OTA update job.
 	//
 	// RoleArn is a required field
 	RoleArn *string `locationName:"roleArn" min:"20" type:"string" required:"true"`
@@ -23283,7 +27863,7 @@ type CreateOTAUpdateInput struct {
 	// by all things originally in the group. Valid values: CONTINUOUS | SNAPSHOT.
 	TargetSelection *string `locationName:"targetSelection" type:"string" enum:"TargetSelection"`
 
-	// The targeted devices to receive OTA updates.
+	// The devices targeted to receive OTA updates.
 	//
 	// Targets is a required field
 	Targets []*string `locationName:"targets" min:"1" type:"list" required:"true"`
@@ -23329,6 +27909,11 @@ func (s *CreateOTAUpdateInput) Validate() error {
 	if s.Targets != nil && len(s.Targets) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Targets", 1))
 	}
+	if s.AwsJobAbortConfig != nil {
+		if err := s.AwsJobAbortConfig.Validate(); err != nil {
+			invalidParams.AddNested("AwsJobAbortConfig", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.AwsJobExecutionsRolloutConfig != nil {
 		if err := s.AwsJobExecutionsRolloutConfig.Validate(); err != nil {
 			invalidParams.AddNested("AwsJobExecutionsRolloutConfig", err.(request.ErrInvalidParams))
@@ -23341,6 +27926,16 @@ func (s *CreateOTAUpdateInput) Validate() error {
 			}
 			if err := v.Validate(); err != nil {
 				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Files", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
 			}
 		}
 	}
@@ -23357,6 +27952,12 @@ func (s *CreateOTAUpdateInput) SetAdditionalParameters(v map[string]*string) *Cr
 	return s
 }
 
+// SetAwsJobAbortConfig sets the AwsJobAbortConfig field's value.
+func (s *CreateOTAUpdateInput) SetAwsJobAbortConfig(v *AwsJobAbortConfig) *CreateOTAUpdateInput {
+	s.AwsJobAbortConfig = v
+	return s
+}
+
 // SetAwsJobExecutionsRolloutConfig sets the AwsJobExecutionsRolloutConfig field's value.
 func (s *CreateOTAUpdateInput) SetAwsJobExecutionsRolloutConfig(v *AwsJobExecutionsRolloutConfig) *CreateOTAUpdateInput {
 	s.AwsJobExecutionsRolloutConfig = v
@@ -23366,6 +27967,12 @@ func (s *CreateOTAUpdateInput) SetAwsJobExecutionsRolloutConfig(v *AwsJobExecuti
 // SetAwsJobPresignedUrlConfig sets the AwsJobPresignedUrlConfig field's value.
 func (s *CreateOTAUpdateInput) SetAwsJobPresignedUrlConfig(v *AwsJobPresignedUrlConfig) *CreateOTAUpdateInput {
 	s.AwsJobPresignedUrlConfig = v
+	return s
+}
+
+// SetAwsJobTimeoutConfig sets the AwsJobTimeoutConfig field's value.
+func (s *CreateOTAUpdateInput) SetAwsJobTimeoutConfig(v *AwsJobTimeoutConfig) *CreateOTAUpdateInput {
+	s.AwsJobTimeoutConfig = v
 	return s
 }
 
@@ -23490,6 +28097,15 @@ type CreatePolicyInput struct {
 	//
 	// PolicyName is a required field
 	PolicyName *string `location:"uri" locationName:"policyName" min:"1" type:"string" required:"true"`
+
+	// Metadata which can be used to manage the policy.
+	//
+	// For URI Request parameters use format: ...key1=value1&key2=value2...
+	//
+	// For the CLI command-line parameter use format: &&tags "key1=value1&key2=value2..."
+	//
+	// For the cli-input-json file use format: "tags": "key1=value1&key2=value2..."
+	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
 // String returns the string representation
@@ -23514,6 +28130,16 @@ func (s *CreatePolicyInput) Validate() error {
 	if s.PolicyName != nil && len(*s.PolicyName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("PolicyName", 1))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -23530,6 +28156,12 @@ func (s *CreatePolicyInput) SetPolicyDocument(v string) *CreatePolicyInput {
 // SetPolicyName sets the PolicyName field's value.
 func (s *CreatePolicyInput) SetPolicyName(v string) *CreatePolicyInput {
 	s.PolicyName = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreatePolicyInput) SetTags(v []*Tag) *CreatePolicyInput {
+	s.Tags = v
 	return s
 }
 
@@ -23803,6 +28435,9 @@ type CreateProvisioningTemplateInput struct {
 	// True to enable the fleet provisioning template, otherwise false.
 	Enabled *bool `locationName:"enabled" type:"boolean"`
 
+	// Creates a pre-provisioning hook template.
+	PreProvisioningHook *ProvisioningHook `locationName:"preProvisioningHook" type:"structure"`
+
 	// The role ARN for the role associated with the fleet provisioning template.
 	// This IoT role grants permission to provision a device.
 	//
@@ -23857,6 +28492,21 @@ func (s *CreateProvisioningTemplateInput) Validate() error {
 	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
 	}
+	if s.PreProvisioningHook != nil {
+		if err := s.PreProvisioningHook.Validate(); err != nil {
+			invalidParams.AddNested("PreProvisioningHook", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -23873,6 +28523,12 @@ func (s *CreateProvisioningTemplateInput) SetDescription(v string) *CreateProvis
 // SetEnabled sets the Enabled field's value.
 func (s *CreateProvisioningTemplateInput) SetEnabled(v bool) *CreateProvisioningTemplateInput {
 	s.Enabled = &v
+	return s
+}
+
+// SetPreProvisioningHook sets the PreProvisioningHook field's value.
+func (s *CreateProvisioningTemplateInput) SetPreProvisioningHook(v *ProvisioningHook) *CreateProvisioningTemplateInput {
+	s.PreProvisioningHook = v
 	return s
 }
 
@@ -24072,6 +28728,15 @@ type CreateRoleAliasInput struct {
 	//
 	// RoleArn is a required field
 	RoleArn *string `locationName:"roleArn" min:"20" type:"string" required:"true"`
+
+	// Metadata which can be used to manage the role alias.
+	//
+	// For URI Request parameters use format: ...key1=value1&key2=value2...
+	//
+	// For the CLI command-line parameter use format: &&tags "key1=value1&key2=value2..."
+	//
+	// For the cli-input-json file use format: "tags": "key1=value1&key2=value2..."
+	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
 // String returns the string representation
@@ -24102,6 +28767,16 @@ func (s *CreateRoleAliasInput) Validate() error {
 	if s.RoleArn != nil && len(*s.RoleArn) < 20 {
 		invalidParams.Add(request.NewErrParamMinLen("RoleArn", 20))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -24124,6 +28799,12 @@ func (s *CreateRoleAliasInput) SetRoleAlias(v string) *CreateRoleAliasInput {
 // SetRoleArn sets the RoleArn field's value.
 func (s *CreateRoleAliasInput) SetRoleArn(v string) *CreateRoleAliasInput {
 	s.RoleArn = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateRoleAliasInput) SetTags(v []*Tag) *CreateRoleAliasInput {
+	s.Tags = v
 	return s
 }
 
@@ -24222,6 +28903,16 @@ func (s *CreateScheduledAuditInput) Validate() error {
 	if s.TargetCheckNames == nil {
 		invalidParams.Add(request.NewErrParamRequired("TargetCheckNames"))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -24294,7 +28985,17 @@ type CreateSecurityProfileInput struct {
 	// A list of metrics whose data is retained (stored). By default, data is retained
 	// for any metric used in the profile's behaviors, but it is also retained for
 	// any metric specified here.
-	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" type:"list"`
+	//
+	// Note: This API field is deprecated. Please use CreateSecurityProfileRequest$additionalMetricsToRetainV2
+	// instead.
+	//
+	// Deprecated: Use additionalMetricsToRetainV2.
+	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" deprecated:"true" type:"list"`
+
+	// A list of metrics whose data is retained (stored). By default, data is retained
+	// for any metric used in the profile's behaviors, but it is also retained for
+	// any metric specified here.
+	AdditionalMetricsToRetainV2 []*MetricToRetain `locationName:"additionalMetricsToRetainV2" type:"list"`
 
 	// Specifies the destinations to which alerts are sent. (Alerts are always sent
 	// to the console.) Alerts are generated when a device (thing) violates a behavior.
@@ -24335,6 +29036,16 @@ func (s *CreateSecurityProfileInput) Validate() error {
 	if s.SecurityProfileName != nil && len(*s.SecurityProfileName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("SecurityProfileName", 1))
 	}
+	if s.AdditionalMetricsToRetainV2 != nil {
+		for i, v := range s.AdditionalMetricsToRetainV2 {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "AdditionalMetricsToRetainV2", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 	if s.AlertTargets != nil {
 		for i, v := range s.AlertTargets {
 			if v == nil {
@@ -24355,6 +29066,16 @@ func (s *CreateSecurityProfileInput) Validate() error {
 			}
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -24365,6 +29086,12 @@ func (s *CreateSecurityProfileInput) Validate() error {
 // SetAdditionalMetricsToRetain sets the AdditionalMetricsToRetain field's value.
 func (s *CreateSecurityProfileInput) SetAdditionalMetricsToRetain(v []*string) *CreateSecurityProfileInput {
 	s.AdditionalMetricsToRetain = v
+	return s
+}
+
+// SetAdditionalMetricsToRetainV2 sets the AdditionalMetricsToRetainV2 field's value.
+func (s *CreateSecurityProfileInput) SetAdditionalMetricsToRetainV2(v []*MetricToRetain) *CreateSecurityProfileInput {
+	s.AdditionalMetricsToRetainV2 = v
 	return s
 }
 
@@ -24497,6 +29224,16 @@ func (s *CreateStreamInput) Validate() error {
 			}
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -24624,6 +29361,16 @@ func (s *CreateThingGroupInput) Validate() error {
 	if s.ThingGroupName != nil && len(*s.ThingGroupName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ThingGroupName", 1))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -24710,6 +29457,10 @@ type CreateThingInput struct {
 	BillingGroupName *string `locationName:"billingGroupName" min:"1" type:"string"`
 
 	// The name of the thing to create.
+	//
+	// You can't change a thing's name after you create it. To change a thing's
+	// name, you must create a new thing, give it the new name, and then delete
+	// the old thing.
 	//
 	// ThingName is a required field
 	ThingName *string `location:"uri" locationName:"thingName" min:"1" type:"string" required:"true"`
@@ -24852,6 +29603,16 @@ func (s *CreateThingTypeInput) Validate() error {
 	}
 	if s.ThingTypeName != nil && len(*s.ThingTypeName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ThingTypeName", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -25164,6 +29925,79 @@ func (s DeleteAccountAuditConfigurationOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteAuditSuppressionInput struct {
+	_ struct{} `type:"structure"`
+
+	// An audit check name. Checks must be enabled for your account. (Use DescribeAccountAuditConfiguration
+	// to see the list of all checks, including those that are enabled or use UpdateAccountAuditConfiguration
+	// to select which checks are enabled.)
+	//
+	// CheckName is a required field
+	CheckName *string `locationName:"checkName" type:"string" required:"true"`
+
+	// Information that identifies the noncompliant resource.
+	//
+	// ResourceIdentifier is a required field
+	ResourceIdentifier *ResourceIdentifier `locationName:"resourceIdentifier" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteAuditSuppressionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteAuditSuppressionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteAuditSuppressionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteAuditSuppressionInput"}
+	if s.CheckName == nil {
+		invalidParams.Add(request.NewErrParamRequired("CheckName"))
+	}
+	if s.ResourceIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceIdentifier"))
+	}
+	if s.ResourceIdentifier != nil {
+		if err := s.ResourceIdentifier.Validate(); err != nil {
+			invalidParams.AddNested("ResourceIdentifier", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCheckName sets the CheckName field's value.
+func (s *DeleteAuditSuppressionInput) SetCheckName(v string) *DeleteAuditSuppressionInput {
+	s.CheckName = &v
+	return s
+}
+
+// SetResourceIdentifier sets the ResourceIdentifier field's value.
+func (s *DeleteAuditSuppressionInput) SetResourceIdentifier(v *ResourceIdentifier) *DeleteAuditSuppressionInput {
+	s.ResourceIdentifier = v
+	return s
+}
+
+type DeleteAuditSuppressionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteAuditSuppressionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteAuditSuppressionOutput) GoString() string {
+	return s.String()
+}
+
 type DeleteAuthorizerInput struct {
 	_ struct{} `type:"structure"`
 
@@ -25412,8 +30246,8 @@ func (s DeleteCertificateOutput) GoString() string {
 
 // You can't delete the resource because it is attached to one or more resources.
 type DeleteConflictException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -25431,17 +30265,17 @@ func (s DeleteConflictException) GoString() string {
 
 func newErrorDeleteConflictException(v protocol.ResponseMetadata) error {
 	return &DeleteConflictException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s DeleteConflictException) Code() string {
+func (s *DeleteConflictException) Code() string {
 	return "DeleteConflictException"
 }
 
 // Message returns the exception's message.
-func (s DeleteConflictException) Message() string {
+func (s *DeleteConflictException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -25449,22 +30283,77 @@ func (s DeleteConflictException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s DeleteConflictException) OrigErr() error {
+func (s *DeleteConflictException) OrigErr() error {
 	return nil
 }
 
-func (s DeleteConflictException) Error() string {
+func (s *DeleteConflictException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s DeleteConflictException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *DeleteConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s DeleteConflictException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *DeleteConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+type DeleteDimensionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier for the dimension that you want to delete.
+	//
+	// Name is a required field
+	Name *string `location:"uri" locationName:"name" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteDimensionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteDimensionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteDimensionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteDimensionInput"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *DeleteDimensionInput) SetName(v string) *DeleteDimensionInput {
+	s.Name = &v
+	return s
+}
+
+type DeleteDimensionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteDimensionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteDimensionOutput) GoString() string {
+	return s.String()
 }
 
 type DeleteDomainConfigurationInput struct {
@@ -25830,10 +30719,10 @@ type DeleteOTAUpdateInput struct {
 	DeleteStream *bool `location:"querystring" locationName:"deleteStream" type:"boolean"`
 
 	// Specifies if the AWS Job associated with the OTA update should be deleted
-	// with the OTA update is deleted.
+	// when the OTA update is deleted.
 	ForceDeleteAWSJob *bool `location:"querystring" locationName:"forceDeleteAWSJob" type:"boolean"`
 
-	// The OTA update ID to delete.
+	// The ID of the OTA update to delete.
 	//
 	// OtaUpdateId is a required field
 	OtaUpdateId *string `location:"uri" locationName:"otaUpdateId" min:"1" type:"string" required:"true"`
@@ -27126,6 +32015,126 @@ func (s *DescribeAuditMitigationActionsTaskOutput) SetTaskStatus(v string) *Desc
 	return s
 }
 
+type DescribeAuditSuppressionInput struct {
+	_ struct{} `type:"structure"`
+
+	// An audit check name. Checks must be enabled for your account. (Use DescribeAccountAuditConfiguration
+	// to see the list of all checks, including those that are enabled or use UpdateAccountAuditConfiguration
+	// to select which checks are enabled.)
+	//
+	// CheckName is a required field
+	CheckName *string `locationName:"checkName" type:"string" required:"true"`
+
+	// Information that identifies the noncompliant resource.
+	//
+	// ResourceIdentifier is a required field
+	ResourceIdentifier *ResourceIdentifier `locationName:"resourceIdentifier" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeAuditSuppressionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAuditSuppressionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeAuditSuppressionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeAuditSuppressionInput"}
+	if s.CheckName == nil {
+		invalidParams.Add(request.NewErrParamRequired("CheckName"))
+	}
+	if s.ResourceIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceIdentifier"))
+	}
+	if s.ResourceIdentifier != nil {
+		if err := s.ResourceIdentifier.Validate(); err != nil {
+			invalidParams.AddNested("ResourceIdentifier", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCheckName sets the CheckName field's value.
+func (s *DescribeAuditSuppressionInput) SetCheckName(v string) *DescribeAuditSuppressionInput {
+	s.CheckName = &v
+	return s
+}
+
+// SetResourceIdentifier sets the ResourceIdentifier field's value.
+func (s *DescribeAuditSuppressionInput) SetResourceIdentifier(v *ResourceIdentifier) *DescribeAuditSuppressionInput {
+	s.ResourceIdentifier = v
+	return s
+}
+
+type DescribeAuditSuppressionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An audit check name. Checks must be enabled for your account. (Use DescribeAccountAuditConfiguration
+	// to see the list of all checks, including those that are enabled or use UpdateAccountAuditConfiguration
+	// to select which checks are enabled.)
+	CheckName *string `locationName:"checkName" type:"string"`
+
+	// The description of the audit suppression.
+	Description *string `locationName:"description" type:"string"`
+
+	// The epoch timestamp in seconds at which this suppression expires.
+	ExpirationDate *time.Time `locationName:"expirationDate" type:"timestamp"`
+
+	// Information that identifies the noncompliant resource.
+	ResourceIdentifier *ResourceIdentifier `locationName:"resourceIdentifier" type:"structure"`
+
+	// Indicates whether a suppression should exist indefinitely or not.
+	SuppressIndefinitely *bool `locationName:"suppressIndefinitely" type:"boolean"`
+}
+
+// String returns the string representation
+func (s DescribeAuditSuppressionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAuditSuppressionOutput) GoString() string {
+	return s.String()
+}
+
+// SetCheckName sets the CheckName field's value.
+func (s *DescribeAuditSuppressionOutput) SetCheckName(v string) *DescribeAuditSuppressionOutput {
+	s.CheckName = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *DescribeAuditSuppressionOutput) SetDescription(v string) *DescribeAuditSuppressionOutput {
+	s.Description = &v
+	return s
+}
+
+// SetExpirationDate sets the ExpirationDate field's value.
+func (s *DescribeAuditSuppressionOutput) SetExpirationDate(v time.Time) *DescribeAuditSuppressionOutput {
+	s.ExpirationDate = &v
+	return s
+}
+
+// SetResourceIdentifier sets the ResourceIdentifier field's value.
+func (s *DescribeAuditSuppressionOutput) SetResourceIdentifier(v *ResourceIdentifier) *DescribeAuditSuppressionOutput {
+	s.ResourceIdentifier = v
+	return s
+}
+
+// SetSuppressIndefinitely sets the SuppressIndefinitely field's value.
+func (s *DescribeAuditSuppressionOutput) SetSuppressIndefinitely(v bool) *DescribeAuditSuppressionOutput {
+	s.SuppressIndefinitely = &v
+	return s
+}
+
 type DescribeAuditTaskInput struct {
 	_ struct{} `type:"structure"`
 
@@ -27588,6 +32597,116 @@ func (s *DescribeDefaultAuthorizerOutput) SetAuthorizerDescription(v *Authorizer
 	return s
 }
 
+type DescribeDimensionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier for the dimension.
+	//
+	// Name is a required field
+	Name *string `location:"uri" locationName:"name" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeDimensionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeDimensionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeDimensionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeDimensionInput"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *DescribeDimensionInput) SetName(v string) *DescribeDimensionInput {
+	s.Name = &v
+	return s
+}
+
+type DescribeDimensionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN (Amazon resource name) for the dimension.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// The date the dimension was created.
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
+
+	// The date the dimension was last modified.
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
+
+	// The unique identifier for the dimension.
+	Name *string `locationName:"name" min:"1" type:"string"`
+
+	// The value or list of values used to scope the dimension. For example, for
+	// topic filters, this is the pattern used to match the MQTT topic name.
+	StringValues []*string `locationName:"stringValues" min:"1" type:"list"`
+
+	// The type of the dimension.
+	Type *string `locationName:"type" type:"string" enum:"DimensionType"`
+}
+
+// String returns the string representation
+func (s DescribeDimensionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeDimensionOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *DescribeDimensionOutput) SetArn(v string) *DescribeDimensionOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *DescribeDimensionOutput) SetCreationDate(v time.Time) *DescribeDimensionOutput {
+	s.CreationDate = &v
+	return s
+}
+
+// SetLastModifiedDate sets the LastModifiedDate field's value.
+func (s *DescribeDimensionOutput) SetLastModifiedDate(v time.Time) *DescribeDimensionOutput {
+	s.LastModifiedDate = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *DescribeDimensionOutput) SetName(v string) *DescribeDimensionOutput {
+	s.Name = &v
+	return s
+}
+
+// SetStringValues sets the StringValues field's value.
+func (s *DescribeDimensionOutput) SetStringValues(v []*string) *DescribeDimensionOutput {
+	s.StringValues = v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *DescribeDimensionOutput) SetType(v string) *DescribeDimensionOutput {
+	s.Type = &v
+	return s
+}
+
 type DescribeDomainConfigurationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -27730,6 +32849,10 @@ type DescribeEndpointInput struct {
 	//    endpoint.
 	//
 	//    * iot:Jobs - Returns an AWS IoT device management Jobs API endpoint.
+	//
+	// We strongly recommend that customers use the newer iot:Data-ATS endpoint
+	// type to avoid issues related to the widespread distrust of Symantec certificate
+	// authorities.
 	EndpointType *string `location:"querystring" locationName:"endpointType" type:"string"`
 }
 
@@ -28273,6 +33396,9 @@ type DescribeProvisioningTemplateOutput struct {
 	// The date when the fleet provisioning template was last modified.
 	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
 
+	// Gets information about a pre-provisioned hook.
+	PreProvisioningHook *ProvisioningHook `locationName:"preProvisioningHook" type:"structure"`
+
 	// The ARN of the role associated with the provisioning template. This IoT role
 	// grants permission to provision a device.
 	ProvisioningRoleArn *string `locationName:"provisioningRoleArn" min:"20" type:"string"`
@@ -28324,6 +33450,12 @@ func (s *DescribeProvisioningTemplateOutput) SetEnabled(v bool) *DescribeProvisi
 // SetLastModifiedDate sets the LastModifiedDate field's value.
 func (s *DescribeProvisioningTemplateOutput) SetLastModifiedDate(v time.Time) *DescribeProvisioningTemplateOutput {
 	s.LastModifiedDate = &v
+	return s
+}
+
+// SetPreProvisioningHook sets the PreProvisioningHook field's value.
+func (s *DescribeProvisioningTemplateOutput) SetPreProvisioningHook(v *ProvisioningHook) *DescribeProvisioningTemplateOutput {
+	s.PreProvisioningHook = v
 	return s
 }
 
@@ -28683,7 +33815,17 @@ type DescribeSecurityProfileOutput struct {
 	// A list of metrics whose data is retained (stored). By default, data is retained
 	// for any metric used in the profile's behaviors, but it is also retained for
 	// any metric specified here.
-	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" type:"list"`
+	//
+	// Note: This API field is deprecated. Please use DescribeSecurityProfileResponse$additionalMetricsToRetainV2
+	// instead.
+	//
+	// Deprecated: Use additionalMetricsToRetainV2.
+	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" deprecated:"true" type:"list"`
+
+	// A list of metrics whose data is retained (stored). By default, data is retained
+	// for any metric used in the profile's behaviors, but it is also retained for
+	// any metric specified here.
+	AdditionalMetricsToRetainV2 []*MetricToRetain `locationName:"additionalMetricsToRetainV2" type:"list"`
 
 	// Where the alerts are sent. (Alerts are always sent to the console.)
 	AlertTargets map[string]*AlertTarget `locationName:"alertTargets" type:"map"`
@@ -28726,6 +33868,12 @@ func (s DescribeSecurityProfileOutput) GoString() string {
 // SetAdditionalMetricsToRetain sets the AdditionalMetricsToRetain field's value.
 func (s *DescribeSecurityProfileOutput) SetAdditionalMetricsToRetain(v []*string) *DescribeSecurityProfileOutput {
 	s.AdditionalMetricsToRetain = v
+	return s
+}
+
+// SetAdditionalMetricsToRetainV2 sets the AdditionalMetricsToRetainV2 field's value.
+func (s *DescribeSecurityProfileOutput) SetAdditionalMetricsToRetainV2(v []*MetricToRetain) *DescribeSecurityProfileOutput {
+	s.AdditionalMetricsToRetainV2 = v
 	return s
 }
 
@@ -29038,7 +34186,14 @@ type DescribeThingOutput struct {
 	// The name of the billing group the thing belongs to.
 	BillingGroupName *string `locationName:"billingGroupName" min:"1" type:"string"`
 
-	// The default client ID.
+	// The default MQTT client ID. For a typical device, the thing name is also
+	// used as the default MQTT client ID. Although we don’t require a mapping
+	// between a thing's registry name and its use of MQTT client IDs, certificates,
+	// or shadow state, we recommend that you choose a thing name and use it as
+	// the MQTT client ID for the registry and the Device Shadow service.
+	//
+	// This lets you better organize your AWS IoT fleet without removing the flexibility
+	// of the underlying device certificate model or shadows.
 	DefaultClientId *string `locationName:"defaultClientId" type:"string"`
 
 	// The ARN of the thing to describe.
@@ -29506,8 +34661,9 @@ type DetachPrincipalPolicyInput struct {
 
 	// The principal.
 	//
-	// If the principal is a certificate, specify the certificate ARN. If the principal
-	// is an Amazon Cognito identity, specify the identity ID.
+	// Valid principals are CertificateArn (arn:aws:iot:region:accountId:cert/certificateId),
+	// thingGroupArn (arn:aws:iot:region:accountId:thinggroup/groupName) and CognitoId
+	// (region:id).
 	//
 	// Principal is a required field
 	Principal *string `location:"header" locationName:"x-amzn-iot-principal" type:"string" required:"true"`
@@ -30682,7 +35838,9 @@ type GetEffectivePoliciesInput struct {
 	// The Cognito identity pool ID.
 	CognitoIdentityPoolId *string `locationName:"cognitoIdentityPoolId" type:"string"`
 
-	// The principal.
+	// The principal. Valid principals are CertificateArn (arn:aws:iot:region:accountId:cert/certificateId),
+	// thingGroupArn (arn:aws:iot:region:accountId:thinggroup/groupName) and CognitoId
+	// (region:id).
 	Principal *string `locationName:"principal" type:"string"`
 
 	// The thing name.
@@ -31723,7 +36881,7 @@ type HttpAction struct {
 	// URL must be a prefix of the endpoint URL. If you do not specify a confirmation
 	// URL AWS IoT uses the endpoint URL as the confirmation URL. If you use substitution
 	// templates in the confirmationUrl, you must create and enable topic rule destinations
-	// that match each possible value of the substituion template before traffic
+	// that match each possible value of the substitution template before traffic
 	// is allowed to your endpoint URL.
 	ConfirmationUrl *string `locationName:"confirmationUrl" type:"string"`
 
@@ -32059,8 +37217,8 @@ func (s *ImplicitDeny) SetPolicies(v []*Policy) *ImplicitDeny {
 
 // The index is not ready.
 type IndexNotReadyException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -32078,17 +37236,17 @@ func (s IndexNotReadyException) GoString() string {
 
 func newErrorIndexNotReadyException(v protocol.ResponseMetadata) error {
 	return &IndexNotReadyException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s IndexNotReadyException) Code() string {
+func (s *IndexNotReadyException) Code() string {
 	return "IndexNotReadyException"
 }
 
 // Message returns the exception's message.
-func (s IndexNotReadyException) Message() string {
+func (s *IndexNotReadyException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -32096,28 +37254,28 @@ func (s IndexNotReadyException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s IndexNotReadyException) OrigErr() error {
+func (s *IndexNotReadyException) OrigErr() error {
 	return nil
 }
 
-func (s IndexNotReadyException) Error() string {
+func (s *IndexNotReadyException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s IndexNotReadyException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *IndexNotReadyException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s IndexNotReadyException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *IndexNotReadyException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An unexpected error has occurred.
 type InternalException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -32135,17 +37293,17 @@ func (s InternalException) GoString() string {
 
 func newErrorInternalException(v protocol.ResponseMetadata) error {
 	return &InternalException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalException) Code() string {
+func (s *InternalException) Code() string {
 	return "InternalException"
 }
 
 // Message returns the exception's message.
-func (s InternalException) Message() string {
+func (s *InternalException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -32153,28 +37311,28 @@ func (s InternalException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalException) OrigErr() error {
+func (s *InternalException) OrigErr() error {
 	return nil
 }
 
-func (s InternalException) Error() string {
+func (s *InternalException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An unexpected error has occurred.
 type InternalFailureException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -32192,17 +37350,17 @@ func (s InternalFailureException) GoString() string {
 
 func newErrorInternalFailureException(v protocol.ResponseMetadata) error {
 	return &InternalFailureException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalFailureException) Code() string {
+func (s *InternalFailureException) Code() string {
 	return "InternalFailureException"
 }
 
 // Message returns the exception's message.
-func (s InternalFailureException) Message() string {
+func (s *InternalFailureException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -32210,28 +37368,28 @@ func (s InternalFailureException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalFailureException) OrigErr() error {
+func (s *InternalFailureException) OrigErr() error {
 	return nil
 }
 
-func (s InternalFailureException) Error() string {
+func (s *InternalFailureException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalFailureException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalFailureException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalFailureException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalFailureException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The aggregation is invalid.
 type InvalidAggregationException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -32248,17 +37406,17 @@ func (s InvalidAggregationException) GoString() string {
 
 func newErrorInvalidAggregationException(v protocol.ResponseMetadata) error {
 	return &InvalidAggregationException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidAggregationException) Code() string {
+func (s *InvalidAggregationException) Code() string {
 	return "InvalidAggregationException"
 }
 
 // Message returns the exception's message.
-func (s InvalidAggregationException) Message() string {
+func (s *InvalidAggregationException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -32266,28 +37424,28 @@ func (s InvalidAggregationException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidAggregationException) OrigErr() error {
+func (s *InvalidAggregationException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidAggregationException) Error() string {
+func (s *InvalidAggregationException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidAggregationException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidAggregationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidAggregationException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidAggregationException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The query is invalid.
 type InvalidQueryException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -32305,17 +37463,17 @@ func (s InvalidQueryException) GoString() string {
 
 func newErrorInvalidQueryException(v protocol.ResponseMetadata) error {
 	return &InvalidQueryException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidQueryException) Code() string {
+func (s *InvalidQueryException) Code() string {
 	return "InvalidQueryException"
 }
 
 // Message returns the exception's message.
-func (s InvalidQueryException) Message() string {
+func (s *InvalidQueryException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -32323,28 +37481,28 @@ func (s InvalidQueryException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidQueryException) OrigErr() error {
+func (s *InvalidQueryException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidQueryException) Error() string {
+func (s *InvalidQueryException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidQueryException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidQueryException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidQueryException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidQueryException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The request is not valid.
 type InvalidRequestException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -32362,17 +37520,17 @@ func (s InvalidRequestException) GoString() string {
 
 func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
 	return &InvalidRequestException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidRequestException) Code() string {
+func (s *InvalidRequestException) Code() string {
 	return "InvalidRequestException"
 }
 
 // Message returns the exception's message.
-func (s InvalidRequestException) Message() string {
+func (s *InvalidRequestException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -32380,28 +37538,28 @@ func (s InvalidRequestException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidRequestException) OrigErr() error {
+func (s *InvalidRequestException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidRequestException) Error() string {
+func (s *InvalidRequestException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidRequestException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidRequestException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The response is invalid.
 type InvalidResponseException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -32419,17 +37577,17 @@ func (s InvalidResponseException) GoString() string {
 
 func newErrorInvalidResponseException(v protocol.ResponseMetadata) error {
 	return &InvalidResponseException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidResponseException) Code() string {
+func (s *InvalidResponseException) Code() string {
 	return "InvalidResponseException"
 }
 
 // Message returns the exception's message.
-func (s InvalidResponseException) Message() string {
+func (s *InvalidResponseException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -32437,30 +37595,30 @@ func (s InvalidResponseException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidResponseException) OrigErr() error {
+func (s *InvalidResponseException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidResponseException) Error() string {
+func (s *InvalidResponseException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidResponseException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidResponseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidResponseException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidResponseException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An attempt was made to change to an invalid state, for example by deleting
 // a job or a job execution which is "IN_PROGRESS" without setting the force
 // parameter.
 type InvalidStateTransitionException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -32478,17 +37636,17 @@ func (s InvalidStateTransitionException) GoString() string {
 
 func newErrorInvalidStateTransitionException(v protocol.ResponseMetadata) error {
 	return &InvalidStateTransitionException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidStateTransitionException) Code() string {
+func (s *InvalidStateTransitionException) Code() string {
 	return "InvalidStateTransitionException"
 }
 
 // Message returns the exception's message.
-func (s InvalidStateTransitionException) Message() string {
+func (s *InvalidStateTransitionException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -32496,22 +37654,22 @@ func (s InvalidStateTransitionException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidStateTransitionException) OrigErr() error {
+func (s *InvalidStateTransitionException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidStateTransitionException) Error() string {
+func (s *InvalidStateTransitionException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidStateTransitionException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidStateTransitionException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidStateTransitionException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidStateTransitionException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Sends message data to an AWS IoT Analytics channel.
@@ -33529,8 +38687,8 @@ func (s *LambdaAction) SetFunctionArn(v string) *LambdaAction {
 
 // A limit has been exceeded.
 type LimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -33548,17 +38706,17 @@ func (s LimitExceededException) GoString() string {
 
 func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
 	return &LimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LimitExceededException) Code() string {
+func (s *LimitExceededException) Code() string {
 	return "LimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s LimitExceededException) Message() string {
+func (s *LimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -33566,22 +38724,22 @@ func (s LimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LimitExceededException) OrigErr() error {
+func (s *LimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s LimitExceededException) Error() string {
+func (s *LimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type ListActiveViolationsInput struct {
@@ -33699,7 +38857,9 @@ type ListAttachedPoliciesInput struct {
 	// When true, recursively list attached policies.
 	Recursive *bool `location:"querystring" locationName:"recursive" type:"boolean"`
 
-	// The group or principal for which the policies will be listed.
+	// The group or principal for which the policies will be listed. Valid principals
+	// are CertificateArn (arn:aws:iot:region:accountId:cert/certificateId), thingGroupArn
+	// (arn:aws:iot:region:accountId:thinggroup/groupName) and CognitoId (region:id).
 	//
 	// Target is a required field
 	Target *string `location:"uri" locationName:"target" type:"string" required:"true"`
@@ -33801,6 +38961,11 @@ type ListAuditFindingsInput struct {
 	// specify either the startTime and endTime or the taskId, but not both.
 	EndTime *time.Time `locationName:"endTime" type:"timestamp"`
 
+	// Boolean flag indicating whether only the suppressed findings or the unsuppressed
+	// findings should be listed. If this parameter isn't provided, the response
+	// will list both suppressed and unsuppressed findings.
+	ListSuppressedFindings *bool `locationName:"listSuppressedFindings" type:"boolean"`
+
 	// The maximum number of results to return at one time. The default is 25.
 	MaxResults *int64 `locationName:"maxResults" min:"1" type:"integer"`
 
@@ -33859,6 +39024,12 @@ func (s *ListAuditFindingsInput) SetCheckName(v string) *ListAuditFindingsInput 
 // SetEndTime sets the EndTime field's value.
 func (s *ListAuditFindingsInput) SetEndTime(v time.Time) *ListAuditFindingsInput {
 	s.EndTime = &v
+	return s
+}
+
+// SetListSuppressedFindings sets the ListSuppressedFindings field's value.
+func (s *ListAuditFindingsInput) SetListSuppressedFindings(v bool) *ListAuditFindingsInput {
+	s.ListSuppressedFindings = &v
 	return s
 }
 
@@ -34187,6 +39358,119 @@ func (s *ListAuditMitigationActionsTasksOutput) SetNextToken(v string) *ListAudi
 // SetTasks sets the Tasks field's value.
 func (s *ListAuditMitigationActionsTasksOutput) SetTasks(v []*AuditMitigationActionsTaskMetadata) *ListAuditMitigationActionsTasksOutput {
 	s.Tasks = v
+	return s
+}
+
+type ListAuditSuppressionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Determines whether suppressions are listed in ascending order by expiration
+	// date or not. If parameter isn't provided, ascendingOrder=true.
+	AscendingOrder *bool `locationName:"ascendingOrder" type:"boolean"`
+
+	// An audit check name. Checks must be enabled for your account. (Use DescribeAccountAuditConfiguration
+	// to see the list of all checks, including those that are enabled or use UpdateAccountAuditConfiguration
+	// to select which checks are enabled.)
+	CheckName *string `locationName:"checkName" type:"string"`
+
+	// The maximum number of results to return at one time. The default is 25.
+	MaxResults *int64 `locationName:"maxResults" min:"1" type:"integer"`
+
+	// The token for the next set of results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// Information that identifies the noncompliant resource.
+	ResourceIdentifier *ResourceIdentifier `locationName:"resourceIdentifier" type:"structure"`
+}
+
+// String returns the string representation
+func (s ListAuditSuppressionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAuditSuppressionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListAuditSuppressionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListAuditSuppressionsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.ResourceIdentifier != nil {
+		if err := s.ResourceIdentifier.Validate(); err != nil {
+			invalidParams.AddNested("ResourceIdentifier", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAscendingOrder sets the AscendingOrder field's value.
+func (s *ListAuditSuppressionsInput) SetAscendingOrder(v bool) *ListAuditSuppressionsInput {
+	s.AscendingOrder = &v
+	return s
+}
+
+// SetCheckName sets the CheckName field's value.
+func (s *ListAuditSuppressionsInput) SetCheckName(v string) *ListAuditSuppressionsInput {
+	s.CheckName = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListAuditSuppressionsInput) SetMaxResults(v int64) *ListAuditSuppressionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListAuditSuppressionsInput) SetNextToken(v string) *ListAuditSuppressionsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetResourceIdentifier sets the ResourceIdentifier field's value.
+func (s *ListAuditSuppressionsInput) SetResourceIdentifier(v *ResourceIdentifier) *ListAuditSuppressionsInput {
+	s.ResourceIdentifier = v
+	return s
+}
+
+type ListAuditSuppressionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A token that can be used to retrieve the next set of results, or null if
+	// there are no additional results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// List of audit suppressions.
+	Suppressions []*AuditSuppression `locationName:"suppressions" type:"list"`
+}
+
+// String returns the string representation
+func (s ListAuditSuppressionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAuditSuppressionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListAuditSuppressionsOutput) SetNextToken(v string) *ListAuditSuppressionsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetSuppressions sets the Suppressions field's value.
+func (s *ListAuditSuppressionsOutput) SetSuppressions(v []*AuditSuppression) *ListAuditSuppressionsOutput {
+	s.Suppressions = v
 	return s
 }
 
@@ -34786,6 +40070,85 @@ func (s *ListCertificatesOutput) SetCertificates(v []*Certificate) *ListCertific
 // SetNextMarker sets the NextMarker field's value.
 func (s *ListCertificatesOutput) SetNextMarker(v string) *ListCertificatesOutput {
 	s.NextMarker = &v
+	return s
+}
+
+type ListDimensionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of results to retrieve at one time.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	// The token for the next set of results.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListDimensionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDimensionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListDimensionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListDimensionsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListDimensionsInput) SetMaxResults(v int64) *ListDimensionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListDimensionsInput) SetNextToken(v string) *ListDimensionsInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListDimensionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of the names of the defined dimensions. Use DescribeDimension to get
+	// details for a dimension.
+	DimensionNames []*string `locationName:"dimensionNames" type:"list"`
+
+	// A token that can be used to retrieve the next set of results, or null if
+	// there are no additional results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListDimensionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDimensionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetDimensionNames sets the DimensionNames field's value.
+func (s *ListDimensionsOutput) SetDimensionNames(v []*string) *ListDimensionsOutput {
+	s.DimensionNames = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListDimensionsOutput) SetNextToken(v string) *ListDimensionsOutput {
+	s.NextToken = &v
 	return s
 }
 
@@ -35829,7 +41192,9 @@ type ListPrincipalPoliciesInput struct {
 	// The result page size.
 	PageSize *int64 `location:"querystring" locationName:"pageSize" min:"1" type:"integer"`
 
-	// The principal.
+	// The principal. Valid principals are CertificateArn (arn:aws:iot:region:accountId:cert/certificateId),
+	// thingGroupArn (arn:aws:iot:region:accountId:thinggroup/groupName) and CognitoId
+	// (region:id).
 	//
 	// Principal is a required field
 	Principal *string `location:"header" locationName:"x-amzn-iot-principal" type:"string" required:"true"`
@@ -36453,6 +41818,9 @@ func (s *ListSecurityProfilesForTargetOutput) SetSecurityProfileTargetMappings(v
 type ListSecurityProfilesInput struct {
 	_ struct{} `type:"structure"`
 
+	// A filter to limit results to the security profiles that use the defined dimension.
+	DimensionName *string `location:"querystring" locationName:"dimensionName" min:"1" type:"string"`
+
 	// The maximum number of results to return at one time.
 	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
 
@@ -36473,6 +41841,9 @@ func (s ListSecurityProfilesInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ListSecurityProfilesInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ListSecurityProfilesInput"}
+	if s.DimensionName != nil && len(*s.DimensionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DimensionName", 1))
+	}
 	if s.MaxResults != nil && *s.MaxResults < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
 	}
@@ -36481,6 +41852,12 @@ func (s *ListSecurityProfilesInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetDimensionName sets the DimensionName field's value.
+func (s *ListSecurityProfilesInput) SetDimensionName(v string) *ListSecurityProfilesInput {
+	s.DimensionName = &v
+	return s
 }
 
 // SetMaxResults sets the MaxResults field's value.
@@ -37059,8 +42436,8 @@ func (s *ListThingGroupsInput) SetRecursive(v bool) *ListThingGroupsInput {
 type ListThingGroupsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The token used to get the next set of results, or null if there are no additional
-	// results.
+	// The token used to get the next set of results. Will not be returned if operation
+	// has returned all results.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// The thing groups.
@@ -37422,8 +42799,8 @@ func (s *ListThingTypesInput) SetThingTypeName(v string) *ListThingTypesInput {
 type ListThingTypesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The token for the next set of results, or null if there are no additional
-	// results.
+	// The token for the next set of results. Will not be returned if operation
+	// has returned all results.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// The thing types.
@@ -37517,8 +42894,8 @@ func (s *ListThingsInBillingGroupInput) SetNextToken(v string) *ListThingsInBill
 type ListThingsInBillingGroupOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The token used to get the next set of results, or null if there are no additional
-	// results.
+	// The token used to get the next set of results. Will not be returned if operation
+	// has returned all results.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// A list of things in the billing group.
@@ -37731,8 +43108,8 @@ func (s *ListThingsInput) SetThingTypeName(v string) *ListThingsInput {
 type ListThingsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The token used to get the next set of results, or null if there are no additional
-	// results.
+	// The token used to get the next set of results. Will not be returned if operation
+	// has returned all results.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// The things.
@@ -38287,8 +43664,8 @@ func (s *LoggingOptionsPayload) SetRoleArn(v string) *LoggingOptionsPayload {
 
 // The policy documentation is not valid.
 type MalformedPolicyException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -38306,17 +43683,17 @@ func (s MalformedPolicyException) GoString() string {
 
 func newErrorMalformedPolicyException(v protocol.ResponseMetadata) error {
 	return &MalformedPolicyException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s MalformedPolicyException) Code() string {
+func (s *MalformedPolicyException) Code() string {
 	return "MalformedPolicyException"
 }
 
 // Message returns the exception's message.
-func (s MalformedPolicyException) Message() string {
+func (s *MalformedPolicyException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -38324,22 +43701,131 @@ func (s MalformedPolicyException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s MalformedPolicyException) OrigErr() error {
+func (s *MalformedPolicyException) OrigErr() error {
 	return nil
 }
 
-func (s MalformedPolicyException) Error() string {
+func (s *MalformedPolicyException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s MalformedPolicyException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *MalformedPolicyException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s MalformedPolicyException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *MalformedPolicyException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The dimension of a metric.
+type MetricDimension struct {
+	_ struct{} `type:"structure"`
+
+	// A unique identifier for the dimension.
+	//
+	// DimensionName is a required field
+	DimensionName *string `locationName:"dimensionName" min:"1" type:"string" required:"true"`
+
+	// Defines how the dimensionValues of a dimension are interpreted. For example,
+	// for dimension type TOPIC_FILTER, the IN operator, a message will be counted
+	// only if its topic matches one of the topic filters. With NOT_IN operator,
+	// a message will be counted only if it doesn't match any of the topic filters.
+	// The operator is optional: if it's not provided (is null), it will be interpreted
+	// as IN.
+	Operator *string `locationName:"operator" type:"string" enum:"DimensionValueOperator"`
+}
+
+// String returns the string representation
+func (s MetricDimension) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MetricDimension) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MetricDimension) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MetricDimension"}
+	if s.DimensionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DimensionName"))
+	}
+	if s.DimensionName != nil && len(*s.DimensionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DimensionName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDimensionName sets the DimensionName field's value.
+func (s *MetricDimension) SetDimensionName(v string) *MetricDimension {
+	s.DimensionName = &v
+	return s
+}
+
+// SetOperator sets the Operator field's value.
+func (s *MetricDimension) SetOperator(v string) *MetricDimension {
+	s.Operator = &v
+	return s
+}
+
+// The metric you want to retain. Dimensions are optional.
+type MetricToRetain struct {
+	_ struct{} `type:"structure"`
+
+	// What is measured by the behavior.
+	//
+	// Metric is a required field
+	Metric *string `locationName:"metric" type:"string" required:"true"`
+
+	// The dimension of a metric.
+	MetricDimension *MetricDimension `locationName:"metricDimension" type:"structure"`
+}
+
+// String returns the string representation
+func (s MetricToRetain) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MetricToRetain) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MetricToRetain) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MetricToRetain"}
+	if s.Metric == nil {
+		invalidParams.Add(request.NewErrParamRequired("Metric"))
+	}
+	if s.MetricDimension != nil {
+		if err := s.MetricDimension.Validate(); err != nil {
+			invalidParams.AddNested("MetricDimension", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMetric sets the Metric field's value.
+func (s *MetricToRetain) SetMetric(v string) *MetricToRetain {
+	s.Metric = &v
+	return s
+}
+
+// SetMetricDimension sets the MetricDimension field's value.
+func (s *MetricToRetain) SetMetricDimension(v *MetricDimension) *MetricToRetain {
+	s.MetricDimension = v
+	return s
 }
 
 // The value to be compared with the metric.
@@ -38707,8 +44193,8 @@ func (s *NonCompliantResource) SetResourceType(v string) *NonCompliantResource {
 
 // The resource is not configured.
 type NotConfiguredException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -38726,17 +44212,17 @@ func (s NotConfiguredException) GoString() string {
 
 func newErrorNotConfiguredException(v protocol.ResponseMetadata) error {
 	return &NotConfiguredException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s NotConfiguredException) Code() string {
+func (s *NotConfiguredException) Code() string {
 	return "NotConfiguredException"
 }
 
 // Message returns the exception's message.
-func (s NotConfiguredException) Message() string {
+func (s *NotConfiguredException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -38744,22 +44230,22 @@ func (s NotConfiguredException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s NotConfiguredException) OrigErr() error {
+func (s *NotConfiguredException) OrigErr() error {
 	return nil
 }
 
-func (s NotConfiguredException) Error() string {
+func (s *NotConfiguredException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s NotConfiguredException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *NotConfiguredException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s NotConfiguredException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *NotConfiguredException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Describes a file to be associated with an OTA update.
@@ -39327,6 +44813,61 @@ func (s *PresignedUrlConfig) SetRoleArn(v string) *PresignedUrlConfig {
 	return s
 }
 
+// Structure that contains payloadVersion and targetArn.
+type ProvisioningHook struct {
+	_ struct{} `type:"structure"`
+
+	// The payload that was sent to the target function.
+	//
+	// Note: Only Lambda functions are currently supported.
+	PayloadVersion *string `locationName:"payloadVersion" min:"10" type:"string"`
+
+	// The ARN of the target function.
+	//
+	// Note: Only Lambda functions are currently supported.
+	//
+	// TargetArn is a required field
+	TargetArn *string `locationName:"targetArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ProvisioningHook) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisioningHook) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ProvisioningHook) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ProvisioningHook"}
+	if s.PayloadVersion != nil && len(*s.PayloadVersion) < 10 {
+		invalidParams.Add(request.NewErrParamMinLen("PayloadVersion", 10))
+	}
+	if s.TargetArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("TargetArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPayloadVersion sets the PayloadVersion field's value.
+func (s *ProvisioningHook) SetPayloadVersion(v string) *ProvisioningHook {
+	s.PayloadVersion = &v
+	return s
+}
+
+// SetTargetArn sets the TargetArn field's value.
+func (s *ProvisioningHook) SetTargetArn(v string) *ProvisioningHook {
+	s.TargetArn = &v
+	return s
+}
+
 // A summary of information about a fleet provisioning template.
 type ProvisioningTemplateSummary struct {
 	_ struct{} `type:"structure"`
@@ -39688,6 +45229,15 @@ type RegisterCACertificateInput struct {
 	// A boolean value that specifies if the CA certificate is set to active.
 	SetAsActive *bool `location:"querystring" locationName:"setAsActive" type:"boolean"`
 
+	// Metadata which can be used to manage the CA certificate.
+	//
+	// For URI Request parameters use format: ...key1=value1&key2=value2...
+	//
+	// For the CLI command-line parameter use format: &&tags "key1=value1&key2=value2..."
+	//
+	// For the cli-input-json file use format: "tags": "key1=value1&key2=value2..."
+	Tags []*Tag `locationName:"tags" type:"list"`
+
 	// The private key verification certificate.
 	//
 	// VerificationCertificate is a required field
@@ -39724,6 +45274,16 @@ func (s *RegisterCACertificateInput) Validate() error {
 			invalidParams.AddNested("RegistrationConfig", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -39752,6 +45312,12 @@ func (s *RegisterCACertificateInput) SetRegistrationConfig(v *RegistrationConfig
 // SetSetAsActive sets the SetAsActive field's value.
 func (s *RegisterCACertificateInput) SetSetAsActive(v bool) *RegisterCACertificateInput {
 	s.SetAsActive = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *RegisterCACertificateInput) SetTags(v []*Tag) *RegisterCACertificateInput {
+	s.Tags = v
 	return s
 }
 
@@ -39901,14 +45467,98 @@ func (s *RegisterCertificateOutput) SetCertificateId(v string) *RegisterCertific
 	return s
 }
 
+type RegisterCertificateWithoutCAInput struct {
+	_ struct{} `type:"structure"`
+
+	// The certificate data, in PEM format.
+	//
+	// CertificatePem is a required field
+	CertificatePem *string `locationName:"certificatePem" min:"1" type:"string" required:"true"`
+
+	// The status of the register certificate request.
+	Status *string `locationName:"status" type:"string" enum:"CertificateStatus"`
+}
+
+// String returns the string representation
+func (s RegisterCertificateWithoutCAInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RegisterCertificateWithoutCAInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RegisterCertificateWithoutCAInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RegisterCertificateWithoutCAInput"}
+	if s.CertificatePem == nil {
+		invalidParams.Add(request.NewErrParamRequired("CertificatePem"))
+	}
+	if s.CertificatePem != nil && len(*s.CertificatePem) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CertificatePem", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificatePem sets the CertificatePem field's value.
+func (s *RegisterCertificateWithoutCAInput) SetCertificatePem(v string) *RegisterCertificateWithoutCAInput {
+	s.CertificatePem = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *RegisterCertificateWithoutCAInput) SetStatus(v string) *RegisterCertificateWithoutCAInput {
+	s.Status = &v
+	return s
+}
+
+type RegisterCertificateWithoutCAOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the registered certificate.
+	CertificateArn *string `locationName:"certificateArn" type:"string"`
+
+	// The ID of the registered certificate. (The last part of the certificate ARN
+	// contains the certificate ID.
+	CertificateId *string `locationName:"certificateId" min:"64" type:"string"`
+}
+
+// String returns the string representation
+func (s RegisterCertificateWithoutCAOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RegisterCertificateWithoutCAOutput) GoString() string {
+	return s.String()
+}
+
+// SetCertificateArn sets the CertificateArn field's value.
+func (s *RegisterCertificateWithoutCAOutput) SetCertificateArn(v string) *RegisterCertificateWithoutCAOutput {
+	s.CertificateArn = &v
+	return s
+}
+
+// SetCertificateId sets the CertificateId field's value.
+func (s *RegisterCertificateWithoutCAOutput) SetCertificateId(v string) *RegisterCertificateWithoutCAOutput {
+	s.CertificateId = &v
+	return s
+}
+
 type RegisterThingInput struct {
 	_ struct{} `type:"structure"`
 
-	// The parameters for provisioning a thing. See Programmatic Provisioning (https://docs.aws.amazon.com/iot/latest/developerguide/programmatic-provisioning.html)
+	// The parameters for provisioning a thing. See Provisioning Templates (https://docs.aws.amazon.com/iot/latest/developerguide/provision-template.html)
 	// for more information.
 	Parameters map[string]*string `locationName:"parameters" type:"map"`
 
-	// The provisioning template. See Programmatic Provisioning (https://docs.aws.amazon.com/iot/latest/developerguide/programmatic-provisioning.html)
+	// The provisioning template. See Provisioning Devices That Have Device Certificates
+	// (https://docs.aws.amazon.com/iot/latest/developerguide/provision-w-cert.html)
 	// for more information.
 	//
 	// TemplateBody is a required field
@@ -39953,7 +45603,7 @@ func (s *RegisterThingInput) SetTemplateBody(v string) *RegisterThingInput {
 type RegisterThingOutput struct {
 	_ struct{} `type:"structure"`
 
-	// .
+	// The certificate data, in PEM format.
 	CertificatePem *string `locationName:"certificatePem" min:"1" type:"string"`
 
 	// ARNs for the generated resources.
@@ -39984,8 +45634,8 @@ func (s *RegisterThingOutput) SetResourceArns(v map[string]*string) *RegisterThi
 
 // The registration code is invalid.
 type RegistrationCodeValidationException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// Additional information about the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -40003,17 +45653,17 @@ func (s RegistrationCodeValidationException) GoString() string {
 
 func newErrorRegistrationCodeValidationException(v protocol.ResponseMetadata) error {
 	return &RegistrationCodeValidationException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s RegistrationCodeValidationException) Code() string {
+func (s *RegistrationCodeValidationException) Code() string {
 	return "RegistrationCodeValidationException"
 }
 
 // Message returns the exception's message.
-func (s RegistrationCodeValidationException) Message() string {
+func (s *RegistrationCodeValidationException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -40021,22 +45671,22 @@ func (s RegistrationCodeValidationException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s RegistrationCodeValidationException) OrigErr() error {
+func (s *RegistrationCodeValidationException) OrigErr() error {
 	return nil
 }
 
-func (s RegistrationCodeValidationException) Error() string {
+func (s *RegistrationCodeValidationException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s RegistrationCodeValidationException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *RegistrationCodeValidationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s RegistrationCodeValidationException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *RegistrationCodeValidationException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The registration configuration.
@@ -40533,8 +46183,8 @@ func (s *RepublishAction) SetTopic(v string) *RepublishAction {
 
 // The resource already exists.
 type ResourceAlreadyExistsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -40558,17 +46208,17 @@ func (s ResourceAlreadyExistsException) GoString() string {
 
 func newErrorResourceAlreadyExistsException(v protocol.ResponseMetadata) error {
 	return &ResourceAlreadyExistsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceAlreadyExistsException) Code() string {
+func (s *ResourceAlreadyExistsException) Code() string {
 	return "ResourceAlreadyExistsException"
 }
 
 // Message returns the exception's message.
-func (s ResourceAlreadyExistsException) Message() string {
+func (s *ResourceAlreadyExistsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -40576,22 +46226,22 @@ func (s ResourceAlreadyExistsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceAlreadyExistsException) OrigErr() error {
+func (s *ResourceAlreadyExistsException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceAlreadyExistsException) Error() string {
+func (s *ResourceAlreadyExistsException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceAlreadyExistsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceAlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceAlreadyExistsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceAlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Information that identifies the noncompliant resource.
@@ -40713,8 +46363,8 @@ func (s *ResourceIdentifier) SetRoleAliasArn(v string) *ResourceIdentifier {
 
 // The specified resource does not exist.
 type ResourceNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -40732,17 +46382,17 @@ func (s ResourceNotFoundException) GoString() string {
 
 func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
 	return &ResourceNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceNotFoundException) Code() string {
+func (s *ResourceNotFoundException) Code() string {
 	return "ResourceNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ResourceNotFoundException) Message() string {
+func (s *ResourceNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -40750,28 +46400,28 @@ func (s ResourceNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceNotFoundException) OrigErr() error {
+func (s *ResourceNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceNotFoundException) Error() string {
+func (s *ResourceNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The resource registration failed.
 type ResourceRegistrationFailureException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -40789,17 +46439,17 @@ func (s ResourceRegistrationFailureException) GoString() string {
 
 func newErrorResourceRegistrationFailureException(v protocol.ResponseMetadata) error {
 	return &ResourceRegistrationFailureException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceRegistrationFailureException) Code() string {
+func (s *ResourceRegistrationFailureException) Code() string {
 	return "ResourceRegistrationFailureException"
 }
 
 // Message returns the exception's message.
-func (s ResourceRegistrationFailureException) Message() string {
+func (s *ResourceRegistrationFailureException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -40807,22 +46457,22 @@ func (s ResourceRegistrationFailureException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceRegistrationFailureException) OrigErr() error {
+func (s *ResourceRegistrationFailureException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceRegistrationFailureException) Error() string {
+func (s *ResourceRegistrationFailureException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceRegistrationFailureException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceRegistrationFailureException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceRegistrationFailureException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceRegistrationFailureException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Role alias description.
@@ -41472,8 +47122,8 @@ func (s *ServerCertificateSummary) SetServerCertificateStatusDetail(v string) *S
 
 // The service is temporarily unavailable.
 type ServiceUnavailableException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -41491,17 +47141,17 @@ func (s ServiceUnavailableException) GoString() string {
 
 func newErrorServiceUnavailableException(v protocol.ResponseMetadata) error {
 	return &ServiceUnavailableException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ServiceUnavailableException) Code() string {
+func (s *ServiceUnavailableException) Code() string {
 	return "ServiceUnavailableException"
 }
 
 // Message returns the exception's message.
-func (s ServiceUnavailableException) Message() string {
+func (s *ServiceUnavailableException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -41509,22 +47159,22 @@ func (s ServiceUnavailableException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ServiceUnavailableException) OrigErr() error {
+func (s *ServiceUnavailableException) OrigErr() error {
 	return nil
 }
 
-func (s ServiceUnavailableException) Error() string {
+func (s *ServiceUnavailableException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ServiceUnavailableException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ServiceUnavailableException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ServiceUnavailableException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ServiceUnavailableException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type SetDefaultAuthorizerInput struct {
@@ -42035,8 +47685,8 @@ func (s *SnsAction) SetTargetArn(v string) *SnsAction {
 
 // The Rule-SQL expression can't be parsed correctly.
 type SqlParseException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -42054,17 +47704,17 @@ func (s SqlParseException) GoString() string {
 
 func newErrorSqlParseException(v protocol.ResponseMetadata) error {
 	return &SqlParseException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s SqlParseException) Code() string {
+func (s *SqlParseException) Code() string {
 	return "SqlParseException"
 }
 
 // Message returns the exception's message.
-func (s SqlParseException) Message() string {
+func (s *SqlParseException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -42072,22 +47722,22 @@ func (s SqlParseException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s SqlParseException) OrigErr() error {
+func (s *SqlParseException) OrigErr() error {
 	return nil
 }
 
-func (s SqlParseException) Error() string {
+func (s *SqlParseException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s SqlParseException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *SqlParseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s SqlParseException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *SqlParseException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Describes an action to publish data to an Amazon SQS queue.
@@ -42981,10 +48631,12 @@ type Tag struct {
 	_ struct{} `type:"structure"`
 
 	// The tag's key.
-	Key *string `type:"string"`
+	//
+	// Key is a required field
+	Key *string `min:"1" type:"string" required:"true"`
 
 	// The tag's value.
-	Value *string `type:"string"`
+	Value *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -42995,6 +48647,25 @@ func (s Tag) String() string {
 // GoString returns the string representation
 func (s Tag) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Tag) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Tag"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+	if s.Value != nil && len(*s.Value) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Value", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetKey sets the Key field's value.
@@ -43042,6 +48713,16 @@ func (s *TagResourceInput) Validate() error {
 	if s.Tags == nil {
 		invalidParams.Add(request.NewErrParamRequired("Tags"))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -43078,8 +48759,8 @@ func (s TagResourceOutput) GoString() string {
 // This exception occurs if you attempt to start a task with the same task-id
 // as an existing task but with a different clientRequestToken.
 type TaskAlreadyExistsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -43096,17 +48777,17 @@ func (s TaskAlreadyExistsException) GoString() string {
 
 func newErrorTaskAlreadyExistsException(v protocol.ResponseMetadata) error {
 	return &TaskAlreadyExistsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TaskAlreadyExistsException) Code() string {
+func (s *TaskAlreadyExistsException) Code() string {
 	return "TaskAlreadyExistsException"
 }
 
 // Message returns the exception's message.
-func (s TaskAlreadyExistsException) Message() string {
+func (s *TaskAlreadyExistsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -43114,22 +48795,22 @@ func (s TaskAlreadyExistsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TaskAlreadyExistsException) OrigErr() error {
+func (s *TaskAlreadyExistsException) OrigErr() error {
 	return nil
 }
 
-func (s TaskAlreadyExistsException) Error() string {
+func (s *TaskAlreadyExistsException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TaskAlreadyExistsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TaskAlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TaskAlreadyExistsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TaskAlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Statistics for the checks performed during the audit.
@@ -43297,7 +48978,9 @@ type TestAuthorizationInput struct {
 	// as if they are not attached to the principal being authorized.
 	PolicyNamesToSkip []*string `locationName:"policyNamesToSkip" type:"list"`
 
-	// The principal.
+	// The principal. Valid principals are CertificateArn (arn:aws:iot:region:accountId:cert/certificateId),
+	// thingGroupArn (arn:aws:iot:region:accountId:thinggroup/groupName) and CognitoId
+	// (region:id).
 	Principal *string `locationName:"principal" type:"string"`
 }
 
@@ -43319,6 +49002,16 @@ func (s *TestAuthorizationInput) Validate() error {
 	}
 	if s.AuthInfos != nil && len(s.AuthInfos) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("AuthInfos", 1))
+	}
+	if s.AuthInfos != nil {
+		for i, v := range s.AuthInfos {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "AuthInfos", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -43407,7 +49100,7 @@ type TestInvokeAuthorizerInput struct {
 	Token *string `locationName:"token" min:"1" type:"string"`
 
 	// The signature made with the token and your custom authentication service's
-	// private key.
+	// private key. This value must be Base-64-encoded.
 	TokenSignature *string `locationName:"tokenSignature" min:"1" type:"string"`
 }
 
@@ -44138,8 +49831,8 @@ func (s *ThingTypeProperties) SetThingTypeDescription(v string) *ThingTypeProper
 
 // The rate exceeds the limit.
 type ThrottlingException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -44157,17 +49850,17 @@ func (s ThrottlingException) GoString() string {
 
 func newErrorThrottlingException(v protocol.ResponseMetadata) error {
 	return &ThrottlingException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ThrottlingException) Code() string {
+func (s *ThrottlingException) Code() string {
 	return "ThrottlingException"
 }
 
 // Message returns the exception's message.
-func (s ThrottlingException) Message() string {
+func (s *ThrottlingException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -44175,22 +49868,22 @@ func (s ThrottlingException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ThrottlingException) OrigErr() error {
+func (s *ThrottlingException) OrigErr() error {
 	return nil
 }
 
-func (s ThrottlingException) Error() string {
+func (s *ThrottlingException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ThrottlingException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ThrottlingException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ThrottlingException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ThrottlingException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Specifies the amount of time each device has to finish its execution of the
@@ -44711,8 +50404,8 @@ func (s *TopicRulePayload) SetSql(v string) *TopicRulePayload {
 // You can't revert the certificate transfer because the transfer is already
 // complete.
 type TransferAlreadyCompletedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -44730,17 +50423,17 @@ func (s TransferAlreadyCompletedException) GoString() string {
 
 func newErrorTransferAlreadyCompletedException(v protocol.ResponseMetadata) error {
 	return &TransferAlreadyCompletedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TransferAlreadyCompletedException) Code() string {
+func (s *TransferAlreadyCompletedException) Code() string {
 	return "TransferAlreadyCompletedException"
 }
 
 // Message returns the exception's message.
-func (s TransferAlreadyCompletedException) Message() string {
+func (s *TransferAlreadyCompletedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -44748,22 +50441,22 @@ func (s TransferAlreadyCompletedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TransferAlreadyCompletedException) OrigErr() error {
+func (s *TransferAlreadyCompletedException) OrigErr() error {
 	return nil
 }
 
-func (s TransferAlreadyCompletedException) Error() string {
+func (s *TransferAlreadyCompletedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TransferAlreadyCompletedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TransferAlreadyCompletedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TransferAlreadyCompletedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TransferAlreadyCompletedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The input for the TransferCertificate operation.
@@ -44862,8 +50555,8 @@ func (s *TransferCertificateOutput) SetTransferredCertificateArn(v string) *Tran
 // You can't transfer the certificate because authorization policies are still
 // attached.
 type TransferConflictException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -44881,17 +50574,17 @@ func (s TransferConflictException) GoString() string {
 
 func newErrorTransferConflictException(v protocol.ResponseMetadata) error {
 	return &TransferConflictException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TransferConflictException) Code() string {
+func (s *TransferConflictException) Code() string {
 	return "TransferConflictException"
 }
 
 // Message returns the exception's message.
-func (s TransferConflictException) Message() string {
+func (s *TransferConflictException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -44899,22 +50592,22 @@ func (s TransferConflictException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TransferConflictException) OrigErr() error {
+func (s *TransferConflictException) OrigErr() error {
 	return nil
 }
 
-func (s TransferConflictException) Error() string {
+func (s *TransferConflictException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TransferConflictException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TransferConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TransferConflictException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TransferConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Data used to transfer a certificate to an AWS account.
@@ -44979,8 +50672,8 @@ func (s *TransferData) SetTransferMessage(v string) *TransferData {
 
 // You are not authorized to perform this operation.
 type UnauthorizedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -44998,17 +50691,17 @@ func (s UnauthorizedException) GoString() string {
 
 func newErrorUnauthorizedException(v protocol.ResponseMetadata) error {
 	return &UnauthorizedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnauthorizedException) Code() string {
+func (s *UnauthorizedException) Code() string {
 	return "UnauthorizedException"
 }
 
 // Message returns the exception's message.
-func (s UnauthorizedException) Message() string {
+func (s *UnauthorizedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -45016,22 +50709,22 @@ func (s UnauthorizedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnauthorizedException) OrigErr() error {
+func (s *UnauthorizedException) OrigErr() error {
 	return nil
 }
 
-func (s UnauthorizedException) Error() string {
+func (s *UnauthorizedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnauthorizedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnauthorizedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnauthorizedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnauthorizedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -45190,6 +50883,107 @@ func (s UpdateAccountAuditConfigurationOutput) String() string {
 
 // GoString returns the string representation
 func (s UpdateAccountAuditConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+type UpdateAuditSuppressionInput struct {
+	_ struct{} `type:"structure"`
+
+	// An audit check name. Checks must be enabled for your account. (Use DescribeAccountAuditConfiguration
+	// to see the list of all checks, including those that are enabled or use UpdateAccountAuditConfiguration
+	// to select which checks are enabled.)
+	//
+	// CheckName is a required field
+	CheckName *string `locationName:"checkName" type:"string" required:"true"`
+
+	// The description of the audit suppression.
+	Description *string `locationName:"description" type:"string"`
+
+	// The expiration date (epoch timestamp in seconds) that you want the suppression
+	// to adhere to.
+	ExpirationDate *time.Time `locationName:"expirationDate" type:"timestamp"`
+
+	// Information that identifies the noncompliant resource.
+	//
+	// ResourceIdentifier is a required field
+	ResourceIdentifier *ResourceIdentifier `locationName:"resourceIdentifier" type:"structure" required:"true"`
+
+	// Indicates whether a suppression should exist indefinitely or not.
+	SuppressIndefinitely *bool `locationName:"suppressIndefinitely" type:"boolean"`
+}
+
+// String returns the string representation
+func (s UpdateAuditSuppressionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateAuditSuppressionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateAuditSuppressionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateAuditSuppressionInput"}
+	if s.CheckName == nil {
+		invalidParams.Add(request.NewErrParamRequired("CheckName"))
+	}
+	if s.ResourceIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceIdentifier"))
+	}
+	if s.ResourceIdentifier != nil {
+		if err := s.ResourceIdentifier.Validate(); err != nil {
+			invalidParams.AddNested("ResourceIdentifier", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCheckName sets the CheckName field's value.
+func (s *UpdateAuditSuppressionInput) SetCheckName(v string) *UpdateAuditSuppressionInput {
+	s.CheckName = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *UpdateAuditSuppressionInput) SetDescription(v string) *UpdateAuditSuppressionInput {
+	s.Description = &v
+	return s
+}
+
+// SetExpirationDate sets the ExpirationDate field's value.
+func (s *UpdateAuditSuppressionInput) SetExpirationDate(v time.Time) *UpdateAuditSuppressionInput {
+	s.ExpirationDate = &v
+	return s
+}
+
+// SetResourceIdentifier sets the ResourceIdentifier field's value.
+func (s *UpdateAuditSuppressionInput) SetResourceIdentifier(v *ResourceIdentifier) *UpdateAuditSuppressionInput {
+	s.ResourceIdentifier = v
+	return s
+}
+
+// SetSuppressIndefinitely sets the SuppressIndefinitely field's value.
+func (s *UpdateAuditSuppressionInput) SetSuppressIndefinitely(v bool) *UpdateAuditSuppressionInput {
+	s.SuppressIndefinitely = &v
+	return s
+}
+
+type UpdateAuditSuppressionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateAuditSuppressionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateAuditSuppressionOutput) GoString() string {
 	return s.String()
 }
 
@@ -45548,9 +51342,10 @@ type UpdateCertificateInput struct {
 
 	// The new status.
 	//
-	// Note: Setting the status to PENDING_TRANSFER will result in an exception
-	// being thrown. PENDING_TRANSFER is a status used internally by AWS IoT. It
-	// is not intended for developer use.
+	// Note: Setting the status to PENDING_TRANSFER or PENDING_ACTIVATION will result
+	// in an exception being thrown. PENDING_TRANSFER and PENDING_ACTIVATION are
+	// statuses used internally by AWS IoT. They are not intended for developer
+	// use.
 	//
 	// Note: The status value REGISTER_INACTIVE is deprecated and should not be
 	// used.
@@ -45652,6 +51447,138 @@ func (s *UpdateDeviceCertificateParams) Validate() error {
 // SetAction sets the Action field's value.
 func (s *UpdateDeviceCertificateParams) SetAction(v string) *UpdateDeviceCertificateParams {
 	s.Action = &v
+	return s
+}
+
+type UpdateDimensionInput struct {
+	_ struct{} `type:"structure"`
+
+	// A unique identifier for the dimension. Choose something that describes the
+	// type and value to make it easy to remember what it does.
+	//
+	// Name is a required field
+	Name *string `location:"uri" locationName:"name" min:"1" type:"string" required:"true"`
+
+	// Specifies the value or list of values for the dimension. For TOPIC_FILTER
+	// dimensions, this is a pattern used to match the MQTT topic (for example,
+	// "admin/#").
+	//
+	// StringValues is a required field
+	StringValues []*string `locationName:"stringValues" min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateDimensionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateDimensionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateDimensionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateDimensionInput"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.StringValues == nil {
+		invalidParams.Add(request.NewErrParamRequired("StringValues"))
+	}
+	if s.StringValues != nil && len(s.StringValues) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StringValues", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateDimensionInput) SetName(v string) *UpdateDimensionInput {
+	s.Name = &v
+	return s
+}
+
+// SetStringValues sets the StringValues field's value.
+func (s *UpdateDimensionInput) SetStringValues(v []*string) *UpdateDimensionInput {
+	s.StringValues = v
+	return s
+}
+
+type UpdateDimensionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN (Amazon resource name) of the created dimension.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// The date and time, in milliseconds since epoch, when the dimension was initially
+	// created.
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
+
+	// The date and time, in milliseconds since epoch, when the dimension was most
+	// recently updated.
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
+
+	// A unique identifier for the dimension.
+	Name *string `locationName:"name" min:"1" type:"string"`
+
+	// The value or list of values used to scope the dimension. For example, for
+	// topic filters, this is the pattern used to match the MQTT topic name.
+	StringValues []*string `locationName:"stringValues" min:"1" type:"list"`
+
+	// The type of the dimension.
+	Type *string `locationName:"type" type:"string" enum:"DimensionType"`
+}
+
+// String returns the string representation
+func (s UpdateDimensionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateDimensionOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *UpdateDimensionOutput) SetArn(v string) *UpdateDimensionOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *UpdateDimensionOutput) SetCreationDate(v time.Time) *UpdateDimensionOutput {
+	s.CreationDate = &v
+	return s
+}
+
+// SetLastModifiedDate sets the LastModifiedDate field's value.
+func (s *UpdateDimensionOutput) SetLastModifiedDate(v time.Time) *UpdateDimensionOutput {
+	s.LastModifiedDate = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateDimensionOutput) SetName(v string) *UpdateDimensionOutput {
+	s.Name = &v
+	return s
+}
+
+// SetStringValues sets the StringValues field's value.
+func (s *UpdateDimensionOutput) SetStringValues(v []*string) *UpdateDimensionOutput {
+	s.StringValues = v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *UpdateDimensionOutput) SetType(v string) *UpdateDimensionOutput {
+	s.Type = &v
 	return s
 }
 
@@ -46219,9 +52146,15 @@ type UpdateProvisioningTemplateInput struct {
 	// True to enable the fleet provisioning template, otherwise false.
 	Enabled *bool `locationName:"enabled" type:"boolean"`
 
+	// Updates the pre-provisioning hook template.
+	PreProvisioningHook *ProvisioningHook `locationName:"preProvisioningHook" type:"structure"`
+
 	// The ARN of the role associated with the provisioning template. This IoT role
 	// grants permission to provision a device.
 	ProvisioningRoleArn *string `locationName:"provisioningRoleArn" min:"20" type:"string"`
+
+	// Removes pre-provisioning hook template.
+	RemovePreProvisioningHook *bool `locationName:"removePreProvisioningHook" type:"boolean"`
 
 	// The name of the fleet provisioning template.
 	//
@@ -46251,6 +52184,11 @@ func (s *UpdateProvisioningTemplateInput) Validate() error {
 	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
 	}
+	if s.PreProvisioningHook != nil {
+		if err := s.PreProvisioningHook.Validate(); err != nil {
+			invalidParams.AddNested("PreProvisioningHook", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -46276,9 +52214,21 @@ func (s *UpdateProvisioningTemplateInput) SetEnabled(v bool) *UpdateProvisioning
 	return s
 }
 
+// SetPreProvisioningHook sets the PreProvisioningHook field's value.
+func (s *UpdateProvisioningTemplateInput) SetPreProvisioningHook(v *ProvisioningHook) *UpdateProvisioningTemplateInput {
+	s.PreProvisioningHook = v
+	return s
+}
+
 // SetProvisioningRoleArn sets the ProvisioningRoleArn field's value.
 func (s *UpdateProvisioningTemplateInput) SetProvisioningRoleArn(v string) *UpdateProvisioningTemplateInput {
 	s.ProvisioningRoleArn = &v
+	return s
+}
+
+// SetRemovePreProvisioningHook sets the RemovePreProvisioningHook field's value.
+func (s *UpdateProvisioningTemplateInput) SetRemovePreProvisioningHook(v bool) *UpdateProvisioningTemplateInput {
+	s.RemovePreProvisioningHook = &v
 	return s
 }
 
@@ -46515,7 +52465,17 @@ type UpdateSecurityProfileInput struct {
 	// A list of metrics whose data is retained (stored). By default, data is retained
 	// for any metric used in the profile's behaviors, but it is also retained for
 	// any metric specified here.
-	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" type:"list"`
+	//
+	// Note: This API field is deprecated. Please use UpdateSecurityProfileRequest$additionalMetricsToRetainV2
+	// instead.
+	//
+	// Deprecated: Use additionalMetricsToRetainV2.
+	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" deprecated:"true" type:"list"`
+
+	// A list of metrics whose data is retained (stored). By default, data is retained
+	// for any metric used in the profile's behaviors, but it is also retained for
+	// any metric specified here.
+	AdditionalMetricsToRetainV2 []*MetricToRetain `locationName:"additionalMetricsToRetainV2" type:"list"`
 
 	// Where the alerts are sent. (Alerts are always sent to the console.)
 	AlertTargets map[string]*AlertTarget `locationName:"alertTargets" type:"map"`
@@ -46570,6 +52530,16 @@ func (s *UpdateSecurityProfileInput) Validate() error {
 	if s.SecurityProfileName != nil && len(*s.SecurityProfileName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("SecurityProfileName", 1))
 	}
+	if s.AdditionalMetricsToRetainV2 != nil {
+		for i, v := range s.AdditionalMetricsToRetainV2 {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "AdditionalMetricsToRetainV2", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 	if s.AlertTargets != nil {
 		for i, v := range s.AlertTargets {
 			if v == nil {
@@ -46600,6 +52570,12 @@ func (s *UpdateSecurityProfileInput) Validate() error {
 // SetAdditionalMetricsToRetain sets the AdditionalMetricsToRetain field's value.
 func (s *UpdateSecurityProfileInput) SetAdditionalMetricsToRetain(v []*string) *UpdateSecurityProfileInput {
 	s.AdditionalMetricsToRetain = v
+	return s
+}
+
+// SetAdditionalMetricsToRetainV2 sets the AdditionalMetricsToRetainV2 field's value.
+func (s *UpdateSecurityProfileInput) SetAdditionalMetricsToRetainV2(v []*MetricToRetain) *UpdateSecurityProfileInput {
+	s.AdditionalMetricsToRetainV2 = v
 	return s
 }
 
@@ -46657,7 +52633,17 @@ type UpdateSecurityProfileOutput struct {
 	// A list of metrics whose data is retained (stored). By default, data is retained
 	// for any metric used in the security profile's behaviors, but it is also retained
 	// for any metric specified here.
-	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" type:"list"`
+	//
+	// Note: This API field is deprecated. Please use UpdateSecurityProfileResponse$additionalMetricsToRetainV2
+	// instead.
+	//
+	// Deprecated: Use additionalMetricsToRetainV2.
+	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" deprecated:"true" type:"list"`
+
+	// A list of metrics whose data is retained (stored). By default, data is retained
+	// for any metric used in the profile's behaviors, but it is also retained for
+	// any metric specified here.
+	AdditionalMetricsToRetainV2 []*MetricToRetain `locationName:"additionalMetricsToRetainV2" type:"list"`
 
 	// Where the alerts are sent. (Alerts are always sent to the console.)
 	AlertTargets map[string]*AlertTarget `locationName:"alertTargets" type:"map"`
@@ -46698,6 +52684,12 @@ func (s UpdateSecurityProfileOutput) GoString() string {
 // SetAdditionalMetricsToRetain sets the AdditionalMetricsToRetain field's value.
 func (s *UpdateSecurityProfileOutput) SetAdditionalMetricsToRetain(v []*string) *UpdateSecurityProfileOutput {
 	s.AdditionalMetricsToRetain = v
+	return s
+}
+
+// SetAdditionalMetricsToRetainV2 sets the AdditionalMetricsToRetainV2 field's value.
+func (s *UpdateSecurityProfileOutput) SetAdditionalMetricsToRetainV2(v []*MetricToRetain) *UpdateSecurityProfileOutput {
+	s.AdditionalMetricsToRetainV2 = v
 	return s
 }
 
@@ -47074,6 +53066,9 @@ type UpdateThingInput struct {
 
 	// The name of the thing to update.
 	//
+	// You can't change a thing's name. To change a thing's name, you must create
+	// a new thing, give it the new name, and then delete the old thing.
+	//
 	// ThingName is a required field
 	ThingName *string `location:"uri" locationName:"thingName" min:"1" type:"string" required:"true"`
 
@@ -47354,8 +53349,8 @@ func (s *ValidationError) SetErrorMessage(v string) *ValidationError {
 // An exception thrown when the version of an entity specified with the expectedVersion
 // parameter does not match the latest version in the system.
 type VersionConflictException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -47373,17 +53368,17 @@ func (s VersionConflictException) GoString() string {
 
 func newErrorVersionConflictException(v protocol.ResponseMetadata) error {
 	return &VersionConflictException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s VersionConflictException) Code() string {
+func (s *VersionConflictException) Code() string {
 	return "VersionConflictException"
 }
 
 // Message returns the exception's message.
-func (s VersionConflictException) Message() string {
+func (s *VersionConflictException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -47391,28 +53386,28 @@ func (s VersionConflictException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s VersionConflictException) OrigErr() error {
+func (s *VersionConflictException) OrigErr() error {
 	return nil
 }
 
-func (s VersionConflictException) Error() string {
+func (s *VersionConflictException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s VersionConflictException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *VersionConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s VersionConflictException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *VersionConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The number of policy versions exceeds the limit.
 type VersionsLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -47430,17 +53425,17 @@ func (s VersionsLimitExceededException) GoString() string {
 
 func newErrorVersionsLimitExceededException(v protocol.ResponseMetadata) error {
 	return &VersionsLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s VersionsLimitExceededException) Code() string {
+func (s *VersionsLimitExceededException) Code() string {
 	return "VersionsLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s VersionsLimitExceededException) Message() string {
+func (s *VersionsLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -47448,22 +53443,22 @@ func (s VersionsLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s VersionsLimitExceededException) OrigErr() error {
+func (s *VersionsLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s VersionsLimitExceededException) Error() string {
+func (s *VersionsLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s VersionsLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *VersionsLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s VersionsLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *VersionsLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Information about a Device Defender security profile behavior violation.
@@ -47549,6 +53544,13 @@ const (
 	AbortActionCancel = "CANCEL"
 )
 
+// AbortAction_Values returns all elements of the AbortAction enum
+func AbortAction_Values() []string {
+	return []string{
+		AbortActionCancel,
+	}
+}
+
 const (
 	// ActionTypePublish is a ActionType enum value
 	ActionTypePublish = "PUBLISH"
@@ -47563,11 +53565,28 @@ const (
 	ActionTypeConnect = "CONNECT"
 )
 
+// ActionType_Values returns all elements of the ActionType enum
+func ActionType_Values() []string {
+	return []string{
+		ActionTypePublish,
+		ActionTypeSubscribe,
+		ActionTypeReceive,
+		ActionTypeConnect,
+	}
+}
+
 // The type of alert target: one of "SNS".
 const (
 	// AlertTargetTypeSns is a AlertTargetType enum value
 	AlertTargetTypeSns = "SNS"
 )
+
+// AlertTargetType_Values returns all elements of the AlertTargetType enum
+func AlertTargetType_Values() []string {
+	return []string{
+		AlertTargetTypeSns,
+	}
+}
 
 const (
 	// AuditCheckRunStatusInProgress is a AuditCheckRunStatus enum value
@@ -47589,6 +53608,18 @@ const (
 	AuditCheckRunStatusFailed = "FAILED"
 )
 
+// AuditCheckRunStatus_Values returns all elements of the AuditCheckRunStatus enum
+func AuditCheckRunStatus_Values() []string {
+	return []string{
+		AuditCheckRunStatusInProgress,
+		AuditCheckRunStatusWaitingForDataCollection,
+		AuditCheckRunStatusCanceled,
+		AuditCheckRunStatusCompletedCompliant,
+		AuditCheckRunStatusCompletedNonCompliant,
+		AuditCheckRunStatusFailed,
+	}
+}
+
 const (
 	// AuditFindingSeverityCritical is a AuditFindingSeverity enum value
 	AuditFindingSeverityCritical = "CRITICAL"
@@ -47603,6 +53634,16 @@ const (
 	AuditFindingSeverityLow = "LOW"
 )
 
+// AuditFindingSeverity_Values returns all elements of the AuditFindingSeverity enum
+func AuditFindingSeverity_Values() []string {
+	return []string{
+		AuditFindingSeverityCritical,
+		AuditFindingSeverityHigh,
+		AuditFindingSeverityMedium,
+		AuditFindingSeverityLow,
+	}
+}
+
 const (
 	// AuditFrequencyDaily is a AuditFrequency enum value
 	AuditFrequencyDaily = "DAILY"
@@ -47616,6 +53657,16 @@ const (
 	// AuditFrequencyMonthly is a AuditFrequency enum value
 	AuditFrequencyMonthly = "MONTHLY"
 )
+
+// AuditFrequency_Values returns all elements of the AuditFrequency enum
+func AuditFrequency_Values() []string {
+	return []string{
+		AuditFrequencyDaily,
+		AuditFrequencyWeekly,
+		AuditFrequencyBiweekly,
+		AuditFrequencyMonthly,
+	}
+}
 
 const (
 	// AuditMitigationActionsExecutionStatusInProgress is a AuditMitigationActionsExecutionStatus enum value
@@ -47637,6 +53688,18 @@ const (
 	AuditMitigationActionsExecutionStatusPending = "PENDING"
 )
 
+// AuditMitigationActionsExecutionStatus_Values returns all elements of the AuditMitigationActionsExecutionStatus enum
+func AuditMitigationActionsExecutionStatus_Values() []string {
+	return []string{
+		AuditMitigationActionsExecutionStatusInProgress,
+		AuditMitigationActionsExecutionStatusCompleted,
+		AuditMitigationActionsExecutionStatusFailed,
+		AuditMitigationActionsExecutionStatusCanceled,
+		AuditMitigationActionsExecutionStatusSkipped,
+		AuditMitigationActionsExecutionStatusPending,
+	}
+}
+
 const (
 	// AuditMitigationActionsTaskStatusInProgress is a AuditMitigationActionsTaskStatus enum value
 	AuditMitigationActionsTaskStatusInProgress = "IN_PROGRESS"
@@ -47651,10 +53714,27 @@ const (
 	AuditMitigationActionsTaskStatusCanceled = "CANCELED"
 )
 
+// AuditMitigationActionsTaskStatus_Values returns all elements of the AuditMitigationActionsTaskStatus enum
+func AuditMitigationActionsTaskStatus_Values() []string {
+	return []string{
+		AuditMitigationActionsTaskStatusInProgress,
+		AuditMitigationActionsTaskStatusCompleted,
+		AuditMitigationActionsTaskStatusFailed,
+		AuditMitigationActionsTaskStatusCanceled,
+	}
+}
+
 const (
 	// AuditNotificationTypeSns is a AuditNotificationType enum value
 	AuditNotificationTypeSns = "SNS"
 )
+
+// AuditNotificationType_Values returns all elements of the AuditNotificationType enum
+func AuditNotificationType_Values() []string {
+	return []string{
+		AuditNotificationTypeSns,
+	}
+}
 
 const (
 	// AuditTaskStatusInProgress is a AuditTaskStatus enum value
@@ -47670,6 +53750,16 @@ const (
 	AuditTaskStatusCanceled = "CANCELED"
 )
 
+// AuditTaskStatus_Values returns all elements of the AuditTaskStatus enum
+func AuditTaskStatus_Values() []string {
+	return []string{
+		AuditTaskStatusInProgress,
+		AuditTaskStatusCompleted,
+		AuditTaskStatusFailed,
+		AuditTaskStatusCanceled,
+	}
+}
+
 const (
 	// AuditTaskTypeOnDemandAuditTask is a AuditTaskType enum value
 	AuditTaskTypeOnDemandAuditTask = "ON_DEMAND_AUDIT_TASK"
@@ -47677,6 +53767,14 @@ const (
 	// AuditTaskTypeScheduledAuditTask is a AuditTaskType enum value
 	AuditTaskTypeScheduledAuditTask = "SCHEDULED_AUDIT_TASK"
 )
+
+// AuditTaskType_Values returns all elements of the AuditTaskType enum
+func AuditTaskType_Values() []string {
+	return []string{
+		AuditTaskTypeOnDemandAuditTask,
+		AuditTaskTypeScheduledAuditTask,
+	}
+}
 
 const (
 	// AuthDecisionAllowed is a AuthDecision enum value
@@ -47689,6 +53787,15 @@ const (
 	AuthDecisionImplicitDeny = "IMPLICIT_DENY"
 )
 
+// AuthDecision_Values returns all elements of the AuthDecision enum
+func AuthDecision_Values() []string {
+	return []string{
+		AuthDecisionAllowed,
+		AuthDecisionExplicitDeny,
+		AuthDecisionImplicitDeny,
+	}
+}
+
 const (
 	// AuthorizerStatusActive is a AuthorizerStatus enum value
 	AuthorizerStatusActive = "ACTIVE"
@@ -47696,6 +53803,14 @@ const (
 	// AuthorizerStatusInactive is a AuthorizerStatus enum value
 	AuthorizerStatusInactive = "INACTIVE"
 )
+
+// AuthorizerStatus_Values returns all elements of the AuthorizerStatus enum
+func AuthorizerStatus_Values() []string {
+	return []string{
+		AuthorizerStatusActive,
+		AuthorizerStatusInactive,
+	}
+}
 
 const (
 	// AutoRegistrationStatusEnable is a AutoRegistrationStatus enum value
@@ -47705,6 +53820,50 @@ const (
 	AutoRegistrationStatusDisable = "DISABLE"
 )
 
+// AutoRegistrationStatus_Values returns all elements of the AutoRegistrationStatus enum
+func AutoRegistrationStatus_Values() []string {
+	return []string{
+		AutoRegistrationStatusEnable,
+		AutoRegistrationStatusDisable,
+	}
+}
+
+const (
+	// AwsJobAbortCriteriaAbortActionCancel is a AwsJobAbortCriteriaAbortAction enum value
+	AwsJobAbortCriteriaAbortActionCancel = "CANCEL"
+)
+
+// AwsJobAbortCriteriaAbortAction_Values returns all elements of the AwsJobAbortCriteriaAbortAction enum
+func AwsJobAbortCriteriaAbortAction_Values() []string {
+	return []string{
+		AwsJobAbortCriteriaAbortActionCancel,
+	}
+}
+
+const (
+	// AwsJobAbortCriteriaFailureTypeFailed is a AwsJobAbortCriteriaFailureType enum value
+	AwsJobAbortCriteriaFailureTypeFailed = "FAILED"
+
+	// AwsJobAbortCriteriaFailureTypeRejected is a AwsJobAbortCriteriaFailureType enum value
+	AwsJobAbortCriteriaFailureTypeRejected = "REJECTED"
+
+	// AwsJobAbortCriteriaFailureTypeTimedOut is a AwsJobAbortCriteriaFailureType enum value
+	AwsJobAbortCriteriaFailureTypeTimedOut = "TIMED_OUT"
+
+	// AwsJobAbortCriteriaFailureTypeAll is a AwsJobAbortCriteriaFailureType enum value
+	AwsJobAbortCriteriaFailureTypeAll = "ALL"
+)
+
+// AwsJobAbortCriteriaFailureType_Values returns all elements of the AwsJobAbortCriteriaFailureType enum
+func AwsJobAbortCriteriaFailureType_Values() []string {
+	return []string{
+		AwsJobAbortCriteriaFailureTypeFailed,
+		AwsJobAbortCriteriaFailureTypeRejected,
+		AwsJobAbortCriteriaFailureTypeTimedOut,
+		AwsJobAbortCriteriaFailureTypeAll,
+	}
+}
+
 const (
 	// CACertificateStatusActive is a CACertificateStatus enum value
 	CACertificateStatusActive = "ACTIVE"
@@ -47713,10 +53872,25 @@ const (
 	CACertificateStatusInactive = "INACTIVE"
 )
 
+// CACertificateStatus_Values returns all elements of the CACertificateStatus enum
+func CACertificateStatus_Values() []string {
+	return []string{
+		CACertificateStatusActive,
+		CACertificateStatusInactive,
+	}
+}
+
 const (
 	// CACertificateUpdateActionDeactivate is a CACertificateUpdateAction enum value
 	CACertificateUpdateActionDeactivate = "DEACTIVATE"
 )
+
+// CACertificateUpdateAction_Values returns all elements of the CACertificateUpdateAction enum
+func CACertificateUpdateAction_Values() []string {
+	return []string{
+		CACertificateUpdateActionDeactivate,
+	}
+}
 
 const (
 	// CannedAccessControlListPrivate is a CannedAccessControlList enum value
@@ -47744,6 +53918,36 @@ const (
 	CannedAccessControlListLogDeliveryWrite = "log-delivery-write"
 )
 
+// CannedAccessControlList_Values returns all elements of the CannedAccessControlList enum
+func CannedAccessControlList_Values() []string {
+	return []string{
+		CannedAccessControlListPrivate,
+		CannedAccessControlListPublicRead,
+		CannedAccessControlListPublicReadWrite,
+		CannedAccessControlListAwsExecRead,
+		CannedAccessControlListAuthenticatedRead,
+		CannedAccessControlListBucketOwnerRead,
+		CannedAccessControlListBucketOwnerFullControl,
+		CannedAccessControlListLogDeliveryWrite,
+	}
+}
+
+const (
+	// CertificateModeDefault is a CertificateMode enum value
+	CertificateModeDefault = "DEFAULT"
+
+	// CertificateModeSniOnly is a CertificateMode enum value
+	CertificateModeSniOnly = "SNI_ONLY"
+)
+
+// CertificateMode_Values returns all elements of the CertificateMode enum
+func CertificateMode_Values() []string {
+	return []string{
+		CertificateModeDefault,
+		CertificateModeSniOnly,
+	}
+}
+
 const (
 	// CertificateStatusActive is a CertificateStatus enum value
 	CertificateStatusActive = "ACTIVE"
@@ -47763,6 +53967,18 @@ const (
 	// CertificateStatusPendingActivation is a CertificateStatus enum value
 	CertificateStatusPendingActivation = "PENDING_ACTIVATION"
 )
+
+// CertificateStatus_Values returns all elements of the CertificateStatus enum
+func CertificateStatus_Values() []string {
+	return []string{
+		CertificateStatusActive,
+		CertificateStatusInactive,
+		CertificateStatusRevoked,
+		CertificateStatusPendingTransfer,
+		CertificateStatusRegisterInactive,
+		CertificateStatusPendingActivation,
+	}
+}
 
 const (
 	// ComparisonOperatorLessThan is a ComparisonOperator enum value
@@ -47790,6 +54006,20 @@ const (
 	ComparisonOperatorNotInPortSet = "not-in-port-set"
 )
 
+// ComparisonOperator_Values returns all elements of the ComparisonOperator enum
+func ComparisonOperator_Values() []string {
+	return []string{
+		ComparisonOperatorLessThan,
+		ComparisonOperatorLessThanEquals,
+		ComparisonOperatorGreaterThan,
+		ComparisonOperatorGreaterThanEquals,
+		ComparisonOperatorInCidrSet,
+		ComparisonOperatorNotInCidrSet,
+		ComparisonOperatorInPortSet,
+		ComparisonOperatorNotInPortSet,
+	}
+}
+
 const (
 	// DayOfWeekSun is a DayOfWeek enum value
 	DayOfWeekSun = "SUN"
@@ -47813,10 +54043,58 @@ const (
 	DayOfWeekSat = "SAT"
 )
 
+// DayOfWeek_Values returns all elements of the DayOfWeek enum
+func DayOfWeek_Values() []string {
+	return []string{
+		DayOfWeekSun,
+		DayOfWeekMon,
+		DayOfWeekTue,
+		DayOfWeekWed,
+		DayOfWeekThu,
+		DayOfWeekFri,
+		DayOfWeekSat,
+	}
+}
+
 const (
 	// DeviceCertificateUpdateActionDeactivate is a DeviceCertificateUpdateAction enum value
 	DeviceCertificateUpdateActionDeactivate = "DEACTIVATE"
 )
+
+// DeviceCertificateUpdateAction_Values returns all elements of the DeviceCertificateUpdateAction enum
+func DeviceCertificateUpdateAction_Values() []string {
+	return []string{
+		DeviceCertificateUpdateActionDeactivate,
+	}
+}
+
+const (
+	// DimensionTypeTopicFilter is a DimensionType enum value
+	DimensionTypeTopicFilter = "TOPIC_FILTER"
+)
+
+// DimensionType_Values returns all elements of the DimensionType enum
+func DimensionType_Values() []string {
+	return []string{
+		DimensionTypeTopicFilter,
+	}
+}
+
+const (
+	// DimensionValueOperatorIn is a DimensionValueOperator enum value
+	DimensionValueOperatorIn = "IN"
+
+	// DimensionValueOperatorNotIn is a DimensionValueOperator enum value
+	DimensionValueOperatorNotIn = "NOT_IN"
+)
+
+// DimensionValueOperator_Values returns all elements of the DimensionValueOperator enum
+func DimensionValueOperator_Values() []string {
+	return []string{
+		DimensionValueOperatorIn,
+		DimensionValueOperatorNotIn,
+	}
+}
 
 const (
 	// DomainConfigurationStatusEnabled is a DomainConfigurationStatus enum value
@@ -47825,6 +54103,14 @@ const (
 	// DomainConfigurationStatusDisabled is a DomainConfigurationStatus enum value
 	DomainConfigurationStatusDisabled = "DISABLED"
 )
+
+// DomainConfigurationStatus_Values returns all elements of the DomainConfigurationStatus enum
+func DomainConfigurationStatus_Values() []string {
+	return []string{
+		DomainConfigurationStatusEnabled,
+		DomainConfigurationStatusDisabled,
+	}
+}
 
 const (
 	// DomainTypeEndpoint is a DomainType enum value
@@ -47837,6 +54123,15 @@ const (
 	DomainTypeCustomerManaged = "CUSTOMER_MANAGED"
 )
 
+// DomainType_Values returns all elements of the DomainType enum
+func DomainType_Values() []string {
+	return []string{
+		DomainTypeEndpoint,
+		DomainTypeAwsManaged,
+		DomainTypeCustomerManaged,
+	}
+}
+
 const (
 	// DynamicGroupStatusActive is a DynamicGroupStatus enum value
 	DynamicGroupStatusActive = "ACTIVE"
@@ -47848,6 +54143,15 @@ const (
 	DynamicGroupStatusRebuilding = "REBUILDING"
 )
 
+// DynamicGroupStatus_Values returns all elements of the DynamicGroupStatus enum
+func DynamicGroupStatus_Values() []string {
+	return []string{
+		DynamicGroupStatusActive,
+		DynamicGroupStatusBuilding,
+		DynamicGroupStatusRebuilding,
+	}
+}
+
 const (
 	// DynamoKeyTypeString is a DynamoKeyType enum value
 	DynamoKeyTypeString = "STRING"
@@ -47855,6 +54159,14 @@ const (
 	// DynamoKeyTypeNumber is a DynamoKeyType enum value
 	DynamoKeyTypeNumber = "NUMBER"
 )
+
+// DynamoKeyType_Values returns all elements of the DynamoKeyType enum
+func DynamoKeyType_Values() []string {
+	return []string{
+		DynamoKeyTypeString,
+		DynamoKeyTypeNumber,
+	}
+}
 
 const (
 	// EventTypeThing is a EventType enum value
@@ -47891,6 +54203,23 @@ const (
 	EventTypeCaCertificate = "CA_CERTIFICATE"
 )
 
+// EventType_Values returns all elements of the EventType enum
+func EventType_Values() []string {
+	return []string{
+		EventTypeThing,
+		EventTypeThingGroup,
+		EventTypeThingType,
+		EventTypeThingGroupMembership,
+		EventTypeThingGroupHierarchy,
+		EventTypeThingTypeAssociation,
+		EventTypeJob,
+		EventTypeJobExecution,
+		EventTypePolicy,
+		EventTypeCertificate,
+		EventTypeCaCertificate,
+	}
+}
+
 const (
 	// FieldTypeNumber is a FieldType enum value
 	FieldTypeNumber = "Number"
@@ -47902,6 +54231,15 @@ const (
 	FieldTypeBoolean = "Boolean"
 )
 
+// FieldType_Values returns all elements of the FieldType enum
+func FieldType_Values() []string {
+	return []string{
+		FieldTypeNumber,
+		FieldTypeString,
+		FieldTypeBoolean,
+	}
+}
+
 const (
 	// IndexStatusActive is a IndexStatus enum value
 	IndexStatusActive = "ACTIVE"
@@ -47912,6 +54250,15 @@ const (
 	// IndexStatusRebuilding is a IndexStatus enum value
 	IndexStatusRebuilding = "REBUILDING"
 )
+
+// IndexStatus_Values returns all elements of the IndexStatus enum
+func IndexStatus_Values() []string {
+	return []string{
+		IndexStatusActive,
+		IndexStatusBuilding,
+		IndexStatusRebuilding,
+	}
+}
 
 const (
 	// JobExecutionFailureTypeFailed is a JobExecutionFailureType enum value
@@ -47926,6 +54273,16 @@ const (
 	// JobExecutionFailureTypeAll is a JobExecutionFailureType enum value
 	JobExecutionFailureTypeAll = "ALL"
 )
+
+// JobExecutionFailureType_Values returns all elements of the JobExecutionFailureType enum
+func JobExecutionFailureType_Values() []string {
+	return []string{
+		JobExecutionFailureTypeFailed,
+		JobExecutionFailureTypeRejected,
+		JobExecutionFailureTypeTimedOut,
+		JobExecutionFailureTypeAll,
+	}
+}
 
 const (
 	// JobExecutionStatusQueued is a JobExecutionStatus enum value
@@ -47953,6 +54310,20 @@ const (
 	JobExecutionStatusCanceled = "CANCELED"
 )
 
+// JobExecutionStatus_Values returns all elements of the JobExecutionStatus enum
+func JobExecutionStatus_Values() []string {
+	return []string{
+		JobExecutionStatusQueued,
+		JobExecutionStatusInProgress,
+		JobExecutionStatusSucceeded,
+		JobExecutionStatusFailed,
+		JobExecutionStatusTimedOut,
+		JobExecutionStatusRejected,
+		JobExecutionStatusRemoved,
+		JobExecutionStatusCanceled,
+	}
+}
+
 const (
 	// JobStatusInProgress is a JobStatus enum value
 	JobStatusInProgress = "IN_PROGRESS"
@@ -47966,6 +54337,16 @@ const (
 	// JobStatusDeletionInProgress is a JobStatus enum value
 	JobStatusDeletionInProgress = "DELETION_IN_PROGRESS"
 )
+
+// JobStatus_Values returns all elements of the JobStatus enum
+func JobStatus_Values() []string {
+	return []string{
+		JobStatusInProgress,
+		JobStatusCanceled,
+		JobStatusCompleted,
+		JobStatusDeletionInProgress,
+	}
+}
 
 const (
 	// LogLevelDebug is a LogLevel enum value
@@ -47984,6 +54365,17 @@ const (
 	LogLevelDisabled = "DISABLED"
 )
 
+// LogLevel_Values returns all elements of the LogLevel enum
+func LogLevel_Values() []string {
+	return []string{
+		LogLevelDebug,
+		LogLevelInfo,
+		LogLevelError,
+		LogLevelWarn,
+		LogLevelDisabled,
+	}
+}
+
 const (
 	// LogTargetTypeDefault is a LogTargetType enum value
 	LogTargetTypeDefault = "DEFAULT"
@@ -47992,6 +54384,14 @@ const (
 	LogTargetTypeThingGroup = "THING_GROUP"
 )
 
+// LogTargetType_Values returns all elements of the LogTargetType enum
+func LogTargetType_Values() []string {
+	return []string{
+		LogTargetTypeDefault,
+		LogTargetTypeThingGroup,
+	}
+}
+
 const (
 	// MessageFormatRaw is a MessageFormat enum value
 	MessageFormatRaw = "RAW"
@@ -47999,6 +54399,14 @@ const (
 	// MessageFormatJson is a MessageFormat enum value
 	MessageFormatJson = "JSON"
 )
+
+// MessageFormat_Values returns all elements of the MessageFormat enum
+func MessageFormat_Values() []string {
+	return []string{
+		MessageFormatRaw,
+		MessageFormatJson,
+	}
+}
 
 const (
 	// MitigationActionTypeUpdateDeviceCertificate is a MitigationActionType enum value
@@ -48020,6 +54428,18 @@ const (
 	MitigationActionTypePublishFindingToSns = "PUBLISH_FINDING_TO_SNS"
 )
 
+// MitigationActionType_Values returns all elements of the MitigationActionType enum
+func MitigationActionType_Values() []string {
+	return []string{
+		MitigationActionTypeUpdateDeviceCertificate,
+		MitigationActionTypeUpdateCaCertificate,
+		MitigationActionTypeAddThingsToThingGroup,
+		MitigationActionTypeReplaceDefaultPolicyVersion,
+		MitigationActionTypeEnableIotLogging,
+		MitigationActionTypePublishFindingToSns,
+	}
+}
+
 const (
 	// OTAUpdateStatusCreatePending is a OTAUpdateStatus enum value
 	OTAUpdateStatusCreatePending = "CREATE_PENDING"
@@ -48034,10 +54454,27 @@ const (
 	OTAUpdateStatusCreateFailed = "CREATE_FAILED"
 )
 
+// OTAUpdateStatus_Values returns all elements of the OTAUpdateStatus enum
+func OTAUpdateStatus_Values() []string {
+	return []string{
+		OTAUpdateStatusCreatePending,
+		OTAUpdateStatusCreateInProgress,
+		OTAUpdateStatusCreateComplete,
+		OTAUpdateStatusCreateFailed,
+	}
+}
+
 const (
 	// PolicyTemplateNameBlankPolicy is a PolicyTemplateName enum value
 	PolicyTemplateNameBlankPolicy = "BLANK_POLICY"
 )
+
+// PolicyTemplateName_Values returns all elements of the PolicyTemplateName enum
+func PolicyTemplateName_Values() []string {
+	return []string{
+		PolicyTemplateNameBlankPolicy,
+	}
+}
 
 const (
 	// ProtocolMqtt is a Protocol enum value
@@ -48047,6 +54484,14 @@ const (
 	ProtocolHttp = "HTTP"
 )
 
+// Protocol_Values returns all elements of the Protocol enum
+func Protocol_Values() []string {
+	return []string{
+		ProtocolMqtt,
+		ProtocolHttp,
+	}
+}
+
 const (
 	// ReportTypeErrors is a ReportType enum value
 	ReportTypeErrors = "ERRORS"
@@ -48054,6 +54499,14 @@ const (
 	// ReportTypeResults is a ReportType enum value
 	ReportTypeResults = "RESULTS"
 )
+
+// ReportType_Values returns all elements of the ReportType enum
+func ReportType_Values() []string {
+	return []string{
+		ReportTypeErrors,
+		ReportTypeResults,
+	}
+}
 
 const (
 	// ResourceTypeDeviceCertificate is a ResourceType enum value
@@ -48081,6 +54534,20 @@ const (
 	ResourceTypeIamRole = "IAM_ROLE"
 )
 
+// ResourceType_Values returns all elements of the ResourceType enum
+func ResourceType_Values() []string {
+	return []string{
+		ResourceTypeDeviceCertificate,
+		ResourceTypeCaCertificate,
+		ResourceTypeIotPolicy,
+		ResourceTypeCognitoIdentityPool,
+		ResourceTypeClientId,
+		ResourceTypeAccountSettings,
+		ResourceTypeRoleAlias,
+		ResourceTypeIamRole,
+	}
+}
+
 const (
 	// ServerCertificateStatusInvalid is a ServerCertificateStatus enum value
 	ServerCertificateStatusInvalid = "INVALID"
@@ -48088,6 +54555,14 @@ const (
 	// ServerCertificateStatusValid is a ServerCertificateStatus enum value
 	ServerCertificateStatusValid = "VALID"
 )
+
+// ServerCertificateStatus_Values returns all elements of the ServerCertificateStatus enum
+func ServerCertificateStatus_Values() []string {
+	return []string{
+		ServerCertificateStatusInvalid,
+		ServerCertificateStatusValid,
+	}
+}
 
 const (
 	// ServiceTypeData is a ServiceType enum value
@@ -48099,6 +54574,15 @@ const (
 	// ServiceTypeJobs is a ServiceType enum value
 	ServiceTypeJobs = "JOBS"
 )
+
+// ServiceType_Values returns all elements of the ServiceType enum
+func ServiceType_Values() []string {
+	return []string{
+		ServiceTypeData,
+		ServiceTypeCredentialProvider,
+		ServiceTypeJobs,
+	}
+}
 
 const (
 	// StatusInProgress is a Status enum value
@@ -48117,6 +54601,17 @@ const (
 	StatusCancelling = "Cancelling"
 )
 
+// Status_Values returns all elements of the Status enum
+func Status_Values() []string {
+	return []string{
+		StatusInProgress,
+		StatusCompleted,
+		StatusFailed,
+		StatusCancelled,
+		StatusCancelling,
+	}
+}
+
 const (
 	// TargetSelectionContinuous is a TargetSelection enum value
 	TargetSelectionContinuous = "CONTINUOUS"
@@ -48124,6 +54619,14 @@ const (
 	// TargetSelectionSnapshot is a TargetSelection enum value
 	TargetSelectionSnapshot = "SNAPSHOT"
 )
+
+// TargetSelection_Values returns all elements of the TargetSelection enum
+func TargetSelection_Values() []string {
+	return []string{
+		TargetSelectionContinuous,
+		TargetSelectionSnapshot,
+	}
+}
 
 const (
 	// ThingConnectivityIndexingModeOff is a ThingConnectivityIndexingMode enum value
@@ -48133,6 +54636,14 @@ const (
 	ThingConnectivityIndexingModeStatus = "STATUS"
 )
 
+// ThingConnectivityIndexingMode_Values returns all elements of the ThingConnectivityIndexingMode enum
+func ThingConnectivityIndexingMode_Values() []string {
+	return []string{
+		ThingConnectivityIndexingModeOff,
+		ThingConnectivityIndexingModeStatus,
+	}
+}
+
 const (
 	// ThingGroupIndexingModeOff is a ThingGroupIndexingMode enum value
 	ThingGroupIndexingModeOff = "OFF"
@@ -48140,6 +54651,14 @@ const (
 	// ThingGroupIndexingModeOn is a ThingGroupIndexingMode enum value
 	ThingGroupIndexingModeOn = "ON"
 )
+
+// ThingGroupIndexingMode_Values returns all elements of the ThingGroupIndexingMode enum
+func ThingGroupIndexingMode_Values() []string {
+	return []string{
+		ThingGroupIndexingModeOff,
+		ThingGroupIndexingModeOn,
+	}
+}
 
 const (
 	// ThingIndexingModeOff is a ThingIndexingMode enum value
@@ -48151,6 +54670,15 @@ const (
 	// ThingIndexingModeRegistryAndShadow is a ThingIndexingMode enum value
 	ThingIndexingModeRegistryAndShadow = "REGISTRY_AND_SHADOW"
 )
+
+// ThingIndexingMode_Values returns all elements of the ThingIndexingMode enum
+func ThingIndexingMode_Values() []string {
+	return []string{
+		ThingIndexingModeOff,
+		ThingIndexingModeRegistry,
+		ThingIndexingModeRegistryAndShadow,
+	}
+}
 
 const (
 	// TopicRuleDestinationStatusEnabled is a TopicRuleDestinationStatus enum value
@@ -48166,6 +54694,16 @@ const (
 	TopicRuleDestinationStatusError = "ERROR"
 )
 
+// TopicRuleDestinationStatus_Values returns all elements of the TopicRuleDestinationStatus enum
+func TopicRuleDestinationStatus_Values() []string {
+	return []string{
+		TopicRuleDestinationStatusEnabled,
+		TopicRuleDestinationStatusInProgress,
+		TopicRuleDestinationStatusDisabled,
+		TopicRuleDestinationStatusError,
+	}
+}
+
 const (
 	// ViolationEventTypeInAlarm is a ViolationEventType enum value
 	ViolationEventTypeInAlarm = "in-alarm"
@@ -48176,3 +54714,12 @@ const (
 	// ViolationEventTypeAlarmInvalidated is a ViolationEventType enum value
 	ViolationEventTypeAlarmInvalidated = "alarm-invalidated"
 )
+
+// ViolationEventType_Values returns all elements of the ViolationEventType enum
+func ViolationEventType_Values() []string {
+	return []string{
+		ViolationEventTypeInAlarm,
+		ViolationEventTypeAlarmCleared,
+		ViolationEventTypeAlarmInvalidated,
+	}
+}

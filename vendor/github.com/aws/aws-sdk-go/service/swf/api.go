@@ -7143,8 +7143,8 @@ func (s *DecisionTaskTimedOutEventAttributes) SetTimeoutType(v string) *Decision
 // If these parameters aren't set and no default parameters were defined in
 // the workflow type, this error is displayed.
 type DefaultUndefinedFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -7161,17 +7161,17 @@ func (s DefaultUndefinedFault) GoString() string {
 
 func newErrorDefaultUndefinedFault(v protocol.ResponseMetadata) error {
 	return &DefaultUndefinedFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s DefaultUndefinedFault) Code() string {
+func (s *DefaultUndefinedFault) Code() string {
 	return "DefaultUndefinedFault"
 }
 
 // Message returns the exception's message.
-func (s DefaultUndefinedFault) Message() string {
+func (s *DefaultUndefinedFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7179,22 +7179,22 @@ func (s DefaultUndefinedFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s DefaultUndefinedFault) OrigErr() error {
+func (s *DefaultUndefinedFault) OrigErr() error {
 	return nil
 }
 
-func (s DefaultUndefinedFault) Error() string {
+func (s *DefaultUndefinedFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s DefaultUndefinedFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *DefaultUndefinedFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s DefaultUndefinedFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *DefaultUndefinedFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type DeprecateActivityTypeInput struct {
@@ -7830,8 +7830,8 @@ func (s *DescribeWorkflowTypeOutput) SetTypeInfo(v *WorkflowTypeInfo) *DescribeW
 // registering a domain that is either already registered or deprecated, or
 // if you undeprecate a domain that is currently registered.
 type DomainAlreadyExistsFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A description that may help with diagnosing the cause of the fault.
 	Message_ *string `locationName:"message" type:"string"`
@@ -7849,17 +7849,17 @@ func (s DomainAlreadyExistsFault) GoString() string {
 
 func newErrorDomainAlreadyExistsFault(v protocol.ResponseMetadata) error {
 	return &DomainAlreadyExistsFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s DomainAlreadyExistsFault) Code() string {
+func (s *DomainAlreadyExistsFault) Code() string {
 	return "DomainAlreadyExistsFault"
 }
 
 // Message returns the exception's message.
-func (s DomainAlreadyExistsFault) Message() string {
+func (s *DomainAlreadyExistsFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7867,22 +7867,22 @@ func (s DomainAlreadyExistsFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s DomainAlreadyExistsFault) OrigErr() error {
+func (s *DomainAlreadyExistsFault) OrigErr() error {
 	return nil
 }
 
-func (s DomainAlreadyExistsFault) Error() string {
+func (s *DomainAlreadyExistsFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s DomainAlreadyExistsFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *DomainAlreadyExistsFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s DomainAlreadyExistsFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *DomainAlreadyExistsFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Contains the configuration settings of a domain.
@@ -7913,8 +7913,8 @@ func (s *DomainConfiguration) SetWorkflowExecutionRetentionPeriodInDays(v string
 
 // Returned when the specified domain has been deprecated.
 type DomainDeprecatedFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A description that may help with diagnosing the cause of the fault.
 	Message_ *string `locationName:"message" type:"string"`
@@ -7932,17 +7932,17 @@ func (s DomainDeprecatedFault) GoString() string {
 
 func newErrorDomainDeprecatedFault(v protocol.ResponseMetadata) error {
 	return &DomainDeprecatedFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s DomainDeprecatedFault) Code() string {
+func (s *DomainDeprecatedFault) Code() string {
 	return "DomainDeprecatedFault"
 }
 
 // Message returns the exception's message.
-func (s DomainDeprecatedFault) Message() string {
+func (s *DomainDeprecatedFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7950,22 +7950,22 @@ func (s DomainDeprecatedFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s DomainDeprecatedFault) OrigErr() error {
+func (s *DomainDeprecatedFault) OrigErr() error {
 	return nil
 }
 
-func (s DomainDeprecatedFault) Error() string {
+func (s *DomainDeprecatedFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s DomainDeprecatedFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *DomainDeprecatedFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s DomainDeprecatedFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *DomainDeprecatedFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Contains general information about a domain.
@@ -9438,8 +9438,8 @@ func (s *LambdaFunctionTimedOutEventAttributes) SetTimeoutType(v string) *Lambda
 // To address this fault you should either clean up unused resources or increase
 // the limit by contacting AWS.
 type LimitExceededFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A description that may help with diagnosing the cause of the fault.
 	Message_ *string `locationName:"message" type:"string"`
@@ -9457,17 +9457,17 @@ func (s LimitExceededFault) GoString() string {
 
 func newErrorLimitExceededFault(v protocol.ResponseMetadata) error {
 	return &LimitExceededFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LimitExceededFault) Code() string {
+func (s *LimitExceededFault) Code() string {
 	return "LimitExceededFault"
 }
 
 // Message returns the exception's message.
-func (s LimitExceededFault) Message() string {
+func (s *LimitExceededFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9475,22 +9475,22 @@ func (s LimitExceededFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LimitExceededFault) OrigErr() error {
+func (s *LimitExceededFault) OrigErr() error {
 	return nil
 }
 
-func (s LimitExceededFault) Error() string {
+func (s *LimitExceededFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LimitExceededFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LimitExceededFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LimitExceededFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LimitExceededFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type ListActivityTypesInput struct {
@@ -10352,8 +10352,8 @@ func (s *MarkerRecordedEventAttributes) SetMarkerName(v string) *MarkerRecordedE
 // Returned when the caller doesn't have sufficient permissions to invoke the
 // action.
 type OperationNotPermittedFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A description that may help with diagnosing the cause of the fault.
 	Message_ *string `locationName:"message" type:"string"`
@@ -10371,17 +10371,17 @@ func (s OperationNotPermittedFault) GoString() string {
 
 func newErrorOperationNotPermittedFault(v protocol.ResponseMetadata) error {
 	return &OperationNotPermittedFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s OperationNotPermittedFault) Code() string {
+func (s *OperationNotPermittedFault) Code() string {
 	return "OperationNotPermittedFault"
 }
 
 // Message returns the exception's message.
-func (s OperationNotPermittedFault) Message() string {
+func (s *OperationNotPermittedFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -10389,22 +10389,22 @@ func (s OperationNotPermittedFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s OperationNotPermittedFault) OrigErr() error {
+func (s *OperationNotPermittedFault) OrigErr() error {
 	return nil
 }
 
-func (s OperationNotPermittedFault) Error() string {
+func (s *OperationNotPermittedFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s OperationNotPermittedFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *OperationNotPermittedFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s OperationNotPermittedFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *OperationNotPermittedFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Contains the count of tasks in a task list.
@@ -14603,8 +14603,8 @@ func (s *TimerStartedEventAttributes) SetTimerId(v string) *TimerStartedEventAtt
 
 // You've exceeded the number of tags allowed for a domain.
 type TooManyTagsFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -14621,17 +14621,17 @@ func (s TooManyTagsFault) GoString() string {
 
 func newErrorTooManyTagsFault(v protocol.ResponseMetadata) error {
 	return &TooManyTagsFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TooManyTagsFault) Code() string {
+func (s *TooManyTagsFault) Code() string {
 	return "TooManyTagsFault"
 }
 
 // Message returns the exception's message.
-func (s TooManyTagsFault) Message() string {
+func (s *TooManyTagsFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -14639,30 +14639,30 @@ func (s TooManyTagsFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TooManyTagsFault) OrigErr() error {
+func (s *TooManyTagsFault) OrigErr() error {
 	return nil
 }
 
-func (s TooManyTagsFault) Error() string {
+func (s *TooManyTagsFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TooManyTagsFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TooManyTagsFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TooManyTagsFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TooManyTagsFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Returned if the type already exists in the specified domain. You may get
 // this fault if you are registering a type that is either already registered
 // or deprecated, or if you undeprecate a type that is currently registered.
 type TypeAlreadyExistsFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A description that may help with diagnosing the cause of the fault.
 	Message_ *string `locationName:"message" type:"string"`
@@ -14680,17 +14680,17 @@ func (s TypeAlreadyExistsFault) GoString() string {
 
 func newErrorTypeAlreadyExistsFault(v protocol.ResponseMetadata) error {
 	return &TypeAlreadyExistsFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TypeAlreadyExistsFault) Code() string {
+func (s *TypeAlreadyExistsFault) Code() string {
 	return "TypeAlreadyExistsFault"
 }
 
 // Message returns the exception's message.
-func (s TypeAlreadyExistsFault) Message() string {
+func (s *TypeAlreadyExistsFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -14698,28 +14698,28 @@ func (s TypeAlreadyExistsFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TypeAlreadyExistsFault) OrigErr() error {
+func (s *TypeAlreadyExistsFault) OrigErr() error {
 	return nil
 }
 
-func (s TypeAlreadyExistsFault) Error() string {
+func (s *TypeAlreadyExistsFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TypeAlreadyExistsFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TypeAlreadyExistsFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TypeAlreadyExistsFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TypeAlreadyExistsFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Returned when the specified activity or workflow type was already deprecated.
 type TypeDeprecatedFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A description that may help with diagnosing the cause of the fault.
 	Message_ *string `locationName:"message" type:"string"`
@@ -14737,17 +14737,17 @@ func (s TypeDeprecatedFault) GoString() string {
 
 func newErrorTypeDeprecatedFault(v protocol.ResponseMetadata) error {
 	return &TypeDeprecatedFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TypeDeprecatedFault) Code() string {
+func (s *TypeDeprecatedFault) Code() string {
 	return "TypeDeprecatedFault"
 }
 
 // Message returns the exception's message.
-func (s TypeDeprecatedFault) Message() string {
+func (s *TypeDeprecatedFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -14755,22 +14755,22 @@ func (s TypeDeprecatedFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TypeDeprecatedFault) OrigErr() error {
+func (s *TypeDeprecatedFault) OrigErr() error {
 	return nil
 }
 
-func (s TypeDeprecatedFault) Error() string {
+func (s *TypeDeprecatedFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TypeDeprecatedFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TypeDeprecatedFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TypeDeprecatedFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TypeDeprecatedFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UndeprecateActivityTypeInput struct {
@@ -14980,8 +14980,8 @@ func (s UndeprecateWorkflowTypeOutput) GoString() string {
 // operation (region or domain). This could happen if the named resource was
 // never created or is no longer available for this operation.
 type UnknownResourceFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A description that may help with diagnosing the cause of the fault.
 	Message_ *string `locationName:"message" type:"string"`
@@ -14999,17 +14999,17 @@ func (s UnknownResourceFault) GoString() string {
 
 func newErrorUnknownResourceFault(v protocol.ResponseMetadata) error {
 	return &UnknownResourceFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnknownResourceFault) Code() string {
+func (s *UnknownResourceFault) Code() string {
 	return "UnknownResourceFault"
 }
 
 // Message returns the exception's message.
-func (s UnknownResourceFault) Message() string {
+func (s *UnknownResourceFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -15017,22 +15017,22 @@ func (s UnknownResourceFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnknownResourceFault) OrigErr() error {
+func (s *UnknownResourceFault) OrigErr() error {
 	return nil
 }
 
-func (s UnknownResourceFault) Error() string {
+func (s *UnknownResourceFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnknownResourceFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnknownResourceFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnknownResourceFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnknownResourceFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -15166,8 +15166,8 @@ func (s *WorkflowExecution) SetWorkflowId(v string) *WorkflowExecution {
 // Returned by StartWorkflowExecution when an open execution with the same workflowId
 // is already running in the specified domain.
 type WorkflowExecutionAlreadyStartedFault struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A description that may help with diagnosing the cause of the fault.
 	Message_ *string `locationName:"message" type:"string"`
@@ -15185,17 +15185,17 @@ func (s WorkflowExecutionAlreadyStartedFault) GoString() string {
 
 func newErrorWorkflowExecutionAlreadyStartedFault(v protocol.ResponseMetadata) error {
 	return &WorkflowExecutionAlreadyStartedFault{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s WorkflowExecutionAlreadyStartedFault) Code() string {
+func (s *WorkflowExecutionAlreadyStartedFault) Code() string {
 	return "WorkflowExecutionAlreadyStartedFault"
 }
 
 // Message returns the exception's message.
-func (s WorkflowExecutionAlreadyStartedFault) Message() string {
+func (s *WorkflowExecutionAlreadyStartedFault) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -15203,22 +15203,22 @@ func (s WorkflowExecutionAlreadyStartedFault) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s WorkflowExecutionAlreadyStartedFault) OrigErr() error {
+func (s *WorkflowExecutionAlreadyStartedFault) OrigErr() error {
 	return nil
 }
 
-func (s WorkflowExecutionAlreadyStartedFault) Error() string {
+func (s *WorkflowExecutionAlreadyStartedFault) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s WorkflowExecutionAlreadyStartedFault) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *WorkflowExecutionAlreadyStartedFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s WorkflowExecutionAlreadyStartedFault) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *WorkflowExecutionAlreadyStartedFault) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Provides the details of the WorkflowExecutionCancelRequested event.
@@ -16607,6 +16607,16 @@ const (
 	ActivityTaskTimeoutTypeHeartbeat = "HEARTBEAT"
 )
 
+// ActivityTaskTimeoutType_Values returns all elements of the ActivityTaskTimeoutType enum
+func ActivityTaskTimeoutType_Values() []string {
+	return []string{
+		ActivityTaskTimeoutTypeStartToClose,
+		ActivityTaskTimeoutTypeScheduleToStart,
+		ActivityTaskTimeoutTypeScheduleToClose,
+		ActivityTaskTimeoutTypeHeartbeat,
+	}
+}
+
 const (
 	// CancelTimerFailedCauseTimerIdUnknown is a CancelTimerFailedCause enum value
 	CancelTimerFailedCauseTimerIdUnknown = "TIMER_ID_UNKNOWN"
@@ -16615,6 +16625,14 @@ const (
 	CancelTimerFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
 
+// CancelTimerFailedCause_Values returns all elements of the CancelTimerFailedCause enum
+func CancelTimerFailedCause_Values() []string {
+	return []string{
+		CancelTimerFailedCauseTimerIdUnknown,
+		CancelTimerFailedCauseOperationNotPermitted,
+	}
+}
+
 const (
 	// CancelWorkflowExecutionFailedCauseUnhandledDecision is a CancelWorkflowExecutionFailedCause enum value
 	CancelWorkflowExecutionFailedCauseUnhandledDecision = "UNHANDLED_DECISION"
@@ -16622,6 +16640,14 @@ const (
 	// CancelWorkflowExecutionFailedCauseOperationNotPermitted is a CancelWorkflowExecutionFailedCause enum value
 	CancelWorkflowExecutionFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
+
+// CancelWorkflowExecutionFailedCause_Values returns all elements of the CancelWorkflowExecutionFailedCause enum
+func CancelWorkflowExecutionFailedCause_Values() []string {
+	return []string{
+		CancelWorkflowExecutionFailedCauseUnhandledDecision,
+		CancelWorkflowExecutionFailedCauseOperationNotPermitted,
+	}
+}
 
 const (
 	// ChildPolicyTerminate is a ChildPolicy enum value
@@ -16633,6 +16659,15 @@ const (
 	// ChildPolicyAbandon is a ChildPolicy enum value
 	ChildPolicyAbandon = "ABANDON"
 )
+
+// ChildPolicy_Values returns all elements of the ChildPolicy enum
+func ChildPolicy_Values() []string {
+	return []string{
+		ChildPolicyTerminate,
+		ChildPolicyRequestCancel,
+		ChildPolicyAbandon,
+	}
+}
 
 const (
 	// CloseStatusCompleted is a CloseStatus enum value
@@ -16654,6 +16689,18 @@ const (
 	CloseStatusTimedOut = "TIMED_OUT"
 )
 
+// CloseStatus_Values returns all elements of the CloseStatus enum
+func CloseStatus_Values() []string {
+	return []string{
+		CloseStatusCompleted,
+		CloseStatusFailed,
+		CloseStatusCanceled,
+		CloseStatusTerminated,
+		CloseStatusContinuedAsNew,
+		CloseStatusTimedOut,
+	}
+}
+
 const (
 	// CompleteWorkflowExecutionFailedCauseUnhandledDecision is a CompleteWorkflowExecutionFailedCause enum value
 	CompleteWorkflowExecutionFailedCauseUnhandledDecision = "UNHANDLED_DECISION"
@@ -16661,6 +16708,14 @@ const (
 	// CompleteWorkflowExecutionFailedCauseOperationNotPermitted is a CompleteWorkflowExecutionFailedCause enum value
 	CompleteWorkflowExecutionFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
+
+// CompleteWorkflowExecutionFailedCause_Values returns all elements of the CompleteWorkflowExecutionFailedCause enum
+func CompleteWorkflowExecutionFailedCause_Values() []string {
+	return []string{
+		CompleteWorkflowExecutionFailedCauseUnhandledDecision,
+		CompleteWorkflowExecutionFailedCauseOperationNotPermitted,
+	}
+}
 
 const (
 	// ContinueAsNewWorkflowExecutionFailedCauseUnhandledDecision is a ContinueAsNewWorkflowExecutionFailedCause enum value
@@ -16691,10 +16746,32 @@ const (
 	ContinueAsNewWorkflowExecutionFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
 
+// ContinueAsNewWorkflowExecutionFailedCause_Values returns all elements of the ContinueAsNewWorkflowExecutionFailedCause enum
+func ContinueAsNewWorkflowExecutionFailedCause_Values() []string {
+	return []string{
+		ContinueAsNewWorkflowExecutionFailedCauseUnhandledDecision,
+		ContinueAsNewWorkflowExecutionFailedCauseWorkflowTypeDeprecated,
+		ContinueAsNewWorkflowExecutionFailedCauseWorkflowTypeDoesNotExist,
+		ContinueAsNewWorkflowExecutionFailedCauseDefaultExecutionStartToCloseTimeoutUndefined,
+		ContinueAsNewWorkflowExecutionFailedCauseDefaultTaskStartToCloseTimeoutUndefined,
+		ContinueAsNewWorkflowExecutionFailedCauseDefaultTaskListUndefined,
+		ContinueAsNewWorkflowExecutionFailedCauseDefaultChildPolicyUndefined,
+		ContinueAsNewWorkflowExecutionFailedCauseContinueAsNewWorkflowExecutionRateExceeded,
+		ContinueAsNewWorkflowExecutionFailedCauseOperationNotPermitted,
+	}
+}
+
 const (
 	// DecisionTaskTimeoutTypeStartToClose is a DecisionTaskTimeoutType enum value
 	DecisionTaskTimeoutTypeStartToClose = "START_TO_CLOSE"
 )
+
+// DecisionTaskTimeoutType_Values returns all elements of the DecisionTaskTimeoutType enum
+func DecisionTaskTimeoutType_Values() []string {
+	return []string{
+		DecisionTaskTimeoutTypeStartToClose,
+	}
+}
 
 const (
 	// DecisionTypeScheduleActivityTask is a DecisionType enum value
@@ -16736,6 +16813,25 @@ const (
 	// DecisionTypeScheduleLambdaFunction is a DecisionType enum value
 	DecisionTypeScheduleLambdaFunction = "ScheduleLambdaFunction"
 )
+
+// DecisionType_Values returns all elements of the DecisionType enum
+func DecisionType_Values() []string {
+	return []string{
+		DecisionTypeScheduleActivityTask,
+		DecisionTypeRequestCancelActivityTask,
+		DecisionTypeCompleteWorkflowExecution,
+		DecisionTypeFailWorkflowExecution,
+		DecisionTypeCancelWorkflowExecution,
+		DecisionTypeContinueAsNewWorkflowExecution,
+		DecisionTypeRecordMarker,
+		DecisionTypeStartTimer,
+		DecisionTypeCancelTimer,
+		DecisionTypeSignalExternalWorkflowExecution,
+		DecisionTypeRequestCancelExternalWorkflowExecution,
+		DecisionTypeStartChildWorkflowExecution,
+		DecisionTypeScheduleLambdaFunction,
+	}
+}
 
 const (
 	// EventTypeWorkflowExecutionStarted is a EventType enum value
@@ -16901,6 +16997,66 @@ const (
 	EventTypeStartLambdaFunctionFailed = "StartLambdaFunctionFailed"
 )
 
+// EventType_Values returns all elements of the EventType enum
+func EventType_Values() []string {
+	return []string{
+		EventTypeWorkflowExecutionStarted,
+		EventTypeWorkflowExecutionCancelRequested,
+		EventTypeWorkflowExecutionCompleted,
+		EventTypeCompleteWorkflowExecutionFailed,
+		EventTypeWorkflowExecutionFailed,
+		EventTypeFailWorkflowExecutionFailed,
+		EventTypeWorkflowExecutionTimedOut,
+		EventTypeWorkflowExecutionCanceled,
+		EventTypeCancelWorkflowExecutionFailed,
+		EventTypeWorkflowExecutionContinuedAsNew,
+		EventTypeContinueAsNewWorkflowExecutionFailed,
+		EventTypeWorkflowExecutionTerminated,
+		EventTypeDecisionTaskScheduled,
+		EventTypeDecisionTaskStarted,
+		EventTypeDecisionTaskCompleted,
+		EventTypeDecisionTaskTimedOut,
+		EventTypeActivityTaskScheduled,
+		EventTypeScheduleActivityTaskFailed,
+		EventTypeActivityTaskStarted,
+		EventTypeActivityTaskCompleted,
+		EventTypeActivityTaskFailed,
+		EventTypeActivityTaskTimedOut,
+		EventTypeActivityTaskCanceled,
+		EventTypeActivityTaskCancelRequested,
+		EventTypeRequestCancelActivityTaskFailed,
+		EventTypeWorkflowExecutionSignaled,
+		EventTypeMarkerRecorded,
+		EventTypeRecordMarkerFailed,
+		EventTypeTimerStarted,
+		EventTypeStartTimerFailed,
+		EventTypeTimerFired,
+		EventTypeTimerCanceled,
+		EventTypeCancelTimerFailed,
+		EventTypeStartChildWorkflowExecutionInitiated,
+		EventTypeStartChildWorkflowExecutionFailed,
+		EventTypeChildWorkflowExecutionStarted,
+		EventTypeChildWorkflowExecutionCompleted,
+		EventTypeChildWorkflowExecutionFailed,
+		EventTypeChildWorkflowExecutionTimedOut,
+		EventTypeChildWorkflowExecutionCanceled,
+		EventTypeChildWorkflowExecutionTerminated,
+		EventTypeSignalExternalWorkflowExecutionInitiated,
+		EventTypeSignalExternalWorkflowExecutionFailed,
+		EventTypeExternalWorkflowExecutionSignaled,
+		EventTypeRequestCancelExternalWorkflowExecutionInitiated,
+		EventTypeRequestCancelExternalWorkflowExecutionFailed,
+		EventTypeExternalWorkflowExecutionCancelRequested,
+		EventTypeLambdaFunctionScheduled,
+		EventTypeLambdaFunctionStarted,
+		EventTypeLambdaFunctionCompleted,
+		EventTypeLambdaFunctionFailed,
+		EventTypeLambdaFunctionTimedOut,
+		EventTypeScheduleLambdaFunctionFailed,
+		EventTypeStartLambdaFunctionFailed,
+	}
+}
+
 const (
 	// ExecutionStatusOpen is a ExecutionStatus enum value
 	ExecutionStatusOpen = "OPEN"
@@ -16908,6 +17064,14 @@ const (
 	// ExecutionStatusClosed is a ExecutionStatus enum value
 	ExecutionStatusClosed = "CLOSED"
 )
+
+// ExecutionStatus_Values returns all elements of the ExecutionStatus enum
+func ExecutionStatus_Values() []string {
+	return []string{
+		ExecutionStatusOpen,
+		ExecutionStatusClosed,
+	}
+}
 
 const (
 	// FailWorkflowExecutionFailedCauseUnhandledDecision is a FailWorkflowExecutionFailedCause enum value
@@ -16917,15 +17081,37 @@ const (
 	FailWorkflowExecutionFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
 
+// FailWorkflowExecutionFailedCause_Values returns all elements of the FailWorkflowExecutionFailedCause enum
+func FailWorkflowExecutionFailedCause_Values() []string {
+	return []string{
+		FailWorkflowExecutionFailedCauseUnhandledDecision,
+		FailWorkflowExecutionFailedCauseOperationNotPermitted,
+	}
+}
+
 const (
 	// LambdaFunctionTimeoutTypeStartToClose is a LambdaFunctionTimeoutType enum value
 	LambdaFunctionTimeoutTypeStartToClose = "START_TO_CLOSE"
 )
 
+// LambdaFunctionTimeoutType_Values returns all elements of the LambdaFunctionTimeoutType enum
+func LambdaFunctionTimeoutType_Values() []string {
+	return []string{
+		LambdaFunctionTimeoutTypeStartToClose,
+	}
+}
+
 const (
 	// RecordMarkerFailedCauseOperationNotPermitted is a RecordMarkerFailedCause enum value
 	RecordMarkerFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
+
+// RecordMarkerFailedCause_Values returns all elements of the RecordMarkerFailedCause enum
+func RecordMarkerFailedCause_Values() []string {
+	return []string{
+		RecordMarkerFailedCauseOperationNotPermitted,
+	}
+}
 
 const (
 	// RegistrationStatusRegistered is a RegistrationStatus enum value
@@ -16935,6 +17121,14 @@ const (
 	RegistrationStatusDeprecated = "DEPRECATED"
 )
 
+// RegistrationStatus_Values returns all elements of the RegistrationStatus enum
+func RegistrationStatus_Values() []string {
+	return []string{
+		RegistrationStatusRegistered,
+		RegistrationStatusDeprecated,
+	}
+}
+
 const (
 	// RequestCancelActivityTaskFailedCauseActivityIdUnknown is a RequestCancelActivityTaskFailedCause enum value
 	RequestCancelActivityTaskFailedCauseActivityIdUnknown = "ACTIVITY_ID_UNKNOWN"
@@ -16942,6 +17136,14 @@ const (
 	// RequestCancelActivityTaskFailedCauseOperationNotPermitted is a RequestCancelActivityTaskFailedCause enum value
 	RequestCancelActivityTaskFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
+
+// RequestCancelActivityTaskFailedCause_Values returns all elements of the RequestCancelActivityTaskFailedCause enum
+func RequestCancelActivityTaskFailedCause_Values() []string {
+	return []string{
+		RequestCancelActivityTaskFailedCauseActivityIdUnknown,
+		RequestCancelActivityTaskFailedCauseOperationNotPermitted,
+	}
+}
 
 const (
 	// RequestCancelExternalWorkflowExecutionFailedCauseUnknownExternalWorkflowExecution is a RequestCancelExternalWorkflowExecutionFailedCause enum value
@@ -16953,6 +17155,15 @@ const (
 	// RequestCancelExternalWorkflowExecutionFailedCauseOperationNotPermitted is a RequestCancelExternalWorkflowExecutionFailedCause enum value
 	RequestCancelExternalWorkflowExecutionFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
+
+// RequestCancelExternalWorkflowExecutionFailedCause_Values returns all elements of the RequestCancelExternalWorkflowExecutionFailedCause enum
+func RequestCancelExternalWorkflowExecutionFailedCause_Values() []string {
+	return []string{
+		RequestCancelExternalWorkflowExecutionFailedCauseUnknownExternalWorkflowExecution,
+		RequestCancelExternalWorkflowExecutionFailedCauseRequestCancelExternalWorkflowExecutionRateExceeded,
+		RequestCancelExternalWorkflowExecutionFailedCauseOperationNotPermitted,
+	}
+}
 
 const (
 	// ScheduleActivityTaskFailedCauseActivityTypeDeprecated is a ScheduleActivityTaskFailedCause enum value
@@ -16989,6 +17200,23 @@ const (
 	ScheduleActivityTaskFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
 
+// ScheduleActivityTaskFailedCause_Values returns all elements of the ScheduleActivityTaskFailedCause enum
+func ScheduleActivityTaskFailedCause_Values() []string {
+	return []string{
+		ScheduleActivityTaskFailedCauseActivityTypeDeprecated,
+		ScheduleActivityTaskFailedCauseActivityTypeDoesNotExist,
+		ScheduleActivityTaskFailedCauseActivityIdAlreadyInUse,
+		ScheduleActivityTaskFailedCauseOpenActivitiesLimitExceeded,
+		ScheduleActivityTaskFailedCauseActivityCreationRateExceeded,
+		ScheduleActivityTaskFailedCauseDefaultScheduleToCloseTimeoutUndefined,
+		ScheduleActivityTaskFailedCauseDefaultTaskListUndefined,
+		ScheduleActivityTaskFailedCauseDefaultScheduleToStartTimeoutUndefined,
+		ScheduleActivityTaskFailedCauseDefaultStartToCloseTimeoutUndefined,
+		ScheduleActivityTaskFailedCauseDefaultHeartbeatTimeoutUndefined,
+		ScheduleActivityTaskFailedCauseOperationNotPermitted,
+	}
+}
+
 const (
 	// ScheduleLambdaFunctionFailedCauseIdAlreadyInUse is a ScheduleLambdaFunctionFailedCause enum value
 	ScheduleLambdaFunctionFailedCauseIdAlreadyInUse = "ID_ALREADY_IN_USE"
@@ -17003,6 +17231,16 @@ const (
 	ScheduleLambdaFunctionFailedCauseLambdaServiceNotAvailableInRegion = "LAMBDA_SERVICE_NOT_AVAILABLE_IN_REGION"
 )
 
+// ScheduleLambdaFunctionFailedCause_Values returns all elements of the ScheduleLambdaFunctionFailedCause enum
+func ScheduleLambdaFunctionFailedCause_Values() []string {
+	return []string{
+		ScheduleLambdaFunctionFailedCauseIdAlreadyInUse,
+		ScheduleLambdaFunctionFailedCauseOpenLambdaFunctionsLimitExceeded,
+		ScheduleLambdaFunctionFailedCauseLambdaFunctionCreationRateExceeded,
+		ScheduleLambdaFunctionFailedCauseLambdaServiceNotAvailableInRegion,
+	}
+}
+
 const (
 	// SignalExternalWorkflowExecutionFailedCauseUnknownExternalWorkflowExecution is a SignalExternalWorkflowExecutionFailedCause enum value
 	SignalExternalWorkflowExecutionFailedCauseUnknownExternalWorkflowExecution = "UNKNOWN_EXTERNAL_WORKFLOW_EXECUTION"
@@ -17013,6 +17251,15 @@ const (
 	// SignalExternalWorkflowExecutionFailedCauseOperationNotPermitted is a SignalExternalWorkflowExecutionFailedCause enum value
 	SignalExternalWorkflowExecutionFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
+
+// SignalExternalWorkflowExecutionFailedCause_Values returns all elements of the SignalExternalWorkflowExecutionFailedCause enum
+func SignalExternalWorkflowExecutionFailedCause_Values() []string {
+	return []string{
+		SignalExternalWorkflowExecutionFailedCauseUnknownExternalWorkflowExecution,
+		SignalExternalWorkflowExecutionFailedCauseSignalExternalWorkflowExecutionRateExceeded,
+		SignalExternalWorkflowExecutionFailedCauseOperationNotPermitted,
+	}
+}
 
 const (
 	// StartChildWorkflowExecutionFailedCauseWorkflowTypeDoesNotExist is a StartChildWorkflowExecutionFailedCause enum value
@@ -17049,10 +17296,34 @@ const (
 	StartChildWorkflowExecutionFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
 
+// StartChildWorkflowExecutionFailedCause_Values returns all elements of the StartChildWorkflowExecutionFailedCause enum
+func StartChildWorkflowExecutionFailedCause_Values() []string {
+	return []string{
+		StartChildWorkflowExecutionFailedCauseWorkflowTypeDoesNotExist,
+		StartChildWorkflowExecutionFailedCauseWorkflowTypeDeprecated,
+		StartChildWorkflowExecutionFailedCauseOpenChildrenLimitExceeded,
+		StartChildWorkflowExecutionFailedCauseOpenWorkflowsLimitExceeded,
+		StartChildWorkflowExecutionFailedCauseChildCreationRateExceeded,
+		StartChildWorkflowExecutionFailedCauseWorkflowAlreadyRunning,
+		StartChildWorkflowExecutionFailedCauseDefaultExecutionStartToCloseTimeoutUndefined,
+		StartChildWorkflowExecutionFailedCauseDefaultTaskListUndefined,
+		StartChildWorkflowExecutionFailedCauseDefaultTaskStartToCloseTimeoutUndefined,
+		StartChildWorkflowExecutionFailedCauseDefaultChildPolicyUndefined,
+		StartChildWorkflowExecutionFailedCauseOperationNotPermitted,
+	}
+}
+
 const (
 	// StartLambdaFunctionFailedCauseAssumeRoleFailed is a StartLambdaFunctionFailedCause enum value
 	StartLambdaFunctionFailedCauseAssumeRoleFailed = "ASSUME_ROLE_FAILED"
 )
+
+// StartLambdaFunctionFailedCause_Values returns all elements of the StartLambdaFunctionFailedCause enum
+func StartLambdaFunctionFailedCause_Values() []string {
+	return []string{
+		StartLambdaFunctionFailedCauseAssumeRoleFailed,
+	}
+}
 
 const (
 	// StartTimerFailedCauseTimerIdAlreadyInUse is a StartTimerFailedCause enum value
@@ -17068,10 +17339,27 @@ const (
 	StartTimerFailedCauseOperationNotPermitted = "OPERATION_NOT_PERMITTED"
 )
 
+// StartTimerFailedCause_Values returns all elements of the StartTimerFailedCause enum
+func StartTimerFailedCause_Values() []string {
+	return []string{
+		StartTimerFailedCauseTimerIdAlreadyInUse,
+		StartTimerFailedCauseOpenTimersLimitExceeded,
+		StartTimerFailedCauseTimerCreationRateExceeded,
+		StartTimerFailedCauseOperationNotPermitted,
+	}
+}
+
 const (
 	// WorkflowExecutionCancelRequestedCauseChildPolicyApplied is a WorkflowExecutionCancelRequestedCause enum value
 	WorkflowExecutionCancelRequestedCauseChildPolicyApplied = "CHILD_POLICY_APPLIED"
 )
+
+// WorkflowExecutionCancelRequestedCause_Values returns all elements of the WorkflowExecutionCancelRequestedCause enum
+func WorkflowExecutionCancelRequestedCause_Values() []string {
+	return []string{
+		WorkflowExecutionCancelRequestedCauseChildPolicyApplied,
+	}
+}
 
 const (
 	// WorkflowExecutionTerminatedCauseChildPolicyApplied is a WorkflowExecutionTerminatedCause enum value
@@ -17084,7 +17372,23 @@ const (
 	WorkflowExecutionTerminatedCauseOperatorInitiated = "OPERATOR_INITIATED"
 )
 
+// WorkflowExecutionTerminatedCause_Values returns all elements of the WorkflowExecutionTerminatedCause enum
+func WorkflowExecutionTerminatedCause_Values() []string {
+	return []string{
+		WorkflowExecutionTerminatedCauseChildPolicyApplied,
+		WorkflowExecutionTerminatedCauseEventLimitExceeded,
+		WorkflowExecutionTerminatedCauseOperatorInitiated,
+	}
+}
+
 const (
 	// WorkflowExecutionTimeoutTypeStartToClose is a WorkflowExecutionTimeoutType enum value
 	WorkflowExecutionTimeoutTypeStartToClose = "START_TO_CLOSE"
 )
+
+// WorkflowExecutionTimeoutType_Values returns all elements of the WorkflowExecutionTimeoutType enum
+func WorkflowExecutionTimeoutType_Values() []string {
+	return []string{
+		WorkflowExecutionTimeoutTypeStartToClose,
+	}
+}

@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsS3AccessPoint() *schema.Resource {
@@ -194,7 +194,7 @@ func resourceAwsS3AccessPointRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("account_id", accountId)
 	d.Set("arn", arn.String())
 	d.Set("bucket", output.Bucket)
-	d.Set("domain_name", fmt.Sprintf("%s-%s.s3-accesspoint.%s.amazonaws.com", name, accountId, meta.(*AWSClient).region))
+	d.Set("domain_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s-%s.s3-accesspoint", name, accountId)))
 	d.Set("name", name)
 	d.Set("network_origin", output.NetworkOrigin)
 	if err := d.Set("public_access_block_configuration", flattenS3AccessPointPublicAccessBlockConfiguration(output.PublicAccessBlockConfiguration)); err != nil {

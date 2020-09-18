@@ -60,14 +60,12 @@ func (c *ECR) BatchCheckLayerAvailabilityRequest(input *BatchCheckLayerAvailabil
 // Checks the availability of one or more image layers in a repository.
 //
 // When an image is pushed to a repository, each image layer is checked to verify
-// if it has been uploaded before. If it is, then the image layer is skipped.
+// if it has been uploaded before. If it has been uploaded, then the image layer
+// is skipped.
 //
-// When an image is pulled from a repository, each image layer is checked once
-// to verify it is available to be pulled.
-//
-// This operation is used by the Amazon ECR proxy, and it is not intended for
-// general use by customers for pulling and pushing images. In most cases, you
-// should use the docker CLI to pull, tag, and push images.
+// This operation is used by the Amazon ECR proxy and is not generally used
+// by customers for pulling and pushing images. In most cases, you should use
+// the docker CLI to pull, tag, and push images.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -347,9 +345,9 @@ func (c *ECR) CompleteLayerUploadRequest(input *CompleteLayerUploadInput) (req *
 // When an image is pushed, the CompleteLayerUpload API is called once per each
 // new image layer to verify that the upload has completed.
 //
-// This operation is used by the Amazon ECR proxy, and it is not intended for
-// general use by customers for pulling and pushing images. In most cases, you
-// should use the docker CLI to pull, tag, and push images.
+// This operation is used by the Amazon ECR proxy and is not generally used
+// by customers for pulling and pushing images. In most cases, you should use
+// the docker CLI to pull, tag, and push images.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -371,7 +369,7 @@ func (c *ECR) CompleteLayerUploadRequest(input *CompleteLayerUploadInput) (req *
 //   repository and ensure that you are performing operations on the correct registry.
 //
 //   * UploadNotFoundException
-//   The upload could not be found, or the specified upload id is not valid for
+//   The upload could not be found, or the specified upload ID is not valid for
 //   this repository.
 //
 //   * InvalidLayerException
@@ -386,6 +384,9 @@ func (c *ECR) CompleteLayerUploadRequest(input *CompleteLayerUploadInput) (req *
 //
 //   * EmptyUploadException
 //   The specified layer upload does not contain any layer parts.
+//
+//   * KmsException
+//   The operation failed due to a KMS exception.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/CompleteLayerUpload
 func (c *ECR) CompleteLayerUpload(input *CompleteLayerUploadInput) (*CompleteLayerUploadOutput, error) {
@@ -485,9 +486,11 @@ func (c *ECR) CreateRepositoryRequest(input *CreateRepositoryInput) (req *reques
 //
 //   * LimitExceededException
 //   The operation did not succeed because it would have exceeded a service limit
-//   for your account. For more information, see Amazon ECR Default Service Limits
-//   (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service_limits.html)
+//   for your account. For more information, see Amazon ECR Service Quotas (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service-quotas.html)
 //   in the Amazon Elastic Container Registry User Guide.
+//
+//   * KmsException
+//   The operation failed due to a KMS exception.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/CreateRepository
 func (c *ECR) CreateRepository(input *CreateRepositoryInput) (*CreateRepositoryOutput, error) {
@@ -671,6 +674,9 @@ func (c *ECR) DeleteRepositoryRequest(input *DeleteRepositoryInput) (req *reques
 //   * RepositoryNotEmptyException
 //   The specified repository contains images. To delete a repository that contains
 //   images, you must force the deletion with the force parameter.
+//
+//   * KmsException
+//   The operation failed due to a KMS exception.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/DeleteRepository
 func (c *ECR) DeleteRepository(input *DeleteRepositoryInput) (*DeleteRepositoryOutput, error) {
@@ -1375,11 +1381,11 @@ func (c *ECR) GetDownloadUrlForLayerRequest(input *GetDownloadUrlForLayerInput) 
 // layer. You can only get URLs for image layers that are referenced in an image.
 //
 // When an image is pulled, the GetDownloadUrlForLayer API is called once per
-// image layer.
+// image layer that is not already cached.
 //
-// This operation is used by the Amazon ECR proxy, and it is not intended for
-// general use by customers for pulling and pushing images. In most cases, you
-// should use the docker CLI to pull, tag, and push images.
+// This operation is used by the Amazon ECR proxy and is not generally used
+// by customers for pulling and pushing images. In most cases, you should use
+// the docker CLI to pull, tag, and push images.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1807,12 +1813,12 @@ func (c *ECR) InitiateLayerUploadRequest(input *InitiateLayerUploadInput) (req *
 // Notifies Amazon ECR that you intend to upload an image layer.
 //
 // When an image is pushed, the InitiateLayerUpload API is called once per image
-// layer that has not already been uploaded. Whether an image layer has been
-// uploaded before is determined by the BatchCheckLayerAvailability API action.
+// layer that has not already been uploaded. Whether or not an image layer has
+// been uploaded is determined by the BatchCheckLayerAvailability API action.
 //
-// This operation is used by the Amazon ECR proxy, and it is not intended for
-// general use by customers for pulling and pushing images. In most cases, you
-// should use the docker CLI to pull, tag, and push images.
+// This operation is used by the Amazon ECR proxy and is not generally used
+// by customers for pulling and pushing images. In most cases, you should use
+// the docker CLI to pull, tag, and push images.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1832,6 +1838,9 @@ func (c *ECR) InitiateLayerUploadRequest(input *InitiateLayerUploadInput) (req *
 //   * RepositoryNotFoundException
 //   The specified repository could not be found. Check the spelling of the specified
 //   repository and ensure that you are performing operations on the correct registry.
+//
+//   * KmsException
+//   The operation failed due to a KMS exception.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/InitiateLayerUpload
 func (c *ECR) InitiateLayerUpload(input *InitiateLayerUploadInput) (*InitiateLayerUploadOutput, error) {
@@ -2141,12 +2150,12 @@ func (c *ECR) PutImageRequest(input *PutImageInput) (req *request.Request, outpu
 // Creates or updates the image manifest and tags associated with an image.
 //
 // When an image is pushed and all new image layers have been uploaded, the
-// PutImage API is called once to create or update the image manifest and tags
-// associated with the image.
+// PutImage API is called once to create or update the image manifest and the
+// tags associated with the image.
 //
-// This operation is used by the Amazon ECR proxy, and it is not intended for
-// general use by customers for pulling and pushing images. In most cases, you
-// should use the docker CLI to pull, tag, and push images.
+// This operation is used by the Amazon ECR proxy and is not generally used
+// by customers for pulling and pushing images. In most cases, you should use
+// the docker CLI to pull, tag, and push images.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2175,15 +2184,24 @@ func (c *ECR) PutImageRequest(input *PutImageInput) (req *request.Request, outpu
 //   The specified layers could not be found, or the specified layer is not valid
 //   for this repository.
 //
+//   * ReferencedImagesNotFoundException
+//   The manifest list is referencing an image that does not exist.
+//
 //   * LimitExceededException
 //   The operation did not succeed because it would have exceeded a service limit
-//   for your account. For more information, see Amazon ECR Default Service Limits
-//   (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service_limits.html)
+//   for your account. For more information, see Amazon ECR Service Quotas (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service-quotas.html)
 //   in the Amazon Elastic Container Registry User Guide.
 //
 //   * ImageTagAlreadyExistsException
 //   The specified image is tagged with a tag that already exists. The repository
 //   is configured for tag immutability.
+//
+//   * ImageDigestDoesNotMatchException
+//   The specified image digest does not match the digest that Amazon ECR calculated
+//   for the image.
+//
+//   * KmsException
+//   The operation failed due to a KMS exception.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/PutImage
 func (c *ECR) PutImage(input *PutImageInput) (*PutImageOutput, error) {
@@ -2516,7 +2534,7 @@ func (c *ECR) SetRepositoryPolicyRequest(input *SetRepositoryPolicyInput) (req *
 // SetRepositoryPolicy API operation for Amazon EC2 Container Registry.
 //
 // Applies a repository policy to the specified repository to control access
-// permissions. For more information, see Amazon ECR Repository Policies (https://docs.aws.amazon.com/AmazonECR/latest/userguide/RepositoryPolicies.html)
+// permissions. For more information, see Amazon ECR Repository Policies (https://docs.aws.amazon.com/AmazonECR/latest/userguide/repository-policies.html)
 // in the Amazon Elastic Container Registry User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2624,6 +2642,14 @@ func (c *ECR) StartImageScanRequest(input *StartImageScanInput) (req *request.Re
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
+//   * UnsupportedImageTypeException
+//   The image is of a type that cannot be scanned.
+//
+//   * LimitExceededException
+//   The operation did not succeed because it would have exceeded a service limit
+//   for your account. For more information, see Amazon ECR Service Quotas (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service-quotas.html)
+//   in the Amazon Elastic Container Registry User Guide.
+//
 //   * RepositoryNotFoundException
 //   The specified repository could not be found. Check the spelling of the specified
 //   repository and ensure that you are performing operations on the correct registry.
@@ -2724,8 +2750,8 @@ func (c *ECR) StartLifecyclePolicyPreviewRequest(input *StartLifecyclePolicyPrev
 //   The lifecycle policy could not be found, and no policy is set to the repository.
 //
 //   * LifecyclePolicyPreviewInProgressException
-//   The previous lifecycle policy preview request has not completed. Please try
-//   again later.
+//   The previous lifecycle policy preview request has not completed. Wait and
+//   try again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/StartLifecyclePolicyPreview
 func (c *ECR) StartLifecyclePolicyPreview(input *StartLifecyclePolicyPreviewInput) (*StartLifecyclePolicyPreviewOutput, error) {
@@ -2994,9 +3020,9 @@ func (c *ECR) UploadLayerPartRequest(input *UploadLayerPartInput) (req *request.
 // size of each image layer part can be 20971520 bytes (or about 20MB). The
 // UploadLayerPart API is called once per each new image layer part.
 //
-// This operation is used by the Amazon ECR proxy, and it is not intended for
-// general use by customers for pulling and pushing images. In most cases, you
-// should use the docker CLI to pull, tag, and push images.
+// This operation is used by the Amazon ECR proxy and is not generally used
+// by customers for pulling and pushing images. In most cases, you should use
+// the docker CLI to pull, tag, and push images.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3022,14 +3048,16 @@ func (c *ECR) UploadLayerPartRequest(input *UploadLayerPartInput) (req *request.
 //   repository and ensure that you are performing operations on the correct registry.
 //
 //   * UploadNotFoundException
-//   The upload could not be found, or the specified upload id is not valid for
+//   The upload could not be found, or the specified upload ID is not valid for
 //   this repository.
 //
 //   * LimitExceededException
 //   The operation did not succeed because it would have exceeded a service limit
-//   for your account. For more information, see Amazon ECR Default Service Limits
-//   (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service_limits.html)
+//   for your account. For more information, see Amazon ECR Service Quotas (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service-quotas.html)
 //   in the Amazon Elastic Container Registry User Guide.
+//
+//   * KmsException
+//   The operation failed due to a KMS exception.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecr-2015-09-21/UploadLayerPart
 func (c *ECR) UploadLayerPart(input *UploadLayerPartInput) (*UploadLayerPartOutput, error) {
@@ -3611,9 +3639,12 @@ func (s *CompleteLayerUploadOutput) SetUploadId(v string) *CompleteLayerUploadOu
 type CreateRepositoryInput struct {
 	_ struct{} `type:"structure"`
 
-	// The image scanning configuration for the repository. This setting determines
-	// whether images are scanned for known vulnerabilities after being pushed to
-	// the repository.
+	// The encryption configuration for the repository. This determines how the
+	// contents of your repository are encrypted at rest.
+	EncryptionConfiguration *EncryptionConfiguration `locationName:"encryptionConfiguration" type:"structure"`
+
+	// The image scanning configuration for the repository. This determines whether
+	// images are scanned for known vulnerabilities after being pushed to the repository.
 	ImageScanningConfiguration *ImageScanningConfiguration `locationName:"imageScanningConfiguration" type:"structure"`
 
 	// The tag mutability setting for the repository. If this parameter is omitted,
@@ -3655,11 +3686,22 @@ func (s *CreateRepositoryInput) Validate() error {
 	if s.RepositoryName != nil && len(*s.RepositoryName) < 2 {
 		invalidParams.Add(request.NewErrParamMinLen("RepositoryName", 2))
 	}
+	if s.EncryptionConfiguration != nil {
+		if err := s.EncryptionConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("EncryptionConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetEncryptionConfiguration sets the EncryptionConfiguration field's value.
+func (s *CreateRepositoryInput) SetEncryptionConfiguration(v *EncryptionConfiguration) *CreateRepositoryInput {
+	s.EncryptionConfiguration = v
+	return s
 }
 
 // SetImageScanningConfiguration sets the ImageScanningConfiguration field's value.
@@ -4457,8 +4499,8 @@ func (s *DescribeRepositoriesOutput) SetRepositories(v []*Repository) *DescribeR
 
 // The specified layer upload does not contain any layer parts.
 type EmptyUploadException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The error message associated with the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -4476,17 +4518,17 @@ func (s EmptyUploadException) GoString() string {
 
 func newErrorEmptyUploadException(v protocol.ResponseMetadata) error {
 	return &EmptyUploadException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s EmptyUploadException) Code() string {
+func (s *EmptyUploadException) Code() string {
 	return "EmptyUploadException"
 }
 
 // Message returns the exception's message.
-func (s EmptyUploadException) Message() string {
+func (s *EmptyUploadException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4494,22 +4536,103 @@ func (s EmptyUploadException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s EmptyUploadException) OrigErr() error {
+func (s *EmptyUploadException) OrigErr() error {
 	return nil
 }
 
-func (s EmptyUploadException) Error() string {
+func (s *EmptyUploadException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s EmptyUploadException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *EmptyUploadException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s EmptyUploadException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *EmptyUploadException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The encryption configuration for the repository. This determines how the
+// contents of your repository are encrypted at rest.
+//
+// By default, when no encryption configuration is set or the AES256 encryption
+// type is used, Amazon ECR uses server-side encryption with Amazon S3-managed
+// encryption keys which encrypts your data at rest using an AES-256 encryption
+// algorithm. This does not require any action on your part.
+//
+// For more control over the encryption of the contents of your repository,
+// you can use server-side encryption with customer master keys (CMKs) stored
+// in AWS Key Management Service (AWS KMS) to encrypt your images. For more
+// information, see Amazon ECR encryption at rest (https://docs.aws.amazon.com/AmazonECR/latest/userguide/encryption-at-rest.html)
+// in the Amazon Elastic Container Registry User Guide.
+type EncryptionConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The encryption type to use.
+	//
+	// If you use the KMS encryption type, the contents of the repository will be
+	// encrypted using server-side encryption with customer master keys (CMKs) stored
+	// in AWS KMS. When you use AWS KMS to encrypt your data, you can either use
+	// the default AWS managed CMK for Amazon ECR, or specify your own CMK, which
+	// you already created. For more information, see Protecting Data Using Server-Side
+	// Encryption with CMKs Stored in AWS Key Management Service (SSE-KMS) (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingKMSEncryption.html)
+	// in the Amazon Simple Storage Service Console Developer Guide..
+	//
+	// If you use the AES256 encryption type, Amazon ECR uses server-side encryption
+	// with Amazon S3-managed encryption keys which encrypts the images in the repository
+	// using an AES-256 encryption algorithm. For more information, see Protecting
+	// Data Using Server-Side Encryption with Amazon S3-Managed Encryption Keys
+	// (SSE-S3) (https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingServerSideEncryption.html)
+	// in the Amazon Simple Storage Service Console Developer Guide..
+	//
+	// EncryptionType is a required field
+	EncryptionType *string `locationName:"encryptionType" type:"string" required:"true" enum:"EncryptionType"`
+
+	// If you use the KMS encryption type, specify the CMK to use for encryption.
+	// The alias, key ID, or full ARN of the CMK can be specified. The key must
+	// exist in the same Region as the repository. If no key is specified, the default
+	// AWS managed CMK for Amazon ECR will be used.
+	KmsKey *string `locationName:"kmsKey" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s EncryptionConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EncryptionConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *EncryptionConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "EncryptionConfiguration"}
+	if s.EncryptionType == nil {
+		invalidParams.Add(request.NewErrParamRequired("EncryptionType"))
+	}
+	if s.KmsKey != nil && len(*s.KmsKey) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("KmsKey", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEncryptionType sets the EncryptionType field's value.
+func (s *EncryptionConfiguration) SetEncryptionType(v string) *EncryptionConfiguration {
+	s.EncryptionType = &v
+	return s
+}
+
+// SetKmsKey sets the KmsKey field's value.
+func (s *EncryptionConfiguration) SetKmsKey(v string) *EncryptionConfiguration {
+	s.KmsKey = &v
+	return s
 }
 
 type GetAuthorizationTokenInput struct {
@@ -5070,6 +5193,9 @@ type Image struct {
 	// The image manifest associated with the image.
 	ImageManifest *string `locationName:"imageManifest" min:"1" type:"string"`
 
+	// The manifest media type of the image.
+	ImageManifestMediaType *string `locationName:"imageManifestMediaType" type:"string"`
+
 	// The AWS account ID associated with the registry containing the image.
 	RegistryId *string `locationName:"registryId" type:"string"`
 
@@ -5099,6 +5225,12 @@ func (s *Image) SetImageManifest(v string) *Image {
 	return s
 }
 
+// SetImageManifestMediaType sets the ImageManifestMediaType field's value.
+func (s *Image) SetImageManifestMediaType(v string) *Image {
+	s.ImageManifestMediaType = &v
+	return s
+}
+
 // SetRegistryId sets the RegistryId field's value.
 func (s *Image) SetRegistryId(v string) *Image {
 	s.RegistryId = &v
@@ -5114,8 +5246,8 @@ func (s *Image) SetRepositoryName(v string) *Image {
 // The specified image has already been pushed, and there were no changes to
 // the manifest or image tag after the last push.
 type ImageAlreadyExistsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The error message associated with the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -5133,17 +5265,17 @@ func (s ImageAlreadyExistsException) GoString() string {
 
 func newErrorImageAlreadyExistsException(v protocol.ResponseMetadata) error {
 	return &ImageAlreadyExistsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ImageAlreadyExistsException) Code() string {
+func (s *ImageAlreadyExistsException) Code() string {
 	return "ImageAlreadyExistsException"
 }
 
 // Message returns the exception's message.
-func (s ImageAlreadyExistsException) Message() string {
+func (s *ImageAlreadyExistsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5151,30 +5283,36 @@ func (s ImageAlreadyExistsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ImageAlreadyExistsException) OrigErr() error {
+func (s *ImageAlreadyExistsException) OrigErr() error {
 	return nil
 }
 
-func (s ImageAlreadyExistsException) Error() string {
+func (s *ImageAlreadyExistsException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ImageAlreadyExistsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ImageAlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ImageAlreadyExistsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ImageAlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An object that describes an image returned by a DescribeImages operation.
 type ImageDetail struct {
 	_ struct{} `type:"structure"`
 
+	// The artifact media type of the image.
+	ArtifactMediaType *string `locationName:"artifactMediaType" type:"string"`
+
 	// The sha256 digest of the image manifest.
 	ImageDigest *string `locationName:"imageDigest" type:"string"`
+
+	// The media type of the image manifest.
+	ImageManifestMediaType *string `locationName:"imageManifestMediaType" type:"string"`
 
 	// The date and time, expressed in standard JavaScript date format, at which
 	// the current image was pushed to the repository.
@@ -5187,6 +5325,9 @@ type ImageDetail struct {
 	ImageScanStatus *ImageScanStatus `locationName:"imageScanStatus" type:"structure"`
 
 	// The size, in bytes, of the image in the repository.
+	//
+	// If the image is a manifest list, this will be the max size of all manifests
+	// in the list.
 	//
 	// Beginning with Docker version 1.9, the Docker client compresses image layers
 	// before pushing them to a V2 Docker registry. The output of the docker images
@@ -5214,9 +5355,21 @@ func (s ImageDetail) GoString() string {
 	return s.String()
 }
 
+// SetArtifactMediaType sets the ArtifactMediaType field's value.
+func (s *ImageDetail) SetArtifactMediaType(v string) *ImageDetail {
+	s.ArtifactMediaType = &v
+	return s
+}
+
 // SetImageDigest sets the ImageDigest field's value.
 func (s *ImageDetail) SetImageDigest(v string) *ImageDetail {
 	s.ImageDigest = &v
+	return s
+}
+
+// SetImageManifestMediaType sets the ImageManifestMediaType field's value.
+func (s *ImageDetail) SetImageManifestMediaType(v string) *ImageDetail {
+	s.ImageManifestMediaType = &v
 	return s
 }
 
@@ -5260,6 +5413,63 @@ func (s *ImageDetail) SetRegistryId(v string) *ImageDetail {
 func (s *ImageDetail) SetRepositoryName(v string) *ImageDetail {
 	s.RepositoryName = &v
 	return s
+}
+
+// The specified image digest does not match the digest that Amazon ECR calculated
+// for the image.
+type ImageDigestDoesNotMatchException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ImageDigestDoesNotMatchException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ImageDigestDoesNotMatchException) GoString() string {
+	return s.String()
+}
+
+func newErrorImageDigestDoesNotMatchException(v protocol.ResponseMetadata) error {
+	return &ImageDigestDoesNotMatchException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ImageDigestDoesNotMatchException) Code() string {
+	return "ImageDigestDoesNotMatchException"
+}
+
+// Message returns the exception's message.
+func (s *ImageDigestDoesNotMatchException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ImageDigestDoesNotMatchException) OrigErr() error {
+	return nil
+}
+
+func (s *ImageDigestDoesNotMatchException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ImageDigestDoesNotMatchException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ImageDigestDoesNotMatchException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An object representing an Amazon ECR image failure.
@@ -5352,8 +5562,8 @@ func (s *ImageIdentifier) SetImageTag(v string) *ImageIdentifier {
 
 // The image requested does not exist in the specified repository.
 type ImageNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5370,17 +5580,17 @@ func (s ImageNotFoundException) GoString() string {
 
 func newErrorImageNotFoundException(v protocol.ResponseMetadata) error {
 	return &ImageNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ImageNotFoundException) Code() string {
+func (s *ImageNotFoundException) Code() string {
 	return "ImageNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ImageNotFoundException) Message() string {
+func (s *ImageNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5388,22 +5598,22 @@ func (s ImageNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ImageNotFoundException) OrigErr() error {
+func (s *ImageNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ImageNotFoundException) Error() string {
+func (s *ImageNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ImageNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ImageNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ImageNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ImageNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Contains information about an image scan finding.
@@ -5623,8 +5833,8 @@ func (s *ImageScanningConfiguration) SetScanOnPush(v bool) *ImageScanningConfigu
 // The specified image is tagged with a tag that already exists. The repository
 // is configured for tag immutability.
 type ImageTagAlreadyExistsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5641,17 +5851,17 @@ func (s ImageTagAlreadyExistsException) GoString() string {
 
 func newErrorImageTagAlreadyExistsException(v protocol.ResponseMetadata) error {
 	return &ImageTagAlreadyExistsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ImageTagAlreadyExistsException) Code() string {
+func (s *ImageTagAlreadyExistsException) Code() string {
 	return "ImageTagAlreadyExistsException"
 }
 
 // Message returns the exception's message.
-func (s ImageTagAlreadyExistsException) Message() string {
+func (s *ImageTagAlreadyExistsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5659,22 +5869,22 @@ func (s ImageTagAlreadyExistsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ImageTagAlreadyExistsException) OrigErr() error {
+func (s *ImageTagAlreadyExistsException) OrigErr() error {
 	return nil
 }
 
-func (s ImageTagAlreadyExistsException) Error() string {
+func (s *ImageTagAlreadyExistsException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ImageTagAlreadyExistsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ImageTagAlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ImageTagAlreadyExistsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ImageTagAlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type InitiateLayerUploadInput struct {
@@ -5765,8 +5975,8 @@ func (s *InitiateLayerUploadOutput) SetUploadId(v string) *InitiateLayerUploadOu
 // The layer digest calculation performed by Amazon ECR upon receipt of the
 // image layer does not match the digest specified.
 type InvalidLayerException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The error message associated with the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -5784,17 +5994,17 @@ func (s InvalidLayerException) GoString() string {
 
 func newErrorInvalidLayerException(v protocol.ResponseMetadata) error {
 	return &InvalidLayerException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidLayerException) Code() string {
+func (s *InvalidLayerException) Code() string {
 	return "InvalidLayerException"
 }
 
 // Message returns the exception's message.
-func (s InvalidLayerException) Message() string {
+func (s *InvalidLayerException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5802,29 +6012,29 @@ func (s InvalidLayerException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidLayerException) OrigErr() error {
+func (s *InvalidLayerException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidLayerException) Error() string {
+func (s *InvalidLayerException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidLayerException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidLayerException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidLayerException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidLayerException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The layer part size is not valid, or the first byte specified is not consecutive
 // to the last byte of a previous layer part upload.
 type InvalidLayerPartException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The last valid byte received from the layer part upload that is associated
 	// with the exception.
@@ -5855,17 +6065,17 @@ func (s InvalidLayerPartException) GoString() string {
 
 func newErrorInvalidLayerPartException(v protocol.ResponseMetadata) error {
 	return &InvalidLayerPartException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidLayerPartException) Code() string {
+func (s *InvalidLayerPartException) Code() string {
 	return "InvalidLayerPartException"
 }
 
 // Message returns the exception's message.
-func (s InvalidLayerPartException) Message() string {
+func (s *InvalidLayerPartException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5873,29 +6083,29 @@ func (s InvalidLayerPartException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidLayerPartException) OrigErr() error {
+func (s *InvalidLayerPartException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidLayerPartException) Error() string {
+func (s *InvalidLayerPartException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidLayerPartException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidLayerPartException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidLayerPartException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidLayerPartException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified parameter is invalid. Review the available parameters for the
 // API request.
 type InvalidParameterException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The error message associated with the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -5913,17 +6123,17 @@ func (s InvalidParameterException) GoString() string {
 
 func newErrorInvalidParameterException(v protocol.ResponseMetadata) error {
 	return &InvalidParameterException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidParameterException) Code() string {
+func (s *InvalidParameterException) Code() string {
 	return "InvalidParameterException"
 }
 
 // Message returns the exception's message.
-func (s InvalidParameterException) Message() string {
+func (s *InvalidParameterException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5931,30 +6141,30 @@ func (s InvalidParameterException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidParameterException) OrigErr() error {
+func (s *InvalidParameterException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidParameterException) Error() string {
+func (s *InvalidParameterException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidParameterException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidParameterException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidParameterException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidParameterException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An invalid parameter has been specified. Tag keys can have a maximum character
 // length of 128 characters, and tag values can have a maximum length of 256
 // characters.
 type InvalidTagParameterException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5971,17 +6181,17 @@ func (s InvalidTagParameterException) GoString() string {
 
 func newErrorInvalidTagParameterException(v protocol.ResponseMetadata) error {
 	return &InvalidTagParameterException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidTagParameterException) Code() string {
+func (s *InvalidTagParameterException) Code() string {
 	return "InvalidTagParameterException"
 }
 
 // Message returns the exception's message.
-func (s InvalidTagParameterException) Message() string {
+func (s *InvalidTagParameterException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5989,22 +6199,81 @@ func (s InvalidTagParameterException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidTagParameterException) OrigErr() error {
+func (s *InvalidTagParameterException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidTagParameterException) Error() string {
+func (s *InvalidTagParameterException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidTagParameterException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidTagParameterException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidTagParameterException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidTagParameterException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The operation failed due to a KMS exception.
+type KmsException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// The error code returned by AWS KMS.
+	KmsError *string `locationName:"kmsError" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s KmsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KmsException) GoString() string {
+	return s.String()
+}
+
+func newErrorKmsException(v protocol.ResponseMetadata) error {
+	return &KmsException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *KmsException) Code() string {
+	return "KmsException"
+}
+
+// Message returns the exception's message.
+func (s *KmsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *KmsException) OrigErr() error {
+	return nil
+}
+
+func (s *KmsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *KmsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *KmsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An object representing an Amazon ECR image layer.
@@ -6061,8 +6330,8 @@ func (s *Layer) SetMediaType(v string) *Layer {
 
 // The image layer already exists in the associated repository.
 type LayerAlreadyExistsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The error message associated with the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -6080,17 +6349,17 @@ func (s LayerAlreadyExistsException) GoString() string {
 
 func newErrorLayerAlreadyExistsException(v protocol.ResponseMetadata) error {
 	return &LayerAlreadyExistsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LayerAlreadyExistsException) Code() string {
+func (s *LayerAlreadyExistsException) Code() string {
 	return "LayerAlreadyExistsException"
 }
 
 // Message returns the exception's message.
-func (s LayerAlreadyExistsException) Message() string {
+func (s *LayerAlreadyExistsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6098,22 +6367,22 @@ func (s LayerAlreadyExistsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LayerAlreadyExistsException) OrigErr() error {
+func (s *LayerAlreadyExistsException) OrigErr() error {
 	return nil
 }
 
-func (s LayerAlreadyExistsException) Error() string {
+func (s *LayerAlreadyExistsException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LayerAlreadyExistsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LayerAlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LayerAlreadyExistsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LayerAlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An object representing an Amazon ECR image layer failure.
@@ -6161,8 +6430,8 @@ func (s *LayerFailure) SetLayerDigest(v string) *LayerFailure {
 // The specified layer is not available because it is not associated with an
 // image. Unassociated image layers may be cleaned up at any time.
 type LayerInaccessibleException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The error message associated with the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -6180,17 +6449,17 @@ func (s LayerInaccessibleException) GoString() string {
 
 func newErrorLayerInaccessibleException(v protocol.ResponseMetadata) error {
 	return &LayerInaccessibleException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LayerInaccessibleException) Code() string {
+func (s *LayerInaccessibleException) Code() string {
 	return "LayerInaccessibleException"
 }
 
 // Message returns the exception's message.
-func (s LayerInaccessibleException) Message() string {
+func (s *LayerInaccessibleException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6198,28 +6467,28 @@ func (s LayerInaccessibleException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LayerInaccessibleException) OrigErr() error {
+func (s *LayerInaccessibleException) OrigErr() error {
 	return nil
 }
 
-func (s LayerInaccessibleException) Error() string {
+func (s *LayerInaccessibleException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LayerInaccessibleException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LayerInaccessibleException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LayerInaccessibleException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LayerInaccessibleException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Layer parts must be at least 5 MiB in size.
 type LayerPartTooSmallException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The error message associated with the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -6237,17 +6506,17 @@ func (s LayerPartTooSmallException) GoString() string {
 
 func newErrorLayerPartTooSmallException(v protocol.ResponseMetadata) error {
 	return &LayerPartTooSmallException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LayerPartTooSmallException) Code() string {
+func (s *LayerPartTooSmallException) Code() string {
 	return "LayerPartTooSmallException"
 }
 
 // Message returns the exception's message.
-func (s LayerPartTooSmallException) Message() string {
+func (s *LayerPartTooSmallException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6255,29 +6524,29 @@ func (s LayerPartTooSmallException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LayerPartTooSmallException) OrigErr() error {
+func (s *LayerPartTooSmallException) OrigErr() error {
 	return nil
 }
 
-func (s LayerPartTooSmallException) Error() string {
+func (s *LayerPartTooSmallException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LayerPartTooSmallException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LayerPartTooSmallException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LayerPartTooSmallException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LayerPartTooSmallException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified layers could not be found, or the specified layer is not valid
 // for this repository.
 type LayersNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The error message associated with the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -6295,17 +6564,17 @@ func (s LayersNotFoundException) GoString() string {
 
 func newErrorLayersNotFoundException(v protocol.ResponseMetadata) error {
 	return &LayersNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LayersNotFoundException) Code() string {
+func (s *LayersNotFoundException) Code() string {
 	return "LayersNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s LayersNotFoundException) Message() string {
+func (s *LayersNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6313,28 +6582,28 @@ func (s LayersNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LayersNotFoundException) OrigErr() error {
+func (s *LayersNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s LayersNotFoundException) Error() string {
+func (s *LayersNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LayersNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LayersNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LayersNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LayersNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The lifecycle policy could not be found, and no policy is set to the repository.
 type LifecyclePolicyNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -6351,17 +6620,17 @@ func (s LifecyclePolicyNotFoundException) GoString() string {
 
 func newErrorLifecyclePolicyNotFoundException(v protocol.ResponseMetadata) error {
 	return &LifecyclePolicyNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LifecyclePolicyNotFoundException) Code() string {
+func (s *LifecyclePolicyNotFoundException) Code() string {
 	return "LifecyclePolicyNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s LifecyclePolicyNotFoundException) Message() string {
+func (s *LifecyclePolicyNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6369,22 +6638,22 @@ func (s LifecyclePolicyNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LifecyclePolicyNotFoundException) OrigErr() error {
+func (s *LifecyclePolicyNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s LifecyclePolicyNotFoundException) Error() string {
+func (s *LifecyclePolicyNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LifecyclePolicyNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LifecyclePolicyNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LifecyclePolicyNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LifecyclePolicyNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The filter for the lifecycle policy preview.
@@ -6411,11 +6680,11 @@ func (s *LifecyclePolicyPreviewFilter) SetTagStatus(v string) *LifecyclePolicyPr
 	return s
 }
 
-// The previous lifecycle policy preview request has not completed. Please try
-// again later.
+// The previous lifecycle policy preview request has not completed. Wait and
+// try again.
 type LifecyclePolicyPreviewInProgressException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -6432,17 +6701,17 @@ func (s LifecyclePolicyPreviewInProgressException) GoString() string {
 
 func newErrorLifecyclePolicyPreviewInProgressException(v protocol.ResponseMetadata) error {
 	return &LifecyclePolicyPreviewInProgressException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LifecyclePolicyPreviewInProgressException) Code() string {
+func (s *LifecyclePolicyPreviewInProgressException) Code() string {
 	return "LifecyclePolicyPreviewInProgressException"
 }
 
 // Message returns the exception's message.
-func (s LifecyclePolicyPreviewInProgressException) Message() string {
+func (s *LifecyclePolicyPreviewInProgressException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6450,28 +6719,28 @@ func (s LifecyclePolicyPreviewInProgressException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LifecyclePolicyPreviewInProgressException) OrigErr() error {
+func (s *LifecyclePolicyPreviewInProgressException) OrigErr() error {
 	return nil
 }
 
-func (s LifecyclePolicyPreviewInProgressException) Error() string {
+func (s *LifecyclePolicyPreviewInProgressException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LifecyclePolicyPreviewInProgressException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LifecyclePolicyPreviewInProgressException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LifecyclePolicyPreviewInProgressException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LifecyclePolicyPreviewInProgressException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // There is no dry run for this repository.
 type LifecyclePolicyPreviewNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -6488,17 +6757,17 @@ func (s LifecyclePolicyPreviewNotFoundException) GoString() string {
 
 func newErrorLifecyclePolicyPreviewNotFoundException(v protocol.ResponseMetadata) error {
 	return &LifecyclePolicyPreviewNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LifecyclePolicyPreviewNotFoundException) Code() string {
+func (s *LifecyclePolicyPreviewNotFoundException) Code() string {
 	return "LifecyclePolicyPreviewNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s LifecyclePolicyPreviewNotFoundException) Message() string {
+func (s *LifecyclePolicyPreviewNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6506,22 +6775,22 @@ func (s LifecyclePolicyPreviewNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LifecyclePolicyPreviewNotFoundException) OrigErr() error {
+func (s *LifecyclePolicyPreviewNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s LifecyclePolicyPreviewNotFoundException) Error() string {
+func (s *LifecyclePolicyPreviewNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LifecyclePolicyPreviewNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LifecyclePolicyPreviewNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LifecyclePolicyPreviewNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LifecyclePolicyPreviewNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The result of the lifecycle policy preview.
@@ -6634,12 +6903,11 @@ func (s *LifecyclePolicyRuleAction) SetType(v string) *LifecyclePolicyRuleAction
 }
 
 // The operation did not succeed because it would have exceeded a service limit
-// for your account. For more information, see Amazon ECR Default Service Limits
-// (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service_limits.html)
+// for your account. For more information, see Amazon ECR Service Quotas (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service-quotas.html)
 // in the Amazon Elastic Container Registry User Guide.
 type LimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The error message associated with the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -6657,17 +6925,17 @@ func (s LimitExceededException) GoString() string {
 
 func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
 	return &LimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LimitExceededException) Code() string {
+func (s *LimitExceededException) Code() string {
 	return "LimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s LimitExceededException) Message() string {
+func (s *LimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6675,22 +6943,22 @@ func (s LimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LimitExceededException) OrigErr() error {
+func (s *LimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s LimitExceededException) Error() string {
+func (s *LimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An object representing a filter on a ListImages operation.
@@ -6912,13 +7180,22 @@ func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput
 type PutImageInput struct {
 	_ struct{} `type:"structure"`
 
+	// The image digest of the image manifest corresponding to the image.
+	ImageDigest *string `locationName:"imageDigest" type:"string"`
+
 	// The image manifest corresponding to the image to be uploaded.
 	//
 	// ImageManifest is a required field
 	ImageManifest *string `locationName:"imageManifest" min:"1" type:"string" required:"true"`
 
+	// The media type of the image manifest. If you push an image manifest that
+	// does not contain the mediaType field, you must specify the imageManifestMediaType
+	// in the request.
+	ImageManifestMediaType *string `locationName:"imageManifestMediaType" type:"string"`
+
 	// The tag to associate with the image. This parameter is required for images
-	// that use the Docker Image Manifest V2 Schema 2 or OCI formats.
+	// that use the Docker Image Manifest V2 Schema 2 or Open Container Initiative
+	// (OCI) formats.
 	ImageTag *string `locationName:"imageTag" min:"1" type:"string"`
 
 	// The AWS account ID associated with the registry that contains the repository
@@ -6967,9 +7244,21 @@ func (s *PutImageInput) Validate() error {
 	return nil
 }
 
+// SetImageDigest sets the ImageDigest field's value.
+func (s *PutImageInput) SetImageDigest(v string) *PutImageInput {
+	s.ImageDigest = &v
+	return s
+}
+
 // SetImageManifest sets the ImageManifest field's value.
 func (s *PutImageInput) SetImageManifest(v string) *PutImageInput {
 	s.ImageManifest = &v
+	return s
+}
+
+// SetImageManifestMediaType sets the ImageManifestMediaType field's value.
+func (s *PutImageInput) SetImageManifestMediaType(v string) *PutImageInput {
+	s.ImageManifestMediaType = &v
 	return s
 }
 
@@ -7342,12 +7631,72 @@ func (s *PutLifecyclePolicyOutput) SetRepositoryName(v string) *PutLifecyclePoli
 	return s
 }
 
+// The manifest list is referencing an image that does not exist.
+type ReferencedImagesNotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ReferencedImagesNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReferencedImagesNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorReferencedImagesNotFoundException(v protocol.ResponseMetadata) error {
+	return &ReferencedImagesNotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ReferencedImagesNotFoundException) Code() string {
+	return "ReferencedImagesNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *ReferencedImagesNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ReferencedImagesNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *ReferencedImagesNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ReferencedImagesNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ReferencedImagesNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // An object representing a repository.
 type Repository struct {
 	_ struct{} `type:"structure"`
 
 	// The date and time, in JavaScript date format, when the repository was created.
 	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
+
+	// The encryption configuration for the repository. This determines how the
+	// contents of your repository are encrypted at rest.
+	EncryptionConfiguration *EncryptionConfiguration `locationName:"encryptionConfiguration" type:"structure"`
 
 	// The image scanning configuration for a repository.
 	ImageScanningConfiguration *ImageScanningConfiguration `locationName:"imageScanningConfiguration" type:"structure"`
@@ -7367,8 +7716,8 @@ type Repository struct {
 	// The name of the repository.
 	RepositoryName *string `locationName:"repositoryName" min:"2" type:"string"`
 
-	// The URI for the repository. You can use this URI for Docker push or pull
-	// operations.
+	// The URI for the repository. You can use this URI for container image push
+	// and pull operations.
 	RepositoryUri *string `locationName:"repositoryUri" type:"string"`
 }
 
@@ -7385,6 +7734,12 @@ func (s Repository) GoString() string {
 // SetCreatedAt sets the CreatedAt field's value.
 func (s *Repository) SetCreatedAt(v time.Time) *Repository {
 	s.CreatedAt = &v
+	return s
+}
+
+// SetEncryptionConfiguration sets the EncryptionConfiguration field's value.
+func (s *Repository) SetEncryptionConfiguration(v *EncryptionConfiguration) *Repository {
+	s.EncryptionConfiguration = v
 	return s
 }
 
@@ -7426,8 +7781,8 @@ func (s *Repository) SetRepositoryUri(v string) *Repository {
 
 // The specified repository already exists in the specified registry.
 type RepositoryAlreadyExistsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The error message associated with the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -7445,17 +7800,17 @@ func (s RepositoryAlreadyExistsException) GoString() string {
 
 func newErrorRepositoryAlreadyExistsException(v protocol.ResponseMetadata) error {
 	return &RepositoryAlreadyExistsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s RepositoryAlreadyExistsException) Code() string {
+func (s *RepositoryAlreadyExistsException) Code() string {
 	return "RepositoryAlreadyExistsException"
 }
 
 // Message returns the exception's message.
-func (s RepositoryAlreadyExistsException) Message() string {
+func (s *RepositoryAlreadyExistsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7463,29 +7818,29 @@ func (s RepositoryAlreadyExistsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s RepositoryAlreadyExistsException) OrigErr() error {
+func (s *RepositoryAlreadyExistsException) OrigErr() error {
 	return nil
 }
 
-func (s RepositoryAlreadyExistsException) Error() string {
+func (s *RepositoryAlreadyExistsException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s RepositoryAlreadyExistsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *RepositoryAlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s RepositoryAlreadyExistsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *RepositoryAlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified repository contains images. To delete a repository that contains
 // images, you must force the deletion with the force parameter.
 type RepositoryNotEmptyException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The error message associated with the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -7503,17 +7858,17 @@ func (s RepositoryNotEmptyException) GoString() string {
 
 func newErrorRepositoryNotEmptyException(v protocol.ResponseMetadata) error {
 	return &RepositoryNotEmptyException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s RepositoryNotEmptyException) Code() string {
+func (s *RepositoryNotEmptyException) Code() string {
 	return "RepositoryNotEmptyException"
 }
 
 // Message returns the exception's message.
-func (s RepositoryNotEmptyException) Message() string {
+func (s *RepositoryNotEmptyException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7521,29 +7876,29 @@ func (s RepositoryNotEmptyException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s RepositoryNotEmptyException) OrigErr() error {
+func (s *RepositoryNotEmptyException) OrigErr() error {
 	return nil
 }
 
-func (s RepositoryNotEmptyException) Error() string {
+func (s *RepositoryNotEmptyException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s RepositoryNotEmptyException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *RepositoryNotEmptyException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s RepositoryNotEmptyException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *RepositoryNotEmptyException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified repository could not be found. Check the spelling of the specified
 // repository and ensure that you are performing operations on the correct registry.
 type RepositoryNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The error message associated with the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -7561,17 +7916,17 @@ func (s RepositoryNotFoundException) GoString() string {
 
 func newErrorRepositoryNotFoundException(v protocol.ResponseMetadata) error {
 	return &RepositoryNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s RepositoryNotFoundException) Code() string {
+func (s *RepositoryNotFoundException) Code() string {
 	return "RepositoryNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s RepositoryNotFoundException) Message() string {
+func (s *RepositoryNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7579,29 +7934,29 @@ func (s RepositoryNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s RepositoryNotFoundException) OrigErr() error {
+func (s *RepositoryNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s RepositoryNotFoundException) Error() string {
+func (s *RepositoryNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s RepositoryNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *RepositoryNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s RepositoryNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *RepositoryNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified repository and registry combination does not have an associated
 // repository policy.
 type RepositoryPolicyNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The error message associated with the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -7619,17 +7974,17 @@ func (s RepositoryPolicyNotFoundException) GoString() string {
 
 func newErrorRepositoryPolicyNotFoundException(v protocol.ResponseMetadata) error {
 	return &RepositoryPolicyNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s RepositoryPolicyNotFoundException) Code() string {
+func (s *RepositoryPolicyNotFoundException) Code() string {
 	return "RepositoryPolicyNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s RepositoryPolicyNotFoundException) Message() string {
+func (s *RepositoryPolicyNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7637,29 +7992,29 @@ func (s RepositoryPolicyNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s RepositoryPolicyNotFoundException) OrigErr() error {
+func (s *RepositoryPolicyNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s RepositoryPolicyNotFoundException) Error() string {
+func (s *RepositoryPolicyNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s RepositoryPolicyNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *RepositoryPolicyNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s RepositoryPolicyNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *RepositoryPolicyNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified image scan could not be found. Ensure that image scanning is
 // enabled on the repository and try again.
 type ScanNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -7676,17 +8031,17 @@ func (s ScanNotFoundException) GoString() string {
 
 func newErrorScanNotFoundException(v protocol.ResponseMetadata) error {
 	return &ScanNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ScanNotFoundException) Code() string {
+func (s *ScanNotFoundException) Code() string {
 	return "ScanNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ScanNotFoundException) Message() string {
+func (s *ScanNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7694,28 +8049,28 @@ func (s ScanNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ScanNotFoundException) OrigErr() error {
+func (s *ScanNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ScanNotFoundException) Error() string {
+func (s *ScanNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ScanNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ScanNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ScanNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ScanNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // These errors are usually caused by a server-side issue.
 type ServerException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The error message associated with the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -7733,17 +8088,17 @@ func (s ServerException) GoString() string {
 
 func newErrorServerException(v protocol.ResponseMetadata) error {
 	return &ServerException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ServerException) Code() string {
+func (s *ServerException) Code() string {
 	return "ServerException"
 }
 
 // Message returns the exception's message.
-func (s ServerException) Message() string {
+func (s *ServerException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7751,22 +8106,22 @@ func (s ServerException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ServerException) OrigErr() error {
+func (s *ServerException) OrigErr() error {
 	return nil
 }
 
-func (s ServerException) Error() string {
+func (s *ServerException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ServerException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ServerException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ServerException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ServerException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type SetRepositoryPolicyInput struct {
@@ -7778,7 +8133,7 @@ type SetRepositoryPolicyInput struct {
 	Force *bool `locationName:"force" type:"boolean"`
 
 	// The JSON repository policy text to apply to the repository. For more information,
-	// see Amazon ECR Repository Policy Examples (https://docs.aws.amazon.com/AmazonECR/latest/userguide/RepositoryPolicyExamples.html)
+	// see Amazon ECR Repository Policies (https://docs.aws.amazon.com/AmazonECR/latest/userguide/repository-policy-examples.html)
 	// in the Amazon Elastic Container Registry User Guide.
 	//
 	// PolicyText is a required field
@@ -8233,8 +8588,8 @@ func (s TagResourceOutput) GoString() string {
 // The list of tags on the repository is over the limit. The maximum number
 // of tags that can be applied to a repository is 50.
 type TooManyTagsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -8251,17 +8606,17 @@ func (s TooManyTagsException) GoString() string {
 
 func newErrorTooManyTagsException(v protocol.ResponseMetadata) error {
 	return &TooManyTagsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TooManyTagsException) Code() string {
+func (s *TooManyTagsException) Code() string {
 	return "TooManyTagsException"
 }
 
 // Message returns the exception's message.
-func (s TooManyTagsException) Message() string {
+func (s *TooManyTagsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -8269,22 +8624,78 @@ func (s TooManyTagsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TooManyTagsException) OrigErr() error {
+func (s *TooManyTagsException) OrigErr() error {
 	return nil
 }
 
-func (s TooManyTagsException) Error() string {
+func (s *TooManyTagsException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TooManyTagsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TooManyTagsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TooManyTagsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TooManyTagsException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The image is of a type that cannot be scanned.
+type UnsupportedImageTypeException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s UnsupportedImageTypeException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnsupportedImageTypeException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnsupportedImageTypeException(v protocol.ResponseMetadata) error {
+	return &UnsupportedImageTypeException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *UnsupportedImageTypeException) Code() string {
+	return "UnsupportedImageTypeException"
+}
+
+// Message returns the exception's message.
+func (s *UnsupportedImageTypeException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *UnsupportedImageTypeException) OrigErr() error {
+	return nil
+}
+
+func (s *UnsupportedImageTypeException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *UnsupportedImageTypeException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *UnsupportedImageTypeException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -8364,12 +8775,14 @@ type UploadLayerPartInput struct {
 	// LayerPartBlob is a required field
 	LayerPartBlob []byte `locationName:"layerPartBlob" type:"blob" required:"true"`
 
-	// The integer value of the first byte of the layer part.
+	// The position of the first byte of the layer part witin the overall image
+	// layer.
 	//
 	// PartFirstByte is a required field
 	PartFirstByte *int64 `locationName:"partFirstByte" type:"long" required:"true"`
 
-	// The integer value of the last byte of the layer part.
+	// The position of the last byte of the layer part within the overall image
+	// layer.
 	//
 	// PartLastByte is a required field
 	PartLastByte *int64 `locationName:"partLastByte" type:"long" required:"true"`
@@ -8514,11 +8927,11 @@ func (s *UploadLayerPartOutput) SetUploadId(v string) *UploadLayerPartOutput {
 	return s
 }
 
-// The upload could not be found, or the specified upload id is not valid for
+// The upload could not be found, or the specified upload ID is not valid for
 // this repository.
 type UploadNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The error message associated with the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -8536,17 +8949,17 @@ func (s UploadNotFoundException) GoString() string {
 
 func newErrorUploadNotFoundException(v protocol.ResponseMetadata) error {
 	return &UploadNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UploadNotFoundException) Code() string {
+func (s *UploadNotFoundException) Code() string {
 	return "UploadNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s UploadNotFoundException) Message() string {
+func (s *UploadNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -8554,22 +8967,38 @@ func (s UploadNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UploadNotFoundException) OrigErr() error {
+func (s *UploadNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s UploadNotFoundException) Error() string {
+func (s *UploadNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UploadNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UploadNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UploadNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UploadNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+const (
+	// EncryptionTypeAes256 is a EncryptionType enum value
+	EncryptionTypeAes256 = "AES256"
+
+	// EncryptionTypeKms is a EncryptionType enum value
+	EncryptionTypeKms = "KMS"
+)
+
+// EncryptionType_Values returns all elements of the EncryptionType enum
+func EncryptionType_Values() []string {
+	return []string{
+		EncryptionTypeAes256,
+		EncryptionTypeKms,
+	}
 }
 
 const (
@@ -8592,10 +9021,29 @@ const (
 	FindingSeverityUndefined = "UNDEFINED"
 )
 
+// FindingSeverity_Values returns all elements of the FindingSeverity enum
+func FindingSeverity_Values() []string {
+	return []string{
+		FindingSeverityInformational,
+		FindingSeverityLow,
+		FindingSeverityMedium,
+		FindingSeverityHigh,
+		FindingSeverityCritical,
+		FindingSeverityUndefined,
+	}
+}
+
 const (
 	// ImageActionTypeExpire is a ImageActionType enum value
 	ImageActionTypeExpire = "EXPIRE"
 )
+
+// ImageActionType_Values returns all elements of the ImageActionType enum
+func ImageActionType_Values() []string {
+	return []string{
+		ImageActionTypeExpire,
+	}
+}
 
 const (
 	// ImageFailureCodeInvalidImageDigest is a ImageFailureCode enum value
@@ -8612,7 +9060,26 @@ const (
 
 	// ImageFailureCodeMissingDigestAndTag is a ImageFailureCode enum value
 	ImageFailureCodeMissingDigestAndTag = "MissingDigestAndTag"
+
+	// ImageFailureCodeImageReferencedByManifestList is a ImageFailureCode enum value
+	ImageFailureCodeImageReferencedByManifestList = "ImageReferencedByManifestList"
+
+	// ImageFailureCodeKmsError is a ImageFailureCode enum value
+	ImageFailureCodeKmsError = "KmsError"
 )
+
+// ImageFailureCode_Values returns all elements of the ImageFailureCode enum
+func ImageFailureCode_Values() []string {
+	return []string{
+		ImageFailureCodeInvalidImageDigest,
+		ImageFailureCodeInvalidImageTag,
+		ImageFailureCodeImageTagDoesNotMatchDigest,
+		ImageFailureCodeImageNotFound,
+		ImageFailureCodeMissingDigestAndTag,
+		ImageFailureCodeImageReferencedByManifestList,
+		ImageFailureCodeKmsError,
+	}
+}
 
 const (
 	// ImageTagMutabilityMutable is a ImageTagMutability enum value
@@ -8622,6 +9089,14 @@ const (
 	ImageTagMutabilityImmutable = "IMMUTABLE"
 )
 
+// ImageTagMutability_Values returns all elements of the ImageTagMutability enum
+func ImageTagMutability_Values() []string {
+	return []string{
+		ImageTagMutabilityMutable,
+		ImageTagMutabilityImmutable,
+	}
+}
+
 const (
 	// LayerAvailabilityAvailable is a LayerAvailability enum value
 	LayerAvailabilityAvailable = "AVAILABLE"
@@ -8630,6 +9105,14 @@ const (
 	LayerAvailabilityUnavailable = "UNAVAILABLE"
 )
 
+// LayerAvailability_Values returns all elements of the LayerAvailability enum
+func LayerAvailability_Values() []string {
+	return []string{
+		LayerAvailabilityAvailable,
+		LayerAvailabilityUnavailable,
+	}
+}
+
 const (
 	// LayerFailureCodeInvalidLayerDigest is a LayerFailureCode enum value
 	LayerFailureCodeInvalidLayerDigest = "InvalidLayerDigest"
@@ -8637,6 +9120,14 @@ const (
 	// LayerFailureCodeMissingLayerDigest is a LayerFailureCode enum value
 	LayerFailureCodeMissingLayerDigest = "MissingLayerDigest"
 )
+
+// LayerFailureCode_Values returns all elements of the LayerFailureCode enum
+func LayerFailureCode_Values() []string {
+	return []string{
+		LayerFailureCodeInvalidLayerDigest,
+		LayerFailureCodeMissingLayerDigest,
+	}
+}
 
 const (
 	// LifecyclePolicyPreviewStatusInProgress is a LifecyclePolicyPreviewStatus enum value
@@ -8652,6 +9143,16 @@ const (
 	LifecyclePolicyPreviewStatusFailed = "FAILED"
 )
 
+// LifecyclePolicyPreviewStatus_Values returns all elements of the LifecyclePolicyPreviewStatus enum
+func LifecyclePolicyPreviewStatus_Values() []string {
+	return []string{
+		LifecyclePolicyPreviewStatusInProgress,
+		LifecyclePolicyPreviewStatusComplete,
+		LifecyclePolicyPreviewStatusExpired,
+		LifecyclePolicyPreviewStatusFailed,
+	}
+}
+
 const (
 	// ScanStatusInProgress is a ScanStatus enum value
 	ScanStatusInProgress = "IN_PROGRESS"
@@ -8663,6 +9164,15 @@ const (
 	ScanStatusFailed = "FAILED"
 )
 
+// ScanStatus_Values returns all elements of the ScanStatus enum
+func ScanStatus_Values() []string {
+	return []string{
+		ScanStatusInProgress,
+		ScanStatusComplete,
+		ScanStatusFailed,
+	}
+}
+
 const (
 	// TagStatusTagged is a TagStatus enum value
 	TagStatusTagged = "TAGGED"
@@ -8673,3 +9183,12 @@ const (
 	// TagStatusAny is a TagStatus enum value
 	TagStatusAny = "ANY"
 )
+
+// TagStatus_Values returns all elements of the TagStatus enum
+func TagStatus_Values() []string {
+	return []string{
+		TagStatusTagged,
+		TagStatusUntagged,
+		TagStatusAny,
+	}
+}

@@ -12,9 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -82,10 +83,12 @@ func TestAccAWSELB_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_port", "8000"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_protocol", "http"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+						"instance_port":     "8000",
+						"instance_protocol": "http",
+						"lb_port":           "80",
+						"lb_protocol":       "http",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "cross_zone_load_balancing", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -485,10 +488,12 @@ func TestAccAWSELB_listener(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_port", "8000"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_protocol", "http"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+						"instance_port":     "8000",
+						"instance_protocol": "http",
+						"lb_port":           "80",
+						"lb_protocol":       "http",
+					}),
 				),
 			},
 			{
@@ -496,14 +501,18 @@ func TestAccAWSELB_listener(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_port", "8000"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "listener.829854800.instance_port", "22"),
-					resource.TestCheckResourceAttr(resourceName, "listener.829854800.instance_protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "listener.829854800.lb_port", "22"),
-					resource.TestCheckResourceAttr(resourceName, "listener.829854800.lb_protocol", "tcp"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+						"instance_port":     "8000",
+						"instance_protocol": "http",
+						"lb_port":           "80",
+						"lb_protocol":       "http",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+						"instance_port":     "22",
+						"instance_protocol": "tcp",
+						"lb_port":           "22",
+						"lb_protocol":       "tcp",
+					}),
 				),
 			},
 			{
@@ -511,10 +520,12 @@ func TestAccAWSELB_listener(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_port", "8000"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_protocol", "http"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+						"instance_port":     "8000",
+						"instance_protocol": "http",
+						"lb_port":           "80",
+						"lb_protocol":       "http",
+					}),
 				),
 			},
 			{
@@ -522,10 +533,12 @@ func TestAccAWSELB_listener(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "listener.3931999347.instance_port", "8080"),
-					resource.TestCheckResourceAttr(resourceName, "listener.3931999347.instance_protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "listener.3931999347.lb_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "listener.3931999347.lb_protocol", "http"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+						"instance_port":     "8080",
+						"instance_protocol": "http",
+						"lb_port":           "80",
+						"lb_protocol":       "http",
+					}),
 				),
 			},
 			{
@@ -544,10 +557,12 @@ func TestAccAWSELB_listener(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_port", "8000"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_protocol", "http"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+						"instance_port":     "8000",
+						"instance_protocol": "http",
+						"lb_port":           "80",
+						"lb_protocol":       "http",
+					}),
 				),
 			},
 			{
@@ -573,10 +588,12 @@ func TestAccAWSELB_listener(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_port", "8000"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_protocol", "http"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
+						"instance_port":     "8000",
+						"instance_protocol": "http",
+						"lb_port":           "80",
+						"lb_protocol":       "http",
+					}),
 				),
 			},
 		},
@@ -1107,16 +1124,21 @@ func testAccCheckAWSELBExists(n string, res *elb.LoadBalancerDescription) resour
 const testAccAWSELBConfig = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
   cross_zone_load_balancing = true
@@ -1127,16 +1149,21 @@ func testAccAWSELBConfigTags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
   tags = {
@@ -1152,16 +1179,21 @@ func testAccAWSELBConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) str
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
   tags = {
@@ -1177,17 +1209,22 @@ resource "aws_elb" "test" {
 const testAccAWSELBFullRangeOfCharacters = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
-  name = "%s"
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  name               = "%s"
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 }
 `
@@ -1195,16 +1232,21 @@ resource "aws_elb" "test" {
 const testAccAWSELBAccessLogs = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 }
 `
@@ -1212,7 +1254,7 @@ resource "aws_elb" "test" {
 func testAccAWSELBAccessLogsOn(r string) string {
 	return `
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
     instance_port     = 8000
@@ -1223,12 +1265,17 @@ resource "aws_elb" "test" {
 
   access_logs {
     interval = 5
-    bucket   = "${aws_s3_bucket.accesslogs_bucket.bucket}"
+    bucket   = aws_s3_bucket.accesslogs_bucket.bucket
   }
 }
 
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 ` + testAccAWSELBAccessLogsCommon(r)
 }
@@ -1236,7 +1283,7 @@ data "aws_availability_zones" "available" {
 func testAccAWSELBAccessLogsDisabled(r string) string {
 	return `
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
     instance_port     = 8000
@@ -1247,22 +1294,29 @@ resource "aws_elb" "test" {
 
   access_logs {
     interval = 5
-    bucket   = "${aws_s3_bucket.accesslogs_bucket.bucket}"
+    bucket   = aws_s3_bucket.accesslogs_bucket.bucket
     enabled  = false
   }
 }
 
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 ` + testAccAWSELBAccessLogsCommon(r)
 }
 
 func testAccAWSELBAccessLogsCommon(r string) string {
 	return fmt.Sprintf(`
-data "aws_elb_service_account" "current" {}
+data "aws_elb_service_account" "current" {
+}
 
-data "aws_partition" "current" {}
+data "aws_partition" "current" {
+}
 
 resource "aws_s3_bucket" "accesslogs_bucket" {
   bucket        = "%[1]s"
@@ -1293,17 +1347,22 @@ EOF
 const testAccAWSELB_namePrefix = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
-  name_prefix = "test-"
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  name_prefix        = "test-"
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 }
 `
@@ -1311,16 +1370,21 @@ resource "aws_elb" "test" {
 const testAccAWSELBGeneratedName = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 }
 `
@@ -1328,39 +1392,49 @@ resource "aws_elb" "test" {
 const testAccAWSELB_zeroValueName = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
   name               = ""
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 }
 
 # See https://github.com/terraform-providers/terraform-provider-aws/issues/2498
 output "lb_name" {
-  value = "${aws_elb.test.name}"
+  value = aws_elb.test.name
 }
 `
 
 const testAccAWSELBConfig_AvailabilityZonesUpdate = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 }
 `
@@ -1383,23 +1457,28 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
 
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
-  instances = ["${aws_instance.test.id}"]
+  instances = [aws_instance.test.id]
 }
 
 resource "aws_instance" "test" {
-  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.micro"
 }
 `
@@ -1407,24 +1486,29 @@ resource "aws_instance" "test" {
 const testAccAWSELBConfigHealthCheck = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
   health_check {
-    healthy_threshold = 5
+    healthy_threshold   = 5
     unhealthy_threshold = 5
-    target = "HTTP:8000/"
-    interval = 60
-    timeout = 30
+    target              = "HTTP:8000/"
+    interval            = 60
+    timeout             = 30
   }
 }
 `
@@ -1432,24 +1516,29 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigHealthCheck_update = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
   health_check {
-    healthy_threshold = 10
+    healthy_threshold   = 10
     unhealthy_threshold = 5
-    target = "HTTP:8000/"
-    interval = 60
-    timeout = 30
+    target              = "HTTP:8000/"
+    interval            = 60
+    timeout             = 30
   }
 }
 `
@@ -1457,16 +1546,21 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigListener_update = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8080
+    instance_port     = 8080
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 }
 `
@@ -1474,23 +1568,28 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigListener_multipleListeners = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
   listener {
-    instance_port = 22
+    instance_port     = 22
     instance_protocol = "tcp"
-    lb_port = 22
-    lb_protocol = "tcp"
+    lb_port           = 22
+    lb_protocol       = "tcp"
   }
 }
 `
@@ -1498,135 +1597,172 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigIdleTimeout = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
-	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
-	listener {
-		instance_port = 8000
-		instance_protocol = "http"
-		lb_port = 80
-		lb_protocol = "http"
-	}
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
 
-	idle_timeout = 200
+  idle_timeout = 200
 }
 `
 
 const testAccAWSELBConfigIdleTimeout_update = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
-	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
-	listener {
-		instance_port = 8000
-		instance_protocol = "http"
-		lb_port = 80
-		lb_protocol = "http"
-	}
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
 
-	idle_timeout = 400
+  idle_timeout = 400
 }
 `
 
 const testAccAWSELBConfigConnectionDraining = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
-	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
-	listener {
-		instance_port = 8000
-		instance_protocol = "http"
-		lb_port = 80
-		lb_protocol = "http"
-	}
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
 
-	connection_draining = true
-	connection_draining_timeout = 400
+  connection_draining         = true
+  connection_draining_timeout = 400
 }
 `
 
 const testAccAWSELBConfigConnectionDraining_update_timeout = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
-	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
-	listener {
-		instance_port = 8000
-		instance_protocol = "http"
-		lb_port = 80
-		lb_protocol = "http"
-	}
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
 
-	connection_draining = true
-	connection_draining_timeout = 600
+  connection_draining         = true
+  connection_draining_timeout = 600
 }
 `
 
 const testAccAWSELBConfigConnectionDraining_update_disable = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
-	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
-	listener {
-		instance_port = 8000
-		instance_protocol = "http"
-		lb_port = 80
-		lb_protocol = "http"
-	}
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
 
-	connection_draining = false
+  connection_draining = false
 }
 `
 
 const testAccAWSELBConfigSecurityGroups = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
-  security_groups = ["${aws_security_group.test.id}"]
+  security_groups = [aws_security_group.test.id]
 }
 
 resource "aws_security_group" "test" {
   ingress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 80
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 80
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-	tags = {
-		Name = "tf_elb_sg_test"
-	}
+  tags = {
+    Name = "tf_elb_sg_test"
+  }
 }
 `
 
 func testAccELBConfig_Listener_IAMServerCertificate(certName, certificate, key, lbProtocol string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_iam_server_certificate" "test_cert" {
   name             = "%[1]s"
@@ -1635,14 +1771,14 @@ resource "aws_iam_server_certificate" "test_cert" {
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port      = 443
     instance_protocol  = "%[4]s"
     lb_port            = 443
     lb_protocol        = "%[4]s"
-    ssl_certificate_id = "${aws_iam_server_certificate.test_cert.arn}"
+    ssl_certificate_id = aws_iam_server_certificate.test_cert.arn
   }
 }
 `, certName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key), lbProtocol)
@@ -1650,7 +1786,14 @@ resource "aws_elb" "test" {
 
 func testAccELBConfig_Listener_IAMServerCertificate_AddInvalidListener(certName, certificate, key string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_iam_server_certificate" "test_cert" {
   name             = "%[1]s"
@@ -1659,14 +1802,14 @@ resource "aws_iam_server_certificate" "test_cert" {
 }
 
 resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port      = 443
     instance_protocol  = "https"
     lb_port            = 443
     lb_protocol        = "https"
-    ssl_certificate_id = "${aws_iam_server_certificate.test_cert.arn}"
+    ssl_certificate_id = aws_iam_server_certificate.test_cert.arn
   }
 
   # lb_protocol tcp and ssl_certificate_id is not valid
@@ -1675,7 +1818,7 @@ resource "aws_elb" "test" {
     instance_protocol  = "tcp"
     lb_port            = 8443
     lb_protocol        = "tcp"
-    ssl_certificate_id = "${aws_iam_server_certificate.test_cert.arn}"
+    ssl_certificate_id = aws_iam_server_certificate.test_cert.arn
   }
 }
 `, certName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
@@ -1684,6 +1827,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfig_subnets = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "azelb" {
@@ -1696,30 +1844,32 @@ resource "aws_vpc" "azelb" {
 }
 
 resource "aws_subnet" "public_a_one" {
-  vpc_id = "${aws_vpc.azelb.id}"
+  vpc_id = aws_vpc.azelb.id
 
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   tags = {
     Name = "tf-acc-elb-subnets-a-one"
   }
 }
 
 resource "aws_subnet" "public_b_one" {
-  vpc_id = "${aws_vpc.azelb.id}"
+  vpc_id = aws_vpc.azelb.id
 
   cidr_block        = "10.1.7.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  availability_zone = data.aws_availability_zones.available.names[1]
+
   tags = {
     Name = "tf-acc-elb-subnets-b-one"
   }
 }
 
 resource "aws_subnet" "public_a_two" {
-  vpc_id = "${aws_vpc.azelb.id}"
+  vpc_id = aws_vpc.azelb.id
 
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
   tags = {
     Name = "tf-acc-elb-subnets-a-two"
   }
@@ -1729,8 +1879,8 @@ resource "aws_elb" "test" {
   name = "terraform-asg-deployment-example"
 
   subnets = [
-    "${aws_subnet.public_a_one.id}",
-    "${aws_subnet.public_b_one.id}",
+    aws_subnet.public_a_one.id,
+    aws_subnet.public_b_one.id,
   ]
 
   listener {
@@ -1740,11 +1890,11 @@ resource "aws_elb" "test" {
     lb_protocol       = "http"
   }
 
-  depends_on = ["aws_internet_gateway.gw"]
+  depends_on = [aws_internet_gateway.gw]
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.azelb.id}"
+  vpc_id = aws_vpc.azelb.id
 
   tags = {
     Name = "main"
@@ -1755,6 +1905,11 @@ resource "aws_internet_gateway" "gw" {
 const testAccAWSELBConfig_subnet_swap = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "azelb" {
@@ -1767,30 +1922,30 @@ resource "aws_vpc" "azelb" {
 }
 
 resource "aws_subnet" "public_a_one" {
-  vpc_id = "${aws_vpc.azelb.id}"
+  vpc_id = aws_vpc.azelb.id
 
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   tags = {
     Name = "tf-acc-elb-subnet-swap-a-one"
   }
 }
 
 resource "aws_subnet" "public_b_one" {
-  vpc_id = "${aws_vpc.azelb.id}"
+  vpc_id = aws_vpc.azelb.id
 
   cidr_block        = "10.1.7.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  availability_zone = data.aws_availability_zones.available.names[1]
   tags = {
     Name = "tf-acc-elb-subnet-swap-b-one"
   }
 }
 
 resource "aws_subnet" "public_a_two" {
-  vpc_id = "${aws_vpc.azelb.id}"
+  vpc_id = aws_vpc.azelb.id
 
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   tags = {
     Name = "tf-acc-elb-subnet-swap-a-two"
   }
@@ -1800,8 +1955,8 @@ resource "aws_elb" "test" {
   name = "terraform-asg-deployment-example"
 
   subnets = [
-    "${aws_subnet.public_a_two.id}",
-    "${aws_subnet.public_b_one.id}",
+    aws_subnet.public_a_two.id,
+    aws_subnet.public_b_one.id,
   ]
 
   listener {
@@ -1811,11 +1966,11 @@ resource "aws_elb" "test" {
     lb_protocol       = "http"
   }
 
-  depends_on = ["aws_internet_gateway.gw"]
+  depends_on = [aws_internet_gateway.gw]
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.azelb.id}"
+  vpc_id = aws_vpc.azelb.id
 
   tags = {
     Name = "main"

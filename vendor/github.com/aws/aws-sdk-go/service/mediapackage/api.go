@@ -2791,6 +2791,14 @@ type DashPackage struct {
 
 	// Duration (in seconds) to delay live content before presentation.
 	SuggestedPresentationDelaySeconds *int64 `locationName:"suggestedPresentationDelaySeconds" type:"integer"`
+
+	// Determines the type of UTCTiming included in the Media Presentation Description
+	// (MPD)
+	UtcTiming *string `locationName:"utcTiming" type:"string" enum:"UtcTiming"`
+
+	// Specifies the value attribute of the UTCTiming field when utcTiming is set
+	// to HTTP-ISO or HTTP-HEAD
+	UtcTimingUri *string `locationName:"utcTimingUri" type:"string"`
 }
 
 // String returns the string representation
@@ -2893,6 +2901,18 @@ func (s *DashPackage) SetStreamSelection(v *StreamSelection) *DashPackage {
 // SetSuggestedPresentationDelaySeconds sets the SuggestedPresentationDelaySeconds field's value.
 func (s *DashPackage) SetSuggestedPresentationDelaySeconds(v int64) *DashPackage {
 	s.SuggestedPresentationDelaySeconds = &v
+	return s
+}
+
+// SetUtcTiming sets the UtcTiming field's value.
+func (s *DashPackage) SetUtcTiming(v string) *DashPackage {
+	s.UtcTiming = &v
+	return s
+}
+
+// SetUtcTimingUri sets the UtcTimingUri field's value.
+func (s *DashPackage) SetUtcTimingUri(v string) *DashPackage {
+	s.UtcTimingUri = &v
 	return s
 }
 
@@ -3412,8 +3432,8 @@ func (s *DescribeOriginEndpointOutput) SetWhitelist(v []*string) *DescribeOrigin
 }
 
 type ForbiddenException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -3430,17 +3450,17 @@ func (s ForbiddenException) GoString() string {
 
 func newErrorForbiddenException(v protocol.ResponseMetadata) error {
 	return &ForbiddenException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ForbiddenException) Code() string {
+func (s *ForbiddenException) Code() string {
 	return "ForbiddenException"
 }
 
 // Message returns the exception's message.
-func (s ForbiddenException) Message() string {
+func (s *ForbiddenException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3448,22 +3468,22 @@ func (s ForbiddenException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ForbiddenException) OrigErr() error {
+func (s *ForbiddenException) OrigErr() error {
 	return nil
 }
 
-func (s ForbiddenException) Error() string {
+func (s *ForbiddenException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ForbiddenException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ForbiddenException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ForbiddenException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ForbiddenException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A HarvestJob resource configuration
@@ -3681,7 +3701,10 @@ type HlsManifest struct {
 	// will omit all SCTE-35 ad markers from the output."PASSTHROUGH" causes the
 	// manifest to contain a copy of the SCTE-35 admarkers (comments) taken directly
 	// from the input HTTP Live Streaming (HLS) manifest."SCTE35_ENHANCED" generates
-	// ad markers and blackout tags based on SCTE-35messages in the input source.
+	// ad markers and blackout tags based on SCTE-35messages in the input source."DATERANGE"
+	// inserts EXT-X-DATERANGE tags to signal ad and program transition events in
+	// HLS and CMAF manifests. For this option, you must set a programDateTimeIntervalSeconds
+	// value that is greater than 0.
 	AdMarkers *string `locationName:"adMarkers" type:"string" enum:"AdMarkers"`
 
 	// The ID of the manifest. The ID must be unique within the OriginEndpoint and
@@ -3785,7 +3808,10 @@ type HlsManifestCreateOrUpdateParameters struct {
 	// will omit all SCTE-35 ad markers from the output."PASSTHROUGH" causes the
 	// manifest to contain a copy of the SCTE-35 admarkers (comments) taken directly
 	// from the input HTTP Live Streaming (HLS) manifest."SCTE35_ENHANCED" generates
-	// ad markers and blackout tags based on SCTE-35messages in the input source.
+	// ad markers and blackout tags based on SCTE-35messages in the input source."DATERANGE"
+	// inserts EXT-X-DATERANGE tags to signal ad and program transition events in
+	// HLS and CMAF manifests. For this option, you must set a programDateTimeIntervalSeconds
+	// value that is greater than 0.
 	AdMarkers *string `locationName:"adMarkers" type:"string" enum:"AdMarkers"`
 
 	// A list of SCTE-35 message types that are treated as ad markers in the output.
@@ -3922,7 +3948,10 @@ type HlsPackage struct {
 	// will omit all SCTE-35 ad markers from the output."PASSTHROUGH" causes the
 	// manifest to contain a copy of the SCTE-35 admarkers (comments) taken directly
 	// from the input HTTP Live Streaming (HLS) manifest."SCTE35_ENHANCED" generates
-	// ad markers and blackout tags based on SCTE-35messages in the input source.
+	// ad markers and blackout tags based on SCTE-35messages in the input source."DATERANGE"
+	// inserts EXT-X-DATERANGE tags to signal ad and program transition events in
+	// HLS and CMAF manifests. For this option, you must set a programDateTimeIntervalSeconds
+	// value that is greater than 0.
 	AdMarkers *string `locationName:"adMarkers" type:"string" enum:"AdMarkers"`
 
 	// A list of SCTE-35 message types that are treated as ad markers in the output.
@@ -4120,8 +4149,8 @@ func (s *IngestEndpoint) SetUsername(v string) *IngestEndpoint {
 }
 
 type InternalServerErrorException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -4138,17 +4167,17 @@ func (s InternalServerErrorException) GoString() string {
 
 func newErrorInternalServerErrorException(v protocol.ResponseMetadata) error {
 	return &InternalServerErrorException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalServerErrorException) Code() string {
+func (s *InternalServerErrorException) Code() string {
 	return "InternalServerErrorException"
 }
 
 // Message returns the exception's message.
-func (s InternalServerErrorException) Message() string {
+func (s *InternalServerErrorException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4156,22 +4185,22 @@ func (s InternalServerErrorException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalServerErrorException) OrigErr() error {
+func (s *InternalServerErrorException) OrigErr() error {
 	return nil
 }
 
-func (s InternalServerErrorException) Error() string {
+func (s *InternalServerErrorException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalServerErrorException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalServerErrorException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalServerErrorException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalServerErrorException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type ListChannelsInput struct {
@@ -4590,8 +4619,8 @@ func (s *MssPackage) SetStreamSelection(v *StreamSelection) *MssPackage {
 }
 
 type NotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -4608,17 +4637,17 @@ func (s NotFoundException) GoString() string {
 
 func newErrorNotFoundException(v protocol.ResponseMetadata) error {
 	return &NotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s NotFoundException) Code() string {
+func (s *NotFoundException) Code() string {
 	return "NotFoundException"
 }
 
 // Message returns the exception's message.
-func (s NotFoundException) Message() string {
+func (s *NotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4626,22 +4655,22 @@ func (s NotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s NotFoundException) OrigErr() error {
+func (s *NotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s NotFoundException) Error() string {
+func (s *NotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s NotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *NotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s NotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *NotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An OriginEndpoint resource configuration.
@@ -5086,8 +5115,8 @@ func (s *S3Destination) SetRoleArn(v string) *S3Destination {
 }
 
 type ServiceUnavailableException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5104,17 +5133,17 @@ func (s ServiceUnavailableException) GoString() string {
 
 func newErrorServiceUnavailableException(v protocol.ResponseMetadata) error {
 	return &ServiceUnavailableException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ServiceUnavailableException) Code() string {
+func (s *ServiceUnavailableException) Code() string {
 	return "ServiceUnavailableException"
 }
 
 // Message returns the exception's message.
-func (s ServiceUnavailableException) Message() string {
+func (s *ServiceUnavailableException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5122,22 +5151,22 @@ func (s ServiceUnavailableException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ServiceUnavailableException) OrigErr() error {
+func (s *ServiceUnavailableException) OrigErr() error {
 	return nil
 }
 
-func (s ServiceUnavailableException) Error() string {
+func (s *ServiceUnavailableException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ServiceUnavailableException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ServiceUnavailableException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ServiceUnavailableException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ServiceUnavailableException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A configuration for accessing an external Secure Packager and Encoder Key
@@ -5342,8 +5371,8 @@ func (s TagResourceOutput) GoString() string {
 }
 
 type TooManyRequestsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5360,17 +5389,17 @@ func (s TooManyRequestsException) GoString() string {
 
 func newErrorTooManyRequestsException(v protocol.ResponseMetadata) error {
 	return &TooManyRequestsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TooManyRequestsException) Code() string {
+func (s *TooManyRequestsException) Code() string {
 	return "TooManyRequestsException"
 }
 
 // Message returns the exception's message.
-func (s TooManyRequestsException) Message() string {
+func (s *TooManyRequestsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5378,27 +5407,27 @@ func (s TooManyRequestsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TooManyRequestsException) OrigErr() error {
+func (s *TooManyRequestsException) OrigErr() error {
 	return nil
 }
 
-func (s TooManyRequestsException) Error() string {
+func (s *TooManyRequestsException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TooManyRequestsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TooManyRequestsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TooManyRequestsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TooManyRequestsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UnprocessableEntityException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5415,17 +5444,17 @@ func (s UnprocessableEntityException) GoString() string {
 
 func newErrorUnprocessableEntityException(v protocol.ResponseMetadata) error {
 	return &UnprocessableEntityException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnprocessableEntityException) Code() string {
+func (s *UnprocessableEntityException) Code() string {
 	return "UnprocessableEntityException"
 }
 
 // Message returns the exception's message.
-func (s UnprocessableEntityException) Message() string {
+func (s *UnprocessableEntityException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5433,22 +5462,22 @@ func (s UnprocessableEntityException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnprocessableEntityException) OrigErr() error {
+func (s *UnprocessableEntityException) OrigErr() error {
 	return nil
 }
 
-func (s UnprocessableEntityException) Error() string {
+func (s *UnprocessableEntityException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnprocessableEntityException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnprocessableEntityException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnprocessableEntityException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnprocessableEntityException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -5933,7 +5962,20 @@ const (
 
 	// AdMarkersPassthrough is a AdMarkers enum value
 	AdMarkersPassthrough = "PASSTHROUGH"
+
+	// AdMarkersDaterange is a AdMarkers enum value
+	AdMarkersDaterange = "DATERANGE"
 )
+
+// AdMarkers_Values returns all elements of the AdMarkers enum
+func AdMarkers_Values() []string {
+	return []string{
+		AdMarkersNone,
+		AdMarkersScte35Enhanced,
+		AdMarkersPassthrough,
+		AdMarkersDaterange,
+	}
+}
 
 // This setting allows the delivery restriction flags on SCTE-35 segmentation
 // descriptors todetermine whether a message signals an ad. Choosing "NONE"
@@ -5959,6 +6001,16 @@ const (
 	AdsOnDeliveryRestrictionsBoth = "BOTH"
 )
 
+// AdsOnDeliveryRestrictions_Values returns all elements of the AdsOnDeliveryRestrictions enum
+func AdsOnDeliveryRestrictions_Values() []string {
+	return []string{
+		AdsOnDeliveryRestrictionsNone,
+		AdsOnDeliveryRestrictionsRestricted,
+		AdsOnDeliveryRestrictionsUnrestricted,
+		AdsOnDeliveryRestrictionsBoth,
+	}
+}
+
 const (
 	// EncryptionMethodAes128 is a EncryptionMethod enum value
 	EncryptionMethodAes128 = "AES_128"
@@ -5966,6 +6018,14 @@ const (
 	// EncryptionMethodSampleAes is a EncryptionMethod enum value
 	EncryptionMethodSampleAes = "SAMPLE_AES"
 )
+
+// EncryptionMethod_Values returns all elements of the EncryptionMethod enum
+func EncryptionMethod_Values() []string {
+	return []string{
+		EncryptionMethodAes128,
+		EncryptionMethodSampleAes,
+	}
+}
 
 const (
 	// ManifestLayoutFull is a ManifestLayout enum value
@@ -5975,6 +6035,14 @@ const (
 	ManifestLayoutCompact = "COMPACT"
 )
 
+// ManifestLayout_Values returns all elements of the ManifestLayout enum
+func ManifestLayout_Values() []string {
+	return []string{
+		ManifestLayoutFull,
+		ManifestLayoutCompact,
+	}
+}
+
 const (
 	// OriginationAllow is a Origination enum value
 	OriginationAllow = "ALLOW"
@@ -5982,6 +6050,14 @@ const (
 	// OriginationDeny is a Origination enum value
 	OriginationDeny = "DENY"
 )
+
+// Origination_Values returns all elements of the Origination enum
+func Origination_Values() []string {
+	return []string{
+		OriginationAllow,
+		OriginationDeny,
+	}
+}
 
 const (
 	// PlaylistTypeNone is a PlaylistType enum value
@@ -5994,6 +6070,15 @@ const (
 	PlaylistTypeVod = "VOD"
 )
 
+// PlaylistType_Values returns all elements of the PlaylistType enum
+func PlaylistType_Values() []string {
+	return []string{
+		PlaylistTypeNone,
+		PlaylistTypeEvent,
+		PlaylistTypeVod,
+	}
+}
+
 const (
 	// ProfileNone is a Profile enum value
 	ProfileNone = "NONE"
@@ -6001,6 +6086,14 @@ const (
 	// ProfileHbbtv15 is a Profile enum value
 	ProfileHbbtv15 = "HBBTV_1_5"
 )
+
+// Profile_Values returns all elements of the Profile enum
+func Profile_Values() []string {
+	return []string{
+		ProfileNone,
+		ProfileHbbtv15,
+	}
+}
 
 const (
 	// SegmentTemplateFormatNumberWithTimeline is a SegmentTemplateFormat enum value
@@ -6013,6 +6106,15 @@ const (
 	SegmentTemplateFormatNumberWithDuration = "NUMBER_WITH_DURATION"
 )
 
+// SegmentTemplateFormat_Values returns all elements of the SegmentTemplateFormat enum
+func SegmentTemplateFormat_Values() []string {
+	return []string{
+		SegmentTemplateFormatNumberWithTimeline,
+		SegmentTemplateFormatTimeWithTimeline,
+		SegmentTemplateFormatNumberWithDuration,
+	}
+}
+
 const (
 	// StatusInProgress is a Status enum value
 	StatusInProgress = "IN_PROGRESS"
@@ -6024,6 +6126,15 @@ const (
 	StatusFailed = "FAILED"
 )
 
+// Status_Values returns all elements of the Status enum
+func Status_Values() []string {
+	return []string{
+		StatusInProgress,
+		StatusSucceeded,
+		StatusFailed,
+	}
+}
+
 const (
 	// StreamOrderOriginal is a StreamOrder enum value
 	StreamOrderOriginal = "ORIGINAL"
@@ -6034,6 +6145,35 @@ const (
 	// StreamOrderVideoBitrateDescending is a StreamOrder enum value
 	StreamOrderVideoBitrateDescending = "VIDEO_BITRATE_DESCENDING"
 )
+
+// StreamOrder_Values returns all elements of the StreamOrder enum
+func StreamOrder_Values() []string {
+	return []string{
+		StreamOrderOriginal,
+		StreamOrderVideoBitrateAscending,
+		StreamOrderVideoBitrateDescending,
+	}
+}
+
+const (
+	// UtcTimingNone is a UtcTiming enum value
+	UtcTimingNone = "NONE"
+
+	// UtcTimingHttpHead is a UtcTiming enum value
+	UtcTimingHttpHead = "HTTP-HEAD"
+
+	// UtcTimingHttpIso is a UtcTiming enum value
+	UtcTimingHttpIso = "HTTP-ISO"
+)
+
+// UtcTiming_Values returns all elements of the UtcTiming enum
+func UtcTiming_Values() []string {
+	return []string{
+		UtcTimingNone,
+		UtcTimingHttpHead,
+		UtcTimingHttpIso,
+	}
+}
 
 const (
 	// __AdTriggersElementSpliceInsert is a __AdTriggersElement enum value
@@ -6061,7 +6201,28 @@ const (
 	__AdTriggersElementDistributorOverlayPlacementOpportunity = "DISTRIBUTOR_OVERLAY_PLACEMENT_OPPORTUNITY"
 )
 
+// __AdTriggersElement_Values returns all elements of the __AdTriggersElement enum
+func __AdTriggersElement_Values() []string {
+	return []string{
+		__AdTriggersElementSpliceInsert,
+		__AdTriggersElementBreak,
+		__AdTriggersElementProviderAdvertisement,
+		__AdTriggersElementDistributorAdvertisement,
+		__AdTriggersElementProviderPlacementOpportunity,
+		__AdTriggersElementDistributorPlacementOpportunity,
+		__AdTriggersElementProviderOverlayPlacementOpportunity,
+		__AdTriggersElementDistributorOverlayPlacementOpportunity,
+	}
+}
+
 const (
 	// __PeriodTriggersElementAds is a __PeriodTriggersElement enum value
 	__PeriodTriggersElementAds = "ADS"
 )
+
+// __PeriodTriggersElement_Values returns all elements of the __PeriodTriggersElement enum
+func __PeriodTriggersElement_Values() []string {
+	return []string{
+		__PeriodTriggersElementAds,
+	}
+}

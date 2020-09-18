@@ -1193,6 +1193,12 @@ func (c *MQ) ListBrokersRequest(input *ListBrokersInput) (req *request.Request, 
 		Name:       opListBrokers,
 		HTTPMethod: "GET",
 		HTTPPath:   "/v1/brokers",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1245,6 +1251,58 @@ func (c *MQ) ListBrokersWithContext(ctx aws.Context, input *ListBrokersInput, op
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListBrokersPages iterates over the pages of a ListBrokers operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListBrokers method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListBrokers operation.
+//    pageNum := 0
+//    err := client.ListBrokersPages(params,
+//        func(page *mq.ListBrokersResponse, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *MQ) ListBrokersPages(input *ListBrokersInput, fn func(*ListBrokersResponse, bool) bool) error {
+	return c.ListBrokersPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListBrokersPagesWithContext same as ListBrokersPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MQ) ListBrokersPagesWithContext(ctx aws.Context, input *ListBrokersInput, fn func(*ListBrokersResponse, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListBrokersInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListBrokersRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListBrokersResponse), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListConfigurationRevisions = "ListConfigurationRevisions"
@@ -1985,8 +2043,8 @@ func (s *AvailabilityZone) SetName(v string) *AvailabilityZone {
 
 // Returns information about an error.
 type BadRequestException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	ErrorAttribute *string `locationName:"errorAttribute" type:"string"`
 
@@ -2005,17 +2063,17 @@ func (s BadRequestException) GoString() string {
 
 func newErrorBadRequestException(v protocol.ResponseMetadata) error {
 	return &BadRequestException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s BadRequestException) Code() string {
+func (s *BadRequestException) Code() string {
 	return "BadRequestException"
 }
 
 // Message returns the exception's message.
-func (s BadRequestException) Message() string {
+func (s *BadRequestException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2023,22 +2081,22 @@ func (s BadRequestException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s BadRequestException) OrigErr() error {
+func (s *BadRequestException) OrigErr() error {
 	return nil
 }
 
-func (s BadRequestException) Error() string {
+func (s *BadRequestException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s BadRequestException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *BadRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s BadRequestException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *BadRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Types of broker engines.
@@ -2273,6 +2331,9 @@ type Configuration struct {
 	// Required. The ARN of the configuration.
 	Arn *string `locationName:"arn" type:"string"`
 
+	// The authentication strategy associated with the configuration.
+	AuthenticationStrategy *string `locationName:"authenticationStrategy" type:"string" enum:"AuthenticationStrategy"`
+
 	// Required. The date and time of the configuration revision.
 	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"iso8601"`
 
@@ -2315,6 +2376,12 @@ func (s Configuration) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *Configuration) SetArn(v string) *Configuration {
 	s.Arn = &v
+	return s
+}
+
+// SetAuthenticationStrategy sets the AuthenticationStrategy field's value.
+func (s *Configuration) SetAuthenticationStrategy(v string) *Configuration {
+	s.AuthenticationStrategy = &v
 	return s
 }
 
@@ -2485,8 +2552,8 @@ func (s *Configurations) SetPending(v *ConfigurationId) *Configurations {
 
 // Returns information about an error.
 type ConflictException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	ErrorAttribute *string `locationName:"errorAttribute" type:"string"`
 
@@ -2505,17 +2572,17 @@ func (s ConflictException) GoString() string {
 
 func newErrorConflictException(v protocol.ResponseMetadata) error {
 	return &ConflictException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ConflictException) Code() string {
+func (s *ConflictException) Code() string {
 	return "ConflictException"
 }
 
 // Message returns the exception's message.
-func (s ConflictException) Message() string {
+func (s *ConflictException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2523,26 +2590,29 @@ func (s ConflictException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ConflictException) OrigErr() error {
+func (s *ConflictException) OrigErr() error {
 	return nil
 }
 
-func (s ConflictException) Error() string {
+func (s *ConflictException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ConflictException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ConflictException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type CreateBrokerRequest struct {
 	_ struct{} `type:"structure"`
+
+	// The authentication strategy used to secure the broker.
+	AuthenticationStrategy *string `locationName:"authenticationStrategy" type:"string" enum:"AuthenticationStrategy"`
 
 	AutoMinorVersionUpgrade *bool `locationName:"autoMinorVersionUpgrade" type:"boolean"`
 
@@ -2565,6 +2635,10 @@ type CreateBrokerRequest struct {
 	EngineVersion *string `locationName:"engineVersion" type:"string"`
 
 	HostInstanceType *string `locationName:"hostInstanceType" type:"string"`
+
+	// The metadata of the LDAP server used to authenticate and authorize connections
+	// to the broker.
+	LdapServerMetadata *LdapServerMetadataInput `locationName:"ldapServerMetadata" type:"structure"`
 
 	// The list of information about logs to be enabled for the specified broker.
 	Logs *Logs `locationName:"logs" type:"structure"`
@@ -2610,6 +2684,12 @@ func (s *CreateBrokerRequest) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAuthenticationStrategy sets the AuthenticationStrategy field's value.
+func (s *CreateBrokerRequest) SetAuthenticationStrategy(v string) *CreateBrokerRequest {
+	s.AuthenticationStrategy = &v
+	return s
 }
 
 // SetAutoMinorVersionUpgrade sets the AutoMinorVersionUpgrade field's value.
@@ -2663,6 +2743,12 @@ func (s *CreateBrokerRequest) SetEngineVersion(v string) *CreateBrokerRequest {
 // SetHostInstanceType sets the HostInstanceType field's value.
 func (s *CreateBrokerRequest) SetHostInstanceType(v string) *CreateBrokerRequest {
 	s.HostInstanceType = &v
+	return s
+}
+
+// SetLdapServerMetadata sets the LdapServerMetadata field's value.
+func (s *CreateBrokerRequest) SetLdapServerMetadata(v *LdapServerMetadataInput) *CreateBrokerRequest {
+	s.LdapServerMetadata = v
 	return s
 }
 
@@ -2747,6 +2833,9 @@ func (s *CreateBrokerResponse) SetBrokerId(v string) *CreateBrokerResponse {
 type CreateConfigurationRequest struct {
 	_ struct{} `type:"structure"`
 
+	// The authentication strategy used to secure the broker.
+	AuthenticationStrategy *string `locationName:"authenticationStrategy" type:"string" enum:"AuthenticationStrategy"`
+
 	// The type of broker engine. Note: Currently, Amazon MQ supports only ActiveMQ.
 	EngineType *string `locationName:"engineType" type:"string" enum:"EngineType"`
 
@@ -2765,6 +2854,12 @@ func (s CreateConfigurationRequest) String() string {
 // GoString returns the string representation
 func (s CreateConfigurationRequest) GoString() string {
 	return s.String()
+}
+
+// SetAuthenticationStrategy sets the AuthenticationStrategy field's value.
+func (s *CreateConfigurationRequest) SetAuthenticationStrategy(v string) *CreateConfigurationRequest {
+	s.AuthenticationStrategy = &v
+	return s
 }
 
 // SetEngineType sets the EngineType field's value.
@@ -2796,6 +2891,9 @@ type CreateConfigurationResponse struct {
 
 	Arn *string `locationName:"arn" type:"string"`
 
+	// The authentication strategy used to secure the broker.
+	AuthenticationStrategy *string `locationName:"authenticationStrategy" type:"string" enum:"AuthenticationStrategy"`
+
 	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"iso8601"`
 
 	Id *string `locationName:"id" type:"string"`
@@ -2819,6 +2917,12 @@ func (s CreateConfigurationResponse) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *CreateConfigurationResponse) SetArn(v string) *CreateConfigurationResponse {
 	s.Arn = &v
+	return s
+}
+
+// SetAuthenticationStrategy sets the AuthenticationStrategy field's value.
+func (s *CreateConfigurationResponse) SetAuthenticationStrategy(v string) *CreateConfigurationResponse {
+	s.AuthenticationStrategy = &v
 	return s
 }
 
@@ -3429,6 +3533,9 @@ func (s *DescribeBrokerInstanceOptionsOutput) SetNextToken(v string) *DescribeBr
 type DescribeBrokerResponse struct {
 	_ struct{} `type:"structure"`
 
+	// The authentication strategy used to secure the broker.
+	AuthenticationStrategy *string `locationName:"authenticationStrategy" type:"string" enum:"AuthenticationStrategy"`
+
 	AutoMinorVersionUpgrade *bool `locationName:"autoMinorVersionUpgrade" type:"boolean"`
 
 	BrokerArn *string `locationName:"brokerArn" type:"string"`
@@ -3460,6 +3567,10 @@ type DescribeBrokerResponse struct {
 
 	HostInstanceType *string `locationName:"hostInstanceType" type:"string"`
 
+	// The metadata of the LDAP server used to authenticate and authorize connections
+	// to the broker.
+	LdapServerMetadata *LdapServerMetadataOutput `locationName:"ldapServerMetadata" type:"structure"`
+
 	// The list of information about logs currently enabled and pending to be deployed
 	// for the specified broker.
 	Logs *LogsSummary `locationName:"logs" type:"structure"`
@@ -3468,9 +3579,16 @@ type DescribeBrokerResponse struct {
 	// apply pending updates or patches to the broker.
 	MaintenanceWindowStartTime *WeeklyStartTime `locationName:"maintenanceWindowStartTime" type:"structure"`
 
+	// The authentication strategy used to secure the broker.
+	PendingAuthenticationStrategy *string `locationName:"pendingAuthenticationStrategy" type:"string" enum:"AuthenticationStrategy"`
+
 	PendingEngineVersion *string `locationName:"pendingEngineVersion" type:"string"`
 
 	PendingHostInstanceType *string `locationName:"pendingHostInstanceType" type:"string"`
+
+	// The metadata of the LDAP server used to authenticate and authorize connections
+	// to the broker.
+	PendingLdapServerMetadata *LdapServerMetadataOutput `locationName:"pendingLdapServerMetadata" type:"structure"`
 
 	PendingSecurityGroups []*string `locationName:"pendingSecurityGroups" type:"list"`
 
@@ -3496,6 +3614,12 @@ func (s DescribeBrokerResponse) String() string {
 // GoString returns the string representation
 func (s DescribeBrokerResponse) GoString() string {
 	return s.String()
+}
+
+// SetAuthenticationStrategy sets the AuthenticationStrategy field's value.
+func (s *DescribeBrokerResponse) SetAuthenticationStrategy(v string) *DescribeBrokerResponse {
+	s.AuthenticationStrategy = &v
+	return s
 }
 
 // SetAutoMinorVersionUpgrade sets the AutoMinorVersionUpgrade field's value.
@@ -3576,6 +3700,12 @@ func (s *DescribeBrokerResponse) SetHostInstanceType(v string) *DescribeBrokerRe
 	return s
 }
 
+// SetLdapServerMetadata sets the LdapServerMetadata field's value.
+func (s *DescribeBrokerResponse) SetLdapServerMetadata(v *LdapServerMetadataOutput) *DescribeBrokerResponse {
+	s.LdapServerMetadata = v
+	return s
+}
+
 // SetLogs sets the Logs field's value.
 func (s *DescribeBrokerResponse) SetLogs(v *LogsSummary) *DescribeBrokerResponse {
 	s.Logs = v
@@ -3588,6 +3718,12 @@ func (s *DescribeBrokerResponse) SetMaintenanceWindowStartTime(v *WeeklyStartTim
 	return s
 }
 
+// SetPendingAuthenticationStrategy sets the PendingAuthenticationStrategy field's value.
+func (s *DescribeBrokerResponse) SetPendingAuthenticationStrategy(v string) *DescribeBrokerResponse {
+	s.PendingAuthenticationStrategy = &v
+	return s
+}
+
 // SetPendingEngineVersion sets the PendingEngineVersion field's value.
 func (s *DescribeBrokerResponse) SetPendingEngineVersion(v string) *DescribeBrokerResponse {
 	s.PendingEngineVersion = &v
@@ -3597,6 +3733,12 @@ func (s *DescribeBrokerResponse) SetPendingEngineVersion(v string) *DescribeBrok
 // SetPendingHostInstanceType sets the PendingHostInstanceType field's value.
 func (s *DescribeBrokerResponse) SetPendingHostInstanceType(v string) *DescribeBrokerResponse {
 	s.PendingHostInstanceType = &v
+	return s
+}
+
+// SetPendingLdapServerMetadata sets the PendingLdapServerMetadata field's value.
+func (s *DescribeBrokerResponse) SetPendingLdapServerMetadata(v *LdapServerMetadataOutput) *DescribeBrokerResponse {
+	s.PendingLdapServerMetadata = v
 	return s
 }
 
@@ -3686,6 +3828,9 @@ type DescribeConfigurationOutput struct {
 
 	Arn *string `locationName:"arn" type:"string"`
 
+	// The authentication strategy used to secure the broker.
+	AuthenticationStrategy *string `locationName:"authenticationStrategy" type:"string" enum:"AuthenticationStrategy"`
+
 	Created *time.Time `locationName:"created" type:"timestamp" timestampFormat:"iso8601"`
 
 	Description *string `locationName:"description" type:"string"`
@@ -3718,6 +3863,12 @@ func (s DescribeConfigurationOutput) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *DescribeConfigurationOutput) SetArn(v string) *DescribeConfigurationOutput {
 	s.Arn = &v
+	return s
+}
+
+// SetAuthenticationStrategy sets the AuthenticationStrategy field's value.
+func (s *DescribeConfigurationOutput) SetAuthenticationStrategy(v string) *DescribeConfigurationOutput {
+	s.AuthenticationStrategy = &v
 	return s
 }
 
@@ -3983,9 +4134,9 @@ func (s *DescribeUserResponse) SetUsername(v string) *DescribeUserResponse {
 type EncryptionOptions struct {
 	_ struct{} `type:"structure"`
 
-	// The customer master key (CMK) to use for the AWS Key Management Service (KMS).
-	// This key is used to encrypt your data at rest. If not provided, Amazon MQ
-	// will use a default CMK to encrypt your data.
+	// The symmetric customer master key (CMK) to use for the AWS Key Management
+	// Service (KMS). This key is used to encrypt your data at rest. If not provided,
+	// Amazon MQ will use a default CMK to encrypt your data.
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 
 	// Enables the use of an AWS owned CMK using AWS Key Management Service (KMS).
@@ -4055,8 +4206,8 @@ func (s *EngineVersion) SetName(v string) *EngineVersion {
 
 // Returns information about an error.
 type ForbiddenException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	ErrorAttribute *string `locationName:"errorAttribute" type:"string"`
 
@@ -4075,17 +4226,17 @@ func (s ForbiddenException) GoString() string {
 
 func newErrorForbiddenException(v protocol.ResponseMetadata) error {
 	return &ForbiddenException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ForbiddenException) Code() string {
+func (s *ForbiddenException) Code() string {
 	return "ForbiddenException"
 }
 
 // Message returns the exception's message.
-func (s ForbiddenException) Message() string {
+func (s *ForbiddenException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4093,28 +4244,28 @@ func (s ForbiddenException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ForbiddenException) OrigErr() error {
+func (s *ForbiddenException) OrigErr() error {
 	return nil
 }
 
-func (s ForbiddenException) Error() string {
+func (s *ForbiddenException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ForbiddenException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ForbiddenException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ForbiddenException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ForbiddenException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Returns information about an error.
 type InternalServerErrorException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	ErrorAttribute *string `locationName:"errorAttribute" type:"string"`
 
@@ -4133,17 +4284,17 @@ func (s InternalServerErrorException) GoString() string {
 
 func newErrorInternalServerErrorException(v protocol.ResponseMetadata) error {
 	return &InternalServerErrorException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalServerErrorException) Code() string {
+func (s *InternalServerErrorException) Code() string {
 	return "InternalServerErrorException"
 }
 
 // Message returns the exception's message.
-func (s InternalServerErrorException) Message() string {
+func (s *InternalServerErrorException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4151,22 +4302,249 @@ func (s InternalServerErrorException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalServerErrorException) OrigErr() error {
+func (s *InternalServerErrorException) OrigErr() error {
 	return nil
 }
 
-func (s InternalServerErrorException) Error() string {
+func (s *InternalServerErrorException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalServerErrorException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalServerErrorException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalServerErrorException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalServerErrorException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The metadata of the LDAP server used to authenticate and authorize connections
+// to the broker.
+type LdapServerMetadataInput struct {
+	_ struct{} `type:"structure"`
+
+	// Fully qualified domain name of the LDAP server. Optional failover server.
+	Hosts []*string `locationName:"hosts" type:"list"`
+
+	// Fully qualified name of the directory to search for a user’s groups.
+	RoleBase *string `locationName:"roleBase" type:"string"`
+
+	// Specifies the LDAP attribute that identifies the group name attribute in
+	// the object returned from the group membership query.
+	RoleName *string `locationName:"roleName" type:"string"`
+
+	// The search criteria for groups.
+	RoleSearchMatching *string `locationName:"roleSearchMatching" type:"string"`
+
+	// The directory search scope for the role. If set to true, scope is to search
+	// the entire sub-tree.
+	RoleSearchSubtree *bool `locationName:"roleSearchSubtree" type:"boolean"`
+
+	// Service account password.
+	ServiceAccountPassword *string `locationName:"serviceAccountPassword" type:"string"`
+
+	// Service account username.
+	ServiceAccountUsername *string `locationName:"serviceAccountUsername" type:"string"`
+
+	// Fully qualified name of the directory where you want to search for users.
+	UserBase *string `locationName:"userBase" type:"string"`
+
+	// Specifies the name of the LDAP attribute for the user group membership.
+	UserRoleName *string `locationName:"userRoleName" type:"string"`
+
+	// The search criteria for users.
+	UserSearchMatching *string `locationName:"userSearchMatching" type:"string"`
+
+	// The directory search scope for the user. If set to true, scope is to search
+	// the entire sub-tree.
+	UserSearchSubtree *bool `locationName:"userSearchSubtree" type:"boolean"`
+}
+
+// String returns the string representation
+func (s LdapServerMetadataInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LdapServerMetadataInput) GoString() string {
+	return s.String()
+}
+
+// SetHosts sets the Hosts field's value.
+func (s *LdapServerMetadataInput) SetHosts(v []*string) *LdapServerMetadataInput {
+	s.Hosts = v
+	return s
+}
+
+// SetRoleBase sets the RoleBase field's value.
+func (s *LdapServerMetadataInput) SetRoleBase(v string) *LdapServerMetadataInput {
+	s.RoleBase = &v
+	return s
+}
+
+// SetRoleName sets the RoleName field's value.
+func (s *LdapServerMetadataInput) SetRoleName(v string) *LdapServerMetadataInput {
+	s.RoleName = &v
+	return s
+}
+
+// SetRoleSearchMatching sets the RoleSearchMatching field's value.
+func (s *LdapServerMetadataInput) SetRoleSearchMatching(v string) *LdapServerMetadataInput {
+	s.RoleSearchMatching = &v
+	return s
+}
+
+// SetRoleSearchSubtree sets the RoleSearchSubtree field's value.
+func (s *LdapServerMetadataInput) SetRoleSearchSubtree(v bool) *LdapServerMetadataInput {
+	s.RoleSearchSubtree = &v
+	return s
+}
+
+// SetServiceAccountPassword sets the ServiceAccountPassword field's value.
+func (s *LdapServerMetadataInput) SetServiceAccountPassword(v string) *LdapServerMetadataInput {
+	s.ServiceAccountPassword = &v
+	return s
+}
+
+// SetServiceAccountUsername sets the ServiceAccountUsername field's value.
+func (s *LdapServerMetadataInput) SetServiceAccountUsername(v string) *LdapServerMetadataInput {
+	s.ServiceAccountUsername = &v
+	return s
+}
+
+// SetUserBase sets the UserBase field's value.
+func (s *LdapServerMetadataInput) SetUserBase(v string) *LdapServerMetadataInput {
+	s.UserBase = &v
+	return s
+}
+
+// SetUserRoleName sets the UserRoleName field's value.
+func (s *LdapServerMetadataInput) SetUserRoleName(v string) *LdapServerMetadataInput {
+	s.UserRoleName = &v
+	return s
+}
+
+// SetUserSearchMatching sets the UserSearchMatching field's value.
+func (s *LdapServerMetadataInput) SetUserSearchMatching(v string) *LdapServerMetadataInput {
+	s.UserSearchMatching = &v
+	return s
+}
+
+// SetUserSearchSubtree sets the UserSearchSubtree field's value.
+func (s *LdapServerMetadataInput) SetUserSearchSubtree(v bool) *LdapServerMetadataInput {
+	s.UserSearchSubtree = &v
+	return s
+}
+
+// The metadata of the LDAP server used to authenticate and authorize connections
+// to the broker.
+type LdapServerMetadataOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Fully qualified domain name of the LDAP server. Optional failover server.
+	Hosts []*string `locationName:"hosts" type:"list"`
+
+	// Fully qualified name of the directory to search for a user’s groups.
+	RoleBase *string `locationName:"roleBase" type:"string"`
+
+	// Specifies the LDAP attribute that identifies the group name attribute in
+	// the object returned from the group membership query.
+	RoleName *string `locationName:"roleName" type:"string"`
+
+	// The search criteria for groups.
+	RoleSearchMatching *string `locationName:"roleSearchMatching" type:"string"`
+
+	// The directory search scope for the role. If set to true, scope is to search
+	// the entire sub-tree.
+	RoleSearchSubtree *bool `locationName:"roleSearchSubtree" type:"boolean"`
+
+	// Service account username.
+	ServiceAccountUsername *string `locationName:"serviceAccountUsername" type:"string"`
+
+	// Fully qualified name of the directory where you want to search for users.
+	UserBase *string `locationName:"userBase" type:"string"`
+
+	// Specifies the name of the LDAP attribute for the user group membership.
+	UserRoleName *string `locationName:"userRoleName" type:"string"`
+
+	// The search criteria for users.
+	UserSearchMatching *string `locationName:"userSearchMatching" type:"string"`
+
+	// The directory search scope for the user. If set to true, scope is to search
+	// the entire sub-tree.
+	UserSearchSubtree *bool `locationName:"userSearchSubtree" type:"boolean"`
+}
+
+// String returns the string representation
+func (s LdapServerMetadataOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LdapServerMetadataOutput) GoString() string {
+	return s.String()
+}
+
+// SetHosts sets the Hosts field's value.
+func (s *LdapServerMetadataOutput) SetHosts(v []*string) *LdapServerMetadataOutput {
+	s.Hosts = v
+	return s
+}
+
+// SetRoleBase sets the RoleBase field's value.
+func (s *LdapServerMetadataOutput) SetRoleBase(v string) *LdapServerMetadataOutput {
+	s.RoleBase = &v
+	return s
+}
+
+// SetRoleName sets the RoleName field's value.
+func (s *LdapServerMetadataOutput) SetRoleName(v string) *LdapServerMetadataOutput {
+	s.RoleName = &v
+	return s
+}
+
+// SetRoleSearchMatching sets the RoleSearchMatching field's value.
+func (s *LdapServerMetadataOutput) SetRoleSearchMatching(v string) *LdapServerMetadataOutput {
+	s.RoleSearchMatching = &v
+	return s
+}
+
+// SetRoleSearchSubtree sets the RoleSearchSubtree field's value.
+func (s *LdapServerMetadataOutput) SetRoleSearchSubtree(v bool) *LdapServerMetadataOutput {
+	s.RoleSearchSubtree = &v
+	return s
+}
+
+// SetServiceAccountUsername sets the ServiceAccountUsername field's value.
+func (s *LdapServerMetadataOutput) SetServiceAccountUsername(v string) *LdapServerMetadataOutput {
+	s.ServiceAccountUsername = &v
+	return s
+}
+
+// SetUserBase sets the UserBase field's value.
+func (s *LdapServerMetadataOutput) SetUserBase(v string) *LdapServerMetadataOutput {
+	s.UserBase = &v
+	return s
+}
+
+// SetUserRoleName sets the UserRoleName field's value.
+func (s *LdapServerMetadataOutput) SetUserRoleName(v string) *LdapServerMetadataOutput {
+	s.UserRoleName = &v
+	return s
+}
+
+// SetUserSearchMatching sets the UserSearchMatching field's value.
+func (s *LdapServerMetadataOutput) SetUserSearchMatching(v string) *LdapServerMetadataOutput {
+	s.UserSearchMatching = &v
+	return s
+}
+
+// SetUserSearchSubtree sets the UserSearchSubtree field's value.
+func (s *LdapServerMetadataOutput) SetUserSearchSubtree(v bool) *LdapServerMetadataOutput {
+	s.UserSearchSubtree = &v
+	return s
 }
 
 type ListBrokersInput struct {
@@ -4691,8 +5069,8 @@ func (s *LogsSummary) SetPending(v *PendingLogs) *LogsSummary {
 
 // Returns information about an error.
 type NotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	ErrorAttribute *string `locationName:"errorAttribute" type:"string"`
 
@@ -4711,17 +5089,17 @@ func (s NotFoundException) GoString() string {
 
 func newErrorNotFoundException(v protocol.ResponseMetadata) error {
 	return &NotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s NotFoundException) Code() string {
+func (s *NotFoundException) Code() string {
 	return "NotFoundException"
 }
 
 // Message returns the exception's message.
-func (s NotFoundException) Message() string {
+func (s *NotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4729,22 +5107,22 @@ func (s NotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s NotFoundException) OrigErr() error {
+func (s *NotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s NotFoundException) Error() string {
+func (s *NotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s NotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *NotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s NotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *NotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The list of information about logs to be enabled for the specified broker.
@@ -4879,8 +5257,8 @@ func (s *SanitizationWarning) SetReason(v string) *SanitizationWarning {
 
 // Returns information about an error.
 type UnauthorizedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	ErrorAttribute *string `locationName:"errorAttribute" type:"string"`
 
@@ -4899,17 +5277,17 @@ func (s UnauthorizedException) GoString() string {
 
 func newErrorUnauthorizedException(v protocol.ResponseMetadata) error {
 	return &UnauthorizedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnauthorizedException) Code() string {
+func (s *UnauthorizedException) Code() string {
 	return "UnauthorizedException"
 }
 
 // Message returns the exception's message.
-func (s UnauthorizedException) Message() string {
+func (s *UnauthorizedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4917,26 +5295,29 @@ func (s UnauthorizedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnauthorizedException) OrigErr() error {
+func (s *UnauthorizedException) OrigErr() error {
 	return nil
 }
 
-func (s UnauthorizedException) Error() string {
+func (s *UnauthorizedException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnauthorizedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnauthorizedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnauthorizedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnauthorizedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UpdateBrokerRequest struct {
 	_ struct{} `type:"structure"`
+
+	// The authentication strategy used to secure the broker.
+	AuthenticationStrategy *string `locationName:"authenticationStrategy" type:"string" enum:"AuthenticationStrategy"`
 
 	AutoMinorVersionUpgrade *bool `locationName:"autoMinorVersionUpgrade" type:"boolean"`
 
@@ -4949,6 +5330,10 @@ type UpdateBrokerRequest struct {
 	EngineVersion *string `locationName:"engineVersion" type:"string"`
 
 	HostInstanceType *string `locationName:"hostInstanceType" type:"string"`
+
+	// The metadata of the LDAP server used to authenticate and authorize connections
+	// to the broker.
+	LdapServerMetadata *LdapServerMetadataInput `locationName:"ldapServerMetadata" type:"structure"`
 
 	// The list of information about logs to be enabled for the specified broker.
 	Logs *Logs `locationName:"logs" type:"structure"`
@@ -4982,6 +5367,12 @@ func (s *UpdateBrokerRequest) Validate() error {
 	return nil
 }
 
+// SetAuthenticationStrategy sets the AuthenticationStrategy field's value.
+func (s *UpdateBrokerRequest) SetAuthenticationStrategy(v string) *UpdateBrokerRequest {
+	s.AuthenticationStrategy = &v
+	return s
+}
+
 // SetAutoMinorVersionUpgrade sets the AutoMinorVersionUpgrade field's value.
 func (s *UpdateBrokerRequest) SetAutoMinorVersionUpgrade(v bool) *UpdateBrokerRequest {
 	s.AutoMinorVersionUpgrade = &v
@@ -5012,6 +5403,12 @@ func (s *UpdateBrokerRequest) SetHostInstanceType(v string) *UpdateBrokerRequest
 	return s
 }
 
+// SetLdapServerMetadata sets the LdapServerMetadata field's value.
+func (s *UpdateBrokerRequest) SetLdapServerMetadata(v *LdapServerMetadataInput) *UpdateBrokerRequest {
+	s.LdapServerMetadata = v
+	return s
+}
+
 // SetLogs sets the Logs field's value.
 func (s *UpdateBrokerRequest) SetLogs(v *Logs) *UpdateBrokerRequest {
 	s.Logs = v
@@ -5027,6 +5424,9 @@ func (s *UpdateBrokerRequest) SetSecurityGroups(v []*string) *UpdateBrokerReques
 type UpdateBrokerResponse struct {
 	_ struct{} `type:"structure"`
 
+	// The authentication strategy used to secure the broker.
+	AuthenticationStrategy *string `locationName:"authenticationStrategy" type:"string" enum:"AuthenticationStrategy"`
+
 	AutoMinorVersionUpgrade *bool `locationName:"autoMinorVersionUpgrade" type:"boolean"`
 
 	BrokerId *string `locationName:"brokerId" type:"string"`
@@ -5037,6 +5437,10 @@ type UpdateBrokerResponse struct {
 	EngineVersion *string `locationName:"engineVersion" type:"string"`
 
 	HostInstanceType *string `locationName:"hostInstanceType" type:"string"`
+
+	// The metadata of the LDAP server used to authenticate and authorize connections
+	// to the broker.
+	LdapServerMetadata *LdapServerMetadataOutput `locationName:"ldapServerMetadata" type:"structure"`
 
 	// The list of information about logs to be enabled for the specified broker.
 	Logs *Logs `locationName:"logs" type:"structure"`
@@ -5052,6 +5456,12 @@ func (s UpdateBrokerResponse) String() string {
 // GoString returns the string representation
 func (s UpdateBrokerResponse) GoString() string {
 	return s.String()
+}
+
+// SetAuthenticationStrategy sets the AuthenticationStrategy field's value.
+func (s *UpdateBrokerResponse) SetAuthenticationStrategy(v string) *UpdateBrokerResponse {
+	s.AuthenticationStrategy = &v
+	return s
 }
 
 // SetAutoMinorVersionUpgrade sets the AutoMinorVersionUpgrade field's value.
@@ -5081,6 +5491,12 @@ func (s *UpdateBrokerResponse) SetEngineVersion(v string) *UpdateBrokerResponse 
 // SetHostInstanceType sets the HostInstanceType field's value.
 func (s *UpdateBrokerResponse) SetHostInstanceType(v string) *UpdateBrokerResponse {
 	s.HostInstanceType = &v
+	return s
+}
+
+// SetLdapServerMetadata sets the LdapServerMetadata field's value.
+func (s *UpdateBrokerResponse) SetLdapServerMetadata(v *LdapServerMetadataOutput) *UpdateBrokerResponse {
+	s.LdapServerMetadata = v
 	return s
 }
 
@@ -5487,6 +5903,23 @@ func (s *WeeklyStartTime) SetTimeZone(v string) *WeeklyStartTime {
 	return s
 }
 
+// The authentication strategy used to secure the broker.
+const (
+	// AuthenticationStrategySimple is a AuthenticationStrategy enum value
+	AuthenticationStrategySimple = "SIMPLE"
+
+	// AuthenticationStrategyLdap is a AuthenticationStrategy enum value
+	AuthenticationStrategyLdap = "LDAP"
+)
+
+// AuthenticationStrategy_Values returns all elements of the AuthenticationStrategy enum
+func AuthenticationStrategy_Values() []string {
+	return []string{
+		AuthenticationStrategySimple,
+		AuthenticationStrategyLdap,
+	}
+}
+
 // The status of the broker.
 const (
 	// BrokerStateCreationInProgress is a BrokerState enum value
@@ -5505,6 +5938,17 @@ const (
 	BrokerStateRebootInProgress = "REBOOT_IN_PROGRESS"
 )
 
+// BrokerState_Values returns all elements of the BrokerState enum
+func BrokerState_Values() []string {
+	return []string{
+		BrokerStateCreationInProgress,
+		BrokerStateCreationFailed,
+		BrokerStateDeletionInProgress,
+		BrokerStateRunning,
+		BrokerStateRebootInProgress,
+	}
+}
+
 // The storage type of the broker.
 const (
 	// BrokerStorageTypeEbs is a BrokerStorageType enum value
@@ -5513,6 +5957,14 @@ const (
 	// BrokerStorageTypeEfs is a BrokerStorageType enum value
 	BrokerStorageTypeEfs = "EFS"
 )
+
+// BrokerStorageType_Values returns all elements of the BrokerStorageType enum
+func BrokerStorageType_Values() []string {
+	return []string{
+		BrokerStorageTypeEbs,
+		BrokerStorageTypeEfs,
+	}
+}
 
 // The type of change pending for the ActiveMQ user.
 const (
@@ -5525,6 +5977,15 @@ const (
 	// ChangeTypeDelete is a ChangeType enum value
 	ChangeTypeDelete = "DELETE"
 )
+
+// ChangeType_Values returns all elements of the ChangeType enum
+func ChangeType_Values() []string {
+	return []string{
+		ChangeTypeCreate,
+		ChangeTypeUpdate,
+		ChangeTypeDelete,
+	}
+}
 
 const (
 	// DayOfWeekMonday is a DayOfWeek enum value
@@ -5549,6 +6010,19 @@ const (
 	DayOfWeekSunday = "SUNDAY"
 )
 
+// DayOfWeek_Values returns all elements of the DayOfWeek enum
+func DayOfWeek_Values() []string {
+	return []string{
+		DayOfWeekMonday,
+		DayOfWeekTuesday,
+		DayOfWeekWednesday,
+		DayOfWeekThursday,
+		DayOfWeekFriday,
+		DayOfWeekSaturday,
+		DayOfWeekSunday,
+	}
+}
+
 // The deployment mode of the broker.
 const (
 	// DeploymentModeSingleInstance is a DeploymentMode enum value
@@ -5558,11 +6032,26 @@ const (
 	DeploymentModeActiveStandbyMultiAz = "ACTIVE_STANDBY_MULTI_AZ"
 )
 
+// DeploymentMode_Values returns all elements of the DeploymentMode enum
+func DeploymentMode_Values() []string {
+	return []string{
+		DeploymentModeSingleInstance,
+		DeploymentModeActiveStandbyMultiAz,
+	}
+}
+
 // The type of broker engine. Note: Currently, Amazon MQ supports only ActiveMQ.
 const (
 	// EngineTypeActivemq is a EngineType enum value
 	EngineTypeActivemq = "ACTIVEMQ"
 )
+
+// EngineType_Values returns all elements of the EngineType enum
+func EngineType_Values() []string {
+	return []string{
+		EngineTypeActivemq,
+	}
+}
 
 // The reason for which the XML elements or attributes were sanitized.
 const (
@@ -5575,3 +6064,12 @@ const (
 	// SanitizationWarningReasonInvalidAttributeValueRemoved is a SanitizationWarningReason enum value
 	SanitizationWarningReasonInvalidAttributeValueRemoved = "INVALID_ATTRIBUTE_VALUE_REMOVED"
 )
+
+// SanitizationWarningReason_Values returns all elements of the SanitizationWarningReason enum
+func SanitizationWarningReason_Values() []string {
+	return []string{
+		SanitizationWarningReasonDisallowedElementRemoved,
+		SanitizationWarningReasonDisallowedAttributeRemoved,
+		SanitizationWarningReasonInvalidAttributeValueRemoved,
+	}
+}

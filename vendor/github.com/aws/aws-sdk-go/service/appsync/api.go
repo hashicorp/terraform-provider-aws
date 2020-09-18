@@ -3838,8 +3838,8 @@ func (c *AppSync) UpdateTypeWithContext(ctx aws.Context, input *UpdateTypeInput,
 
 // You do not have access to perform this operation on this resource.
 type AccessDeniedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -3856,17 +3856,17 @@ func (s AccessDeniedException) GoString() string {
 
 func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
 	return &AccessDeniedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AccessDeniedException) Code() string {
+func (s *AccessDeniedException) Code() string {
 	return "AccessDeniedException"
 }
 
 // Message returns the exception's message.
-func (s AccessDeniedException) Message() string {
+func (s *AccessDeniedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3874,22 +3874,22 @@ func (s AccessDeniedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AccessDeniedException) OrigErr() error {
+func (s *AccessDeniedException) OrigErr() error {
 	return nil
 }
 
-func (s AccessDeniedException) Error() string {
+func (s *AccessDeniedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AccessDeniedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AccessDeniedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AccessDeniedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AccessDeniedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Describes an additional authentication provider.
@@ -3990,7 +3990,29 @@ type ApiCache struct {
 	// Valid values are between 1 and 3600 seconds.
 	Ttl *int64 `locationName:"ttl" type:"long"`
 
-	// The cache instance type.
+	// The cache instance type. Valid values are
+	//
+	//    * SMALL
+	//
+	//    * MEDIUM
+	//
+	//    * LARGE
+	//
+	//    * XLARGE
+	//
+	//    * LARGE_2X
+	//
+	//    * LARGE_4X
+	//
+	//    * LARGE_8X (not available in all regions)
+	//
+	//    * LARGE_12X
+	//
+	// Historically, instance types were identified by an EC2-style value. As of
+	// July 2020, this is deprecated, and the generic identifiers above should be
+	// used.
+	//
+	// The following legacy instance types are avaible, but their use is discouraged:
 	//
 	//    * T2_SMALL: A t2.small instance type.
 	//
@@ -4136,8 +4158,8 @@ func (s *ApiKey) SetId(v string) *ApiKey {
 
 // The API key exceeded a limit. Try your request again.
 type ApiKeyLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -4154,17 +4176,17 @@ func (s ApiKeyLimitExceededException) GoString() string {
 
 func newErrorApiKeyLimitExceededException(v protocol.ResponseMetadata) error {
 	return &ApiKeyLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ApiKeyLimitExceededException) Code() string {
+func (s *ApiKeyLimitExceededException) Code() string {
 	return "ApiKeyLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s ApiKeyLimitExceededException) Message() string {
+func (s *ApiKeyLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4172,29 +4194,29 @@ func (s ApiKeyLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ApiKeyLimitExceededException) OrigErr() error {
+func (s *ApiKeyLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s ApiKeyLimitExceededException) Error() string {
+func (s *ApiKeyLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ApiKeyLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ApiKeyLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ApiKeyLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ApiKeyLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The API key expiration must be set to a value between 1 and 365 days from
 // creation (for CreateApiKey) or from update (for UpdateApiKey).
 type ApiKeyValidityOutOfBoundsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -4211,17 +4233,17 @@ func (s ApiKeyValidityOutOfBoundsException) GoString() string {
 
 func newErrorApiKeyValidityOutOfBoundsException(v protocol.ResponseMetadata) error {
 	return &ApiKeyValidityOutOfBoundsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ApiKeyValidityOutOfBoundsException) Code() string {
+func (s *ApiKeyValidityOutOfBoundsException) Code() string {
 	return "ApiKeyValidityOutOfBoundsException"
 }
 
 // Message returns the exception's message.
-func (s ApiKeyValidityOutOfBoundsException) Message() string {
+func (s *ApiKeyValidityOutOfBoundsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4229,28 +4251,28 @@ func (s ApiKeyValidityOutOfBoundsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ApiKeyValidityOutOfBoundsException) OrigErr() error {
+func (s *ApiKeyValidityOutOfBoundsException) OrigErr() error {
 	return nil
 }
 
-func (s ApiKeyValidityOutOfBoundsException) Error() string {
+func (s *ApiKeyValidityOutOfBoundsException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ApiKeyValidityOutOfBoundsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ApiKeyValidityOutOfBoundsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ApiKeyValidityOutOfBoundsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ApiKeyValidityOutOfBoundsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The GraphQL API exceeded a limit. Try your request again.
 type ApiLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -4267,17 +4289,17 @@ func (s ApiLimitExceededException) GoString() string {
 
 func newErrorApiLimitExceededException(v protocol.ResponseMetadata) error {
 	return &ApiLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ApiLimitExceededException) Code() string {
+func (s *ApiLimitExceededException) Code() string {
 	return "ApiLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s ApiLimitExceededException) Message() string {
+func (s *ApiLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4285,22 +4307,22 @@ func (s ApiLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ApiLimitExceededException) OrigErr() error {
+func (s *ApiLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s ApiLimitExceededException) Error() string {
+func (s *ApiLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ApiLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ApiLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ApiLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ApiLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The authorization config in case the HTTP endpoint requires authorization.
@@ -4389,8 +4411,8 @@ func (s *AwsIamConfig) SetSigningServiceName(v string) *AwsIamConfig {
 // The request is not well formed. For example, a value is invalid or a required
 // field is missing. Check the field values, and then try again.
 type BadRequestException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -4407,17 +4429,17 @@ func (s BadRequestException) GoString() string {
 
 func newErrorBadRequestException(v protocol.ResponseMetadata) error {
 	return &BadRequestException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s BadRequestException) Code() string {
+func (s *BadRequestException) Code() string {
 	return "BadRequestException"
 }
 
 // Message returns the exception's message.
-func (s BadRequestException) Message() string {
+func (s *BadRequestException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4425,22 +4447,22 @@ func (s BadRequestException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s BadRequestException) OrigErr() error {
+func (s *BadRequestException) OrigErr() error {
 	return nil
 }
 
-func (s BadRequestException) Error() string {
+func (s *BadRequestException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s BadRequestException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *BadRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s BadRequestException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *BadRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The caching configuration for a resolver that has caching enabled.
@@ -4449,8 +4471,8 @@ type CachingConfig struct {
 
 	// The caching keys for a resolver that has caching enabled.
 	//
-	// Valid values are entries from the $context.identity and $context.arguments
-	// maps.
+	// Valid values are entries from the $context.arguments, $context.source, and
+	// $context.identity maps.
 	CachingKeys []*string `locationName:"cachingKeys" type:"list"`
 
 	// The TTL in seconds for a resolver that has caching enabled.
@@ -4547,8 +4569,8 @@ func (s *CognitoUserPoolConfig) SetUserPoolId(v string) *CognitoUserPoolConfig {
 // Another modification is in progress at this time and it must complete before
 // you can make your change.
 type ConcurrentModificationException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -4565,17 +4587,17 @@ func (s ConcurrentModificationException) GoString() string {
 
 func newErrorConcurrentModificationException(v protocol.ResponseMetadata) error {
 	return &ConcurrentModificationException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ConcurrentModificationException) Code() string {
+func (s *ConcurrentModificationException) Code() string {
 	return "ConcurrentModificationException"
 }
 
 // Message returns the exception's message.
-func (s ConcurrentModificationException) Message() string {
+func (s *ConcurrentModificationException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4583,22 +4605,22 @@ func (s ConcurrentModificationException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ConcurrentModificationException) OrigErr() error {
+func (s *ConcurrentModificationException) OrigErr() error {
 	return nil
 }
 
-func (s ConcurrentModificationException) Error() string {
+func (s *ConcurrentModificationException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ConcurrentModificationException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ConcurrentModificationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ConcurrentModificationException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ConcurrentModificationException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Represents the input of a CreateApiCache operation.
@@ -4633,7 +4655,29 @@ type CreateApiCacheInput struct {
 	// Ttl is a required field
 	Ttl *int64 `locationName:"ttl" type:"long" required:"true"`
 
-	// The cache instance type.
+	// The cache instance type. Valid values are
+	//
+	//    * SMALL
+	//
+	//    * MEDIUM
+	//
+	//    * LARGE
+	//
+	//    * XLARGE
+	//
+	//    * LARGE_2X
+	//
+	//    * LARGE_4X
+	//
+	//    * LARGE_8X (not available in all regions)
+	//
+	//    * LARGE_12X
+	//
+	// Historically, instance types were identified by an EC2-style value. As of
+	// July 2020, this is deprecated, and the generic identifiers above should be
+	// used.
+	//
+	// The following legacy instance types are avaible, but their use is discouraged:
 	//
 	//    * T2_SMALL: A t2.small instance type.
 	//
@@ -5041,9 +5085,7 @@ type CreateFunctionInput struct {
 
 	// The Function request mapping template. Functions support only the 2018-05-29
 	// version of the request mapping template.
-	//
-	// RequestMappingTemplate is a required field
-	RequestMappingTemplate *string `locationName:"requestMappingTemplate" min:"1" type:"string" required:"true"`
+	RequestMappingTemplate *string `locationName:"requestMappingTemplate" min:"1" type:"string"`
 
 	// The Function response mapping template.
 	ResponseMappingTemplate *string `locationName:"responseMappingTemplate" min:"1" type:"string"`
@@ -5082,9 +5124,6 @@ func (s *CreateFunctionInput) Validate() error {
 	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
-	}
-	if s.RequestMappingTemplate == nil {
-		invalidParams.Add(request.NewErrParamRequired("RequestMappingTemplate"))
 	}
 	if s.RequestMappingTemplate != nil && len(*s.RequestMappingTemplate) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("RequestMappingTemplate", 1))
@@ -5360,8 +5399,10 @@ type CreateResolverInput struct {
 	// into a format that a data source can understand. Mapping templates are written
 	// in Apache Velocity Template Language (VTL).
 	//
-	// RequestMappingTemplate is a required field
-	RequestMappingTemplate *string `locationName:"requestMappingTemplate" min:"1" type:"string" required:"true"`
+	// VTL request mapping templates are optional when using a Lambda data source.
+	// For all other data sources, VTL request and response mapping templates are
+	// required.
+	RequestMappingTemplate *string `locationName:"requestMappingTemplate" min:"1" type:"string"`
 
 	// The mapping template to be used for responses from the data source.
 	ResponseMappingTemplate *string `locationName:"responseMappingTemplate" min:"1" type:"string"`
@@ -5402,9 +5443,6 @@ func (s *CreateResolverInput) Validate() error {
 	}
 	if s.FieldName != nil && len(*s.FieldName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("FieldName", 1))
-	}
-	if s.RequestMappingTemplate == nil {
-		invalidParams.Add(request.NewErrParamRequired("RequestMappingTemplate"))
 	}
 	if s.RequestMappingTemplate != nil && len(*s.RequestMappingTemplate) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("RequestMappingTemplate", 1))
@@ -7186,8 +7224,8 @@ func (s *GetTypeOutput) SetType(v *Type) *GetTypeOutput {
 
 // The GraphQL schema is not valid.
 type GraphQLSchemaException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -7204,17 +7242,17 @@ func (s GraphQLSchemaException) GoString() string {
 
 func newErrorGraphQLSchemaException(v protocol.ResponseMetadata) error {
 	return &GraphQLSchemaException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s GraphQLSchemaException) Code() string {
+func (s *GraphQLSchemaException) Code() string {
 	return "GraphQLSchemaException"
 }
 
 // Message returns the exception's message.
-func (s GraphQLSchemaException) Message() string {
+func (s *GraphQLSchemaException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7222,22 +7260,22 @@ func (s GraphQLSchemaException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s GraphQLSchemaException) OrigErr() error {
+func (s *GraphQLSchemaException) OrigErr() error {
 	return nil
 }
 
-func (s GraphQLSchemaException) Error() string {
+func (s *GraphQLSchemaException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s GraphQLSchemaException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *GraphQLSchemaException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s GraphQLSchemaException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *GraphQLSchemaException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Describes a GraphQL API.
@@ -7407,8 +7445,8 @@ func (s *HttpDataSourceConfig) SetEndpoint(v string) *HttpDataSourceConfig {
 
 // An internal AWS AppSync error occurred. Try your request again.
 type InternalFailureException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -7425,17 +7463,17 @@ func (s InternalFailureException) GoString() string {
 
 func newErrorInternalFailureException(v protocol.ResponseMetadata) error {
 	return &InternalFailureException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalFailureException) Code() string {
+func (s *InternalFailureException) Code() string {
 	return "InternalFailureException"
 }
 
 // Message returns the exception's message.
-func (s InternalFailureException) Message() string {
+func (s *InternalFailureException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7443,22 +7481,22 @@ func (s InternalFailureException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalFailureException) OrigErr() error {
+func (s *InternalFailureException) OrigErr() error {
 	return nil
 }
 
-func (s InternalFailureException) Error() string {
+func (s *InternalFailureException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalFailureException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalFailureException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalFailureException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalFailureException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The LambdaConflictHandlerConfig object when configuring LAMBDA as the Conflict
@@ -7527,8 +7565,8 @@ func (s *LambdaDataSourceConfig) SetLambdaFunctionArn(v string) *LambdaDataSourc
 
 // The request exceeded a limit. Try your request again.
 type LimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -7545,17 +7583,17 @@ func (s LimitExceededException) GoString() string {
 
 func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
 	return &LimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LimitExceededException) Code() string {
+func (s *LimitExceededException) Code() string {
 	return "LimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s LimitExceededException) Message() string {
+func (s *LimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7563,22 +7601,22 @@ func (s LimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LimitExceededException) OrigErr() error {
+func (s *LimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s LimitExceededException) Error() string {
+func (s *LimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type ListApiKeysInput struct {
@@ -8424,8 +8462,8 @@ func (s *LogConfig) SetFieldLogLevel(v string) *LogConfig {
 // The resource specified in the request was not found. Check the resource,
 // and then try again.
 type NotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -8442,17 +8480,17 @@ func (s NotFoundException) GoString() string {
 
 func newErrorNotFoundException(v protocol.ResponseMetadata) error {
 	return &NotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s NotFoundException) Code() string {
+func (s *NotFoundException) Code() string {
 	return "NotFoundException"
 }
 
 // Message returns the exception's message.
-func (s NotFoundException) Message() string {
+func (s *NotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -8460,22 +8498,22 @@ func (s NotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s NotFoundException) OrigErr() error {
+func (s *NotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s NotFoundException) Error() string {
+func (s *NotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s NotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *NotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s NotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *NotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Describes an OpenID Connect configuration.
@@ -8585,7 +8623,7 @@ type RdsHttpEndpointConfig struct {
 	// Logical database name.
 	DatabaseName *string `locationName:"databaseName" type:"string"`
 
-	// Amazon RDS cluster identifier.
+	// Amazon RDS cluster ARN.
 	DbClusterIdentifier *string `locationName:"dbClusterIdentifier" type:"string"`
 
 	// Logical schema name.
@@ -9053,8 +9091,8 @@ func (s *Type) SetName(v string) *Type {
 
 // You are not authorized to perform this operation.
 type UnauthorizedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -9071,17 +9109,17 @@ func (s UnauthorizedException) GoString() string {
 
 func newErrorUnauthorizedException(v protocol.ResponseMetadata) error {
 	return &UnauthorizedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnauthorizedException) Code() string {
+func (s *UnauthorizedException) Code() string {
 	return "UnauthorizedException"
 }
 
 // Message returns the exception's message.
-func (s UnauthorizedException) Message() string {
+func (s *UnauthorizedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9089,22 +9127,22 @@ func (s UnauthorizedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnauthorizedException) OrigErr() error {
+func (s *UnauthorizedException) OrigErr() error {
 	return nil
 }
 
-func (s UnauthorizedException) Error() string {
+func (s *UnauthorizedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnauthorizedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnauthorizedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnauthorizedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnauthorizedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -9204,7 +9242,29 @@ type UpdateApiCacheInput struct {
 	// Ttl is a required field
 	Ttl *int64 `locationName:"ttl" type:"long" required:"true"`
 
-	// The cache instance type.
+	// The cache instance type. Valid values are
+	//
+	//    * SMALL
+	//
+	//    * MEDIUM
+	//
+	//    * LARGE
+	//
+	//    * XLARGE
+	//
+	//    * LARGE_2X
+	//
+	//    * LARGE_4X
+	//
+	//    * LARGE_8X (not available in all regions)
+	//
+	//    * LARGE_12X
+	//
+	// Historically, instance types were identified by an EC2-style value. As of
+	// July 2020, this is deprecated, and the generic identifiers above should be
+	// used.
+	//
+	// The following legacy instance types are avaible, but their use is discouraged:
 	//
 	//    * T2_SMALL: A t2.small instance type.
 	//
@@ -9619,9 +9679,7 @@ type UpdateFunctionInput struct {
 
 	// The Function request mapping template. Functions support only the 2018-05-29
 	// version of the request mapping template.
-	//
-	// RequestMappingTemplate is a required field
-	RequestMappingTemplate *string `locationName:"requestMappingTemplate" min:"1" type:"string" required:"true"`
+	RequestMappingTemplate *string `locationName:"requestMappingTemplate" min:"1" type:"string"`
 
 	// The Function request mapping template.
 	ResponseMappingTemplate *string `locationName:"responseMappingTemplate" min:"1" type:"string"`
@@ -9666,9 +9724,6 @@ func (s *UpdateFunctionInput) Validate() error {
 	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
-	}
-	if s.RequestMappingTemplate == nil {
-		invalidParams.Add(request.NewErrParamRequired("RequestMappingTemplate"))
 	}
 	if s.RequestMappingTemplate != nil && len(*s.RequestMappingTemplate) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("RequestMappingTemplate", 1))
@@ -9946,8 +10001,14 @@ type UpdateResolverInput struct {
 
 	// The new request mapping template.
 	//
-	// RequestMappingTemplate is a required field
-	RequestMappingTemplate *string `locationName:"requestMappingTemplate" min:"1" type:"string" required:"true"`
+	// A resolver uses a request mapping template to convert a GraphQL expression
+	// into a format that a data source can understand. Mapping templates are written
+	// in Apache Velocity Template Language (VTL).
+	//
+	// VTL request mapping templates are optional when using a Lambda data source.
+	// For all other data sources, VTL request and response mapping templates are
+	// required.
+	RequestMappingTemplate *string `locationName:"requestMappingTemplate" min:"1" type:"string"`
 
 	// The new response mapping template.
 	ResponseMappingTemplate *string `locationName:"responseMappingTemplate" min:"1" type:"string"`
@@ -9988,9 +10049,6 @@ func (s *UpdateResolverInput) Validate() error {
 	}
 	if s.FieldName != nil && len(*s.FieldName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("FieldName", 1))
-	}
-	if s.RequestMappingTemplate == nil {
-		invalidParams.Add(request.NewErrParamRequired("RequestMappingTemplate"))
 	}
 	if s.RequestMappingTemplate != nil && len(*s.RequestMappingTemplate) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("RequestMappingTemplate", 1))
@@ -10294,6 +10352,17 @@ const (
 	ApiCacheStatusFailed = "FAILED"
 )
 
+// ApiCacheStatus_Values returns all elements of the ApiCacheStatus enum
+func ApiCacheStatus_Values() []string {
+	return []string{
+		ApiCacheStatusAvailable,
+		ApiCacheStatusCreating,
+		ApiCacheStatusDeleting,
+		ApiCacheStatusModifying,
+		ApiCacheStatusFailed,
+	}
+}
+
 const (
 	// ApiCacheTypeT2Small is a ApiCacheType enum value
 	ApiCacheTypeT2Small = "T2_SMALL"
@@ -10315,7 +10384,52 @@ const (
 
 	// ApiCacheTypeR48xlarge is a ApiCacheType enum value
 	ApiCacheTypeR48xlarge = "R4_8XLARGE"
+
+	// ApiCacheTypeSmall is a ApiCacheType enum value
+	ApiCacheTypeSmall = "SMALL"
+
+	// ApiCacheTypeMedium is a ApiCacheType enum value
+	ApiCacheTypeMedium = "MEDIUM"
+
+	// ApiCacheTypeLarge is a ApiCacheType enum value
+	ApiCacheTypeLarge = "LARGE"
+
+	// ApiCacheTypeXlarge is a ApiCacheType enum value
+	ApiCacheTypeXlarge = "XLARGE"
+
+	// ApiCacheTypeLarge2x is a ApiCacheType enum value
+	ApiCacheTypeLarge2x = "LARGE_2X"
+
+	// ApiCacheTypeLarge4x is a ApiCacheType enum value
+	ApiCacheTypeLarge4x = "LARGE_4X"
+
+	// ApiCacheTypeLarge8x is a ApiCacheType enum value
+	ApiCacheTypeLarge8x = "LARGE_8X"
+
+	// ApiCacheTypeLarge12x is a ApiCacheType enum value
+	ApiCacheTypeLarge12x = "LARGE_12X"
 )
+
+// ApiCacheType_Values returns all elements of the ApiCacheType enum
+func ApiCacheType_Values() []string {
+	return []string{
+		ApiCacheTypeT2Small,
+		ApiCacheTypeT2Medium,
+		ApiCacheTypeR4Large,
+		ApiCacheTypeR4Xlarge,
+		ApiCacheTypeR42xlarge,
+		ApiCacheTypeR44xlarge,
+		ApiCacheTypeR48xlarge,
+		ApiCacheTypeSmall,
+		ApiCacheTypeMedium,
+		ApiCacheTypeLarge,
+		ApiCacheTypeXlarge,
+		ApiCacheTypeLarge2x,
+		ApiCacheTypeLarge4x,
+		ApiCacheTypeLarge8x,
+		ApiCacheTypeLarge12x,
+	}
+}
 
 const (
 	// ApiCachingBehaviorFullRequestCaching is a ApiCachingBehavior enum value
@@ -10324,6 +10438,14 @@ const (
 	// ApiCachingBehaviorPerResolverCaching is a ApiCachingBehavior enum value
 	ApiCachingBehaviorPerResolverCaching = "PER_RESOLVER_CACHING"
 )
+
+// ApiCachingBehavior_Values returns all elements of the ApiCachingBehavior enum
+func ApiCachingBehavior_Values() []string {
+	return []string{
+		ApiCachingBehaviorFullRequestCaching,
+		ApiCachingBehaviorPerResolverCaching,
+	}
+}
 
 const (
 	// AuthenticationTypeApiKey is a AuthenticationType enum value
@@ -10339,10 +10461,27 @@ const (
 	AuthenticationTypeOpenidConnect = "OPENID_CONNECT"
 )
 
+// AuthenticationType_Values returns all elements of the AuthenticationType enum
+func AuthenticationType_Values() []string {
+	return []string{
+		AuthenticationTypeApiKey,
+		AuthenticationTypeAwsIam,
+		AuthenticationTypeAmazonCognitoUserPools,
+		AuthenticationTypeOpenidConnect,
+	}
+}
+
 const (
 	// AuthorizationTypeAwsIam is a AuthorizationType enum value
 	AuthorizationTypeAwsIam = "AWS_IAM"
 )
+
+// AuthorizationType_Values returns all elements of the AuthorizationType enum
+func AuthorizationType_Values() []string {
+	return []string{
+		AuthorizationTypeAwsIam,
+	}
+}
 
 const (
 	// ConflictDetectionTypeVersion is a ConflictDetectionType enum value
@@ -10351,6 +10490,14 @@ const (
 	// ConflictDetectionTypeNone is a ConflictDetectionType enum value
 	ConflictDetectionTypeNone = "NONE"
 )
+
+// ConflictDetectionType_Values returns all elements of the ConflictDetectionType enum
+func ConflictDetectionType_Values() []string {
+	return []string{
+		ConflictDetectionTypeVersion,
+		ConflictDetectionTypeNone,
+	}
+}
 
 const (
 	// ConflictHandlerTypeOptimisticConcurrency is a ConflictHandlerType enum value
@@ -10365,6 +10512,16 @@ const (
 	// ConflictHandlerTypeNone is a ConflictHandlerType enum value
 	ConflictHandlerTypeNone = "NONE"
 )
+
+// ConflictHandlerType_Values returns all elements of the ConflictHandlerType enum
+func ConflictHandlerType_Values() []string {
+	return []string{
+		ConflictHandlerTypeOptimisticConcurrency,
+		ConflictHandlerTypeLambda,
+		ConflictHandlerTypeAutomerge,
+		ConflictHandlerTypeNone,
+	}
+}
 
 const (
 	// DataSourceTypeAwsLambda is a DataSourceType enum value
@@ -10386,6 +10543,18 @@ const (
 	DataSourceTypeRelationalDatabase = "RELATIONAL_DATABASE"
 )
 
+// DataSourceType_Values returns all elements of the DataSourceType enum
+func DataSourceType_Values() []string {
+	return []string{
+		DataSourceTypeAwsLambda,
+		DataSourceTypeAmazonDynamodb,
+		DataSourceTypeAmazonElasticsearch,
+		DataSourceTypeNone,
+		DataSourceTypeHttp,
+		DataSourceTypeRelationalDatabase,
+	}
+}
+
 const (
 	// DefaultActionAllow is a DefaultAction enum value
 	DefaultActionAllow = "ALLOW"
@@ -10393,6 +10562,14 @@ const (
 	// DefaultActionDeny is a DefaultAction enum value
 	DefaultActionDeny = "DENY"
 )
+
+// DefaultAction_Values returns all elements of the DefaultAction enum
+func DefaultAction_Values() []string {
+	return []string{
+		DefaultActionAllow,
+		DefaultActionDeny,
+	}
+}
 
 const (
 	// FieldLogLevelNone is a FieldLogLevel enum value
@@ -10405,6 +10582,15 @@ const (
 	FieldLogLevelAll = "ALL"
 )
 
+// FieldLogLevel_Values returns all elements of the FieldLogLevel enum
+func FieldLogLevel_Values() []string {
+	return []string{
+		FieldLogLevelNone,
+		FieldLogLevelError,
+		FieldLogLevelAll,
+	}
+}
+
 const (
 	// OutputTypeSdl is a OutputType enum value
 	OutputTypeSdl = "SDL"
@@ -10413,10 +10599,25 @@ const (
 	OutputTypeJson = "JSON"
 )
 
+// OutputType_Values returns all elements of the OutputType enum
+func OutputType_Values() []string {
+	return []string{
+		OutputTypeSdl,
+		OutputTypeJson,
+	}
+}
+
 const (
 	// RelationalDatabaseSourceTypeRdsHttpEndpoint is a RelationalDatabaseSourceType enum value
 	RelationalDatabaseSourceTypeRdsHttpEndpoint = "RDS_HTTP_ENDPOINT"
 )
+
+// RelationalDatabaseSourceType_Values returns all elements of the RelationalDatabaseSourceType enum
+func RelationalDatabaseSourceType_Values() []string {
+	return []string{
+		RelationalDatabaseSourceTypeRdsHttpEndpoint,
+	}
+}
 
 const (
 	// ResolverKindUnit is a ResolverKind enum value
@@ -10425,6 +10626,14 @@ const (
 	// ResolverKindPipeline is a ResolverKind enum value
 	ResolverKindPipeline = "PIPELINE"
 )
+
+// ResolverKind_Values returns all elements of the ResolverKind enum
+func ResolverKind_Values() []string {
+	return []string{
+		ResolverKindUnit,
+		ResolverKindPipeline,
+	}
+}
 
 const (
 	// SchemaStatusProcessing is a SchemaStatus enum value
@@ -10446,6 +10655,18 @@ const (
 	SchemaStatusNotApplicable = "NOT_APPLICABLE"
 )
 
+// SchemaStatus_Values returns all elements of the SchemaStatus enum
+func SchemaStatus_Values() []string {
+	return []string{
+		SchemaStatusProcessing,
+		SchemaStatusActive,
+		SchemaStatusDeleting,
+		SchemaStatusFailed,
+		SchemaStatusSuccess,
+		SchemaStatusNotApplicable,
+	}
+}
+
 const (
 	// TypeDefinitionFormatSdl is a TypeDefinitionFormat enum value
 	TypeDefinitionFormatSdl = "SDL"
@@ -10453,3 +10674,11 @@ const (
 	// TypeDefinitionFormatJson is a TypeDefinitionFormat enum value
 	TypeDefinitionFormatJson = "JSON"
 )
+
+// TypeDefinitionFormat_Values returns all elements of the TypeDefinitionFormat enum
+func TypeDefinitionFormat_Values() []string {
+	return []string{
+		TypeDefinitionFormatSdl,
+		TypeDefinitionFormatJson,
+	}
+}

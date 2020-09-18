@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -74,6 +74,7 @@ func dataSourceAwsS3BucketObject() *schema.Resource {
 			"metadata": {
 				Type:     schema.TypeMap,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"object_lock_legal_hold_status": {
 				Type:     schema.TypeString,
@@ -120,6 +121,7 @@ func dataSourceAwsS3BucketObject() *schema.Resource {
 
 func dataSourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).s3conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -225,7 +227,7 @@ func dataSourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

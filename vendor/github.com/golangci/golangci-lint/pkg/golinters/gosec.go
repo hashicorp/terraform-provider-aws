@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/securego/gosec"
-	"github.com/securego/gosec/rules"
+	"github.com/securego/gosec/v2"
+	"github.com/securego/gosec/v2/rules"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/packages"
 
@@ -73,7 +73,7 @@ func NewGosec() *goanalysis.Linter {
 					continue
 				}
 
-				res = append(res, goanalysis.NewIssue(&result.Issue{ //nolint:scopelint
+				res = append(res, goanalysis.NewIssue(&result.Issue{
 					Pos: token.Position{
 						Filename: i.File,
 						Line:     line,

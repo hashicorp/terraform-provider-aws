@@ -9,13 +9,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsAppmeshVirtualNode() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsAppmeshVirtualNodeCreate,
 		Read:   resourceAwsAppmeshVirtualNodeRead,
@@ -50,14 +51,6 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"backends": {
-							Type:     schema.TypeSet,
-							Removed:  "Use `backend` configuration blocks instead",
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-
 						"backend": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -67,8 +60,7 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"virtual_service": {
 										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 0,
+										Required: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -86,7 +78,7 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 						},
 
 						"listener": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MinItems: 0,
 							MaxItems: 1,
@@ -173,7 +165,6 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 									},
 								},
 							},
-							Set: appmeshVirtualNodeListenerHash,
 						},
 
 						"logging": {
@@ -256,13 +247,6 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 										ConflictsWith: []string{"spec.0.service_discovery.0.aws_cloud_map"},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"service_name": {
-													Type:     schema.TypeString,
-													Removed:  "Use `hostname` argument instead",
-													Optional: true,
-													Computed: true,
-												},
-
 												"hostname": {
 													Type:         schema.TypeString,
 													Required:     true,
@@ -321,6 +305,7 @@ func resourceAwsAppmeshVirtualNodeCreate(d *schema.ResourceData, meta interface{
 
 func resourceAwsAppmeshVirtualNodeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appmeshconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeVirtualNode(&appmesh.DescribeVirtualNodeInput{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
@@ -357,7 +342,7 @@ func resourceAwsAppmeshVirtualNodeRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error listing tags for App Mesh virtual node (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -445,44 +430,6 @@ func appmeshVirtualNodeBackendHash(vBackend interface{}) int {
 	if vVirtualService, ok := mBackend["virtual_service"].([]interface{}); ok && len(vVirtualService) > 0 && vVirtualService[0] != nil {
 		mVirtualService := vVirtualService[0].(map[string]interface{})
 		if v, ok := mVirtualService["virtual_service_name"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-	}
-	return hashcode.String(buf.String())
-}
-
-func appmeshVirtualNodeListenerHash(vListener interface{}) int {
-	var buf bytes.Buffer
-	mListener := vListener.(map[string]interface{})
-	if vHealthCheck, ok := mListener["health_check"].([]interface{}); ok && len(vHealthCheck) > 0 && vHealthCheck[0] != nil {
-		mHealthCheck := vHealthCheck[0].(map[string]interface{})
-		if v, ok := mHealthCheck["healthy_threshold"].(int); ok {
-			buf.WriteString(fmt.Sprintf("%d-", v))
-		}
-		if v, ok := mHealthCheck["interval_millis"].(int); ok {
-			buf.WriteString(fmt.Sprintf("%d-", v))
-		}
-		if v, ok := mHealthCheck["path"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-		// Don't include "port" in the hash as it's Optional/Computed.
-		// If present it must match the "port_mapping.port" value, so changes will be detected.
-		if v, ok := mHealthCheck["protocol"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-		if v, ok := mHealthCheck["timeout_millis"].(int); ok {
-			buf.WriteString(fmt.Sprintf("%d-", v))
-		}
-		if v, ok := mHealthCheck["unhealthy_threshold"].(int); ok {
-			buf.WriteString(fmt.Sprintf("%d-", v))
-		}
-	}
-	if vPortMapping, ok := mListener["port_mapping"].([]interface{}); ok && len(vPortMapping) > 0 && vPortMapping[0] != nil {
-		mPortMapping := vPortMapping[0].(map[string]interface{})
-		if v, ok := mPortMapping["port"].(int); ok {
-			buf.WriteString(fmt.Sprintf("%d-", v))
-		}
-		if v, ok := mPortMapping["protocol"].(string); ok {
 			buf.WriteString(fmt.Sprintf("%s-", v))
 		}
 	}

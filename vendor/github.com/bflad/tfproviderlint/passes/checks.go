@@ -23,6 +23,9 @@ import (
 	"github.com/bflad/tfproviderlint/passes/R012"
 	"github.com/bflad/tfproviderlint/passes/R013"
 	"github.com/bflad/tfproviderlint/passes/R014"
+	"github.com/bflad/tfproviderlint/passes/R015"
+	"github.com/bflad/tfproviderlint/passes/R016"
+	"github.com/bflad/tfproviderlint/passes/R017"
 	"github.com/bflad/tfproviderlint/passes/S001"
 	"github.com/bflad/tfproviderlint/passes/S002"
 	"github.com/bflad/tfproviderlint/passes/S003"
@@ -57,6 +60,9 @@ import (
 	"github.com/bflad/tfproviderlint/passes/S032"
 	"github.com/bflad/tfproviderlint/passes/S033"
 	"github.com/bflad/tfproviderlint/passes/S034"
+	"github.com/bflad/tfproviderlint/passes/S035"
+	"github.com/bflad/tfproviderlint/passes/S036"
+	"github.com/bflad/tfproviderlint/passes/S037"
 	"github.com/bflad/tfproviderlint/passes/V001"
 	"github.com/bflad/tfproviderlint/passes/V002"
 	"github.com/bflad/tfproviderlint/passes/V003"
@@ -94,6 +100,9 @@ var AllChecks = []*analysis.Analyzer{
 	R012.Analyzer,
 	R013.Analyzer,
 	R014.Analyzer,
+	R015.Analyzer,
+	R016.Analyzer,
+	R017.Analyzer,
 	S001.Analyzer,
 	S002.Analyzer,
 	S003.Analyzer,
@@ -128,6 +137,9 @@ var AllChecks = []*analysis.Analyzer{
 	S032.Analyzer,
 	S033.Analyzer,
 	S034.Analyzer,
+	S035.Analyzer,
+	S036.Analyzer,
+	S037.Analyzer,
 	V001.Analyzer,
 	V002.Analyzer,
 	V003.Analyzer,

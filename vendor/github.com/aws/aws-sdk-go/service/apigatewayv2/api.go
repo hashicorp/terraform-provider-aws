@@ -1027,6 +1027,174 @@ func (c *ApiGatewayV2) CreateStageWithContext(ctx aws.Context, input *CreateStag
 	return out, req.Send()
 }
 
+const opCreateVpcLink = "CreateVpcLink"
+
+// CreateVpcLinkRequest generates a "aws/request.Request" representing the
+// client's request for the CreateVpcLink operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateVpcLink for more information on using the CreateVpcLink
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateVpcLinkRequest method.
+//    req, resp := client.CreateVpcLinkRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/CreateVpcLink
+func (c *ApiGatewayV2) CreateVpcLinkRequest(input *CreateVpcLinkInput) (req *request.Request, output *CreateVpcLinkOutput) {
+	op := &request.Operation{
+		Name:       opCreateVpcLink,
+		HTTPMethod: "POST",
+		HTTPPath:   "/v2/vpclinks",
+	}
+
+	if input == nil {
+		input = &CreateVpcLinkInput{}
+	}
+
+	output = &CreateVpcLinkOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateVpcLink API operation for AmazonApiGatewayV2.
+//
+// Creates a VPC link.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AmazonApiGatewayV2's
+// API operation CreateVpcLink for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//   The request is not valid, for example, the input is incomplete or incorrect.
+//   See the accompanying error message for details.
+//
+//   * TooManyRequestsException
+//   A limit has been exceeded. See the accompanying error message for details.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/CreateVpcLink
+func (c *ApiGatewayV2) CreateVpcLink(input *CreateVpcLinkInput) (*CreateVpcLinkOutput, error) {
+	req, out := c.CreateVpcLinkRequest(input)
+	return out, req.Send()
+}
+
+// CreateVpcLinkWithContext is the same as CreateVpcLink with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateVpcLink for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ApiGatewayV2) CreateVpcLinkWithContext(ctx aws.Context, input *CreateVpcLinkInput, opts ...request.Option) (*CreateVpcLinkOutput, error) {
+	req, out := c.CreateVpcLinkRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteAccessLogSettings = "DeleteAccessLogSettings"
+
+// DeleteAccessLogSettingsRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteAccessLogSettings operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteAccessLogSettings for more information on using the DeleteAccessLogSettings
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteAccessLogSettingsRequest method.
+//    req, resp := client.DeleteAccessLogSettingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/DeleteAccessLogSettings
+func (c *ApiGatewayV2) DeleteAccessLogSettingsRequest(input *DeleteAccessLogSettingsInput) (req *request.Request, output *DeleteAccessLogSettingsOutput) {
+	op := &request.Operation{
+		Name:       opDeleteAccessLogSettings,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/v2/apis/{apiId}/stages/{stageName}/accesslogsettings",
+	}
+
+	if input == nil {
+		input = &DeleteAccessLogSettingsInput{}
+	}
+
+	output = &DeleteAccessLogSettingsOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteAccessLogSettings API operation for AmazonApiGatewayV2.
+//
+// Deletes the AccessLogSettings for a Stage. To disable access logging for
+// a Stage, delete its AccessLogSettings.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AmazonApiGatewayV2's
+// API operation DeleteAccessLogSettings for usage and error information.
+//
+// Returned Error Types:
+//   * NotFoundException
+//   The resource specified in the request was not found. See the message field
+//   for more information.
+//
+//   * TooManyRequestsException
+//   A limit has been exceeded. See the accompanying error message for details.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/DeleteAccessLogSettings
+func (c *ApiGatewayV2) DeleteAccessLogSettings(input *DeleteAccessLogSettingsInput) (*DeleteAccessLogSettingsOutput, error) {
+	req, out := c.DeleteAccessLogSettingsRequest(input)
+	return out, req.Send()
+}
+
+// DeleteAccessLogSettingsWithContext is the same as DeleteAccessLogSettings with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteAccessLogSettings for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ApiGatewayV2) DeleteAccessLogSettingsWithContext(ctx aws.Context, input *DeleteAccessLogSettingsInput, opts ...request.Option) (*DeleteAccessLogSettingsOutput, error) {
+	req, out := c.DeleteAccessLogSettingsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteApi = "DeleteApi"
 
 // DeleteApiRequest generates a "aws/request.Request" representing the
@@ -1871,6 +2039,90 @@ func (c *ApiGatewayV2) DeleteRouteWithContext(ctx aws.Context, input *DeleteRout
 	return out, req.Send()
 }
 
+const opDeleteRouteRequestParameter = "DeleteRouteRequestParameter"
+
+// DeleteRouteRequestParameterRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteRouteRequestParameter operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteRouteRequestParameter for more information on using the DeleteRouteRequestParameter
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteRouteRequestParameterRequest method.
+//    req, resp := client.DeleteRouteRequestParameterRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/DeleteRouteRequestParameter
+func (c *ApiGatewayV2) DeleteRouteRequestParameterRequest(input *DeleteRouteRequestParameterInput) (req *request.Request, output *DeleteRouteRequestParameterOutput) {
+	op := &request.Operation{
+		Name:       opDeleteRouteRequestParameter,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/v2/apis/{apiId}/routes/{routeId}/requestparameters/{requestParameterKey}",
+	}
+
+	if input == nil {
+		input = &DeleteRouteRequestParameterInput{}
+	}
+
+	output = &DeleteRouteRequestParameterOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteRouteRequestParameter API operation for AmazonApiGatewayV2.
+//
+// Deletes a route request parameter.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AmazonApiGatewayV2's
+// API operation DeleteRouteRequestParameter for usage and error information.
+//
+// Returned Error Types:
+//   * NotFoundException
+//   The resource specified in the request was not found. See the message field
+//   for more information.
+//
+//   * TooManyRequestsException
+//   A limit has been exceeded. See the accompanying error message for details.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/DeleteRouteRequestParameter
+func (c *ApiGatewayV2) DeleteRouteRequestParameter(input *DeleteRouteRequestParameterInput) (*DeleteRouteRequestParameterOutput, error) {
+	req, out := c.DeleteRouteRequestParameterRequest(input)
+	return out, req.Send()
+}
+
+// DeleteRouteRequestParameterWithContext is the same as DeleteRouteRequestParameter with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteRouteRequestParameter for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ApiGatewayV2) DeleteRouteRequestParameterWithContext(ctx aws.Context, input *DeleteRouteRequestParameterInput, opts ...request.Option) (*DeleteRouteRequestParameterOutput, error) {
+	req, out := c.DeleteRouteRequestParameterRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteRouteResponse = "DeleteRouteResponse"
 
 // DeleteRouteResponseRequest generates a "aws/request.Request" representing the
@@ -2118,6 +2370,177 @@ func (c *ApiGatewayV2) DeleteStage(input *DeleteStageInput) (*DeleteStageOutput,
 // for more information on using Contexts.
 func (c *ApiGatewayV2) DeleteStageWithContext(ctx aws.Context, input *DeleteStageInput, opts ...request.Option) (*DeleteStageOutput, error) {
 	req, out := c.DeleteStageRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteVpcLink = "DeleteVpcLink"
+
+// DeleteVpcLinkRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteVpcLink operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteVpcLink for more information on using the DeleteVpcLink
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteVpcLinkRequest method.
+//    req, resp := client.DeleteVpcLinkRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/DeleteVpcLink
+func (c *ApiGatewayV2) DeleteVpcLinkRequest(input *DeleteVpcLinkInput) (req *request.Request, output *DeleteVpcLinkOutput) {
+	op := &request.Operation{
+		Name:       opDeleteVpcLink,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/v2/vpclinks/{vpcLinkId}",
+	}
+
+	if input == nil {
+		input = &DeleteVpcLinkInput{}
+	}
+
+	output = &DeleteVpcLinkOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteVpcLink API operation for AmazonApiGatewayV2.
+//
+// Deletes a VPC link.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AmazonApiGatewayV2's
+// API operation DeleteVpcLink for usage and error information.
+//
+// Returned Error Types:
+//   * NotFoundException
+//   The resource specified in the request was not found. See the message field
+//   for more information.
+//
+//   * TooManyRequestsException
+//   A limit has been exceeded. See the accompanying error message for details.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/DeleteVpcLink
+func (c *ApiGatewayV2) DeleteVpcLink(input *DeleteVpcLinkInput) (*DeleteVpcLinkOutput, error) {
+	req, out := c.DeleteVpcLinkRequest(input)
+	return out, req.Send()
+}
+
+// DeleteVpcLinkWithContext is the same as DeleteVpcLink with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteVpcLink for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ApiGatewayV2) DeleteVpcLinkWithContext(ctx aws.Context, input *DeleteVpcLinkInput, opts ...request.Option) (*DeleteVpcLinkOutput, error) {
+	req, out := c.DeleteVpcLinkRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opExportApi = "ExportApi"
+
+// ExportApiRequest generates a "aws/request.Request" representing the
+// client's request for the ExportApi operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ExportApi for more information on using the ExportApi
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ExportApiRequest method.
+//    req, resp := client.ExportApiRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/ExportApi
+func (c *ApiGatewayV2) ExportApiRequest(input *ExportApiInput) (req *request.Request, output *ExportApiOutput) {
+	op := &request.Operation{
+		Name:       opExportApi,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v2/apis/{apiId}/exports/{specification}",
+	}
+
+	if input == nil {
+		input = &ExportApiInput{}
+	}
+
+	output = &ExportApiOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ExportApi API operation for AmazonApiGatewayV2.
+//
+// Exports a definition of an API in a particular output format and specification.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AmazonApiGatewayV2's
+// API operation ExportApi for usage and error information.
+//
+// Returned Error Types:
+//   * NotFoundException
+//   The resource specified in the request was not found. See the message field
+//   for more information.
+//
+//   * TooManyRequestsException
+//   A limit has been exceeded. See the accompanying error message for details.
+//
+//   * BadRequestException
+//   The request is not valid, for example, the input is incomplete or incorrect.
+//   See the accompanying error message for details.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/ExportApi
+func (c *ApiGatewayV2) ExportApi(input *ExportApiInput) (*ExportApiOutput, error) {
+	req, out := c.ExportApiRequest(input)
+	return out, req.Send()
+}
+
+// ExportApiWithContext is the same as ExportApi with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ExportApi for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ApiGatewayV2) ExportApiWithContext(ctx aws.Context, input *ExportApiInput, opts ...request.Option) (*ExportApiOutput, error) {
+	req, out := c.ExportApiRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4172,6 +4595,172 @@ func (c *ApiGatewayV2) GetTagsWithContext(ctx aws.Context, input *GetTagsInput, 
 	return out, req.Send()
 }
 
+const opGetVpcLink = "GetVpcLink"
+
+// GetVpcLinkRequest generates a "aws/request.Request" representing the
+// client's request for the GetVpcLink operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetVpcLink for more information on using the GetVpcLink
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetVpcLinkRequest method.
+//    req, resp := client.GetVpcLinkRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/GetVpcLink
+func (c *ApiGatewayV2) GetVpcLinkRequest(input *GetVpcLinkInput) (req *request.Request, output *GetVpcLinkOutput) {
+	op := &request.Operation{
+		Name:       opGetVpcLink,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v2/vpclinks/{vpcLinkId}",
+	}
+
+	if input == nil {
+		input = &GetVpcLinkInput{}
+	}
+
+	output = &GetVpcLinkOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetVpcLink API operation for AmazonApiGatewayV2.
+//
+// Gets a VPC link.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AmazonApiGatewayV2's
+// API operation GetVpcLink for usage and error information.
+//
+// Returned Error Types:
+//   * NotFoundException
+//   The resource specified in the request was not found. See the message field
+//   for more information.
+//
+//   * TooManyRequestsException
+//   A limit has been exceeded. See the accompanying error message for details.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/GetVpcLink
+func (c *ApiGatewayV2) GetVpcLink(input *GetVpcLinkInput) (*GetVpcLinkOutput, error) {
+	req, out := c.GetVpcLinkRequest(input)
+	return out, req.Send()
+}
+
+// GetVpcLinkWithContext is the same as GetVpcLink with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetVpcLink for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ApiGatewayV2) GetVpcLinkWithContext(ctx aws.Context, input *GetVpcLinkInput, opts ...request.Option) (*GetVpcLinkOutput, error) {
+	req, out := c.GetVpcLinkRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetVpcLinks = "GetVpcLinks"
+
+// GetVpcLinksRequest generates a "aws/request.Request" representing the
+// client's request for the GetVpcLinks operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetVpcLinks for more information on using the GetVpcLinks
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetVpcLinksRequest method.
+//    req, resp := client.GetVpcLinksRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/GetVpcLinks
+func (c *ApiGatewayV2) GetVpcLinksRequest(input *GetVpcLinksInput) (req *request.Request, output *GetVpcLinksOutput) {
+	op := &request.Operation{
+		Name:       opGetVpcLinks,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v2/vpclinks",
+	}
+
+	if input == nil {
+		input = &GetVpcLinksInput{}
+	}
+
+	output = &GetVpcLinksOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetVpcLinks API operation for AmazonApiGatewayV2.
+//
+// Gets a collection of VPC links.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AmazonApiGatewayV2's
+// API operation GetVpcLinks for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//   The request is not valid, for example, the input is incomplete or incorrect.
+//   See the accompanying error message for details.
+//
+//   * TooManyRequestsException
+//   A limit has been exceeded. See the accompanying error message for details.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/GetVpcLinks
+func (c *ApiGatewayV2) GetVpcLinks(input *GetVpcLinksInput) (*GetVpcLinksOutput, error) {
+	req, out := c.GetVpcLinksRequest(input)
+	return out, req.Send()
+}
+
+// GetVpcLinksWithContext is the same as GetVpcLinks with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetVpcLinks for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ApiGatewayV2) GetVpcLinksWithContext(ctx aws.Context, input *GetVpcLinksInput, opts ...request.Option) (*GetVpcLinksOutput, error) {
+	req, out := c.GetVpcLinksRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opImportApi = "ImportApi"
 
 // ImportApiRequest generates a "aws/request.Request" representing the
@@ -4351,6 +4940,91 @@ func (c *ApiGatewayV2) ReimportApi(input *ReimportApiInput) (*ReimportApiOutput,
 // for more information on using Contexts.
 func (c *ApiGatewayV2) ReimportApiWithContext(ctx aws.Context, input *ReimportApiInput, opts ...request.Option) (*ReimportApiOutput, error) {
 	req, out := c.ReimportApiRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opResetAuthorizersCache = "ResetAuthorizersCache"
+
+// ResetAuthorizersCacheRequest generates a "aws/request.Request" representing the
+// client's request for the ResetAuthorizersCache operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ResetAuthorizersCache for more information on using the ResetAuthorizersCache
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ResetAuthorizersCacheRequest method.
+//    req, resp := client.ResetAuthorizersCacheRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/ResetAuthorizersCache
+func (c *ApiGatewayV2) ResetAuthorizersCacheRequest(input *ResetAuthorizersCacheInput) (req *request.Request, output *ResetAuthorizersCacheOutput) {
+	op := &request.Operation{
+		Name:       opResetAuthorizersCache,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/v2/apis/{apiId}/stages/{stageName}/cache/authorizers",
+	}
+
+	if input == nil {
+		input = &ResetAuthorizersCacheInput{}
+	}
+
+	output = &ResetAuthorizersCacheOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// ResetAuthorizersCache API operation for AmazonApiGatewayV2.
+//
+// Resets all authorizer cache entries for the specified stage. Supported only
+// for HTTP API Lambda authorizers.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AmazonApiGatewayV2's
+// API operation ResetAuthorizersCache for usage and error information.
+//
+// Returned Error Types:
+//   * NotFoundException
+//   The resource specified in the request was not found. See the message field
+//   for more information.
+//
+//   * TooManyRequestsException
+//   A limit has been exceeded. See the accompanying error message for details.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/ResetAuthorizersCache
+func (c *ApiGatewayV2) ResetAuthorizersCache(input *ResetAuthorizersCacheInput) (*ResetAuthorizersCacheOutput, error) {
+	req, out := c.ResetAuthorizersCacheRequest(input)
+	return out, req.Send()
+}
+
+// ResetAuthorizersCacheWithContext is the same as ResetAuthorizersCache with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ResetAuthorizersCache for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ApiGatewayV2) ResetAuthorizersCacheWithContext(ctx aws.Context, input *ResetAuthorizersCacheInput, opts ...request.Option) (*ResetAuthorizersCacheOutput, error) {
+	req, out := c.ResetAuthorizersCacheRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5554,9 +6228,96 @@ func (c *ApiGatewayV2) UpdateStageWithContext(ctx aws.Context, input *UpdateStag
 	return out, req.Send()
 }
 
+const opUpdateVpcLink = "UpdateVpcLink"
+
+// UpdateVpcLinkRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateVpcLink operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateVpcLink for more information on using the UpdateVpcLink
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateVpcLinkRequest method.
+//    req, resp := client.UpdateVpcLinkRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/UpdateVpcLink
+func (c *ApiGatewayV2) UpdateVpcLinkRequest(input *UpdateVpcLinkInput) (req *request.Request, output *UpdateVpcLinkOutput) {
+	op := &request.Operation{
+		Name:       opUpdateVpcLink,
+		HTTPMethod: "PATCH",
+		HTTPPath:   "/v2/vpclinks/{vpcLinkId}",
+	}
+
+	if input == nil {
+		input = &UpdateVpcLinkInput{}
+	}
+
+	output = &UpdateVpcLinkOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateVpcLink API operation for AmazonApiGatewayV2.
+//
+// Updates a VPC link.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AmazonApiGatewayV2's
+// API operation UpdateVpcLink for usage and error information.
+//
+// Returned Error Types:
+//   * NotFoundException
+//   The resource specified in the request was not found. See the message field
+//   for more information.
+//
+//   * TooManyRequestsException
+//   A limit has been exceeded. See the accompanying error message for details.
+//
+//   * BadRequestException
+//   The request is not valid, for example, the input is incomplete or incorrect.
+//   See the accompanying error message for details.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/UpdateVpcLink
+func (c *ApiGatewayV2) UpdateVpcLink(input *UpdateVpcLinkInput) (*UpdateVpcLinkOutput, error) {
+	req, out := c.UpdateVpcLinkRequest(input)
+	return out, req.Send()
+}
+
+// UpdateVpcLinkWithContext is the same as UpdateVpcLink with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateVpcLink for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ApiGatewayV2) UpdateVpcLinkWithContext(ctx aws.Context, input *UpdateVpcLinkInput, opts ...request.Option) (*UpdateVpcLinkOutput, error) {
+	req, out := c.UpdateVpcLinkRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 type AccessDeniedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5573,17 +6334,17 @@ func (s AccessDeniedException) GoString() string {
 
 func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
 	return &AccessDeniedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AccessDeniedException) Code() string {
+func (s *AccessDeniedException) Code() string {
 	return "AccessDeniedException"
 }
 
 // Message returns the exception's message.
-func (s AccessDeniedException) Message() string {
+func (s *AccessDeniedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5591,22 +6352,22 @@ func (s AccessDeniedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AccessDeniedException) OrigErr() error {
+func (s *AccessDeniedException) OrigErr() error {
 	return nil
 }
 
-func (s AccessDeniedException) Error() string {
+func (s *AccessDeniedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AccessDeniedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AccessDeniedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AccessDeniedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AccessDeniedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Settings for logging access in a stage.
@@ -5651,6 +6412,11 @@ type Api struct {
 	// The stage name is typically appended to this URI to form a complete path
 	// to a deployed API stage.
 	ApiEndpoint *string `locationName:"apiEndpoint" type:"string"`
+
+	// Specifies whether an API is managed by API Gateway. You can't update or delete
+	// a managed API by using API Gateway. A managed API can be deleted only through
+	// the tooling or service that created it.
+	ApiGatewayManaged *bool `locationName:"apiGatewayManaged" type:"boolean"`
 
 	// The API ID.
 	ApiId *string `locationName:"apiId" type:"string"`
@@ -5718,6 +6484,12 @@ func (s Api) GoString() string {
 // SetApiEndpoint sets the ApiEndpoint field's value.
 func (s *Api) SetApiEndpoint(v string) *Api {
 	s.ApiEndpoint = &v
+	return s
+}
+
+// SetApiGatewayManaged sets the ApiGatewayManaged field's value.
+func (s *Api) SetApiGatewayManaged(v bool) *Api {
+	s.ApiGatewayManaged = &v
 	return s
 }
 
@@ -5861,22 +6633,30 @@ type Authorizer struct {
 	// Specifies the required credentials as an IAM role for API Gateway to invoke
 	// the authorizer. To specify an IAM role for API Gateway to assume, use the
 	// role's Amazon Resource Name (ARN). To use resource-based permissions on the
-	// Lambda function, specify null. Supported only for REQUEST authorizers.
+	// Lambda function, don't specify this parameter. Supported only for REQUEST
+	// authorizers.
 	AuthorizerCredentialsArn *string `locationName:"authorizerCredentialsArn" type:"string"`
 
 	// The authorizer identifier.
 	AuthorizerId *string `locationName:"authorizerId" type:"string"`
 
-	// Authorizer caching is not currently supported. Don't specify this value for
-	// authorizers.
+	// Specifies the format of the payload sent to an HTTP API Lambda authorizer.
+	// Required for HTTP API Lambda authorizers. Supported values are 1.0 and 2.0.
+	// To learn more, see Working with AWS Lambda authorizers for HTTP APIs (https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-lambda-authorizer.html).
+	AuthorizerPayloadFormatVersion *string `locationName:"authorizerPayloadFormatVersion" type:"string"`
+
+	// The time to live (TTL) for cached authorizer results, in seconds. If it equals
+	// 0, authorization caching is disabled. If it is greater than 0, API Gateway
+	// caches authorizer responses. The maximum value is 3600, or 1 hour. Supported
+	// only for HTTP API Lambda authorizers.
 	AuthorizerResultTtlInSeconds *int64 `locationName:"authorizerResultTtlInSeconds" type:"integer"`
 
-	// The authorizer type. For WebSocket APIs, specify REQUEST for a Lambda function
-	// using incoming request parameters. For HTTP APIs, specify JWT to use JSON
-	// Web Tokens.
+	// The authorizer type. Specify REQUEST for a Lambda function using incoming
+	// request parameters. Specify JWT to use JSON Web Tokens (supported only for
+	// HTTP APIs).
 	AuthorizerType *string `locationName:"authorizerType" type:"string" enum:"AuthorizerType"`
 
-	// The authorizer's Uniform Resource Identifier (URI). ForREQUEST authorizers,
+	// The authorizer's Uniform Resource Identifier (URI). For REQUEST authorizers,
 	// this must be a well-formed Lambda function URI, for example, arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:{account_id}:function:{lambda_function_name}/invocations.
 	// In general, the URI has this form: arn:aws:apigateway:{region}:lambda:path/{service_api}
 	// , where {region} is the same as the region hosting the Lambda function, path
@@ -5886,23 +6666,32 @@ type Authorizer struct {
 	// only for REQUEST authorizers.
 	AuthorizerUri *string `locationName:"authorizerUri" type:"string"`
 
+	// Specifies whether a Lambda authorizer returns a response in a simple format.
+	// If enabled, the Lambda authorizer can return a boolean value instead of an
+	// IAM policy. Supported only for HTTP APIs. To learn more, see Working with
+	// AWS Lambda authorizers for HTTP APIs (https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-lambda-authorizer.html)
+	EnableSimpleResponses *bool `locationName:"enableSimpleResponses" type:"boolean"`
+
 	// The identity source for which authorization is requested.
 	//
 	// For a REQUEST authorizer, this is optional. The value is a set of one or
-	// more mapping expressions of the specified request parameters. Currently,
-	// the identity source can be headers, query string parameters, stage variables,
-	// and context parameters. For example, if an Auth header and a Name query string
-	// parameter are defined as identity sources, this value is route.request.header.Auth,
-	// route.request.querystring.Name. These parameters will be used to perform
-	// runtime validation for Lambda-based authorizers by verifying all of the identity-related
-	// request parameters are present in the request, not null, and non-empty. Only
-	// when this is true does the authorizer invoke the authorizer Lambda function.
-	// Otherwise, it returns a 401 Unauthorized response without calling the Lambda
-	// function.
+	// more mapping expressions of the specified request parameters. The identity
+	// source can be headers, query string parameters, stage variables, and context
+	// parameters. For example, if an Auth header and a Name query string parameter
+	// are defined as identity sources, this value is route.request.header.Auth,
+	// route.request.querystring.Name for WebSocket APIs. For HTTP APIs, use selection
+	// expressions prefixed with $, for example, $request.header.Auth, $request.querystring.Name.
+	// These parameters are used to perform runtime validation for Lambda-based
+	// authorizers by verifying all of the identity-related request parameters are
+	// present in the request, not null, and non-empty. Only when this is true does
+	// the authorizer invoke the authorizer Lambda function. Otherwise, it returns
+	// a 401 Unauthorized response without calling the Lambda function. For HTTP
+	// APIs, identity sources are also used as the cache key when caching is enabled.
+	// To learn more, see Working with AWS Lambda authorizers for HTTP APIs (https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-lambda-authorizer.html).
 	//
 	// For JWT, a single entry that specifies where to extract the JSON Web Token
 	// (JWT) from inbound requests. Currently only header-based and query parameter-based
-	// selections are supported, for example "$request.header.Authorization".
+	// selections are supported, for example $request.header.Authorization.
 	IdentitySource []*string `locationName:"identitySource" type:"list"`
 
 	// The validation expression does not apply to the REQUEST authorizer.
@@ -5940,6 +6729,12 @@ func (s *Authorizer) SetAuthorizerId(v string) *Authorizer {
 	return s
 }
 
+// SetAuthorizerPayloadFormatVersion sets the AuthorizerPayloadFormatVersion field's value.
+func (s *Authorizer) SetAuthorizerPayloadFormatVersion(v string) *Authorizer {
+	s.AuthorizerPayloadFormatVersion = &v
+	return s
+}
+
 // SetAuthorizerResultTtlInSeconds sets the AuthorizerResultTtlInSeconds field's value.
 func (s *Authorizer) SetAuthorizerResultTtlInSeconds(v int64) *Authorizer {
 	s.AuthorizerResultTtlInSeconds = &v
@@ -5955,6 +6750,12 @@ func (s *Authorizer) SetAuthorizerType(v string) *Authorizer {
 // SetAuthorizerUri sets the AuthorizerUri field's value.
 func (s *Authorizer) SetAuthorizerUri(v string) *Authorizer {
 	s.AuthorizerUri = &v
+	return s
+}
+
+// SetEnableSimpleResponses sets the EnableSimpleResponses field's value.
+func (s *Authorizer) SetEnableSimpleResponses(v bool) *Authorizer {
+	s.EnableSimpleResponses = &v
 	return s
 }
 
@@ -5985,8 +6786,8 @@ func (s *Authorizer) SetName(v string) *Authorizer {
 // The request is not valid, for example, the input is incomplete or incorrect.
 // See the accompanying error message for details.
 type BadRequestException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// Describes the error encountered.
 	Message_ *string `locationName:"message" type:"string"`
@@ -6004,17 +6805,17 @@ func (s BadRequestException) GoString() string {
 
 func newErrorBadRequestException(v protocol.ResponseMetadata) error {
 	return &BadRequestException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s BadRequestException) Code() string {
+func (s *BadRequestException) Code() string {
 	return "BadRequestException"
 }
 
 // Message returns the exception's message.
-func (s BadRequestException) Message() string {
+func (s *BadRequestException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6022,30 +6823,30 @@ func (s BadRequestException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s BadRequestException) OrigErr() error {
+func (s *BadRequestException) OrigErr() error {
 	return nil
 }
 
-func (s BadRequestException) Error() string {
+func (s *BadRequestException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s BadRequestException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *BadRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s BadRequestException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *BadRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The requested operation would cause a conflict with the current state of
 // a service resource associated with the request. Resolve the conflict before
 // retrying this request. See the accompanying error message for details.
 type ConflictException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// Describes the error encountered.
 	Message_ *string `locationName:"message" type:"string"`
@@ -6063,17 +6864,17 @@ func (s ConflictException) GoString() string {
 
 func newErrorConflictException(v protocol.ResponseMetadata) error {
 	return &ConflictException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ConflictException) Code() string {
+func (s *ConflictException) Code() string {
 	return "ConflictException"
 }
 
 // Message returns the exception's message.
-func (s ConflictException) Message() string {
+func (s *ConflictException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6081,22 +6882,22 @@ func (s ConflictException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ConflictException) OrigErr() error {
+func (s *ConflictException) OrigErr() error {
 	return nil
 }
 
-func (s ConflictException) Error() string {
+func (s *ConflictException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ConflictException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ConflictException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Represents a CORS configuration. Supported only for HTTP APIs. See Configuring
@@ -6481,6 +7282,8 @@ type CreateApiOutput struct {
 
 	ApiEndpoint *string `locationName:"apiEndpoint" type:"string"`
 
+	ApiGatewayManaged *bool `locationName:"apiGatewayManaged" type:"boolean"`
+
 	// The identifier.
 	ApiId *string `locationName:"apiId" type:"string"`
 
@@ -6536,6 +7339,12 @@ func (s CreateApiOutput) GoString() string {
 // SetApiEndpoint sets the ApiEndpoint field's value.
 func (s *CreateApiOutput) SetApiEndpoint(v string) *CreateApiOutput {
 	s.ApiEndpoint = &v
+	return s
+}
+
+// SetApiGatewayManaged sets the ApiGatewayManaged field's value.
+func (s *CreateApiOutput) SetApiGatewayManaged(v bool) *CreateApiOutput {
+	s.ApiGatewayManaged = &v
 	return s
 }
 
@@ -6626,18 +7435,23 @@ type CreateAuthorizerInput struct {
 	// Represents an Amazon Resource Name (ARN).
 	AuthorizerCredentialsArn *string `locationName:"authorizerCredentialsArn" type:"string"`
 
+	// A string with a length between [1-64].
+	AuthorizerPayloadFormatVersion *string `locationName:"authorizerPayloadFormatVersion" type:"string"`
+
 	// An integer with a value between [0-3600].
 	AuthorizerResultTtlInSeconds *int64 `locationName:"authorizerResultTtlInSeconds" type:"integer"`
 
-	// The authorizer type. For WebSocket APIs, specify REQUEST for a Lambda function
-	// using incoming request parameters. For HTTP APIs, specify JWT to use JSON
-	// Web Tokens.
+	// The authorizer type. Specify REQUEST for a Lambda function using incoming
+	// request parameters. Specify JWT to use JSON Web Tokens (supported only for
+	// HTTP APIs).
 	//
 	// AuthorizerType is a required field
 	AuthorizerType *string `locationName:"authorizerType" type:"string" required:"true" enum:"AuthorizerType"`
 
 	// A string representation of a URI with a length between [1-2048].
 	AuthorizerUri *string `locationName:"authorizerUri" type:"string"`
+
+	EnableSimpleResponses *bool `locationName:"enableSimpleResponses" type:"boolean"`
 
 	// The identity source for which authorization is requested. For the REQUEST
 	// authorizer, this is required when authorization caching is enabled. The value
@@ -6716,6 +7530,12 @@ func (s *CreateAuthorizerInput) SetAuthorizerCredentialsArn(v string) *CreateAut
 	return s
 }
 
+// SetAuthorizerPayloadFormatVersion sets the AuthorizerPayloadFormatVersion field's value.
+func (s *CreateAuthorizerInput) SetAuthorizerPayloadFormatVersion(v string) *CreateAuthorizerInput {
+	s.AuthorizerPayloadFormatVersion = &v
+	return s
+}
+
 // SetAuthorizerResultTtlInSeconds sets the AuthorizerResultTtlInSeconds field's value.
 func (s *CreateAuthorizerInput) SetAuthorizerResultTtlInSeconds(v int64) *CreateAuthorizerInput {
 	s.AuthorizerResultTtlInSeconds = &v
@@ -6731,6 +7551,12 @@ func (s *CreateAuthorizerInput) SetAuthorizerType(v string) *CreateAuthorizerInp
 // SetAuthorizerUri sets the AuthorizerUri field's value.
 func (s *CreateAuthorizerInput) SetAuthorizerUri(v string) *CreateAuthorizerInput {
 	s.AuthorizerUri = &v
+	return s
+}
+
+// SetEnableSimpleResponses sets the EnableSimpleResponses field's value.
+func (s *CreateAuthorizerInput) SetEnableSimpleResponses(v bool) *CreateAuthorizerInput {
+	s.EnableSimpleResponses = &v
 	return s
 }
 
@@ -6767,16 +7593,21 @@ type CreateAuthorizerOutput struct {
 	// The identifier.
 	AuthorizerId *string `locationName:"authorizerId" type:"string"`
 
+	// A string with a length between [1-64].
+	AuthorizerPayloadFormatVersion *string `locationName:"authorizerPayloadFormatVersion" type:"string"`
+
 	// An integer with a value between [0-3600].
 	AuthorizerResultTtlInSeconds *int64 `locationName:"authorizerResultTtlInSeconds" type:"integer"`
 
-	// The authorizer type. For WebSocket APIs, specify REQUEST for a Lambda function
-	// using incoming request parameters. For HTTP APIs, specify JWT to use JSON
-	// Web Tokens.
+	// The authorizer type. Specify REQUEST for a Lambda function using incoming
+	// request parameters. Specify JWT to use JSON Web Tokens (supported only for
+	// HTTP APIs).
 	AuthorizerType *string `locationName:"authorizerType" type:"string" enum:"AuthorizerType"`
 
 	// A string representation of a URI with a length between [1-2048].
 	AuthorizerUri *string `locationName:"authorizerUri" type:"string"`
+
+	EnableSimpleResponses *bool `locationName:"enableSimpleResponses" type:"boolean"`
 
 	// The identity source for which authorization is requested. For the REQUEST
 	// authorizer, this is required when authorization caching is enabled. The value
@@ -6826,6 +7657,12 @@ func (s *CreateAuthorizerOutput) SetAuthorizerId(v string) *CreateAuthorizerOutp
 	return s
 }
 
+// SetAuthorizerPayloadFormatVersion sets the AuthorizerPayloadFormatVersion field's value.
+func (s *CreateAuthorizerOutput) SetAuthorizerPayloadFormatVersion(v string) *CreateAuthorizerOutput {
+	s.AuthorizerPayloadFormatVersion = &v
+	return s
+}
+
 // SetAuthorizerResultTtlInSeconds sets the AuthorizerResultTtlInSeconds field's value.
 func (s *CreateAuthorizerOutput) SetAuthorizerResultTtlInSeconds(v int64) *CreateAuthorizerOutput {
 	s.AuthorizerResultTtlInSeconds = &v
@@ -6841,6 +7678,12 @@ func (s *CreateAuthorizerOutput) SetAuthorizerType(v string) *CreateAuthorizerOu
 // SetAuthorizerUri sets the AuthorizerUri field's value.
 func (s *CreateAuthorizerOutput) SetAuthorizerUri(v string) *CreateAuthorizerOutput {
 	s.AuthorizerUri = &v
+	return s
+}
+
+// SetEnableSimpleResponses sets the EnableSimpleResponses field's value.
+func (s *CreateAuthorizerOutput) SetEnableSimpleResponses(v bool) *CreateAuthorizerOutput {
+	s.EnableSimpleResponses = &v
 	return s
 }
 
@@ -7123,6 +7966,9 @@ type CreateIntegrationInput struct {
 	// A string with a length between [1-64].
 	IntegrationMethod *string `locationName:"integrationMethod" type:"string"`
 
+	// A string with a length between [1-128].
+	IntegrationSubtype *string `locationName:"integrationSubtype" type:"string"`
+
 	// Represents an API method integration type.
 	//
 	// IntegrationType is a required field
@@ -7160,8 +8006,13 @@ type CreateIntegrationInput struct {
 	// for more information.
 	TemplateSelectionExpression *string `locationName:"templateSelectionExpression" type:"string"`
 
-	// An integer with a value between [50-29000].
+	// An integer with a value between [50-30000].
 	TimeoutInMillis *int64 `locationName:"timeoutInMillis" min:"50" type:"integer"`
+
+	// The TLS configuration for a private integration. If you specify a TLS configuration,
+	// private integration traffic uses the HTTPS protocol. Supported only for HTTP
+	// APIs.
+	TlsConfig *TlsConfigInput `locationName:"tlsConfig" type:"structure"`
 }
 
 // String returns the string representation
@@ -7238,6 +8089,12 @@ func (s *CreateIntegrationInput) SetIntegrationMethod(v string) *CreateIntegrati
 	return s
 }
 
+// SetIntegrationSubtype sets the IntegrationSubtype field's value.
+func (s *CreateIntegrationInput) SetIntegrationSubtype(v string) *CreateIntegrationInput {
+	s.IntegrationSubtype = &v
+	return s
+}
+
 // SetIntegrationType sets the IntegrationType field's value.
 func (s *CreateIntegrationInput) SetIntegrationType(v string) *CreateIntegrationInput {
 	s.IntegrationType = &v
@@ -7286,6 +8143,12 @@ func (s *CreateIntegrationInput) SetTimeoutInMillis(v int64) *CreateIntegrationI
 	return s
 }
 
+// SetTlsConfig sets the TlsConfig field's value.
+func (s *CreateIntegrationInput) SetTlsConfig(v *TlsConfigInput) *CreateIntegrationInput {
+	s.TlsConfig = v
+	return s
+}
+
 type CreateIntegrationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -7317,6 +8180,9 @@ type CreateIntegrationOutput struct {
 	// (https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-apikey-selection-expressions)
 	// for more information.
 	IntegrationResponseSelectionExpression *string `locationName:"integrationResponseSelectionExpression" type:"string"`
+
+	// A string with a length between [1-128].
+	IntegrationSubtype *string `locationName:"integrationSubtype" type:"string"`
 
 	// Represents an API method integration type.
 	IntegrationType *string `locationName:"integrationType" type:"string" enum:"IntegrationType"`
@@ -7353,8 +8219,13 @@ type CreateIntegrationOutput struct {
 	// for more information.
 	TemplateSelectionExpression *string `locationName:"templateSelectionExpression" type:"string"`
 
-	// An integer with a value between [50-29000].
+	// An integer with a value between [50-30000].
 	TimeoutInMillis *int64 `locationName:"timeoutInMillis" min:"50" type:"integer"`
+
+	// The TLS configuration for a private integration. If you specify a TLS configuration,
+	// private integration traffic uses the HTTPS protocol. Supported only for HTTP
+	// APIs.
+	TlsConfig *TlsConfig `locationName:"tlsConfig" type:"structure"`
 }
 
 // String returns the string representation
@@ -7421,6 +8292,12 @@ func (s *CreateIntegrationOutput) SetIntegrationResponseSelectionExpression(v st
 	return s
 }
 
+// SetIntegrationSubtype sets the IntegrationSubtype field's value.
+func (s *CreateIntegrationOutput) SetIntegrationSubtype(v string) *CreateIntegrationOutput {
+	s.IntegrationSubtype = &v
+	return s
+}
+
 // SetIntegrationType sets the IntegrationType field's value.
 func (s *CreateIntegrationOutput) SetIntegrationType(v string) *CreateIntegrationOutput {
 	s.IntegrationType = &v
@@ -7466,6 +8343,12 @@ func (s *CreateIntegrationOutput) SetTemplateSelectionExpression(v string) *Crea
 // SetTimeoutInMillis sets the TimeoutInMillis field's value.
 func (s *CreateIntegrationOutput) SetTimeoutInMillis(v int64) *CreateIntegrationOutput {
 	s.TimeoutInMillis = &v
+	return s
+}
+
+// SetTlsConfig sets the TlsConfig field's value.
+func (s *CreateIntegrationOutput) SetTlsConfig(v *TlsConfig) *CreateIntegrationOutput {
+	s.TlsConfig = v
 	return s
 }
 
@@ -7840,8 +8723,9 @@ type CreateRouteInput struct {
 
 	// The authorization type. For WebSocket APIs, valid values are NONE for open
 	// access, AWS_IAM for using AWS IAM permissions, and CUSTOM for using a Lambda
-	// authorizer. For HTTP APIs, valid values are NONE for open access, or JWT
-	// for using JSON Web Tokens.
+	// authorizer. For HTTP APIs, valid values are NONE for open access, JWT for
+	// using JSON Web Tokens, AWS_IAM for using AWS IAM permissions, and CUSTOM
+	// for using a Lambda authorizer.
 	AuthorizationType *string `locationName:"authorizationType" type:"string" enum:"AuthorizationType"`
 
 	// The identifier.
@@ -7998,8 +8882,9 @@ type CreateRouteOutput struct {
 
 	// The authorization type. For WebSocket APIs, valid values are NONE for open
 	// access, AWS_IAM for using AWS IAM permissions, and CUSTOM for using a Lambda
-	// authorizer. For HTTP APIs, valid values are NONE for open access, or JWT
-	// for using JSON Web Tokens.
+	// authorizer. For HTTP APIs, valid values are NONE for open access, JWT for
+	// using JSON Web Tokens, AWS_IAM for using AWS IAM permissions, and CUSTOM
+	// for using a Lambda authorizer.
 	AuthorizationType *string `locationName:"authorizationType" type:"string" enum:"AuthorizationType"`
 
 	// The identifier.
@@ -8558,6 +9443,238 @@ func (s *CreateStageOutput) SetStageVariables(v map[string]*string) *CreateStage
 func (s *CreateStageOutput) SetTags(v map[string]*string) *CreateStageOutput {
 	s.Tags = v
 	return s
+}
+
+type CreateVpcLinkInput struct {
+	_ struct{} `type:"structure"`
+
+	// A string with a length between [1-128].
+	//
+	// Name is a required field
+	Name *string `locationName:"name" type:"string" required:"true"`
+
+	// A list of security group IDs for the VPC link.
+	SecurityGroupIds []*string `locationName:"securityGroupIds" type:"list"`
+
+	// A list of subnet IDs to include in the VPC link.
+	//
+	// SubnetIds is a required field
+	SubnetIds []*string `locationName:"subnetIds" type:"list" required:"true"`
+
+	// Represents a collection of tags associated with the resource.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+}
+
+// String returns the string representation
+func (s CreateVpcLinkInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateVpcLinkInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateVpcLinkInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateVpcLinkInput"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.SubnetIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("SubnetIds"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *CreateVpcLinkInput) SetName(v string) *CreateVpcLinkInput {
+	s.Name = &v
+	return s
+}
+
+// SetSecurityGroupIds sets the SecurityGroupIds field's value.
+func (s *CreateVpcLinkInput) SetSecurityGroupIds(v []*string) *CreateVpcLinkInput {
+	s.SecurityGroupIds = v
+	return s
+}
+
+// SetSubnetIds sets the SubnetIds field's value.
+func (s *CreateVpcLinkInput) SetSubnetIds(v []*string) *CreateVpcLinkInput {
+	s.SubnetIds = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateVpcLinkInput) SetTags(v map[string]*string) *CreateVpcLinkInput {
+	s.Tags = v
+	return s
+}
+
+type CreateVpcLinkOutput struct {
+	_ struct{} `type:"structure"`
+
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"iso8601"`
+
+	// A string with a length between [1-128].
+	Name *string `locationName:"name" type:"string"`
+
+	// A list of security group IDs for the VPC link.
+	SecurityGroupIds []*string `locationName:"securityGroupIds" type:"list"`
+
+	// A list of subnet IDs to include in the VPC link.
+	SubnetIds []*string `locationName:"subnetIds" type:"list"`
+
+	// Represents a collection of tags associated with the resource.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
+	// The identifier.
+	VpcLinkId *string `locationName:"vpcLinkId" type:"string"`
+
+	// The status of the VPC link.
+	VpcLinkStatus *string `locationName:"vpcLinkStatus" type:"string" enum:"VpcLinkStatus"`
+
+	// A string with a length between [0-1024].
+	VpcLinkStatusMessage *string `locationName:"vpcLinkStatusMessage" type:"string"`
+
+	// The version of the VPC link.
+	VpcLinkVersion *string `locationName:"vpcLinkVersion" type:"string" enum:"VpcLinkVersion"`
+}
+
+// String returns the string representation
+func (s CreateVpcLinkOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateVpcLinkOutput) GoString() string {
+	return s.String()
+}
+
+// SetCreatedDate sets the CreatedDate field's value.
+func (s *CreateVpcLinkOutput) SetCreatedDate(v time.Time) *CreateVpcLinkOutput {
+	s.CreatedDate = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CreateVpcLinkOutput) SetName(v string) *CreateVpcLinkOutput {
+	s.Name = &v
+	return s
+}
+
+// SetSecurityGroupIds sets the SecurityGroupIds field's value.
+func (s *CreateVpcLinkOutput) SetSecurityGroupIds(v []*string) *CreateVpcLinkOutput {
+	s.SecurityGroupIds = v
+	return s
+}
+
+// SetSubnetIds sets the SubnetIds field's value.
+func (s *CreateVpcLinkOutput) SetSubnetIds(v []*string) *CreateVpcLinkOutput {
+	s.SubnetIds = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateVpcLinkOutput) SetTags(v map[string]*string) *CreateVpcLinkOutput {
+	s.Tags = v
+	return s
+}
+
+// SetVpcLinkId sets the VpcLinkId field's value.
+func (s *CreateVpcLinkOutput) SetVpcLinkId(v string) *CreateVpcLinkOutput {
+	s.VpcLinkId = &v
+	return s
+}
+
+// SetVpcLinkStatus sets the VpcLinkStatus field's value.
+func (s *CreateVpcLinkOutput) SetVpcLinkStatus(v string) *CreateVpcLinkOutput {
+	s.VpcLinkStatus = &v
+	return s
+}
+
+// SetVpcLinkStatusMessage sets the VpcLinkStatusMessage field's value.
+func (s *CreateVpcLinkOutput) SetVpcLinkStatusMessage(v string) *CreateVpcLinkOutput {
+	s.VpcLinkStatusMessage = &v
+	return s
+}
+
+// SetVpcLinkVersion sets the VpcLinkVersion field's value.
+func (s *CreateVpcLinkOutput) SetVpcLinkVersion(v string) *CreateVpcLinkOutput {
+	s.VpcLinkVersion = &v
+	return s
+}
+
+type DeleteAccessLogSettingsInput struct {
+	_ struct{} `type:"structure"`
+
+	// ApiId is a required field
+	ApiId *string `location:"uri" locationName:"apiId" type:"string" required:"true"`
+
+	// StageName is a required field
+	StageName *string `location:"uri" locationName:"stageName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteAccessLogSettingsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteAccessLogSettingsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteAccessLogSettingsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteAccessLogSettingsInput"}
+	if s.ApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
+	if s.StageName == nil {
+		invalidParams.Add(request.NewErrParamRequired("StageName"))
+	}
+	if s.StageName != nil && len(*s.StageName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StageName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApiId sets the ApiId field's value.
+func (s *DeleteAccessLogSettingsInput) SetApiId(v string) *DeleteAccessLogSettingsInput {
+	s.ApiId = &v
+	return s
+}
+
+// SetStageName sets the StageName field's value.
+func (s *DeleteAccessLogSettingsInput) SetStageName(v string) *DeleteAccessLogSettingsInput {
+	s.StageName = &v
+	return s
+}
+
+type DeleteAccessLogSettingsOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteAccessLogSettingsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteAccessLogSettingsOutput) GoString() string {
+	return s.String()
 }
 
 type DeleteApiInput struct {
@@ -9210,6 +10327,89 @@ func (s DeleteRouteOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteRouteRequestParameterInput struct {
+	_ struct{} `type:"structure"`
+
+	// ApiId is a required field
+	ApiId *string `location:"uri" locationName:"apiId" type:"string" required:"true"`
+
+	// RequestParameterKey is a required field
+	RequestParameterKey *string `location:"uri" locationName:"requestParameterKey" type:"string" required:"true"`
+
+	// RouteId is a required field
+	RouteId *string `location:"uri" locationName:"routeId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteRouteRequestParameterInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteRouteRequestParameterInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteRouteRequestParameterInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteRouteRequestParameterInput"}
+	if s.ApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
+	if s.RequestParameterKey == nil {
+		invalidParams.Add(request.NewErrParamRequired("RequestParameterKey"))
+	}
+	if s.RequestParameterKey != nil && len(*s.RequestParameterKey) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RequestParameterKey", 1))
+	}
+	if s.RouteId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RouteId"))
+	}
+	if s.RouteId != nil && len(*s.RouteId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RouteId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApiId sets the ApiId field's value.
+func (s *DeleteRouteRequestParameterInput) SetApiId(v string) *DeleteRouteRequestParameterInput {
+	s.ApiId = &v
+	return s
+}
+
+// SetRequestParameterKey sets the RequestParameterKey field's value.
+func (s *DeleteRouteRequestParameterInput) SetRequestParameterKey(v string) *DeleteRouteRequestParameterInput {
+	s.RequestParameterKey = &v
+	return s
+}
+
+// SetRouteId sets the RouteId field's value.
+func (s *DeleteRouteRequestParameterInput) SetRouteId(v string) *DeleteRouteRequestParameterInput {
+	s.RouteId = &v
+	return s
+}
+
+type DeleteRouteRequestParameterOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteRouteRequestParameterOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteRouteRequestParameterOutput) GoString() string {
+	return s.String()
+}
+
 type DeleteRouteResponseInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9299,12 +10499,6 @@ type DeleteRouteSettingsInput struct {
 	// ApiId is a required field
 	ApiId *string `location:"uri" locationName:"apiId" type:"string" required:"true"`
 
-	// After evaluating a selection expression, the result is compared against one
-	// or more selection keys to find a matching key. See Selection Expressions
-	// (https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-apikey-selection-expressions)
-	// for a list of expressions and each expression's associated selection key
-	// type.
-	//
 	// RouteKey is a required field
 	RouteKey *string `location:"uri" locationName:"routeKey" type:"string" required:"true"`
 
@@ -9447,6 +10641,59 @@ func (s DeleteStageOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteStageOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteVpcLinkInput struct {
+	_ struct{} `type:"structure"`
+
+	// VpcLinkId is a required field
+	VpcLinkId *string `location:"uri" locationName:"vpcLinkId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteVpcLinkInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteVpcLinkInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteVpcLinkInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteVpcLinkInput"}
+	if s.VpcLinkId == nil {
+		invalidParams.Add(request.NewErrParamRequired("VpcLinkId"))
+	}
+	if s.VpcLinkId != nil && len(*s.VpcLinkId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("VpcLinkId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetVpcLinkId sets the VpcLinkId field's value.
+func (s *DeleteVpcLinkInput) SetVpcLinkId(v string) *DeleteVpcLinkInput {
+	s.VpcLinkId = &v
+	return s
+}
+
+type DeleteVpcLinkOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteVpcLinkOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteVpcLinkOutput) GoString() string {
 	return s.String()
 }
 
@@ -9674,6 +10921,121 @@ func (s *DomainNameConfiguration) SetHostedZoneId(v string) *DomainNameConfigura
 // SetSecurityPolicy sets the SecurityPolicy field's value.
 func (s *DomainNameConfiguration) SetSecurityPolicy(v string) *DomainNameConfiguration {
 	s.SecurityPolicy = &v
+	return s
+}
+
+type ExportApiInput struct {
+	_ struct{} `type:"structure"`
+
+	// ApiId is a required field
+	ApiId *string `location:"uri" locationName:"apiId" type:"string" required:"true"`
+
+	ExportVersion *string `location:"querystring" locationName:"exportVersion" type:"string"`
+
+	IncludeExtensions *bool `location:"querystring" locationName:"includeExtensions" type:"boolean"`
+
+	// OutputType is a required field
+	OutputType *string `location:"querystring" locationName:"outputType" type:"string" required:"true"`
+
+	// Specification is a required field
+	Specification *string `location:"uri" locationName:"specification" type:"string" required:"true"`
+
+	StageName *string `location:"querystring" locationName:"stageName" type:"string"`
+}
+
+// String returns the string representation
+func (s ExportApiInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExportApiInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ExportApiInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ExportApiInput"}
+	if s.ApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
+	if s.OutputType == nil {
+		invalidParams.Add(request.NewErrParamRequired("OutputType"))
+	}
+	if s.Specification == nil {
+		invalidParams.Add(request.NewErrParamRequired("Specification"))
+	}
+	if s.Specification != nil && len(*s.Specification) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Specification", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApiId sets the ApiId field's value.
+func (s *ExportApiInput) SetApiId(v string) *ExportApiInput {
+	s.ApiId = &v
+	return s
+}
+
+// SetExportVersion sets the ExportVersion field's value.
+func (s *ExportApiInput) SetExportVersion(v string) *ExportApiInput {
+	s.ExportVersion = &v
+	return s
+}
+
+// SetIncludeExtensions sets the IncludeExtensions field's value.
+func (s *ExportApiInput) SetIncludeExtensions(v bool) *ExportApiInput {
+	s.IncludeExtensions = &v
+	return s
+}
+
+// SetOutputType sets the OutputType field's value.
+func (s *ExportApiInput) SetOutputType(v string) *ExportApiInput {
+	s.OutputType = &v
+	return s
+}
+
+// SetSpecification sets the Specification field's value.
+func (s *ExportApiInput) SetSpecification(v string) *ExportApiInput {
+	s.Specification = &v
+	return s
+}
+
+// SetStageName sets the StageName field's value.
+func (s *ExportApiInput) SetStageName(v string) *ExportApiInput {
+	s.StageName = &v
+	return s
+}
+
+type ExportApiOutput struct {
+	_ struct{} `type:"structure" payload:"Body"`
+
+	// Represents an exported definition of an API in a particular output format,
+	// for example, YAML. The API is serialized to the requested specification,
+	// for example, OpenAPI 3.0.
+	Body []byte `locationName:"body" type:"blob"`
+}
+
+// String returns the string representation
+func (s ExportApiOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExportApiOutput) GoString() string {
+	return s.String()
+}
+
+// SetBody sets the Body field's value.
+func (s *ExportApiOutput) SetBody(v []byte) *ExportApiOutput {
+	s.Body = v
 	return s
 }
 
@@ -9916,6 +11278,8 @@ type GetApiOutput struct {
 
 	ApiEndpoint *string `locationName:"apiEndpoint" type:"string"`
 
+	ApiGatewayManaged *bool `locationName:"apiGatewayManaged" type:"boolean"`
+
 	// The identifier.
 	ApiId *string `locationName:"apiId" type:"string"`
 
@@ -9971,6 +11335,12 @@ func (s GetApiOutput) GoString() string {
 // SetApiEndpoint sets the ApiEndpoint field's value.
 func (s *GetApiOutput) SetApiEndpoint(v string) *GetApiOutput {
 	s.ApiEndpoint = &v
+	return s
+}
+
+// SetApiGatewayManaged sets the ApiGatewayManaged field's value.
+func (s *GetApiOutput) SetApiGatewayManaged(v bool) *GetApiOutput {
+	s.ApiGatewayManaged = &v
 	return s
 }
 
@@ -10177,16 +11547,21 @@ type GetAuthorizerOutput struct {
 	// The identifier.
 	AuthorizerId *string `locationName:"authorizerId" type:"string"`
 
+	// A string with a length between [1-64].
+	AuthorizerPayloadFormatVersion *string `locationName:"authorizerPayloadFormatVersion" type:"string"`
+
 	// An integer with a value between [0-3600].
 	AuthorizerResultTtlInSeconds *int64 `locationName:"authorizerResultTtlInSeconds" type:"integer"`
 
-	// The authorizer type. For WebSocket APIs, specify REQUEST for a Lambda function
-	// using incoming request parameters. For HTTP APIs, specify JWT to use JSON
-	// Web Tokens.
+	// The authorizer type. Specify REQUEST for a Lambda function using incoming
+	// request parameters. Specify JWT to use JSON Web Tokens (supported only for
+	// HTTP APIs).
 	AuthorizerType *string `locationName:"authorizerType" type:"string" enum:"AuthorizerType"`
 
 	// A string representation of a URI with a length between [1-2048].
 	AuthorizerUri *string `locationName:"authorizerUri" type:"string"`
+
+	EnableSimpleResponses *bool `locationName:"enableSimpleResponses" type:"boolean"`
 
 	// The identity source for which authorization is requested. For the REQUEST
 	// authorizer, this is required when authorization caching is enabled. The value
@@ -10236,6 +11611,12 @@ func (s *GetAuthorizerOutput) SetAuthorizerId(v string) *GetAuthorizerOutput {
 	return s
 }
 
+// SetAuthorizerPayloadFormatVersion sets the AuthorizerPayloadFormatVersion field's value.
+func (s *GetAuthorizerOutput) SetAuthorizerPayloadFormatVersion(v string) *GetAuthorizerOutput {
+	s.AuthorizerPayloadFormatVersion = &v
+	return s
+}
+
 // SetAuthorizerResultTtlInSeconds sets the AuthorizerResultTtlInSeconds field's value.
 func (s *GetAuthorizerOutput) SetAuthorizerResultTtlInSeconds(v int64) *GetAuthorizerOutput {
 	s.AuthorizerResultTtlInSeconds = &v
@@ -10251,6 +11632,12 @@ func (s *GetAuthorizerOutput) SetAuthorizerType(v string) *GetAuthorizerOutput {
 // SetAuthorizerUri sets the AuthorizerUri field's value.
 func (s *GetAuthorizerOutput) SetAuthorizerUri(v string) *GetAuthorizerOutput {
 	s.AuthorizerUri = &v
+	return s
+}
+
+// SetEnableSimpleResponses sets the EnableSimpleResponses field's value.
+func (s *GetAuthorizerOutput) SetEnableSimpleResponses(v bool) *GetAuthorizerOutput {
+	s.EnableSimpleResponses = &v
 	return s
 }
 
@@ -10810,6 +12197,9 @@ type GetIntegrationOutput struct {
 	// for more information.
 	IntegrationResponseSelectionExpression *string `locationName:"integrationResponseSelectionExpression" type:"string"`
 
+	// A string with a length between [1-128].
+	IntegrationSubtype *string `locationName:"integrationSubtype" type:"string"`
+
 	// Represents an API method integration type.
 	IntegrationType *string `locationName:"integrationType" type:"string" enum:"IntegrationType"`
 
@@ -10845,8 +12235,13 @@ type GetIntegrationOutput struct {
 	// for more information.
 	TemplateSelectionExpression *string `locationName:"templateSelectionExpression" type:"string"`
 
-	// An integer with a value between [50-29000].
+	// An integer with a value between [50-30000].
 	TimeoutInMillis *int64 `locationName:"timeoutInMillis" min:"50" type:"integer"`
+
+	// The TLS configuration for a private integration. If you specify a TLS configuration,
+	// private integration traffic uses the HTTPS protocol. Supported only for HTTP
+	// APIs.
+	TlsConfig *TlsConfig `locationName:"tlsConfig" type:"structure"`
 }
 
 // String returns the string representation
@@ -10913,6 +12308,12 @@ func (s *GetIntegrationOutput) SetIntegrationResponseSelectionExpression(v strin
 	return s
 }
 
+// SetIntegrationSubtype sets the IntegrationSubtype field's value.
+func (s *GetIntegrationOutput) SetIntegrationSubtype(v string) *GetIntegrationOutput {
+	s.IntegrationSubtype = &v
+	return s
+}
+
 // SetIntegrationType sets the IntegrationType field's value.
 func (s *GetIntegrationOutput) SetIntegrationType(v string) *GetIntegrationOutput {
 	s.IntegrationType = &v
@@ -10958,6 +12359,12 @@ func (s *GetIntegrationOutput) SetTemplateSelectionExpression(v string) *GetInte
 // SetTimeoutInMillis sets the TimeoutInMillis field's value.
 func (s *GetIntegrationOutput) SetTimeoutInMillis(v int64) *GetIntegrationOutput {
 	s.TimeoutInMillis = &v
+	return s
+}
+
+// SetTlsConfig sets the TlsConfig field's value.
+func (s *GetIntegrationOutput) SetTlsConfig(v *TlsConfig) *GetIntegrationOutput {
+	s.TlsConfig = v
 	return s
 }
 
@@ -11653,8 +13060,9 @@ type GetRouteOutput struct {
 
 	// The authorization type. For WebSocket APIs, valid values are NONE for open
 	// access, AWS_IAM for using AWS IAM permissions, and CUSTOM for using a Lambda
-	// authorizer. For HTTP APIs, valid values are NONE for open access, or JWT
-	// for using JSON Web Tokens.
+	// authorizer. For HTTP APIs, valid values are NONE for open access, JWT for
+	// using JSON Web Tokens, AWS_IAM for using AWS IAM permissions, and CUSTOM
+	// for using a Lambda authorizer.
 	AuthorizationType *string `locationName:"authorizationType" type:"string" enum:"AuthorizationType"`
 
 	// The identifier.
@@ -12423,9 +13831,7 @@ type GetTagsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Represents a collection of tags associated with the resource.
-	//
-	// Tags is a required field
-	Tags map[string]*string `locationName:"tags" type:"map" required:"true"`
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -12441,6 +13847,201 @@ func (s GetTagsOutput) GoString() string {
 // SetTags sets the Tags field's value.
 func (s *GetTagsOutput) SetTags(v map[string]*string) *GetTagsOutput {
 	s.Tags = v
+	return s
+}
+
+type GetVpcLinkInput struct {
+	_ struct{} `type:"structure"`
+
+	// VpcLinkId is a required field
+	VpcLinkId *string `location:"uri" locationName:"vpcLinkId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetVpcLinkInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetVpcLinkInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetVpcLinkInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetVpcLinkInput"}
+	if s.VpcLinkId == nil {
+		invalidParams.Add(request.NewErrParamRequired("VpcLinkId"))
+	}
+	if s.VpcLinkId != nil && len(*s.VpcLinkId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("VpcLinkId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetVpcLinkId sets the VpcLinkId field's value.
+func (s *GetVpcLinkInput) SetVpcLinkId(v string) *GetVpcLinkInput {
+	s.VpcLinkId = &v
+	return s
+}
+
+type GetVpcLinkOutput struct {
+	_ struct{} `type:"structure"`
+
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"iso8601"`
+
+	// A string with a length between [1-128].
+	Name *string `locationName:"name" type:"string"`
+
+	// A list of security group IDs for the VPC link.
+	SecurityGroupIds []*string `locationName:"securityGroupIds" type:"list"`
+
+	// A list of subnet IDs to include in the VPC link.
+	SubnetIds []*string `locationName:"subnetIds" type:"list"`
+
+	// Represents a collection of tags associated with the resource.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
+	// The identifier.
+	VpcLinkId *string `locationName:"vpcLinkId" type:"string"`
+
+	// The status of the VPC link.
+	VpcLinkStatus *string `locationName:"vpcLinkStatus" type:"string" enum:"VpcLinkStatus"`
+
+	// A string with a length between [0-1024].
+	VpcLinkStatusMessage *string `locationName:"vpcLinkStatusMessage" type:"string"`
+
+	// The version of the VPC link.
+	VpcLinkVersion *string `locationName:"vpcLinkVersion" type:"string" enum:"VpcLinkVersion"`
+}
+
+// String returns the string representation
+func (s GetVpcLinkOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetVpcLinkOutput) GoString() string {
+	return s.String()
+}
+
+// SetCreatedDate sets the CreatedDate field's value.
+func (s *GetVpcLinkOutput) SetCreatedDate(v time.Time) *GetVpcLinkOutput {
+	s.CreatedDate = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *GetVpcLinkOutput) SetName(v string) *GetVpcLinkOutput {
+	s.Name = &v
+	return s
+}
+
+// SetSecurityGroupIds sets the SecurityGroupIds field's value.
+func (s *GetVpcLinkOutput) SetSecurityGroupIds(v []*string) *GetVpcLinkOutput {
+	s.SecurityGroupIds = v
+	return s
+}
+
+// SetSubnetIds sets the SubnetIds field's value.
+func (s *GetVpcLinkOutput) SetSubnetIds(v []*string) *GetVpcLinkOutput {
+	s.SubnetIds = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *GetVpcLinkOutput) SetTags(v map[string]*string) *GetVpcLinkOutput {
+	s.Tags = v
+	return s
+}
+
+// SetVpcLinkId sets the VpcLinkId field's value.
+func (s *GetVpcLinkOutput) SetVpcLinkId(v string) *GetVpcLinkOutput {
+	s.VpcLinkId = &v
+	return s
+}
+
+// SetVpcLinkStatus sets the VpcLinkStatus field's value.
+func (s *GetVpcLinkOutput) SetVpcLinkStatus(v string) *GetVpcLinkOutput {
+	s.VpcLinkStatus = &v
+	return s
+}
+
+// SetVpcLinkStatusMessage sets the VpcLinkStatusMessage field's value.
+func (s *GetVpcLinkOutput) SetVpcLinkStatusMessage(v string) *GetVpcLinkOutput {
+	s.VpcLinkStatusMessage = &v
+	return s
+}
+
+// SetVpcLinkVersion sets the VpcLinkVersion field's value.
+func (s *GetVpcLinkOutput) SetVpcLinkVersion(v string) *GetVpcLinkOutput {
+	s.VpcLinkVersion = &v
+	return s
+}
+
+type GetVpcLinksInput struct {
+	_ struct{} `type:"structure"`
+
+	MaxResults *string `location:"querystring" locationName:"maxResults" type:"string"`
+
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s GetVpcLinksInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetVpcLinksInput) GoString() string {
+	return s.String()
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *GetVpcLinksInput) SetMaxResults(v string) *GetVpcLinksInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetVpcLinksInput) SetNextToken(v string) *GetVpcLinksInput {
+	s.NextToken = &v
+	return s
+}
+
+type GetVpcLinksOutput struct {
+	_ struct{} `type:"structure"`
+
+	Items []*VpcLink `locationName:"items" type:"list"`
+
+	// The next page of elements from this collection. Not valid for the last element
+	// of the collection.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s GetVpcLinksOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetVpcLinksOutput) GoString() string {
+	return s.String()
+}
+
+// SetItems sets the Items field's value.
+func (s *GetVpcLinksOutput) SetItems(v []*VpcLink) *GetVpcLinksOutput {
+	s.Items = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetVpcLinksOutput) SetNextToken(v string) *GetVpcLinksOutput {
+	s.NextToken = &v
 	return s
 }
 
@@ -12501,6 +14102,8 @@ type ImportApiOutput struct {
 
 	ApiEndpoint *string `locationName:"apiEndpoint" type:"string"`
 
+	ApiGatewayManaged *bool `locationName:"apiGatewayManaged" type:"boolean"`
+
 	// The identifier.
 	ApiId *string `locationName:"apiId" type:"string"`
 
@@ -12556,6 +14159,12 @@ func (s ImportApiOutput) GoString() string {
 // SetApiEndpoint sets the ApiEndpoint field's value.
 func (s *ImportApiOutput) SetApiEndpoint(v string) *ImportApiOutput {
 	s.ApiEndpoint = &v
+	return s
+}
+
+// SetApiGatewayManaged sets the ApiGatewayManaged field's value.
+func (s *ImportApiOutput) SetApiGatewayManaged(v bool) *ImportApiOutput {
+	s.ApiGatewayManaged = &v
 	return s
 }
 
@@ -12646,12 +14255,14 @@ type Integration struct {
 	// API Gateway. You can update a managed integration, but you can't delete it.
 	ApiGatewayManaged *bool `locationName:"apiGatewayManaged" type:"boolean"`
 
-	// The connection ID.
+	// The ID of the VPC link for a private integration. Supported only for HTTP
+	// APIs.
 	ConnectionId *string `locationName:"connectionId" type:"string"`
 
-	// The type of the network connection to the integration endpoint. Currently
-	// the only valid value is INTERNET, for connections through the public routable
-	// internet.
+	// The type of the network connection to the integration endpoint. Specify INTERNET
+	// for connections through the public routable internet or VPC_LINK for private
+	// connections between API Gateway and resources in a VPC. The default value
+	// is INTERNET.
 	ConnectionType *string `locationName:"connectionType" type:"string" enum:"ConnectionType"`
 
 	// Supported only for WebSocket APIs. Specifies how to handle response payload
@@ -12689,6 +14300,10 @@ type Integration struct {
 	// only for WebSocket APIs. See Integration Response Selection Expressions (https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-integration-response-selection-expressions).
 	IntegrationResponseSelectionExpression *string `locationName:"integrationResponseSelectionExpression" type:"string"`
 
+	// Supported only for HTTP API AWS_PROXY integrations. Specifies the AWS service
+	// action to invoke. To learn more, see Integration subtype reference (https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-aws-services-reference.html).
+	IntegrationSubtype *string `locationName:"integrationSubtype" type:"string"`
+
 	// The integration type of an integration. One of the following:
 	//
 	// AWS: for integrating the route or method request with an AWS service action,
@@ -12697,15 +14312,15 @@ type Integration struct {
 	// AWS service action, this is known as AWS integration. Supported only for
 	// WebSocket APIs.
 	//
-	// AWS_PROXY: for integrating the route or method request with the Lambda function-invoking
-	// action with the client request passed through as-is. This integration is
-	// also referred to as Lambda proxy integration.
+	// AWS_PROXY: for integrating the route or method request with a Lambda function
+	// or other AWS service action. This integration is also referred to as a Lambda
+	// proxy integration.
 	//
 	// HTTP: for integrating the route or method request with an HTTP endpoint.
 	// This integration is also referred to as the HTTP custom integration. Supported
 	// only for WebSocket APIs.
 	//
-	// HTTP_PROXY: for integrating route or method request with an HTTP endpoint,
+	// HTTP_PROXY: for integrating the route or method request with an HTTP endpoint,
 	// with the client request passed through as-is. This is also referred to as
 	// HTTP proxy integration.
 	//
@@ -12713,7 +14328,16 @@ type Integration struct {
 	// endpoint without invoking any backend. Supported only for WebSocket APIs.
 	IntegrationType *string `locationName:"integrationType" type:"string" enum:"IntegrationType"`
 
-	// For a Lambda proxy integration, this is the URI of the Lambda function.
+	// For a Lambda integration, specify the URI of a Lambda function.
+	//
+	// For an HTTP integration, specify a fully-qualified URL.
+	//
+	// For an HTTP API private integration, specify the ARN of an Application Load
+	// Balancer listener, Network Load Balancer listener, or AWS Cloud Map service.
+	// If you specify the ARN of an AWS Cloud Map service, API Gateway uses DiscoverInstances
+	// to identify resources. You can use query parameters to target specific resources.
+	// To learn more, see DiscoverInstances (https://docs.aws.amazon.com/cloud-map/latest/api/API_DiscoverInstances.html).
+	// For private integrations, all resources must be owned by the same AWS account.
 	IntegrationUri *string `locationName:"integrationUri" type:"string"`
 
 	// Specifies the pass-through behavior for incoming requests based on the Content-Type
@@ -12735,17 +14359,23 @@ type Integration struct {
 	PassthroughBehavior *string `locationName:"passthroughBehavior" type:"string" enum:"PassthroughBehavior"`
 
 	// Specifies the format of the payload sent to an integration. Required for
-	// HTTP APIs. Currently, the only supported value is 1.0.
+	// HTTP APIs.
 	PayloadFormatVersion *string `locationName:"payloadFormatVersion" type:"string"`
 
-	// A key-value map specifying request parameters that are passed from the method
-	// request to the backend. The key is an integration request parameter name
-	// and the associated value is a method request parameter value or static value
-	// that must be enclosed within single quotes and pre-encoded as required by
-	// the backend. The method request parameter value must match the pattern of
-	// method.request.{location}.{name} , where {location} is querystring, path,
-	// or header; and {name} must be a valid and unique method request parameter
-	// name. Supported only for WebSocket APIs.
+	// For WebSocket APIs, a key-value map specifying request parameters that are
+	// passed from the method request to the backend. The key is an integration
+	// request parameter name and the associated value is a method request parameter
+	// value or static value that must be enclosed within single quotes and pre-encoded
+	// as required by the backend. The method request parameter value must match
+	// the pattern of method.request.{location}.{name} , where {location} is querystring,
+	// path, or header; and {name} must be a valid and unique method request parameter
+	// name.
+	//
+	// For HTTP APIs, request parameters are a key-value map specifying parameters
+	// that are passed to AWS_PROXY integrations with a specified integrationSubtype.
+	// You can provide static values, or map request data, stage variables, or context
+	// variables that are evaluated at runtime. To learn more, see Working with
+	// AWS service integrations for HTTP APIs (https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-aws-services.html).
 	RequestParameters map[string]*string `locationName:"requestParameters" type:"map"`
 
 	// Represents a map of Velocity templates that are applied on the request payload
@@ -12758,10 +14388,15 @@ type Integration struct {
 	// WebSocket APIs.
 	TemplateSelectionExpression *string `locationName:"templateSelectionExpression" type:"string"`
 
-	// Custom timeout between 50 and 29,000 milliseconds. The default value is 29,000
-	// milliseconds or 29 seconds for WebSocket APIs. The default value is 5,000
-	// milliseconds, or 5 seconds for HTTP APIs.
+	// Custom timeout between 50 and 29,000 milliseconds for WebSocket APIs and
+	// between 50 and 30,000 milliseconds for HTTP APIs. The default timeout is
+	// 29 seconds for WebSocket APIs and 30 seconds for HTTP APIs.
 	TimeoutInMillis *int64 `locationName:"timeoutInMillis" min:"50" type:"integer"`
+
+	// The TLS configuration for a private integration. If you specify a TLS configuration,
+	// private integration traffic uses the HTTPS protocol. Supported only for HTTP
+	// APIs.
+	TlsConfig *TlsConfig `locationName:"tlsConfig" type:"structure"`
 }
 
 // String returns the string representation
@@ -12828,6 +14463,12 @@ func (s *Integration) SetIntegrationResponseSelectionExpression(v string) *Integ
 	return s
 }
 
+// SetIntegrationSubtype sets the IntegrationSubtype field's value.
+func (s *Integration) SetIntegrationSubtype(v string) *Integration {
+	s.IntegrationSubtype = &v
+	return s
+}
+
 // SetIntegrationType sets the IntegrationType field's value.
 func (s *Integration) SetIntegrationType(v string) *Integration {
 	s.IntegrationType = &v
@@ -12873,6 +14514,12 @@ func (s *Integration) SetTemplateSelectionExpression(v string) *Integration {
 // SetTimeoutInMillis sets the TimeoutInMillis field's value.
 func (s *Integration) SetTimeoutInMillis(v int64) *Integration {
 	s.TimeoutInMillis = &v
+	return s
+}
+
+// SetTlsConfig sets the TlsConfig field's value.
+func (s *Integration) SetTlsConfig(v *TlsConfig) *Integration {
+	s.TlsConfig = v
 	return s
 }
 
@@ -13075,8 +14722,8 @@ func (s *Model) SetSchema(v string) *Model {
 // The resource specified in the request was not found. See the message field
 // for more information.
 type NotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// Describes the error encountered.
 	Message_ *string `locationName:"message" type:"string"`
@@ -13097,17 +14744,17 @@ func (s NotFoundException) GoString() string {
 
 func newErrorNotFoundException(v protocol.ResponseMetadata) error {
 	return &NotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s NotFoundException) Code() string {
+func (s *NotFoundException) Code() string {
 	return "NotFoundException"
 }
 
 // Message returns the exception's message.
-func (s NotFoundException) Message() string {
+func (s *NotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13115,22 +14762,22 @@ func (s NotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s NotFoundException) OrigErr() error {
+func (s *NotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s NotFoundException) Error() string {
+func (s *NotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s NotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *NotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s NotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *NotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Validation constraints imposed on parameters of a request (path, query string,
@@ -13230,6 +14877,8 @@ type ReimportApiOutput struct {
 
 	ApiEndpoint *string `locationName:"apiEndpoint" type:"string"`
 
+	ApiGatewayManaged *bool `locationName:"apiGatewayManaged" type:"boolean"`
+
 	// The identifier.
 	ApiId *string `locationName:"apiId" type:"string"`
 
@@ -13285,6 +14934,12 @@ func (s ReimportApiOutput) GoString() string {
 // SetApiEndpoint sets the ApiEndpoint field's value.
 func (s *ReimportApiOutput) SetApiEndpoint(v string) *ReimportApiOutput {
 	s.ApiEndpoint = &v
+	return s
+}
+
+// SetApiGatewayManaged sets the ApiGatewayManaged field's value.
+func (s *ReimportApiOutput) SetApiGatewayManaged(v bool) *ReimportApiOutput {
+	s.ApiGatewayManaged = &v
 	return s
 }
 
@@ -13366,6 +15021,74 @@ func (s *ReimportApiOutput) SetWarnings(v []*string) *ReimportApiOutput {
 	return s
 }
 
+type ResetAuthorizersCacheInput struct {
+	_ struct{} `type:"structure"`
+
+	// ApiId is a required field
+	ApiId *string `location:"uri" locationName:"apiId" type:"string" required:"true"`
+
+	// StageName is a required field
+	StageName *string `location:"uri" locationName:"stageName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ResetAuthorizersCacheInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResetAuthorizersCacheInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResetAuthorizersCacheInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResetAuthorizersCacheInput"}
+	if s.ApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
+	if s.StageName == nil {
+		invalidParams.Add(request.NewErrParamRequired("StageName"))
+	}
+	if s.StageName != nil && len(*s.StageName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StageName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApiId sets the ApiId field's value.
+func (s *ResetAuthorizersCacheInput) SetApiId(v string) *ResetAuthorizersCacheInput {
+	s.ApiId = &v
+	return s
+}
+
+// SetStageName sets the StageName field's value.
+func (s *ResetAuthorizersCacheInput) SetStageName(v string) *ResetAuthorizersCacheInput {
+	s.StageName = &v
+	return s
+}
+
+type ResetAuthorizersCacheOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s ResetAuthorizersCacheOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResetAuthorizersCacheOutput) GoString() string {
+	return s.String()
+}
+
 // Represents a route.
 type Route struct {
 	_ struct{} `type:"structure"`
@@ -13391,7 +15114,8 @@ type Route struct {
 	// The authorization type for the route. For WebSocket APIs, valid values are
 	// NONE for open access, AWS_IAM for using AWS IAM permissions, and CUSTOM for
 	// using a Lambda authorizer For HTTP APIs, valid values are NONE for open access,
-	// or JWT for using JSON Web Tokens.
+	// JWT for using JSON Web Tokens, AWS_IAM for using AWS IAM permissions, and
+	// CUSTOM for using a Lambda authorizer.
 	AuthorizationType *string `locationName:"authorizationType" type:"string" enum:"AuthorizationType"`
 
 	// The identifier of the Authorizer resource to be associated with this route.
@@ -13596,10 +15320,10 @@ type RouteSettings struct {
 	// for WebSocket APIs.
 	LoggingLevel *string `locationName:"loggingLevel" type:"string" enum:"LoggingLevel"`
 
-	// Specifies the throttling burst limit. Supported only for WebSocket APIs.
+	// Specifies the throttling burst limit.
 	ThrottlingBurstLimit *int64 `locationName:"throttlingBurstLimit" type:"integer"`
 
-	// Specifies the throttling rate limit. Supported only for WebSocket APIs.
+	// Specifies the throttling rate limit.
 	ThrottlingRateLimit *float64 `locationName:"throttlingRateLimit" type:"double"`
 }
 
@@ -13693,7 +15417,7 @@ type Stage struct {
 
 	// A map that defines the stage variables for a stage resource. Variable names
 	// can have alphanumeric and underscore characters, and the values must match
-	// [A-Za-z0-9-._~:/?#&=,]+. Supported only for WebSocket APIs.
+	// [A-Za-z0-9-._~:/?#&=,]+.
 	StageVariables map[string]*string `locationName:"stageVariables" type:"map"`
 
 	// The collection of tags. Each tag element is associated with a given resource.
@@ -13856,10 +15580,66 @@ func (s TagResourceOutput) GoString() string {
 	return s.String()
 }
 
+// The TLS configuration for a private integration. If you specify a TLS configuration,
+// private integration traffic uses the HTTPS protocol. Supported only for HTTP
+// APIs.
+type TlsConfig struct {
+	_ struct{} `type:"structure"`
+
+	// If you specify a server name, API Gateway uses it to verify the hostname
+	// on the integration's certificate. The server name is also included in the
+	// TLS handshake to support Server Name Indication (SNI) or virtual hosting.
+	ServerNameToVerify *string `locationName:"serverNameToVerify" type:"string"`
+}
+
+// String returns the string representation
+func (s TlsConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TlsConfig) GoString() string {
+	return s.String()
+}
+
+// SetServerNameToVerify sets the ServerNameToVerify field's value.
+func (s *TlsConfig) SetServerNameToVerify(v string) *TlsConfig {
+	s.ServerNameToVerify = &v
+	return s
+}
+
+// The TLS configuration for a private integration. If you specify a TLS configuration,
+// private integration traffic uses the HTTPS protocol. Supported only for HTTP
+// APIs.
+type TlsConfigInput struct {
+	_ struct{} `type:"structure"`
+
+	// If you specify a server name, API Gateway uses it to verify the hostname
+	// on the integration's certificate. The server name is also included in the
+	// TLS handshake to support Server Name Indication (SNI) or virtual hosting.
+	ServerNameToVerify *string `locationName:"serverNameToVerify" type:"string"`
+}
+
+// String returns the string representation
+func (s TlsConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TlsConfigInput) GoString() string {
+	return s.String()
+}
+
+// SetServerNameToVerify sets the ServerNameToVerify field's value.
+func (s *TlsConfigInput) SetServerNameToVerify(v string) *TlsConfigInput {
+	s.ServerNameToVerify = &v
+	return s
+}
+
 // A limit has been exceeded. See the accompanying error message for details.
 type TooManyRequestsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	LimitType *string `locationName:"limitType" type:"string"`
 
@@ -13878,17 +15658,17 @@ func (s TooManyRequestsException) GoString() string {
 
 func newErrorTooManyRequestsException(v protocol.ResponseMetadata) error {
 	return &TooManyRequestsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TooManyRequestsException) Code() string {
+func (s *TooManyRequestsException) Code() string {
 	return "TooManyRequestsException"
 }
 
 // Message returns the exception's message.
-func (s TooManyRequestsException) Message() string {
+func (s *TooManyRequestsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13896,22 +15676,22 @@ func (s TooManyRequestsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TooManyRequestsException) OrigErr() error {
+func (s *TooManyRequestsException) OrigErr() error {
 	return nil
 }
 
-func (s TooManyRequestsException) Error() string {
+func (s *TooManyRequestsException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TooManyRequestsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TooManyRequestsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TooManyRequestsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TooManyRequestsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -14271,6 +16051,8 @@ type UpdateApiOutput struct {
 
 	ApiEndpoint *string `locationName:"apiEndpoint" type:"string"`
 
+	ApiGatewayManaged *bool `locationName:"apiGatewayManaged" type:"boolean"`
+
 	// The identifier.
 	ApiId *string `locationName:"apiId" type:"string"`
 
@@ -14326,6 +16108,12 @@ func (s UpdateApiOutput) GoString() string {
 // SetApiEndpoint sets the ApiEndpoint field's value.
 func (s *UpdateApiOutput) SetApiEndpoint(v string) *UpdateApiOutput {
 	s.ApiEndpoint = &v
+	return s
+}
+
+// SetApiGatewayManaged sets the ApiGatewayManaged field's value.
+func (s *UpdateApiOutput) SetApiGatewayManaged(v bool) *UpdateApiOutput {
+	s.ApiGatewayManaged = &v
 	return s
 }
 
@@ -14419,16 +16207,21 @@ type UpdateAuthorizerInput struct {
 	// AuthorizerId is a required field
 	AuthorizerId *string `location:"uri" locationName:"authorizerId" type:"string" required:"true"`
 
+	// A string with a length between [1-64].
+	AuthorizerPayloadFormatVersion *string `locationName:"authorizerPayloadFormatVersion" type:"string"`
+
 	// An integer with a value between [0-3600].
 	AuthorizerResultTtlInSeconds *int64 `locationName:"authorizerResultTtlInSeconds" type:"integer"`
 
-	// The authorizer type. For WebSocket APIs, specify REQUEST for a Lambda function
-	// using incoming request parameters. For HTTP APIs, specify JWT to use JSON
-	// Web Tokens.
+	// The authorizer type. Specify REQUEST for a Lambda function using incoming
+	// request parameters. Specify JWT to use JSON Web Tokens (supported only for
+	// HTTP APIs).
 	AuthorizerType *string `locationName:"authorizerType" type:"string" enum:"AuthorizerType"`
 
 	// A string representation of a URI with a length between [1-2048].
 	AuthorizerUri *string `locationName:"authorizerUri" type:"string"`
+
+	EnableSimpleResponses *bool `locationName:"enableSimpleResponses" type:"boolean"`
 
 	// The identity source for which authorization is requested. For the REQUEST
 	// authorizer, this is required when authorization caching is enabled. The value
@@ -14506,6 +16299,12 @@ func (s *UpdateAuthorizerInput) SetAuthorizerId(v string) *UpdateAuthorizerInput
 	return s
 }
 
+// SetAuthorizerPayloadFormatVersion sets the AuthorizerPayloadFormatVersion field's value.
+func (s *UpdateAuthorizerInput) SetAuthorizerPayloadFormatVersion(v string) *UpdateAuthorizerInput {
+	s.AuthorizerPayloadFormatVersion = &v
+	return s
+}
+
 // SetAuthorizerResultTtlInSeconds sets the AuthorizerResultTtlInSeconds field's value.
 func (s *UpdateAuthorizerInput) SetAuthorizerResultTtlInSeconds(v int64) *UpdateAuthorizerInput {
 	s.AuthorizerResultTtlInSeconds = &v
@@ -14521,6 +16320,12 @@ func (s *UpdateAuthorizerInput) SetAuthorizerType(v string) *UpdateAuthorizerInp
 // SetAuthorizerUri sets the AuthorizerUri field's value.
 func (s *UpdateAuthorizerInput) SetAuthorizerUri(v string) *UpdateAuthorizerInput {
 	s.AuthorizerUri = &v
+	return s
+}
+
+// SetEnableSimpleResponses sets the EnableSimpleResponses field's value.
+func (s *UpdateAuthorizerInput) SetEnableSimpleResponses(v bool) *UpdateAuthorizerInput {
+	s.EnableSimpleResponses = &v
 	return s
 }
 
@@ -14557,16 +16362,21 @@ type UpdateAuthorizerOutput struct {
 	// The identifier.
 	AuthorizerId *string `locationName:"authorizerId" type:"string"`
 
+	// A string with a length between [1-64].
+	AuthorizerPayloadFormatVersion *string `locationName:"authorizerPayloadFormatVersion" type:"string"`
+
 	// An integer with a value between [0-3600].
 	AuthorizerResultTtlInSeconds *int64 `locationName:"authorizerResultTtlInSeconds" type:"integer"`
 
-	// The authorizer type. For WebSocket APIs, specify REQUEST for a Lambda function
-	// using incoming request parameters. For HTTP APIs, specify JWT to use JSON
-	// Web Tokens.
+	// The authorizer type. Specify REQUEST for a Lambda function using incoming
+	// request parameters. Specify JWT to use JSON Web Tokens (supported only for
+	// HTTP APIs).
 	AuthorizerType *string `locationName:"authorizerType" type:"string" enum:"AuthorizerType"`
 
 	// A string representation of a URI with a length between [1-2048].
 	AuthorizerUri *string `locationName:"authorizerUri" type:"string"`
+
+	EnableSimpleResponses *bool `locationName:"enableSimpleResponses" type:"boolean"`
 
 	// The identity source for which authorization is requested. For the REQUEST
 	// authorizer, this is required when authorization caching is enabled. The value
@@ -14616,6 +16426,12 @@ func (s *UpdateAuthorizerOutput) SetAuthorizerId(v string) *UpdateAuthorizerOutp
 	return s
 }
 
+// SetAuthorizerPayloadFormatVersion sets the AuthorizerPayloadFormatVersion field's value.
+func (s *UpdateAuthorizerOutput) SetAuthorizerPayloadFormatVersion(v string) *UpdateAuthorizerOutput {
+	s.AuthorizerPayloadFormatVersion = &v
+	return s
+}
+
 // SetAuthorizerResultTtlInSeconds sets the AuthorizerResultTtlInSeconds field's value.
 func (s *UpdateAuthorizerOutput) SetAuthorizerResultTtlInSeconds(v int64) *UpdateAuthorizerOutput {
 	s.AuthorizerResultTtlInSeconds = &v
@@ -14631,6 +16447,12 @@ func (s *UpdateAuthorizerOutput) SetAuthorizerType(v string) *UpdateAuthorizerOu
 // SetAuthorizerUri sets the AuthorizerUri field's value.
 func (s *UpdateAuthorizerOutput) SetAuthorizerUri(v string) *UpdateAuthorizerOutput {
 	s.AuthorizerUri = &v
+	return s
+}
+
+// SetEnableSimpleResponses sets the EnableSimpleResponses field's value.
+func (s *UpdateAuthorizerOutput) SetEnableSimpleResponses(v bool) *UpdateAuthorizerOutput {
+	s.EnableSimpleResponses = &v
 	return s
 }
 
@@ -14914,6 +16736,9 @@ type UpdateIntegrationInput struct {
 	// A string with a length between [1-64].
 	IntegrationMethod *string `locationName:"integrationMethod" type:"string"`
 
+	// A string with a length between [1-128].
+	IntegrationSubtype *string `locationName:"integrationSubtype" type:"string"`
+
 	// Represents an API method integration type.
 	IntegrationType *string `locationName:"integrationType" type:"string" enum:"IntegrationType"`
 
@@ -14949,8 +16774,13 @@ type UpdateIntegrationInput struct {
 	// for more information.
 	TemplateSelectionExpression *string `locationName:"templateSelectionExpression" type:"string"`
 
-	// An integer with a value between [50-29000].
+	// An integer with a value between [50-30000].
 	TimeoutInMillis *int64 `locationName:"timeoutInMillis" min:"50" type:"integer"`
+
+	// The TLS configuration for a private integration. If you specify a TLS configuration,
+	// private integration traffic uses the HTTPS protocol. Supported only for HTTP
+	// APIs.
+	TlsConfig *TlsConfigInput `locationName:"tlsConfig" type:"structure"`
 }
 
 // String returns the string representation
@@ -15036,6 +16866,12 @@ func (s *UpdateIntegrationInput) SetIntegrationMethod(v string) *UpdateIntegrati
 	return s
 }
 
+// SetIntegrationSubtype sets the IntegrationSubtype field's value.
+func (s *UpdateIntegrationInput) SetIntegrationSubtype(v string) *UpdateIntegrationInput {
+	s.IntegrationSubtype = &v
+	return s
+}
+
 // SetIntegrationType sets the IntegrationType field's value.
 func (s *UpdateIntegrationInput) SetIntegrationType(v string) *UpdateIntegrationInput {
 	s.IntegrationType = &v
@@ -15084,6 +16920,12 @@ func (s *UpdateIntegrationInput) SetTimeoutInMillis(v int64) *UpdateIntegrationI
 	return s
 }
 
+// SetTlsConfig sets the TlsConfig field's value.
+func (s *UpdateIntegrationInput) SetTlsConfig(v *TlsConfigInput) *UpdateIntegrationInput {
+	s.TlsConfig = v
+	return s
+}
+
 type UpdateIntegrationOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -15115,6 +16957,9 @@ type UpdateIntegrationOutput struct {
 	// (https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-apikey-selection-expressions)
 	// for more information.
 	IntegrationResponseSelectionExpression *string `locationName:"integrationResponseSelectionExpression" type:"string"`
+
+	// A string with a length between [1-128].
+	IntegrationSubtype *string `locationName:"integrationSubtype" type:"string"`
 
 	// Represents an API method integration type.
 	IntegrationType *string `locationName:"integrationType" type:"string" enum:"IntegrationType"`
@@ -15151,8 +16996,13 @@ type UpdateIntegrationOutput struct {
 	// for more information.
 	TemplateSelectionExpression *string `locationName:"templateSelectionExpression" type:"string"`
 
-	// An integer with a value between [50-29000].
+	// An integer with a value between [50-30000].
 	TimeoutInMillis *int64 `locationName:"timeoutInMillis" min:"50" type:"integer"`
+
+	// The TLS configuration for a private integration. If you specify a TLS configuration,
+	// private integration traffic uses the HTTPS protocol. Supported only for HTTP
+	// APIs.
+	TlsConfig *TlsConfig `locationName:"tlsConfig" type:"structure"`
 }
 
 // String returns the string representation
@@ -15219,6 +17069,12 @@ func (s *UpdateIntegrationOutput) SetIntegrationResponseSelectionExpression(v st
 	return s
 }
 
+// SetIntegrationSubtype sets the IntegrationSubtype field's value.
+func (s *UpdateIntegrationOutput) SetIntegrationSubtype(v string) *UpdateIntegrationOutput {
+	s.IntegrationSubtype = &v
+	return s
+}
+
 // SetIntegrationType sets the IntegrationType field's value.
 func (s *UpdateIntegrationOutput) SetIntegrationType(v string) *UpdateIntegrationOutput {
 	s.IntegrationType = &v
@@ -15264,6 +17120,12 @@ func (s *UpdateIntegrationOutput) SetTemplateSelectionExpression(v string) *Upda
 // SetTimeoutInMillis sets the TimeoutInMillis field's value.
 func (s *UpdateIntegrationOutput) SetTimeoutInMillis(v int64) *UpdateIntegrationOutput {
 	s.TimeoutInMillis = &v
+	return s
+}
+
+// SetTlsConfig sets the TlsConfig field's value.
+func (s *UpdateIntegrationOutput) SetTlsConfig(v *TlsConfig) *UpdateIntegrationOutput {
+	s.TlsConfig = v
 	return s
 }
 
@@ -15653,8 +17515,9 @@ type UpdateRouteInput struct {
 
 	// The authorization type. For WebSocket APIs, valid values are NONE for open
 	// access, AWS_IAM for using AWS IAM permissions, and CUSTOM for using a Lambda
-	// authorizer. For HTTP APIs, valid values are NONE for open access, or JWT
-	// for using JSON Web Tokens.
+	// authorizer. For HTTP APIs, valid values are NONE for open access, JWT for
+	// using JSON Web Tokens, AWS_IAM for using AWS IAM permissions, and CUSTOM
+	// for using a Lambda authorizer.
 	AuthorizationType *string `locationName:"authorizationType" type:"string" enum:"AuthorizationType"`
 
 	// The identifier.
@@ -15821,8 +17684,9 @@ type UpdateRouteOutput struct {
 
 	// The authorization type. For WebSocket APIs, valid values are NONE for open
 	// access, AWS_IAM for using AWS IAM permissions, and CUSTOM for using a Lambda
-	// authorizer. For HTTP APIs, valid values are NONE for open access, or JWT
-	// for using JSON Web Tokens.
+	// authorizer. For HTTP APIs, valid values are NONE for open access, JWT for
+	// using JSON Web Tokens, AWS_IAM for using AWS IAM permissions, and CUSTOM
+	// for using a Lambda authorizer.
 	AuthorizationType *string `locationName:"authorizationType" type:"string" enum:"AuthorizationType"`
 
 	// The identifier.
@@ -16385,10 +18249,257 @@ func (s *UpdateStageOutput) SetTags(v map[string]*string) *UpdateStageOutput {
 	return s
 }
 
+type UpdateVpcLinkInput struct {
+	_ struct{} `type:"structure"`
+
+	// A string with a length between [1-128].
+	Name *string `locationName:"name" type:"string"`
+
+	// VpcLinkId is a required field
+	VpcLinkId *string `location:"uri" locationName:"vpcLinkId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateVpcLinkInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateVpcLinkInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateVpcLinkInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateVpcLinkInput"}
+	if s.VpcLinkId == nil {
+		invalidParams.Add(request.NewErrParamRequired("VpcLinkId"))
+	}
+	if s.VpcLinkId != nil && len(*s.VpcLinkId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("VpcLinkId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateVpcLinkInput) SetName(v string) *UpdateVpcLinkInput {
+	s.Name = &v
+	return s
+}
+
+// SetVpcLinkId sets the VpcLinkId field's value.
+func (s *UpdateVpcLinkInput) SetVpcLinkId(v string) *UpdateVpcLinkInput {
+	s.VpcLinkId = &v
+	return s
+}
+
+type UpdateVpcLinkOutput struct {
+	_ struct{} `type:"structure"`
+
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"iso8601"`
+
+	// A string with a length between [1-128].
+	Name *string `locationName:"name" type:"string"`
+
+	// A list of security group IDs for the VPC link.
+	SecurityGroupIds []*string `locationName:"securityGroupIds" type:"list"`
+
+	// A list of subnet IDs to include in the VPC link.
+	SubnetIds []*string `locationName:"subnetIds" type:"list"`
+
+	// Represents a collection of tags associated with the resource.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
+	// The identifier.
+	VpcLinkId *string `locationName:"vpcLinkId" type:"string"`
+
+	// The status of the VPC link.
+	VpcLinkStatus *string `locationName:"vpcLinkStatus" type:"string" enum:"VpcLinkStatus"`
+
+	// A string with a length between [0-1024].
+	VpcLinkStatusMessage *string `locationName:"vpcLinkStatusMessage" type:"string"`
+
+	// The version of the VPC link.
+	VpcLinkVersion *string `locationName:"vpcLinkVersion" type:"string" enum:"VpcLinkVersion"`
+}
+
+// String returns the string representation
+func (s UpdateVpcLinkOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateVpcLinkOutput) GoString() string {
+	return s.String()
+}
+
+// SetCreatedDate sets the CreatedDate field's value.
+func (s *UpdateVpcLinkOutput) SetCreatedDate(v time.Time) *UpdateVpcLinkOutput {
+	s.CreatedDate = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateVpcLinkOutput) SetName(v string) *UpdateVpcLinkOutput {
+	s.Name = &v
+	return s
+}
+
+// SetSecurityGroupIds sets the SecurityGroupIds field's value.
+func (s *UpdateVpcLinkOutput) SetSecurityGroupIds(v []*string) *UpdateVpcLinkOutput {
+	s.SecurityGroupIds = v
+	return s
+}
+
+// SetSubnetIds sets the SubnetIds field's value.
+func (s *UpdateVpcLinkOutput) SetSubnetIds(v []*string) *UpdateVpcLinkOutput {
+	s.SubnetIds = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *UpdateVpcLinkOutput) SetTags(v map[string]*string) *UpdateVpcLinkOutput {
+	s.Tags = v
+	return s
+}
+
+// SetVpcLinkId sets the VpcLinkId field's value.
+func (s *UpdateVpcLinkOutput) SetVpcLinkId(v string) *UpdateVpcLinkOutput {
+	s.VpcLinkId = &v
+	return s
+}
+
+// SetVpcLinkStatus sets the VpcLinkStatus field's value.
+func (s *UpdateVpcLinkOutput) SetVpcLinkStatus(v string) *UpdateVpcLinkOutput {
+	s.VpcLinkStatus = &v
+	return s
+}
+
+// SetVpcLinkStatusMessage sets the VpcLinkStatusMessage field's value.
+func (s *UpdateVpcLinkOutput) SetVpcLinkStatusMessage(v string) *UpdateVpcLinkOutput {
+	s.VpcLinkStatusMessage = &v
+	return s
+}
+
+// SetVpcLinkVersion sets the VpcLinkVersion field's value.
+func (s *UpdateVpcLinkOutput) SetVpcLinkVersion(v string) *UpdateVpcLinkOutput {
+	s.VpcLinkVersion = &v
+	return s
+}
+
+// Represents a VPC link.
+type VpcLink struct {
+	_ struct{} `type:"structure"`
+
+	// The timestamp when the VPC link was created.
+	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp" timestampFormat:"iso8601"`
+
+	// The name of the VPC link.
+	//
+	// Name is a required field
+	Name *string `locationName:"name" type:"string" required:"true"`
+
+	// A list of security group IDs for the VPC link.
+	//
+	// SecurityGroupIds is a required field
+	SecurityGroupIds []*string `locationName:"securityGroupIds" type:"list" required:"true"`
+
+	// A list of subnet IDs to include in the VPC link.
+	//
+	// SubnetIds is a required field
+	SubnetIds []*string `locationName:"subnetIds" type:"list" required:"true"`
+
+	// Tags for the VPC link.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
+	// The ID of the VPC link.
+	//
+	// VpcLinkId is a required field
+	VpcLinkId *string `locationName:"vpcLinkId" type:"string" required:"true"`
+
+	// The status of the VPC link.
+	VpcLinkStatus *string `locationName:"vpcLinkStatus" type:"string" enum:"VpcLinkStatus"`
+
+	// A message summarizing the cause of the status of the VPC link.
+	VpcLinkStatusMessage *string `locationName:"vpcLinkStatusMessage" type:"string"`
+
+	// The version of the VPC link.
+	VpcLinkVersion *string `locationName:"vpcLinkVersion" type:"string" enum:"VpcLinkVersion"`
+}
+
+// String returns the string representation
+func (s VpcLink) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VpcLink) GoString() string {
+	return s.String()
+}
+
+// SetCreatedDate sets the CreatedDate field's value.
+func (s *VpcLink) SetCreatedDate(v time.Time) *VpcLink {
+	s.CreatedDate = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *VpcLink) SetName(v string) *VpcLink {
+	s.Name = &v
+	return s
+}
+
+// SetSecurityGroupIds sets the SecurityGroupIds field's value.
+func (s *VpcLink) SetSecurityGroupIds(v []*string) *VpcLink {
+	s.SecurityGroupIds = v
+	return s
+}
+
+// SetSubnetIds sets the SubnetIds field's value.
+func (s *VpcLink) SetSubnetIds(v []*string) *VpcLink {
+	s.SubnetIds = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *VpcLink) SetTags(v map[string]*string) *VpcLink {
+	s.Tags = v
+	return s
+}
+
+// SetVpcLinkId sets the VpcLinkId field's value.
+func (s *VpcLink) SetVpcLinkId(v string) *VpcLink {
+	s.VpcLinkId = &v
+	return s
+}
+
+// SetVpcLinkStatus sets the VpcLinkStatus field's value.
+func (s *VpcLink) SetVpcLinkStatus(v string) *VpcLink {
+	s.VpcLinkStatus = &v
+	return s
+}
+
+// SetVpcLinkStatusMessage sets the VpcLinkStatusMessage field's value.
+func (s *VpcLink) SetVpcLinkStatusMessage(v string) *VpcLink {
+	s.VpcLinkStatusMessage = &v
+	return s
+}
+
+// SetVpcLinkVersion sets the VpcLinkVersion field's value.
+func (s *VpcLink) SetVpcLinkVersion(v string) *VpcLink {
+	s.VpcLinkVersion = &v
+	return s
+}
+
 // The authorization type. For WebSocket APIs, valid values are NONE for open
 // access, AWS_IAM for using AWS IAM permissions, and CUSTOM for using a Lambda
-// authorizer. For HTTP APIs, valid values are NONE for open access, or JWT
-// for using JSON Web Tokens.
+// authorizer. For HTTP APIs, valid values are NONE for open access, JWT for
+// using JSON Web Tokens, AWS_IAM for using AWS IAM permissions, and CUSTOM
+// for using a Lambda authorizer.
 const (
 	// AuthorizationTypeNone is a AuthorizationType enum value
 	AuthorizationTypeNone = "NONE"
@@ -16403,9 +18514,19 @@ const (
 	AuthorizationTypeJwt = "JWT"
 )
 
-// The authorizer type. For WebSocket APIs, specify REQUEST for a Lambda function
-// using incoming request parameters. For HTTP APIs, specify JWT to use JSON
-// Web Tokens.
+// AuthorizationType_Values returns all elements of the AuthorizationType enum
+func AuthorizationType_Values() []string {
+	return []string{
+		AuthorizationTypeNone,
+		AuthorizationTypeAwsIam,
+		AuthorizationTypeCustom,
+		AuthorizationTypeJwt,
+	}
+}
+
+// The authorizer type. Specify REQUEST for a Lambda function using incoming
+// request parameters. Specify JWT to use JSON Web Tokens (supported only for
+// HTTP APIs).
 const (
 	// AuthorizerTypeRequest is a AuthorizerType enum value
 	AuthorizerTypeRequest = "REQUEST"
@@ -16413,6 +18534,14 @@ const (
 	// AuthorizerTypeJwt is a AuthorizerType enum value
 	AuthorizerTypeJwt = "JWT"
 )
+
+// AuthorizerType_Values returns all elements of the AuthorizerType enum
+func AuthorizerType_Values() []string {
+	return []string{
+		AuthorizerTypeRequest,
+		AuthorizerTypeJwt,
+	}
+}
 
 // Represents a connection type.
 const (
@@ -16423,6 +18552,14 @@ const (
 	ConnectionTypeVpcLink = "VPC_LINK"
 )
 
+// ConnectionType_Values returns all elements of the ConnectionType enum
+func ConnectionType_Values() []string {
+	return []string{
+		ConnectionTypeInternet,
+		ConnectionTypeVpcLink,
+	}
+}
+
 // Specifies how to handle response payload content type conversions. Supported
 // only for WebSocket APIs.
 const (
@@ -16432,6 +18569,14 @@ const (
 	// ContentHandlingStrategyConvertToText is a ContentHandlingStrategy enum value
 	ContentHandlingStrategyConvertToText = "CONVERT_TO_TEXT"
 )
+
+// ContentHandlingStrategy_Values returns all elements of the ContentHandlingStrategy enum
+func ContentHandlingStrategy_Values() []string {
+	return []string{
+		ContentHandlingStrategyConvertToBinary,
+		ContentHandlingStrategyConvertToText,
+	}
+}
 
 // Represents a deployment status.
 const (
@@ -16445,6 +18590,15 @@ const (
 	DeploymentStatusDeployed = "DEPLOYED"
 )
 
+// DeploymentStatus_Values returns all elements of the DeploymentStatus enum
+func DeploymentStatus_Values() []string {
+	return []string{
+		DeploymentStatusPending,
+		DeploymentStatusFailed,
+		DeploymentStatusDeployed,
+	}
+}
+
 // The status of the domain name migration. The valid values are AVAILABLE and
 // UPDATING. If the status is UPDATING, the domain cannot be modified further
 // until the existing operation is complete. If it is AVAILABLE, the domain
@@ -16457,6 +18611,14 @@ const (
 	DomainNameStatusUpdating = "UPDATING"
 )
 
+// DomainNameStatus_Values returns all elements of the DomainNameStatus enum
+func DomainNameStatus_Values() []string {
+	return []string{
+		DomainNameStatusAvailable,
+		DomainNameStatusUpdating,
+	}
+}
+
 // Represents an endpoint type.
 const (
 	// EndpointTypeRegional is a EndpointType enum value
@@ -16465,6 +18627,14 @@ const (
 	// EndpointTypeEdge is a EndpointType enum value
 	EndpointTypeEdge = "EDGE"
 )
+
+// EndpointType_Values returns all elements of the EndpointType enum
+func EndpointType_Values() []string {
+	return []string{
+		EndpointTypeRegional,
+		EndpointTypeEdge,
+	}
+}
 
 // Represents an API method integration type.
 const (
@@ -16484,6 +18654,17 @@ const (
 	IntegrationTypeAwsProxy = "AWS_PROXY"
 )
 
+// IntegrationType_Values returns all elements of the IntegrationType enum
+func IntegrationType_Values() []string {
+	return []string{
+		IntegrationTypeAws,
+		IntegrationTypeHttp,
+		IntegrationTypeMock,
+		IntegrationTypeHttpProxy,
+		IntegrationTypeAwsProxy,
+	}
+}
+
 // The logging level.
 const (
 	// LoggingLevelError is a LoggingLevel enum value
@@ -16492,9 +18673,18 @@ const (
 	// LoggingLevelInfo is a LoggingLevel enum value
 	LoggingLevelInfo = "INFO"
 
-	// LoggingLevelFalse is a LoggingLevel enum value
-	LoggingLevelFalse = "false"
+	// LoggingLevelOff is a LoggingLevel enum value
+	LoggingLevelOff = "OFF"
 )
+
+// LoggingLevel_Values returns all elements of the LoggingLevel enum
+func LoggingLevel_Values() []string {
+	return []string{
+		LoggingLevelError,
+		LoggingLevelInfo,
+		LoggingLevelOff,
+	}
+}
 
 // Represents passthrough behavior for an integration response. Supported only
 // for WebSocket APIs.
@@ -16509,6 +18699,15 @@ const (
 	PassthroughBehaviorWhenNoTemplates = "WHEN_NO_TEMPLATES"
 )
 
+// PassthroughBehavior_Values returns all elements of the PassthroughBehavior enum
+func PassthroughBehavior_Values() []string {
+	return []string{
+		PassthroughBehaviorWhenNoMatch,
+		PassthroughBehaviorNever,
+		PassthroughBehaviorWhenNoTemplates,
+	}
+}
+
 // Represents a protocol type.
 const (
 	// ProtocolTypeWebsocket is a ProtocolType enum value
@@ -16517,6 +18716,14 @@ const (
 	// ProtocolTypeHttp is a ProtocolType enum value
 	ProtocolTypeHttp = "HTTP"
 )
+
+// ProtocolType_Values returns all elements of the ProtocolType enum
+func ProtocolType_Values() []string {
+	return []string{
+		ProtocolTypeWebsocket,
+		ProtocolTypeHttp,
+	}
+}
 
 // The Transport Layer Security (TLS) version of the security policy for this
 // domain name. The valid values are TLS_1_0 and TLS_1_2.
@@ -16527,3 +18734,53 @@ const (
 	// SecurityPolicyTls12 is a SecurityPolicy enum value
 	SecurityPolicyTls12 = "TLS_1_2"
 )
+
+// SecurityPolicy_Values returns all elements of the SecurityPolicy enum
+func SecurityPolicy_Values() []string {
+	return []string{
+		SecurityPolicyTls10,
+		SecurityPolicyTls12,
+	}
+}
+
+// The status of the VPC link.
+const (
+	// VpcLinkStatusPending is a VpcLinkStatus enum value
+	VpcLinkStatusPending = "PENDING"
+
+	// VpcLinkStatusAvailable is a VpcLinkStatus enum value
+	VpcLinkStatusAvailable = "AVAILABLE"
+
+	// VpcLinkStatusDeleting is a VpcLinkStatus enum value
+	VpcLinkStatusDeleting = "DELETING"
+
+	// VpcLinkStatusFailed is a VpcLinkStatus enum value
+	VpcLinkStatusFailed = "FAILED"
+
+	// VpcLinkStatusInactive is a VpcLinkStatus enum value
+	VpcLinkStatusInactive = "INACTIVE"
+)
+
+// VpcLinkStatus_Values returns all elements of the VpcLinkStatus enum
+func VpcLinkStatus_Values() []string {
+	return []string{
+		VpcLinkStatusPending,
+		VpcLinkStatusAvailable,
+		VpcLinkStatusDeleting,
+		VpcLinkStatusFailed,
+		VpcLinkStatusInactive,
+	}
+}
+
+// The version of the VPC link.
+const (
+	// VpcLinkVersionV2 is a VpcLinkVersion enum value
+	VpcLinkVersionV2 = "V2"
+)
+
+// VpcLinkVersion_Values returns all elements of the VpcLinkVersion enum
+func VpcLinkVersion_Values() []string {
+	return []string{
+		VpcLinkVersionV2,
+	}
+}

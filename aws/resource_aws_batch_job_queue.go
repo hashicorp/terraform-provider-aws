@@ -3,13 +3,14 @@ package aws
 import (
 	"fmt"
 	"log"
+	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsBatchJobQueue() *schema.Resource {
@@ -105,10 +106,16 @@ func resourceAwsBatchJobQueueRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("arn", jq.JobQueueArn)
 
-	computeEnvironments := make([]string, len(jq.ComputeEnvironmentOrder))
+	computeEnvironments := make([]string, 0, len(jq.ComputeEnvironmentOrder))
+
+	sort.Slice(jq.ComputeEnvironmentOrder, func(i, j int) bool {
+		return aws.Int64Value(jq.ComputeEnvironmentOrder[i].Order) < aws.Int64Value(jq.ComputeEnvironmentOrder[j].Order)
+	})
+
 	for _, computeEnvironmentOrder := range jq.ComputeEnvironmentOrder {
-		computeEnvironments[aws.Int64Value(computeEnvironmentOrder.Order)] = aws.StringValue(computeEnvironmentOrder.ComputeEnvironment)
+		computeEnvironments = append(computeEnvironments, aws.StringValue(computeEnvironmentOrder.ComputeEnvironment))
 	}
+
 	if err := d.Set("compute_environments", computeEnvironments); err != nil {
 		return fmt.Errorf("error setting compute_environments: %s", err)
 	}

@@ -1,6 +1,8 @@
 package result
 
 import (
+	"crypto/md5" //nolint:gosec
+	"fmt"
 	"go/token"
 
 	"golang.org/x/tools/go/packages"
@@ -26,6 +28,8 @@ type Issue struct {
 	FromLinter string
 	Text       string
 
+	Severity string
+
 	// Source lines of a code with the issue to show
 	SourceLines []string
 
@@ -41,6 +45,10 @@ type Issue struct {
 
 	// HunkPos is used only when golangci-lint is run over a diff
 	HunkPos int `json:",omitempty"`
+
+	// If we are expecting a nolint (because this is from nolintlint), record the expected linter
+	ExpectNoLint         bool
+	ExpectedNoLintLinter string
 }
 
 func (i *Issue) FilePath() string {
@@ -71,4 +79,20 @@ func (i *Issue) GetLineRange() Range {
 	}
 
 	return *i.LineRange
+}
+
+func (i *Issue) Description() string {
+	return fmt.Sprintf("%s: %s", i.FromLinter, i.Text)
+}
+
+func (i *Issue) Fingerprint() string {
+	firstLine := ""
+	if len(i.SourceLines) > 0 {
+		firstLine = i.SourceLines[0]
+	}
+
+	hash := md5.New() //nolint:gosec
+	_, _ = hash.Write([]byte(fmt.Sprintf("%s%s%s", i.Pos.Filename, i.Text, firstLine)))
+
+	return fmt.Sprintf("%X", hash.Sum(nil))
 }

@@ -1104,6 +1104,94 @@ func (c *WorkMail) DeleteResourceWithContext(ctx aws.Context, input *DeleteResou
 	return out, req.Send()
 }
 
+const opDeleteRetentionPolicy = "DeleteRetentionPolicy"
+
+// DeleteRetentionPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteRetentionPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteRetentionPolicy for more information on using the DeleteRetentionPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteRetentionPolicyRequest method.
+//    req, resp := client.DeleteRetentionPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DeleteRetentionPolicy
+func (c *WorkMail) DeleteRetentionPolicyRequest(input *DeleteRetentionPolicyInput) (req *request.Request, output *DeleteRetentionPolicyOutput) {
+	op := &request.Operation{
+		Name:       opDeleteRetentionPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteRetentionPolicyInput{}
+	}
+
+	output = &DeleteRetentionPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteRetentionPolicy API operation for Amazon WorkMail.
+//
+// Deletes the specified retention policy from the specified organization.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkMail's
+// API operation DeleteRetentionPolicy for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidParameterException
+//   One or more of the input parameters don't match the service's restrictions.
+//
+//   * OrganizationNotFoundException
+//   An operation received a valid organization identifier that either doesn't
+//   belong or exist in the system.
+//
+//   * OrganizationStateException
+//   The organization must have a valid state (Active or Synchronizing) to perform
+//   certain operations on the organization or its members.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DeleteRetentionPolicy
+func (c *WorkMail) DeleteRetentionPolicy(input *DeleteRetentionPolicyInput) (*DeleteRetentionPolicyOutput, error) {
+	req, out := c.DeleteRetentionPolicyRequest(input)
+	return out, req.Send()
+}
+
+// DeleteRetentionPolicyWithContext is the same as DeleteRetentionPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteRetentionPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkMail) DeleteRetentionPolicyWithContext(ctx aws.Context, input *DeleteRetentionPolicyInput, opts ...request.Option) (*DeleteRetentionPolicyOutput, error) {
+	req, out := c.DeleteRetentionPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteUser = "DeleteUser"
 
 // DeleteUserRequest generates a "aws/request.Request" representing the
@@ -1958,6 +2046,97 @@ func (c *WorkMail) GetAccessControlEffectWithContext(ctx aws.Context, input *Get
 	return out, req.Send()
 }
 
+const opGetDefaultRetentionPolicy = "GetDefaultRetentionPolicy"
+
+// GetDefaultRetentionPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the GetDefaultRetentionPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetDefaultRetentionPolicy for more information on using the GetDefaultRetentionPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetDefaultRetentionPolicyRequest method.
+//    req, resp := client.GetDefaultRetentionPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/GetDefaultRetentionPolicy
+func (c *WorkMail) GetDefaultRetentionPolicyRequest(input *GetDefaultRetentionPolicyInput) (req *request.Request, output *GetDefaultRetentionPolicyOutput) {
+	op := &request.Operation{
+		Name:       opGetDefaultRetentionPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetDefaultRetentionPolicyInput{}
+	}
+
+	output = &GetDefaultRetentionPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetDefaultRetentionPolicy API operation for Amazon WorkMail.
+//
+// Gets the default retention policy details for the specified organization.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkMail's
+// API operation GetDefaultRetentionPolicy for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidParameterException
+//   One or more of the input parameters don't match the service's restrictions.
+//
+//   * OrganizationNotFoundException
+//   An operation received a valid organization identifier that either doesn't
+//   belong or exist in the system.
+//
+//   * OrganizationStateException
+//   The organization must have a valid state (Active or Synchronizing) to perform
+//   certain operations on the organization or its members.
+//
+//   * EntityNotFoundException
+//   The identifier supplied for the user, group, or resource does not exist in
+//   your organization.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/GetDefaultRetentionPolicy
+func (c *WorkMail) GetDefaultRetentionPolicy(input *GetDefaultRetentionPolicyInput) (*GetDefaultRetentionPolicyOutput, error) {
+	req, out := c.GetDefaultRetentionPolicyRequest(input)
+	return out, req.Send()
+}
+
+// GetDefaultRetentionPolicyWithContext is the same as GetDefaultRetentionPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetDefaultRetentionPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkMail) GetDefaultRetentionPolicyWithContext(ctx aws.Context, input *GetDefaultRetentionPolicyInput, opts ...request.Option) (*GetDefaultRetentionPolicyOutput, error) {
+	req, out := c.GetDefaultRetentionPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetMailboxDetails = "GetMailboxDetails"
 
 // GetMailboxDetailsRequest generates a "aws/request.Request" representing the
@@ -2786,7 +2965,7 @@ func (c *WorkMail) ListOrganizationsRequest(input *ListOrganizationsInput) (req 
 
 // ListOrganizations API operation for Amazon WorkMail.
 //
-// Returns summaries of the customer's non-deleted organizations.
+// Returns summaries of the customer's organizations.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3586,6 +3765,97 @@ func (c *WorkMail) PutMailboxPermissions(input *PutMailboxPermissionsInput) (*Pu
 // for more information on using Contexts.
 func (c *WorkMail) PutMailboxPermissionsWithContext(ctx aws.Context, input *PutMailboxPermissionsInput, opts ...request.Option) (*PutMailboxPermissionsOutput, error) {
 	req, out := c.PutMailboxPermissionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutRetentionPolicy = "PutRetentionPolicy"
+
+// PutRetentionPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the PutRetentionPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutRetentionPolicy for more information on using the PutRetentionPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutRetentionPolicyRequest method.
+//    req, resp := client.PutRetentionPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/PutRetentionPolicy
+func (c *WorkMail) PutRetentionPolicyRequest(input *PutRetentionPolicyInput) (req *request.Request, output *PutRetentionPolicyOutput) {
+	op := &request.Operation{
+		Name:       opPutRetentionPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutRetentionPolicyInput{}
+	}
+
+	output = &PutRetentionPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// PutRetentionPolicy API operation for Amazon WorkMail.
+//
+// Puts a retention policy to the specified organization.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkMail's
+// API operation PutRetentionPolicy for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidParameterException
+//   One or more of the input parameters don't match the service's restrictions.
+//
+//   * OrganizationNotFoundException
+//   An operation received a valid organization identifier that either doesn't
+//   belong or exist in the system.
+//
+//   * OrganizationStateException
+//   The organization must have a valid state (Active or Synchronizing) to perform
+//   certain operations on the organization or its members.
+//
+//   * LimitExceededException
+//   The request exceeds the limit of the resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/PutRetentionPolicy
+func (c *WorkMail) PutRetentionPolicy(input *PutRetentionPolicyInput) (*PutRetentionPolicyOutput, error) {
+	req, out := c.PutRetentionPolicyRequest(input)
+	return out, req.Send()
+}
+
+// PutRetentionPolicyWithContext is the same as PutRetentionPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutRetentionPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkMail) PutRetentionPolicyWithContext(ctx aws.Context, input *PutRetentionPolicyInput, opts ...request.Option) (*PutRetentionPolicyOutput, error) {
+	req, out := c.PutRetentionPolicyRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5071,7 +5341,9 @@ type DeleteAccessControlRuleInput struct {
 	Name *string `min:"1" type:"string" required:"true"`
 
 	// The identifier for the organization.
-	OrganizationId *string `type:"string"`
+	//
+	// OrganizationId is a required field
+	OrganizationId *string `type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -5092,6 +5364,9 @@ func (s *DeleteAccessControlRuleInput) Validate() error {
 	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.OrganizationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OrganizationId"))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5436,6 +5711,75 @@ func (s DeleteResourceOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteResourceOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteRetentionPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The retention policy ID.
+	//
+	// Id is a required field
+	Id *string `min:"1" type:"string" required:"true"`
+
+	// The organization ID.
+	//
+	// OrganizationId is a required field
+	OrganizationId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteRetentionPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteRetentionPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteRetentionPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteRetentionPolicyInput"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+	if s.OrganizationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OrganizationId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId sets the Id field's value.
+func (s *DeleteRetentionPolicyInput) SetId(v string) *DeleteRetentionPolicyInput {
+	s.Id = &v
+	return s
+}
+
+// SetOrganizationId sets the OrganizationId field's value.
+func (s *DeleteRetentionPolicyInput) SetOrganizationId(v string) *DeleteRetentionPolicyInput {
+	s.OrganizationId = &v
+	return s
+}
+
+type DeleteRetentionPolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteRetentionPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteRetentionPolicyOutput) GoString() string {
 	return s.String()
 }
 
@@ -6132,8 +6476,8 @@ func (s *DescribeUserOutput) SetUserRole(v string) *DescribeUserOutput {
 
 // The directory service doesn't recognize the credentials supplied by WorkMail.
 type DirectoryServiceAuthenticationFailedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -6150,17 +6494,17 @@ func (s DirectoryServiceAuthenticationFailedException) GoString() string {
 
 func newErrorDirectoryServiceAuthenticationFailedException(v protocol.ResponseMetadata) error {
 	return &DirectoryServiceAuthenticationFailedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s DirectoryServiceAuthenticationFailedException) Code() string {
+func (s *DirectoryServiceAuthenticationFailedException) Code() string {
 	return "DirectoryServiceAuthenticationFailedException"
 }
 
 // Message returns the exception's message.
-func (s DirectoryServiceAuthenticationFailedException) Message() string {
+func (s *DirectoryServiceAuthenticationFailedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6168,28 +6512,28 @@ func (s DirectoryServiceAuthenticationFailedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s DirectoryServiceAuthenticationFailedException) OrigErr() error {
+func (s *DirectoryServiceAuthenticationFailedException) OrigErr() error {
 	return nil
 }
 
-func (s DirectoryServiceAuthenticationFailedException) Error() string {
+func (s *DirectoryServiceAuthenticationFailedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s DirectoryServiceAuthenticationFailedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *DirectoryServiceAuthenticationFailedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s DirectoryServiceAuthenticationFailedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *DirectoryServiceAuthenticationFailedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The directory on which you are trying to perform operations isn't available.
 type DirectoryUnavailableException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -6206,17 +6550,17 @@ func (s DirectoryUnavailableException) GoString() string {
 
 func newErrorDirectoryUnavailableException(v protocol.ResponseMetadata) error {
 	return &DirectoryUnavailableException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s DirectoryUnavailableException) Code() string {
+func (s *DirectoryUnavailableException) Code() string {
 	return "DirectoryUnavailableException"
 }
 
 // Message returns the exception's message.
-func (s DirectoryUnavailableException) Message() string {
+func (s *DirectoryUnavailableException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6224,22 +6568,22 @@ func (s DirectoryUnavailableException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s DirectoryUnavailableException) OrigErr() error {
+func (s *DirectoryUnavailableException) OrigErr() error {
 	return nil
 }
 
-func (s DirectoryUnavailableException) Error() string {
+func (s *DirectoryUnavailableException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s DirectoryUnavailableException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *DirectoryUnavailableException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s DirectoryUnavailableException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *DirectoryUnavailableException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type DisassociateDelegateFromResourceInput struct {
@@ -6415,8 +6759,8 @@ func (s DisassociateMemberFromGroupOutput) GoString() string {
 // The email address that you're trying to assign is already created for a different
 // user, group, or resource.
 type EmailAddressInUseException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -6433,17 +6777,17 @@ func (s EmailAddressInUseException) GoString() string {
 
 func newErrorEmailAddressInUseException(v protocol.ResponseMetadata) error {
 	return &EmailAddressInUseException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s EmailAddressInUseException) Code() string {
+func (s *EmailAddressInUseException) Code() string {
 	return "EmailAddressInUseException"
 }
 
 // Message returns the exception's message.
-func (s EmailAddressInUseException) Message() string {
+func (s *EmailAddressInUseException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6451,28 +6795,28 @@ func (s EmailAddressInUseException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s EmailAddressInUseException) OrigErr() error {
+func (s *EmailAddressInUseException) OrigErr() error {
 	return nil
 }
 
-func (s EmailAddressInUseException) Error() string {
+func (s *EmailAddressInUseException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s EmailAddressInUseException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *EmailAddressInUseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s EmailAddressInUseException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *EmailAddressInUseException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The user, group, or resource that you're trying to register is already registered.
 type EntityAlreadyRegisteredException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -6489,17 +6833,17 @@ func (s EntityAlreadyRegisteredException) GoString() string {
 
 func newErrorEntityAlreadyRegisteredException(v protocol.ResponseMetadata) error {
 	return &EntityAlreadyRegisteredException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s EntityAlreadyRegisteredException) Code() string {
+func (s *EntityAlreadyRegisteredException) Code() string {
 	return "EntityAlreadyRegisteredException"
 }
 
 // Message returns the exception's message.
-func (s EntityAlreadyRegisteredException) Message() string {
+func (s *EntityAlreadyRegisteredException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6507,29 +6851,29 @@ func (s EntityAlreadyRegisteredException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s EntityAlreadyRegisteredException) OrigErr() error {
+func (s *EntityAlreadyRegisteredException) OrigErr() error {
 	return nil
 }
 
-func (s EntityAlreadyRegisteredException) Error() string {
+func (s *EntityAlreadyRegisteredException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s EntityAlreadyRegisteredException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *EntityAlreadyRegisteredException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s EntityAlreadyRegisteredException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *EntityAlreadyRegisteredException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The identifier supplied for the user, group, or resource does not exist in
 // your organization.
 type EntityNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -6546,17 +6890,17 @@ func (s EntityNotFoundException) GoString() string {
 
 func newErrorEntityNotFoundException(v protocol.ResponseMetadata) error {
 	return &EntityNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s EntityNotFoundException) Code() string {
+func (s *EntityNotFoundException) Code() string {
 	return "EntityNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s EntityNotFoundException) Message() string {
+func (s *EntityNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6564,29 +6908,29 @@ func (s EntityNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s EntityNotFoundException) OrigErr() error {
+func (s *EntityNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s EntityNotFoundException) Error() string {
+func (s *EntityNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s EntityNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *EntityNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s EntityNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *EntityNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // You are performing an operation on a user, group, or resource that isn't
 // in the expected state, such as trying to delete an active user.
 type EntityStateException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -6603,17 +6947,17 @@ func (s EntityStateException) GoString() string {
 
 func newErrorEntityStateException(v protocol.ResponseMetadata) error {
 	return &EntityStateException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s EntityStateException) Code() string {
+func (s *EntityStateException) Code() string {
 	return "EntityStateException"
 }
 
 // Message returns the exception's message.
-func (s EntityStateException) Message() string {
+func (s *EntityStateException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6621,22 +6965,88 @@ func (s EntityStateException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s EntityStateException) OrigErr() error {
+func (s *EntityStateException) OrigErr() error {
 	return nil
 }
 
-func (s EntityStateException) Error() string {
+func (s *EntityStateException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s EntityStateException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *EntityStateException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s EntityStateException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *EntityStateException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The configuration applied to an organization's folders by its retention policy.
+type FolderConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The action to take on the folder contents at the end of the folder configuration
+	// period.
+	//
+	// Action is a required field
+	Action *string `type:"string" required:"true" enum:"RetentionAction"`
+
+	// The folder name.
+	//
+	// Name is a required field
+	Name *string `type:"string" required:"true" enum:"FolderName"`
+
+	// The period of time at which the folder configuration action is applied.
+	Period *int64 `min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s FolderConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FolderConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *FolderConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "FolderConfiguration"}
+	if s.Action == nil {
+		invalidParams.Add(request.NewErrParamRequired("Action"))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Period != nil && *s.Period < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Period", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAction sets the Action field's value.
+func (s *FolderConfiguration) SetAction(v string) *FolderConfiguration {
+	s.Action = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *FolderConfiguration) SetName(v string) *FolderConfiguration {
+	s.Name = &v
+	return s
+}
+
+// SetPeriod sets the Period field's value.
+func (s *FolderConfiguration) SetPeriod(v int64) *FolderConfiguration {
+	s.Period = &v
+	return s
 }
 
 type GetAccessControlEffectInput struct {
@@ -6758,6 +7168,94 @@ func (s *GetAccessControlEffectOutput) SetEffect(v string) *GetAccessControlEffe
 // SetMatchedRules sets the MatchedRules field's value.
 func (s *GetAccessControlEffectOutput) SetMatchedRules(v []*string) *GetAccessControlEffectOutput {
 	s.MatchedRules = v
+	return s
+}
+
+type GetDefaultRetentionPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The organization ID.
+	//
+	// OrganizationId is a required field
+	OrganizationId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetDefaultRetentionPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDefaultRetentionPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetDefaultRetentionPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetDefaultRetentionPolicyInput"}
+	if s.OrganizationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OrganizationId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOrganizationId sets the OrganizationId field's value.
+func (s *GetDefaultRetentionPolicyInput) SetOrganizationId(v string) *GetDefaultRetentionPolicyInput {
+	s.OrganizationId = &v
+	return s
+}
+
+type GetDefaultRetentionPolicyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The retention policy description.
+	Description *string `type:"string"`
+
+	// The retention policy folder configurations.
+	FolderConfigurations []*FolderConfiguration `type:"list"`
+
+	// The retention policy ID.
+	Id *string `min:"1" type:"string"`
+
+	// The retention policy name.
+	Name *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s GetDefaultRetentionPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDefaultRetentionPolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *GetDefaultRetentionPolicyOutput) SetDescription(v string) *GetDefaultRetentionPolicyOutput {
+	s.Description = &v
+	return s
+}
+
+// SetFolderConfigurations sets the FolderConfigurations field's value.
+func (s *GetDefaultRetentionPolicyOutput) SetFolderConfigurations(v []*FolderConfiguration) *GetDefaultRetentionPolicyOutput {
+	s.FolderConfigurations = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *GetDefaultRetentionPolicyOutput) SetId(v string) *GetDefaultRetentionPolicyOutput {
+	s.Id = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *GetDefaultRetentionPolicyOutput) SetName(v string) *GetDefaultRetentionPolicyOutput {
+	s.Name = &v
 	return s
 }
 
@@ -6922,8 +7420,8 @@ func (s *Group) SetState(v string) *Group {
 // to auto-respond to requests or have at least one delegate associated that
 // can do so on its behalf.
 type InvalidConfigurationException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -6940,17 +7438,17 @@ func (s InvalidConfigurationException) GoString() string {
 
 func newErrorInvalidConfigurationException(v protocol.ResponseMetadata) error {
 	return &InvalidConfigurationException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidConfigurationException) Code() string {
+func (s *InvalidConfigurationException) Code() string {
 	return "InvalidConfigurationException"
 }
 
 // Message returns the exception's message.
-func (s InvalidConfigurationException) Message() string {
+func (s *InvalidConfigurationException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6958,28 +7456,28 @@ func (s InvalidConfigurationException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidConfigurationException) OrigErr() error {
+func (s *InvalidConfigurationException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidConfigurationException) Error() string {
+func (s *InvalidConfigurationException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidConfigurationException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidConfigurationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidConfigurationException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidConfigurationException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // One or more of the input parameters don't match the service's restrictions.
 type InvalidParameterException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -6996,17 +7494,17 @@ func (s InvalidParameterException) GoString() string {
 
 func newErrorInvalidParameterException(v protocol.ResponseMetadata) error {
 	return &InvalidParameterException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidParameterException) Code() string {
+func (s *InvalidParameterException) Code() string {
 	return "InvalidParameterException"
 }
 
 // Message returns the exception's message.
-func (s InvalidParameterException) Message() string {
+func (s *InvalidParameterException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7014,29 +7512,29 @@ func (s InvalidParameterException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidParameterException) OrigErr() error {
+func (s *InvalidParameterException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidParameterException) Error() string {
+func (s *InvalidParameterException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidParameterException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidParameterException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidParameterException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidParameterException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The supplied password doesn't match the minimum security constraints, such
 // as length or use of special characters.
 type InvalidPasswordException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -7053,17 +7551,17 @@ func (s InvalidPasswordException) GoString() string {
 
 func newErrorInvalidPasswordException(v protocol.ResponseMetadata) error {
 	return &InvalidPasswordException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidPasswordException) Code() string {
+func (s *InvalidPasswordException) Code() string {
 	return "InvalidPasswordException"
 }
 
 // Message returns the exception's message.
-func (s InvalidPasswordException) Message() string {
+func (s *InvalidPasswordException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7071,28 +7569,28 @@ func (s InvalidPasswordException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidPasswordException) OrigErr() error {
+func (s *InvalidPasswordException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidPasswordException) Error() string {
+func (s *InvalidPasswordException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidPasswordException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidPasswordException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidPasswordException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidPasswordException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The request exceeds the limit of the resource.
 type LimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -7109,17 +7607,17 @@ func (s LimitExceededException) GoString() string {
 
 func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
 	return &LimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LimitExceededException) Code() string {
+func (s *LimitExceededException) Code() string {
 	return "LimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s LimitExceededException) Message() string {
+func (s *LimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7127,22 +7625,22 @@ func (s LimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LimitExceededException) OrigErr() error {
+func (s *LimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s LimitExceededException) Error() string {
+func (s *LimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type ListAccessControlRulesInput struct {
@@ -8099,8 +8597,8 @@ func (s *ListUsersOutput) SetUsers(v []*User) *ListUsersOutput {
 // For an email or alias to be created in Amazon WorkMail, the included domain
 // must be defined in the organization.
 type MailDomainNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -8117,17 +8615,17 @@ func (s MailDomainNotFoundException) GoString() string {
 
 func newErrorMailDomainNotFoundException(v protocol.ResponseMetadata) error {
 	return &MailDomainNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s MailDomainNotFoundException) Code() string {
+func (s *MailDomainNotFoundException) Code() string {
 	return "MailDomainNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s MailDomainNotFoundException) Message() string {
+func (s *MailDomainNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -8135,29 +8633,29 @@ func (s MailDomainNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s MailDomainNotFoundException) OrigErr() error {
+func (s *MailDomainNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s MailDomainNotFoundException) Error() string {
+func (s *MailDomainNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s MailDomainNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *MailDomainNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s MailDomainNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *MailDomainNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // After a domain has been added to the organization, it must be verified. The
 // domain is not yet verified.
 type MailDomainStateException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -8174,17 +8672,17 @@ func (s MailDomainStateException) GoString() string {
 
 func newErrorMailDomainStateException(v protocol.ResponseMetadata) error {
 	return &MailDomainStateException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s MailDomainStateException) Code() string {
+func (s *MailDomainStateException) Code() string {
 	return "MailDomainStateException"
 }
 
 // Message returns the exception's message.
-func (s MailDomainStateException) Message() string {
+func (s *MailDomainStateException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -8192,22 +8690,22 @@ func (s MailDomainStateException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s MailDomainStateException) OrigErr() error {
+func (s *MailDomainStateException) OrigErr() error {
 	return nil
 }
 
-func (s MailDomainStateException) Error() string {
+func (s *MailDomainStateException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s MailDomainStateException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *MailDomainStateException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s MailDomainStateException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *MailDomainStateException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The representation of a user or group.
@@ -8281,8 +8779,8 @@ func (s *Member) SetType(v string) *Member {
 
 // The user, group, or resource name isn't unique in Amazon WorkMail.
 type NameAvailabilityException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -8299,17 +8797,17 @@ func (s NameAvailabilityException) GoString() string {
 
 func newErrorNameAvailabilityException(v protocol.ResponseMetadata) error {
 	return &NameAvailabilityException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s NameAvailabilityException) Code() string {
+func (s *NameAvailabilityException) Code() string {
 	return "NameAvailabilityException"
 }
 
 // Message returns the exception's message.
-func (s NameAvailabilityException) Message() string {
+func (s *NameAvailabilityException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -8317,29 +8815,29 @@ func (s NameAvailabilityException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s NameAvailabilityException) OrigErr() error {
+func (s *NameAvailabilityException) OrigErr() error {
 	return nil
 }
 
-func (s NameAvailabilityException) Error() string {
+func (s *NameAvailabilityException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s NameAvailabilityException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *NameAvailabilityException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s NameAvailabilityException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *NameAvailabilityException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An operation received a valid organization identifier that either doesn't
 // belong or exist in the system.
 type OrganizationNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -8356,17 +8854,17 @@ func (s OrganizationNotFoundException) GoString() string {
 
 func newErrorOrganizationNotFoundException(v protocol.ResponseMetadata) error {
 	return &OrganizationNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s OrganizationNotFoundException) Code() string {
+func (s *OrganizationNotFoundException) Code() string {
 	return "OrganizationNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s OrganizationNotFoundException) Message() string {
+func (s *OrganizationNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -8374,29 +8872,29 @@ func (s OrganizationNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s OrganizationNotFoundException) OrigErr() error {
+func (s *OrganizationNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s OrganizationNotFoundException) Error() string {
+func (s *OrganizationNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s OrganizationNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *OrganizationNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s OrganizationNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *OrganizationNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The organization must have a valid state (Active or Synchronizing) to perform
 // certain operations on the organization or its members.
 type OrganizationStateException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -8413,17 +8911,17 @@ func (s OrganizationStateException) GoString() string {
 
 func newErrorOrganizationStateException(v protocol.ResponseMetadata) error {
 	return &OrganizationStateException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s OrganizationStateException) Code() string {
+func (s *OrganizationStateException) Code() string {
 	return "OrganizationStateException"
 }
 
 // Message returns the exception's message.
-func (s OrganizationStateException) Message() string {
+func (s *OrganizationStateException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -8431,22 +8929,22 @@ func (s OrganizationStateException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s OrganizationStateException) OrigErr() error {
+func (s *OrganizationStateException) OrigErr() error {
 	return nil
 }
 
-func (s OrganizationStateException) Error() string {
+func (s *OrganizationStateException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s OrganizationStateException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *OrganizationStateException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s OrganizationStateException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *OrganizationStateException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The representation of an organization.
@@ -8817,6 +9315,120 @@ func (s PutMailboxPermissionsOutput) GoString() string {
 	return s.String()
 }
 
+type PutRetentionPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The retention policy description.
+	Description *string `type:"string"`
+
+	// The retention policy folder configurations.
+	//
+	// FolderConfigurations is a required field
+	FolderConfigurations []*FolderConfiguration `type:"list" required:"true"`
+
+	// The retention policy ID.
+	Id *string `min:"1" type:"string"`
+
+	// The retention policy name.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// The organization ID.
+	//
+	// OrganizationId is a required field
+	OrganizationId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s PutRetentionPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutRetentionPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutRetentionPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutRetentionPolicyInput"}
+	if s.FolderConfigurations == nil {
+		invalidParams.Add(request.NewErrParamRequired("FolderConfigurations"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.OrganizationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OrganizationId"))
+	}
+	if s.FolderConfigurations != nil {
+		for i, v := range s.FolderConfigurations {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "FolderConfigurations", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDescription sets the Description field's value.
+func (s *PutRetentionPolicyInput) SetDescription(v string) *PutRetentionPolicyInput {
+	s.Description = &v
+	return s
+}
+
+// SetFolderConfigurations sets the FolderConfigurations field's value.
+func (s *PutRetentionPolicyInput) SetFolderConfigurations(v []*FolderConfiguration) *PutRetentionPolicyInput {
+	s.FolderConfigurations = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *PutRetentionPolicyInput) SetId(v string) *PutRetentionPolicyInput {
+	s.Id = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *PutRetentionPolicyInput) SetName(v string) *PutRetentionPolicyInput {
+	s.Name = &v
+	return s
+}
+
+// SetOrganizationId sets the OrganizationId field's value.
+func (s *PutRetentionPolicyInput) SetOrganizationId(v string) *PutRetentionPolicyInput {
+	s.OrganizationId = &v
+	return s
+}
+
+type PutRetentionPolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s PutRetentionPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutRetentionPolicyOutput) GoString() string {
+	return s.String()
+}
+
 type RegisterToWorkMailInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8906,8 +9518,8 @@ func (s RegisterToWorkMailOutput) GoString() string {
 
 // This user, group, or resource name is not allowed in Amazon WorkMail.
 type ReservedNameException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -8924,17 +9536,17 @@ func (s ReservedNameException) GoString() string {
 
 func newErrorReservedNameException(v protocol.ResponseMetadata) error {
 	return &ReservedNameException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ReservedNameException) Code() string {
+func (s *ReservedNameException) Code() string {
 	return "ReservedNameException"
 }
 
 // Message returns the exception's message.
-func (s ReservedNameException) Message() string {
+func (s *ReservedNameException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -8942,22 +9554,22 @@ func (s ReservedNameException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ReservedNameException) OrigErr() error {
+func (s *ReservedNameException) OrigErr() error {
 	return nil
 }
 
-func (s ReservedNameException) Error() string {
+func (s *ReservedNameException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ReservedNameException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ReservedNameException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ReservedNameException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ReservedNameException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type ResetPasswordInput struct {
@@ -9124,8 +9736,8 @@ func (s *Resource) SetType(v string) *Resource {
 
 // The resource cannot be found.
 type ResourceNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -9142,17 +9754,17 @@ func (s ResourceNotFoundException) GoString() string {
 
 func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
 	return &ResourceNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceNotFoundException) Code() string {
+func (s *ResourceNotFoundException) Code() string {
 	return "ResourceNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ResourceNotFoundException) Message() string {
+func (s *ResourceNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9160,22 +9772,22 @@ func (s ResourceNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceNotFoundException) OrigErr() error {
+func (s *ResourceNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceNotFoundException) Error() string {
+func (s *ResourceNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Describes a tag applied to a resource.
@@ -9315,8 +9927,8 @@ func (s TagResourceOutput) GoString() string {
 
 // The resource can have up to 50 user-applied tags.
 type TooManyTagsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -9333,17 +9945,17 @@ func (s TooManyTagsException) GoString() string {
 
 func newErrorTooManyTagsException(v protocol.ResponseMetadata) error {
 	return &TooManyTagsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TooManyTagsException) Code() string {
+func (s *TooManyTagsException) Code() string {
 	return "TooManyTagsException"
 }
 
 // Message returns the exception's message.
-func (s TooManyTagsException) Message() string {
+func (s *TooManyTagsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9351,28 +9963,28 @@ func (s TooManyTagsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TooManyTagsException) OrigErr() error {
+func (s *TooManyTagsException) OrigErr() error {
 	return nil
 }
 
-func (s TooManyTagsException) Error() string {
+func (s *TooManyTagsException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TooManyTagsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TooManyTagsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TooManyTagsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TooManyTagsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // You can't perform a write operation against a read-only directory.
 type UnsupportedOperationException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -9389,17 +10001,17 @@ func (s UnsupportedOperationException) GoString() string {
 
 func newErrorUnsupportedOperationException(v protocol.ResponseMetadata) error {
 	return &UnsupportedOperationException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnsupportedOperationException) Code() string {
+func (s *UnsupportedOperationException) Code() string {
 	return "UnsupportedOperationException"
 }
 
 // Message returns the exception's message.
-func (s UnsupportedOperationException) Message() string {
+func (s *UnsupportedOperationException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9407,22 +10019,22 @@ func (s UnsupportedOperationException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnsupportedOperationException) OrigErr() error {
+func (s *UnsupportedOperationException) OrigErr() error {
 	return nil
 }
 
-func (s UnsupportedOperationException) Error() string {
+func (s *UnsupportedOperationException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnsupportedOperationException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnsupportedOperationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnsupportedOperationException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnsupportedOperationException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -9850,6 +10462,14 @@ const (
 	AccessControlRuleEffectDeny = "DENY"
 )
 
+// AccessControlRuleEffect_Values returns all elements of the AccessControlRuleEffect enum
+func AccessControlRuleEffect_Values() []string {
+	return []string{
+		AccessControlRuleEffectAllow,
+		AccessControlRuleEffectDeny,
+	}
+}
+
 const (
 	// EntityStateEnabled is a EntityState enum value
 	EntityStateEnabled = "ENABLED"
@@ -9861,6 +10481,43 @@ const (
 	EntityStateDeleted = "DELETED"
 )
 
+// EntityState_Values returns all elements of the EntityState enum
+func EntityState_Values() []string {
+	return []string{
+		EntityStateEnabled,
+		EntityStateDisabled,
+		EntityStateDeleted,
+	}
+}
+
+const (
+	// FolderNameInbox is a FolderName enum value
+	FolderNameInbox = "INBOX"
+
+	// FolderNameDeletedItems is a FolderName enum value
+	FolderNameDeletedItems = "DELETED_ITEMS"
+
+	// FolderNameSentItems is a FolderName enum value
+	FolderNameSentItems = "SENT_ITEMS"
+
+	// FolderNameDrafts is a FolderName enum value
+	FolderNameDrafts = "DRAFTS"
+
+	// FolderNameJunkEmail is a FolderName enum value
+	FolderNameJunkEmail = "JUNK_EMAIL"
+)
+
+// FolderName_Values returns all elements of the FolderName enum
+func FolderName_Values() []string {
+	return []string{
+		FolderNameInbox,
+		FolderNameDeletedItems,
+		FolderNameSentItems,
+		FolderNameDrafts,
+		FolderNameJunkEmail,
+	}
+}
+
 const (
 	// MemberTypeGroup is a MemberType enum value
 	MemberTypeGroup = "GROUP"
@@ -9868,6 +10525,14 @@ const (
 	// MemberTypeUser is a MemberType enum value
 	MemberTypeUser = "USER"
 )
+
+// MemberType_Values returns all elements of the MemberType enum
+func MemberType_Values() []string {
+	return []string{
+		MemberTypeGroup,
+		MemberTypeUser,
+	}
+}
 
 const (
 	// PermissionTypeFullAccess is a PermissionType enum value
@@ -9880,6 +10545,15 @@ const (
 	PermissionTypeSendOnBehalf = "SEND_ON_BEHALF"
 )
 
+// PermissionType_Values returns all elements of the PermissionType enum
+func PermissionType_Values() []string {
+	return []string{
+		PermissionTypeFullAccess,
+		PermissionTypeSendAs,
+		PermissionTypeSendOnBehalf,
+	}
+}
+
 const (
 	// ResourceTypeRoom is a ResourceType enum value
 	ResourceTypeRoom = "ROOM"
@@ -9887,6 +10561,34 @@ const (
 	// ResourceTypeEquipment is a ResourceType enum value
 	ResourceTypeEquipment = "EQUIPMENT"
 )
+
+// ResourceType_Values returns all elements of the ResourceType enum
+func ResourceType_Values() []string {
+	return []string{
+		ResourceTypeRoom,
+		ResourceTypeEquipment,
+	}
+}
+
+const (
+	// RetentionActionNone is a RetentionAction enum value
+	RetentionActionNone = "NONE"
+
+	// RetentionActionDelete is a RetentionAction enum value
+	RetentionActionDelete = "DELETE"
+
+	// RetentionActionPermanentlyDelete is a RetentionAction enum value
+	RetentionActionPermanentlyDelete = "PERMANENTLY_DELETE"
+)
+
+// RetentionAction_Values returns all elements of the RetentionAction enum
+func RetentionAction_Values() []string {
+	return []string{
+		RetentionActionNone,
+		RetentionActionDelete,
+		RetentionActionPermanentlyDelete,
+	}
+}
 
 const (
 	// UserRoleUser is a UserRole enum value
@@ -9898,3 +10600,12 @@ const (
 	// UserRoleSystemUser is a UserRole enum value
 	UserRoleSystemUser = "SYSTEM_USER"
 )
+
+// UserRole_Values returns all elements of the UserRole enum
+func UserRole_Values() []string {
+	return []string{
+		UserRoleUser,
+		UserRoleResource,
+		UserRoleSystemUser,
+	}
+}

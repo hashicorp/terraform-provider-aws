@@ -63,8 +63,8 @@ func (c *LicenseManager) CreateLicenseConfigurationRequest(input *CreateLicenseC
 // that can be consumed and enforced by License Manager. Components include
 // specifications for the license type (licensing by instance, socket, CPU,
 // or vCPU), allowed tenancy (shared tenancy, Dedicated Instance, Dedicated
-// Host, or all of these), host affinity (how long a VM must be associated with
-// a host), and the number of licenses purchased and used.
+// Host, or all of these), license affinity to host (how long a license must
+// be associated with a host), and the number of licenses purchased and used.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1289,13 +1289,6 @@ func (c *LicenseManager) UpdateLicenseConfigurationRequest(input *UpdateLicenseC
 //
 // Modifies the attributes of an existing license configuration.
 //
-// A license configuration is an abstraction of a customer license agreement
-// that can be consumed and enforced by License Manager. Components include
-// specifications for the license type (licensing by instance, socket, CPU,
-// or vCPU), allowed tenancy (shared tenancy, Dedicated Instance, Dedicated
-// Host, or all of these), host affinity (how long a VM must be associated with
-// a host), and the number of licenses purchased and used.
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1545,8 +1538,8 @@ func (c *LicenseManager) UpdateServiceSettingsWithContext(ctx aws.Context, input
 
 // Access to resource denied.
 type AccessDeniedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -1563,17 +1556,17 @@ func (s AccessDeniedException) GoString() string {
 
 func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
 	return &AccessDeniedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AccessDeniedException) Code() string {
+func (s *AccessDeniedException) Code() string {
 	return "AccessDeniedException"
 }
 
 // Message returns the exception's message.
-func (s AccessDeniedException) Message() string {
+func (s *AccessDeniedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -1581,29 +1574,29 @@ func (s AccessDeniedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AccessDeniedException) OrigErr() error {
+func (s *AccessDeniedException) OrigErr() error {
 	return nil
 }
 
-func (s AccessDeniedException) Error() string {
+func (s *AccessDeniedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AccessDeniedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AccessDeniedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AccessDeniedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AccessDeniedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The AWS user account does not have permission to perform the action. Check
 // the IAM policy associated with this account.
 type AuthorizationException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -1620,17 +1613,17 @@ func (s AuthorizationException) GoString() string {
 
 func newErrorAuthorizationException(v protocol.ResponseMetadata) error {
 	return &AuthorizationException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AuthorizationException) Code() string {
+func (s *AuthorizationException) Code() string {
 	return "AuthorizationException"
 }
 
 // Message returns the exception's message.
-func (s AuthorizationException) Message() string {
+func (s *AuthorizationException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -1638,22 +1631,22 @@ func (s AuthorizationException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AuthorizationException) OrigErr() error {
+func (s *AuthorizationException) OrigErr() error {
 	return nil
 }
 
-func (s AuthorizationException) Error() string {
+func (s *AuthorizationException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AuthorizationException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AuthorizationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AuthorizationException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AuthorizationException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Describes automated discovery.
@@ -1732,17 +1725,24 @@ type CreateLicenseConfigurationInput struct {
 	LicenseCountingType *string `type:"string" required:"true" enum:"LicenseCountingType"`
 
 	// License rules. The syntax is #name=value (for example, #allowedTenancy=EC2-DedicatedHost).
-	// Available rules vary by dimension.
+	// The available rules vary by dimension, as follows.
 	//
-	//    * Cores dimension: allowedTenancy | maximumCores | minimumCores
+	//    * Cores dimension: allowedTenancy | licenseAffinityToHost | maximumCores
+	//    | minimumCores
 	//
 	//    * Instances dimension: allowedTenancy | maximumCores | minimumCores |
 	//    maximumSockets | minimumSockets | maximumVcpus | minimumVcpus
 	//
-	//    * Sockets dimension: allowedTenancy | maximumSockets | minimumSockets
+	//    * Sockets dimension: allowedTenancy | licenseAffinityToHost | maximumSockets
+	//    | minimumSockets
 	//
 	//    * vCPUs dimension: allowedTenancy | honorVcpuOptimization | maximumVcpus
 	//    | minimumVcpus
+	//
+	// The unit for licenseAffinityToHost is days and the range is 1 to 180. The
+	// possible values for allowedTenancy are EC2-Default, EC2-DedicatedHost, and
+	// EC2-DedicatedInstance. The possible values for honorVcpuOptimization are
+	// True and False.
 	LicenseRules []*string `type:"list"`
 
 	// Name of the license configuration.
@@ -1918,8 +1918,8 @@ func (s DeleteLicenseConfigurationOutput) GoString() string {
 
 // A dependency required to run the API is missing.
 type FailedDependencyException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -1936,17 +1936,17 @@ func (s FailedDependencyException) GoString() string {
 
 func newErrorFailedDependencyException(v protocol.ResponseMetadata) error {
 	return &FailedDependencyException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s FailedDependencyException) Code() string {
+func (s *FailedDependencyException) Code() string {
 	return "FailedDependencyException"
 }
 
 // Message returns the exception's message.
-func (s FailedDependencyException) Message() string {
+func (s *FailedDependencyException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -1954,22 +1954,22 @@ func (s FailedDependencyException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s FailedDependencyException) OrigErr() error {
+func (s *FailedDependencyException) OrigErr() error {
 	return nil
 }
 
-func (s FailedDependencyException) Error() string {
+func (s *FailedDependencyException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s FailedDependencyException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *FailedDependencyException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s FailedDependencyException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *FailedDependencyException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A filter name and value pair that is used to return more specific results
@@ -2009,8 +2009,8 @@ func (s *Filter) SetValues(v []*string) *Filter {
 
 // The request uses too many filters or too many filter values.
 type FilterLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -2027,17 +2027,17 @@ func (s FilterLimitExceededException) GoString() string {
 
 func newErrorFilterLimitExceededException(v protocol.ResponseMetadata) error {
 	return &FilterLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s FilterLimitExceededException) Code() string {
+func (s *FilterLimitExceededException) Code() string {
 	return "FilterLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s FilterLimitExceededException) Message() string {
+func (s *FilterLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2045,22 +2045,22 @@ func (s FilterLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s FilterLimitExceededException) OrigErr() error {
+func (s *FilterLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s FilterLimitExceededException) Error() string {
+func (s *FilterLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s FilterLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *FilterLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s FilterLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *FilterLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type GetLicenseConfigurationInput struct {
@@ -2337,8 +2337,8 @@ func (s *GetServiceSettingsOutput) SetSnsTopicArn(v string) *GetServiceSettingsO
 
 // One or more parameter values are not valid.
 type InvalidParameterValueException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -2355,17 +2355,17 @@ func (s InvalidParameterValueException) GoString() string {
 
 func newErrorInvalidParameterValueException(v protocol.ResponseMetadata) error {
 	return &InvalidParameterValueException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidParameterValueException) Code() string {
+func (s *InvalidParameterValueException) Code() string {
 	return "InvalidParameterValueException"
 }
 
 // Message returns the exception's message.
-func (s InvalidParameterValueException) Message() string {
+func (s *InvalidParameterValueException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2373,22 +2373,22 @@ func (s InvalidParameterValueException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidParameterValueException) OrigErr() error {
+func (s *InvalidParameterValueException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidParameterValueException) Error() string {
+func (s *InvalidParameterValueException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidParameterValueException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidParameterValueException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidParameterValueException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidParameterValueException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // License Manager cannot allocate a license to a resource because of its state.
@@ -2396,8 +2396,8 @@ func (s InvalidParameterValueException) RequestID() string {
 // For example, you cannot allocate a license to an instance in the process
 // of shutting down.
 type InvalidResourceStateException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -2414,17 +2414,17 @@ func (s InvalidResourceStateException) GoString() string {
 
 func newErrorInvalidResourceStateException(v protocol.ResponseMetadata) error {
 	return &InvalidResourceStateException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidResourceStateException) Code() string {
+func (s *InvalidResourceStateException) Code() string {
 	return "InvalidResourceStateException"
 }
 
 // Message returns the exception's message.
-func (s InvalidResourceStateException) Message() string {
+func (s *InvalidResourceStateException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2432,22 +2432,22 @@ func (s InvalidResourceStateException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidResourceStateException) OrigErr() error {
+func (s *InvalidResourceStateException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidResourceStateException) Error() string {
+func (s *InvalidResourceStateException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidResourceStateException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidResourceStateException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidResourceStateException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidResourceStateException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An inventory filter.
@@ -2915,8 +2915,8 @@ func (s *LicenseSpecification) SetLicenseConfigurationArn(v string) *LicenseSpec
 
 // You do not have enough licenses available to support a new resource launch.
 type LicenseUsageException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -2933,17 +2933,17 @@ func (s LicenseUsageException) GoString() string {
 
 func newErrorLicenseUsageException(v protocol.ResponseMetadata) error {
 	return &LicenseUsageException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LicenseUsageException) Code() string {
+func (s *LicenseUsageException) Code() string {
 	return "LicenseUsageException"
 }
 
 // Message returns the exception's message.
-func (s LicenseUsageException) Message() string {
+func (s *LicenseUsageException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2951,22 +2951,22 @@ func (s LicenseUsageException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LicenseUsageException) OrigErr() error {
+func (s *LicenseUsageException) OrigErr() error {
 	return nil
 }
 
-func (s LicenseUsageException) Error() string {
+func (s *LicenseUsageException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LicenseUsageException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LicenseUsageException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LicenseUsageException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LicenseUsageException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type ListAssociationsForLicenseConfigurationInput struct {
@@ -3151,8 +3151,9 @@ type ListLicenseConfigurationsInput struct {
 	// Filters to scope the results. The following filters and logical operators
 	// are supported:
 	//
-	//    * licenseCountingType - The dimension on which licenses are counted (vCPU).
-	//    Logical operators are EQUALS | NOT_EQUALS.
+	//    * licenseCountingType - The dimension on which licenses are counted. Possible
+	//    values are vCPU | Instance | Core | Socket. Logical operators are EQUALS
+	//    | NOT_EQUALS.
 	//
 	//    * enforceLicenseCount - A Boolean value that indicates whether hard license
 	//    enforcement is used. Logical operators are EQUALS | NOT_EQUALS.
@@ -3712,8 +3713,10 @@ func (s *OrganizationConfiguration) SetEnableIntegration(v bool) *OrganizationCo
 type ProductInformation struct {
 	_ struct{} `type:"structure"`
 
-	// Product information filters. The following filters and logical operators
-	// are supported:
+	// Product information filters.
+	//
+	// The following filters and logical operators are supported when the resource
+	// type is SSM_MANAGED:
 	//
 	//    * Application Name - The name of the application. Logical operator is
 	//    EQUALS.
@@ -3729,13 +3732,23 @@ type ProductInformation struct {
 	//    * Platform Type - The platform type. Logical operator is EQUALS.
 	//
 	//    * License Included - The type of license included. Logical operators are
-	//    EQUALS and NOT_EQUALS. Possible values are sql-server-enterprise | sql-server-standard
+	//    EQUALS and NOT_EQUALS. Possible values are: sql-server-enterprise | sql-server-standard
 	//    | sql-server-web | windows-server-datacenter.
+	//
+	// The following filters and logical operators are supported when the resource
+	// type is RDS:
+	//
+	//    * Engine Edition - The edition of the database engine. Logical operator
+	//    is EQUALS. Possible values are: oracle-ee | oracle-se | oracle-se1 | oracle-se2.
+	//
+	//    * License Pack - The license pack. Logical operator is EQUALS. Possible
+	//    values are: data guard | diagnostic pack sqlt | tuning pack sqlt | ols
+	//    | olap.
 	//
 	// ProductInformationFilterList is a required field
 	ProductInformationFilterList []*ProductInformationFilter `type:"list" required:"true"`
 
-	// Resource type. The value is SSM_MANAGED.
+	// Resource type. The possible values are SSM_MANAGED | RDS.
 	//
 	// ResourceType is a required field
 	ResourceType *string `type:"string" required:"true"`
@@ -3858,8 +3871,8 @@ func (s *ProductInformationFilter) SetProductInformationFilterValue(v []*string)
 
 // Too many requests have been submitted. Try again after a brief wait.
 type RateLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -3876,17 +3889,17 @@ func (s RateLimitExceededException) GoString() string {
 
 func newErrorRateLimitExceededException(v protocol.ResponseMetadata) error {
 	return &RateLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s RateLimitExceededException) Code() string {
+func (s *RateLimitExceededException) Code() string {
 	return "RateLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s RateLimitExceededException) Message() string {
+func (s *RateLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3894,22 +3907,22 @@ func (s RateLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s RateLimitExceededException) OrigErr() error {
+func (s *RateLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s RateLimitExceededException) Error() string {
+func (s *RateLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s RateLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *RateLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s RateLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *RateLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Details about a resource.
@@ -3983,8 +3996,8 @@ func (s *ResourceInventory) SetResourceType(v string) *ResourceInventory {
 
 // Your resource limits have been exceeded.
 type ResourceLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -4001,17 +4014,17 @@ func (s ResourceLimitExceededException) GoString() string {
 
 func newErrorResourceLimitExceededException(v protocol.ResponseMetadata) error {
 	return &ResourceLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceLimitExceededException) Code() string {
+func (s *ResourceLimitExceededException) Code() string {
 	return "ResourceLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s ResourceLimitExceededException) Message() string {
+func (s *ResourceLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4019,28 +4032,28 @@ func (s ResourceLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceLimitExceededException) OrigErr() error {
+func (s *ResourceLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceLimitExceededException) Error() string {
+func (s *ResourceLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The server experienced an internal error. Try again.
 type ServerInternalException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -4057,17 +4070,17 @@ func (s ServerInternalException) GoString() string {
 
 func newErrorServerInternalException(v protocol.ResponseMetadata) error {
 	return &ServerInternalException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ServerInternalException) Code() string {
+func (s *ServerInternalException) Code() string {
 	return "ServerInternalException"
 }
 
 // Message returns the exception's message.
-func (s ServerInternalException) Message() string {
+func (s *ServerInternalException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4075,22 +4088,22 @@ func (s ServerInternalException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ServerInternalException) OrigErr() error {
+func (s *ServerInternalException) OrigErr() error {
 	return nil
 }
 
-func (s ServerInternalException) Error() string {
+func (s *ServerInternalException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ServerInternalException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ServerInternalException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ServerInternalException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ServerInternalException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Details about a tag for a license configuration.
@@ -4278,7 +4291,8 @@ type UpdateLicenseConfigurationInput struct {
 	// New hard limit of the number of available licenses.
 	LicenseCountHardLimit *bool `type:"boolean"`
 
-	// New license rules.
+	// New license rule. The only rule that you can add after you create a license
+	// configuration is licenseAffinityToHost.
 	LicenseRules []*string `type:"list"`
 
 	// New name of the license configuration.
@@ -4568,6 +4582,16 @@ const (
 	InventoryFilterConditionContains = "CONTAINS"
 )
 
+// InventoryFilterCondition_Values returns all elements of the InventoryFilterCondition enum
+func InventoryFilterCondition_Values() []string {
+	return []string{
+		InventoryFilterConditionEquals,
+		InventoryFilterConditionNotEquals,
+		InventoryFilterConditionBeginsWith,
+		InventoryFilterConditionContains,
+	}
+}
+
 const (
 	// LicenseConfigurationStatusAvailable is a LicenseConfigurationStatus enum value
 	LicenseConfigurationStatusAvailable = "AVAILABLE"
@@ -4575,6 +4599,14 @@ const (
 	// LicenseConfigurationStatusDisabled is a LicenseConfigurationStatus enum value
 	LicenseConfigurationStatusDisabled = "DISABLED"
 )
+
+// LicenseConfigurationStatus_Values returns all elements of the LicenseConfigurationStatus enum
+func LicenseConfigurationStatus_Values() []string {
+	return []string{
+		LicenseConfigurationStatusAvailable,
+		LicenseConfigurationStatusDisabled,
+	}
+}
 
 const (
 	// LicenseCountingTypeVCpu is a LicenseCountingType enum value
@@ -4589,6 +4621,16 @@ const (
 	// LicenseCountingTypeSocket is a LicenseCountingType enum value
 	LicenseCountingTypeSocket = "Socket"
 )
+
+// LicenseCountingType_Values returns all elements of the LicenseCountingType enum
+func LicenseCountingType_Values() []string {
+	return []string{
+		LicenseCountingTypeVCpu,
+		LicenseCountingTypeInstance,
+		LicenseCountingTypeCore,
+		LicenseCountingTypeSocket,
+	}
+}
 
 const (
 	// ResourceTypeEc2Instance is a ResourceType enum value
@@ -4606,3 +4648,14 @@ const (
 	// ResourceTypeSystemsManagerManagedInstance is a ResourceType enum value
 	ResourceTypeSystemsManagerManagedInstance = "SYSTEMS_MANAGER_MANAGED_INSTANCE"
 )
+
+// ResourceType_Values returns all elements of the ResourceType enum
+func ResourceType_Values() []string {
+	return []string{
+		ResourceTypeEc2Instance,
+		ResourceTypeEc2Host,
+		ResourceTypeEc2Ami,
+		ResourceTypeRds,
+		ResourceTypeSystemsManagerManagedInstance,
+	}
+}

@@ -9,8 +9,8 @@ description: |-
 # Resource: aws_glue_workflow
 
 Provides a Glue Workflow resource.
-The workflow graph (DAG) can be build using the `aws_glue_trigger` resource. 
-See the example below for creating a graph with four nodes (two triggers and two jobs). 
+The workflow graph (DAG) can be build using the `aws_glue_trigger` resource.
+See the example below for creating a graph with four nodes (two triggers and two jobs).
 
 ## Example Usage
 
@@ -20,9 +20,9 @@ resource "aws_glue_workflow" "example" {
 }
 
 resource "aws_glue_trigger" "example-start" {
-  name = "trigger-start"
-  type = "ON_DEMAND"
-  workflow_name = "${aws_glue_workflow.example.name}"
+  name          = "trigger-start"
+  type          = "ON_DEMAND"
+  workflow_name = aws_glue_workflow.example.name
 
   actions {
     job_name = "example-job"
@@ -30,14 +30,14 @@ resource "aws_glue_trigger" "example-start" {
 }
 
 resource "aws_glue_trigger" "example-inner" {
-  name = "trigger-inner"
-  type = "CONDITIONAL"
-  workflow_name = "${aws_glue_workflow.example.name}"
+  name          = "trigger-inner"
+  type          = "CONDITIONAL"
+  workflow_name = aws_glue_workflow.example.name
 
   predicate {
     conditions {
       job_name = "example-job"
-      state = "SUCCEEDED"
+      state    = "SUCCEEDED"
     }
   }
 

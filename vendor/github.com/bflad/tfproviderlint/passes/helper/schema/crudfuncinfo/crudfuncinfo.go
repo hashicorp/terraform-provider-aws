@@ -36,15 +36,15 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 
-		if !astutils.IsFieldListTypePackageType(funcType.Params, 0, pass.TypesInfo, schema.PackagePath, schema.TypeNameResourceData) {
+		if !astutils.IsFieldListTypeModulePackageType(funcType.Params, 0, pass.TypesInfo, schema.PackageModule, schema.PackageModulePath, schema.TypeNameResourceData) {
 			return
 		}
 
-		if !astutils.IsFieldListType(funcType.Params, 1, astutils.IsFunctionParameterTypeInterface) {
+		if !astutils.IsFieldListType(funcType.Params, 1, astutils.IsExprTypeInterface) {
 			return
 		}
 
-		if !astutils.IsFieldListType(funcType.Results, 0, astutils.IsFunctionParameterTypeError) {
+		if !astutils.IsFieldListType(funcType.Results, 0, astutils.IsExprTypeError) {
 			return
 		}
 

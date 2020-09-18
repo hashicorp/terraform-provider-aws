@@ -335,7 +335,9 @@ func (c *EKS) CreateNodegroupRequest(input *CreateNodegroupInput) (req *request.
 // Creates a managed worker node group for an Amazon EKS cluster. You can only
 // create a node group for your cluster that is equal to the current Kubernetes
 // version for the cluster. All node groups are created with the latest AMI
-// release version for the respective minor Kubernetes version of the cluster.
+// release version for the respective minor Kubernetes version of the cluster,
+// unless you deploy a custom AMI using a launch template. For more information
+// about using launch templates, see Launch template support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html).
 //
 // An Amazon EKS managed node group is an Amazon EC2 Auto Scaling group and
 // associated Amazon EC2 instances that are managed by AWS for an Amazon EKS
@@ -452,7 +454,8 @@ func (c *EKS) DeleteClusterRequest(input *DeleteClusterInput) (req *request.Requ
 // in the Amazon EKS User Guide.
 //
 // If you have managed node groups or Fargate profiles attached to the cluster,
-// you must delete them first. For more information, see DeleteNodegroup andDeleteFargateProfile.
+// you must delete them first. For more information, see DeleteNodegroup and
+// DeleteFargateProfile.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1443,8 +1446,9 @@ func (c *EKS) ListNodegroupsRequest(input *ListNodegroupsInput) (req *request.Re
 
 // ListNodegroups API operation for Amazon Elastic Kubernetes Service.
 //
-// Lists the Amazon EKS node groups associated with the specified cluster in
-// your AWS account in the specified Region.
+// Lists the Amazon EKS managed node groups associated with the specified cluster
+// in your AWS account in the specified Region. Self-managed node groups are
+// not listed.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2350,11 +2354,18 @@ func (c *EKS) UpdateNodegroupVersionRequest(input *UpdateNodegroupVersionInput) 
 // Updates the Kubernetes version or AMI version of an Amazon EKS managed node
 // group.
 //
-// You can update to the latest available AMI version of a node group's current
-// Kubernetes version by not specifying a Kubernetes version in the request.
-// You can update to the latest AMI version of your cluster's current Kubernetes
-// version by specifying your cluster's Kubernetes version in the request. For
-// more information, see Amazon EKS-Optimized Linux AMI Versions (https://docs.aws.amazon.com/eks/latest/userguide/eks-linux-ami-versions.html)
+// You can update a node group using a launch template only if the node group
+// was originally deployed with a launch template. If you need to update a custom
+// AMI in a node group that was deployed with a launch template, then update
+// your custom AMI, specify the new ID in a new version of the launch template,
+// and then update the node group to the new version of the launch template.
+//
+// If you update without a launch template, then you can update to the latest
+// available AMI version of a node group's current Kubernetes version by not
+// specifying a Kubernetes version in the request. You can update to the latest
+// AMI version of your cluster's current Kubernetes version by specifying your
+// cluster's Kubernetes version in the request. For more information, see Amazon
+// EKS-Optimized Linux AMI Versions (https://docs.aws.amazon.com/eks/latest/userguide/eks-linux-ami-versions.html)
 // in the Amazon EKS User Guide.
 //
 // You cannot roll back a node group to an earlier Kubernetes version or AMI
@@ -2449,8 +2460,8 @@ func (s *AutoScalingGroup) SetName(v string) *AutoScalingGroup {
 // This exception is thrown if the request contains a semantic error. The precise
 // meaning will depend on the API, and will be documented in the error message.
 type BadRequestException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -2467,17 +2478,17 @@ func (s BadRequestException) GoString() string {
 
 func newErrorBadRequestException(v protocol.ResponseMetadata) error {
 	return &BadRequestException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s BadRequestException) Code() string {
+func (s *BadRequestException) Code() string {
 	return "BadRequestException"
 }
 
 // Message returns the exception's message.
-func (s BadRequestException) Message() string {
+func (s *BadRequestException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2485,22 +2496,22 @@ func (s BadRequestException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s BadRequestException) OrigErr() error {
+func (s *BadRequestException) OrigErr() error {
 	return nil
 }
 
-func (s BadRequestException) Error() string {
+func (s *BadRequestException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s BadRequestException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *BadRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s BadRequestException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *BadRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An object representing the certificate-authority-data for your cluster.
@@ -2533,8 +2544,8 @@ func (s *Certificate) SetData(v string) *Certificate {
 // an action or resource on behalf of a user that doesn't have permissions to
 // use the action or resource or specifying an identifier that is not valid.
 type ClientException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The Amazon EKS cluster associated with the exception.
 	ClusterName *string `locationName:"clusterName" type:"string"`
@@ -2557,17 +2568,17 @@ func (s ClientException) GoString() string {
 
 func newErrorClientException(v protocol.ResponseMetadata) error {
 	return &ClientException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ClientException) Code() string {
+func (s *ClientException) Code() string {
 	return "ClientException"
 }
 
 // Message returns the exception's message.
-func (s ClientException) Message() string {
+func (s *ClientException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2575,22 +2586,22 @@ func (s ClientException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ClientException) OrigErr() error {
+func (s *ClientException) OrigErr() error {
 	return nil
 }
 
-func (s ClientException) Error() string {
+func (s *ClientException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ClientException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ClientException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ClientException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ClientException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An object representing an Amazon EKS cluster.
@@ -2793,8 +2804,8 @@ type CreateClusterInput struct {
 	ResourcesVpcConfig *VpcConfigRequest `locationName:"resourcesVpcConfig" type:"structure" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the IAM role that provides permissions
-	// for Amazon EKS to make calls to other AWS API operations on your behalf.
-	// For more information, see Amazon EKS Service IAM Role (https://docs.aws.amazon.com/eks/latest/userguide/service_IAM_role.html)
+	// for the Kubernetes control plane to make calls to AWS API operations on your
+	// behalf. For more information, see Amazon EKS Service IAM Role (https://docs.aws.amazon.com/eks/latest/userguide/service_IAM_role.html)
 	// in the Amazon EKS User Guide .
 	//
 	// RoleArn is a required field
@@ -3066,7 +3077,11 @@ type CreateNodegroupInput struct {
 	// The AMI type for your node group. GPU instance types should use the AL2_x86_64_GPU
 	// AMI type, which uses the Amazon EKS-optimized Linux AMI with GPU support.
 	// Non-GPU instances should use the AL2_x86_64 AMI type, which uses the Amazon
-	// EKS-optimized Linux AMI.
+	// EKS-optimized Linux AMI. If you specify launchTemplate, and your launch template
+	// uses a custom AMI, then don't specify amiType, or the node group deployment
+	// will fail. For more information about using launch templates with Amazon
+	// EKS, see Launch template support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+	// in the Amazon EKS User Guide.
 	AmiType *string `locationName:"amiType" type:"string" enum:"AMITypes"`
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency
@@ -3079,26 +3094,44 @@ type CreateNodegroupInput struct {
 	ClusterName *string `location:"uri" locationName:"name" type:"string" required:"true"`
 
 	// The root device disk size (in GiB) for your node group instances. The default
-	// disk size is 20 GiB.
+	// disk size is 20 GiB. If you specify launchTemplate, then don't specify diskSize,
+	// or the node group deployment will fail. For more information about using
+	// launch templates with Amazon EKS, see Launch template support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+	// in the Amazon EKS User Guide.
 	DiskSize *int64 `locationName:"diskSize" type:"integer"`
 
-	// The instance type to use for your node group. Currently, you can specify
-	// a single instance type for a node group. The default value for this parameter
-	// is t3.medium. If you choose a GPU instance type, be sure to specify the AL2_x86_64_GPU
-	// with the amiType parameter.
+	// The instance type to use for your node group. You can specify a single instance
+	// type for a node group. The default value for instanceTypes is t3.medium.
+	// If you choose a GPU instance type, be sure to specify AL2_x86_64_GPU with
+	// the amiType parameter. If you specify launchTemplate, then don't specify
+	// instanceTypes, or the node group deployment will fail. For more information
+	// about using launch templates with Amazon EKS, see Launch template support
+	// (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+	// in the Amazon EKS User Guide.
 	InstanceTypes []*string `locationName:"instanceTypes" type:"list"`
 
 	// The Kubernetes labels to be applied to the nodes in the node group when they
 	// are created.
 	Labels map[string]*string `locationName:"labels" type:"map"`
 
-	// The IAM role associated with your node group. The Amazon EKS worker node
-	// kubelet daemon makes calls to AWS APIs on your behalf. Worker nodes receive
-	// permissions for these API calls through an IAM instance profile and associated
-	// policies. Before you can launch worker nodes and register them into a cluster,
-	// you must create an IAM role for those worker nodes to use when they are launched.
-	// For more information, see Amazon EKS Worker Node IAM Role (https://docs.aws.amazon.com/eks/latest/userguide/worker_node_IAM_role.html)
-	// in the Amazon EKS User Guide .
+	// An object representing a node group's launch template specification. If specified,
+	// then do not specify instanceTypes, diskSize, or remoteAccess. If specified,
+	// make sure that the launch template meets the requirements in launchTemplateSpecification.
+	LaunchTemplate *LaunchTemplateSpecification `locationName:"launchTemplate" type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the IAM role to associate with your node
+	// group. The Amazon EKS worker node kubelet daemon makes calls to AWS APIs
+	// on your behalf. Worker nodes receive permissions for these API calls through
+	// an IAM instance profile and associated policies. Before you can launch worker
+	// nodes and register them into a cluster, you must create an IAM role for those
+	// worker nodes to use when they are launched. For more information, see Amazon
+	// EKS Worker Node IAM Role (https://docs.aws.amazon.com/eks/latest/userguide/worker_node_IAM_role.html)
+	// in the Amazon EKS User Guide . If you specify launchTemplate, then don't
+	// specify IamInstanceProfile (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IamInstanceProfile.html)
+	// in your launch template, or the node group deployment will fail. For more
+	// information about using launch templates with Amazon EKS, see Launch template
+	// support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+	// in the Amazon EKS User Guide.
 	//
 	// NodeRole is a required field
 	NodeRole *string `locationName:"nodeRole" type:"string" required:"true"`
@@ -3112,10 +3145,18 @@ type CreateNodegroupInput struct {
 	// By default, the latest available AMI version for the node group's current
 	// Kubernetes version is used. For more information, see Amazon EKS-Optimized
 	// Linux AMI Versions (https://docs.aws.amazon.com/eks/latest/userguide/eks-linux-ami-versions.html)
+	// in the Amazon EKS User Guide. If you specify launchTemplate, and your launch
+	// template uses a custom AMI, then don't specify releaseVersion, or the node
+	// group deployment will fail. For more information about using launch templates
+	// with Amazon EKS, see Launch template support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
 	ReleaseVersion *string `locationName:"releaseVersion" type:"string"`
 
-	// The remote access (SSH) configuration to use with your node group.
+	// The remote access (SSH) configuration to use with your node group. If you
+	// specify launchTemplate, then don't specify remoteAccess, or the node group
+	// deployment will fail. For more information about using launch templates with
+	// Amazon EKS, see Launch template support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+	// in the Amazon EKS User Guide.
 	RemoteAccess *RemoteAccessConfig `locationName:"remoteAccess" type:"structure"`
 
 	// The scaling configuration details for the Auto Scaling group that is created
@@ -3125,7 +3166,11 @@ type CreateNodegroupInput struct {
 	// The subnets to use for the Auto Scaling group that is created for your node
 	// group. These subnets must have the tag key kubernetes.io/cluster/CLUSTER_NAME
 	// with a value of shared, where CLUSTER_NAME is replaced with the name of your
-	// cluster.
+	// cluster. If you specify launchTemplate, then don't specify SubnetId (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateNetworkInterface.html)
+	// in your launch template, or the node group deployment will fail. For more
+	// information about using launch templates with Amazon EKS, see Launch template
+	// support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+	// in the Amazon EKS User Guide.
 	//
 	// Subnets is a required field
 	Subnets []*string `locationName:"subnets" type:"list" required:"true"`
@@ -3138,6 +3183,11 @@ type CreateNodegroupInput struct {
 
 	// The Kubernetes version to use for your managed nodes. By default, the Kubernetes
 	// version of the cluster is used, and this is the only accepted specified value.
+	// If you specify launchTemplate, and your launch template uses a custom AMI,
+	// then don't specify version, or the node group deployment will fail. For more
+	// information about using launch templates with Amazon EKS, see Launch template
+	// support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+	// in the Amazon EKS User Guide.
 	Version *string `locationName:"version" type:"string"`
 }
 
@@ -3217,6 +3267,12 @@ func (s *CreateNodegroupInput) SetInstanceTypes(v []*string) *CreateNodegroupInp
 // SetLabels sets the Labels field's value.
 func (s *CreateNodegroupInput) SetLabels(v map[string]*string) *CreateNodegroupInput {
 	s.Labels = v
+	return s
+}
+
+// SetLaunchTemplate sets the LaunchTemplate field's value.
+func (s *CreateNodegroupInput) SetLaunchTemplate(v *LaunchTemplateSpecification) *CreateNodegroupInput {
+	s.LaunchTemplate = v
 	return s
 }
 
@@ -4095,8 +4151,8 @@ func (s *Identity) SetOidc(v *OIDC) *Identity {
 // The specified parameter is invalid. Review the available parameters for the
 // API request.
 type InvalidParameterException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The Amazon EKS cluster associated with the exception.
 	ClusterName *string `locationName:"clusterName" type:"string"`
@@ -4122,17 +4178,17 @@ func (s InvalidParameterException) GoString() string {
 
 func newErrorInvalidParameterException(v protocol.ResponseMetadata) error {
 	return &InvalidParameterException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidParameterException) Code() string {
+func (s *InvalidParameterException) Code() string {
 	return "InvalidParameterException"
 }
 
 // Message returns the exception's message.
-func (s InvalidParameterException) Message() string {
+func (s *InvalidParameterException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4140,29 +4196,29 @@ func (s InvalidParameterException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidParameterException) OrigErr() error {
+func (s *InvalidParameterException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidParameterException) Error() string {
+func (s *InvalidParameterException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidParameterException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidParameterException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidParameterException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidParameterException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The request is invalid given the state of the cluster. Check the state of
 // the cluster and the associated operations.
 type InvalidRequestException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The Amazon EKS cluster associated with the exception.
 	ClusterName *string `locationName:"clusterName" type:"string"`
@@ -4185,17 +4241,17 @@ func (s InvalidRequestException) GoString() string {
 
 func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
 	return &InvalidRequestException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidRequestException) Code() string {
+func (s *InvalidRequestException) Code() string {
 	return "InvalidRequestException"
 }
 
 // Message returns the exception's message.
-func (s InvalidRequestException) Message() string {
+func (s *InvalidRequestException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4203,22 +4259,22 @@ func (s InvalidRequestException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidRequestException) OrigErr() error {
+func (s *InvalidRequestException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidRequestException) Error() string {
+func (s *InvalidRequestException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidRequestException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidRequestException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An object representing an issue with an Amazon EKS resource.
@@ -4246,6 +4302,14 @@ type Issue struct {
 	//    for your managed node group does not match the version that Amazon EKS
 	//    created. You may be able to revert to the version that Amazon EKS created
 	//    to recover.
+	//
+	//    * Ec2SubnetInvalidConfiguration: One or more Amazon EC2 subnets specified
+	//    for a node group do not automatically assign public IP addresses to instances
+	//    launched into it. If you want your instances to be assigned a public IP
+	//    address, then you need to enable the auto-assign public IP address setting
+	//    for the subnet. See Modifying the public IPv4 addressing attribute for
+	//    your subnet (https://docs.aws.amazon.com/vpc/latest/userguide/vpc-ip-addressing.html#subnet-public-ip)
+	//    in the Amazon VPC User Guide.
 	//
 	//    * IamInstanceProfileNotFound: We couldn't find the IAM instance profile
 	//    for your managed node group. You may be able to recreate an instance profile
@@ -4310,6 +4374,61 @@ func (s *Issue) SetMessage(v string) *Issue {
 // SetResourceIds sets the ResourceIds field's value.
 func (s *Issue) SetResourceIds(v []*string) *Issue {
 	s.ResourceIds = v
+	return s
+}
+
+// An object representing a node group launch template specification. The launch
+// template cannot include SubnetId (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateNetworkInterface.html),
+// IamInstanceProfile (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IamInstanceProfile.html),
+// RequestSpotInstances (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RequestSpotInstances.html),
+// HibernationOptions (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_HibernationOptionsRequest.html),
+// or TerminateInstances (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_TerminateInstances.html),
+// or the node group deployment or update will fail. For more information about
+// launch templates, see CreateLaunchTemplate (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateLaunchTemplate.html)
+// in the Amazon EC2 API Reference. For more information about using launch
+// templates with Amazon EKS, see Launch template support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+// in the Amazon EKS User Guide.
+//
+// Specify either name or id, but not both.
+type LaunchTemplateSpecification struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the launch template.
+	Id *string `locationName:"id" type:"string"`
+
+	// The name of the launch template.
+	Name *string `locationName:"name" type:"string"`
+
+	// The version of the launch template to use. If no version is specified, then
+	// the template's default version is used.
+	Version *string `locationName:"version" type:"string"`
+}
+
+// String returns the string representation
+func (s LaunchTemplateSpecification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LaunchTemplateSpecification) GoString() string {
+	return s.String()
+}
+
+// SetId sets the Id field's value.
+func (s *LaunchTemplateSpecification) SetId(v string) *LaunchTemplateSpecification {
+	s.Id = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *LaunchTemplateSpecification) SetName(v string) *LaunchTemplateSpecification {
+	s.Name = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *LaunchTemplateSpecification) SetVersion(v string) *LaunchTemplateSpecification {
+	s.Version = &v
 	return s
 }
 
@@ -4865,10 +4984,9 @@ func (s *Logging) SetClusterLogging(v []*LogSetup) *Logging {
 type Nodegroup struct {
 	_ struct{} `type:"structure"`
 
-	// The AMI type associated with your node group. GPU instance types should use
-	// the AL2_x86_64_GPU AMI type, which uses the Amazon EKS-optimized Linux AMI
-	// with GPU support. Non-GPU instances should use the AL2_x86_64 AMI type, which
-	// uses the Amazon EKS-optimized Linux AMI.
+	// If the node group was deployed using a launch template with a custom AMI,
+	// then this is CUSTOM. For node groups that weren't deployed using a launch
+	// template, this is the AMI type that was specified in the node group configuration.
 	AmiType *string `locationName:"amiType" type:"string" enum:"AMITypes"`
 
 	// The name of the cluster that the managed node group resides in.
@@ -4877,15 +4995,18 @@ type Nodegroup struct {
 	// The Unix epoch timestamp in seconds for when the managed node group was created.
 	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
-	// The root device disk size (in GiB) for your node group instances. The default
-	// disk size is 20 GiB.
+	// If the node group wasn't deployed with a launch template, then this is the
+	// disk size in the node group configuration. If the node group was deployed
+	// with a launch template, then diskSize is null.
 	DiskSize *int64 `locationName:"diskSize" type:"integer"`
 
 	// The health status of the node group. If there are issues with your node group's
 	// health, they are listed here.
 	Health *NodegroupHealth `locationName:"health" type:"structure"`
 
-	// The instance types associated with your node group.
+	// If the node group wasn't deployed with a launch template, then this is the
+	// instance type that is associated with the node group. If the node group was
+	// deployed with a launch template, then instanceTypes is null.
 	InstanceTypes []*string `locationName:"instanceTypes" type:"list"`
 
 	// The Kubernetes labels applied to the nodes in the node group.
@@ -4894,6 +5015,10 @@ type Nodegroup struct {
 	// may be other Kubernetes labels applied to the nodes in this group.
 	Labels map[string]*string `locationName:"labels" type:"map"`
 
+	// If a launch template was used to create the node group, then this is the
+	// launch template that was used.
+	LaunchTemplate *LaunchTemplateSpecification `locationName:"launchTemplate" type:"structure"`
+
 	// The Unix epoch timestamp in seconds for when the managed node group was last
 	// modified.
 	ModifiedAt *time.Time `locationName:"modifiedAt" type:"timestamp"`
@@ -4901,10 +5026,7 @@ type Nodegroup struct {
 	// The IAM role associated with your node group. The Amazon EKS worker node
 	// kubelet daemon makes calls to AWS APIs on your behalf. Worker nodes receive
 	// permissions for these API calls through an IAM instance profile and associated
-	// policies. Before you can launch worker nodes and register them into a cluster,
-	// you must create an IAM role for those worker nodes to use when they are launched.
-	// For more information, see Amazon EKS Worker Node IAM Role (https://docs.aws.amazon.com/eks/latest/userguide/worker_node_IAM_role.html)
-	// in the Amazon EKS User Guide .
+	// policies.
 	NodeRole *string `locationName:"nodeRole" type:"string"`
 
 	// The Amazon Resource Name (ARN) associated with the managed node group.
@@ -4913,12 +5035,15 @@ type Nodegroup struct {
 	// The name associated with an Amazon EKS managed node group.
 	NodegroupName *string `locationName:"nodegroupName" type:"string"`
 
-	// The AMI version of the managed node group. For more information, see Amazon
-	// EKS-Optimized Linux AMI Versions (https://docs.aws.amazon.com/eks/latest/userguide/eks-linux-ami-versions.html)
-	// in the Amazon EKS User Guide.
+	// If the node group was deployed using a launch template with a custom AMI,
+	// then this is the AMI ID that was specified in the launch template. For node
+	// groups that weren't deployed using a launch template, this is the version
+	// of the Amazon EKS-optimized AMI that the node group was deployed with.
 	ReleaseVersion *string `locationName:"releaseVersion" type:"string"`
 
-	// The remote access (SSH) configuration that is associated with the node group.
+	// If the node group wasn't deployed with a launch template, then this is the
+	// remote access configuration that is associated with the node group. If the
+	// node group was deployed with a launch template, then remoteAccess is null.
 	RemoteAccess *RemoteAccessConfig `locationName:"remoteAccess" type:"structure"`
 
 	// The resources associated with the node group, such as Auto Scaling groups
@@ -4932,9 +5057,8 @@ type Nodegroup struct {
 	// The current status of the managed node group.
 	Status *string `locationName:"status" type:"string" enum:"NodegroupStatus"`
 
-	// The subnets allowed for the Auto Scaling group that is associated with your
-	// node group. These subnets must have the following tag: kubernetes.io/cluster/CLUSTER_NAME,
-	// where CLUSTER_NAME is replaced with the name of your cluster.
+	// The subnets that were specified for the Auto Scaling group that is associated
+	// with your node group.
 	Subnets []*string `locationName:"subnets" type:"list"`
 
 	// The metadata applied to the node group to assist with categorization and
@@ -4996,6 +5120,12 @@ func (s *Nodegroup) SetInstanceTypes(v []*string) *Nodegroup {
 // SetLabels sets the Labels field's value.
 func (s *Nodegroup) SetLabels(v map[string]*string) *Nodegroup {
 	s.Labels = v
+	return s
+}
+
+// SetLaunchTemplate sets the LaunchTemplate field's value.
+func (s *Nodegroup) SetLaunchTemplate(v *LaunchTemplateSpecification) *Nodegroup {
+	s.LaunchTemplate = v
 	return s
 }
 
@@ -5131,7 +5261,8 @@ func (s *NodegroupResources) SetRemoteAccessSecurityGroup(v string) *NodegroupRe
 }
 
 // An object representing the scaling configuration details for the Auto Scaling
-// group that is associated with your node group.
+// group that is associated with your node group. If you specify a value for
+// any property, then you must specify values for all of the properties.
 type NodegroupScalingConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -5197,8 +5328,8 @@ func (s *NodegroupScalingConfig) SetMinSize(v int64) *NodegroupScalingConfig {
 // A service resource associated with the request could not be found. Clients
 // should not retry such requests.
 type NotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5215,17 +5346,17 @@ func (s NotFoundException) GoString() string {
 
 func newErrorNotFoundException(v protocol.ResponseMetadata) error {
 	return &NotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s NotFoundException) Code() string {
+func (s *NotFoundException) Code() string {
 	return "NotFoundException"
 }
 
 // Message returns the exception's message.
-func (s NotFoundException) Message() string {
+func (s *NotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5233,22 +5364,22 @@ func (s NotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s NotFoundException) OrigErr() error {
+func (s *NotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s NotFoundException) Error() string {
+func (s *NotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s NotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *NotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s NotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *NotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An object representing the OpenID Connect (https://openid.net/connect/) identity
@@ -5350,8 +5481,8 @@ func (s *RemoteAccessConfig) SetSourceSecurityGroups(v []*string) *RemoteAccessC
 
 // The specified resource is in use.
 type ResourceInUseException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The Amazon EKS cluster associated with the exception.
 	ClusterName *string `locationName:"clusterName" type:"string"`
@@ -5374,17 +5505,17 @@ func (s ResourceInUseException) GoString() string {
 
 func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
 	return &ResourceInUseException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceInUseException) Code() string {
+func (s *ResourceInUseException) Code() string {
 	return "ResourceInUseException"
 }
 
 // Message returns the exception's message.
-func (s ResourceInUseException) Message() string {
+func (s *ResourceInUseException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5392,28 +5523,28 @@ func (s ResourceInUseException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceInUseException) OrigErr() error {
+func (s *ResourceInUseException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceInUseException) Error() string {
+func (s *ResourceInUseException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceInUseException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceInUseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceInUseException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceInUseException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // You have encountered a service limit on the specified resource.
 type ResourceLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The Amazon EKS cluster associated with the exception.
 	ClusterName *string `locationName:"clusterName" type:"string"`
@@ -5436,17 +5567,17 @@ func (s ResourceLimitExceededException) GoString() string {
 
 func newErrorResourceLimitExceededException(v protocol.ResponseMetadata) error {
 	return &ResourceLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceLimitExceededException) Code() string {
+func (s *ResourceLimitExceededException) Code() string {
 	return "ResourceLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s ResourceLimitExceededException) Message() string {
+func (s *ResourceLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5454,30 +5585,30 @@ func (s ResourceLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceLimitExceededException) OrigErr() error {
+func (s *ResourceLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceLimitExceededException) Error() string {
+func (s *ResourceLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified resource could not be found. You can view your available clusters
 // with ListClusters. You can view your available managed node groups with ListNodegroups.
 // Amazon EKS clusters and node groups are Region-specific.
 type ResourceNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The Amazon EKS cluster associated with the exception.
 	ClusterName *string `locationName:"clusterName" type:"string"`
@@ -5503,17 +5634,17 @@ func (s ResourceNotFoundException) GoString() string {
 
 func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
 	return &ResourceNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceNotFoundException) Code() string {
+func (s *ResourceNotFoundException) Code() string {
 	return "ResourceNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ResourceNotFoundException) Message() string {
+func (s *ResourceNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5521,28 +5652,28 @@ func (s ResourceNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceNotFoundException) OrigErr() error {
+func (s *ResourceNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceNotFoundException) Error() string {
+func (s *ResourceNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // These errors are usually caused by a server-side issue.
 type ServerException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The Amazon EKS cluster associated with the exception.
 	ClusterName *string `locationName:"clusterName" type:"string"`
@@ -5565,17 +5696,17 @@ func (s ServerException) GoString() string {
 
 func newErrorServerException(v protocol.ResponseMetadata) error {
 	return &ServerException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ServerException) Code() string {
+func (s *ServerException) Code() string {
 	return "ServerException"
 }
 
 // Message returns the exception's message.
-func (s ServerException) Message() string {
+func (s *ServerException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5583,28 +5714,28 @@ func (s ServerException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ServerException) OrigErr() error {
+func (s *ServerException) OrigErr() error {
 	return nil
 }
 
-func (s ServerException) Error() string {
+func (s *ServerException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ServerException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ServerException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ServerException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ServerException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The service is unavailable. Back off and retry the operation.
 type ServiceUnavailableException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5621,17 +5752,17 @@ func (s ServiceUnavailableException) GoString() string {
 
 func newErrorServiceUnavailableException(v protocol.ResponseMetadata) error {
 	return &ServiceUnavailableException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ServiceUnavailableException) Code() string {
+func (s *ServiceUnavailableException) Code() string {
 	return "ServiceUnavailableException"
 }
 
 // Message returns the exception's message.
-func (s ServiceUnavailableException) Message() string {
+func (s *ServiceUnavailableException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5639,22 +5770,22 @@ func (s ServiceUnavailableException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ServiceUnavailableException) OrigErr() error {
+func (s *ServiceUnavailableException) OrigErr() error {
 	return nil
 }
 
-func (s ServiceUnavailableException) Error() string {
+func (s *ServiceUnavailableException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ServiceUnavailableException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ServiceUnavailableException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ServiceUnavailableException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ServiceUnavailableException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type TagResourceInput struct {
@@ -5735,8 +5866,8 @@ func (s TagResourceOutput) GoString() string {
 // Availability Zones for your account, from which you can choose subnets for
 // your cluster.
 type UnsupportedAvailabilityZoneException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The Amazon EKS cluster associated with the exception.
 	ClusterName *string `locationName:"clusterName" type:"string"`
@@ -5763,17 +5894,17 @@ func (s UnsupportedAvailabilityZoneException) GoString() string {
 
 func newErrorUnsupportedAvailabilityZoneException(v protocol.ResponseMetadata) error {
 	return &UnsupportedAvailabilityZoneException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnsupportedAvailabilityZoneException) Code() string {
+func (s *UnsupportedAvailabilityZoneException) Code() string {
 	return "UnsupportedAvailabilityZoneException"
 }
 
 // Message returns the exception's message.
-func (s UnsupportedAvailabilityZoneException) Message() string {
+func (s *UnsupportedAvailabilityZoneException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5781,22 +5912,22 @@ func (s UnsupportedAvailabilityZoneException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnsupportedAvailabilityZoneException) OrigErr() error {
+func (s *UnsupportedAvailabilityZoneException) OrigErr() error {
 	return nil
 }
 
-func (s UnsupportedAvailabilityZoneException) Error() string {
+func (s *UnsupportedAvailabilityZoneException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnsupportedAvailabilityZoneException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnsupportedAvailabilityZoneException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnsupportedAvailabilityZoneException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnsupportedAvailabilityZoneException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -6297,6 +6428,11 @@ type UpdateNodegroupVersionInput struct {
 	// old node whether or not any pods are running on the node.
 	Force *bool `locationName:"force" type:"boolean"`
 
+	// An object representing a node group's launch template specification. You
+	// can only update a node group using a launch template if the node group was
+	// originally deployed with a launch template.
+	LaunchTemplate *LaunchTemplateSpecification `locationName:"launchTemplate" type:"structure"`
+
 	// The name of the managed node group to update.
 	//
 	// NodegroupName is a required field
@@ -6306,13 +6442,21 @@ type UpdateNodegroupVersionInput struct {
 	// default, the latest available AMI version for the node group's Kubernetes
 	// version is used. For more information, see Amazon EKS-Optimized Linux AMI
 	// Versions (https://docs.aws.amazon.com/eks/latest/userguide/eks-linux-ami-versions.html)
+	// in the Amazon EKS User Guide. If you specify launchTemplate, and your launch
+	// template uses a custom AMI, then don't specify releaseVersion, or the node
+	// group update will fail. For more information about using launch templates
+	// with Amazon EKS, see Launch template support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
 	// in the Amazon EKS User Guide.
 	ReleaseVersion *string `locationName:"releaseVersion" type:"string"`
 
 	// The Kubernetes version to update to. If no version is specified, then the
 	// Kubernetes version of the node group does not change. You can specify the
 	// Kubernetes version of the cluster to update the node group to the latest
-	// AMI version of the cluster's Kubernetes version.
+	// AMI version of the cluster's Kubernetes version. If you specify launchTemplate,
+	// and your launch template uses a custom AMI, then don't specify version, or
+	// the node group update will fail. For more information about using launch
+	// templates with Amazon EKS, see Launch template support (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html)
+	// in the Amazon EKS User Guide.
 	Version *string `locationName:"version" type:"string"`
 }
 
@@ -6363,6 +6507,12 @@ func (s *UpdateNodegroupVersionInput) SetClusterName(v string) *UpdateNodegroupV
 // SetForce sets the Force field's value.
 func (s *UpdateNodegroupVersionInput) SetForce(v bool) *UpdateNodegroupVersionInput {
 	s.Force = &v
+	return s
+}
+
+// SetLaunchTemplate sets the LaunchTemplate field's value.
+func (s *UpdateNodegroupVersionInput) SetLaunchTemplate(v *LaunchTemplateSpecification) *UpdateNodegroupVersionInput {
+	s.LaunchTemplate = v
 	return s
 }
 
@@ -6632,7 +6782,19 @@ const (
 
 	// AMITypesAl2X8664Gpu is a AMITypes enum value
 	AMITypesAl2X8664Gpu = "AL2_x86_64_GPU"
+
+	// AMITypesAl2Arm64 is a AMITypes enum value
+	AMITypesAl2Arm64 = "AL2_ARM_64"
 )
+
+// AMITypes_Values returns all elements of the AMITypes enum
+func AMITypes_Values() []string {
+	return []string{
+		AMITypesAl2X8664,
+		AMITypesAl2X8664Gpu,
+		AMITypesAl2Arm64,
+	}
+}
 
 const (
 	// ClusterStatusCreating is a ClusterStatus enum value
@@ -6650,6 +6812,17 @@ const (
 	// ClusterStatusUpdating is a ClusterStatus enum value
 	ClusterStatusUpdating = "UPDATING"
 )
+
+// ClusterStatus_Values returns all elements of the ClusterStatus enum
+func ClusterStatus_Values() []string {
+	return []string{
+		ClusterStatusCreating,
+		ClusterStatusActive,
+		ClusterStatusDeleting,
+		ClusterStatusFailed,
+		ClusterStatusUpdating,
+	}
+}
 
 const (
 	// ErrorCodeSubnetNotFound is a ErrorCode enum value
@@ -6686,6 +6859,23 @@ const (
 	ErrorCodeInsufficientFreeAddresses = "InsufficientFreeAddresses"
 )
 
+// ErrorCode_Values returns all elements of the ErrorCode enum
+func ErrorCode_Values() []string {
+	return []string{
+		ErrorCodeSubnetNotFound,
+		ErrorCodeSecurityGroupNotFound,
+		ErrorCodeEniLimitReached,
+		ErrorCodeIpNotAvailable,
+		ErrorCodeAccessDenied,
+		ErrorCodeOperationNotPermitted,
+		ErrorCodeVpcIdNotFound,
+		ErrorCodeUnknown,
+		ErrorCodeNodeCreationFailure,
+		ErrorCodePodEvictionFailure,
+		ErrorCodeInsufficientFreeAddresses,
+	}
+}
+
 const (
 	// FargateProfileStatusCreating is a FargateProfileStatus enum value
 	FargateProfileStatusCreating = "CREATING"
@@ -6703,6 +6893,17 @@ const (
 	FargateProfileStatusDeleteFailed = "DELETE_FAILED"
 )
 
+// FargateProfileStatus_Values returns all elements of the FargateProfileStatus enum
+func FargateProfileStatus_Values() []string {
+	return []string{
+		FargateProfileStatusCreating,
+		FargateProfileStatusActive,
+		FargateProfileStatusDeleting,
+		FargateProfileStatusCreateFailed,
+		FargateProfileStatusDeleteFailed,
+	}
+}
+
 const (
 	// LogTypeApi is a LogType enum value
 	LogTypeApi = "api"
@@ -6719,6 +6920,17 @@ const (
 	// LogTypeScheduler is a LogType enum value
 	LogTypeScheduler = "scheduler"
 )
+
+// LogType_Values returns all elements of the LogType enum
+func LogType_Values() []string {
+	return []string{
+		LogTypeApi,
+		LogTypeAudit,
+		LogTypeAuthenticator,
+		LogTypeControllerManager,
+		LogTypeScheduler,
+	}
+}
 
 const (
 	// NodegroupIssueCodeAutoScalingGroupNotFound is a NodegroupIssueCode enum value
@@ -6742,11 +6954,20 @@ const (
 	// NodegroupIssueCodeEc2subnetNotFound is a NodegroupIssueCode enum value
 	NodegroupIssueCodeEc2subnetNotFound = "Ec2SubnetNotFound"
 
+	// NodegroupIssueCodeEc2subnetInvalidConfiguration is a NodegroupIssueCode enum value
+	NodegroupIssueCodeEc2subnetInvalidConfiguration = "Ec2SubnetInvalidConfiguration"
+
 	// NodegroupIssueCodeIamInstanceProfileNotFound is a NodegroupIssueCode enum value
 	NodegroupIssueCodeIamInstanceProfileNotFound = "IamInstanceProfileNotFound"
 
+	// NodegroupIssueCodeIamLimitExceeded is a NodegroupIssueCode enum value
+	NodegroupIssueCodeIamLimitExceeded = "IamLimitExceeded"
+
 	// NodegroupIssueCodeIamNodeRoleNotFound is a NodegroupIssueCode enum value
 	NodegroupIssueCodeIamNodeRoleNotFound = "IamNodeRoleNotFound"
+
+	// NodegroupIssueCodeNodeCreationFailure is a NodegroupIssueCode enum value
+	NodegroupIssueCodeNodeCreationFailure = "NodeCreationFailure"
 
 	// NodegroupIssueCodeAsgInstanceLaunchFailures is a NodegroupIssueCode enum value
 	NodegroupIssueCodeAsgInstanceLaunchFailures = "AsgInstanceLaunchFailures"
@@ -6763,6 +6984,29 @@ const (
 	// NodegroupIssueCodeInternalFailure is a NodegroupIssueCode enum value
 	NodegroupIssueCodeInternalFailure = "InternalFailure"
 )
+
+// NodegroupIssueCode_Values returns all elements of the NodegroupIssueCode enum
+func NodegroupIssueCode_Values() []string {
+	return []string{
+		NodegroupIssueCodeAutoScalingGroupNotFound,
+		NodegroupIssueCodeAutoScalingGroupInvalidConfiguration,
+		NodegroupIssueCodeEc2securityGroupNotFound,
+		NodegroupIssueCodeEc2securityGroupDeletionFailure,
+		NodegroupIssueCodeEc2launchTemplateNotFound,
+		NodegroupIssueCodeEc2launchTemplateVersionMismatch,
+		NodegroupIssueCodeEc2subnetNotFound,
+		NodegroupIssueCodeEc2subnetInvalidConfiguration,
+		NodegroupIssueCodeIamInstanceProfileNotFound,
+		NodegroupIssueCodeIamLimitExceeded,
+		NodegroupIssueCodeIamNodeRoleNotFound,
+		NodegroupIssueCodeNodeCreationFailure,
+		NodegroupIssueCodeAsgInstanceLaunchFailures,
+		NodegroupIssueCodeInstanceLimitExceeded,
+		NodegroupIssueCodeInsufficientFreeAddresses,
+		NodegroupIssueCodeAccessDenied,
+		NodegroupIssueCodeInternalFailure,
+	}
+}
 
 const (
 	// NodegroupStatusCreating is a NodegroupStatus enum value
@@ -6786,6 +7030,19 @@ const (
 	// NodegroupStatusDegraded is a NodegroupStatus enum value
 	NodegroupStatusDegraded = "DEGRADED"
 )
+
+// NodegroupStatus_Values returns all elements of the NodegroupStatus enum
+func NodegroupStatus_Values() []string {
+	return []string{
+		NodegroupStatusCreating,
+		NodegroupStatusActive,
+		NodegroupStatusUpdating,
+		NodegroupStatusDeleting,
+		NodegroupStatusCreateFailed,
+		NodegroupStatusDeleteFailed,
+		NodegroupStatusDegraded,
+	}
+}
 
 const (
 	// UpdateParamTypeVersion is a UpdateParamType enum value
@@ -6825,6 +7082,24 @@ const (
 	UpdateParamTypePublicAccessCidrs = "PublicAccessCidrs"
 )
 
+// UpdateParamType_Values returns all elements of the UpdateParamType enum
+func UpdateParamType_Values() []string {
+	return []string{
+		UpdateParamTypeVersion,
+		UpdateParamTypePlatformVersion,
+		UpdateParamTypeEndpointPrivateAccess,
+		UpdateParamTypeEndpointPublicAccess,
+		UpdateParamTypeClusterLogging,
+		UpdateParamTypeDesiredSize,
+		UpdateParamTypeLabelsToAdd,
+		UpdateParamTypeLabelsToRemove,
+		UpdateParamTypeMaxSize,
+		UpdateParamTypeMinSize,
+		UpdateParamTypeReleaseVersion,
+		UpdateParamTypePublicAccessCidrs,
+	}
+}
+
 const (
 	// UpdateStatusInProgress is a UpdateStatus enum value
 	UpdateStatusInProgress = "InProgress"
@@ -6839,6 +7114,16 @@ const (
 	UpdateStatusSuccessful = "Successful"
 )
 
+// UpdateStatus_Values returns all elements of the UpdateStatus enum
+func UpdateStatus_Values() []string {
+	return []string{
+		UpdateStatusInProgress,
+		UpdateStatusFailed,
+		UpdateStatusCancelled,
+		UpdateStatusSuccessful,
+	}
+}
+
 const (
 	// UpdateTypeVersionUpdate is a UpdateType enum value
 	UpdateTypeVersionUpdate = "VersionUpdate"
@@ -6852,3 +7137,13 @@ const (
 	// UpdateTypeConfigUpdate is a UpdateType enum value
 	UpdateTypeConfigUpdate = "ConfigUpdate"
 )
+
+// UpdateType_Values returns all elements of the UpdateType enum
+func UpdateType_Values() []string {
+	return []string{
+		UpdateTypeVersionUpdate,
+		UpdateTypeEndpointAccessUpdate,
+		UpdateTypeLoggingUpdate,
+		UpdateTypeConfigUpdate,
+	}
+}

@@ -85,6 +85,8 @@ func (c *CloudHSMV2) CopyBackupToRegionRequest(input *CopyBackupToRegionInput) (
 //   The request was rejected because an error occurred.
 //
 //   * CloudHsmTagException
+//   The request was rejected because of a tagging failure. Verify the tag conditions
+//   in all applicable policies, and then retry the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/CopyBackupToRegion
 func (c *CloudHSMV2) CopyBackupToRegion(input *CopyBackupToRegionInput) (*CopyBackupToRegionOutput, error) {
@@ -180,6 +182,8 @@ func (c *CloudHSMV2) CreateClusterRequest(input *CreateClusterInput) (req *reque
 //   The request was rejected because an error occurred.
 //
 //   * CloudHsmTagException
+//   The request was rejected because of a tagging failure. Verify the tag conditions
+//   in all applicable policies, and then retry the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/CreateCluster
 func (c *CloudHSMV2) CreateCluster(input *CreateClusterInput) (*CreateClusterOutput, error) {
@@ -466,6 +470,8 @@ func (c *CloudHSMV2) DeleteClusterRequest(input *DeleteClusterInput) (req *reque
 //   The request was rejected because an error occurred.
 //
 //   * CloudHsmTagException
+//   The request was rejected because of a tagging failure. Verify the tag conditions
+//   in all applicable policies, and then retry the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/DeleteCluster
 func (c *CloudHSMV2) DeleteCluster(input *DeleteClusterInput) (*DeleteClusterOutput, error) {
@@ -670,6 +676,8 @@ func (c *CloudHSMV2) DescribeBackupsRequest(input *DescribeBackupsInput) (req *r
 //   The request was rejected because an error occurred.
 //
 //   * CloudHsmTagException
+//   The request was rejected because of a tagging failure. Verify the tag conditions
+//   in all applicable policies, and then retry the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/DescribeBackups
 func (c *CloudHSMV2) DescribeBackups(input *DescribeBackupsInput) (*DescribeBackupsOutput, error) {
@@ -827,6 +835,8 @@ func (c *CloudHSMV2) DescribeClustersRequest(input *DescribeClustersInput) (req 
 //   The request was rejected because an error occurred.
 //
 //   * CloudHsmTagException
+//   The request was rejected because of a tagging failure. Verify the tag conditions
+//   in all applicable policies, and then retry the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/DescribeClusters
 func (c *CloudHSMV2) DescribeClusters(input *DescribeClustersInput) (*DescribeClustersOutput, error) {
@@ -1082,6 +1092,8 @@ func (c *CloudHSMV2) ListTagsRequest(input *ListTagsInput) (req *request.Request
 //   The request was rejected because an error occurred.
 //
 //   * CloudHsmTagException
+//   The request was rejected because of a tagging failure. Verify the tag conditions
+//   in all applicable policies, and then retry the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/ListTags
 func (c *CloudHSMV2) ListTags(input *ListTagsInput) (*ListTagsOutput, error) {
@@ -1324,6 +1336,8 @@ func (c *CloudHSMV2) TagResourceRequest(input *TagResourceInput) (req *request.R
 //   The request was rejected because an error occurred.
 //
 //   * CloudHsmTagException
+//   The request was rejected because of a tagging failure. Verify the tag conditions
+//   in all applicable policies, and then retry the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/TagResource
 func (c *CloudHSMV2) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
@@ -1420,6 +1434,8 @@ func (c *CloudHSMV2) UntagResourceRequest(input *UntagResourceInput) (req *reque
 //   The request was rejected because an error occurred.
 //
 //   * CloudHsmTagException
+//   The request was rejected because of a tagging failure. Verify the tag conditions
+//   in all applicable policies, and then retry the request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudhsmv2-2017-04-28/UntagResource
 func (c *CloudHSMV2) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
@@ -1476,13 +1492,14 @@ type Backup struct {
 	SourceBackup *string `type:"string"`
 
 	// The identifier (ID) of the cluster containing the source backup from which
-	// the new backup was copied. .
+	// the new backup was copied.
 	SourceCluster *string `type:"string"`
 
-	// The AWS region that contains the source backup from which the new backup
+	// The AWS Region that contains the source backup from which the new backup
 	// was copied.
 	SourceRegion *string `type:"string"`
 
+	// The list of tags for the backup.
 	TagList []*Tag `min:"1" type:"list"`
 }
 
@@ -1621,8 +1638,8 @@ func (s *Certificates) SetManufacturerHardwareCertificate(v string) *Certificate
 // The request was rejected because the requester does not have permission to
 // perform the requested operation.
 type CloudHsmAccessDeniedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -1639,17 +1656,17 @@ func (s CloudHsmAccessDeniedException) GoString() string {
 
 func newErrorCloudHsmAccessDeniedException(v protocol.ResponseMetadata) error {
 	return &CloudHsmAccessDeniedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s CloudHsmAccessDeniedException) Code() string {
+func (s *CloudHsmAccessDeniedException) Code() string {
 	return "CloudHsmAccessDeniedException"
 }
 
 // Message returns the exception's message.
-func (s CloudHsmAccessDeniedException) Message() string {
+func (s *CloudHsmAccessDeniedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -1657,29 +1674,29 @@ func (s CloudHsmAccessDeniedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s CloudHsmAccessDeniedException) OrigErr() error {
+func (s *CloudHsmAccessDeniedException) OrigErr() error {
 	return nil
 }
 
-func (s CloudHsmAccessDeniedException) Error() string {
+func (s *CloudHsmAccessDeniedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s CloudHsmAccessDeniedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *CloudHsmAccessDeniedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s CloudHsmAccessDeniedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *CloudHsmAccessDeniedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The request was rejected because of an AWS CloudHSM internal failure. The
 // request can be retried.
 type CloudHsmInternalFailureException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -1696,17 +1713,17 @@ func (s CloudHsmInternalFailureException) GoString() string {
 
 func newErrorCloudHsmInternalFailureException(v protocol.ResponseMetadata) error {
 	return &CloudHsmInternalFailureException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s CloudHsmInternalFailureException) Code() string {
+func (s *CloudHsmInternalFailureException) Code() string {
 	return "CloudHsmInternalFailureException"
 }
 
 // Message returns the exception's message.
-func (s CloudHsmInternalFailureException) Message() string {
+func (s *CloudHsmInternalFailureException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -1714,28 +1731,28 @@ func (s CloudHsmInternalFailureException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s CloudHsmInternalFailureException) OrigErr() error {
+func (s *CloudHsmInternalFailureException) OrigErr() error {
 	return nil
 }
 
-func (s CloudHsmInternalFailureException) Error() string {
+func (s *CloudHsmInternalFailureException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s CloudHsmInternalFailureException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *CloudHsmInternalFailureException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s CloudHsmInternalFailureException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *CloudHsmInternalFailureException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The request was rejected because it is not a valid request.
 type CloudHsmInvalidRequestException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -1752,17 +1769,17 @@ func (s CloudHsmInvalidRequestException) GoString() string {
 
 func newErrorCloudHsmInvalidRequestException(v protocol.ResponseMetadata) error {
 	return &CloudHsmInvalidRequestException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s CloudHsmInvalidRequestException) Code() string {
+func (s *CloudHsmInvalidRequestException) Code() string {
 	return "CloudHsmInvalidRequestException"
 }
 
 // Message returns the exception's message.
-func (s CloudHsmInvalidRequestException) Message() string {
+func (s *CloudHsmInvalidRequestException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -1770,28 +1787,28 @@ func (s CloudHsmInvalidRequestException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s CloudHsmInvalidRequestException) OrigErr() error {
+func (s *CloudHsmInvalidRequestException) OrigErr() error {
 	return nil
 }
 
-func (s CloudHsmInvalidRequestException) Error() string {
+func (s *CloudHsmInvalidRequestException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s CloudHsmInvalidRequestException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *CloudHsmInvalidRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s CloudHsmInvalidRequestException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *CloudHsmInvalidRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The request was rejected because it refers to a resource that cannot be found.
 type CloudHsmResourceNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -1808,17 +1825,17 @@ func (s CloudHsmResourceNotFoundException) GoString() string {
 
 func newErrorCloudHsmResourceNotFoundException(v protocol.ResponseMetadata) error {
 	return &CloudHsmResourceNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s CloudHsmResourceNotFoundException) Code() string {
+func (s *CloudHsmResourceNotFoundException) Code() string {
 	return "CloudHsmResourceNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s CloudHsmResourceNotFoundException) Message() string {
+func (s *CloudHsmResourceNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -1826,28 +1843,28 @@ func (s CloudHsmResourceNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s CloudHsmResourceNotFoundException) OrigErr() error {
+func (s *CloudHsmResourceNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s CloudHsmResourceNotFoundException) Error() string {
+func (s *CloudHsmResourceNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s CloudHsmResourceNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *CloudHsmResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s CloudHsmResourceNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *CloudHsmResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The request was rejected because an error occurred.
 type CloudHsmServiceException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -1864,17 +1881,17 @@ func (s CloudHsmServiceException) GoString() string {
 
 func newErrorCloudHsmServiceException(v protocol.ResponseMetadata) error {
 	return &CloudHsmServiceException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s CloudHsmServiceException) Code() string {
+func (s *CloudHsmServiceException) Code() string {
 	return "CloudHsmServiceException"
 }
 
 // Message returns the exception's message.
-func (s CloudHsmServiceException) Message() string {
+func (s *CloudHsmServiceException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -1882,27 +1899,29 @@ func (s CloudHsmServiceException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s CloudHsmServiceException) OrigErr() error {
+func (s *CloudHsmServiceException) OrigErr() error {
 	return nil
 }
 
-func (s CloudHsmServiceException) Error() string {
+func (s *CloudHsmServiceException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s CloudHsmServiceException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *CloudHsmServiceException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s CloudHsmServiceException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *CloudHsmServiceException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
+// The request was rejected because of a tagging failure. Verify the tag conditions
+// in all applicable policies, and then retry the request.
 type CloudHsmTagException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -1919,17 +1938,17 @@ func (s CloudHsmTagException) GoString() string {
 
 func newErrorCloudHsmTagException(v protocol.ResponseMetadata) error {
 	return &CloudHsmTagException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s CloudHsmTagException) Code() string {
+func (s *CloudHsmTagException) Code() string {
 	return "CloudHsmTagException"
 }
 
 // Message returns the exception's message.
-func (s CloudHsmTagException) Message() string {
+func (s *CloudHsmTagException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -1937,22 +1956,22 @@ func (s CloudHsmTagException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s CloudHsmTagException) OrigErr() error {
+func (s *CloudHsmTagException) OrigErr() error {
 	return nil
 }
 
-func (s CloudHsmTagException) Error() string {
+func (s *CloudHsmTagException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s CloudHsmTagException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *CloudHsmTagException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s CloudHsmTagException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *CloudHsmTagException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Contains information about an AWS CloudHSM cluster.
@@ -1997,6 +2016,7 @@ type Cluster struct {
 	// zone.
 	SubnetMapping map[string]*string `type:"map"`
 
+	// The list of tags for the cluster.
 	TagList []*Tag `min:"1" type:"list"`
 
 	// The identifier (ID) of the virtual private cloud (VPC) that contains the
@@ -2111,6 +2131,10 @@ type CopyBackupToRegionInput struct {
 	// DestinationRegion is a required field
 	DestinationRegion *string `type:"string" required:"true"`
 
+	// Tags to apply to the destination backup during creation. If you specify tags,
+	// only these tags will be applied to the destination backup. If you do not
+	// specify tags, the service copies tags from the source backup to the destination
+	// backup.
 	TagList []*Tag `min:"1" type:"list"`
 }
 
@@ -2226,6 +2250,7 @@ type CreateClusterInput struct {
 	// SubnetIds is a required field
 	SubnetIds []*string `min:"1" type:"list" required:"true"`
 
+	// Tags to apply to the CloudHSM cluster during creation.
 	TagList []*Tag `min:"1" type:"list"`
 }
 
@@ -3451,6 +3476,13 @@ const (
 	BackupPolicyDefault = "DEFAULT"
 )
 
+// BackupPolicy_Values returns all elements of the BackupPolicy enum
+func BackupPolicy_Values() []string {
+	return []string{
+		BackupPolicyDefault,
+	}
+}
+
 const (
 	// BackupStateCreateInProgress is a BackupState enum value
 	BackupStateCreateInProgress = "CREATE_IN_PROGRESS"
@@ -3464,6 +3496,16 @@ const (
 	// BackupStatePendingDeletion is a BackupState enum value
 	BackupStatePendingDeletion = "PENDING_DELETION"
 )
+
+// BackupState_Values returns all elements of the BackupState enum
+func BackupState_Values() []string {
+	return []string{
+		BackupStateCreateInProgress,
+		BackupStateReady,
+		BackupStateDeleted,
+		BackupStatePendingDeletion,
+	}
+}
 
 const (
 	// ClusterStateCreateInProgress is a ClusterState enum value
@@ -3494,6 +3536,21 @@ const (
 	ClusterStateDegraded = "DEGRADED"
 )
 
+// ClusterState_Values returns all elements of the ClusterState enum
+func ClusterState_Values() []string {
+	return []string{
+		ClusterStateCreateInProgress,
+		ClusterStateUninitialized,
+		ClusterStateInitializeInProgress,
+		ClusterStateInitialized,
+		ClusterStateActive,
+		ClusterStateUpdateInProgress,
+		ClusterStateDeleteInProgress,
+		ClusterStateDeleted,
+		ClusterStateDegraded,
+	}
+}
+
 const (
 	// HsmStateCreateInProgress is a HsmState enum value
 	HsmStateCreateInProgress = "CREATE_IN_PROGRESS"
@@ -3510,3 +3567,14 @@ const (
 	// HsmStateDeleted is a HsmState enum value
 	HsmStateDeleted = "DELETED"
 )
+
+// HsmState_Values returns all elements of the HsmState enum
+func HsmState_Values() []string {
+	return []string{
+		HsmStateCreateInProgress,
+		HsmStateActive,
+		HsmStateDegraded,
+		HsmStateDeleteInProgress,
+		HsmStateDeleted,
+	}
+}

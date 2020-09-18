@@ -21,7 +21,7 @@ resource "aws_lb_target_group" "test" {
   name     = "tf-example-lb-tg"
   port     = 80
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.main.id}"
+  vpc_id   = aws_vpc.main.id
 }
 
 resource "aws_vpc" "main" {
@@ -37,7 +37,7 @@ resource "aws_lb_target_group" "ip-example" {
   port        = 80
   protocol    = "HTTP"
   target_type = "ip"
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = aws_vpc.main.id
 }
 
 resource "aws_vpc" "main" {
@@ -77,7 +77,7 @@ The default is `instance`. Note that you can't specify targets for a target grou
 If the target type is `ip`, specify IP addresses from the subnets of the virtual private cloud (VPC) for the target group,
 the RFC 1918 range (10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16), and the RFC 6598 range (100.64.0.0/10).
 You can't specify publicly routable IP addresses.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 Stickiness Blocks (`stickiness`) support the following:
 

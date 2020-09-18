@@ -1978,8 +1978,8 @@ func (s CancelJobOutput) GoString() string {
 // or resource on behalf of a user that doesn't have permissions to use the
 // action or resource, or specifying an identifier that is not valid.
 type ClientException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -1996,17 +1996,17 @@ func (s ClientException) GoString() string {
 
 func newErrorClientException(v protocol.ResponseMetadata) error {
 	return &ClientException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ClientException) Code() string {
+func (s *ClientException) Code() string {
 	return "ClientException"
 }
 
 // Message returns the exception's message.
-func (s ClientException) Message() string {
+func (s *ClientException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2014,22 +2014,22 @@ func (s ClientException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ClientException) OrigErr() error {
+func (s *ClientException) OrigErr() error {
 	return nil
 }
 
-func (s ClientException) Error() string {
+func (s *ClientException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ClientException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ClientException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ClientException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ClientException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An object representing an AWS Batch compute environment.
@@ -5510,8 +5510,8 @@ func (s *RetryStrategy) SetAttempts(v int64) *RetryStrategy {
 
 // These errors are usually caused by a server issue.
 type ServerException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5528,17 +5528,17 @@ func (s ServerException) GoString() string {
 
 func newErrorServerException(v protocol.ResponseMetadata) error {
 	return &ServerException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ServerException) Code() string {
+func (s *ServerException) Code() string {
 	return "ServerException"
 }
 
 // Message returns the exception's message.
-func (s ServerException) Message() string {
+func (s *ServerException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5546,22 +5546,22 @@ func (s ServerException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ServerException) OrigErr() error {
+func (s *ServerException) OrigErr() error {
 	return nil
 }
 
-func (s ServerException) Error() string {
+func (s *ServerException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ServerException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ServerException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ServerException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ServerException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type SubmitJobInput struct {
@@ -6180,6 +6180,14 @@ const (
 	ArrayJobDependencySequential = "SEQUENTIAL"
 )
 
+// ArrayJobDependency_Values returns all elements of the ArrayJobDependency enum
+func ArrayJobDependency_Values() []string {
+	return []string{
+		ArrayJobDependencyNToN,
+		ArrayJobDependencySequential,
+	}
+}
+
 const (
 	// CEStateEnabled is a CEState enum value
 	CEStateEnabled = "ENABLED"
@@ -6187,6 +6195,14 @@ const (
 	// CEStateDisabled is a CEState enum value
 	CEStateDisabled = "DISABLED"
 )
+
+// CEState_Values returns all elements of the CEState enum
+func CEState_Values() []string {
+	return []string{
+		CEStateEnabled,
+		CEStateDisabled,
+	}
+}
 
 const (
 	// CEStatusCreating is a CEStatus enum value
@@ -6208,6 +6224,18 @@ const (
 	CEStatusInvalid = "INVALID"
 )
 
+// CEStatus_Values returns all elements of the CEStatus enum
+func CEStatus_Values() []string {
+	return []string{
+		CEStatusCreating,
+		CEStatusUpdating,
+		CEStatusDeleting,
+		CEStatusDeleted,
+		CEStatusValid,
+		CEStatusInvalid,
+	}
+}
+
 const (
 	// CETypeManaged is a CEType enum value
 	CETypeManaged = "MANAGED"
@@ -6215,6 +6243,14 @@ const (
 	// CETypeUnmanaged is a CEType enum value
 	CETypeUnmanaged = "UNMANAGED"
 )
+
+// CEType_Values returns all elements of the CEType enum
+func CEType_Values() []string {
+	return []string{
+		CETypeManaged,
+		CETypeUnmanaged,
+	}
+}
 
 const (
 	// CRAllocationStrategyBestFit is a CRAllocationStrategy enum value
@@ -6227,6 +6263,15 @@ const (
 	CRAllocationStrategySpotCapacityOptimized = "SPOT_CAPACITY_OPTIMIZED"
 )
 
+// CRAllocationStrategy_Values returns all elements of the CRAllocationStrategy enum
+func CRAllocationStrategy_Values() []string {
+	return []string{
+		CRAllocationStrategyBestFit,
+		CRAllocationStrategyBestFitProgressive,
+		CRAllocationStrategySpotCapacityOptimized,
+	}
+}
+
 const (
 	// CRTypeEc2 is a CRType enum value
 	CRTypeEc2 = "EC2"
@@ -6234,6 +6279,14 @@ const (
 	// CRTypeSpot is a CRType enum value
 	CRTypeSpot = "SPOT"
 )
+
+// CRType_Values returns all elements of the CRType enum
+func CRType_Values() []string {
+	return []string{
+		CRTypeEc2,
+		CRTypeSpot,
+	}
+}
 
 const (
 	// DeviceCgroupPermissionRead is a DeviceCgroupPermission enum value
@@ -6246,6 +6299,15 @@ const (
 	DeviceCgroupPermissionMknod = "MKNOD"
 )
 
+// DeviceCgroupPermission_Values returns all elements of the DeviceCgroupPermission enum
+func DeviceCgroupPermission_Values() []string {
+	return []string{
+		DeviceCgroupPermissionRead,
+		DeviceCgroupPermissionWrite,
+		DeviceCgroupPermissionMknod,
+	}
+}
+
 const (
 	// JQStateEnabled is a JQState enum value
 	JQStateEnabled = "ENABLED"
@@ -6253,6 +6315,14 @@ const (
 	// JQStateDisabled is a JQState enum value
 	JQStateDisabled = "DISABLED"
 )
+
+// JQState_Values returns all elements of the JQState enum
+func JQState_Values() []string {
+	return []string{
+		JQStateEnabled,
+		JQStateDisabled,
+	}
+}
 
 const (
 	// JQStatusCreating is a JQStatus enum value
@@ -6274,6 +6344,18 @@ const (
 	JQStatusInvalid = "INVALID"
 )
 
+// JQStatus_Values returns all elements of the JQStatus enum
+func JQStatus_Values() []string {
+	return []string{
+		JQStatusCreating,
+		JQStatusUpdating,
+		JQStatusDeleting,
+		JQStatusDeleted,
+		JQStatusValid,
+		JQStatusInvalid,
+	}
+}
+
 const (
 	// JobDefinitionTypeContainer is a JobDefinitionType enum value
 	JobDefinitionTypeContainer = "container"
@@ -6281,6 +6363,14 @@ const (
 	// JobDefinitionTypeMultinode is a JobDefinitionType enum value
 	JobDefinitionTypeMultinode = "multinode"
 )
+
+// JobDefinitionType_Values returns all elements of the JobDefinitionType enum
+func JobDefinitionType_Values() []string {
+	return []string{
+		JobDefinitionTypeContainer,
+		JobDefinitionTypeMultinode,
+	}
+}
 
 const (
 	// JobStatusSubmitted is a JobStatus enum value
@@ -6305,7 +6395,27 @@ const (
 	JobStatusFailed = "FAILED"
 )
 
+// JobStatus_Values returns all elements of the JobStatus enum
+func JobStatus_Values() []string {
+	return []string{
+		JobStatusSubmitted,
+		JobStatusPending,
+		JobStatusRunnable,
+		JobStatusStarting,
+		JobStatusRunning,
+		JobStatusSucceeded,
+		JobStatusFailed,
+	}
+}
+
 const (
 	// ResourceTypeGpu is a ResourceType enum value
 	ResourceTypeGpu = "GPU"
 )
+
+// ResourceType_Values returns all elements of the ResourceType enum
+func ResourceType_Values() []string {
+	return []string{
+		ResourceTypeGpu,
+	}
+}

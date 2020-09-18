@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -11,10 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -110,10 +111,20 @@ func resourceAwsLb() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						"outpost_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"allocation_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+						},
+						"private_ipv4_address": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IsIPv4Address,
 						},
 					},
 				},
@@ -123,6 +134,9 @@ func resourceAwsLb() *schema.Resource {
 					buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))
 					if m["allocation_id"] != "" {
 						buf.WriteString(fmt.Sprintf("%s-", m["allocation_id"].(string)))
+					}
+					if m["private_ipv4_address"] != "" {
+						buf.WriteString(fmt.Sprintf("%s-", m["private_ipv4_address"].(string)))
 					}
 					return hashcode.String(buf.String())
 				},
@@ -171,6 +185,13 @@ func resourceAwsLb() *schema.Resource {
 				DiffSuppressFunc: suppressIfLBType(elbv2.LoadBalancerTypeEnumNetwork),
 			},
 
+			"drop_invalid_header_fields": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBType("network"),
+			},
+
 			"enable_cross_zone_load_balancing": {
 				Type:             schema.TypeBool,
 				Optional:         true,
@@ -193,6 +214,12 @@ func resourceAwsLb() *schema.Resource {
 					elbv2.IpAddressTypeIpv4,
 					elbv2.IpAddressTypeDualstack,
 				}, false),
+			},
+
+			"customer_owned_ipv4_pool": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 
 			"vpc_id": {
@@ -244,7 +271,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 		elbOpts.Tags = tags
 	}
 
-	if scheme, ok := d.GetOk("internal"); ok && scheme.(bool) {
+	if _, ok := d.GetOk("internal"); ok {
 		elbOpts.Scheme = aws.String("internal")
 	}
 
@@ -269,11 +296,19 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 			if subnetMap["allocation_id"].(string) != "" {
 				elbOpts.SubnetMappings[i].AllocationId = aws.String(subnetMap["allocation_id"].(string))
 			}
+
+			if subnetMap["private_ipv4_address"].(string) != "" {
+				elbOpts.SubnetMappings[i].PrivateIPv4Address = aws.String(subnetMap["private_ipv4_address"].(string))
+			}
 		}
 	}
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
 		elbOpts.IpAddressType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("customer_owned_ipv4_pool"); ok {
+		elbOpts.CustomerOwnedIpv4Pool = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] ALB create configuration: %#v", elbOpts)
@@ -408,6 +443,14 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 				Value: aws.String(strconv.FormatBool(d.Get("enable_http2").(bool))),
 			})
 		}
+
+		if d.HasChange("drop_invalid_header_fields") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("routing.http.drop_invalid_header_fields.enabled"),
+				Value: aws.String(strconv.FormatBool(d.Get("drop_invalid_header_fields").(bool))),
+			})
+		}
+
 	case elbv2.LoadBalancerTypeEnumNetwork:
 		if d.HasChange("enable_cross_zone_load_balancing") || d.IsNewResource() {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
@@ -671,9 +714,11 @@ func flattenSubnetMappingsFromAvailabilityZones(availabilityZones []*elbv2.Avail
 	for _, availabilityZone := range availabilityZones {
 		m := make(map[string]interface{})
 		m["subnet_id"] = aws.StringValue(availabilityZone.SubnetId)
+		m["outpost_id"] = aws.StringValue(availabilityZone.OutpostId)
 
 		for _, loadBalancerAddress := range availabilityZone.LoadBalancerAddresses {
 			m["allocation_id"] = aws.StringValue(loadBalancerAddress.AllocationId)
+			m["private_ipv4_address"] = aws.StringValue(loadBalancerAddress.PrivateIPv4Address)
 		}
 
 		l = append(l, m)
@@ -698,17 +743,19 @@ func lbSuffixFromARN(arn *string) string {
 // flattenAwsLbResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
 func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBalancer) error {
 	elbconn := meta.(*AWSClient).elbv2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	d.Set("arn", lb.LoadBalancerArn)
 	d.Set("arn_suffix", lbSuffixFromARN(lb.LoadBalancerArn))
 	d.Set("name", lb.LoadBalancerName)
-	d.Set("internal", (lb.Scheme != nil && aws.StringValue(lb.Scheme) == "internal"))
+	d.Set("internal", lb.Scheme != nil && aws.StringValue(lb.Scheme) == "internal")
 	d.Set("security_groups", flattenStringList(lb.SecurityGroups))
 	d.Set("vpc_id", lb.VpcId)
 	d.Set("zone_id", lb.CanonicalHostedZoneId)
 	d.Set("dns_name", lb.DNSName)
 	d.Set("ip_address_type", lb.IpAddressType)
 	d.Set("load_balancer_type", lb.Type)
+	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
 
 	if err := d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
 		return fmt.Errorf("error setting subnets: %s", err)
@@ -724,7 +771,7 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 		return fmt.Errorf("error listing tags for (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -756,6 +803,10 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 			}
 			log.Printf("[DEBUG] Setting ALB Timeout Seconds: %d", timeout)
 			d.Set("idle_timeout", timeout)
+		case "routing.http.drop_invalid_header_fields.enabled":
+			dropInvalidHeaderFieldsEnabled := aws.StringValue(attr.Value) == "true"
+			log.Printf("[DEBUG] Setting LB Invalid Header Fields Enabled: %t", dropInvalidHeaderFieldsEnabled)
+			d.Set("drop_invalid_header_fields", dropInvalidHeaderFieldsEnabled)
 		case "deletion_protection.enabled":
 			protectionEnabled := aws.StringValue(attr.Value) == "true"
 			log.Printf("[DEBUG] Setting LB Deletion Protection Enabled: %t", protectionEnabled)
@@ -781,7 +832,7 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 // Load balancers of type 'network' cannot have their subnets updated at
 // this time. If the type is 'network' and subnets have changed, mark the
 // diff as a ForceNew operation
-func customizeDiffNLBSubnets(diff *schema.ResourceDiff, v interface{}) error {
+func customizeDiffNLBSubnets(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	// The current criteria for determining if the operation should be ForceNew:
 	// - lb of type "network"
 	// - existing resource (id is not "")

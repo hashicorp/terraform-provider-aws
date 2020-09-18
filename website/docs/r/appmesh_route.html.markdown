@@ -17,8 +17,8 @@ Provides an AWS App Mesh route resource.
 ```hcl
 resource "aws_appmesh_route" "serviceb" {
   name                = "serviceB-route"
-  mesh_name           = "${aws_appmesh_mesh.simple.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.serviceb.name}"
+  mesh_name           = aws_appmesh_mesh.simple.id
+  virtual_router_name = aws_appmesh_virtual_router.serviceb.name
 
   spec {
     http_route {
@@ -28,12 +28,12 @@ resource "aws_appmesh_route" "serviceb" {
 
       action {
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.serviceb1.name}"
+          virtual_node = aws_appmesh_virtual_node.serviceb1.name
           weight       = 90
         }
 
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.serviceb2.name}"
+          virtual_node = aws_appmesh_virtual_node.serviceb2.name
           weight       = 10
         }
       }
@@ -47,8 +47,8 @@ resource "aws_appmesh_route" "serviceb" {
 ```hcl
 resource "aws_appmesh_route" "serviceb" {
   name                = "serviceB-route"
-  mesh_name           = "${aws_appmesh_mesh.simple.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.serviceb.name}"
+  mesh_name           = aws_appmesh_mesh.simple.id
+  virtual_router_name = aws_appmesh_virtual_router.serviceb.name
 
   spec {
     http_route {
@@ -68,7 +68,7 @@ resource "aws_appmesh_route" "serviceb" {
 
       action {
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.serviceb.name}"
+          virtual_node = aws_appmesh_virtual_node.serviceb.name
           weight       = 100
         }
       }
@@ -82,14 +82,14 @@ resource "aws_appmesh_route" "serviceb" {
 ```hcl
 resource "aws_appmesh_route" "serviceb" {
   name                = "serviceB-route"
-  mesh_name           = "${aws_appmesh_mesh.simple.id}"
-  virtual_router_name = "${aws_appmesh_virtual_router.serviceb.name}"
+  mesh_name           = aws_appmesh_mesh.simple.id
+  virtual_router_name = aws_appmesh_virtual_router.serviceb.name
 
   spec {
     tcp_route {
       action {
         weighted_target {
-          virtual_node = "${aws_appmesh_virtual_node.serviceb1.name}"
+          virtual_node = aws_appmesh_virtual_node.serviceb1.name
           weight       = 100
         }
       }
@@ -106,7 +106,7 @@ The following arguments are supported:
 * `mesh_name` - (Required) The name of the service mesh in which to create the route.
 * `virtual_router_name` - (Required) The name of the virtual router in which to create the route.
 * `spec` - (Required) The route specification to apply.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 The `spec` object supports the following:
 
