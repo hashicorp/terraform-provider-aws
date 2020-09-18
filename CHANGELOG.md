@@ -24,6 +24,7 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* data-source/aws_kms_secrets: Prevent `plaintext` values to appear in CLI output with Terraform 0.13 ([#15169](https://github.com/terraform-providers/terraform-provider-aws/issues/15169))
 * resource/aws_acm_certificate: Prevent tagging is not permitted on re-import error ([#15060](https://github.com/terraform-providers/terraform-provider-aws/issues/15060))
 * resource/aws_cognito_identity_pool: Prevent ordering differences for `openid_connect_provider_arns` argument ([#15178](https://github.com/terraform-providers/terraform-provider-aws/issues/15178))
 
@@ -35,7 +36,6 @@ FEATURES
 
 BUG FIXES
 
-* data-source/aws_kms_secrets: Prevent `plaintext` values to appear in CLI output with Terraform 0.13 ([#15169](https://github.com/terraform-providers/terraform-provider-aws/issues/15169))
 * resource/aws_ec2_client_vpn_authorization_rule: Increase active and revoked timeouts from 1 to 5 minutes ([#15037](https://github.com/terraform-providers/terraform-provider-aws/issues/15037))
 
 ## 3.5.0 (September 03, 2020)
