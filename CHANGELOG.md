@@ -5,6 +5,11 @@ ENHANCEMENTS
 * data-source/aws_lb: Add `customer_owned_ipv4_pool` and `subnet_mapping` `outpost_id` attributes [GH-15170]
 * resource/aws_lb: Add `customer_owned_ipv4_pool` argument and `subnet_mapping` `outpost_id` attribute [GH-15170]
 
+BUG FIXES
+
+* resource/aws_vpn_gateway: Increase VPC detachment timeout to 30 minutes [GH-15201]
+* resource/aws_vpn_gateway_attachment: Increase VPC detachment timeout to 30 minutes [GH-15201]
+
 ## 3.7.0 (September 17, 2020)
 
 FEATURES
