@@ -1727,7 +1727,7 @@ resource "aws_route_table" "public" {
 
 resource "aws_route_table_association" "a" {
   count          = length(data.aws_availability_zones.available.names)
-  subnet_id      = aws_subnet.public.*.id[count.index]
+  subnet_id      = aws_subnet.public[*].id[count.index]
   route_table_id = aws_route_table.public.id
 }
 
