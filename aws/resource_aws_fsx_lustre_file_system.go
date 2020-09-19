@@ -171,8 +171,8 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 			"auto_import_policy": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      fsx.AutoImportPolicyTypeNone,
-				ValidateFunc: validation.StringInSlice(fsx.LustreDeploymentType_Values(), false),
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(fsx.AutoImportPolicyType_Values(), false),
 			},
 		},
 	}
