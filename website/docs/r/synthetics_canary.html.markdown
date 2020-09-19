@@ -34,7 +34,7 @@ The following arguments are supported:
 * `artifact_s3_location` - (Required) The location in Amazon S3 where Synthetics stores artifacts from the test runs of this canary.
 * `schedule` -  (Required) Information about how often the canary is to run and when these test runs are to stop. See [Schedule](#schedule) below.
 * `handler` - (Required) The domain description.
-* `execution_role_arn` - (Required) The ARN of the IAM role to be used to run the canary. see [AWS Docs](https://docs.aws.amazon.com/AmazonSynthetics/latest/APIReference/API_CreateCanary.html#API_CreateCanary_RequestSyntax) for permissions needs for IAM Role. 
+* `execution_role_arn` - (Required) The ARN of the IAM role to be used to run the canary. see [AWS Docs](https://docs.aws.amazon.com/AmazonSynthetics/latest/APIReference/API_CreateCanary.html#API_CreateCanary_RequestSyntax) for permissions needs for IAM Role.
 * `s3_bucket` - (Optional) If your canary script is located in S3, specify the full bucket name here. The bucket must already exist. Specify the full bucket name, including s3:// as the start of the bucket name. **Conflicts with `zip_file`**
 * `s3_key` - (Optional) The S3 key of your script. **Conflicts with `zip_file`**
 * `s3_version` - (Optional) The S3 version ID of your script. **Conflicts with `zip_file`**
@@ -42,7 +42,7 @@ The following arguments are supported:
 * `failure_retention_period` - (Optional) The number of days to retain data about failed runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
 * `success_retention_period` - (Optional) The number of days to retain data about successful runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
 * `run_config` - (Optional) Configuration for individual canary runs. See [Run Config](#run-config) below.
-* `vpc_config` - (Optional) If this canary is to test an endpoint in a VPC, this structure contains information about the subnet and security groups of the VPC endpoint. For more information, see [Running a Canary in a VPC](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_VPC.html). See [VPC Config](#vpc-config) below. 
+* `vpc_config` - (Optional) If this canary is to test an endpoint in a VPC, this structure contains information about the subnet and security groups of the VPC endpoint. For more information, see [Running a Canary in a VPC](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_VPC.html). See [VPC Config](#vpc-config) below.
 * `tags` - (Optional) Key-value map of resource tags
 
 ### Schedule
