@@ -98,6 +98,7 @@ func TestAccAWSFsxLustreFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypeScratch1),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
+					resource.TestCheckResourceAttr(resourceName, "auto_import_policy", "NONE"),
 				),
 			},
 			{
@@ -617,6 +618,39 @@ func TestAccAWSFsxLustreFileSystem_StorageTypeHddDriveCacheNone(t *testing.T) {
 	})
 }
 
+func TestAccAWSFsxLustreFileSystem_autoImportPolicy(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxLustreFileSystemAutoImportPolicyConfig("NEW"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "auto_import_policy", "NEW"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccAwsFsxLustreFileSystemAutoImportPolicyConfig("NEW_CHANGED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "auto_import_policy", "NEW_CHANGED"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckFsxLustreFileSystemExists(resourceName string, fs *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -980,4 +1014,14 @@ resource "aws_fsx_lustre_file_system" "test" {
   drive_cache_type            = %[1]q
 }
 `, drive_cache_type)
+}
+
+func testAccAwsFsxLustreFileSystemAutoImportPolicyConfig(policy string) string {
+	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+resource "aws_fsx_lustre_file_system" "test" {
+  storage_capacity   = 1200
+  subnet_ids         = [aws_subnet.test1.id]
+  auto_import_policy = %[1]q
+}
+`, policy)
 }
