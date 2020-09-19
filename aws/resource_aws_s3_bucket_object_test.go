@@ -954,6 +954,27 @@ func TestAccAWSS3BucketObject_ObjectLockRetentionStartWithSet(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3BucketObject_defaultBucketSSE(t *testing.T) {
+	var obj1 s3.GetObjectOutput
+	resourceName := "aws_s3_bucket_object.object"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketObjectConfig_defaultBucketSSE(rInt, "stuff"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj1),
+					testAccCheckAWSS3BucketObjectBody(&obj1, "stuff"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSS3BucketObjectVersionIdDiffers(first, second *s3.GetObjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if first.VersionId == nil {
@@ -1576,4 +1597,31 @@ resource "aws_s3_bucket_object" "object" {
   etag   = filemd5(%[1]q)
 }
 `, randInt, source)
+}
+
+func testAccAWSS3BucketObjectConfig_defaultBucketSSE(randInt int, content string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = "Encrypts test bucket objects"
+  deletion_window_in_days = 7
+}
+
+resource "aws_s3_bucket" "object_bucket" {
+  bucket = "tf-object-test-bucket-%d"
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = aws_kms_key.test.arn
+        sse_algorithm     = "aws:kms"
+      }
+    }
+  }
+}
+
+resource "aws_s3_bucket_object" "object" {
+  bucket  = aws_s3_bucket.object_bucket.bucket
+  key     = "test-key"
+  content = %q
+}
+`, randInt, content)
 }

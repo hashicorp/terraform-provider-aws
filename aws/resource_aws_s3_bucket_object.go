@@ -140,6 +140,13 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateArn,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// ignore diffs where the user hasn't specified a kms_key_id but the bucket has a default KMS key configured
+					if new == "" && d.Get("server_side_encryption") == s3.ServerSideEncryptionAwsKms {
+						return true
+					}
+					return false
+				},
 			},
 
 			"etag": {
