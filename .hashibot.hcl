@@ -581,6 +581,7 @@ behavior "pull_request_path_labeler" "service_labels" {
       ".gitignore",
       ".go-version",
       ".hashibot.hcl",
+      ".semgrep.yml",
       "aws/auth_helpers.go",
       "aws/awserr.go",
       "aws/config.go",
@@ -624,6 +625,7 @@ behavior "pull_request_path_labeler" "service_labels" {
       ".gometalinter.json",
       ".markdownlinkcheck.json",
       ".markdownlint.yml",
+      ".semgrep.yml",
       "staticcheck.conf"
     ]
     # label services

@@ -1346,7 +1346,7 @@ resource "aws_launch_template" "test" {
 }
 
 func testAccAWSLaunchTemplateConfig_data(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name = %q
 
@@ -1390,7 +1390,7 @@ resource "aws_launch_template" "test" {
   }
 
   placement {
-    availability_zone = "us-west-2b"
+    availability_zone = data.aws_availability_zones.available.names[0]
   }
 
   ram_disk_id = "ari-a12bc3de"
@@ -1429,7 +1429,7 @@ resource "aws_launch_template" "test" {
     }
   }
 }
-`, rName) //lintignore:AWSAT002
+`, rName)) //lintignore:AWSAT002
 }
 
 func testAccAWSLaunchTemplateConfig_tagsUpdate(rName string) string {

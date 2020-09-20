@@ -872,18 +872,18 @@ resource "aws_db_option_group" "bar" {
 
 const testAccAWSDBOptionGroup_namePrefix = `
 resource "aws_db_option_group" "test" {
-  name_prefix = "tf-test-"
+  name_prefix              = "tf-test-"
   option_group_description = "Test option group for terraform"
-  engine_name = "mysql"
-  major_engine_version = "5.6"
+  engine_name              = "mysql"
+  major_engine_version     = "5.6"
 }
 `
 
 const testAccAWSDBOptionGroup_generatedName = `
 resource "aws_db_option_group" "test" {
   option_group_description = "Test option group for terraform"
-  engine_name = "mysql"
-  major_engine_version = "5.6"
+  engine_name              = "mysql"
+  major_engine_version     = "5.6"
 }
 `
 

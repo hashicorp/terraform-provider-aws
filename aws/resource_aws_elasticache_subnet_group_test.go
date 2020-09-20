@@ -14,7 +14,6 @@ import (
 
 func TestAccAWSElasticacheSubnetGroup_basic(t *testing.T) {
 	var csg elasticache.CacheSubnetGroup
-	config := fmt.Sprintf(testAccAWSElasticacheSubnetGroupConfig, acctest.RandInt())
 	resourceName := "aws_elasticache_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -23,7 +22,7 @@ func TestAccAWSElasticacheSubnetGroup_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAWSElasticacheSubnetGroupConfig(acctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheSubnetGroupExists(resourceName, &csg),
 					resource.TestCheckResourceAttr(
@@ -45,8 +44,6 @@ func TestAccAWSElasticacheSubnetGroup_update(t *testing.T) {
 	var csg elasticache.CacheSubnetGroup
 	resourceName := "aws_elasticache_subnet_group.test"
 	rInt := acctest.RandInt()
-	preConfig := fmt.Sprintf(testAccAWSElasticacheSubnetGroupUpdateConfigPre, rInt)
-	postConfig := fmt.Sprintf(testAccAWSElasticacheSubnetGroupUpdateConfigPost, rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -54,7 +51,7 @@ func TestAccAWSElasticacheSubnetGroup_update(t *testing.T) {
 		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: preConfig,
+				Config: testAccAWSElasticacheSubnetGroupUpdateConfigPre(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheSubnetGroupExists(resourceName, &csg),
 					testAccCheckAWSElastiCacheSubnetGroupAttrs(&csg, resourceName, 1),
@@ -68,7 +65,7 @@ func TestAccAWSElasticacheSubnetGroup_update(t *testing.T) {
 					"description"},
 			},
 			{
-				Config: postConfig,
+				Config: testAccAWSElasticacheSubnetGroupUpdateConfigPost(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheSubnetGroupExists(resourceName, &csg),
 					testAccCheckAWSElastiCacheSubnetGroupAttrs(&csg, resourceName, 2),
@@ -154,7 +151,8 @@ func testAccCheckAWSElastiCacheSubnetGroupAttrs(csg *elasticache.CacheSubnetGrou
 	}
 }
 
-var testAccAWSElasticacheSubnetGroupConfig = `
+func testAccAWSElasticacheSubnetGroupConfig(rInt int) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "192.168.0.0/16"
 
@@ -166,7 +164,7 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
   vpc_id            = aws_vpc.foo.id
   cidr_block        = "192.168.0.0/20"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-elasticache-subnet-group"
@@ -180,8 +178,11 @@ resource "aws_elasticache_subnet_group" "test" {
   name       = "tf-TEST-cache-subnet-%03d"
   subnet_ids = [aws_subnet.foo.id]
 }
-`
-var testAccAWSElasticacheSubnetGroupUpdateConfigPre = `
+`, rInt))
+}
+
+func testAccAWSElasticacheSubnetGroupUpdateConfigPre(rInt int) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
 
@@ -193,7 +194,7 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
   vpc_id            = aws_vpc.foo.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-elasticache-subnet-group-update-foo"
@@ -205,21 +206,23 @@ resource "aws_elasticache_subnet_group" "test" {
   description = "tf-test-cache-subnet-group-descr"
   subnet_ids  = [aws_subnet.foo.id]
 }
-`
+`, rInt))
+}
 
-var testAccAWSElasticacheSubnetGroupUpdateConfigPost = `
+func testAccAWSElasticacheSubnetGroupUpdateConfigPost(rInt int) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-     Name = "terraform-testacc-elasticache-subnet-group-update"
+    Name = "terraform-testacc-elasticache-subnet-group-update"
   }
 }
 
 resource "aws_subnet" "foo" {
   vpc_id            = aws_vpc.foo.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-elasticache-subnet-group-update-foo"
@@ -229,7 +232,7 @@ resource "aws_subnet" "foo" {
 resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.foo.id
   cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-elasticache-subnet-group-update-test"
@@ -244,4 +247,5 @@ resource "aws_elasticache_subnet_group" "test" {
     aws_subnet.test.id,
   ]
 }
-`
+`, rInt))
+}

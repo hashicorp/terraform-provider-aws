@@ -7,7 +7,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/acctest-terraform-lint.yml
-      - aws/*_test.go
+      - aws/resource_aws_[a-d]*_test.go
 
 env:
   GO_VERSION: "1.14"
@@ -35,9 +35,15 @@ jobs:
           go install
       # - run: terrafmt diff ./aws --check --pattern '*_test.go' --quiet --fmtcompat
       - run: |
-          find ./aws -type f -name 'resource_aws_a*_test.go' \
+          find ./aws -type f \( \
+            -name 'resource_aws_a*_test.go' \
+            -o -name 'resource_aws_b*_test.go' \
+            -o -name 'resource_aws_c*_test.go' \
+            -o -name 'resource_aws_d*_test.go' \
+            \) \
             | sort -u \
             | grep -v resource_aws_apigatewayv2_domain_name_test.go \
+            | grep -v resource_aws_dynamodb_table_test.go \
             | xargs -I {} terrafmt diff --check --quiet --fmtcompat {}
 
   validate-terraform:
@@ -60,8 +66,14 @@ jobs:
           go install
       - run: curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | sh
       - run: |
-          find ./aws -type f -name 'resource_aws_a*_test.go' \
+          find ./aws -type f \( \
+            -name 'resource_aws_a*_test.go' \
+            -o -name 'resource_aws_b*_test.go' \
+            -o -name 'resource_aws_c*_test.go' \
+            -o -name 'resource_aws_d*_test.go' \
+            \) \
             | sort -u \
             | grep -v resource_aws_apigatewayv2_domain_name_test.go \
+            | grep -v resource_aws_dynamodb_table_test.go \
             | ./scripts/validate-terraform.sh
           

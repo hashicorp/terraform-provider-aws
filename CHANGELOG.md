@@ -1,4 +1,14 @@
-## 3.6.0 (Unreleased)
+## 3.7.0 (Unreleased)
+## 3.6.0 (September 11, 2020)
+
+FEATURES
+
+* **New Resource:** `aws_db_proxy_default_target_group` ([#12743](https://github.com/terraform-providers/terraform-provider-aws/issues/12743))
+
+BUG FIXES
+
+* resource/aws_ec2_client_vpn_authorization_rule: Increase active and revoked timeouts from 1 to 5 minutes ([#15037](https://github.com/terraform-providers/terraform-provider-aws/issues/15037))
+
 ## 3.5.0 (September 03, 2020)
 
 FEATURES
