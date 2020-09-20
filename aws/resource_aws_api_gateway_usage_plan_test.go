@@ -723,8 +723,8 @@ resource "aws_api_gateway_usage_plan" "test" {
   name        = "%s"
 
   api_stages {
-    api_id = "${aws_api_gateway_rest_api.test.id}"
-    stage  = "${aws_api_gateway_deployment.foo.stage_name}"
+    api_id = aws_api_gateway_rest_api.test.id
+    stage  = aws_api_gateway_deployment.foo.stage_name
   }
 }
 `, rName)
@@ -741,8 +741,8 @@ resource "aws_api_gateway_usage_plan" "test" {
   }
 
   api_stages {
-    api_id = "${aws_api_gateway_rest_api.test.id}"
-    stage  = "${aws_api_gateway_deployment.test.stage_name}"
+    api_id = aws_api_gateway_rest_api.test.id
+    stage  = aws_api_gateway_deployment.test.stage_name
   }
 }
 `, rName)
