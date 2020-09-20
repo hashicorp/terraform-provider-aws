@@ -45,6 +45,9 @@ Applicable for WebSocket APIs.
 * `cors_configuration` - (Optional) The cross-origin resource sharing (CORS) [configuration](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-cors.html). Applicable for HTTP APIs.
 * `credentials_arn` - (Optional) Part of _quick create_. Specifies any credentials required for the integration. Applicable for HTTP APIs.
 * `description` - (Optional) The description of the API.
+* `disable_execute_api_endpoint` - (Optional) Whether clients can invoke the API by using the default `execute-api` endpoint.
+By default, clients can invoke the API with the default `{api_id}.execute-api.{region}.amazonaws.com endpoint`.
+To require that clients use a custom domain name to invoke the API, disable the default endpoint.
 * `route_key` - (Optional) Part of _quick create_. Specifies any [route key](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-routes.html). Applicable for HTTP APIs.
 * `route_selection_expression` - (Optional) The [route selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-route-selection-expressions) for the API.
 Defaults to `$request.method $request.path`.
