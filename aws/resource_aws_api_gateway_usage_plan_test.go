@@ -16,7 +16,7 @@ import (
 func TestAccAWSAPIGatewayUsagePlan_basic(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	updatedName := acctest.RandomWithPrefix("tf-acc-test")
+	updatedName := acctest.RandomWithPrefix("tf-acc-test-2")
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
