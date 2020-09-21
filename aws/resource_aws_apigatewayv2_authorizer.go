@@ -58,8 +58,7 @@ func resourceAwsApiGatewayV2Authorizer() *schema.Resource {
 			},
 			"identity_sources": {
 				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
+				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"jwt_configuration": {

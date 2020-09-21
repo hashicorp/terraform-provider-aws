@@ -49,9 +49,6 @@ The following arguments are supported:
 * `authorizer_type` - (Required) The authorizer type. Valid values: `JWT`, `REQUEST`.
 Specify `REQUEST` for a Lambda function using incoming request parameters.
 For HTTP APIs, specify `JWT` to use JSON Web Tokens.
-* `identity_sources` - (Required) The identity sources for which authorization is requested.
-For `REQUEST` authorizers the value is a list of one or more mapping expressions of the specified request parameters.
-For `JWT` authorizers the single entry specifies where to extract the JSON Web Token (JWT) from inbound requests.
 * `name` - (Required) The name of the authorizer.
 * `authorizer_credentials_arn` - (Optional) The required credentials as an IAM role for API Gateway to invoke the authorizer.
 Supported only for `REQUEST` authorizers.
@@ -65,6 +62,9 @@ For `REQUEST` authorizers this must be a well-formed Lambda function URI, such a
 Supported only for `REQUEST` authorizers.
 * `enable_simple_responses` - (Optional) Whether a Lambda authorizer returns a response in a simple format. If enabled, the Lambda authorizer can return a boolean value instead of an IAM policy.
 Supported only for HTTP APIs.
+* `identity_sources` - (Optional) The identity sources for which authorization is requested.
+For `REQUEST` authorizers the value is a list of one or more mapping expressions of the specified request parameters.
+For `JWT` authorizers the single entry specifies where to extract the JSON Web Token (JWT) from inbound requests.
 * `jwt_configuration` - (Optional) The configuration of a JWT authorizer. Required for the `JWT` authorizer type.
 Supported only for HTTP APIs.
 

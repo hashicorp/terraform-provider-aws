@@ -34,8 +34,7 @@ func TestAccAWSAPIGatewayV2Authorizer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "REQUEST"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "enable_simple_responses", "false"),
-					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "route.request.header.Auth"),
+					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -135,8 +134,7 @@ func TestAccAWSAPIGatewayV2Authorizer_Credentials(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "enable_simple_responses", "false"),
-					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "route.request.header.Auth"),
+					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -376,11 +374,10 @@ func testAccAWSAPIGatewayV2AuthorizerConfig_basic(rName string) string {
 		testAccAWSAPIGatewayV2AuthorizerConfig_baseLambda(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_authorizer" "test" {
-  api_id           = aws_apigatewayv2_api.test.id
-  authorizer_type  = "REQUEST"
-  authorizer_uri   = aws_lambda_function.test.invoke_arn
-  identity_sources = ["route.request.header.Auth"]
-  name             = %[1]q
+  api_id          = aws_apigatewayv2_api.test.id
+  authorizer_type = "REQUEST"
+  authorizer_uri  = aws_lambda_function.test.invoke_arn
+  name            = %[1]q
 }
 `, rName))
 }
