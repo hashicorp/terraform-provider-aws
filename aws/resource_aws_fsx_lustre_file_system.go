@@ -161,15 +161,9 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 		},
 	}
 
-	var t string
-	if v, ok := d.GetOk("deployment_type"); ok {
-		t = v.(string)
-	}
-
+	//Applicable only for TypePersistent1
 	if v, ok := d.GetOk("kms_key_id"); ok {
-		if t == fsx.LustreDeploymentTypePersistent1 {
-			input.KmsKeyId = aws.String(v.(string))
-		}
+		input.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("automatic_backup_retention_days"); ok {
