@@ -511,7 +511,7 @@ func testAccCheckAWSAPIGatewayUsagePlanDestroy(s *terraform.State) error {
 		}
 
 		req := &apigateway.GetUsagePlanInput{
-			UsagePlanId: aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+			UsagePlanId: aws.String(rs.Primary.ID),
 		}
 		describe, err := conn.GetUsagePlan(req)
 
