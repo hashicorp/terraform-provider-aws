@@ -122,6 +122,7 @@ variable "service_labels" {
     "lightsail",
     "machinelearning",
     "macie",
+    "macie2",
     "managedblockchain",
     "marketplacecatalog",
     "mediaconnect",

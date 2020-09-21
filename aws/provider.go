@@ -1138,6 +1138,7 @@ func init() {
 		"licensemanager",
 		"lightsail",
 		"macie",
+		"macie2",
 		"managedblockchain",
 		"marketplacecatalog",
 		"mediaconnect",

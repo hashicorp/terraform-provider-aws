@@ -140,6 +140,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>licensemanager</code></li>
   <li><code>lightsail</code></li>
   <li><code>macie</code></li>
+  <li><code>macie2</code></li>
   <li><code>managedblockchain</code></li>
   <li><code>marketplacecatalog</code></li>
   <li><code>mediaconnect</code></li>
