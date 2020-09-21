@@ -145,6 +145,11 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"admin_user_list": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"case_sensitivity": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -174,6 +179,7 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 		Role:                 aws.String(d.Get("role_arn").(string)),
 		CaseSensitivity:      aws.String(d.Get("case_sensitivity").(string)),
 		ValidUserList:        expandStringSet(d.Get("valid_user_list").(*schema.Set)),
+		AdminUserList:        expandStringSet(d.Get("admin_user_list").(*schema.Set)),
 		Tags:                 keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().StoragegatewayTags(),
 	}
 
@@ -276,6 +282,10 @@ func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error setting valid_user_list: %w", err)
 	}
 
+	if err := d.Set("admin_user_list", schema.NewSet(schema.HashString, flattenStringList(fileshare.AdminUserList))); err != nil {
+		return fmt.Errorf("error setting admin_user_list: %s", err)
+	}
+
 	if err := d.Set("tags", keyvaluetags.StoragegatewayKeyValueTags(fileshare.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
@@ -293,7 +303,7 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChanges("default_storage_class", "guess_mime_type_enabled", "invalid_user_list",
+	if d.HasChanges("admin_user_list", "default_storage_class", "guess_mime_type_enabled", "invalid_user_list",
 		"kms_encrypted", "object_acl", "read_only", "requester_pays", "requester_pays",
 		"valid_user_list", "kms_key_arn", "audit_destination_arn", "smb_acl_enabled", "cache_attributes",
 		"case_sensitivity") {
@@ -307,6 +317,7 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 			ReadOnly:             aws.Bool(d.Get("read_only").(bool)),
 			RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
 			ValidUserList:        expandStringSet(d.Get("valid_user_list").(*schema.Set)),
+			AdminUserList:        expandStringSet(d.Get("admin_user_list").(*schema.Set)),
 			SMBACLEnabled:        aws.Bool(d.Get("smb_acl_enabled").(bool)),
 			CaseSensitivity:      aws.String(d.Get("case_sensitivity").(string)),
 		}
