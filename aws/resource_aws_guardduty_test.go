@@ -30,7 +30,8 @@ func TestAccAWSGuardDuty_serial(t *testing.T) {
 			"basic": testAccAwsGuardDutyOrganizationAdminAccount_basic,
 		},
 		"OrganizationConfiguration": {
-			"basic": testAccAwsGuardDutyOrganizationConfiguration_basic,
+			"basic":  testAccAwsGuardDutyOrganizationConfiguration_basic,
+			"s3Logs": testAccAwsGuardDutyOrganizationConfiguration_s3logs,
 		},
 		"ThreatIntelSet": {
 			"basic": testAccAwsGuardDutyThreatintelset_basic,
