@@ -401,13 +401,13 @@ func resourceAwsInstance() *schema.Resource {
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								ec2.VolumeTypeStandard,
-								ec2.VolumeTypeIo1,
-								ec2.VolumeTypeGp2,
-								ec2.VolumeTypeSc1,
-								ec2.VolumeTypeSt1,
-							}, false),
+							// ValidateFunc: validation.StringInSlice([]string{
+							// 	ec2.VolumeTypeStandard,
+							// 	ec2.VolumeTypeIo1,
+							// 	ec2.VolumeTypeGp2,
+							// 	ec2.VolumeTypeSc1,
+							// 	ec2.VolumeTypeSt1,
+							// }, false),
 						},
 
 						"volume_id": {
