@@ -660,120 +660,122 @@ resource "aws_transfer_user" "foo" {
 }
 
 func testAccAWSTransferUserConfig_homeDirectoryMappings(rName string) string {
-	return testAccAWSTransferUserConfig_base + fmt.Sprintf(`
-
+	return composeConfig(
+		testAccAWSTransferUserConfig_base,
+		fmt.Sprintf(`
 resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-user-iam-role-%s"
+  name = "tf-test-transfer-user-iam-role-%[1]s"
 
   assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Effect": "Allow",
-			"Principal": {
-				"Service": "transfer.amazonaws.com"
-			},
-			"Action": "sts:AssumeRole"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "transfer.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
 }
 EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-user-iam-policy-%s"
-  role = "${aws_iam_role.foo.id}"
+  name = "tf-test-transfer-user-iam-policy-%[1]s"
+  role = aws_iam_role.foo.id
 
   policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "AllowFullAccesstoS3",
-			"Effect": "Allow",
-			"Action": [
-				"s3:*"
-			],
-			"Resource": "*"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowFullAccesstoS3",
+      "Effect": "Allow",
+      "Action": [
+        "s3:*"
+      ],
+      "Resource": "*"
+    }
+  ]
 }
 POLICY
 }
 
 resource "aws_transfer_user" "foo" {
-  server_id = "${aws_transfer_server.foo.id}"
-  user_name = "tftestuser"
-  role      = "${aws_iam_role.foo.arn}"
   home_directory_type = "LOGICAL"
+  role                = aws_iam_role.foo.arn
+  server_id           = aws_transfer_server.foo.id
+  user_name           = "tftestuser"
 
   home_directory_mappings {
-    entry = "/your-personal-report.pdf"
+    entry  = "/your-personal-report.pdf"
     target = "/bucket3/customized-reports/tftestuser.pdf" 
   }
 }
-`, rName, rName)
+`, rName))
 }
 
 func testAccAWSTransferUserConfig_homeDirectoryMappingsUpdate(rName string) string {
-	return testAccAWSTransferUserConfig_base + fmt.Sprintf(`
-
+	return composeConfig(
+		testAccAWSTransferUserConfig_base,
+		fmt.Sprintf(`
 resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-user-iam-role-%s"
+  name = "tf-test-transfer-user-iam-role-%[1]s"
 
   assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Effect": "Allow",
-			"Principal": {
-				"Service": "transfer.amazonaws.com"
-			},
-			"Action": "sts:AssumeRole"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "transfer.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
 }
 EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-user-iam-policy-%s"
-  role = "${aws_iam_role.foo.id}"
+  name = "tf-test-transfer-user-iam-policy-%[1]s"
+  role = aws_iam_role.foo.id
 
   policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "AllowFullAccesstoS3",
-			"Effect": "Allow",
-			"Action": [
-				"s3:*"
-			],
-			"Resource": "*"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowFullAccesstoS3",
+      "Effect": "Allow",
+      "Action": [
+        "s3:*"
+      ],
+      "Resource": "*"
+    }
+  ]
 }
 POLICY
 }
 
 resource "aws_transfer_user" "foo" {
-  server_id = "${aws_transfer_server.foo.id}"
-  user_name = "tftestuser"
-  role      = "${aws_iam_role.foo.arn}"
   home_directory_type = "LOGICAL"
+  role                = aws_iam_role.foo.arn
+  server_id           = aws_transfer_server.foo.id
+  user_name           = "tftestuser"
 
   home_directory_mappings {
-    entry = "/your-personal-report.pdf"
+    entry  = "/your-personal-report.pdf"
     target = "/bucket3/customized-reports/tftestuser.pdf" 
   }
 
   home_directory_mappings {
-    entry = "/your-personal-report2.pdf"
+    entry  = "/your-personal-report2.pdf"
     target = "/bucket3/customized-reports2/tftestuser.pdf" 
   }
 }
-`, rName, rName)
+`, rName))
 }
