@@ -71,13 +71,9 @@ func resourceAwsApiGatewayUsagePlan() *schema.Resource {
 						},
 
 						"period": {
-							Type:     schema.TypeString,
-							Required: true, // Required as not removable
-							ValidateFunc: validation.StringInSlice([]string{
-								apigateway.QuotaPeriodTypeDay,
-								apigateway.QuotaPeriodTypeWeek,
-								apigateway.QuotaPeriodTypeMonth,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true, // Required as not removable
+							ValidateFunc: validation.StringInSlice(apigateway.QuotaPeriodType_Values(), false),
 						},
 					},
 				},
