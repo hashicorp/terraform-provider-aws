@@ -370,6 +370,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 								elasticsearch.LogTypeIndexSlowLogs,
 								elasticsearch.LogTypeSearchSlowLogs,
 								elasticsearch.LogTypeEsApplicationLogs,
+								elasticsearch.LogTypeAuditLogs,
 							}, false),
 						},
 						"cloudwatch_log_group_arn": {
