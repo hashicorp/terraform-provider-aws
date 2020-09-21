@@ -202,6 +202,7 @@ func Provider() *schema.Provider {
 			"aws_db_snapshot":                                dataSourceAwsDbSnapshot(),
 			"aws_db_subnet_group":                            dataSourceAwsDbSubnetGroup(),
 			"aws_directory_service_directory":                dataSourceAwsDirectoryServiceDirectory(),
+			"aws_docdb_engine_version":                       dataSourceAwsDocdbEngineVersion(),
 			"aws_docdb_orderable_db_instance":                dataSourceAwsDocdbOrderableDbInstance(),
 			"aws_dx_gateway":                                 dataSourceAwsDxGateway(),
 			"aws_dynamodb_table":                             dataSourceAwsDynamoDbTable(),
