@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -139,6 +140,9 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 				}
 				stmt.Sid = sid.(string)
 				if len(stmt.Sid) > 0 {
+					if ok, _ := regexp.MatchString(`[0-9A-Za-z]*`, stmt.Sid); !ok {
+						return fmt.Errorf("Error in sid (%s), sid must match regex [0-9A-Za-z]*.", sid.(string))
+					}
 					sidMap[stmt.Sid] = struct{}{}
 				}
 			}

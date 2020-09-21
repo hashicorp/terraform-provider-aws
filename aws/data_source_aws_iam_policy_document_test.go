@@ -123,6 +123,19 @@ func TestAccAWSDataSourceIAMPolicyDocument_noStatementOverride(t *testing.T) {
 	})
 }
 
+func TestAccAWSDataSourceIAMPolicyDocument_invalidSid(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSIAMPolicyDocumentInvalidSidConfig,
+				ExpectError: regexp.MustCompile(`sid must match regex`),
+			},
+		},
+	})
+}
+
 func TestAccAWSDataSourceIAMPolicyDocument_duplicateSid(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -717,6 +730,17 @@ var testAccAWSIAMPolicyDocumentNoStatementOverrideExpectedJSON = `{
     }
   ]
 }`
+
+var testAccAWSIAMPolicyDocumentInvalidSidConfig = `
+data "aws_iam_policy_document" "test" {
+  statement {
+    sid       = "Hi-I-Am-Not-Valid"
+    effect    = "Allow"
+    actions   = ["ec2:DescribeAccountAttributes"]
+    resources = ["*"]
+  }
+}
+`
 
 var testAccAWSIAMPolicyDocumentDuplicateSidConfig = `
 data "aws_iam_policy_document" "test" {
