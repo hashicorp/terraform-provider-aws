@@ -31,7 +31,7 @@ resource "aws_synthetics_canary" "some" {
 The following arguments are supported:
 
 * `name` - (Required) The name for this canary.
-* `artifact_s3_location` - (Required) The location in Amazon S3 where Synthetics stores artifacts from the test runs of this canary.
+* `artifact_s3_location` - (Required) The location on Amazon S3 where Synthetics stores artifacts from the test runs of this canary.
 * `schedule` -  (Required) Information about how often the canary is to run and when these test runs are to stop. See [Schedule](#schedule) below.
 * `handler` - (Required) The domain description.
 * `execution_role_arn` - (Required) The ARN of the IAM role to be used to run the canary. see [AWS Docs](https://docs.aws.amazon.com/AmazonSynthetics/latest/APIReference/API_CreateCanary.html#API_CreateCanary_RequestSyntax) for permissions needs for IAM Role.
@@ -70,10 +70,18 @@ In addition to all arguments above, the following attributes are exported:
 * `source_location_arn` - The ARN of the Lambda layer where Synthetics stores the canary script code.
 * `engine_arn` - The ARN of the Lambda function that is used as your canary's engine.
 * `runtime_version` - Specifies the runtime version to use for the canary.
+* `timeline` - A structure that contains information about when the canary was created, modified, and most recently run. see [Timeline](#timeline).
 
 ### VPC Config
 
 * `vpc_id` - The ID of the VPC where this canary is to run.
+
+### Timeline
+
+* `created` - The date and time the canary was created.
+* `last_modified` - The date and time the canary was most recently modified.
+* `last_started` - The date and time that the canary's most recent run started.
+* `last_stopped` - The date and time that the canary's most recent run ended.
 
 ## Import
 
