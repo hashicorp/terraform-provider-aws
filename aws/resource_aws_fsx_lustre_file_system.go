@@ -161,6 +161,17 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 		},
 	}
 
+    var t string
+	if v, ok := d.GetOk("deployment_type"); ok {
+		t = v.(string)
+	}
+
+	if v, ok := d.GetOk("kms_key_id"); ok {
+		if t == fsx.LustreDeploymentTypePersistent1 {
+			input.KmsKeyId = aws.String(v.(string))
+		}
+	}
+
 	if v, ok := d.GetOk("automatic_backup_retention_days"); ok {
 		input.LustreConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(v.(int)))
 	}
@@ -187,21 +198,6 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
 		input.LustreConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
-	}
-
-	var t string
-	if v, ok := d.GetOk("deployment_type"); ok {
-		if input.LustreConfiguration == nil {
-			input.LustreConfiguration = &fsx.CreateFileSystemLustreConfiguration{}
-		}
-		t = v.(string)
-		input.LustreConfiguration.DeploymentType = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("kms_key_id"); ok {
-		if t == fsx.LustreDeploymentTypePersistent1 {
-			input.KmsKeyId = aws.String(v.(string))
-		}
 	}
 
 	if v, ok := d.GetOk("per_unit_storage_throughput"); ok {
