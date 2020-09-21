@@ -4,6 +4,7 @@ FEATURES
 
 * **New Resource:** `aws_datasync_location_fsx_windows` ([#12686](https://github.com/terraform-providers/terraform-provider-aws/pull/12686))
 * **New Resource:** `aws_route53_resolver_query_log_config`. ([#14897](https://github.com/terraform-providers/terraform-provider-aws/pull/14897))
+* **New Resource:** `aws_route53_resolver_query_log_config_association`. ([#14901](https://github.com/terraform-providers/terraform-provider-aws/pull/14901))
 
 ENHANCEMENTS
 
