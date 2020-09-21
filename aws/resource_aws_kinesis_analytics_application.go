@@ -565,7 +565,7 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 		ApplicationName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("code"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("code"); ok {
 		createOpts.ApplicationCode = aws.String(v.(string))
 	}
 
@@ -1086,7 +1086,7 @@ func createApplicationUpdateOpts(d *schema.ResourceData) *kinesisanalytics.Appli
 	applicationUpdate := &kinesisanalytics.ApplicationUpdate{}
 
 	if d.HasChange("code") {
-		if v, ok := d.GetOk("code"); ok && v.(string) != "" {
+		if v, ok := d.GetOk("code"); ok {
 			applicationUpdate.ApplicationCodeUpdate = aws.String(v.(string))
 		}
 	}

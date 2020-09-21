@@ -4945,6 +4945,91 @@ func (c *ApiGatewayV2) ReimportApiWithContext(ctx aws.Context, input *ReimportAp
 	return out, req.Send()
 }
 
+const opResetAuthorizersCache = "ResetAuthorizersCache"
+
+// ResetAuthorizersCacheRequest generates a "aws/request.Request" representing the
+// client's request for the ResetAuthorizersCache operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ResetAuthorizersCache for more information on using the ResetAuthorizersCache
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ResetAuthorizersCacheRequest method.
+//    req, resp := client.ResetAuthorizersCacheRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/ResetAuthorizersCache
+func (c *ApiGatewayV2) ResetAuthorizersCacheRequest(input *ResetAuthorizersCacheInput) (req *request.Request, output *ResetAuthorizersCacheOutput) {
+	op := &request.Operation{
+		Name:       opResetAuthorizersCache,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/v2/apis/{apiId}/stages/{stageName}/cache/authorizers",
+	}
+
+	if input == nil {
+		input = &ResetAuthorizersCacheInput{}
+	}
+
+	output = &ResetAuthorizersCacheOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// ResetAuthorizersCache API operation for AmazonApiGatewayV2.
+//
+// Resets all authorizer cache entries for the specified stage. Supported only
+// for HTTP API Lambda authorizers.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AmazonApiGatewayV2's
+// API operation ResetAuthorizersCache for usage and error information.
+//
+// Returned Error Types:
+//   * NotFoundException
+//   The resource specified in the request was not found. See the message field
+//   for more information.
+//
+//   * TooManyRequestsException
+//   A limit has been exceeded. See the accompanying error message for details.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/ResetAuthorizersCache
+func (c *ApiGatewayV2) ResetAuthorizersCache(input *ResetAuthorizersCacheInput) (*ResetAuthorizersCacheOutput, error) {
+	req, out := c.ResetAuthorizersCacheRequest(input)
+	return out, req.Send()
+}
+
+// ResetAuthorizersCacheWithContext is the same as ResetAuthorizersCache with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ResetAuthorizersCache for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ApiGatewayV2) ResetAuthorizersCacheWithContext(ctx aws.Context, input *ResetAuthorizersCacheInput, opts ...request.Option) (*ResetAuthorizersCacheOutput, error) {
+	req, out := c.ResetAuthorizersCacheRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opTagResource = "TagResource"
 
 // TagResourceRequest generates a "aws/request.Request" representing the
@@ -6349,6 +6434,12 @@ type Api struct {
 	// The description of the API.
 	Description *string `locationName:"description" type:"string"`
 
+	// Specifies whether clients can invoke your API by using the default execute-api
+	// endpoint. By default, clients can invoke your API with the default https://{api_id}.execute-api.{region}.amazonaws.com
+	// endpoint. To require that clients use a custom domain name to invoke your
+	// API, disable the default endpoint.
+	DisableExecuteApiEndpoint *bool `locationName:"disableExecuteApiEndpoint" type:"boolean"`
+
 	// Avoid validating models when creating a deployment. Supported only for WebSocket
 	// APIs.
 	DisableSchemaValidation *bool `locationName:"disableSchemaValidation" type:"boolean"`
@@ -6435,6 +6526,12 @@ func (s *Api) SetCreatedDate(v time.Time) *Api {
 // SetDescription sets the Description field's value.
 func (s *Api) SetDescription(v string) *Api {
 	s.Description = &v
+	return s
+}
+
+// SetDisableExecuteApiEndpoint sets the DisableExecuteApiEndpoint field's value.
+func (s *Api) SetDisableExecuteApiEndpoint(v bool) *Api {
+	s.DisableExecuteApiEndpoint = &v
 	return s
 }
 
@@ -6548,22 +6645,30 @@ type Authorizer struct {
 	// Specifies the required credentials as an IAM role for API Gateway to invoke
 	// the authorizer. To specify an IAM role for API Gateway to assume, use the
 	// role's Amazon Resource Name (ARN). To use resource-based permissions on the
-	// Lambda function, specify null. Supported only for REQUEST authorizers.
+	// Lambda function, don't specify this parameter. Supported only for REQUEST
+	// authorizers.
 	AuthorizerCredentialsArn *string `locationName:"authorizerCredentialsArn" type:"string"`
 
 	// The authorizer identifier.
 	AuthorizerId *string `locationName:"authorizerId" type:"string"`
 
-	// Authorizer caching is not currently supported. Don't specify this value for
-	// authorizers.
+	// Specifies the format of the payload sent to an HTTP API Lambda authorizer.
+	// Required for HTTP API Lambda authorizers. Supported values are 1.0 and 2.0.
+	// To learn more, see Working with AWS Lambda authorizers for HTTP APIs (https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-lambda-authorizer.html).
+	AuthorizerPayloadFormatVersion *string `locationName:"authorizerPayloadFormatVersion" type:"string"`
+
+	// The time to live (TTL) for cached authorizer results, in seconds. If it equals
+	// 0, authorization caching is disabled. If it is greater than 0, API Gateway
+	// caches authorizer responses. The maximum value is 3600, or 1 hour. Supported
+	// only for HTTP API Lambda authorizers.
 	AuthorizerResultTtlInSeconds *int64 `locationName:"authorizerResultTtlInSeconds" type:"integer"`
 
-	// The authorizer type. For WebSocket APIs, specify REQUEST for a Lambda function
-	// using incoming request parameters. For HTTP APIs, specify JWT to use JSON
-	// Web Tokens.
+	// The authorizer type. Specify REQUEST for a Lambda function using incoming
+	// request parameters. Specify JWT to use JSON Web Tokens (supported only for
+	// HTTP APIs).
 	AuthorizerType *string `locationName:"authorizerType" type:"string" enum:"AuthorizerType"`
 
-	// The authorizer's Uniform Resource Identifier (URI). ForREQUEST authorizers,
+	// The authorizer's Uniform Resource Identifier (URI). For REQUEST authorizers,
 	// this must be a well-formed Lambda function URI, for example, arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:{account_id}:function:{lambda_function_name}/invocations.
 	// In general, the URI has this form: arn:aws:apigateway:{region}:lambda:path/{service_api}
 	// , where {region} is the same as the region hosting the Lambda function, path
@@ -6573,23 +6678,32 @@ type Authorizer struct {
 	// only for REQUEST authorizers.
 	AuthorizerUri *string `locationName:"authorizerUri" type:"string"`
 
+	// Specifies whether a Lambda authorizer returns a response in a simple format.
+	// If enabled, the Lambda authorizer can return a boolean value instead of an
+	// IAM policy. Supported only for HTTP APIs. To learn more, see Working with
+	// AWS Lambda authorizers for HTTP APIs (https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-lambda-authorizer.html)
+	EnableSimpleResponses *bool `locationName:"enableSimpleResponses" type:"boolean"`
+
 	// The identity source for which authorization is requested.
 	//
 	// For a REQUEST authorizer, this is optional. The value is a set of one or
-	// more mapping expressions of the specified request parameters. Currently,
-	// the identity source can be headers, query string parameters, stage variables,
-	// and context parameters. For example, if an Auth header and a Name query string
-	// parameter are defined as identity sources, this value is route.request.header.Auth,
-	// route.request.querystring.Name. These parameters will be used to perform
-	// runtime validation for Lambda-based authorizers by verifying all of the identity-related
-	// request parameters are present in the request, not null, and non-empty. Only
-	// when this is true does the authorizer invoke the authorizer Lambda function.
-	// Otherwise, it returns a 401 Unauthorized response without calling the Lambda
-	// function.
+	// more mapping expressions of the specified request parameters. The identity
+	// source can be headers, query string parameters, stage variables, and context
+	// parameters. For example, if an Auth header and a Name query string parameter
+	// are defined as identity sources, this value is route.request.header.Auth,
+	// route.request.querystring.Name for WebSocket APIs. For HTTP APIs, use selection
+	// expressions prefixed with $, for example, $request.header.Auth, $request.querystring.Name.
+	// These parameters are used to perform runtime validation for Lambda-based
+	// authorizers by verifying all of the identity-related request parameters are
+	// present in the request, not null, and non-empty. Only when this is true does
+	// the authorizer invoke the authorizer Lambda function. Otherwise, it returns
+	// a 401 Unauthorized response without calling the Lambda function. For HTTP
+	// APIs, identity sources are also used as the cache key when caching is enabled.
+	// To learn more, see Working with AWS Lambda authorizers for HTTP APIs (https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-lambda-authorizer.html).
 	//
 	// For JWT, a single entry that specifies where to extract the JSON Web Token
 	// (JWT) from inbound requests. Currently only header-based and query parameter-based
-	// selections are supported, for example "$request.header.Authorization".
+	// selections are supported, for example $request.header.Authorization.
 	IdentitySource []*string `locationName:"identitySource" type:"list"`
 
 	// The validation expression does not apply to the REQUEST authorizer.
@@ -6627,6 +6741,12 @@ func (s *Authorizer) SetAuthorizerId(v string) *Authorizer {
 	return s
 }
 
+// SetAuthorizerPayloadFormatVersion sets the AuthorizerPayloadFormatVersion field's value.
+func (s *Authorizer) SetAuthorizerPayloadFormatVersion(v string) *Authorizer {
+	s.AuthorizerPayloadFormatVersion = &v
+	return s
+}
+
 // SetAuthorizerResultTtlInSeconds sets the AuthorizerResultTtlInSeconds field's value.
 func (s *Authorizer) SetAuthorizerResultTtlInSeconds(v int64) *Authorizer {
 	s.AuthorizerResultTtlInSeconds = &v
@@ -6642,6 +6762,12 @@ func (s *Authorizer) SetAuthorizerType(v string) *Authorizer {
 // SetAuthorizerUri sets the AuthorizerUri field's value.
 func (s *Authorizer) SetAuthorizerUri(v string) *Authorizer {
 	s.AuthorizerUri = &v
+	return s
+}
+
+// SetEnableSimpleResponses sets the EnableSimpleResponses field's value.
+func (s *Authorizer) SetEnableSimpleResponses(v bool) *Authorizer {
+	s.EnableSimpleResponses = &v
 	return s
 }
 
@@ -6892,6 +7018,8 @@ type CreateApiInput struct {
 	// A string with a length between [0-1024].
 	Description *string `locationName:"description" type:"string"`
 
+	DisableExecuteApiEndpoint *bool `locationName:"disableExecuteApiEndpoint" type:"boolean"`
+
 	DisableSchemaValidation *bool `locationName:"disableSchemaValidation" type:"boolean"`
 
 	// A string with a length between [1-128].
@@ -6978,6 +7106,12 @@ func (s *CreateApiInput) SetCredentialsArn(v string) *CreateApiInput {
 // SetDescription sets the Description field's value.
 func (s *CreateApiInput) SetDescription(v string) *CreateApiInput {
 	s.Description = &v
+	return s
+}
+
+// SetDisableExecuteApiEndpoint sets the DisableExecuteApiEndpoint field's value.
+func (s *CreateApiInput) SetDisableExecuteApiEndpoint(v bool) *CreateApiInput {
+	s.DisableExecuteApiEndpoint = &v
 	return s
 }
 
@@ -7188,6 +7322,8 @@ type CreateApiOutput struct {
 	// A string with a length between [0-1024].
 	Description *string `locationName:"description" type:"string"`
 
+	DisableExecuteApiEndpoint *bool `locationName:"disableExecuteApiEndpoint" type:"boolean"`
+
 	DisableSchemaValidation *bool `locationName:"disableSchemaValidation" type:"boolean"`
 
 	ImportInfo []*string `locationName:"importInfo" type:"list"`
@@ -7264,6 +7400,12 @@ func (s *CreateApiOutput) SetDescription(v string) *CreateApiOutput {
 	return s
 }
 
+// SetDisableExecuteApiEndpoint sets the DisableExecuteApiEndpoint field's value.
+func (s *CreateApiOutput) SetDisableExecuteApiEndpoint(v bool) *CreateApiOutput {
+	s.DisableExecuteApiEndpoint = &v
+	return s
+}
+
 // SetDisableSchemaValidation sets the DisableSchemaValidation field's value.
 func (s *CreateApiOutput) SetDisableSchemaValidation(v bool) *CreateApiOutput {
 	s.DisableSchemaValidation = &v
@@ -7321,18 +7463,23 @@ type CreateAuthorizerInput struct {
 	// Represents an Amazon Resource Name (ARN).
 	AuthorizerCredentialsArn *string `locationName:"authorizerCredentialsArn" type:"string"`
 
+	// A string with a length between [1-64].
+	AuthorizerPayloadFormatVersion *string `locationName:"authorizerPayloadFormatVersion" type:"string"`
+
 	// An integer with a value between [0-3600].
 	AuthorizerResultTtlInSeconds *int64 `locationName:"authorizerResultTtlInSeconds" type:"integer"`
 
-	// The authorizer type. For WebSocket APIs, specify REQUEST for a Lambda function
-	// using incoming request parameters. For HTTP APIs, specify JWT to use JSON
-	// Web Tokens.
+	// The authorizer type. Specify REQUEST for a Lambda function using incoming
+	// request parameters. Specify JWT to use JSON Web Tokens (supported only for
+	// HTTP APIs).
 	//
 	// AuthorizerType is a required field
 	AuthorizerType *string `locationName:"authorizerType" type:"string" required:"true" enum:"AuthorizerType"`
 
 	// A string representation of a URI with a length between [1-2048].
 	AuthorizerUri *string `locationName:"authorizerUri" type:"string"`
+
+	EnableSimpleResponses *bool `locationName:"enableSimpleResponses" type:"boolean"`
 
 	// The identity source for which authorization is requested. For the REQUEST
 	// authorizer, this is required when authorization caching is enabled. The value
@@ -7411,6 +7558,12 @@ func (s *CreateAuthorizerInput) SetAuthorizerCredentialsArn(v string) *CreateAut
 	return s
 }
 
+// SetAuthorizerPayloadFormatVersion sets the AuthorizerPayloadFormatVersion field's value.
+func (s *CreateAuthorizerInput) SetAuthorizerPayloadFormatVersion(v string) *CreateAuthorizerInput {
+	s.AuthorizerPayloadFormatVersion = &v
+	return s
+}
+
 // SetAuthorizerResultTtlInSeconds sets the AuthorizerResultTtlInSeconds field's value.
 func (s *CreateAuthorizerInput) SetAuthorizerResultTtlInSeconds(v int64) *CreateAuthorizerInput {
 	s.AuthorizerResultTtlInSeconds = &v
@@ -7426,6 +7579,12 @@ func (s *CreateAuthorizerInput) SetAuthorizerType(v string) *CreateAuthorizerInp
 // SetAuthorizerUri sets the AuthorizerUri field's value.
 func (s *CreateAuthorizerInput) SetAuthorizerUri(v string) *CreateAuthorizerInput {
 	s.AuthorizerUri = &v
+	return s
+}
+
+// SetEnableSimpleResponses sets the EnableSimpleResponses field's value.
+func (s *CreateAuthorizerInput) SetEnableSimpleResponses(v bool) *CreateAuthorizerInput {
+	s.EnableSimpleResponses = &v
 	return s
 }
 
@@ -7462,16 +7621,21 @@ type CreateAuthorizerOutput struct {
 	// The identifier.
 	AuthorizerId *string `locationName:"authorizerId" type:"string"`
 
+	// A string with a length between [1-64].
+	AuthorizerPayloadFormatVersion *string `locationName:"authorizerPayloadFormatVersion" type:"string"`
+
 	// An integer with a value between [0-3600].
 	AuthorizerResultTtlInSeconds *int64 `locationName:"authorizerResultTtlInSeconds" type:"integer"`
 
-	// The authorizer type. For WebSocket APIs, specify REQUEST for a Lambda function
-	// using incoming request parameters. For HTTP APIs, specify JWT to use JSON
-	// Web Tokens.
+	// The authorizer type. Specify REQUEST for a Lambda function using incoming
+	// request parameters. Specify JWT to use JSON Web Tokens (supported only for
+	// HTTP APIs).
 	AuthorizerType *string `locationName:"authorizerType" type:"string" enum:"AuthorizerType"`
 
 	// A string representation of a URI with a length between [1-2048].
 	AuthorizerUri *string `locationName:"authorizerUri" type:"string"`
+
+	EnableSimpleResponses *bool `locationName:"enableSimpleResponses" type:"boolean"`
 
 	// The identity source for which authorization is requested. For the REQUEST
 	// authorizer, this is required when authorization caching is enabled. The value
@@ -7521,6 +7685,12 @@ func (s *CreateAuthorizerOutput) SetAuthorizerId(v string) *CreateAuthorizerOutp
 	return s
 }
 
+// SetAuthorizerPayloadFormatVersion sets the AuthorizerPayloadFormatVersion field's value.
+func (s *CreateAuthorizerOutput) SetAuthorizerPayloadFormatVersion(v string) *CreateAuthorizerOutput {
+	s.AuthorizerPayloadFormatVersion = &v
+	return s
+}
+
 // SetAuthorizerResultTtlInSeconds sets the AuthorizerResultTtlInSeconds field's value.
 func (s *CreateAuthorizerOutput) SetAuthorizerResultTtlInSeconds(v int64) *CreateAuthorizerOutput {
 	s.AuthorizerResultTtlInSeconds = &v
@@ -7536,6 +7706,12 @@ func (s *CreateAuthorizerOutput) SetAuthorizerType(v string) *CreateAuthorizerOu
 // SetAuthorizerUri sets the AuthorizerUri field's value.
 func (s *CreateAuthorizerOutput) SetAuthorizerUri(v string) *CreateAuthorizerOutput {
 	s.AuthorizerUri = &v
+	return s
+}
+
+// SetEnableSimpleResponses sets the EnableSimpleResponses field's value.
+func (s *CreateAuthorizerOutput) SetEnableSimpleResponses(v bool) *CreateAuthorizerOutput {
+	s.EnableSimpleResponses = &v
 	return s
 }
 
@@ -7696,6 +7872,11 @@ type CreateDomainNameInput struct {
 	// The domain name configurations.
 	DomainNameConfigurations []*DomainNameConfiguration `locationName:"domainNameConfigurations" type:"list"`
 
+	// If specified, API Gateway performs two-way authentication between the client
+	// and the server. Clients must present a trusted certificate to access your
+	// API.
+	MutualTlsAuthentication *MutualTlsAuthenticationInput `locationName:"mutualTlsAuthentication" type:"structure"`
+
 	// Represents a collection of tags associated with the resource.
 	Tags map[string]*string `locationName:"tags" type:"map"`
 }
@@ -7735,6 +7916,12 @@ func (s *CreateDomainNameInput) SetDomainNameConfigurations(v []*DomainNameConfi
 	return s
 }
 
+// SetMutualTlsAuthentication sets the MutualTlsAuthentication field's value.
+func (s *CreateDomainNameInput) SetMutualTlsAuthentication(v *MutualTlsAuthenticationInput) *CreateDomainNameInput {
+	s.MutualTlsAuthentication = v
+	return s
+}
+
 // SetTags sets the Tags field's value.
 func (s *CreateDomainNameInput) SetTags(v map[string]*string) *CreateDomainNameInput {
 	s.Tags = v
@@ -7754,6 +7941,11 @@ type CreateDomainNameOutput struct {
 
 	// The domain name configurations.
 	DomainNameConfigurations []*DomainNameConfiguration `locationName:"domainNameConfigurations" type:"list"`
+
+	// If specified, API Gateway performs two-way authentication between the client
+	// and the server. Clients must present a trusted certificate to access your
+	// API.
+	MutualTlsAuthentication *MutualTlsAuthentication `locationName:"mutualTlsAuthentication" type:"structure"`
 
 	// Represents a collection of tags associated with the resource.
 	Tags map[string]*string `locationName:"tags" type:"map"`
@@ -7784,6 +7976,12 @@ func (s *CreateDomainNameOutput) SetDomainName(v string) *CreateDomainNameOutput
 // SetDomainNameConfigurations sets the DomainNameConfigurations field's value.
 func (s *CreateDomainNameOutput) SetDomainNameConfigurations(v []*DomainNameConfiguration) *CreateDomainNameOutput {
 	s.DomainNameConfigurations = v
+	return s
+}
+
+// SetMutualTlsAuthentication sets the MutualTlsAuthentication field's value.
+func (s *CreateDomainNameOutput) SetMutualTlsAuthentication(v *MutualTlsAuthentication) *CreateDomainNameOutput {
+	s.MutualTlsAuthentication = v
 	return s
 }
 
@@ -8575,8 +8773,9 @@ type CreateRouteInput struct {
 
 	// The authorization type. For WebSocket APIs, valid values are NONE for open
 	// access, AWS_IAM for using AWS IAM permissions, and CUSTOM for using a Lambda
-	// authorizer. For HTTP APIs, valid values are NONE for open access, or JWT
-	// for using JSON Web Tokens.
+	// authorizer. For HTTP APIs, valid values are NONE for open access, JWT for
+	// using JSON Web Tokens, AWS_IAM for using AWS IAM permissions, and CUSTOM
+	// for using a Lambda authorizer.
 	AuthorizationType *string `locationName:"authorizationType" type:"string" enum:"AuthorizationType"`
 
 	// The identifier.
@@ -8733,8 +8932,9 @@ type CreateRouteOutput struct {
 
 	// The authorization type. For WebSocket APIs, valid values are NONE for open
 	// access, AWS_IAM for using AWS IAM permissions, and CUSTOM for using a Lambda
-	// authorizer. For HTTP APIs, valid values are NONE for open access, or JWT
-	// for using JSON Web Tokens.
+	// authorizer. For HTTP APIs, valid values are NONE for open access, JWT for
+	// using JSON Web Tokens, AWS_IAM for using AWS IAM permissions, and CUSTOM
+	// for using a Lambda authorizer.
 	AuthorizationType *string `locationName:"authorizationType" type:"string" enum:"AuthorizationType"`
 
 	// The identifier.
@@ -10632,6 +10832,9 @@ type DomainName struct {
 	// The domain name configurations.
 	DomainNameConfigurations []*DomainNameConfiguration `locationName:"domainNameConfigurations" type:"list"`
 
+	// The mutual TLS authentication configuration for a custom domain name.
+	MutualTlsAuthentication *MutualTlsAuthentication `locationName:"mutualTlsAuthentication" type:"structure"`
+
 	// The collection of tags associated with a domain name.
 	Tags map[string]*string `locationName:"tags" type:"map"`
 }
@@ -10661,6 +10864,12 @@ func (s *DomainName) SetDomainName(v string) *DomainName {
 // SetDomainNameConfigurations sets the DomainNameConfigurations field's value.
 func (s *DomainName) SetDomainNameConfigurations(v []*DomainNameConfiguration) *DomainName {
 	s.DomainNameConfigurations = v
+	return s
+}
+
+// SetMutualTlsAuthentication sets the MutualTlsAuthentication field's value.
+func (s *DomainName) SetMutualTlsAuthentication(v *MutualTlsAuthentication) *DomainName {
+	s.MutualTlsAuthentication = v
 	return s
 }
 
@@ -11148,6 +11357,8 @@ type GetApiOutput struct {
 	// A string with a length between [0-1024].
 	Description *string `locationName:"description" type:"string"`
 
+	DisableExecuteApiEndpoint *bool `locationName:"disableExecuteApiEndpoint" type:"boolean"`
+
 	DisableSchemaValidation *bool `locationName:"disableSchemaValidation" type:"boolean"`
 
 	ImportInfo []*string `locationName:"importInfo" type:"list"`
@@ -11221,6 +11432,12 @@ func (s *GetApiOutput) SetCreatedDate(v time.Time) *GetApiOutput {
 // SetDescription sets the Description field's value.
 func (s *GetApiOutput) SetDescription(v string) *GetApiOutput {
 	s.Description = &v
+	return s
+}
+
+// SetDisableExecuteApiEndpoint sets the DisableExecuteApiEndpoint field's value.
+func (s *GetApiOutput) SetDisableExecuteApiEndpoint(v bool) *GetApiOutput {
+	s.DisableExecuteApiEndpoint = &v
 	return s
 }
 
@@ -11397,16 +11614,21 @@ type GetAuthorizerOutput struct {
 	// The identifier.
 	AuthorizerId *string `locationName:"authorizerId" type:"string"`
 
+	// A string with a length between [1-64].
+	AuthorizerPayloadFormatVersion *string `locationName:"authorizerPayloadFormatVersion" type:"string"`
+
 	// An integer with a value between [0-3600].
 	AuthorizerResultTtlInSeconds *int64 `locationName:"authorizerResultTtlInSeconds" type:"integer"`
 
-	// The authorizer type. For WebSocket APIs, specify REQUEST for a Lambda function
-	// using incoming request parameters. For HTTP APIs, specify JWT to use JSON
-	// Web Tokens.
+	// The authorizer type. Specify REQUEST for a Lambda function using incoming
+	// request parameters. Specify JWT to use JSON Web Tokens (supported only for
+	// HTTP APIs).
 	AuthorizerType *string `locationName:"authorizerType" type:"string" enum:"AuthorizerType"`
 
 	// A string representation of a URI with a length between [1-2048].
 	AuthorizerUri *string `locationName:"authorizerUri" type:"string"`
+
+	EnableSimpleResponses *bool `locationName:"enableSimpleResponses" type:"boolean"`
 
 	// The identity source for which authorization is requested. For the REQUEST
 	// authorizer, this is required when authorization caching is enabled. The value
@@ -11456,6 +11678,12 @@ func (s *GetAuthorizerOutput) SetAuthorizerId(v string) *GetAuthorizerOutput {
 	return s
 }
 
+// SetAuthorizerPayloadFormatVersion sets the AuthorizerPayloadFormatVersion field's value.
+func (s *GetAuthorizerOutput) SetAuthorizerPayloadFormatVersion(v string) *GetAuthorizerOutput {
+	s.AuthorizerPayloadFormatVersion = &v
+	return s
+}
+
 // SetAuthorizerResultTtlInSeconds sets the AuthorizerResultTtlInSeconds field's value.
 func (s *GetAuthorizerOutput) SetAuthorizerResultTtlInSeconds(v int64) *GetAuthorizerOutput {
 	s.AuthorizerResultTtlInSeconds = &v
@@ -11471,6 +11699,12 @@ func (s *GetAuthorizerOutput) SetAuthorizerType(v string) *GetAuthorizerOutput {
 // SetAuthorizerUri sets the AuthorizerUri field's value.
 func (s *GetAuthorizerOutput) SetAuthorizerUri(v string) *GetAuthorizerOutput {
 	s.AuthorizerUri = &v
+	return s
+}
+
+// SetEnableSimpleResponses sets the EnableSimpleResponses field's value.
+func (s *GetAuthorizerOutput) SetEnableSimpleResponses(v bool) *GetAuthorizerOutput {
+	s.EnableSimpleResponses = &v
 	return s
 }
 
@@ -11844,6 +12078,11 @@ type GetDomainNameOutput struct {
 	// The domain name configurations.
 	DomainNameConfigurations []*DomainNameConfiguration `locationName:"domainNameConfigurations" type:"list"`
 
+	// If specified, API Gateway performs two-way authentication between the client
+	// and the server. Clients must present a trusted certificate to access your
+	// API.
+	MutualTlsAuthentication *MutualTlsAuthentication `locationName:"mutualTlsAuthentication" type:"structure"`
+
 	// Represents a collection of tags associated with the resource.
 	Tags map[string]*string `locationName:"tags" type:"map"`
 }
@@ -11873,6 +12112,12 @@ func (s *GetDomainNameOutput) SetDomainName(v string) *GetDomainNameOutput {
 // SetDomainNameConfigurations sets the DomainNameConfigurations field's value.
 func (s *GetDomainNameOutput) SetDomainNameConfigurations(v []*DomainNameConfiguration) *GetDomainNameOutput {
 	s.DomainNameConfigurations = v
+	return s
+}
+
+// SetMutualTlsAuthentication sets the MutualTlsAuthentication field's value.
+func (s *GetDomainNameOutput) SetMutualTlsAuthentication(v *MutualTlsAuthentication) *GetDomainNameOutput {
+	s.MutualTlsAuthentication = v
 	return s
 }
 
@@ -12893,8 +13138,9 @@ type GetRouteOutput struct {
 
 	// The authorization type. For WebSocket APIs, valid values are NONE for open
 	// access, AWS_IAM for using AWS IAM permissions, and CUSTOM for using a Lambda
-	// authorizer. For HTTP APIs, valid values are NONE for open access, or JWT
-	// for using JSON Web Tokens.
+	// authorizer. For HTTP APIs, valid values are NONE for open access, JWT for
+	// using JSON Web Tokens, AWS_IAM for using AWS IAM permissions, and CUSTOM
+	// for using a Lambda authorizer.
 	AuthorizationType *string `locationName:"authorizationType" type:"string" enum:"AuthorizationType"`
 
 	// The identifier.
@@ -13954,6 +14200,8 @@ type ImportApiOutput struct {
 	// A string with a length between [0-1024].
 	Description *string `locationName:"description" type:"string"`
 
+	DisableExecuteApiEndpoint *bool `locationName:"disableExecuteApiEndpoint" type:"boolean"`
+
 	DisableSchemaValidation *bool `locationName:"disableSchemaValidation" type:"boolean"`
 
 	ImportInfo []*string `locationName:"importInfo" type:"list"`
@@ -14027,6 +14275,12 @@ func (s *ImportApiOutput) SetCreatedDate(v time.Time) *ImportApiOutput {
 // SetDescription sets the Description field's value.
 func (s *ImportApiOutput) SetDescription(v string) *ImportApiOutput {
 	s.Description = &v
+	return s
+}
+
+// SetDisableExecuteApiEndpoint sets the DisableExecuteApiEndpoint field's value.
+func (s *ImportApiOutput) SetDisableExecuteApiEndpoint(v bool) *ImportApiOutput {
+	s.DisableExecuteApiEndpoint = &v
 	return s
 }
 
@@ -14551,6 +14805,100 @@ func (s *Model) SetSchema(v string) *Model {
 	return s
 }
 
+// If specified, API Gateway performs two-way authentication between the client
+// and the server. Clients must present a trusted certificate to access your
+// API.
+type MutualTlsAuthentication struct {
+	_ struct{} `type:"structure"`
+
+	// An Amazon S3 URL that specifies the truststore for mutual TLS authentication,
+	// for example, s3://bucket-name/key-name. The truststore can contain certificates
+	// from public or private certificate authorities. To update the truststore,
+	// upload a new version to S3, and then update your custom domain name to use
+	// the new version. To update the truststore, you must have permissions to access
+	// the S3 object.
+	TruststoreUri *string `locationName:"truststoreUri" type:"string"`
+
+	// The version of the S3 object that contains your truststore. To specify a
+	// version, you must have versioning enabled for the S3 bucket.
+	TruststoreVersion *string `locationName:"truststoreVersion" type:"string"`
+
+	// A list of warnings that API Gateway returns while processing your truststore.
+	// Invalid certificates produce warnings. Mutual TLS is still enabled, but some
+	// clients might not be able to access your API. To resolve warnings, upload
+	// a new truststore to S3, and then update you domain name to use the new version.
+	TruststoreWarnings []*string `locationName:"truststoreWarnings" type:"list"`
+}
+
+// String returns the string representation
+func (s MutualTlsAuthentication) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MutualTlsAuthentication) GoString() string {
+	return s.String()
+}
+
+// SetTruststoreUri sets the TruststoreUri field's value.
+func (s *MutualTlsAuthentication) SetTruststoreUri(v string) *MutualTlsAuthentication {
+	s.TruststoreUri = &v
+	return s
+}
+
+// SetTruststoreVersion sets the TruststoreVersion field's value.
+func (s *MutualTlsAuthentication) SetTruststoreVersion(v string) *MutualTlsAuthentication {
+	s.TruststoreVersion = &v
+	return s
+}
+
+// SetTruststoreWarnings sets the TruststoreWarnings field's value.
+func (s *MutualTlsAuthentication) SetTruststoreWarnings(v []*string) *MutualTlsAuthentication {
+	s.TruststoreWarnings = v
+	return s
+}
+
+// If specified, API Gateway performs two-way authentication between the client
+// and the server. Clients must present a trusted certificate to access your
+// API.
+type MutualTlsAuthenticationInput struct {
+	_ struct{} `type:"structure"`
+
+	// An Amazon S3 URL that specifies the truststore for mutual TLS authentication,
+	// for example, s3://bucket-name/key-name. The truststore can contain certificates
+	// from public or private certificate authorities. To update the truststore,
+	// upload a new version to S3, and then update your custom domain name to use
+	// the new version. To update the truststore, you must have permissions to access
+	// the S3 object.
+	TruststoreUri *string `locationName:"truststoreUri" type:"string"`
+
+	// The version of the S3 object that contains your truststore. To specify a
+	// version, you must have versioning enabled for the S3 bucket.
+	TruststoreVersion *string `locationName:"truststoreVersion" type:"string"`
+}
+
+// String returns the string representation
+func (s MutualTlsAuthenticationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MutualTlsAuthenticationInput) GoString() string {
+	return s.String()
+}
+
+// SetTruststoreUri sets the TruststoreUri field's value.
+func (s *MutualTlsAuthenticationInput) SetTruststoreUri(v string) *MutualTlsAuthenticationInput {
+	s.TruststoreUri = &v
+	return s
+}
+
+// SetTruststoreVersion sets the TruststoreVersion field's value.
+func (s *MutualTlsAuthenticationInput) SetTruststoreVersion(v string) *MutualTlsAuthenticationInput {
+	s.TruststoreVersion = &v
+	return s
+}
+
 // The resource specified in the request was not found. See the message field
 // for more information.
 type NotFoundException struct {
@@ -14729,6 +15077,8 @@ type ReimportApiOutput struct {
 	// A string with a length between [0-1024].
 	Description *string `locationName:"description" type:"string"`
 
+	DisableExecuteApiEndpoint *bool `locationName:"disableExecuteApiEndpoint" type:"boolean"`
+
 	DisableSchemaValidation *bool `locationName:"disableSchemaValidation" type:"boolean"`
 
 	ImportInfo []*string `locationName:"importInfo" type:"list"`
@@ -14805,6 +15155,12 @@ func (s *ReimportApiOutput) SetDescription(v string) *ReimportApiOutput {
 	return s
 }
 
+// SetDisableExecuteApiEndpoint sets the DisableExecuteApiEndpoint field's value.
+func (s *ReimportApiOutput) SetDisableExecuteApiEndpoint(v bool) *ReimportApiOutput {
+	s.DisableExecuteApiEndpoint = &v
+	return s
+}
+
 // SetDisableSchemaValidation sets the DisableSchemaValidation field's value.
 func (s *ReimportApiOutput) SetDisableSchemaValidation(v bool) *ReimportApiOutput {
 	s.DisableSchemaValidation = &v
@@ -14853,6 +15209,74 @@ func (s *ReimportApiOutput) SetWarnings(v []*string) *ReimportApiOutput {
 	return s
 }
 
+type ResetAuthorizersCacheInput struct {
+	_ struct{} `type:"structure"`
+
+	// ApiId is a required field
+	ApiId *string `location:"uri" locationName:"apiId" type:"string" required:"true"`
+
+	// StageName is a required field
+	StageName *string `location:"uri" locationName:"stageName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ResetAuthorizersCacheInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResetAuthorizersCacheInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResetAuthorizersCacheInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResetAuthorizersCacheInput"}
+	if s.ApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
+	if s.StageName == nil {
+		invalidParams.Add(request.NewErrParamRequired("StageName"))
+	}
+	if s.StageName != nil && len(*s.StageName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StageName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApiId sets the ApiId field's value.
+func (s *ResetAuthorizersCacheInput) SetApiId(v string) *ResetAuthorizersCacheInput {
+	s.ApiId = &v
+	return s
+}
+
+// SetStageName sets the StageName field's value.
+func (s *ResetAuthorizersCacheInput) SetStageName(v string) *ResetAuthorizersCacheInput {
+	s.StageName = &v
+	return s
+}
+
+type ResetAuthorizersCacheOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s ResetAuthorizersCacheOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResetAuthorizersCacheOutput) GoString() string {
+	return s.String()
+}
+
 // Represents a route.
 type Route struct {
 	_ struct{} `type:"structure"`
@@ -14878,7 +15302,8 @@ type Route struct {
 	// The authorization type for the route. For WebSocket APIs, valid values are
 	// NONE for open access, AWS_IAM for using AWS IAM permissions, and CUSTOM for
 	// using a Lambda authorizer For HTTP APIs, valid values are NONE for open access,
-	// or JWT for using JSON Web Tokens.
+	// JWT for using JSON Web Tokens, AWS_IAM for using AWS IAM permissions, and
+	// CUSTOM for using a Lambda authorizer.
 	AuthorizationType *string `locationName:"authorizationType" type:"string" enum:"AuthorizationType"`
 
 	// The identifier of the Authorizer resource to be associated with this route.
@@ -15544,6 +15969,8 @@ type UpdateApiInput struct {
 	// A string with a length between [0-1024].
 	Description *string `locationName:"description" type:"string"`
 
+	DisableExecuteApiEndpoint *bool `locationName:"disableExecuteApiEndpoint" type:"boolean"`
+
 	DisableSchemaValidation *bool `locationName:"disableSchemaValidation" type:"boolean"`
 
 	// A string with a length between [1-128].
@@ -15626,6 +16053,12 @@ func (s *UpdateApiInput) SetCredentialsArn(v string) *UpdateApiInput {
 // SetDescription sets the Description field's value.
 func (s *UpdateApiInput) SetDescription(v string) *UpdateApiInput {
 	s.Description = &v
+	return s
+}
+
+// SetDisableExecuteApiEndpoint sets the DisableExecuteApiEndpoint field's value.
+func (s *UpdateApiInput) SetDisableExecuteApiEndpoint(v bool) *UpdateApiInput {
+	s.DisableExecuteApiEndpoint = &v
 	return s
 }
 
@@ -15834,6 +16267,8 @@ type UpdateApiOutput struct {
 	// A string with a length between [0-1024].
 	Description *string `locationName:"description" type:"string"`
 
+	DisableExecuteApiEndpoint *bool `locationName:"disableExecuteApiEndpoint" type:"boolean"`
+
 	DisableSchemaValidation *bool `locationName:"disableSchemaValidation" type:"boolean"`
 
 	ImportInfo []*string `locationName:"importInfo" type:"list"`
@@ -15910,6 +16345,12 @@ func (s *UpdateApiOutput) SetDescription(v string) *UpdateApiOutput {
 	return s
 }
 
+// SetDisableExecuteApiEndpoint sets the DisableExecuteApiEndpoint field's value.
+func (s *UpdateApiOutput) SetDisableExecuteApiEndpoint(v bool) *UpdateApiOutput {
+	s.DisableExecuteApiEndpoint = &v
+	return s
+}
+
 // SetDisableSchemaValidation sets the DisableSchemaValidation field's value.
 func (s *UpdateApiOutput) SetDisableSchemaValidation(v bool) *UpdateApiOutput {
 	s.DisableSchemaValidation = &v
@@ -15970,16 +16411,21 @@ type UpdateAuthorizerInput struct {
 	// AuthorizerId is a required field
 	AuthorizerId *string `location:"uri" locationName:"authorizerId" type:"string" required:"true"`
 
+	// A string with a length between [1-64].
+	AuthorizerPayloadFormatVersion *string `locationName:"authorizerPayloadFormatVersion" type:"string"`
+
 	// An integer with a value between [0-3600].
 	AuthorizerResultTtlInSeconds *int64 `locationName:"authorizerResultTtlInSeconds" type:"integer"`
 
-	// The authorizer type. For WebSocket APIs, specify REQUEST for a Lambda function
-	// using incoming request parameters. For HTTP APIs, specify JWT to use JSON
-	// Web Tokens.
+	// The authorizer type. Specify REQUEST for a Lambda function using incoming
+	// request parameters. Specify JWT to use JSON Web Tokens (supported only for
+	// HTTP APIs).
 	AuthorizerType *string `locationName:"authorizerType" type:"string" enum:"AuthorizerType"`
 
 	// A string representation of a URI with a length between [1-2048].
 	AuthorizerUri *string `locationName:"authorizerUri" type:"string"`
+
+	EnableSimpleResponses *bool `locationName:"enableSimpleResponses" type:"boolean"`
 
 	// The identity source for which authorization is requested. For the REQUEST
 	// authorizer, this is required when authorization caching is enabled. The value
@@ -16057,6 +16503,12 @@ func (s *UpdateAuthorizerInput) SetAuthorizerId(v string) *UpdateAuthorizerInput
 	return s
 }
 
+// SetAuthorizerPayloadFormatVersion sets the AuthorizerPayloadFormatVersion field's value.
+func (s *UpdateAuthorizerInput) SetAuthorizerPayloadFormatVersion(v string) *UpdateAuthorizerInput {
+	s.AuthorizerPayloadFormatVersion = &v
+	return s
+}
+
 // SetAuthorizerResultTtlInSeconds sets the AuthorizerResultTtlInSeconds field's value.
 func (s *UpdateAuthorizerInput) SetAuthorizerResultTtlInSeconds(v int64) *UpdateAuthorizerInput {
 	s.AuthorizerResultTtlInSeconds = &v
@@ -16072,6 +16524,12 @@ func (s *UpdateAuthorizerInput) SetAuthorizerType(v string) *UpdateAuthorizerInp
 // SetAuthorizerUri sets the AuthorizerUri field's value.
 func (s *UpdateAuthorizerInput) SetAuthorizerUri(v string) *UpdateAuthorizerInput {
 	s.AuthorizerUri = &v
+	return s
+}
+
+// SetEnableSimpleResponses sets the EnableSimpleResponses field's value.
+func (s *UpdateAuthorizerInput) SetEnableSimpleResponses(v bool) *UpdateAuthorizerInput {
+	s.EnableSimpleResponses = &v
 	return s
 }
 
@@ -16108,16 +16566,21 @@ type UpdateAuthorizerOutput struct {
 	// The identifier.
 	AuthorizerId *string `locationName:"authorizerId" type:"string"`
 
+	// A string with a length between [1-64].
+	AuthorizerPayloadFormatVersion *string `locationName:"authorizerPayloadFormatVersion" type:"string"`
+
 	// An integer with a value between [0-3600].
 	AuthorizerResultTtlInSeconds *int64 `locationName:"authorizerResultTtlInSeconds" type:"integer"`
 
-	// The authorizer type. For WebSocket APIs, specify REQUEST for a Lambda function
-	// using incoming request parameters. For HTTP APIs, specify JWT to use JSON
-	// Web Tokens.
+	// The authorizer type. Specify REQUEST for a Lambda function using incoming
+	// request parameters. Specify JWT to use JSON Web Tokens (supported only for
+	// HTTP APIs).
 	AuthorizerType *string `locationName:"authorizerType" type:"string" enum:"AuthorizerType"`
 
 	// A string representation of a URI with a length between [1-2048].
 	AuthorizerUri *string `locationName:"authorizerUri" type:"string"`
+
+	EnableSimpleResponses *bool `locationName:"enableSimpleResponses" type:"boolean"`
 
 	// The identity source for which authorization is requested. For the REQUEST
 	// authorizer, this is required when authorization caching is enabled. The value
@@ -16167,6 +16630,12 @@ func (s *UpdateAuthorizerOutput) SetAuthorizerId(v string) *UpdateAuthorizerOutp
 	return s
 }
 
+// SetAuthorizerPayloadFormatVersion sets the AuthorizerPayloadFormatVersion field's value.
+func (s *UpdateAuthorizerOutput) SetAuthorizerPayloadFormatVersion(v string) *UpdateAuthorizerOutput {
+	s.AuthorizerPayloadFormatVersion = &v
+	return s
+}
+
 // SetAuthorizerResultTtlInSeconds sets the AuthorizerResultTtlInSeconds field's value.
 func (s *UpdateAuthorizerOutput) SetAuthorizerResultTtlInSeconds(v int64) *UpdateAuthorizerOutput {
 	s.AuthorizerResultTtlInSeconds = &v
@@ -16182,6 +16651,12 @@ func (s *UpdateAuthorizerOutput) SetAuthorizerType(v string) *UpdateAuthorizerOu
 // SetAuthorizerUri sets the AuthorizerUri field's value.
 func (s *UpdateAuthorizerOutput) SetAuthorizerUri(v string) *UpdateAuthorizerOutput {
 	s.AuthorizerUri = &v
+	return s
+}
+
+// SetEnableSimpleResponses sets the EnableSimpleResponses field's value.
+func (s *UpdateAuthorizerOutput) SetEnableSimpleResponses(v bool) *UpdateAuthorizerOutput {
+	s.EnableSimpleResponses = &v
 	return s
 }
 
@@ -16345,6 +16820,11 @@ type UpdateDomainNameInput struct {
 
 	// The domain name configurations.
 	DomainNameConfigurations []*DomainNameConfiguration `locationName:"domainNameConfigurations" type:"list"`
+
+	// If specified, API Gateway performs two-way authentication between the client
+	// and the server. Clients must present a trusted certificate to access your
+	// API.
+	MutualTlsAuthentication *MutualTlsAuthenticationInput `locationName:"mutualTlsAuthentication" type:"structure"`
 }
 
 // String returns the string representation
@@ -16385,6 +16865,12 @@ func (s *UpdateDomainNameInput) SetDomainNameConfigurations(v []*DomainNameConfi
 	return s
 }
 
+// SetMutualTlsAuthentication sets the MutualTlsAuthentication field's value.
+func (s *UpdateDomainNameInput) SetMutualTlsAuthentication(v *MutualTlsAuthenticationInput) *UpdateDomainNameInput {
+	s.MutualTlsAuthentication = v
+	return s
+}
+
 type UpdateDomainNameOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -16398,6 +16884,11 @@ type UpdateDomainNameOutput struct {
 
 	// The domain name configurations.
 	DomainNameConfigurations []*DomainNameConfiguration `locationName:"domainNameConfigurations" type:"list"`
+
+	// If specified, API Gateway performs two-way authentication between the client
+	// and the server. Clients must present a trusted certificate to access your
+	// API.
+	MutualTlsAuthentication *MutualTlsAuthentication `locationName:"mutualTlsAuthentication" type:"structure"`
 
 	// Represents a collection of tags associated with the resource.
 	Tags map[string]*string `locationName:"tags" type:"map"`
@@ -16428,6 +16919,12 @@ func (s *UpdateDomainNameOutput) SetDomainName(v string) *UpdateDomainNameOutput
 // SetDomainNameConfigurations sets the DomainNameConfigurations field's value.
 func (s *UpdateDomainNameOutput) SetDomainNameConfigurations(v []*DomainNameConfiguration) *UpdateDomainNameOutput {
 	s.DomainNameConfigurations = v
+	return s
+}
+
+// SetMutualTlsAuthentication sets the MutualTlsAuthentication field's value.
+func (s *UpdateDomainNameOutput) SetMutualTlsAuthentication(v *MutualTlsAuthentication) *UpdateDomainNameOutput {
+	s.MutualTlsAuthentication = v
 	return s
 }
 
@@ -17244,8 +17741,9 @@ type UpdateRouteInput struct {
 
 	// The authorization type. For WebSocket APIs, valid values are NONE for open
 	// access, AWS_IAM for using AWS IAM permissions, and CUSTOM for using a Lambda
-	// authorizer. For HTTP APIs, valid values are NONE for open access, or JWT
-	// for using JSON Web Tokens.
+	// authorizer. For HTTP APIs, valid values are NONE for open access, JWT for
+	// using JSON Web Tokens, AWS_IAM for using AWS IAM permissions, and CUSTOM
+	// for using a Lambda authorizer.
 	AuthorizationType *string `locationName:"authorizationType" type:"string" enum:"AuthorizationType"`
 
 	// The identifier.
@@ -17412,8 +17910,9 @@ type UpdateRouteOutput struct {
 
 	// The authorization type. For WebSocket APIs, valid values are NONE for open
 	// access, AWS_IAM for using AWS IAM permissions, and CUSTOM for using a Lambda
-	// authorizer. For HTTP APIs, valid values are NONE for open access, or JWT
-	// for using JSON Web Tokens.
+	// authorizer. For HTTP APIs, valid values are NONE for open access, JWT for
+	// using JSON Web Tokens, AWS_IAM for using AWS IAM permissions, and CUSTOM
+	// for using a Lambda authorizer.
 	AuthorizationType *string `locationName:"authorizationType" type:"string" enum:"AuthorizationType"`
 
 	// The identifier.
@@ -18224,8 +18723,9 @@ func (s *VpcLink) SetVpcLinkVersion(v string) *VpcLink {
 
 // The authorization type. For WebSocket APIs, valid values are NONE for open
 // access, AWS_IAM for using AWS IAM permissions, and CUSTOM for using a Lambda
-// authorizer. For HTTP APIs, valid values are NONE for open access, or JWT
-// for using JSON Web Tokens.
+// authorizer. For HTTP APIs, valid values are NONE for open access, JWT for
+// using JSON Web Tokens, AWS_IAM for using AWS IAM permissions, and CUSTOM
+// for using a Lambda authorizer.
 const (
 	// AuthorizationTypeNone is a AuthorizationType enum value
 	AuthorizationTypeNone = "NONE"
@@ -18250,9 +18750,9 @@ func AuthorizationType_Values() []string {
 	}
 }
 
-// The authorizer type. For WebSocket APIs, specify REQUEST for a Lambda function
-// using incoming request parameters. For HTTP APIs, specify JWT to use JSON
-// Web Tokens.
+// The authorizer type. Specify REQUEST for a Lambda function using incoming
+// request parameters. Specify JWT to use JSON Web Tokens (supported only for
+// HTTP APIs).
 const (
 	// AuthorizerTypeRequest is a AuthorizerType enum value
 	AuthorizerTypeRequest = "REQUEST"

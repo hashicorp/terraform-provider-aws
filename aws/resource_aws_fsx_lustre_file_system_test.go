@@ -95,6 +95,7 @@ func TestAccAWSFsxLustreFileSystem_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "vpc_id", regexp.MustCompile(`^vpc-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexp.MustCompile(`^\d:\d\d:\d\d$`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypeScratch1),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 				),
 			},
 			{
@@ -124,7 +125,7 @@ func TestAccAWSFsxLustreFileSystem_disappears(t *testing.T) {
 				Config: testAccAwsFsxLustreFileSystemConfigSubnetIds1(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
-					testAccCheckFsxLustreFileSystemDisappears(&filesystem),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsFsxLustreFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -387,6 +388,47 @@ func TestAccAWSFsxLustreFileSystem_WeeklyMaintenanceStartTime(t *testing.T) {
 	})
 }
 
+func TestAccAWSFsxLustreFileSystem_automaticBackupRetentionDays(t *testing.T) {
+	var filesystem1, filesystem2 fsx.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxLustreFileSystemConfigAutomaticBackupRetentionDays(1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccAwsFsxLustreFileSystemConfigAutomaticBackupRetentionDays(0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem2),
+					testAccCheckFsxLustreFileSystemNotRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
+				),
+			},
+			{
+				Config: testAccAwsFsxLustreFileSystemConfigAutomaticBackupRetentionDays(1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSFsxLustreFileSystem_DeploymentTypePersistent1(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
@@ -403,6 +445,7 @@ func TestAccAWSFsxLustreFileSystem_DeploymentTypePersistent1(t *testing.T) {
 					// per_unit_storage_throughput is only available with deployment_type=PERSISTENT_1, so we test both here.
 					resource.TestCheckResourceAttr(resourceName, "per_unit_storage_throughput", "50"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypePersistent1),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 				),
 			},
 			{
@@ -527,24 +570,6 @@ func testAccCheckFsxLustreFileSystemDestroy(s *terraform.State) error {
 		}
 	}
 	return nil
-}
-
-func testAccCheckFsxLustreFileSystemDisappears(filesystem *fsx.FileSystem) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).fsxconn
-
-		input := &fsx.DeleteFileSystemInput{
-			FileSystemId: filesystem.FileSystemId,
-		}
-
-		_, err := conn.DeleteFileSystem(input)
-
-		if err != nil {
-			return err
-		}
-
-		return waitForFsxFileSystemDeletion(conn, aws.StringValue(filesystem.FileSystemId), 30*time.Minute)
-	}
 }
 
 func testAccCheckFsxLustreFileSystemNotRecreated(i, j *fsx.FileSystem) resource.TestCheckFunc {
@@ -767,6 +792,18 @@ resource "aws_fsx_lustre_file_system" "test" {
   weekly_maintenance_start_time = %[1]q
 }
 `, weeklyMaintenanceStartTime)
+}
+
+func testAccAwsFsxLustreFileSystemConfigAutomaticBackupRetentionDays(retention int) string {
+	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+resource "aws_fsx_lustre_file_system" "test" {
+  storage_capacity                = 1200
+  subnet_ids                      = ["${aws_subnet.test1.id}"]
+  deployment_type                 = "PERSISTENT_1"
+  per_unit_storage_throughput     = 50
+  automatic_backup_retention_days = %[1]d
+}
+`, retention)
 }
 
 func testAccAwsFsxLustreFileSystemDeploymentType(deploymentType string) string {

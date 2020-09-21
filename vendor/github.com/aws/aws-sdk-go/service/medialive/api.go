@@ -27172,6 +27172,9 @@ const (
 
 	// InputTypeInputDevice is a InputType enum value
 	InputTypeInputDevice = "INPUT_DEVICE"
+
+	// InputTypeAwsCdi is a InputType enum value
+	InputTypeAwsCdi = "AWS_CDI"
 )
 
 // InputType_Values returns all elements of the InputType enum
@@ -27185,6 +27188,7 @@ func InputType_Values() []string {
 		InputTypeMp4File,
 		InputTypeMediaconnect,
 		InputTypeInputDevice,
+		InputTypeAwsCdi,
 	}
 }
 
@@ -27838,6 +27842,9 @@ const (
 
 	// ReservationCodecAudio is a ReservationCodec enum value
 	ReservationCodecAudio = "AUDIO"
+
+	// ReservationCodecLink is a ReservationCodec enum value
+	ReservationCodecLink = "LINK"
 )
 
 // ReservationCodec_Values returns all elements of the ReservationCodec enum
@@ -27847,6 +27854,7 @@ func ReservationCodec_Values() []string {
 		ReservationCodecAvc,
 		ReservationCodecHevc,
 		ReservationCodecAudio,
+		ReservationCodecLink,
 	}
 }
 

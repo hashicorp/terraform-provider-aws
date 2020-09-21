@@ -1,4 +1,42 @@
-## 3.7.0 (Unreleased)
+## 3.8.0 (Unreleased)
+
+FEATURES
+
+* **New Resource:** `aws_datasync_location_fsx_windows` ([#12686](https://github.com/terraform-providers/terraform-provider-aws/pull/12686))
+
+ENHANCEMENTS
+
+* resource/aws_fsx_lustre_file_system - add support for backup retention [GH-14446]
+* data-source/aws_lb: Add `customer_owned_ipv4_pool` and `subnet_mapping` `outpost_id` attributes [GH-15170]
+* resource/aws_lb: Add `customer_owned_ipv4_pool` argument and `subnet_mapping` `outpost_id` attribute [GH-15170]
+* resource/aws_storagegateway_smb_file_share: Add `admin_user_list` argument [GH-12196]
+* resource/aws_transfer_user: Add `home_directory_mappings` configuration blocks and `home_directory_type` argument [GH-13591]
+
+BUG FIXES
+
+* resource/aws_dynamodb_table: Ensure changes in `name`, `range_key`, `projection_type`, or `non_key_attributes` of a `local_secondary_index` configuration block force resource recreation [GH-12335]
+* resource/aws_dynamodb_table: Ensure `local_secondary_index` `non_key_attributes` are sent through API requests on resource creation [GH-15115]
+* resource/aws_fsx_lustre_file_system: Change `aws_fsx_lustre_file_system's`'s `network_interface_ids` to `TypeList` to preserve ordering. [GH-14314]
+* resource/aws_vpn_gateway: Increase VPC detachment timeout to 30 minutes [GH-15201]
+* resource/aws_vpn_gateway_attachment: Increase VPC detachment timeout to 30 minutes [GH-15201]
+
+## 3.7.0 (September 17, 2020)
+
+FEATURES
+
+* **New Resource:** `aws_config_remediation_configuration` ([#13884](https://github.com/terraform-providers/terraform-provider-aws/issues/13884))
+
+ENHANCEMENTS
+
+* resource/aws_db_cluster_snapshot: Add plan-time validation for `db_cluster_snapshot_identifier` argument ([#15132](https://github.com/terraform-providers/terraform-provider-aws/issues/15132))
+* resource/aws_kinesis_firehose_delivery_stream: Add `server_side_encryption` `key_arn` and `key_type` arguments (support KMS Customer Managed Key encryption) ([#11954](https://github.com/terraform-providers/terraform-provider-aws/issues/11954))
+
+BUG FIXES
+
+* data-source/aws_kms_secrets: Prevent `plaintext` values to appear in CLI output with Terraform 0.13 ([#15169](https://github.com/terraform-providers/terraform-provider-aws/issues/15169))
+* resource/aws_acm_certificate: Prevent tagging is not permitted on re-import error ([#15060](https://github.com/terraform-providers/terraform-provider-aws/issues/15060))
+* resource/aws_cognito_identity_pool: Prevent ordering differences for `openid_connect_provider_arns` argument ([#15178](https://github.com/terraform-providers/terraform-provider-aws/issues/15178))
+
 ## 3.6.0 (September 11, 2020)
 
 FEATURES

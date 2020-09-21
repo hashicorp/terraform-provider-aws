@@ -412,113 +412,113 @@ resource "aws_emr_cluster" "test" {
 func testAccAWSEmrInstanceFleetConfig(r string) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
     resource "aws_emr_instance_fleet" "task" {
-      cluster_id = aws_emr_cluster.test.id
-      instance_type_configs {
-        instance_type     = "m3.xlarge"
-        weighted_capacity = 1
-      }
-      launch_specifications {
-        on_demand_specification {
-          allocation_strategy = "lowest-price"
-        }
-      }
-      name                      = "emr_instance_fleet_%[1]s"
-      target_on_demand_capacity = 1
-      target_spot_capacity      = 0
+  cluster_id = aws_emr_cluster.test.id
+  instance_type_configs {
+    instance_type     = "m3.xlarge"
+    weighted_capacity = 1
+  }
+  launch_specifications {
+    on_demand_specification {
+      allocation_strategy = "lowest-price"
     }
+  }
+  name                      = "emr_instance_fleet_%[1]s"
+  target_on_demand_capacity = 1
+  target_spot_capacity      = 0
+}
 `, r)
 }
 
 func testAccAWSEmrInstanceFleetConfigZeroCount(r string) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
     resource "aws_emr_instance_fleet" "task" {
-      cluster_id = aws_emr_cluster.test.id
-      instance_type_configs {
-        instance_type     = "m3.xlarge"
-        weighted_capacity = 1
-      }
-      launch_specifications {
-        on_demand_specification {
-          allocation_strategy = "lowest-price"
-        }
-      }
-      name                      = "emr_instance_fleet_%[1]s"
-      target_on_demand_capacity = 0
-      target_spot_capacity      = 0
+  cluster_id = aws_emr_cluster.test.id
+  instance_type_configs {
+    instance_type     = "m3.xlarge"
+    weighted_capacity = 1
+  }
+  launch_specifications {
+    on_demand_specification {
+      allocation_strategy = "lowest-price"
     }
+  }
+  name                      = "emr_instance_fleet_%[1]s"
+  target_on_demand_capacity = 0
+  target_spot_capacity      = 0
+}
 `, r)
 }
 
 func testAccAWSEmrInstanceFleetConfigEbsBasic(r string) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
     resource "aws_emr_instance_fleet" "task" {
-      cluster_id = aws_emr_cluster.test.id
-      instance_type_configs {
-        bid_price_as_percentage_of_on_demand_price = 100
-        ebs_config {
-          size                 = 10
-          type                 = "gp2"
-          volumes_per_instance = 1
-        }
-        instance_type     = "m4.xlarge"
-        weighted_capacity = 1
-      }
-      launch_specifications {
-        spot_specification {
-          allocation_strategy      = "capacity-optimized"
-          block_duration_minutes   = 0
-          timeout_action           = "SWITCH_TO_ON_DEMAND"
-          timeout_duration_minutes = 10
-        }
-      }
-      name                      = "emr_instance_fleet_%[1]s"
-      target_on_demand_capacity = 0
-      target_spot_capacity      = 1
+  cluster_id = aws_emr_cluster.test.id
+  instance_type_configs {
+    bid_price_as_percentage_of_on_demand_price = 100
+    ebs_config {
+      size                 = 10
+      type                 = "gp2"
+      volumes_per_instance = 1
     }
+    instance_type     = "m4.xlarge"
+    weighted_capacity = 1
+  }
+  launch_specifications {
+    spot_specification {
+      allocation_strategy      = "capacity-optimized"
+      block_duration_minutes   = 0
+      timeout_action           = "SWITCH_TO_ON_DEMAND"
+      timeout_duration_minutes = 10
+    }
+  }
+  name                      = "emr_instance_fleet_%[1]s"
+  target_on_demand_capacity = 0
+  target_spot_capacity      = 1
+}
 `, r)
 }
 
 func testAccAWSEmrInstanceFleetConfigFull(r string) string {
 	return fmt.Sprintf(testAccAWSEmrInstanceFleetBase+`
     resource "aws_emr_instance_fleet" "task" {
-      cluster_id = aws_emr_cluster.test.id
-      instance_type_configs {
-        bid_price_as_percentage_of_on_demand_price = 100
-        ebs_config {
-          size                 = 10
-          type                 = "gp2"
-          volumes_per_instance = 1
-        }
-        ebs_config {
-          size                 = 20
-          type                 = "gp2"
-          volumes_per_instance = 2
-        }
-        instance_type     = "m4.xlarge"
-        weighted_capacity = 1
-      }
-      instance_type_configs {
-        bid_price_as_percentage_of_on_demand_price = 80
-        ebs_config {
-          size                 = 10
-          type                 = "gp2"
-          volumes_per_instance = 1
-        }
-        instance_type     = "m4.2xlarge"
-        weighted_capacity = 2
-      }
-      launch_specifications {
-        spot_specification {
-          allocation_strategy      = "capacity-optimized"
-          block_duration_minutes   = 0
-          timeout_action           = "SWITCH_TO_ON_DEMAND"
-          timeout_duration_minutes = 10
-        }
-      }
-
-      name                      = "emr_instance_fleet_%[1]s"
-      target_on_demand_capacity = 2
-      target_spot_capacity      = 2
+  cluster_id = aws_emr_cluster.test.id
+  instance_type_configs {
+    bid_price_as_percentage_of_on_demand_price = 100
+    ebs_config {
+      size                 = 10
+      type                 = "gp2"
+      volumes_per_instance = 1
     }
+    ebs_config {
+      size                 = 20
+      type                 = "gp2"
+      volumes_per_instance = 2
+    }
+    instance_type     = "m4.xlarge"
+    weighted_capacity = 1
+  }
+  instance_type_configs {
+    bid_price_as_percentage_of_on_demand_price = 80
+    ebs_config {
+      size                 = 10
+      type                 = "gp2"
+      volumes_per_instance = 1
+    }
+    instance_type     = "m4.2xlarge"
+    weighted_capacity = 2
+  }
+  launch_specifications {
+    spot_specification {
+      allocation_strategy      = "capacity-optimized"
+      block_duration_minutes   = 0
+      timeout_action           = "SWITCH_TO_ON_DEMAND"
+      timeout_duration_minutes = 10
+    }
+  }
+
+  name                      = "emr_instance_fleet_%[1]s"
+  target_on_demand_capacity = 2
+  target_spot_capacity      = 2
+}
 `, r)
 }

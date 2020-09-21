@@ -66,7 +66,7 @@ func dataSourceAwsVpcDhcpOptionsRead(d *schema.ResourceData, meta interface{}) e
 
 	input := &ec2.DescribeDhcpOptionsInput{}
 
-	if v, ok := d.GetOk("dhcp_options_id"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("dhcp_options_id"); ok {
 		input.DhcpOptionsIds = []*string{aws.String(v.(string))}
 	}
 

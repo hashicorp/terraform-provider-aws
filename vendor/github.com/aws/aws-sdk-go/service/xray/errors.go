@@ -16,6 +16,9 @@ const (
 
 	// ErrCodeResourceNotFoundException for service response error code
 	// "ResourceNotFoundException".
+	//
+	// The resource was not found. Verify that the name or ARN of the resource is
+	// correct.
 	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
 
 	// ErrCodeRuleLimitExceededException for service response error code
@@ -32,6 +35,8 @@ const (
 
 	// ErrCodeTooManyTagsException for service response error code
 	// "TooManyTagsException".
+	//
+	// You have exceeded the maximum number of tags you can apply to this resource.
 	ErrCodeTooManyTagsException = "TooManyTagsException"
 )
 

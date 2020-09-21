@@ -2901,6 +2901,9 @@ func (c *ServiceCatalog) DescribeProvisionedProductRequest(input *DescribeProvis
 //   * ResourceNotFoundException
 //   The specified resource was not found.
 //
+//   * InvalidParametersException
+//   One or more parameters provided to the operation are not valid.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeProvisionedProduct
 func (c *ServiceCatalog) DescribeProvisionedProduct(input *DescribeProvisionedProductInput) (*DescribeProvisionedProductOutput, error) {
 	req, out := c.DescribeProvisionedProductRequest(input)
@@ -11852,6 +11855,10 @@ func (s *DescribeProductViewOutput) SetProvisioningArtifacts(v []*ProvisioningAr
 	return s
 }
 
+// DescribeProvisionedProductAPI input structure. AcceptLanguage - [Optional]
+// The language code for localization. Id - [Optional] The provisioned product
+// identifier. Name - [Optional] Another provisioned product identifier. Customers
+// must provide either Id or Name.
 type DescribeProvisionedProductInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11864,10 +11871,19 @@ type DescribeProvisionedProductInput struct {
 	//    * zh - Chinese
 	AcceptLanguage *string `type:"string"`
 
-	// The provisioned product identifier.
+	// The provisioned product identifier. You must provide the name or ID, but
+	// not both.
 	//
-	// Id is a required field
-	Id *string `min:"1" type:"string" required:"true"`
+	// If you do not provide a name or ID, or you provide both name and ID, an InvalidParametersException
+	// will occur.
+	Id *string `min:"1" type:"string"`
+
+	// The name of the provisioned product. You must provide the name or ID, but
+	// not both.
+	//
+	// If you do not provide a name or ID, or you provide both name and ID, an InvalidParametersException
+	// will occur.
+	Name *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -11883,11 +11899,11 @@ func (s DescribeProvisionedProductInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *DescribeProvisionedProductInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeProvisionedProductInput"}
-	if s.Id == nil {
-		invalidParams.Add(request.NewErrParamRequired("Id"))
-	}
 	if s.Id != nil && len(*s.Id) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -11905,6 +11921,12 @@ func (s *DescribeProvisionedProductInput) SetAcceptLanguage(v string) *DescribeP
 // SetId sets the Id field's value.
 func (s *DescribeProvisionedProductInput) SetId(v string) *DescribeProvisionedProductInput {
 	s.Id = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *DescribeProvisionedProductInput) SetName(v string) *DescribeProvisionedProductInput {
+	s.Name = &v
 	return s
 }
 
