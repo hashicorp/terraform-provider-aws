@@ -16,6 +16,7 @@ import (
 )
 
 func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
+	var conf1, conf2 synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
 
@@ -29,7 +30,7 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 			{
 				Config: testAccAWSSyntheticsCanaryBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf1),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "synthetics", regexp.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-1.0"),
@@ -46,6 +47,8 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "source_location_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.created"),
 				),
 			},
 			{
@@ -54,11 +57,38 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
 			},
+			{
+				Config: testAccAWSSyntheticsCanaryZipUpdatedConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf2),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "synthetics", regexp.MustCompile(`canary:.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-1.0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
+					resource.TestCheckResourceAttr(resourceName, "failure_retention_period", "31"),
+					resource.TestCheckResourceAttr(resourceName, "success_retention_period", "31"),
+					resource.TestCheckResourceAttr(resourceName, "handler", "exports.handler"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.duration_in_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "engine_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "source_location_arn", "lambda", regexp.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
+					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.created"),
+					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_modified"),
+					testAccCheckAwsSyntheticsCanaryIsUpdated(&conf1, &conf2),
+				),
+			},
 		},
 	})
 }
 
 func TestAccAWSSyntheticsCanary_startCanary(t *testing.T) {
+	var conf synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
 
@@ -72,7 +102,7 @@ func TestAccAWSSyntheticsCanary_startCanary(t *testing.T) {
 			{
 				Config: testAccAWSSyntheticsCanaryStartCanaryConfig(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
 				),
 			},
 			{
@@ -84,13 +114,13 @@ func TestAccAWSSyntheticsCanary_startCanary(t *testing.T) {
 			{
 				Config: testAccAWSSyntheticsCanaryStartCanaryConfig(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
 				),
 			},
 			{
 				Config: testAccAWSSyntheticsCanaryStartCanaryConfig(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
 				),
 			},
 		},
@@ -98,6 +128,7 @@ func TestAccAWSSyntheticsCanary_startCanary(t *testing.T) {
 }
 
 func TestAccAWSSyntheticsCanary_s3(t *testing.T) {
+	var conf synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
 
@@ -111,7 +142,7 @@ func TestAccAWSSyntheticsCanary_s3(t *testing.T) {
 			{
 				Config: testAccAWSSyntheticsCanaryBasicS3CodeConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "synthetics", regexp.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-1.0"),
@@ -141,6 +172,7 @@ func TestAccAWSSyntheticsCanary_s3(t *testing.T) {
 }
 
 func TestAccAWSSyntheticsCanary_runConfig(t *testing.T) {
+	var conf synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
 
@@ -154,7 +186,7 @@ func TestAccAWSSyntheticsCanary_runConfig(t *testing.T) {
 			{
 				Config: testAccAWSSyntheticsCanaryRunConfigConfig1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "60"),
@@ -169,7 +201,7 @@ func TestAccAWSSyntheticsCanary_runConfig(t *testing.T) {
 			{
 				Config: testAccAWSSyntheticsCanaryRunConfigConfig2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "960"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "120"),
 				),
@@ -177,7 +209,7 @@ func TestAccAWSSyntheticsCanary_runConfig(t *testing.T) {
 			{
 				Config: testAccAWSSyntheticsCanaryRunConfigConfig1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "960"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "60"),
 				),
@@ -187,6 +219,7 @@ func TestAccAWSSyntheticsCanary_runConfig(t *testing.T) {
 }
 
 func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
+	var conf synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
 
@@ -200,7 +233,7 @@ func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
 			{
 				Config: testAccAWSSyntheticsCanaryVPCConfig1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", "id"),
@@ -215,7 +248,7 @@ func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
 			{
 				Config: testAccAWSSyntheticsCanaryVPCConfig2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", "id"),
@@ -224,7 +257,7 @@ func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
 			{
 				Config: testAccAWSSyntheticsCanaryVPCConfig3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", "id"),
@@ -236,6 +269,7 @@ func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
 }
 
 func TestAccAWSSyntheticsCanary_tags(t *testing.T) {
+	var conf synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
 
@@ -249,7 +283,7 @@ func TestAccAWSSyntheticsCanary_tags(t *testing.T) {
 			{
 				Config: testAccAWSSyntheticsCanaryConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -263,7 +297,7 @@ func TestAccAWSSyntheticsCanary_tags(t *testing.T) {
 			{
 				Config: testAccAWSSyntheticsCanaryConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -272,7 +306,7 @@ func TestAccAWSSyntheticsCanary_tags(t *testing.T) {
 			{
 				Config: testAccAWSSyntheticsCanaryConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -282,6 +316,7 @@ func TestAccAWSSyntheticsCanary_tags(t *testing.T) {
 }
 
 func TestAccAWSSyntheticsCanary_disappears(t *testing.T) {
+	var conf synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
 
@@ -295,7 +330,7 @@ func TestAccAWSSyntheticsCanary_disappears(t *testing.T) {
 			{
 				Config: testAccAWSSyntheticsCanaryBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSyntheticsCanary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -329,7 +364,7 @@ func testAccCheckAwsSyntheticsCanaryDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsSyntheticsCanaryExists(n string) resource.TestCheckFunc {
+func testAccCheckAwsSyntheticsCanaryExists(n string, canary *synthetics.Canary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -347,10 +382,13 @@ func testAccCheckAwsSyntheticsCanaryExists(n string) resource.TestCheckFunc {
 			Name: aws.String(name),
 		}
 
-		_, err := conn.GetCanary(input)
+		out, err := conn.GetCanary(input)
 		if err != nil {
 			return fmt.Errorf("syntherics Canary %s not found in AWS", name)
 		}
+
+		*canary = *out.Canary
+
 		return nil
 	}
 }
@@ -400,6 +438,17 @@ func testAccCheckAwsSyntheticsCanaryDeleteImplicitResources(n string) resource.T
 		_, err = lambdaConn.DeleteFunction(deleteLambdaInput)
 		if err != nil {
 			return fmt.Errorf("synthetics Canary Lambda %s could not be deleted: %w", lambdaArn, err)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAwsSyntheticsCanaryIsUpdated(first, second *synthetics.Canary) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if !second.Timeline.LastModified.After(*first.Timeline.LastModified) {
+			return fmt.Errorf("synthetics Canary not updated")
+
 		}
 
 		return nil
@@ -549,6 +598,22 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
+}
+`, rName)
+}
+
+func testAccAWSSyntheticsCanaryZipUpdatedConfig(rName string) string {
+	return testAccAWSSyntheticsCanaryConfigBase(rName) + fmt.Sprintf(`
+resource "aws_synthetics_canary" "test" {
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest_modified.zip"
 
   schedule {
     expression = "rate(0 minute)"

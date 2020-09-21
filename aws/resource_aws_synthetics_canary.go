@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -157,6 +158,30 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 					},
 				},
 			},
+			"timeline": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"created": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"last_modified": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"last_started": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"last_stopped": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"engine_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -294,6 +319,10 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err := d.Set("schedule", flattenAwsSyntheticsCanarySchedule(canary.Schedule)); err != nil {
+		return fmt.Errorf("error setting schedule: %w", err)
+	}
+
+	if err := d.Set("timeline", flattenAwsSyntheticsCanaryTimeline(canary.Timeline)); err != nil {
 		return fmt.Errorf("error setting schedule: %w", err)
 	}
 
@@ -544,6 +573,30 @@ func expandAwsSyntheticsCanaryVpcConfig(l []interface{}) *synthetics.VpcConfigIn
 	}
 
 	return codeConfig
+}
+
+func flattenAwsSyntheticsCanaryTimeline(timeline *synthetics.CanaryTimeline) []interface{} {
+	if timeline == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"created": aws.TimeValue(timeline.Created).Format(time.RFC3339),
+	}
+
+	if timeline.LastModified != nil {
+		m["last_modified"] = aws.TimeValue(timeline.LastModified).Format(time.RFC3339)
+	}
+
+	if timeline.LastStarted != nil {
+		m["last_started"] = aws.TimeValue(timeline.LastStarted).Format(time.RFC3339)
+	}
+
+	if timeline.LastStopped != nil {
+		m["last_stopped"] = aws.TimeValue(timeline.LastStopped).Format(time.RFC3339)
+	}
+
+	return []interface{}{m}
 }
 
 func syntheticsStartCanary(name string, conn *synthetics.Synthetics) error {
