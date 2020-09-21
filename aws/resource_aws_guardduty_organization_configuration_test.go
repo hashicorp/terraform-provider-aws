@@ -137,9 +137,9 @@ resource "aws_guardduty_organization_configuration" "test" {
   detector_id = aws_guardduty_detector.test.id
 
   datasources {
-	s3_logs {
-	  auto_enable = %[1]t
-	}
+    s3_logs {
+      auto_enable = %[1]t
+    }
   }
 }
 `, autoEnable)
