@@ -10,6 +10,7 @@ ENHANCEMENTS
 * data-source/aws_lb: Add `customer_owned_ipv4_pool` and `subnet_mapping` `outpost_id` attributes [GH-15170]
 * resource/aws_lb: Add `customer_owned_ipv4_pool` argument and `subnet_mapping` `outpost_id` attribute [GH-15170]
 * resource/aws_storagegateway_smb_file_share: Add `admin_user_list` argument [GH-12196]
+* resource/aws_transfer_user: Add `home_directory_mappings` configuration blocks and `home_directory_type` argument [GH-13591]
 
 BUG FIXES
 
