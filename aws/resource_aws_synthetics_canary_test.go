@@ -88,7 +88,7 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 }
 
 func TestAccAWSSyntheticsCanary_startCanary(t *testing.T) {
-	var conf synthetics.Canary
+	var conf1, conf2, conf3 synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
 
@@ -102,7 +102,9 @@ func TestAccAWSSyntheticsCanary_startCanary(t *testing.T) {
 			{
 				Config: testAccAWSSyntheticsCanaryStartCanaryConfig(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf1),
+					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
 				),
 			},
 			{
@@ -114,13 +116,19 @@ func TestAccAWSSyntheticsCanary_startCanary(t *testing.T) {
 			{
 				Config: testAccAWSSyntheticsCanaryStartCanaryConfig(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf2),
+					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
+					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_stopped"),
 				),
 			},
 			{
 				Config: testAccAWSSyntheticsCanaryStartCanaryConfig(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf3),
+					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
+					testAccCheckAwsSyntheticsCanaryIsStartedAfter(&conf2, &conf3),
 				),
 			},
 		},
@@ -447,6 +455,17 @@ func testAccCheckAwsSyntheticsCanaryDeleteImplicitResources(n string) resource.T
 func testAccCheckAwsSyntheticsCanaryIsUpdated(first, second *synthetics.Canary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !second.Timeline.LastModified.After(*first.Timeline.LastModified) {
+			return fmt.Errorf("synthetics Canary not updated")
+
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAwsSyntheticsCanaryIsStartedAfter(first, second *synthetics.Canary) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if !second.Timeline.LastStarted.After(*first.Timeline.LastStarted) {
 			return fmt.Errorf("synthetics Canary not updated")
 
 		}
