@@ -771,6 +771,8 @@ resource "aws_codepipeline" "example" {
 }
 ```
 
+The configuration could be updated as follows:
+
 ```bash
 $ TF_VAR_github_token=<token> terraform apply
 ```
