@@ -25,7 +25,6 @@ func init() {
 			"aws_lambda_function",
 			"aws_lambda_layer_version",
 			"aws_cloudwatch_log_group",
-			"aws_cloudwatch_metric_alarm",
 		},
 	})
 }
