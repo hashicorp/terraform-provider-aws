@@ -161,7 +161,7 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 		},
 	}
 
-    var t string
+	var t string
 	if v, ok := d.GetOk("deployment_type"); ok {
 		t = v.(string)
 	}
