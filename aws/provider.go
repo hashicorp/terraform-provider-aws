@@ -791,6 +791,7 @@ func Provider() *schema.Provider {
 			"aws_route53_health_check":                                resourceAwsRoute53HealthCheck(),
 			"aws_route53_resolver_endpoint":                           resourceAwsRoute53ResolverEndpoint(),
 			"aws_route53_resolver_query_log_config":                   resourceAwsRoute53ResolverQueryLogConfig(),
+			"aws_route53_resolver_query_log_config_association":       resourceAwsRoute53ResolverQueryLogConfigAssociation(),
 			"aws_route53_resolver_rule_association":                   resourceAwsRoute53ResolverRuleAssociation(),
 			"aws_route53_resolver_rule":                               resourceAwsRoute53ResolverRule(),
 			"aws_route":                                               resourceAwsRoute(),

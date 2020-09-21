@@ -9,9 +9,33 @@ import (
 )
 
 const (
+	resolverQueryLogConfigAssociationStatusNotFound = "NotFound"
+	resolverQueryLogConfigAssociationStatusUnknown  = "Unknown"
+
 	resolverQueryLogConfigStatusNotFound = "NotFound"
 	resolverQueryLogConfigStatusUnknown  = "Unknown"
 )
+
+// QueryLogConfigAssociationStatus fetches the QueryLogConfigAssociation and its Status
+func QueryLogConfigAssociationStatus(conn *route53resolver.Route53Resolver, queryLogConfigAssociationID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		queryLogConfigAssociation, err := finder.ResolverQueryLogConfigAssociationByID(conn, queryLogConfigAssociationID)
+
+		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
+			return nil, resolverQueryLogConfigAssociationStatusNotFound, nil
+		}
+
+		if err != nil {
+			return nil, resolverQueryLogConfigAssociationStatusUnknown, err
+		}
+
+		if queryLogConfigAssociation == nil {
+			return nil, resolverQueryLogConfigAssociationStatusNotFound, nil
+		}
+
+		return queryLogConfigAssociation, aws.StringValue(queryLogConfigAssociation.Status), nil
+	}
+}
 
 // QueryLogConfigStatus fetches the QueryLogConfig and its Status
 func QueryLogConfigStatus(conn *route53resolver.Route53Resolver, queryLogConfigID string) resource.StateRefreshFunc {
