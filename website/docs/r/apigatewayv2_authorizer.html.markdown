@@ -55,7 +55,7 @@ Supported only for `REQUEST` authorizers.
 * `authorizer_payload_format_version` - (Optional) The format of the payload sent to an HTTP API Lambda authorizer. Required for HTTP API Lambda authorizers.
 Valid values: `1.0`, `2.0`.
 * `authorizer_result_ttl_in_seconds` - (Optional) The time to live (TTL) for cached authorizer results, in seconds. If it equals 0, authorization caching is disabled.
-If it is greater than 0, API Gateway caches authorizer responses. The maximum value is 3600, or 1 hour.
+If it is greater than 0, API Gateway caches authorizer responses. The maximum value is 3600, or 1 hour. Defaults to `300`.
 Supported only for HTTP API Lambda authorizers.
 * `authorizer_uri` - (Optional) The authorizer's Uniform Resource Identifier (URI).
 For `REQUEST` authorizers this must be a well-formed Lambda function URI, such as the `invoke_arn` attribute of the [`aws_lambda_function`](/docs/providers/aws/r/lambda_function.html) resource.

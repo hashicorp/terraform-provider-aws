@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apigatewayv2/finder"
 )
 
 func resourceAwsApiGatewayV2Authorizer() *schema.Resource {
@@ -40,6 +41,7 @@ func resourceAwsApiGatewayV2Authorizer() *schema.Resource {
 			"authorizer_result_ttl_in_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.IntBetween(0, 3600),
 			},
 			"authorizer_type": {
@@ -92,9 +94,20 @@ func resourceAwsApiGatewayV2Authorizer() *schema.Resource {
 func resourceAwsApiGatewayV2AuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
+	apiId := d.Get("api_id").(string)
+	authorizerType := d.Get("authorizer_type").(string)
+
+	apiOutput, err := finder.ApiByID(conn, apiId)
+
+	if err != nil {
+		return fmt.Errorf("error reading API Gateway v2 API (%s): %s", apiId, err)
+	}
+
+	protocolType := aws.StringValue(apiOutput.ProtocolType)
+
 	req := &apigatewayv2.CreateAuthorizerInput{
-		ApiId:          aws.String(d.Get("api_id").(string)),
-		AuthorizerType: aws.String(d.Get("authorizer_type").(string)),
+		ApiId:          aws.String(apiId),
+		AuthorizerType: aws.String(authorizerType),
 		IdentitySource: expandStringSet(d.Get("identity_sources").(*schema.Set)),
 		Name:           aws.String(d.Get("name").(string)),
 	}
@@ -106,6 +119,10 @@ func resourceAwsApiGatewayV2AuthorizerCreate(d *schema.ResourceData, meta interf
 	}
 	if v, ok := d.GetOk("authorizer_result_ttl_in_seconds"); ok {
 		req.AuthorizerResultTtlInSeconds = aws.Int64(int64(v.(int)))
+	} else if protocolType == apigatewayv2.ProtocolTypeHttp && authorizerType == apigatewayv2.AuthorizerTypeRequest {
+		// Default in the AWS Console is 300 seconds.
+		// Explicitly set on creation so that we can correctly detect changes to the 0 value.
+		req.AuthorizerResultTtlInSeconds = aws.Int64(300)
 	}
 	if v, ok := d.GetOk("authorizer_uri"); ok {
 		req.AuthorizerUri = aws.String(v.(string))
