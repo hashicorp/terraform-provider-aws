@@ -432,6 +432,7 @@ func TestAccAWSFsxLustreFileSystem_automaticBackupRetentionDays(t *testing.T) {
 func TestAccAWSFsxLustreFileSystem_DeploymentTypePersistent1(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
+	datakmsKeyArn := "data.aws_kms_alias.fsx"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -446,6 +447,7 @@ func TestAccAWSFsxLustreFileSystem_DeploymentTypePersistent1(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "per_unit_storage_throughput", "50"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypePersistent1),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", datakmsKeyArn, "target_key_arn"),
 				),
 			},
 			{
@@ -823,6 +825,10 @@ resource "aws_fsx_lustre_file_system" "test" {
   subnet_ids                  = [aws_subnet.test1.id]
   deployment_type             = "PERSISTENT_1"
   per_unit_storage_throughput = %[1]d
+}
+
+data "aws_kms_alias" "fsx" {
+  name = "alias/aws/fsx"
 }
 `, perUnitStorageThroughput)
 }
