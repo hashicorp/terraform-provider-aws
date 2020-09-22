@@ -12,7 +12,7 @@ env:
 
 jobs:
   changes:
-    if: github.event_name == 'pull_request_target' && !contains(fromJSON('["anGie44", "bflad", "breathingdust", "DrFaust92", "ewbankkit", "gdavison", "maryelizbeth", "YakDriver", "renovate[bot]"]'), github.actor)
+    if: github.event_name == 'pull_request_target' && !contains(fromJSON('["bflad", "breathingdust", "DrFaust92", "ewbankkit", "gdavison", "maryelizbeth", "YakDriver", "renovate[bot]"]'), github.actor)
     name: Changed Files Filter
     runs-on: ubuntu-latest
     outputs:
