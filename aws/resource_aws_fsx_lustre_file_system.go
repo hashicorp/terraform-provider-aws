@@ -121,6 +121,13 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 					fsx.LustreDeploymentTypePersistent1,
 				}, false),
 			},
+			"kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
+			},
 			"per_unit_storage_throughput": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -152,6 +159,11 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 		LustreConfiguration: &fsx.CreateFileSystemLustreConfiguration{
 			DeploymentType: aws.String(d.Get("deployment_type").(string)),
 		},
+	}
+
+	//Applicable only for TypePersistent1
+	if v, ok := d.GetOk("kms_key_id"); ok {
+		input.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("automatic_backup_retention_days"); ok {
@@ -291,6 +303,10 @@ func resourceAwsFsxLustreFileSystemRead(d *schema.ResourceData, meta interface{}
 	d.Set("deployment_type", lustreConfig.DeploymentType)
 	if lustreConfig.PerUnitStorageThroughput != nil {
 		d.Set("per_unit_storage_throughput", lustreConfig.PerUnitStorageThroughput)
+	}
+
+	if filesystem.KmsKeyId != nil {
+		d.Set("kms_key_id", filesystem.KmsKeyId)
 	}
 
 	if err := d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds)); err != nil {
