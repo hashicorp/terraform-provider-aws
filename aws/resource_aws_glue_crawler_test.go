@@ -901,6 +901,39 @@ func TestAccAWSGlueCrawler_TablePrefix(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueCrawler_RemoveTablePrefix(t *testing.T) {
+	var crawler glue.Crawler
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_crawler.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCrawlerConfig_TablePrefix(rName, "prefix1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "table_prefix", "prefix1"),
+				),
+			},
+			{
+				Config: testAccGlueCrawlerConfig_TablePrefix(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "table_prefix", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSGlueCrawler_Tags(t *testing.T) {
 	var crawler1, crawler2, crawler3 glue.Crawler
 	rName := acctest.RandomWithPrefix("tf-acc-test")
