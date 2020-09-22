@@ -36,6 +36,7 @@ jobs:
       - name: PR Comment
         uses: unsplash/comment-on-pr@v1.2.0
         env:
+          GITHUB_EVENT_NAME: "pull_request"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           check_duplicate_msg: true
