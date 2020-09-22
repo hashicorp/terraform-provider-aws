@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -25,6 +26,7 @@ const (
 	firehoseDestinationTypeElasticsearch = "elasticsearch"
 	firehoseDestinationTypeRedshift      = "redshift"
 	firehoseDestinationTypeSplunk        = "splunk"
+	firehoseDestinationTypeHttpEndpoint  = "HttpEndpoint"
 )
 
 func cloudWatchLoggingOptionsSchema() *schema.Schema {
@@ -49,6 +51,71 @@ func cloudWatchLoggingOptionsSchema() *schema.Schema {
 				"log_stream_name": {
 					Type:     schema.TypeString,
 					Optional: true,
+				},
+			},
+		},
+	}
+}
+
+func bufferingHintsOptionsSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		MaxItems: 1,
+		Optional: true,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"size_in_mb": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      300,
+					ValidateFunc: validation.IntBetween(60, 900),
+				},
+
+				"interval_in_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      5,
+					ValidateFunc: validation.IntBetween(1, 64),
+				},
+			},
+		},
+	}
+}
+
+func requestConfigurationSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		MaxItems: 1,
+		Optional: true,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"content_encoding": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  firehose.ContentEncodingNone,
+					ValidateFunc: validation.StringInSlice([]string{
+						firehose.HttpEndpointContentEncodingGzip,
+						firehose.HttpEndpointContentEncodingNone,
+					}, false),
+				},
+
+				"common_attributes": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"value": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
 				},
 			},
 		},
@@ -660,6 +727,14 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 			if err := d.Set("s3_configuration", flattenFirehoseS3Configuration(destination.SplunkDestinationDescription.S3DestinationDescription)); err != nil {
 				return fmt.Errorf("error setting s3_configuration: %s", err)
 			}
+		} else if destination.HttpEndpointDestinationDescription != nil {
+			d.Set("destination", firehoseDestinationTypeHttpEndpoint)
+			if err := d.Set("http_endpoint_configuration", flattenFirehoseHttpEndpointConfiguration(destination.HttpEndpointDestinationDescription)); err != nil {
+				return fmt.Errorf("error setting http_endpoint_configuration: %s", err)
+			}
+			if err := d.Set("s3_configuration", flattenFirehoseS3Configuration(destination.HttpEndpointDestinationDescription.S3DestinationDescription)); err != nil {
+				return fmt.Errorf("error setting s3_configuration: %s", err)
+			}
 		} else if d.Get("destination").(string) == firehoseDestinationTypeS3 {
 			d.Set("destination", firehoseDestinationTypeS3)
 			if err := d.Set("s3_configuration", flattenFirehoseS3Configuration(destination.S3DestinationDescription)); err != nil {
@@ -675,6 +750,65 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 	}
 
 	return nil
+}
+
+func flattenFirehoseHttpEndpointConfiguration(description *firehose.HttpEndpointDestinationDescription) []map[string]interface{} {
+	if description == nil {
+		return []map[string]interface{}{}
+	}
+	m := map[string]interface{}{
+		"url":  aws.StringValue(description.EndpointConfiguration.Url),
+		"name": aws.StringValue(description.EndpointConfiguration.Name),
+		//	"access_key":                 aws.StringValue(description.EndpointConfiguration.AccessKey),
+		"role_arn":                   aws.StringValue(description.RoleARN),
+		"s3_backup_mode":             aws.StringValue(description.S3BackupMode),
+		"request_configuration":      flattenRequestConfiguration(description.RequestConfiguration),
+		"buffering_hints":            flattenBufferingHints(description.BufferingHints),
+		"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
+		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, ""),
+	}
+
+	if description.RetryOptions != nil {
+		m["retry_duration"] = int(aws.Int64Value(description.RetryOptions.DurationInSeconds))
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenBufferingHints(bh *firehose.HttpEndpointBufferingHints) []interface{} {
+	if bh == nil {
+		return []interface{}{}
+	}
+
+	BufferingHints := map[string]interface{}{
+		"size_in_mb":          aws.Int64Value(bh.SizeInMBs),
+		"interval_in_seconds": aws.Int64Value(bh.IntervalInSeconds),
+	}
+	return []interface{}{BufferingHints}
+}
+
+func flattenRequestConfiguration(rc *firehose.HttpEndpointRequestConfiguration) []interface{} {
+	if rc == nil {
+		return []interface{}{}
+	}
+
+	attributes := make([]interface{}, len(rc.CommonAttributes))
+	for _, params := range rc.CommonAttributes {
+		name := aws.StringValue(params.AttributeName)
+		value := aws.StringValue(params.AttributeValue)
+
+		attributes = append(attributes, map[string]interface{}{
+			"attribute_name":  name,
+			"attribute_value": value,
+		})
+	}
+
+	RequestConfiguration := map[string]interface{}{
+		"attributes":       attributes,
+		"content_encoding": aws.StringValue(rc.ContentEncoding),
+	}
+
+	return []interface{}{RequestConfiguration}
 }
 
 func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
@@ -1315,6 +1449,67 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 							Default:      3600,
 							ValidateFunc: validation.IntBetween(0, 7200),
 						},
+
+						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
+
+						"processing_configuration": processingConfigurationSchema(),
+					},
+				},
+			},
+
+			"HttpEndpoint_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"url": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 1000),
+								validation.StringMatch(regexp.MustCompile(`^https://.*$`), ""),
+							),
+						},
+
+						"name": {
+							Type:     schema.TypeString,
+							Required: false,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 256),
+								validation.StringMatch(regexp.MustCompile(`^(?!\s*$).+$`), ""),
+							),
+						},
+
+						"access_key ": {
+							Type:         schema.TypeString,
+							Required:     false,
+							ValidateFunc: validation.StringLenBetween(0, 4096),
+						},
+
+						"role_arn ": {
+							Type:         schema.TypeString,
+							Required:     false,
+							ValidateFunc: validateArn,
+						},
+
+						"s3_backup_mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      firehose.HttpEndpointS3BackupModeFailedDataOnly,
+							ValidateFunc: validation.StringInSlice(firehose.HttpEndpointS3BackupMode_Values(), false),
+						},
+
+						"retry_duration": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      3600,
+							ValidateFunc: validation.IntBetween(0, 7200),
+						},
+
+						"request_configuration": requestConfigurationSchema(),
+
+						"buffering_hints_options": bufferingHintsOptionsSchema(),
 
 						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
 
@@ -2044,6 +2239,159 @@ func updateSplunkConfig(d *schema.ResourceData, s3Update *firehose.S3Destination
 	return configuration, nil
 }
 
+func createHttpEndpointConfig(d *schema.ResourceData, s3Config *firehose.S3DestinationConfiguration) (*firehose.HttpEndpointDestinationConfiguration, error) {
+	HttpEndpointRaw, ok := d.GetOk("http_endpoint_configuration")
+	if !ok {
+		return nil, fmt.Errorf("Error loading HTTP Endpoint Configuration for Kinesis Firehose: http_endpoint_configuration not found")
+	}
+	sl := HttpEndpointRaw.([]interface{})
+
+	HttpEndpoint := sl[0].(map[string]interface{})
+
+	configuration := &firehose.HttpEndpointDestinationConfiguration{
+		RoleARN:         aws.String(HttpEndpoint["role_arn"].(string)),
+		S3Configuration: s3Config,
+	}
+
+	configuration.EndpointConfiguration = extractHttpEndpointConfiguration(HttpEndpoint)
+
+	if _, ok := HttpEndpoint["buffering_hints"]; ok {
+		configuration.BufferingHints = extractHttpEndpointBufferingHints(HttpEndpoint)
+	}
+
+	if _, ok := HttpEndpoint["processing_configuration"]; ok {
+		configuration.ProcessingConfiguration = extractProcessingConfiguration(HttpEndpoint)
+	}
+
+	if _, ok := HttpEndpoint["request_configuration"]; ok {
+		configuration.RequestConfiguration = extractRequestConfiguration(HttpEndpoint)
+	}
+
+	if _, ok := HttpEndpoint["cloudwatch_logging_options"]; ok {
+		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(HttpEndpoint)
+	}
+	if s3BackupMode, ok := HttpEndpoint["s3_backup_mode"]; ok {
+		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
+	}
+
+	return configuration, nil
+}
+
+func updateHttpEndpointConfig(d *schema.ResourceData, s3Update *firehose.S3DestinationUpdate) (*firehose.HttpEndpointDestinationUpdate, error) {
+	HttpEndpointRaw, ok := d.GetOk("http_endpoint_configuration")
+	if !ok {
+		return nil, fmt.Errorf("Error loading  HTTP Endpoint Configuration for Kinesis Firehose: http_endpoint_configuration not found")
+	}
+	sl := HttpEndpointRaw.([]interface{})
+
+	HttpEndpoint := sl[0].(map[string]interface{})
+
+	configuration := &firehose.HttpEndpointDestinationUpdate{
+		RoleARN:  aws.String(HttpEndpoint["role_arn"].(string)),
+		S3Update: s3Update,
+	}
+
+	configuration.EndpointConfiguration = extractHttpEndpointConfiguration(HttpEndpoint)
+
+	if _, ok := HttpEndpoint["buffering_hints"]; ok {
+		configuration.BufferingHints = extractHttpEndpointBufferingHints(HttpEndpoint)
+	}
+
+	if _, ok := HttpEndpoint["processing_configuration"]; ok {
+		configuration.ProcessingConfiguration = extractProcessingConfiguration(HttpEndpoint)
+	}
+
+	if _, ok := HttpEndpoint["request_configuration"]; ok {
+		configuration.RequestConfiguration = extractRequestConfiguration(HttpEndpoint)
+	}
+
+	if _, ok := HttpEndpoint["cloudwatch_logging_options"]; ok {
+		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(HttpEndpoint)
+	}
+
+	if s3BackupMode, ok := HttpEndpoint["s3_backup_mode"]; ok {
+		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
+	}
+
+	return configuration, nil
+}
+
+func extractCommonAttributes(ca map[string]interface{}) *firehose.HttpEndpointCommonAttribute {
+	CommonAttributes := &firehose.HttpEndpointCommonAttribute{}
+
+	if contentEncoding, ok := ca["content_encoding"]; ok {
+		CommonAttributes.ContentEncoding = aws.String(contentEncoding.(string))
+	}
+
+	if commonAttributes, ok := ca["common_attributes"]; ok {
+		CommonAttributes.CommonAttributes = extractCommonAttributes(commonAttributes)
+	}
+
+	return CommonAttributes
+}
+/*
+func expandAwsCloudTrailEventSelector(configured []interface{}) []*cloudtrail.EventSelector {
+	eventSelectors := make([]*cloudtrail.EventSelector, 0, len(configured))
+
+	for _, raw := range configured {
+		data := raw.(map[string]interface{})
+		dataResources := expandAwsCloudTrailEventSelectorDataResource(data["data_resource"].([]interface{}))
+
+		es := &cloudtrail.EventSelector{
+			IncludeManagementEvents: aws.Bool(data["include_management_events"].(bool)),
+			ReadWriteType:           aws.String(data["read_write_type"].(string)),
+			DataResources:           dataResources,
+		}
+		eventSelectors = append(eventSelectors, es)
+	}
+
+	return eventSelectors
+}
+*/
+
+func extractRequestConfiguration(rc map[string]interface{}) *firehose.HttpEndpointRequestConfiguration {
+	RequestConfiguration := &firehose.HttpEndpointRequestConfiguration{}
+
+	if contentEncoding, ok := rc["content_encoding"]; ok {
+		RequestConfiguration.ContentEncoding = aws.String(contentEncoding.(string))
+	}
+
+	if commonAttributes, ok := rc["common_attributes"]; ok {
+		RequestConfiguration.CommonAttributes = extractCommonAttributes(commonAttributes)
+	}
+
+	return RequestConfiguration
+}
+
+func extractHttpEndpointBufferingHints(bh map[string]interface{}) *firehose.HttpEndpointBufferingHints {
+	bufferingHints := &firehose.HttpEndpointBufferingHints{}
+
+	if bufferingInterval, ok := bh["interval_in_seconds"].(int); ok {
+		bufferingHints.IntervalInSeconds = aws.Int64(int64(bufferingInterval))
+	}
+	if bufferingSize, ok := bh["size_in_mb"].(int); ok {
+		bufferingHints.SizeInMBs = aws.Int64(int64(bufferingSize))
+	}
+
+	return bufferingHints
+}
+
+func extractHttpEndpointConfiguration(ep map[string]interface{}) *firehose.HttpEndpointConfiguration {
+	endpointConfiguration := &firehose.HttpEndpointConfiguration{
+		Url: aws.String(ep["url"].(string)),
+	}
+
+	if Name, ok := ep["name"]; ok {
+		endpointConfiguration.Name = aws.String(Name.(string))
+	}
+
+	if AccessKey, ok := ep["access_key"]; ok {
+		endpointConfiguration.AccessKey = aws.String(AccessKey.(string))
+	}
+
+	return endpointConfiguration
+}
+
 func extractBufferingHints(es map[string]interface{}) *firehose.ElasticsearchBufferingHints {
 	bufferingHints := &firehose.ElasticsearchBufferingHints{}
 
@@ -2150,6 +2498,12 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 				return err
 			}
 			createInput.SplunkDestinationConfiguration = rc
+		} else if d.Get("destination").(string) == firehoseDestinationTypeHttpEndpoint {
+			rc, err := createHttpEndpointConfig(d, s3Config)
+			if err != nil {
+				return err
+			}
+			createInput.HttpEndpointDestinationConfiguration = rc
 		}
 	}
 
@@ -2286,6 +2640,12 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 				return err
 			}
 			updateInput.SplunkDestinationUpdate = rc
+		} else if d.Get("destination").(string) == firehoseDestinationTypeHttpEndpoint {
+			rc, err := updateHttpEndpointConfig(d, s3Config)
+			if err != nil {
+				return err
+			}
+			updateInput.HttpEndpointDestinationUpdate = rc
 		}
 	}
 

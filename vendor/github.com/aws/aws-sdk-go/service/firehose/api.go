@@ -8469,6 +8469,14 @@ const (
 	HttpEndpointS3BackupModeAllData = "AllData"
 )
 
+const (
+	// HttpEndpointContentEncodingGzip is a HttpEndpointContentEncoding enum value
+	HttpEndpointContentEncodingGzip = "GZIP"
+
+	// HttpContentEncodingNone is a HttpEndpointContentEncoding enum value
+	HttpEndpointContentEncodingNone = "NONE"
+)
+
 // HttpEndpointS3BackupMode_Values returns all elements of the HttpEndpointS3BackupMode enum
 func HttpEndpointS3BackupMode_Values() []string {
 	return []string{
