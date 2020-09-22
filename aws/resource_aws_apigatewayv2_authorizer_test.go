@@ -201,7 +201,7 @@ func TestAccAWSAPIGatewayV2Authorizer_JWT(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayV2Authorizer_HttpApiLambdaRequestAuthorizer(t *testing.T) {
+func TestAccAWSAPIGatewayV2Authorizer_HttpApiLambdaRequestAuthorizer_InitialMissingCacheTTL(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetAuthorizerOutput
 	resourceName := "aws_apigatewayv2_authorizer.test"
@@ -259,6 +259,62 @@ func TestAccAWSAPIGatewayV2Authorizer_HttpApiLambdaRequestAuthorizer(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_payload_format_version", "1.0"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "REQUEST"),
+					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
+					resource.TestCheckResourceAttr(resourceName, "enable_simple_responses", "false"),
+					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "2"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$request.querystring.User"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$context.routeKey"),
+					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayV2Authorizer_HttpApiLambdaRequestAuthorizer_InitialZeroCacheTTL(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetAuthorizerOutput
+	resourceName := "aws_apigatewayv2_authorizer.test"
+	lambdaResourceName := "aws_lambda_function.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2AuthorizerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayV2AuthorizerConfig_httpApiLambdaRequestAuthorizerUpdated(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayV2AuthorizerExists(resourceName, &apiId, &v),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_payload_format_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "REQUEST"),
+					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
+					resource.TestCheckResourceAttr(resourceName, "enable_simple_responses", "false"),
+					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "2"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$request.querystring.User"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "identity_sources.*", "$context.routeKey"),
+					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSAPIGatewayV2AuthorizerImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSAPIGatewayV2AuthorizerConfig_httpApiLambdaRequestAuthorizerUpdated(rName, 600),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayV2AuthorizerExists(resourceName, &apiId, &v),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_payload_format_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", "600"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "REQUEST"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "enable_simple_responses", "false"),

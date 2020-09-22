@@ -117,7 +117,7 @@ func resourceAwsApiGatewayV2AuthorizerCreate(d *schema.ResourceData, meta interf
 	if v, ok := d.GetOk("authorizer_payload_format_version"); ok {
 		req.AuthorizerPayloadFormatVersion = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("authorizer_result_ttl_in_seconds"); ok {
+	if v, ok := d.GetOkExists("authorizer_result_ttl_in_seconds"); ok {
 		req.AuthorizerResultTtlInSeconds = aws.Int64(int64(v.(int)))
 	} else if protocolType == apigatewayv2.ProtocolTypeHttp && authorizerType == apigatewayv2.AuthorizerTypeRequest {
 		// Default in the AWS Console is 300 seconds.
