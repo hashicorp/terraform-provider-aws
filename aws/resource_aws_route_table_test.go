@@ -1006,8 +1006,8 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = aws_vpc.test.id
+  cidr_block = "10.0.0.0/24"
+  vpc_id     = aws_vpc.test.id
 }
 
 resource "aws_ec2_local_gateway_route_table_vpc_association" "example" {
@@ -1019,7 +1019,7 @@ resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
 
   route {
-    cidr_block         = "0.0.0.0/0"
+    cidr_block       = "0.0.0.0/0"
     local_gateway_id = data.aws_ec2_local_gateway.first.id
   }
   depends_on = [aws_ec2_local_gateway_route_table_vpc_association.example]

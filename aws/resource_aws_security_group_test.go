@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"regexp"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -2451,6 +2452,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
 					testAccCheckAWSSecurityGroupRuleCount(&group, 0, ruleLimit),
+					resource.TestCheckResourceAttr(resourceName, "egress.#"),
 				),
 			},
 			// append a rule to step over the limit
@@ -2471,6 +2473,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
 					testAccCheckAWSSecurityGroupRuleCount(&group, 0, ruleLimit),
+					resource.TestCheckResourceAttr(resourceName, "egress.#"),
 				),
 			},
 		},
@@ -2691,29 +2694,9 @@ func testSecurityGroupRuleCount(id string, expectedIngressCount, expectedEgressC
 }
 
 func testAccAWSSecurityGroupConfigRuleLimit(egressStartIndex, egressRulesCount int) string {
-	c := `
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-security-group-rule-limit"
-  }
-}
-
-resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_rule_limit"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-test"
-  }
-
-  # egress rules to exhaust the limit
-`
-
+	var egressRules strings.Builder
 	for i := egressStartIndex; i < egressRulesCount+egressStartIndex; i++ {
-		c += fmt.Sprintf(`
+		fmt.Fprintf(&egressRules, `
   egress {
     protocol    = "tcp"
     from_port   = "${80 + %[1]d}"
@@ -2723,13 +2706,7 @@ resource "aws_security_group" "test" {
 `, i)
 	}
 
-	c += "\n}"
-
-	return c
-}
-
-func testAccAWSSecurityGroupConfigCidrBlockRuleLimit(egressStartIndex, egressRulesCount int) string {
-	c := `
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -2748,22 +2725,48 @@ resource "aws_security_group" "test" {
   }
 
   # egress rules to exhaust the limit
-  egress {
-    protocol = "tcp"
-    from_port = "80"
-    to_port = "80"
-    cidr_blocks = [
-`
+  %[1]s
+}
+`, egressRules)
+}
 
+func testAccAWSSecurityGroupConfigCidrBlockRuleLimit(egressStartIndex, egressRulesCount int) string {
+	var cidrBlocks strings.Builder
 	for i := egressStartIndex; i < egressRulesCount+egressStartIndex; i++ {
-		c += fmt.Sprintf(`
+		fmt.Fprintf(&egressRules, `
 		"${cidrhost("10.1.0.0/16", %[1]d)}/32",
 `, i)
 	}
 
-	c += "\n\t\t]\n\t}\n}"
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
 
-	return c
+  tags = {
+    Name = "terraform-testacc-security-group-rule-limit"
+  }
+}
+
+resource "aws_security_group" "test" {
+  name        = "terraform_acceptance_test_rule_limit"
+  description = "Used in the terraform acceptance tests"
+  vpc_id      = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-test"
+  }
+
+  egress {
+    protocol  = "tcp"
+    from_port = "80"
+    to_port   = "80"
+    # cidr_blocks to exhaust the limit
+    cidr_blocks = [
+		%s
+    ]
+  }
+}
+`, cidrBlocks)
 }
 
 const testAccAWSSecurityGroupConfigEmptyRuleDescription = `

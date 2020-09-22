@@ -10,6 +10,7 @@ on:
       - aws/core_acceptance_test.go
       - aws/data_source_aws_*_test.go
       - aws/resource_aws_[a-g]*_test.go
+      - aws/resource_aws_[o-s]*_test.go
 
 env:
   GO_VERSION: "1.14"
@@ -47,12 +48,20 @@ jobs:
             -o -name 'resource_aws_e*_test.go' \
             -o -name 'resource_aws_f*_test.go' \
             -o -name 'resource_aws_g*_test.go' \
+            -o -name 'resource_aws_o*_test.go' \
+            -o -name 'resource_aws_p*_test.go' \
+            -o -name 'resource_aws_q*_test.go' \
+            -o -name 'resource_aws_r*_test.go' \
+            -o -name 'resource_aws_s*_test.go' \
             \) \
             | sort -u \
             | grep -v resource_aws_apigatewayv2_domain_name_test.go \
             | grep -v resource_aws_dynamodb_table_test.go \
             | grep -v resource_aws_ecs_capacity_provider_test.go \
             | grep -v resource_aws_efs_file_system_test.go \
+            | grep -v resource_aws_quicksight_user_test.go \
+            | grep -v resource_aws_s3_bucket_object_test.go \
+            | grep -v resource_aws_sns_platform_application_test.go \
             | xargs -I {} terrafmt diff --check --quiet --fmtcompat {}
 
   validate-terraform:
@@ -85,6 +94,11 @@ jobs:
             -o -name 'resource_aws_e*_test.go' \
             -o -name 'resource_aws_f*_test.go' \
             -o -name 'resource_aws_g*_test.go' \
+            -o -name 'resource_aws_o*_test.go' \
+            -o -name 'resource_aws_p*_test.go' \
+            -o -name 'resource_aws_q*_test.go' \
+            -o -name 'resource_aws_r*_test.go' \
+            -o -name 'resource_aws_s*_test.go' \
             \) \
             | sort -u \
             | grep -v resource_aws_apigatewayv2_domain_name_test.go \
@@ -92,5 +106,8 @@ jobs:
             | grep -v resource_aws_ecs_capacity_provider_test.go \
             | grep -v resource_aws_efs_file_system_test.go \
             | grep -v resource_aws_elasticache_cluster_test.go \
+            | grep -v resource_aws_quicksight_user_test.go \
+            | grep -v resource_aws_s3_bucket_object_test.go \
+            | grep -v resource_aws_sns_platform_application_test.go \
             | ./scripts/validate-terraform.sh
           
