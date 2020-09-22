@@ -35,6 +35,7 @@ The following arguments are supported:
 * `deployment_type` - (Optional) The filesystem deployment type. One of: `SCRATCH_1`, `SCRATCH_2`, `PERSISTENT_1`.
 * `per_unit_storage_throughput` - (Optional) Describes the amount of read and write throughput for each 1 tebibyte of storage, in MB/s/TiB, required for the `PERSISTENT_1` deployment_type. For valid values, see the [AWS documentation](https://docs.aws.amazon.com/fsx/latest/APIReference/API_CreateFileSystemLustreConfiguration.html).
 * `automatic_backup_retention_days` - (Optional) The number of days to retain automatic backups. Setting this to 0 disables automatic backups. You can retain automatic backups for a maximum of 35 days. only valid for `PERSISTENT_1` deployment_type.
+* `copy_tags_to_backups` - (Optional) A boolean flag indicating whether tags for the file system should be copied to backups. The default value is false.
 
 ## Attributes Reference
 

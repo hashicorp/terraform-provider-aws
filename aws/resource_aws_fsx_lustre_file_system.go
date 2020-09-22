@@ -137,6 +137,12 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(0, 35),
 			},
+			"copy_tags_to_backups": {
+				Type: schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default: false,
+			},
 		},
 	}
 }
@@ -184,6 +190,10 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 
 	if v, ok := d.GetOk("per_unit_storage_throughput"); ok {
 		input.LustreConfiguration.PerUnitStorageThroughput = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("copy_tags_to_backups"); ok {
+		input.LustreConfiguration.CopyTagsToBackups = aws.Bool(v.(bool))
 	}
 
 	result, err := conn.CreateFileSystem(input)
@@ -311,6 +321,7 @@ func resourceAwsFsxLustreFileSystemRead(d *schema.ResourceData, meta interface{}
 	d.Set("vpc_id", filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", lustreConfig.WeeklyMaintenanceStartTime)
 	d.Set("automatic_backup_retention_days", lustreConfig.AutomaticBackupRetentionDays)
+	d.Set("copy_tags_to_backups", filesystem.LustreConfiguration.CopyTagsToBackups)
 
 	return nil
 }
