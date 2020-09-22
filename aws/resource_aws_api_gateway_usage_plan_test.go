@@ -720,7 +720,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 func testAccAWSApiGatewayUsagePlanApiStagesModifiedConfig(rName string) string {
 	return testAccAWSAPIGatewayUsagePlanConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
-  name        = "%s"
+  name = "%s"
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
