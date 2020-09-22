@@ -61,7 +61,12 @@ func TestAccAwsWorkspacesWorkspace_basic(t *testing.T) {
 	bundleDataSourceName := "data.aws_workspaces_bundle.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
@@ -102,7 +107,12 @@ func TestAccAwsWorkspacesWorkspace_tags(t *testing.T) {
 	resourceName := "aws_workspaces_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
@@ -148,7 +158,12 @@ func TestAccAwsWorkspacesWorkspace_workspaceProperties(t *testing.T) {
 	resourceName := "aws_workspaces_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
@@ -207,7 +222,12 @@ func TestAccAwsWorkspacesWorkspace_workspaceProperties_runningModeAlwaysOn(t *te
 	resourceName := "aws_workspaces_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{

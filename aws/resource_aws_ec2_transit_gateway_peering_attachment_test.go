@@ -377,7 +377,8 @@ resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   transit_gateway_id      = aws_ec2_transit_gateway.test.id
 
   tags = {
-    Name  = %[2]q
+    Name = %[2]q
+
     %[3]s = %[4]q
   }
 }
@@ -392,7 +393,8 @@ resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   transit_gateway_id      = aws_ec2_transit_gateway.test.id
 
   tags = {
-    Name  = %[2]q
+    Name = %[2]q
+
     %[3]s = %[4]q
     %[5]s = %[6]q
   }

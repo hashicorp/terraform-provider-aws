@@ -135,12 +135,12 @@ resource "aws_vpc" "test" {
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
+  vpc_id       = aws_vpc.test.id
   service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -148,8 +148,8 @@ resource "aws_route_table" "test" {
 }
 
 resource "aws_vpc_endpoint_route_table_association" "test" {
-  vpc_endpoint_id = "${aws_vpc_endpoint.test.id}"
-  route_table_id  = "${aws_route_table.test.id}"
+  vpc_endpoint_id = aws_vpc_endpoint.test.id
+  route_table_id  = aws_route_table.test.id
 }
 `, rName)
 }

@@ -365,13 +365,13 @@ resource "aws_autoscaling_group" "test" {
     id = aws_launch_template.test.id
   }
 
-  	tags = [
-		{
-			key                 = "foo"
-			value               = "bar"
-			propagate_at_launch = true
-		},
-	]
+  tags = [
+    {
+      key                 = "foo"
+      value               = "bar"
+      propagate_at_launch = true
+    },
+  ]
 }
 `, rName)
 }
@@ -427,10 +427,10 @@ resource "aws_ecs_capacity_provider" "test" {
 func testAccAWSEcsCapacityProviderConfigTags1(rName, tag1Key, tag1Value string) string {
 	return testAccAWSEcsCapacityProviderConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
-  name = %q
+  name = %[1]q
 
   tags = {
-    %q = %q,
+    %[2]q = %[3]q,
   }
 
   auto_scaling_group_provider {

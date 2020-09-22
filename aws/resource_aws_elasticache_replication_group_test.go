@@ -977,7 +977,7 @@ resource "aws_elasticache_replication_group" "test" {
   apply_immediately             = true
   node_type                     = "cache.t3.small"
   number_cache_clusters         = 2
-  parameter_group_name          = "${aws_elasticache_parameter_group.test.*.name[%[2]d]}"
+  parameter_group_name          = aws_elasticache_parameter_group.test.*.name[%[2]d]
   replication_group_description = "test description"
   replication_group_id          = %[1]q
 }
@@ -1128,7 +1128,7 @@ resource "aws_subnet" "test2" {
 resource "aws_elasticache_subnet_group" "test" {
   name        = "tf-test-cache-subnet-%03d"
   description = "tf-test-cache-subnet-group-descr"
-  subnet_ids  = [
+  subnet_ids = [
     aws_subnet.test.id,
     aws_subnet.test2.id,
   ]
@@ -1164,9 +1164,7 @@ resource "aws_elasticache_replication_group" "test" {
 
 var testAccAWSElasticacheReplicationGroupRedisClusterInVPCConfig = fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-  # InvalidParameterValue: Specified node type cache.m3.medium is not available in AZ us-east-1b.
-  exclude_zone_ids = ["use1-az1"]
-  state            = "available"
+  state = "available"
 
   filter {
     name   = "opt-in-status"
@@ -1193,8 +1191,8 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_subnet" "test2" {
-  vpc_id = aws_vpc.test.id
-  cidr_block = "192.168.16.0/20"
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "192.168.16.0/20"
   availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
@@ -1205,7 +1203,7 @@ resource "aws_subnet" "test2" {
 resource "aws_elasticache_subnet_group" "test" {
   name        = "tf-test-cache-subnet-%03d"
   description = "tf-test-cache-subnet-group-descr"
-  subnet_ids  = [
+  subnet_ids = [
     aws_subnet.test.id,
     aws_subnet.test2.id,
   ]
@@ -1227,7 +1225,7 @@ resource "aws_security_group" "test" {
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = "tf-%s"
   replication_group_description = "test description"
-  node_type                     = "cache.m3.medium"
+  node_type                     = "cache.t3.medium"
   number_cache_clusters         = "2"
   port                          = 6379
   subnet_group_name             = aws_elasticache_subnet_group.test.name
@@ -1611,9 +1609,7 @@ resource "aws_elasticache_replication_group" "test" {
 func testAccAWSElasticacheReplicationGroupConfig_NumberCacheClusters(rName string, numberCacheClusters int, autoFailover bool) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-  # InvalidParameterValue: Specified node type cache.m3.medium is not available in AZ us-east-1b.
-  exclude_zone_ids = ["use1-az1"]
-  state            = "available"
+  state = "available"
 
   filter {
     name   = "opt-in-status"
@@ -1649,7 +1645,7 @@ resource "aws_elasticache_subnet_group" "test" {
 resource "aws_elasticache_replication_group" "test" {
   # InvalidParameterCombination: Automatic failover is not supported for T1 and T2 cache node types.
   automatic_failover_enabled    = %[2]t
-  node_type                     = "cache.m3.medium"
+  node_type                     = "cache.t3.medium"
   number_cache_clusters         = %[3]d
   replication_group_id          = "%[1]s"
   replication_group_description = "Terraform Acceptance Testing - number_cache_clusters"

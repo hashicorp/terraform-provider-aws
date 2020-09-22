@@ -19,7 +19,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_Basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -53,7 +53,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_ConnectionBorrowTimeout(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -86,7 +86,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_InitQuery(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -119,7 +119,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_MaxConnectionsPercent(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -152,7 +152,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_MaxIdleConnectionsPercent(t *testing.T)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -186,7 +186,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_SessionPinningFilters(t *testing.T) {
 	sessionPinningFilters := "EXCLUDE_VARIABLE_SETS"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -219,7 +219,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_disappears(t *testing.T) {
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -399,8 +399,8 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_security_group" "test" {
-	name   = "%[1]s"
-	vpc_id = aws_vpc.test.id
+  name   = "%[1]s"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_subnet" "test" {

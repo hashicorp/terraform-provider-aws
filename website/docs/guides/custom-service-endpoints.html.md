@@ -122,6 +122,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>guardduty</code></li>
   <li><code>greengrass</code></li>
   <li><code>iam</code></li>
+  <li><code>identitystore</code></li>
   <li><code>imagebuilder</code></li>
   <li><code>inspector</code></li>
   <li><code>iot</code></li>
@@ -181,6 +182,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>sns</code></li>
   <li><code>sqs</code></li>
   <li><code>ssm</code></li>
+  <li><code>ssoadmin</code></li>
   <li><code>stepfunctions</code></li>
   <li><code>storagegateway</code></li>
   <li><code>sts</code></li>

@@ -19,7 +19,7 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
 		Steps: []resource.TestStep{
@@ -84,7 +84,7 @@ func TestAccAWSAPIGatewayStage_disappears_ReferencingDeployment(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
 		Steps: []resource.TestStep{
@@ -110,7 +110,7 @@ func TestAccAWSAPIGatewayStage_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
 		Steps: []resource.TestStep{
@@ -137,7 +137,7 @@ func TestAccAWSAPIGatewayStage_accessLogSettings(t *testing.T) {
 	csv := `$context.identity.sourceIp,$context.identity.caller,$context.identity.user,$context.requestTime,$context.httpMethod,$context.resourcePath,$context.protocol,$context.status,$context.responseLength,$context.requestId`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
 		Steps: []resource.TestStep{
@@ -204,7 +204,7 @@ func TestAccAWSAPIGatewayStage_accessLogSettings_kinesis(t *testing.T) {
 	csv := `$context.identity.sourceIp,$context.identity.caller,$context.identity.user,$context.requestTime,$context.httpMethod,$context.resourcePath,$context.protocol,$context.status,$context.responseLength,$context.requestId`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
 		Steps: []resource.TestStep{

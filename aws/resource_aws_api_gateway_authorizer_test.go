@@ -22,7 +22,7 @@ func TestAccAWSAPIGatewayAuthorizer_basic(t *testing.T) {
 	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
@@ -67,7 +67,7 @@ func TestAccAWSAPIGatewayAuthorizer_cognito(t *testing.T) {
 	resourceName := "aws_api_gateway_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
@@ -104,7 +104,7 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
@@ -150,7 +150,7 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthorizerTTL(t *testing.T) {
 	resourceName := "aws_api_gateway_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
@@ -196,7 +196,7 @@ func TestAccAWSAPIGatewayAuthorizer_authTypeValidation(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
@@ -222,7 +222,7 @@ func TestAccAWSAPIGatewayAuthorizer_zero_ttl(t *testing.T) {
 	resourceName := "aws_api_gateway_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
@@ -249,7 +249,7 @@ func TestAccAWSAPIGatewayAuthorizer_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{

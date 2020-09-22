@@ -341,7 +341,7 @@ func TestAccAWSSubnet_availabilityZoneId(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone_id", "data.aws_availability_zones.test", "zone_ids.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone_id", "data.aws_availability_zones.available", "zone_ids.0"),
 				),
 			},
 			{

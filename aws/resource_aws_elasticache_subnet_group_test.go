@@ -242,7 +242,7 @@ resource "aws_subnet" "test" {
 resource "aws_elasticache_subnet_group" "test" {
   name        = "tf-test-cache-subnet-%03d"
   description = "tf-test-cache-subnet-group-descr-edited"
-  subnet_ids  = [
+  subnet_ids = [
     aws_subnet.foo.id,
     aws_subnet.test.id,
   ]

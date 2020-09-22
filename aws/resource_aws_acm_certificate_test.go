@@ -694,6 +694,37 @@ func TestAccAWSAcmCertificate_imported_IpAddress(t *testing.T) { // Reference: h
 	})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/15055
+func TestAccAWSAcmCertificate_PrivateKey_Tags(t *testing.T) {
+	resourceName := "aws_acm_certificate.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAcmCertificateConfigPrivateKeyTags("1.2.3.4"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"private_key", "certificate_body"},
+			},
+			{
+				Config: testAccAcmCertificateConfigPrivateKeyTags("5.6.7.8"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAcmCertificateConfig(domainName, validationMethod string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "cert" {
@@ -772,6 +803,22 @@ func testAccAcmCertificateConfigPrivateKeyWithoutChain(commonName string) string
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[1]s"
   private_key      = "%[2]s"
+}
+`, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+}
+
+func testAccAcmCertificateConfigPrivateKeyTags(commonName string) string {
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, commonName)
+
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[1]s"
+  private_key      = "%[2]s"
+
+  tags = {
+    key1 = "value1"
+  }
 }
 `, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }

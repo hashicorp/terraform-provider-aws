@@ -691,6 +691,12 @@ func (c *Budgets) DescribeBudgetPerformanceHistoryRequest(input *DescribeBudgetP
 		Name:       opDescribeBudgetPerformanceHistory,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -756,6 +762,58 @@ func (c *Budgets) DescribeBudgetPerformanceHistoryWithContext(ctx aws.Context, i
 	return out, req.Send()
 }
 
+// DescribeBudgetPerformanceHistoryPages iterates over the pages of a DescribeBudgetPerformanceHistory operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeBudgetPerformanceHistory method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeBudgetPerformanceHistory operation.
+//    pageNum := 0
+//    err := client.DescribeBudgetPerformanceHistoryPages(params,
+//        func(page *budgets.DescribeBudgetPerformanceHistoryOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Budgets) DescribeBudgetPerformanceHistoryPages(input *DescribeBudgetPerformanceHistoryInput, fn func(*DescribeBudgetPerformanceHistoryOutput, bool) bool) error {
+	return c.DescribeBudgetPerformanceHistoryPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeBudgetPerformanceHistoryPagesWithContext same as DescribeBudgetPerformanceHistoryPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Budgets) DescribeBudgetPerformanceHistoryPagesWithContext(ctx aws.Context, input *DescribeBudgetPerformanceHistoryInput, fn func(*DescribeBudgetPerformanceHistoryOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeBudgetPerformanceHistoryInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeBudgetPerformanceHistoryRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeBudgetPerformanceHistoryOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeBudgets = "DescribeBudgets"
 
 // DescribeBudgetsRequest generates a "aws/request.Request" representing the
@@ -785,6 +843,12 @@ func (c *Budgets) DescribeBudgetsRequest(input *DescribeBudgetsInput) (req *requ
 		Name:       opDescribeBudgets,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -853,6 +917,58 @@ func (c *Budgets) DescribeBudgetsWithContext(ctx aws.Context, input *DescribeBud
 	return out, req.Send()
 }
 
+// DescribeBudgetsPages iterates over the pages of a DescribeBudgets operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeBudgets method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeBudgets operation.
+//    pageNum := 0
+//    err := client.DescribeBudgetsPages(params,
+//        func(page *budgets.DescribeBudgetsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Budgets) DescribeBudgetsPages(input *DescribeBudgetsInput, fn func(*DescribeBudgetsOutput, bool) bool) error {
+	return c.DescribeBudgetsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeBudgetsPagesWithContext same as DescribeBudgetsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Budgets) DescribeBudgetsPagesWithContext(ctx aws.Context, input *DescribeBudgetsInput, fn func(*DescribeBudgetsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeBudgetsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeBudgetsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeBudgetsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeNotificationsForBudget = "DescribeNotificationsForBudget"
 
 // DescribeNotificationsForBudgetRequest generates a "aws/request.Request" representing the
@@ -882,6 +998,12 @@ func (c *Budgets) DescribeNotificationsForBudgetRequest(input *DescribeNotificat
 		Name:       opDescribeNotificationsForBudget,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -946,6 +1068,58 @@ func (c *Budgets) DescribeNotificationsForBudgetWithContext(ctx aws.Context, inp
 	return out, req.Send()
 }
 
+// DescribeNotificationsForBudgetPages iterates over the pages of a DescribeNotificationsForBudget operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeNotificationsForBudget method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeNotificationsForBudget operation.
+//    pageNum := 0
+//    err := client.DescribeNotificationsForBudgetPages(params,
+//        func(page *budgets.DescribeNotificationsForBudgetOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Budgets) DescribeNotificationsForBudgetPages(input *DescribeNotificationsForBudgetInput, fn func(*DescribeNotificationsForBudgetOutput, bool) bool) error {
+	return c.DescribeNotificationsForBudgetPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeNotificationsForBudgetPagesWithContext same as DescribeNotificationsForBudgetPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Budgets) DescribeNotificationsForBudgetPagesWithContext(ctx aws.Context, input *DescribeNotificationsForBudgetInput, fn func(*DescribeNotificationsForBudgetOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeNotificationsForBudgetInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeNotificationsForBudgetRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeNotificationsForBudgetOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeSubscribersForNotification = "DescribeSubscribersForNotification"
 
 // DescribeSubscribersForNotificationRequest generates a "aws/request.Request" representing the
@@ -975,6 +1149,12 @@ func (c *Budgets) DescribeSubscribersForNotificationRequest(input *DescribeSubsc
 		Name:       opDescribeSubscribersForNotification,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1037,6 +1217,58 @@ func (c *Budgets) DescribeSubscribersForNotificationWithContext(ctx aws.Context,
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// DescribeSubscribersForNotificationPages iterates over the pages of a DescribeSubscribersForNotification operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeSubscribersForNotification method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeSubscribersForNotification operation.
+//    pageNum := 0
+//    err := client.DescribeSubscribersForNotificationPages(params,
+//        func(page *budgets.DescribeSubscribersForNotificationOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Budgets) DescribeSubscribersForNotificationPages(input *DescribeSubscribersForNotificationInput, fn func(*DescribeSubscribersForNotificationOutput, bool) bool) error {
+	return c.DescribeSubscribersForNotificationPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeSubscribersForNotificationPagesWithContext same as DescribeSubscribersForNotificationPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Budgets) DescribeSubscribersForNotificationPagesWithContext(ctx aws.Context, input *DescribeSubscribersForNotificationInput, fn func(*DescribeSubscribersForNotificationOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeSubscribersForNotificationInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeSubscribersForNotificationRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeSubscribersForNotificationOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opUpdateBudget = "UpdateBudget"
@@ -1379,7 +1611,7 @@ func (s *AccessDeniedException) RequestID() string {
 //
 // This is the ARN pattern for a budget:
 //
-// arn:aws:budgetservice::AccountId:budget/budgetName
+// arn:aws:budgets::AccountId:budget/budgetName
 type Budget struct {
 	_ struct{} `type:"structure"`
 
@@ -1425,7 +1657,7 @@ type Budget struct {
 
 	// The types of costs that are included in this COST budget.
 	//
-	// USAGE, RI_UTILIZATION, RI_COVERAGE, Savings_Plans_Utilization, and Savings_Plans_Coverage
+	// USAGE, RI_UTILIZATION, RI_COVERAGE, SAVINGS_PLANS_UTILIZATION, and SAVINGS_PLANS_COVERAGE
 	// budgets do not have CostTypes.
 	CostTypes *CostTypes `type:"structure"`
 
@@ -1484,8 +1716,6 @@ type Budget struct {
 	TimePeriod *TimePeriod `type:"structure"`
 
 	// The length of time until a budget resets the actual and forecasted spend.
-	// DAILY is available only for RI_UTILIZATION, RI_COVERAGE, Savings_Plans_Utilization,
-	// and Savings_Plans_Coverage budgets.
 	//
 	// TimeUnit is a required field
 	TimeUnit *string `type:"string" required:"true" enum:"TimeUnit"`
@@ -1614,7 +1844,7 @@ type BudgetPerformanceHistory struct {
 
 	// The type of a budget. It must be one of the following types:
 	//
-	// COST, USAGE, RI_UTILIZATION, or RI_COVERAGE.
+	// COST, USAGE, RI_UTILIZATION, RI_COVERAGE, SAVINGS_PLANS_UTILIZATION, or SAVINGS_PLANS_COVERAGE.
 	BudgetType *string `type:"string" enum:"BudgetType"`
 
 	// A list of amounts of cost or usage that you created budgets for, compared
@@ -1721,8 +1951,9 @@ func (s *BudgetedAndActualAmounts) SetTimePeriod(v *TimePeriod) *BudgetedAndActu
 }
 
 // The spend objects that are associated with this budget. The actualSpend tracks
-// how much you've used, cost, usage, or RI units, and the forecastedSpend tracks
-// how much you are predicted to spend if your current usage remains steady.
+// how much you've used, cost, usage, RI units, or Savings Plans units and the
+// forecastedSpend tracks how much you are predicted to spend based on your
+// historical usage profile.
 //
 // For example, if it is the 20th of the month and you have spent 50 dollars
 // on Amazon EC2, your actualSpend is 50 USD, and your forecastedSpend is 75
@@ -1730,12 +1961,14 @@ func (s *BudgetedAndActualAmounts) SetTimePeriod(v *TimePeriod) *BudgetedAndActu
 type CalculatedSpend struct {
 	_ struct{} `type:"structure"`
 
-	// The amount of cost, usage, or RI units that you have used.
+	// The amount of cost, usage, RI units, or Savings Plans units that you have
+	// used.
 	//
 	// ActualSpend is a required field
 	ActualSpend *Spend `type:"structure" required:"true"`
 
-	// The amount of cost, usage, or RI units that you are forecasted to use.
+	// The amount of cost, usage, RI units, or Savings Plans units that you are
+	// forecasted to use.
 	ForecastedSpend *Spend `type:"structure"`
 }
 
@@ -1786,7 +2019,8 @@ func (s *CalculatedSpend) SetForecastedSpend(v *Spend) *CalculatedSpend {
 
 // The types of cost that are included in a COST budget, such as tax and subscriptions.
 //
-// USAGE, RI_UTILIZATION, and RI_COVERAGE budgets do not have CostTypes.
+// USAGE, RI_UTILIZATION, RI_COVERAGE, SAVINGS_PLANS_UTILIZATION, and SAVINGS_PLANS_COVERAGE
+// budgets do not have CostTypes.
 type CostTypes struct {
 	_ struct{} `type:"structure"`
 
@@ -3506,7 +3740,7 @@ func (s *NotFoundException) RequestID() string {
 }
 
 // A notification that is associated with a budget. A budget can have up to
-// five notifications.
+// ten notifications.
 //
 // Each notification must have at least one subscriber. A notification can have
 // one SNS subscriber and up to 10 email subscribers, for a total of 11 subscribers.
@@ -3540,7 +3774,9 @@ type Notification struct {
 	NotificationType *string `type:"string" required:"true" enum:"NotificationType"`
 
 	// The threshold that is associated with a notification. Thresholds are always
-	// a percentage.
+	// a percentage, and many customers find value being alerted between 50% - 200%
+	// of the budgeted amount. The maximum limit for your threshold is 1,000,000%
+	// above the budgeted amount.
 	//
 	// Threshold is a required field
 	Threshold *float64 `type:"double" required:"true"`
@@ -4189,7 +4425,7 @@ func (s UpdateSubscriberOutput) GoString() string {
 
 // The type of a budget. It must be one of the following types:
 //
-// COST, USAGE, RI_UTILIZATION, or RI_COVERAGE.
+// COST, USAGE, RI_UTILIZATION, RI_COVERAGE, SAVINGS_PLANS_UTILIZATION, or SAVINGS_PLANS_COVERAGE.
 const (
 	// BudgetTypeUsage is a BudgetType enum value
 	BudgetTypeUsage = "USAGE"

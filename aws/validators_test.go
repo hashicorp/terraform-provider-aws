@@ -1179,7 +1179,7 @@ func TestValidateEmrCustomAmiId(t *testing.T) {
 		ErrCount int
 	}{
 		{
-			Value:    "ami-dbcf88b1",
+			Value:    "ami-dbcf88b1", //lintignore:AWSAT002
 			ErrCount: 0,
 		},
 		{

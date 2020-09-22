@@ -172,10 +172,11 @@ func (c *SFN) CreateStateMachineRequest(input *CreateStateMachineInput) (req *re
 //
 // CreateStateMachine is an idempotent API. Subsequent requests won’t create
 // a duplicate resource if it was already created. CreateStateMachine's idempotency
-// check is based on the state machine name, definition, type, and LoggingConfiguration.
-// If a following request has a different roleArn or tags, Step Functions will
-// ignore these differences and treat it as an idempotent request of the previous.
-// In this case, roleArn and tags will not be updated, even if they are different.
+// check is based on the state machine name, definition, type, LoggingConfiguration
+// and TracingConfiguration. If a following request has a different roleArn
+// or tags, Step Functions will ignore these differences and treat it as an
+// idempotent request of the previous. In this case, roleArn and tags will not
+// be updated, even if they are different.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -195,6 +196,10 @@ func (c *SFN) CreateStateMachineRequest(input *CreateStateMachineInput) (req *re
 //   The provided name is invalid.
 //
 //   * InvalidLoggingConfiguration
+//
+//   * InvalidTracingConfiguration
+//   Your tracingConfiguration key does not match, or enabled has not been set
+//   to true or false.
 //
 //   * StateMachineAlreadyExists
 //   A state machine with the same name but a different definition or role ARN
@@ -2243,6 +2248,10 @@ func (c *SFN) UpdateStateMachineRequest(input *UpdateStateMachineInput) (req *re
 //
 //   * InvalidLoggingConfiguration
 //
+//   * InvalidTracingConfiguration
+//   Your tracingConfiguration key does not match, or enabled has not been set
+//   to true or false.
+//
 //   * MissingRequiredParameter
 //   Request is missing a required parameter. This error occurs if both definition
 //   and roleArn are not specified.
@@ -2525,8 +2534,12 @@ type ActivityScheduledEventDetails struct {
 	// The maximum allowed duration between two heartbeats for the activity task.
 	HeartbeatInSeconds *int64 `locationName:"heartbeatInSeconds" type:"long"`
 
-	// The JSON data input to the activity task.
+	// The JSON data input to the activity task. Length constraints apply to the
+	// payload size, and are expressed as bytes in UTF-8 encoding.
 	Input *string `locationName:"input" type:"string" sensitive:"true"`
+
+	// Contains details about the input for an execution history event.
+	InputDetails *HistoryEventExecutionDataDetails `locationName:"inputDetails" type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the scheduled activity.
 	//
@@ -2556,6 +2569,12 @@ func (s *ActivityScheduledEventDetails) SetHeartbeatInSeconds(v int64) *Activity
 // SetInput sets the Input field's value.
 func (s *ActivityScheduledEventDetails) SetInput(v string) *ActivityScheduledEventDetails {
 	s.Input = &v
+	return s
+}
+
+// SetInputDetails sets the InputDetails field's value.
+func (s *ActivityScheduledEventDetails) SetInputDetails(v *HistoryEventExecutionDataDetails) *ActivityScheduledEventDetails {
+	s.InputDetails = v
 	return s
 }
 
@@ -2601,8 +2620,12 @@ func (s *ActivityStartedEventDetails) SetWorkerName(v string) *ActivityStartedEv
 type ActivitySucceededEventDetails struct {
 	_ struct{} `type:"structure"`
 
-	// The JSON data output by the activity task.
+	// The JSON data output by the activity task. Length constraints apply to the
+	// payload size, and are expressed as bytes in UTF-8 encoding.
 	Output *string `locationName:"output" type:"string" sensitive:"true"`
+
+	// Contains details about the output of an execution history event.
+	OutputDetails *HistoryEventExecutionDataDetails `locationName:"outputDetails" type:"structure"`
 }
 
 // String returns the string representation
@@ -2618,6 +2641,12 @@ func (s ActivitySucceededEventDetails) GoString() string {
 // SetOutput sets the Output field's value.
 func (s *ActivitySucceededEventDetails) SetOutput(v string) *ActivitySucceededEventDetails {
 	s.Output = &v
+	return s
+}
+
+// SetOutputDetails sets the OutputDetails field's value.
+func (s *ActivitySucceededEventDetails) SetOutputDetails(v *HistoryEventExecutionDataDetails) *ActivitySucceededEventDetails {
+	s.OutputDetails = v
 	return s
 }
 
@@ -2709,6 +2738,31 @@ func (s *ActivityWorkerLimitExceeded) StatusCode() int {
 // RequestID returns the service's response RequestID for request.
 func (s *ActivityWorkerLimitExceeded) RequestID() string {
 	return s.RespMetadata.RequestID
+}
+
+// Provides details about execution input or output.
+type CloudWatchEventsExecutionDataDetails struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether input or output was included in the response. Always true
+	// for API calls.
+	Included *bool `locationName:"included" type:"boolean"`
+}
+
+// String returns the string representation
+func (s CloudWatchEventsExecutionDataDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CloudWatchEventsExecutionDataDetails) GoString() string {
+	return s.String()
+}
+
+// SetIncluded sets the Included field's value.
+func (s *CloudWatchEventsExecutionDataDetails) SetIncluded(v bool) *CloudWatchEventsExecutionDataDetails {
+	s.Included = &v
+	return s
 }
 
 type CloudWatchLogsLogGroup struct {
@@ -2922,6 +2976,9 @@ type CreateStateMachineInput struct {
 	// _ . : / = + - @.
 	Tags []*Tag `locationName:"tags" type:"list"`
 
+	// Selects whether AWS X-Ray tracing is enabled.
+	TracingConfiguration *TracingConfiguration `locationName:"tracingConfiguration" type:"structure"`
+
 	// Determines whether a Standard or Express state machine is created. The default
 	// is STANDARD. You cannot update the type of a state machine once it has been
 	// created.
@@ -3008,6 +3065,12 @@ func (s *CreateStateMachineInput) SetRoleArn(v string) *CreateStateMachineInput 
 // SetTags sets the Tags field's value.
 func (s *CreateStateMachineInput) SetTags(v []*Tag) *CreateStateMachineInput {
 	s.Tags = v
+	return s
+}
+
+// SetTracingConfiguration sets the TracingConfiguration field's value.
+func (s *CreateStateMachineInput) SetTracingConfiguration(v *TracingConfiguration) *CreateStateMachineInput {
+	s.TracingConfiguration = v
 	return s
 }
 
@@ -3315,10 +3378,12 @@ type DescribeExecutionOutput struct {
 	// ExecutionArn is a required field
 	ExecutionArn *string `locationName:"executionArn" min:"1" type:"string" required:"true"`
 
-	// The string that contains the JSON input data of the execution.
-	//
-	// Input is a required field
-	Input *string `locationName:"input" type:"string" required:"true" sensitive:"true"`
+	// The string that contains the JSON input data of the execution. Length constraints
+	// apply to the payload size, and are expressed as bytes in UTF-8 encoding.
+	Input *string `locationName:"input" type:"string" sensitive:"true"`
+
+	// Provides details about execution input or output.
+	InputDetails *CloudWatchEventsExecutionDataDetails `locationName:"inputDetails" type:"structure"`
 
 	// The name of the execution.
 	//
@@ -3338,11 +3403,15 @@ type DescribeExecutionOutput struct {
 	// A-Z, a-z, - and _.
 	Name *string `locationName:"name" min:"1" type:"string"`
 
-	// The JSON output data of the execution.
+	// The JSON output data of the execution. Length constraints apply to the payload
+	// size, and are expressed as bytes in UTF-8 encoding.
 	//
 	// This field is set only if the execution succeeds. If the execution fails,
 	// this field is null.
 	Output *string `locationName:"output" type:"string" sensitive:"true"`
+
+	// Provides details about execution input or output.
+	OutputDetails *CloudWatchEventsExecutionDataDetails `locationName:"outputDetails" type:"structure"`
 
 	// The date the execution is started.
 	//
@@ -3361,6 +3430,9 @@ type DescribeExecutionOutput struct {
 
 	// If the execution has already ended, the date the execution stopped.
 	StopDate *time.Time `locationName:"stopDate" type:"timestamp"`
+
+	// The AWS X-Ray trace header which was passed to the execution.
+	TraceHeader *string `locationName:"traceHeader" type:"string"`
 }
 
 // String returns the string representation
@@ -3385,6 +3457,12 @@ func (s *DescribeExecutionOutput) SetInput(v string) *DescribeExecutionOutput {
 	return s
 }
 
+// SetInputDetails sets the InputDetails field's value.
+func (s *DescribeExecutionOutput) SetInputDetails(v *CloudWatchEventsExecutionDataDetails) *DescribeExecutionOutput {
+	s.InputDetails = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *DescribeExecutionOutput) SetName(v string) *DescribeExecutionOutput {
 	s.Name = &v
@@ -3394,6 +3472,12 @@ func (s *DescribeExecutionOutput) SetName(v string) *DescribeExecutionOutput {
 // SetOutput sets the Output field's value.
 func (s *DescribeExecutionOutput) SetOutput(v string) *DescribeExecutionOutput {
 	s.Output = &v
+	return s
+}
+
+// SetOutputDetails sets the OutputDetails field's value.
+func (s *DescribeExecutionOutput) SetOutputDetails(v *CloudWatchEventsExecutionDataDetails) *DescribeExecutionOutput {
+	s.OutputDetails = v
 	return s
 }
 
@@ -3418,6 +3502,12 @@ func (s *DescribeExecutionOutput) SetStatus(v string) *DescribeExecutionOutput {
 // SetStopDate sets the StopDate field's value.
 func (s *DescribeExecutionOutput) SetStopDate(v time.Time) *DescribeExecutionOutput {
 	s.StopDate = &v
+	return s
+}
+
+// SetTraceHeader sets the TraceHeader field's value.
+func (s *DescribeExecutionOutput) SetTraceHeader(v string) *DescribeExecutionOutput {
+	s.TraceHeader = &v
 	return s
 }
 
@@ -3491,6 +3581,9 @@ type DescribeStateMachineForExecutionOutput struct {
 	// StateMachineArn is a required field
 	StateMachineArn *string `locationName:"stateMachineArn" min:"1" type:"string" required:"true"`
 
+	// Selects whether AWS X-Ray tracing is enabled.
+	TracingConfiguration *TracingConfiguration `locationName:"tracingConfiguration" type:"structure"`
+
 	// The date and time the state machine associated with an execution was updated.
 	// For a newly created state machine, this is the creation date.
 	//
@@ -3535,6 +3628,12 @@ func (s *DescribeStateMachineForExecutionOutput) SetRoleArn(v string) *DescribeS
 // SetStateMachineArn sets the StateMachineArn field's value.
 func (s *DescribeStateMachineForExecutionOutput) SetStateMachineArn(v string) *DescribeStateMachineForExecutionOutput {
 	s.StateMachineArn = &v
+	return s
+}
+
+// SetTracingConfiguration sets the TracingConfiguration field's value.
+func (s *DescribeStateMachineForExecutionOutput) SetTracingConfiguration(v *TracingConfiguration) *DescribeStateMachineForExecutionOutput {
+	s.TracingConfiguration = v
 	return s
 }
 
@@ -3637,6 +3736,9 @@ type DescribeStateMachineOutput struct {
 	// The current status of the state machine.
 	Status *string `locationName:"status" type:"string" enum:"StateMachineStatus"`
 
+	// Selects whether AWS X-Ray tracing is enabled.
+	TracingConfiguration *TracingConfiguration `locationName:"tracingConfiguration" type:"structure"`
+
 	// The type of the state machine (STANDARD or EXPRESS).
 	//
 	// Type is a required field
@@ -3692,6 +3794,12 @@ func (s *DescribeStateMachineOutput) SetStateMachineArn(v string) *DescribeState
 // SetStatus sets the Status field's value.
 func (s *DescribeStateMachineOutput) SetStatus(v string) *DescribeStateMachineOutput {
 	s.Status = &v
+	return s
+}
+
+// SetTracingConfiguration sets the TracingConfiguration field's value.
+func (s *DescribeStateMachineOutput) SetTracingConfiguration(v *TracingConfiguration) *DescribeStateMachineOutput {
+	s.TracingConfiguration = v
 	return s
 }
 
@@ -4036,8 +4144,12 @@ func (s *ExecutionListItem) SetStopDate(v time.Time) *ExecutionListItem {
 type ExecutionStartedEventDetails struct {
 	_ struct{} `type:"structure"`
 
-	// The JSON data input to the execution.
+	// The JSON data input to the execution. Length constraints apply to the payload
+	// size, and are expressed as bytes in UTF-8 encoding.
 	Input *string `locationName:"input" type:"string" sensitive:"true"`
+
+	// Contains details about the input for an execution history event.
+	InputDetails *HistoryEventExecutionDataDetails `locationName:"inputDetails" type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the IAM role used for executing AWS Lambda
 	// tasks.
@@ -4060,6 +4172,12 @@ func (s *ExecutionStartedEventDetails) SetInput(v string) *ExecutionStartedEvent
 	return s
 }
 
+// SetInputDetails sets the InputDetails field's value.
+func (s *ExecutionStartedEventDetails) SetInputDetails(v *HistoryEventExecutionDataDetails) *ExecutionStartedEventDetails {
+	s.InputDetails = v
+	return s
+}
+
 // SetRoleArn sets the RoleArn field's value.
 func (s *ExecutionStartedEventDetails) SetRoleArn(v string) *ExecutionStartedEventDetails {
 	s.RoleArn = &v
@@ -4070,8 +4188,12 @@ func (s *ExecutionStartedEventDetails) SetRoleArn(v string) *ExecutionStartedEve
 type ExecutionSucceededEventDetails struct {
 	_ struct{} `type:"structure"`
 
-	// The JSON data output by the execution.
+	// The JSON data output by the execution. Length constraints apply to the payload
+	// size, and are expressed as bytes in UTF-8 encoding.
 	Output *string `locationName:"output" type:"string" sensitive:"true"`
+
+	// Contains details about the output of an execution history event.
+	OutputDetails *HistoryEventExecutionDataDetails `locationName:"outputDetails" type:"structure"`
 }
 
 // String returns the string representation
@@ -4087,6 +4209,12 @@ func (s ExecutionSucceededEventDetails) GoString() string {
 // SetOutput sets the Output field's value.
 func (s *ExecutionSucceededEventDetails) SetOutput(v string) *ExecutionSucceededEventDetails {
 	s.Output = &v
+	return s
+}
+
+// SetOutputDetails sets the OutputDetails field's value.
+func (s *ExecutionSucceededEventDetails) SetOutputDetails(v *HistoryEventExecutionDataDetails) *ExecutionSucceededEventDetails {
+	s.OutputDetails = v
 	return s
 }
 
@@ -4182,7 +4310,8 @@ func (s *GetActivityTaskInput) SetWorkerName(v string) *GetActivityTaskInput {
 type GetActivityTaskOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The string that contains the JSON input data for the task.
+	// The string that contains the JSON input data for the task. Length constraints
+	// apply to the payload size, and are expressed as bytes in UTF-8 encoding.
 	Input *string `locationName:"input" type:"string" sensitive:"true"`
 
 	// A token that identifies the scheduled task. This token must be copied and
@@ -4220,6 +4349,10 @@ type GetExecutionHistoryInput struct {
 	//
 	// ExecutionArn is a required field
 	ExecutionArn *string `locationName:"executionArn" min:"1" type:"string" required:"true"`
+
+	// You can select whether execution data (input or output of a history event)
+	// is returned. The default is true.
+	IncludeExecutionData *bool `locationName:"includeExecutionData" type:"boolean"`
 
 	// The maximum number of results that are returned per call. You can use nextToken
 	// to obtain further pages of results. The default is 100 and the maximum allowed
@@ -4272,6 +4405,12 @@ func (s *GetExecutionHistoryInput) Validate() error {
 // SetExecutionArn sets the ExecutionArn field's value.
 func (s *GetExecutionHistoryInput) SetExecutionArn(v string) *GetExecutionHistoryInput {
 	s.ExecutionArn = &v
+	return s
+}
+
+// SetIncludeExecutionData sets the IncludeExecutionData field's value.
+func (s *GetExecutionHistoryInput) SetIncludeExecutionData(v bool) *GetExecutionHistoryInput {
+	s.IncludeExecutionData = &v
 	return s
 }
 
@@ -4680,6 +4819,31 @@ func (s *HistoryEvent) SetType(v string) *HistoryEvent {
 	return s
 }
 
+// Provides details about input or output in an execution history event.
+type HistoryEventExecutionDataDetails struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether input or output was truncated in the response. Always false
+	// for API calls.
+	Truncated *bool `locationName:"truncated" type:"boolean"`
+}
+
+// String returns the string representation
+func (s HistoryEventExecutionDataDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HistoryEventExecutionDataDetails) GoString() string {
+	return s.String()
+}
+
+// SetTruncated sets the Truncated field's value.
+func (s *HistoryEventExecutionDataDetails) SetTruncated(v bool) *HistoryEventExecutionDataDetails {
+	s.Truncated = &v
+	return s
+}
+
 // The provided Amazon Resource Name (ARN) is invalid.
 type InvalidArn struct {
 	_            struct{}                  `type:"structure"`
@@ -5071,6 +5235,63 @@ func (s *InvalidToken) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+// Your tracingConfiguration key does not match, or enabled has not been set
+// to true or false.
+type InvalidTracingConfiguration struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidTracingConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidTracingConfiguration) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidTracingConfiguration(v protocol.ResponseMetadata) error {
+	return &InvalidTracingConfiguration{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidTracingConfiguration) Code() string {
+	return "InvalidTracingConfiguration"
+}
+
+// Message returns the exception's message.
+func (s *InvalidTracingConfiguration) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidTracingConfiguration) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidTracingConfiguration) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidTracingConfiguration) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidTracingConfiguration) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // Contains details about a lambda function that failed during an execution.
 type LambdaFunctionFailedEventDetails struct {
 	_ struct{} `type:"structure"`
@@ -5142,8 +5363,12 @@ func (s *LambdaFunctionScheduleFailedEventDetails) SetError(v string) *LambdaFun
 type LambdaFunctionScheduledEventDetails struct {
 	_ struct{} `type:"structure"`
 
-	// The JSON data input to the lambda function.
+	// The JSON data input to the lambda function. Length constraints apply to the
+	// payload size, and are expressed as bytes in UTF-8 encoding.
 	Input *string `locationName:"input" type:"string" sensitive:"true"`
+
+	// Contains details about input for an execution history event.
+	InputDetails *HistoryEventExecutionDataDetails `locationName:"inputDetails" type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the scheduled lambda function.
 	//
@@ -5167,6 +5392,12 @@ func (s LambdaFunctionScheduledEventDetails) GoString() string {
 // SetInput sets the Input field's value.
 func (s *LambdaFunctionScheduledEventDetails) SetInput(v string) *LambdaFunctionScheduledEventDetails {
 	s.Input = &v
+	return s
+}
+
+// SetInputDetails sets the InputDetails field's value.
+func (s *LambdaFunctionScheduledEventDetails) SetInputDetails(v *HistoryEventExecutionDataDetails) *LambdaFunctionScheduledEventDetails {
+	s.InputDetails = v
 	return s
 }
 
@@ -5220,8 +5451,12 @@ func (s *LambdaFunctionStartFailedEventDetails) SetError(v string) *LambdaFuncti
 type LambdaFunctionSucceededEventDetails struct {
 	_ struct{} `type:"structure"`
 
-	// The JSON data output by the lambda function.
+	// The JSON data output by the lambda function. Length constraints apply to
+	// the payload size, and are expressed as bytes in UTF-8 encoding.
 	Output *string `locationName:"output" type:"string" sensitive:"true"`
+
+	// Contains details about the output of an execution history event.
+	OutputDetails *HistoryEventExecutionDataDetails `locationName:"outputDetails" type:"structure"`
 }
 
 // String returns the string representation
@@ -5237,6 +5472,12 @@ func (s LambdaFunctionSucceededEventDetails) GoString() string {
 // SetOutput sets the Output field's value.
 func (s *LambdaFunctionSucceededEventDetails) SetOutput(v string) *LambdaFunctionSucceededEventDetails {
 	s.Output = &v
+	return s
+}
+
+// SetOutputDetails sets the OutputDetails field's value.
+func (s *LambdaFunctionSucceededEventDetails) SetOutputDetails(v *HistoryEventExecutionDataDetails) *LambdaFunctionSucceededEventDetails {
+	s.OutputDetails = v
 	return s
 }
 
@@ -5687,7 +5928,7 @@ type LoggingConfiguration struct {
 	// be logged. Limited to size 1. Required, if your log level is not set to OFF.
 	Destinations []*LogDestination `locationName:"destinations" type:"list"`
 
-	// Determines whether execution data is included in your log. When set to FALSE,
+	// Determines whether execution data is included in your log. When set to false,
 	// data is excluded.
 	IncludeExecutionData *bool `locationName:"includeExecutionData" type:"boolean"`
 
@@ -6051,7 +6292,8 @@ func (s SendTaskHeartbeatOutput) GoString() string {
 type SendTaskSuccessInput struct {
 	_ struct{} `type:"structure"`
 
-	// The JSON output of the task.
+	// The JSON output of the task. Length constraints apply to the payload size,
+	// and are expressed as bytes in UTF-8 encoding.
 	//
 	// Output is a required field
 	Output *string `locationName:"output" type:"string" required:"true" sensitive:"true"`
@@ -6128,6 +6370,9 @@ type StartExecutionInput struct {
 	//
 	// If you don't include any JSON input data, you still must include the two
 	// braces, for example: "input": "{}"
+	//
+	// Length constraints apply to the payload size, and are expressed as bytes
+	// in UTF-8 encoding.
 	Input *string `locationName:"input" type:"string" sensitive:"true"`
 
 	// The name of the execution. This name must be unique for your AWS account,
@@ -6155,6 +6400,10 @@ type StartExecutionInput struct {
 	//
 	// StateMachineArn is a required field
 	StateMachineArn *string `locationName:"stateMachineArn" min:"1" type:"string" required:"true"`
+
+	// Passes the AWS X-Ray trace header. The trace header can also be passed in
+	// the request payload.
+	TraceHeader *string `locationName:"traceHeader" type:"string"`
 }
 
 // String returns the string representation
@@ -6204,6 +6453,12 @@ func (s *StartExecutionInput) SetStateMachineArn(v string) *StartExecutionInput 
 	return s
 }
 
+// SetTraceHeader sets the TraceHeader field's value.
+func (s *StartExecutionInput) SetTraceHeader(v string) *StartExecutionInput {
+	s.TraceHeader = &v
+	return s
+}
+
 type StartExecutionOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -6244,8 +6499,12 @@ func (s *StartExecutionOutput) SetStartDate(v time.Time) *StartExecutionOutput {
 type StateEnteredEventDetails struct {
 	_ struct{} `type:"structure"`
 
-	// The string that contains the JSON input data for the state.
+	// The string that contains the JSON input data for the state. Length constraints
+	// apply to the payload size, and are expressed as bytes in UTF-8 encoding.
 	Input *string `locationName:"input" type:"string" sensitive:"true"`
+
+	// Contains details about the input for an execution history event.
+	InputDetails *HistoryEventExecutionDataDetails `locationName:"inputDetails" type:"structure"`
 
 	// The name of the state.
 	//
@@ -6266,6 +6525,12 @@ func (s StateEnteredEventDetails) GoString() string {
 // SetInput sets the Input field's value.
 func (s *StateEnteredEventDetails) SetInput(v string) *StateEnteredEventDetails {
 	s.Input = &v
+	return s
+}
+
+// SetInputDetails sets the InputDetails field's value.
+func (s *StateEnteredEventDetails) SetInputDetails(v *HistoryEventExecutionDataDetails) *StateEnteredEventDetails {
+	s.InputDetails = v
 	return s
 }
 
@@ -6299,8 +6564,12 @@ type StateExitedEventDetails struct {
 	// Name is a required field
 	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
 
-	// The JSON output data of the state.
+	// The JSON output data of the state. Length constraints apply to the payload
+	// size, and are expressed as bytes in UTF-8 encoding.
 	Output *string `locationName:"output" type:"string" sensitive:"true"`
+
+	// Contains details about the output of an execution history event.
+	OutputDetails *HistoryEventExecutionDataDetails `locationName:"outputDetails" type:"structure"`
 }
 
 // String returns the string representation
@@ -6322,6 +6591,12 @@ func (s *StateExitedEventDetails) SetName(v string) *StateExitedEventDetails {
 // SetOutput sets the Output field's value.
 func (s *StateExitedEventDetails) SetOutput(v string) *StateExitedEventDetails {
 	s.Output = &v
+	return s
+}
+
+// SetOutputDetails sets the OutputDetails field's value.
+func (s *StateExitedEventDetails) SetOutputDetails(v *HistoryEventExecutionDataDetails) *StateExitedEventDetails {
+	s.OutputDetails = v
 	return s
 }
 
@@ -7013,7 +7288,11 @@ func (s *TaskFailedEventDetails) SetResourceType(v string) *TaskFailedEventDetai
 type TaskScheduledEventDetails struct {
 	_ struct{} `type:"structure"`
 
-	// The JSON data passed to the resource referenced in a task state.
+	// The maximum allowed duration between two heartbeats for the task.
+	HeartbeatInSeconds *int64 `locationName:"heartbeatInSeconds" type:"long"`
+
+	// The JSON data passed to the resource referenced in a task state. Length constraints
+	// apply to the payload size, and are expressed as bytes in UTF-8 encoding.
 	//
 	// Parameters is a required field
 	Parameters *string `locationName:"parameters" type:"string" required:"true" sensitive:"true"`
@@ -7045,6 +7324,12 @@ func (s TaskScheduledEventDetails) String() string {
 // GoString returns the string representation
 func (s TaskScheduledEventDetails) GoString() string {
 	return s.String()
+}
+
+// SetHeartbeatInSeconds sets the HeartbeatInSeconds field's value.
+func (s *TaskScheduledEventDetails) SetHeartbeatInSeconds(v int64) *TaskScheduledEventDetails {
+	s.HeartbeatInSeconds = &v
+	return s
 }
 
 // SetParameters sets the Parameters field's value.
@@ -7228,8 +7513,12 @@ func (s *TaskSubmitFailedEventDetails) SetResourceType(v string) *TaskSubmitFail
 type TaskSubmittedEventDetails struct {
 	_ struct{} `type:"structure"`
 
-	// The response from a resource when a task has started.
+	// The response from a resource when a task has started. Length constraints
+	// apply to the payload size, and are expressed as bytes in UTF-8 encoding.
 	Output *string `locationName:"output" type:"string" sensitive:"true"`
+
+	// Contains details about the output of an execution history event.
+	OutputDetails *HistoryEventExecutionDataDetails `locationName:"outputDetails" type:"structure"`
 
 	// The service name of the resource in a task state.
 	//
@@ -7258,6 +7547,12 @@ func (s *TaskSubmittedEventDetails) SetOutput(v string) *TaskSubmittedEventDetai
 	return s
 }
 
+// SetOutputDetails sets the OutputDetails field's value.
+func (s *TaskSubmittedEventDetails) SetOutputDetails(v *HistoryEventExecutionDataDetails) *TaskSubmittedEventDetails {
+	s.OutputDetails = v
+	return s
+}
+
 // SetResource sets the Resource field's value.
 func (s *TaskSubmittedEventDetails) SetResource(v string) *TaskSubmittedEventDetails {
 	s.Resource = &v
@@ -7275,8 +7570,12 @@ type TaskSucceededEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// The full JSON response from a resource when a task has succeeded. This response
-	// becomes the output of the related task.
+	// becomes the output of the related task. Length constraints apply to the payload
+	// size, and are expressed as bytes in UTF-8 encoding.
 	Output *string `locationName:"output" type:"string" sensitive:"true"`
+
+	// Contains details about the output of an execution history event.
+	OutputDetails *HistoryEventExecutionDataDetails `locationName:"outputDetails" type:"structure"`
 
 	// The service name of the resource in a task state.
 	//
@@ -7302,6 +7601,12 @@ func (s TaskSucceededEventDetails) GoString() string {
 // SetOutput sets the Output field's value.
 func (s *TaskSucceededEventDetails) SetOutput(v string) *TaskSucceededEventDetails {
 	s.Output = &v
+	return s
+}
+
+// SetOutputDetails sets the OutputDetails field's value.
+func (s *TaskSucceededEventDetails) SetOutputDetails(v *HistoryEventExecutionDataDetails) *TaskSucceededEventDetails {
+	s.OutputDetails = v
 	return s
 }
 
@@ -7487,6 +7792,31 @@ func (s *TooManyTags) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+// Selects whether or not the state machine's AWS X-Ray tracing is enabled.
+// Default is false
+type TracingConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// When set to true, AWS X-Ray tracing is enabled.
+	Enabled *bool `locationName:"enabled" type:"boolean"`
+}
+
+// String returns the string representation
+func (s TracingConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TracingConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *TracingConfiguration) SetEnabled(v bool) *TracingConfiguration {
+	s.Enabled = &v
+	return s
+}
+
 type UntagResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7573,6 +7903,9 @@ type UpdateStateMachineInput struct {
 	//
 	// StateMachineArn is a required field
 	StateMachineArn *string `locationName:"stateMachineArn" min:"1" type:"string" required:"true"`
+
+	// Selects whether AWS X-Ray tracing is enabled.
+	TracingConfiguration *TracingConfiguration `locationName:"tracingConfiguration" type:"structure"`
 }
 
 // String returns the string representation
@@ -7633,6 +7966,12 @@ func (s *UpdateStateMachineInput) SetRoleArn(v string) *UpdateStateMachineInput 
 // SetStateMachineArn sets the StateMachineArn field's value.
 func (s *UpdateStateMachineInput) SetStateMachineArn(v string) *UpdateStateMachineInput {
 	s.StateMachineArn = &v
+	return s
+}
+
+// SetTracingConfiguration sets the TracingConfiguration field's value.
+func (s *UpdateStateMachineInput) SetTracingConfiguration(v *TracingConfiguration) *UpdateStateMachineInput {
+	s.TracingConfiguration = v
 	return s
 }
 

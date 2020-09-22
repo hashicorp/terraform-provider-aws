@@ -674,11 +674,11 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		// unless the cluster is a read-replica. This also applies to clusters
 		// within a global cluster. Providing a password and/or username for
 		// a replica will result in an InvalidParameterValue error.
-		if v, ok := d.GetOk("master_password"); ok && v.(string) != "" {
+		if v, ok := d.GetOk("master_password"); ok {
 			createOpts.MasterUserPassword = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("master_username"); ok && v.(string) != "" {
+		if v, ok := d.GetOk("master_username"); ok {
 			createOpts.MasterUsername = aws.String(v.(string))
 		}
 

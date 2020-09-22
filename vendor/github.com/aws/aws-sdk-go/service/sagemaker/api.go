@@ -16231,18 +16231,20 @@ type ContainerDefinition struct {
 	// support up to 16 entries in the map.
 	Environment map[string]*string `type:"map"`
 
-	// The Amazon EC2 Container Registry (Amazon ECR) path where inference code
-	// is stored. If you are using your own custom algorithm instead of an algorithm
-	// provided by Amazon SageMaker, the inference code must meet Amazon SageMaker
-	// requirements. Amazon SageMaker supports both registry/repository[:tag] and
-	// registry/repository[@digest] image path formats. For more information, see
-	// Using Your Own Algorithms with Amazon SageMaker (https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms.html)
+	// The path where inference code is stored. This can be either in Amazon EC2
+	// Container Registry or in a Docker registry that is accessible from the same
+	// VPC that you configure for your endpoint. If you are using your own custom
+	// algorithm instead of an algorithm provided by Amazon SageMaker, the inference
+	// code must meet Amazon SageMaker requirements. Amazon SageMaker supports both
+	// registry/repository[:tag] and registry/repository[@digest] image path formats.
+	// For more information, see Using Your Own Algorithms with Amazon SageMaker
+	// (https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms.html)
 	Image *string `type:"string"`
 
 	// Specifies whether the model container is in Amazon ECR or a private Docker
-	// registry in your Amazon Virtual Private Cloud (VPC). For information about
-	// storing containers in a private Docker registry, see Use a Private Docker
-	// Registry for Real-Time Inference Containers (https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-containers-inference-private.html)
+	// registry accessible from your Amazon Virtual Private Cloud (VPC). For information
+	// about storing containers in a private Docker registry, see Use a Private
+	// Docker Registry for Real-Time Inference Containers (https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-containers-inference-private.html)
 	ImageConfig *ImageConfig `type:"structure"`
 
 	// Whether the container hosts a single model or multiple models.
@@ -29475,7 +29477,7 @@ type HumanLoopConfig struct {
 	//    * 0.012
 	PublicWorkforceTaskPrice *PublicWorkforceTaskPrice `type:"structure"`
 
-	// The length of time that a task remains available for labeling by human workers.
+	// The length of time that a task remains available for review by human workers.
 	TaskAvailabilityLifetimeInSeconds *int64 `min:"1" type:"integer"`
 
 	// The number of distinct workers who will perform the same task on each object.
@@ -29494,7 +29496,8 @@ type HumanLoopConfig struct {
 	// Keywords used to describe the task so that workers can discover the task.
 	TaskKeywords []*string `min:"1" type:"list"`
 
-	// The amount of time that a worker has to complete a task.
+	// The amount of time that a worker has to complete a task. The default value
+	// is 3,600 seconds (1 hour)
 	TaskTimeLimitInSeconds *int64 `min:"30" type:"integer"`
 
 	// A title for the human worker task.
@@ -31606,7 +31609,7 @@ func (s *HyperParameterTuningJobWarmStartConfig) SetWarmStartType(v string) *Hyp
 }
 
 // Specifies whether the model container is in Amazon ECR or a private Docker
-// registry in your Amazon Virtual Private Cloud (VPC).
+// registry accessible from your Amazon Virtual Private Cloud (VPC).
 type ImageConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -31614,7 +31617,7 @@ type ImageConfig struct {
 	//
 	//    * Platform - The model image is hosted in Amazon ECR.
 	//
-	//    * VPC - The model image is hosted in a private Docker registry in your
+	//    * Vpc - The model image is hosted in a private Docker registry in your
 	//    VPC.
 	//
 	// RepositoryAccessMode is a required field
@@ -32185,10 +32188,10 @@ func (s *LabelCountersForWorkteam) SetTotal(v int64) *LabelCountersForWorkteam {
 type LabelingJobAlgorithmsConfig struct {
 	_ struct{} `type:"structure"`
 
-	// At the end of an auto-label job Amazon SageMaker Ground Truth sends the Amazon
-	// Resource Nam (ARN) of the final model used for auto-labeling. You can use
-	// this model as the starting point for subsequent similar jobs by providing
-	// the ARN of the model here.
+	// At the end of an auto-label job Ground Truth sends the Amazon Resource Name
+	// (ARN) of the final model used for auto-labeling. You can use this model as
+	// the starting point for subsequent similar jobs by providing the ARN of the
+	// model here.
 	InitialActiveLearningModelArn *string `min:"20" type:"string"`
 
 	// Specifies the Amazon Resource Name (ARN) of the algorithm used for auto-labeling.
@@ -32281,11 +32284,24 @@ func (s *LabelingJobDataAttributes) SetContentClassifiers(v []*string) *Labeling
 }
 
 // Provides information about the location of input data.
+//
+// You must specify at least one of the following: S3DataSource or SnsDataSource.
+//
+// Use SnsDataSource to specify an SNS input topic for a streaming labeling
+// job. If you do not specify and SNS input topic ARN, Ground Truth will create
+// a one-time labeling job.
+//
+// Use S3DataSource to specify an input manifest file for both streaming and
+// one-time labeling jobs. Adding an S3DataSource is optional if you use SnsDataSource
+// to create a streaming labeling job.
 type LabelingJobDataSource struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon S3 location of the input data objects.
 	S3DataSource *LabelingJobS3DataSource `type:"structure"`
+
+	// An Amazon SNS data source used for streaming labeling jobs.
+	SnsDataSource *LabelingJobSnsDataSource `type:"structure"`
 }
 
 // String returns the string representation
@@ -32306,6 +32322,11 @@ func (s *LabelingJobDataSource) Validate() error {
 			invalidParams.AddNested("S3DataSource", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.SnsDataSource != nil {
+		if err := s.SnsDataSource.Validate(); err != nil {
+			invalidParams.AddNested("SnsDataSource", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -32316,6 +32337,12 @@ func (s *LabelingJobDataSource) Validate() error {
 // SetS3DataSource sets the S3DataSource field's value.
 func (s *LabelingJobDataSource) SetS3DataSource(v *LabelingJobS3DataSource) *LabelingJobDataSource {
 	s.S3DataSource = v
+	return s
+}
+
+// SetSnsDataSource sets the SnsDataSource field's value.
+func (s *LabelingJobDataSource) SetSnsDataSource(v *LabelingJobSnsDataSource) *LabelingJobDataSource {
+	s.SnsDataSource = v
 	return s
 }
 
@@ -32509,6 +32536,15 @@ type LabelingJobOutputConfig struct {
 	//
 	// S3OutputPath is a required field
 	S3OutputPath *string `type:"string" required:"true"`
+
+	// An Amazon Simple Notification Service (Amazon SNS) output topic ARN.
+	//
+	// When workers complete labeling tasks, Ground Truth will send labeling task
+	// output data to the SNS output topic you specify here.
+	//
+	// You must provide a value for this parameter if you provide an Amazon SNS
+	// input topic in SnsDataSource in InputConfig.
+	SnsTopicArn *string `type:"string"`
 }
 
 // String returns the string representation
@@ -32543,6 +32579,12 @@ func (s *LabelingJobOutputConfig) SetKmsKeyId(v string) *LabelingJobOutputConfig
 // SetS3OutputPath sets the S3OutputPath field's value.
 func (s *LabelingJobOutputConfig) SetS3OutputPath(v string) *LabelingJobOutputConfig {
 	s.S3OutputPath = &v
+	return s
+}
+
+// SetSnsTopicArn sets the SnsTopicArn field's value.
+func (s *LabelingJobOutputConfig) SetSnsTopicArn(v string) *LabelingJobOutputConfig {
+	s.SnsTopicArn = &v
 	return s
 }
 
@@ -32614,6 +32656,50 @@ func (s *LabelingJobS3DataSource) Validate() error {
 // SetManifestS3Uri sets the ManifestS3Uri field's value.
 func (s *LabelingJobS3DataSource) SetManifestS3Uri(v string) *LabelingJobS3DataSource {
 	s.ManifestS3Uri = &v
+	return s
+}
+
+// An Amazon SNS data source used for streaming labeling jobs.
+type LabelingJobSnsDataSource struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon SNS input topic Amazon Resource Name (ARN). Specify the ARN of
+	// the input topic you will use to send new data objects to a streaming labeling
+	// job.
+	//
+	// If you specify an input topic for SnsTopicArn in InputConfig, you must specify
+	// a value for SnsTopicArn in OutputConfig.
+	//
+	// SnsTopicArn is a required field
+	SnsTopicArn *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s LabelingJobSnsDataSource) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LabelingJobSnsDataSource) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *LabelingJobSnsDataSource) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "LabelingJobSnsDataSource"}
+	if s.SnsTopicArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("SnsTopicArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSnsTopicArn sets the SnsTopicArn field's value.
+func (s *LabelingJobSnsDataSource) SetSnsTopicArn(v string) *LabelingJobSnsDataSource {
+	s.SnsTopicArn = &v
 	return s
 }
 

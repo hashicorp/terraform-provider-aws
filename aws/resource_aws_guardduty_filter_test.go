@@ -107,7 +107,7 @@ func testAccAwsGuardDutyFilter_update(t *testing.T) {
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						"field":    "region",
 						"equals.#": "1",
-						"equals.0": "us-west-2",
+						"equals.0": testAccGetRegion(),
 					}),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						"field":        "service.additionalInfo.threatListName",
@@ -316,6 +316,8 @@ resource "aws_guardduty_detector" "test" {
 
 func testAccGuardDutyFilterConfig_multipleTags() string {
 	return `
+data "aws_region" "current" {}
+
 resource "aws_guardduty_filter" "test" {
   detector_id = aws_guardduty_detector.test.id
   name        = "test-filter"
@@ -325,7 +327,7 @@ resource "aws_guardduty_filter" "test" {
   finding_criteria {
     criterion {
       field  = "region"
-      equals = ["us-west-2"]
+      equals = [data.aws_region.current.name]
     }
   }
 
@@ -343,6 +345,8 @@ resource "aws_guardduty_detector" "test" {
 
 func testAccGuardDutyFilterConfig_update() string {
 	return `
+data "aws_region" "current" {}
+
 resource "aws_guardduty_filter" "test" {
   detector_id = aws_guardduty_detector.test.id
   name        = "test-filter"
@@ -352,7 +356,7 @@ resource "aws_guardduty_filter" "test" {
   finding_criteria {
     criterion {
       field  = "region"
-      equals = ["us-west-2"]
+      equals = [data.aws_region.current.name]
     }
 
     criterion {
@@ -370,6 +374,8 @@ resource "aws_guardduty_detector" "test" {
 
 func testAccGuardDutyFilterConfig_updateTags() string {
 	return `
+data "aws_region" "current" {}
+
 resource "aws_guardduty_filter" "test" {
   detector_id = aws_guardduty_detector.test.id
   name        = "test-filter"
@@ -379,7 +385,7 @@ resource "aws_guardduty_filter" "test" {
   finding_criteria {
     criterion {
       field  = "region"
-      equals = ["us-west-2"]
+      equals = [data.aws_region.current.name]
     }
   }
 
