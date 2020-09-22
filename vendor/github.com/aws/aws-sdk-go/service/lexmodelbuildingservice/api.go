@@ -5289,7 +5289,7 @@ type CreateBotVersionOutput struct {
 	DetectSentiment *bool `locationName:"detectSentiment" type:"boolean"`
 
 	// Indicates whether the bot uses accuracy improvements. true indicates that
-	// the bot is using the imoprovements, otherwise, false.
+	// the bot is using the improvements, otherwise, false.
 	EnableModelImprovements *bool `locationName:"enableModelImprovements" type:"boolean"`
 
 	// If status is FAILED, Amazon Lex provides the reason that it failed to build
@@ -5523,8 +5523,8 @@ type CreateIntentVersionOutput struct {
 	// Describes how the intent is fulfilled.
 	FulfillmentActivity *FulfillmentActivity `locationName:"fulfillmentActivity" type:"structure"`
 
-	// Configuration information, if any, for connectin an Amazon Kendra index with
-	// the AMAZON.KendraSearchIntent intent.
+	// Configuration information, if any, for connecting an Amazon Kendra index
+	// with the AMAZON.KendraSearchIntent intent.
 	KendraConfiguration *KendraConfiguration `locationName:"kendraConfiguration" type:"structure"`
 
 	// The date that the intent was updated.
@@ -7325,7 +7325,7 @@ type GetBotOutput struct {
 	DetectSentiment *bool `locationName:"detectSentiment" type:"boolean"`
 
 	// Indicates whether the bot uses accuracy improvements. true indicates that
-	// the bot is using the imoprovements, otherwise, false.
+	// the bot is using the improvements, otherwise, false.
 	EnableModelImprovements *bool `locationName:"enableModelImprovements" type:"boolean"`
 
 	// If status is FAILED, Amazon Lex explains why it failed to build the bot.
@@ -10657,7 +10657,7 @@ type PutBotOutput struct {
 	DetectSentiment *bool `locationName:"detectSentiment" type:"boolean"`
 
 	// Indicates whether the bot uses accuracy improvements. true indicates that
-	// the bot is using the imoprovements, otherwise, false.
+	// the bot is using the improvements, otherwise, false.
 	EnableModelImprovements *bool `locationName:"enableModelImprovements" type:"boolean"`
 
 	// If status is FAILED, Amazon Lex provides the reason that it failed to build
@@ -12734,26 +12734,30 @@ func ImportStatus_Values() []string {
 }
 
 const (
-	// LocaleEnUs is a Locale enum value
-	LocaleEnUs = "en-US"
-
-	// LocaleEnGb is a Locale enum value
-	LocaleEnGb = "en-GB"
-
 	// LocaleDeDe is a Locale enum value
 	LocaleDeDe = "de-DE"
 
 	// LocaleEnAu is a Locale enum value
 	LocaleEnAu = "en-AU"
+
+	// LocaleEnGb is a Locale enum value
+	LocaleEnGb = "en-GB"
+
+	// LocaleEnUs is a Locale enum value
+	LocaleEnUs = "en-US"
+
+	// LocaleEsUs is a Locale enum value
+	LocaleEsUs = "es-US"
 )
 
 // Locale_Values returns all elements of the Locale enum
 func Locale_Values() []string {
 	return []string{
-		LocaleEnUs,
-		LocaleEnGb,
 		LocaleDeDe,
 		LocaleEnAu,
+		LocaleEnGb,
+		LocaleEnUs,
+		LocaleEsUs,
 	}
 }
 

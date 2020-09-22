@@ -1113,8 +1113,8 @@ func (c *RDS) CopyDBSnapshotRequest(input *CopyDBSnapshotInput) (req *request.Re
 
 // CopyDBSnapshot API operation for Amazon Relational Database Service.
 //
-// Copies the specified DB snapshot. The source DB snapshot must be in the "available"
-// state.
+// Copies the specified DB snapshot. The source DB snapshot must be in the available
+// or storage-optimization state.
 //
 // You can copy a snapshot from one AWS Region to another. In that case, the
 // AWS Region where you call the CopyDBSnapshot action is the destination AWS
@@ -2717,9 +2717,9 @@ func (c *RDS) CreateGlobalClusterRequest(input *CreateGlobalClusterInput) (req *
 
 // CreateGlobalCluster API operation for Amazon Relational Database Service.
 //
-// Creates an Aurora global database spread across multiple regions. The global
-// database contains a single primary cluster with read-write capability, and
-// a read-only secondary cluster that receives data from the primary cluster
+// Creates an Aurora global database spread across multiple AWS Regions. The
+// global database contains a single primary cluster with read-write capability,
+// and a read-only secondary cluster that receives data from the primary cluster
 // through high-speed replication performed by the Aurora storage subsystem.
 //
 // You can create a global database that is initially empty, and then add a
@@ -7921,8 +7921,9 @@ func (c *RDS) DescribeEventsRequest(input *DescribeEventsInput) (req *request.Re
 // DB security groups, DB snapshots, and DB cluster snapshots for the past 14
 // days. Events specific to a particular DB instances, DB clusters, DB parameter
 // groups, DB security groups, DB snapshots, and DB cluster snapshots group
-// can be obtained by providing the name as a parameter. By default, the past
-// hour of events are returned.
+// can be obtained by providing the name as a parameter.
+//
+// By default, the past hour of events are returned.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -17020,6 +17021,14 @@ type CreateDBClusterInput struct {
 	// Logs. The values in the list depend on the DB engine being used. For more
 	// information, see Publishing Database Logs to Amazon CloudWatch Logs (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
 	// in the Amazon Aurora User Guide.
+	//
+	// Aurora MySQL
+	//
+	// Possible values are audit, error, general, and slowquery.
+	//
+	// Aurora PostgreSQL
+	//
+	// Possible values are postgresql and upgrade.
 	EnableCloudwatchLogsExports []*string `type:"list"`
 
 	// A value that indicates whether to enable write operations to be forwarded
@@ -18022,6 +18031,26 @@ type CreateDBInstanceInput struct {
 	// Logs. The values in the list depend on the DB engine being used. For more
 	// information, see Publishing Database Logs to Amazon CloudWatch Logs (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
 	// in the Amazon Relational Database Service User Guide.
+	//
+	// MariaDB
+	//
+	// Possible values are audit, error, general, and slowquery.
+	//
+	// Microsoft SQL Server
+	//
+	// Possible values are agent and error.
+	//
+	// MySQL
+	//
+	// Possible values are audit, error, general, and slowquery.
+	//
+	// Oracle
+	//
+	// Possible values are alert, audit, listener, and trace.
+	//
+	// PostgreSQL
+	//
+	// Possible values are postgresql and upgrade.
 	EnableCloudwatchLogsExports []*string `type:"list"`
 
 	// A value that indicates whether to enable mapping of AWS Identity and Access
@@ -20199,7 +20228,7 @@ type CreateGlobalClusterInput struct {
 	// can't be deleted when deletion protection is enabled.
 	DeletionProtection *bool `type:"boolean"`
 
-	// Provides the name of the database engine to be used for this DB cluster.
+	// The name of the database engine to be used for this DB cluster.
 	Engine *string `type:"string"`
 
 	// The engine version of the Aurora global database.
@@ -20606,7 +20635,7 @@ type DBCluster struct {
 	// Specifies the connection endpoint for the primary instance of the DB cluster.
 	Endpoint *string `type:"string"`
 
-	// Provides the name of the database engine to be used for this DB cluster.
+	// The name of the database engine to be used for this DB cluster.
 	Engine *string `type:"string"`
 
 	// The DB engine mode of the DB cluster, either provisioned, serverless, parallelquery,
@@ -21276,10 +21305,10 @@ type DBClusterParameterGroup struct {
 	// The Amazon Resource Name (ARN) for the DB cluster parameter group.
 	DBClusterParameterGroupArn *string `type:"string"`
 
-	// Provides the name of the DB cluster parameter group.
+	// The name of the DB cluster parameter group.
 	DBClusterParameterGroupName *string `type:"string"`
 
-	// Provides the name of the DB parameter group family that this DB cluster parameter
+	// The name of the DB parameter group family that this DB cluster parameter
 	// group is compatible with.
 	DBParameterGroupFamily *string `type:"string"`
 
@@ -22001,7 +22030,7 @@ type DBInstance struct {
 	// Specifies the connection endpoint.
 	Endpoint *Endpoint `type:"structure"`
 
-	// Provides the name of the database engine to be used for this DB instance.
+	// The name of the database engine to be used for this DB instance.
 	Engine *string `type:"string"`
 
 	// Indicates the database engine version.
@@ -22897,11 +22926,11 @@ type DBParameterGroup struct {
 	// The Amazon Resource Name (ARN) for the DB parameter group.
 	DBParameterGroupArn *string `type:"string"`
 
-	// Provides the name of the DB parameter group family that this DB parameter
-	// group is compatible with.
+	// The name of the DB parameter group family that this DB parameter group is
+	// compatible with.
 	DBParameterGroupFamily *string `type:"string"`
 
-	// Provides the name of the DB parameter group.
+	// The name of the DB parameter group.
 	DBParameterGroupName *string `type:"string"`
 
 	// Provides the customer-specified description for this DB parameter group.
@@ -22947,7 +22976,7 @@ func (s *DBParameterGroup) SetDescription(v string) *DBParameterGroup {
 type DBParameterGroupNameMessage struct {
 	_ struct{} `type:"structure"`
 
-	// Provides the name of the DB parameter group.
+	// The name of the DB parameter group.
 	DBParameterGroupName *string `type:"string"`
 }
 
@@ -28894,6 +28923,7 @@ type DescribeExportTasksInput struct {
 
 	// Filters specify one or more snapshot exports to describe. The filters are
 	// specified as name-value pairs that define what to include in the output.
+	// Filter names and values are case-sensitive.
 	//
 	// Supported filters include the following:
 	//
@@ -28904,7 +28934,8 @@ type DescribeExportTasksInput struct {
 	//    * source-arn - The Amazon Resource Name (ARN) of the snapshot exported
 	//    to Amazon S3
 	//
-	//    * status - The status of the export task.
+	//    * status - The status of the export task. Must be lowercase, for example,
+	//    complete.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// An optional pagination token provided by a previous DescribeExportTasks request.
@@ -36134,6 +36165,16 @@ func (s *PendingModifiedValues) SetStorageType(v string) *PendingModifiedValues 
 //
 //    * DescribeValidDBInstanceModifications
 //
+// If you call DescribeDBInstances, ProcessorFeature returns non-null values
+// only if the following conditions are met:
+//
+//    * You are accessing an Oracle DB instance.
+//
+//    * Your Oracle DB instance class supports configuring the number of CPU
+//    cores and threads per core.
+//
+//    * The current number CPU cores and threads is set to a non-default value.
+//
 // For more information, see Configuring the Processor of the DB Instance Class
 // (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html#USER_ConfigureProcessor)
 // in the Amazon RDS User Guide.
@@ -41590,13 +41631,13 @@ type Tag struct {
 	// A key is the required name of the tag. The string value can be from 1 to
 	// 128 Unicode characters in length and can't be prefixed with "aws:" or "rds:".
 	// The string can only contain only the set of Unicode letters, digits, white-space,
-	// '_', '.', '/', '=', '+', '-' (Java regex: "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-]*)$").
+	// '_', '.', ':', '/', '=', '+', '-', '@' (Java regex: "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$").
 	Key *string `type:"string"`
 
 	// A value is the optional value of the tag. The string value can be from 1
 	// to 256 Unicode characters in length and can't be prefixed with "aws:" or
 	// "rds:". The string can only contain only the set of Unicode letters, digits,
-	// white-space, '_', '.', '/', '=', '+', '-' (Java regex: "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-]*)$").
+	// white-space, '_', '.', ':', '/', '=', '+', '-', '@' (Java regex: "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$").
 	Value *string `type:"string"`
 }
 

@@ -60,6 +60,10 @@ func (c *SSOAdmin) AttachManagedPolicyToPermissionSetRequest(input *AttachManage
 //
 // Attaches an IAM managed policy ARN to a permission set.
 //
+// If the permission set is already referenced by one or more account assignments,
+// you will need to call ProvisionPermissionSet after this action to apply the
+// corresponding IAM policy updates to all assigned accounts.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -167,6 +171,13 @@ func (c *SSOAdmin) CreateAccountAssignmentRequest(input *CreateAccountAssignment
 // The term principal here refers to a user or group that is defined in AWS
 // SSO.
 //
+// As part of a successful CreateAccountAssignment call, the specified permission
+// set will automatically be provisioned to the account in the form of an IAM
+// policy attached to the SSO-created IAM role. If the permission set is subsequently
+// updated, the corresponding IAM policies attached to roles in your accounts
+// will not be updated automatically. In this case, you will need to call ProvisionPermissionSet
+// to make these updates.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -269,6 +280,8 @@ func (c *SSOAdmin) CreatePermissionSetRequest(input *CreatePermissionSetInput) (
 // CreatePermissionSet API operation for AWS Single Sign-On Admin.
 //
 // Creates a permission set within a specified SSO instance.
+//
+// To grant users and groups access to AWS account resources, use CreateAccountAssignment .
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2851,6 +2864,10 @@ func (c *SSOAdmin) PutInlinePolicyToPermissionSetRequest(input *PutInlinePolicyT
 //
 // Attaches an IAM inline policy to a permission set.
 //
+// If the permission set is already referenced by one or more account assignments,
+// you will need to call ProvisionPermissionSet after this action to apply the
+// corresponding IAM policy updates to all assigned accounts.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -3284,7 +3301,10 @@ type AccountAssignment struct {
 	// in the AWS General Reference.
 	PermissionSetArn *string `min:"10" type:"string"`
 
-	// The identifier of the principal.
+	// An identifier for an object in AWS SSO, such as a user or group. PrincipalIds
+	// are GUIDs (For example, f81d4fae-7dec-11d0-a765-00a0c91e6bf6). For more information
+	// about PrincipalIds in AWS SSO, see the AWS SSO Identity Store API Reference
+	// (/singlesignon/latest/IdentityStoreAPIReference/welcome.html).
 	PrincipalId *string `min:"1" type:"string"`
 
 	// The entity type for which the assignment will be created.
@@ -3341,7 +3361,10 @@ type AccountAssignmentOperationStatus struct {
 	// in the AWS General Reference.
 	PermissionSetArn *string `min:"10" type:"string"`
 
-	// The identifier of the principal.
+	// An identifier for an object in AWS SSO, such as a user or group. PrincipalIds
+	// are GUIDs (For example, f81d4fae-7dec-11d0-a765-00a0c91e6bf6). For more information
+	// about PrincipalIds in AWS SSO, see the AWS SSO Identity Store API Reference
+	// (/singlesignon/latest/IdentityStoreAPIReference/welcome.html).
 	PrincipalId *string `min:"1" type:"string"`
 
 	// The entity type for which the assignment will be created.
@@ -3354,7 +3377,8 @@ type AccountAssignmentOperationStatus struct {
 	// The status of the permission set provisioning process.
 	Status *string `type:"string" enum:"StatusValues"`
 
-	// The identifier for the chosen target.
+	// TargetID is an AWS account identifier, typically a 10-12 digit string (For
+	// example, 123456789012).
 	TargetId *string `type:"string"`
 
 	// The entity type for which the assignment will be created.
@@ -3671,7 +3695,10 @@ type CreateAccountAssignmentInput struct {
 	// PermissionSetArn is a required field
 	PermissionSetArn *string `min:"10" type:"string" required:"true"`
 
-	// The identifier of the principal.
+	// An identifier for an object in AWS SSO, such as a user or group. PrincipalIds
+	// are GUIDs (For example, f81d4fae-7dec-11d0-a765-00a0c91e6bf6). For more information
+	// about PrincipalIds in AWS SSO, see the AWS SSO Identity Store API Reference
+	// (/singlesignon/latest/IdentityStoreAPIReference/welcome.html).
 	//
 	// PrincipalId is a required field
 	PrincipalId *string `min:"1" type:"string" required:"true"`
@@ -3681,7 +3708,8 @@ type CreateAccountAssignmentInput struct {
 	// PrincipalType is a required field
 	PrincipalType *string `type:"string" required:"true" enum:"PrincipalType"`
 
-	// The identifier for the chosen target.
+	// TargetID is an AWS account identifier, typically a 10-12 digit string (For
+	// example, 123456789012).
 	//
 	// TargetId is a required field
 	TargetId *string `type:"string" required:"true"`
@@ -3955,7 +3983,10 @@ type DeleteAccountAssignmentInput struct {
 	// PermissionSetArn is a required field
 	PermissionSetArn *string `min:"10" type:"string" required:"true"`
 
-	// The identifier of the principal.
+	// An identifier for an object in AWS SSO, such as a user or group. PrincipalIds
+	// are GUIDs (For example, f81d4fae-7dec-11d0-a765-00a0c91e6bf6). For more information
+	// about PrincipalIds in AWS SSO, see the AWS SSO Identity Store API Reference
+	// (/singlesignon/latest/IdentityStoreAPIReference/welcome.html).
 	//
 	// PrincipalId is a required field
 	PrincipalId *string `min:"1" type:"string" required:"true"`
@@ -3965,7 +3996,8 @@ type DeleteAccountAssignmentInput struct {
 	// PrincipalType is a required field
 	PrincipalType *string `type:"string" required:"true" enum:"PrincipalType"`
 
-	// The identifier for the chosen target.
+	// TargetID is an AWS account identifier, typically a 10-12 digit string (For
+	// example, 123456789012).
 	//
 	// TargetId is a required field
 	TargetId *string `type:"string" required:"true"`
@@ -6158,7 +6190,8 @@ type ProvisionPermissionSetInput struct {
 	// PermissionSetArn is a required field
 	PermissionSetArn *string `min:"10" type:"string" required:"true"`
 
-	// The identifier for the chosen target.
+	// TargetID is an AWS account identifier, typically a 10-12 digit string (For
+	// example, 123456789012).
 	TargetId *string `type:"string"`
 
 	// The entity type for which the assignment will be created.
