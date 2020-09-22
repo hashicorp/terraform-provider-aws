@@ -14,6 +14,282 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/restjson"
 )
 
+const opBatchDelete = "BatchDelete"
+
+// BatchDeleteRequest generates a "aws/request.Request" representing the
+// client's request for the BatchDelete operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchDelete for more information on using the BatchDelete
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the BatchDeleteRequest method.
+//    req, resp := client.BatchDeleteRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/BatchDelete
+func (c *MediaLive) BatchDeleteRequest(input *BatchDeleteInput) (req *request.Request, output *BatchDeleteOutput) {
+	op := &request.Operation{
+		Name:       opBatchDelete,
+		HTTPMethod: "POST",
+		HTTPPath:   "/prod/batch/delete",
+	}
+
+	if input == nil {
+		input = &BatchDeleteInput{}
+	}
+
+	output = &BatchDeleteOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchDelete API operation for AWS Elemental MediaLive.
+//
+// Starts delete of resources.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation BatchDelete for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//
+//   * InternalServerErrorException
+//
+//   * ForbiddenException
+//
+//   * BadGatewayException
+//
+//   * NotFoundException
+//
+//   * GatewayTimeoutException
+//
+//   * TooManyRequestsException
+//
+//   * ConflictException
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/BatchDelete
+func (c *MediaLive) BatchDelete(input *BatchDeleteInput) (*BatchDeleteOutput, error) {
+	req, out := c.BatchDeleteRequest(input)
+	return out, req.Send()
+}
+
+// BatchDeleteWithContext is the same as BatchDelete with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchDelete for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) BatchDeleteWithContext(ctx aws.Context, input *BatchDeleteInput, opts ...request.Option) (*BatchDeleteOutput, error) {
+	req, out := c.BatchDeleteRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opBatchStart = "BatchStart"
+
+// BatchStartRequest generates a "aws/request.Request" representing the
+// client's request for the BatchStart operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchStart for more information on using the BatchStart
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the BatchStartRequest method.
+//    req, resp := client.BatchStartRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/BatchStart
+func (c *MediaLive) BatchStartRequest(input *BatchStartInput) (req *request.Request, output *BatchStartOutput) {
+	op := &request.Operation{
+		Name:       opBatchStart,
+		HTTPMethod: "POST",
+		HTTPPath:   "/prod/batch/start",
+	}
+
+	if input == nil {
+		input = &BatchStartInput{}
+	}
+
+	output = &BatchStartOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchStart API operation for AWS Elemental MediaLive.
+//
+// Starts existing resources
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation BatchStart for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//
+//   * InternalServerErrorException
+//
+//   * ForbiddenException
+//
+//   * BadGatewayException
+//
+//   * NotFoundException
+//
+//   * GatewayTimeoutException
+//
+//   * TooManyRequestsException
+//
+//   * ConflictException
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/BatchStart
+func (c *MediaLive) BatchStart(input *BatchStartInput) (*BatchStartOutput, error) {
+	req, out := c.BatchStartRequest(input)
+	return out, req.Send()
+}
+
+// BatchStartWithContext is the same as BatchStart with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchStart for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) BatchStartWithContext(ctx aws.Context, input *BatchStartInput, opts ...request.Option) (*BatchStartOutput, error) {
+	req, out := c.BatchStartRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opBatchStop = "BatchStop"
+
+// BatchStopRequest generates a "aws/request.Request" representing the
+// client's request for the BatchStop operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchStop for more information on using the BatchStop
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the BatchStopRequest method.
+//    req, resp := client.BatchStopRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/BatchStop
+func (c *MediaLive) BatchStopRequest(input *BatchStopInput) (req *request.Request, output *BatchStopOutput) {
+	op := &request.Operation{
+		Name:       opBatchStop,
+		HTTPMethod: "POST",
+		HTTPPath:   "/prod/batch/stop",
+	}
+
+	if input == nil {
+		input = &BatchStopInput{}
+	}
+
+	output = &BatchStopOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchStop API operation for AWS Elemental MediaLive.
+//
+// Stops running resources
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation BatchStop for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//
+//   * InternalServerErrorException
+//
+//   * ForbiddenException
+//
+//   * BadGatewayException
+//
+//   * NotFoundException
+//
+//   * GatewayTimeoutException
+//
+//   * TooManyRequestsException
+//
+//   * ConflictException
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/BatchStop
+func (c *MediaLive) BatchStop(input *BatchStopInput) (*BatchStopOutput, error) {
+	req, out := c.BatchStopRequest(input)
+	return out, req.Send()
+}
+
+// BatchStopWithContext is the same as BatchStop with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchStop for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) BatchStopWithContext(ctx aws.Context, input *BatchStopInput, opts ...request.Option) (*BatchStopOutput, error) {
+	req, out := c.BatchStopRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opBatchUpdateSchedule = "BatchUpdateSchedule"
 
 // BatchUpdateScheduleRequest generates a "aws/request.Request" representing the
@@ -5853,7 +6129,7 @@ func (s *AudioTrack) SetTrack(v int64) *AudioTrack {
 type AudioTrackSelection struct {
 	_ struct{} `type:"structure"`
 
-	// Selects one or more unique audio tracks from within an mp4 source.
+	// Selects one or more unique audio tracks from within a source.
 	//
 	// Tracks is a required field
 	Tracks []*AudioTrack `locationName:"tracks" type:"list" required:"true"`
@@ -6199,6 +6475,133 @@ func (s *BadRequestException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+type BatchDeleteInput struct {
+	_ struct{} `type:"structure"`
+
+	ChannelIds []*string `locationName:"channelIds" type:"list"`
+
+	InputIds []*string `locationName:"inputIds" type:"list"`
+
+	InputSecurityGroupIds []*string `locationName:"inputSecurityGroupIds" type:"list"`
+
+	MultiplexIds []*string `locationName:"multiplexIds" type:"list"`
+}
+
+// String returns the string representation
+func (s BatchDeleteInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchDeleteInput) GoString() string {
+	return s.String()
+}
+
+// SetChannelIds sets the ChannelIds field's value.
+func (s *BatchDeleteInput) SetChannelIds(v []*string) *BatchDeleteInput {
+	s.ChannelIds = v
+	return s
+}
+
+// SetInputIds sets the InputIds field's value.
+func (s *BatchDeleteInput) SetInputIds(v []*string) *BatchDeleteInput {
+	s.InputIds = v
+	return s
+}
+
+// SetInputSecurityGroupIds sets the InputSecurityGroupIds field's value.
+func (s *BatchDeleteInput) SetInputSecurityGroupIds(v []*string) *BatchDeleteInput {
+	s.InputSecurityGroupIds = v
+	return s
+}
+
+// SetMultiplexIds sets the MultiplexIds field's value.
+func (s *BatchDeleteInput) SetMultiplexIds(v []*string) *BatchDeleteInput {
+	s.MultiplexIds = v
+	return s
+}
+
+type BatchDeleteOutput struct {
+	_ struct{} `type:"structure"`
+
+	Failed []*BatchFailedResultModel `locationName:"failed" type:"list"`
+
+	Successful []*BatchSuccessfulResultModel `locationName:"successful" type:"list"`
+}
+
+// String returns the string representation
+func (s BatchDeleteOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchDeleteOutput) GoString() string {
+	return s.String()
+}
+
+// SetFailed sets the Failed field's value.
+func (s *BatchDeleteOutput) SetFailed(v []*BatchFailedResultModel) *BatchDeleteOutput {
+	s.Failed = v
+	return s
+}
+
+// SetSuccessful sets the Successful field's value.
+func (s *BatchDeleteOutput) SetSuccessful(v []*BatchSuccessfulResultModel) *BatchDeleteOutput {
+	s.Successful = v
+	return s
+}
+
+// Details from a failed operation
+type BatchFailedResultModel struct {
+	_ struct{} `type:"structure"`
+
+	// ARN of the resource
+	Arn *string `locationName:"arn" type:"string"`
+
+	// Error code for the failed operation
+	Code *string `locationName:"code" type:"string"`
+
+	// ID of the resource
+	Id *string `locationName:"id" type:"string"`
+
+	// Error message for the failed operation
+	Message *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s BatchFailedResultModel) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchFailedResultModel) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *BatchFailedResultModel) SetArn(v string) *BatchFailedResultModel {
+	s.Arn = &v
+	return s
+}
+
+// SetCode sets the Code field's value.
+func (s *BatchFailedResultModel) SetCode(v string) *BatchFailedResultModel {
+	s.Code = &v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *BatchFailedResultModel) SetId(v string) *BatchFailedResultModel {
+	s.Id = &v
+	return s
+}
+
+// SetMessage sets the Message field's value.
+func (s *BatchFailedResultModel) SetMessage(v string) *BatchFailedResultModel {
+	s.Message = &v
+	return s
+}
+
 // A list of schedule actions to create (in a request) or that have been created
 // (in a response).
 type BatchScheduleActionCreateRequest struct {
@@ -6337,6 +6740,168 @@ func (s BatchScheduleActionDeleteResult) GoString() string {
 // SetScheduleActions sets the ScheduleActions field's value.
 func (s *BatchScheduleActionDeleteResult) SetScheduleActions(v []*ScheduleAction) *BatchScheduleActionDeleteResult {
 	s.ScheduleActions = v
+	return s
+}
+
+type BatchStartInput struct {
+	_ struct{} `type:"structure"`
+
+	ChannelIds []*string `locationName:"channelIds" type:"list"`
+
+	MultiplexIds []*string `locationName:"multiplexIds" type:"list"`
+}
+
+// String returns the string representation
+func (s BatchStartInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchStartInput) GoString() string {
+	return s.String()
+}
+
+// SetChannelIds sets the ChannelIds field's value.
+func (s *BatchStartInput) SetChannelIds(v []*string) *BatchStartInput {
+	s.ChannelIds = v
+	return s
+}
+
+// SetMultiplexIds sets the MultiplexIds field's value.
+func (s *BatchStartInput) SetMultiplexIds(v []*string) *BatchStartInput {
+	s.MultiplexIds = v
+	return s
+}
+
+type BatchStartOutput struct {
+	_ struct{} `type:"structure"`
+
+	Failed []*BatchFailedResultModel `locationName:"failed" type:"list"`
+
+	Successful []*BatchSuccessfulResultModel `locationName:"successful" type:"list"`
+}
+
+// String returns the string representation
+func (s BatchStartOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchStartOutput) GoString() string {
+	return s.String()
+}
+
+// SetFailed sets the Failed field's value.
+func (s *BatchStartOutput) SetFailed(v []*BatchFailedResultModel) *BatchStartOutput {
+	s.Failed = v
+	return s
+}
+
+// SetSuccessful sets the Successful field's value.
+func (s *BatchStartOutput) SetSuccessful(v []*BatchSuccessfulResultModel) *BatchStartOutput {
+	s.Successful = v
+	return s
+}
+
+type BatchStopInput struct {
+	_ struct{} `type:"structure"`
+
+	ChannelIds []*string `locationName:"channelIds" type:"list"`
+
+	MultiplexIds []*string `locationName:"multiplexIds" type:"list"`
+}
+
+// String returns the string representation
+func (s BatchStopInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchStopInput) GoString() string {
+	return s.String()
+}
+
+// SetChannelIds sets the ChannelIds field's value.
+func (s *BatchStopInput) SetChannelIds(v []*string) *BatchStopInput {
+	s.ChannelIds = v
+	return s
+}
+
+// SetMultiplexIds sets the MultiplexIds field's value.
+func (s *BatchStopInput) SetMultiplexIds(v []*string) *BatchStopInput {
+	s.MultiplexIds = v
+	return s
+}
+
+type BatchStopOutput struct {
+	_ struct{} `type:"structure"`
+
+	Failed []*BatchFailedResultModel `locationName:"failed" type:"list"`
+
+	Successful []*BatchSuccessfulResultModel `locationName:"successful" type:"list"`
+}
+
+// String returns the string representation
+func (s BatchStopOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchStopOutput) GoString() string {
+	return s.String()
+}
+
+// SetFailed sets the Failed field's value.
+func (s *BatchStopOutput) SetFailed(v []*BatchFailedResultModel) *BatchStopOutput {
+	s.Failed = v
+	return s
+}
+
+// SetSuccessful sets the Successful field's value.
+func (s *BatchStopOutput) SetSuccessful(v []*BatchSuccessfulResultModel) *BatchStopOutput {
+	s.Successful = v
+	return s
+}
+
+// Details from a successful operation
+type BatchSuccessfulResultModel struct {
+	_ struct{} `type:"structure"`
+
+	// ARN of the resource
+	Arn *string `locationName:"arn" type:"string"`
+
+	// ID of the resource
+	Id *string `locationName:"id" type:"string"`
+
+	// Current state of the resource
+	State *string `locationName:"state" type:"string"`
+}
+
+// String returns the string representation
+func (s BatchSuccessfulResultModel) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchSuccessfulResultModel) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *BatchSuccessfulResultModel) SetArn(v string) *BatchSuccessfulResultModel {
+	s.Arn = &v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *BatchSuccessfulResultModel) SetId(v string) *BatchSuccessfulResultModel {
+	s.Id = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *BatchSuccessfulResultModel) SetState(v string) *BatchSuccessfulResultModel {
+	s.State = &v
 	return s
 }
 
@@ -9412,8 +9977,6 @@ func (s *DescribeInputDeviceOutput) SetType(v string) *DescribeInputDeviceOutput
 type DescribeInputDeviceThumbnailInput struct {
 	_ struct{} `type:"structure"`
 
-	// Accept Header
-	//
 	// Accept is a required field
 	Accept *string `location:"header" locationName:"accept" type:"string" required:"true" enum:"AcceptHeader"`
 
@@ -11803,12 +12366,12 @@ type FrameCaptureGroupSettings struct {
 	_ struct{} `type:"structure"`
 
 	// The destination for the frame capture files. Either the URI for an Amazon
-	// S3 bucket and object, plus a file name prefix (for example, s3ssl://sportsDelivery/highlights/20180820/curling_)
+	// S3 bucket and object, plus a file name prefix (for example, s3ssl://sportsDelivery/highlights/20180820/curling-)
 	// or the URI for a MediaStore container, plus a file name prefix (for example,
-	// mediastoressl://sportsDelivery/20180820/curling_). The final file names consist
-	// of the prefix from the destination field (for example, "curling_") + name
+	// mediastoressl://sportsDelivery/20180820/curling-). The final file names consist
+	// of the prefix from the destination field (for example, "curling-") + name
 	// modifier + the counter (5 digits, starting from 00001) + extension (which
-	// is always .jpg). For example, curlingLow.00001.jpg
+	// is always .jpg). For example, curling-low.00001.jpg
 	//
 	// Destination is a required field
 	Destination *OutputLocationRef `locationName:"destination" type:"structure" required:"true"`
@@ -13382,10 +13945,10 @@ type HlsGroupSettings struct {
 	// For example, #EXT-X-BYTERANGE:160364@1461888"
 	IFrameOnlyPlaylists *string `locationName:"iFrameOnlyPlaylists" type:"string" enum:"IFrameOnlyPlaylistType"`
 
-	// Applies only if Mode field is LIVE. Specifies the maximum number of segments
+	// Applies only if Mode field is LIVE.Specifies the maximum number of segments
 	// in the media manifest file. After this maximum, older segments are removed
-	// from the media manifest. This number must be less than or equal to the Keep
-	// Segments field.
+	// from the media manifest. This number must be smaller than the number in the
+	// Keep Segments field.
 	IndexNSegments *int64 `locationName:"indexNSegments" min:"3" type:"integer"`
 
 	// Parameter that control output group behavior on input loss.
@@ -13403,8 +13966,14 @@ type HlsGroupSettings struct {
 	// constantIv value.
 	IvSource *string `locationName:"ivSource" type:"string" enum:"HlsIvSource"`
 
-	// Applies only if Mode field is LIVE. Specifies the number of media segments
-	// (.ts files) to retain in the destination directory.
+	// Applies only if Mode field is LIVE.Specifies the number of media segments
+	// to retain in the destination directory. This number should be bigger than
+	// indexNSegments (Num segments). We recommend (value = (2 x indexNsegments)
+	// + 1).If this "keep segments" number is too low, the following might happen:
+	// the player is still reading a media manifest file that lists this segment,
+	// but that segment has been removed from the destination directory (as directed
+	// by indexNSegments). This situation would result in a 404 HTTP error on the
+	// player.
 	KeepSegments *int64 `locationName:"keepSegments" min:"1" type:"integer"`
 
 	// The value specifies how the key is represented in the resource identified
@@ -16679,9 +17248,11 @@ type M2tsSettings struct {
 	// 0 lets the muxer automatically determine the appropriate bitrate.
 	Bitrate *int64 `locationName:"bitrate" type:"integer"`
 
-	// If set to multiplex, use multiplex buffer model for accurate interleaving.
-	// Setting to bufferModel to none can lead to lower latency, but low-memory
-	// devices may not be able to play back the stream without interruptions.
+	// Controls the timing accuracy for output network traffic. Leave as MULTIPLEX
+	// to ensure accurate network packet timing. Or set to NONE, which might result
+	// in lower latency but will result in more variability in output network packet
+	// timing. This variability might cause interruptions, jitter, or bursty behavior
+	// in your playback or receiving devices.
 	BufferModel *string `locationName:"bufferModel" type:"string" enum:"M2tsBufferModel"`
 
 	// When set to enabled, generates captionServiceDescriptor in PMT.
@@ -23723,13 +24294,16 @@ type VideoDescription struct {
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
 
-	// Indicates how to respond to the AFD values in the input stream. RESPOND causes
-	// input video to be clipped, depending on the AFD value, input display aspect
-	// ratio, and output display aspect ratio, and (except for FRAME_CAPTURE codec)
-	// includes the values in the output. PASSTHROUGH (does not apply to FRAME_CAPTURE
-	// codec) ignores the AFD values and includes the values in the output, so input
-	// video is not clipped. NONE ignores the AFD values and does not include the
-	// values through to the output, so input video is not clipped.
+	// Indicates how MediaLive will respond to the AFD values that might be in the
+	// input video. If you do not know what AFD signaling is, or if your downstream
+	// system has not given you guidance, choose PASSTHROUGH.RESPOND: MediaLive
+	// clips the input video using a formula that uses the AFD values (configured
+	// in afdSignaling ), the input display aspect ratio, and the output display
+	// aspect ratio. MediaLive also includes the AFD values in the output, unless
+	// the codec for this encode is FRAME_CAPTURE.PASSTHROUGH: MediaLive ignores
+	// the AFD values and does not clip the video. But MediaLive does include the
+	// values in the output.NONE: MediaLive does not clip the input video and does
+	// not include the AFD values in the output
 	RespondToAfd *string `locationName:"respondToAfd" type:"string" enum:"VideoDescriptionRespondToAfd"`
 
 	// STRETCH_TO_OUTPUT configures the output position to stretch the video to
@@ -24230,7 +24804,6 @@ func Ac3MetadataControl_Values() []string {
 	}
 }
 
-// Accept Header
 const (
 	// AcceptHeaderImageJpeg is a AcceptHeader enum value
 	AcceptHeaderImageJpeg = "image/jpeg"

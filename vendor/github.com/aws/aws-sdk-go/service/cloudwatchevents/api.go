@@ -2419,6 +2419,8 @@ func (c *CloudWatchEvents) PutTargetsRequest(input *PutTargetsInput) (req *reque
 //
 //    * Amazon API Gateway REST APIs
 //
+//    * Redshift Clusters to invoke Data API ExecuteStatement on
+//
 // Creating rules with built-in targets is supported only in the AWS Management
 // Console. The built-in targets are EC2 CreateSnapshot API call, EC2 RebootInstances
 // API call, EC2 StopInstances API call, and EC2 TerminateInstances API call.
@@ -7006,6 +7008,114 @@ func (s *PutTargetsResultEntry) SetTargetId(v string) *PutTargetsResultEntry {
 	return s
 }
 
+// These are custom parameters to be used when the target is a Redshift cluster
+// to invoke the Redshift Data API ExecuteStatement based on EventBridge events.
+type RedshiftDataParameters struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the database. Required when authenticating using temporary credentials.
+	//
+	// Database is a required field
+	Database *string `min:"1" type:"string" required:"true"`
+
+	// The database user name. Required when authenticating using temporary credentials.
+	DbUser *string `min:"1" type:"string"`
+
+	// The name or ARN of the secret that enables access to the database. Required
+	// when authenticating using AWS Secrets Manager.
+	SecretManagerArn *string `min:"1" type:"string"`
+
+	// The SQL statement text to run.
+	//
+	// Sql is a required field
+	Sql *string `min:"1" type:"string" required:"true"`
+
+	// The name of the SQL statement. You can name the SQL statement when you create
+	// it to identify the query.
+	StatementName *string `min:"1" type:"string"`
+
+	// Indicates whether to send an event back to EventBridge after the SQL statement
+	// runs.
+	WithEvent *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s RedshiftDataParameters) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RedshiftDataParameters) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RedshiftDataParameters) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RedshiftDataParameters"}
+	if s.Database == nil {
+		invalidParams.Add(request.NewErrParamRequired("Database"))
+	}
+	if s.Database != nil && len(*s.Database) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Database", 1))
+	}
+	if s.DbUser != nil && len(*s.DbUser) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DbUser", 1))
+	}
+	if s.SecretManagerArn != nil && len(*s.SecretManagerArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SecretManagerArn", 1))
+	}
+	if s.Sql == nil {
+		invalidParams.Add(request.NewErrParamRequired("Sql"))
+	}
+	if s.Sql != nil && len(*s.Sql) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Sql", 1))
+	}
+	if s.StatementName != nil && len(*s.StatementName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StatementName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDatabase sets the Database field's value.
+func (s *RedshiftDataParameters) SetDatabase(v string) *RedshiftDataParameters {
+	s.Database = &v
+	return s
+}
+
+// SetDbUser sets the DbUser field's value.
+func (s *RedshiftDataParameters) SetDbUser(v string) *RedshiftDataParameters {
+	s.DbUser = &v
+	return s
+}
+
+// SetSecretManagerArn sets the SecretManagerArn field's value.
+func (s *RedshiftDataParameters) SetSecretManagerArn(v string) *RedshiftDataParameters {
+	s.SecretManagerArn = &v
+	return s
+}
+
+// SetSql sets the Sql field's value.
+func (s *RedshiftDataParameters) SetSql(v string) *RedshiftDataParameters {
+	s.Sql = &v
+	return s
+}
+
+// SetStatementName sets the StatementName field's value.
+func (s *RedshiftDataParameters) SetStatementName(v string) *RedshiftDataParameters {
+	s.StatementName = &v
+	return s
+}
+
+// SetWithEvent sets the WithEvent field's value.
+func (s *RedshiftDataParameters) SetWithEvent(v bool) *RedshiftDataParameters {
+	s.WithEvent = &v
+	return s
+}
+
 type RemovePermissionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7784,6 +7894,14 @@ type Target struct {
 	// default is to use the eventId as the partition key.
 	KinesisParameters *KinesisParameters `type:"structure"`
 
+	// Contains the Redshift Data API parameters to use when the target is a Redshift
+	// cluster.
+	//
+	// If you specify a Redshift Cluster as a Target, you can use this to specify
+	// parameters to invoke the Redshift Data API ExecuteStatement based on EventBridge
+	// events.
+	RedshiftDataParameters *RedshiftDataParameters `type:"structure"`
+
 	// The Amazon Resource Name (ARN) of the IAM role to be used for this target
 	// when the rule is triggered. If one rule triggers multiple targets, you can
 	// use a different IAM role for each target.
@@ -7845,6 +7963,11 @@ func (s *Target) Validate() error {
 	if s.KinesisParameters != nil {
 		if err := s.KinesisParameters.Validate(); err != nil {
 			invalidParams.AddNested("KinesisParameters", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.RedshiftDataParameters != nil {
+		if err := s.RedshiftDataParameters.Validate(); err != nil {
+			invalidParams.AddNested("RedshiftDataParameters", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.RunCommandParameters != nil {
@@ -7910,6 +8033,12 @@ func (s *Target) SetInputTransformer(v *InputTransformer) *Target {
 // SetKinesisParameters sets the KinesisParameters field's value.
 func (s *Target) SetKinesisParameters(v *KinesisParameters) *Target {
 	s.KinesisParameters = v
+	return s
+}
+
+// SetRedshiftDataParameters sets the RedshiftDataParameters field's value.
+func (s *Target) SetRedshiftDataParameters(v *RedshiftDataParameters) *Target {
+	s.RedshiftDataParameters = v
 	return s
 }
 

@@ -214,6 +214,101 @@ func (c *WorkMail) AssociateMemberToGroupWithContext(ctx aws.Context, input *Ass
 	return out, req.Send()
 }
 
+const opCancelMailboxExportJob = "CancelMailboxExportJob"
+
+// CancelMailboxExportJobRequest generates a "aws/request.Request" representing the
+// client's request for the CancelMailboxExportJob operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CancelMailboxExportJob for more information on using the CancelMailboxExportJob
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CancelMailboxExportJobRequest method.
+//    req, resp := client.CancelMailboxExportJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/CancelMailboxExportJob
+func (c *WorkMail) CancelMailboxExportJobRequest(input *CancelMailboxExportJobInput) (req *request.Request, output *CancelMailboxExportJobOutput) {
+	op := &request.Operation{
+		Name:       opCancelMailboxExportJob,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CancelMailboxExportJobInput{}
+	}
+
+	output = &CancelMailboxExportJobOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// CancelMailboxExportJob API operation for Amazon WorkMail.
+//
+// Cancels a mailbox export job.
+//
+// If the mailbox export job is near completion, it might not be possible to
+// cancel it.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkMail's
+// API operation CancelMailboxExportJob for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidParameterException
+//   One or more of the input parameters don't match the service's restrictions.
+//
+//   * OrganizationNotFoundException
+//   An operation received a valid organization identifier that either doesn't
+//   belong or exist in the system.
+//
+//   * OrganizationStateException
+//   The organization must have a valid state (Active or Synchronizing) to perform
+//   certain operations on the organization or its members.
+//
+//   * EntityNotFoundException
+//   The identifier supplied for the user, group, or resource does not exist in
+//   your organization.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/CancelMailboxExportJob
+func (c *WorkMail) CancelMailboxExportJob(input *CancelMailboxExportJobInput) (*CancelMailboxExportJobOutput, error) {
+	req, out := c.CancelMailboxExportJobRequest(input)
+	return out, req.Send()
+}
+
+// CancelMailboxExportJobWithContext is the same as CancelMailboxExportJob with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CancelMailboxExportJob for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkMail) CancelMailboxExportJobWithContext(ctx aws.Context, input *CancelMailboxExportJobInput, opts ...request.Option) (*CancelMailboxExportJobOutput, error) {
+	req, out := c.CancelMailboxExportJobRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateAlias = "CreateAlias"
 
 // CreateAliasRequest generates a "aws/request.Request" representing the
@@ -1483,6 +1578,97 @@ func (c *WorkMail) DescribeGroup(input *DescribeGroupInput) (*DescribeGroupOutpu
 // for more information on using Contexts.
 func (c *WorkMail) DescribeGroupWithContext(ctx aws.Context, input *DescribeGroupInput, opts ...request.Option) (*DescribeGroupOutput, error) {
 	req, out := c.DescribeGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeMailboxExportJob = "DescribeMailboxExportJob"
+
+// DescribeMailboxExportJobRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeMailboxExportJob operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeMailboxExportJob for more information on using the DescribeMailboxExportJob
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeMailboxExportJobRequest method.
+//    req, resp := client.DescribeMailboxExportJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DescribeMailboxExportJob
+func (c *WorkMail) DescribeMailboxExportJobRequest(input *DescribeMailboxExportJobInput) (req *request.Request, output *DescribeMailboxExportJobOutput) {
+	op := &request.Operation{
+		Name:       opDescribeMailboxExportJob,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeMailboxExportJobInput{}
+	}
+
+	output = &DescribeMailboxExportJobOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeMailboxExportJob API operation for Amazon WorkMail.
+//
+// Describes the current status of a mailbox export job.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkMail's
+// API operation DescribeMailboxExportJob for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidParameterException
+//   One or more of the input parameters don't match the service's restrictions.
+//
+//   * OrganizationNotFoundException
+//   An operation received a valid organization identifier that either doesn't
+//   belong or exist in the system.
+//
+//   * OrganizationStateException
+//   The organization must have a valid state (Active or Synchronizing) to perform
+//   certain operations on the organization or its members.
+//
+//   * EntityNotFoundException
+//   The identifier supplied for the user, group, or resource does not exist in
+//   your organization.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DescribeMailboxExportJob
+func (c *WorkMail) DescribeMailboxExportJob(input *DescribeMailboxExportJobInput) (*DescribeMailboxExportJobOutput, error) {
+	req, out := c.DescribeMailboxExportJobRequest(input)
+	return out, req.Send()
+}
+
+// DescribeMailboxExportJobWithContext is the same as DescribeMailboxExportJob with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeMailboxExportJob for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkMail) DescribeMailboxExportJobWithContext(ctx aws.Context, input *DescribeMailboxExportJobInput, opts ...request.Option) (*DescribeMailboxExportJobOutput, error) {
+	req, out := c.DescribeMailboxExportJobRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2758,6 +2944,152 @@ func (c *WorkMail) ListGroupsPagesWithContext(ctx aws.Context, input *ListGroups
 
 	for p.Next() {
 		if !fn(p.Page().(*ListGroupsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
+const opListMailboxExportJobs = "ListMailboxExportJobs"
+
+// ListMailboxExportJobsRequest generates a "aws/request.Request" representing the
+// client's request for the ListMailboxExportJobs operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListMailboxExportJobs for more information on using the ListMailboxExportJobs
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListMailboxExportJobsRequest method.
+//    req, resp := client.ListMailboxExportJobsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/ListMailboxExportJobs
+func (c *WorkMail) ListMailboxExportJobsRequest(input *ListMailboxExportJobsInput) (req *request.Request, output *ListMailboxExportJobsOutput) {
+	op := &request.Operation{
+		Name:       opListMailboxExportJobs,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListMailboxExportJobsInput{}
+	}
+
+	output = &ListMailboxExportJobsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListMailboxExportJobs API operation for Amazon WorkMail.
+//
+// Lists the mailbox export jobs started for the specified organization within
+// the last seven days.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkMail's
+// API operation ListMailboxExportJobs for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidParameterException
+//   One or more of the input parameters don't match the service's restrictions.
+//
+//   * OrganizationNotFoundException
+//   An operation received a valid organization identifier that either doesn't
+//   belong or exist in the system.
+//
+//   * OrganizationStateException
+//   The organization must have a valid state (Active or Synchronizing) to perform
+//   certain operations on the organization or its members.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/ListMailboxExportJobs
+func (c *WorkMail) ListMailboxExportJobs(input *ListMailboxExportJobsInput) (*ListMailboxExportJobsOutput, error) {
+	req, out := c.ListMailboxExportJobsRequest(input)
+	return out, req.Send()
+}
+
+// ListMailboxExportJobsWithContext is the same as ListMailboxExportJobs with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListMailboxExportJobs for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkMail) ListMailboxExportJobsWithContext(ctx aws.Context, input *ListMailboxExportJobsInput, opts ...request.Option) (*ListMailboxExportJobsOutput, error) {
+	req, out := c.ListMailboxExportJobsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListMailboxExportJobsPages iterates over the pages of a ListMailboxExportJobs operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListMailboxExportJobs method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListMailboxExportJobs operation.
+//    pageNum := 0
+//    err := client.ListMailboxExportJobsPages(params,
+//        func(page *workmail.ListMailboxExportJobsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *WorkMail) ListMailboxExportJobsPages(input *ListMailboxExportJobsInput, fn func(*ListMailboxExportJobsOutput, bool) bool) error {
+	return c.ListMailboxExportJobsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListMailboxExportJobsPagesWithContext same as ListMailboxExportJobsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkMail) ListMailboxExportJobsPagesWithContext(ctx aws.Context, input *ListMailboxExportJobsInput, fn func(*ListMailboxExportJobsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListMailboxExportJobsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListMailboxExportJobsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListMailboxExportJobsOutput), !p.HasNextPage()) {
 			break
 		}
 	}
@@ -4095,6 +4427,103 @@ func (c *WorkMail) ResetPasswordWithContext(ctx aws.Context, input *ResetPasswor
 	return out, req.Send()
 }
 
+const opStartMailboxExportJob = "StartMailboxExportJob"
+
+// StartMailboxExportJobRequest generates a "aws/request.Request" representing the
+// client's request for the StartMailboxExportJob operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartMailboxExportJob for more information on using the StartMailboxExportJob
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartMailboxExportJobRequest method.
+//    req, resp := client.StartMailboxExportJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/StartMailboxExportJob
+func (c *WorkMail) StartMailboxExportJobRequest(input *StartMailboxExportJobInput) (req *request.Request, output *StartMailboxExportJobOutput) {
+	op := &request.Operation{
+		Name:       opStartMailboxExportJob,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StartMailboxExportJobInput{}
+	}
+
+	output = &StartMailboxExportJobOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartMailboxExportJob API operation for Amazon WorkMail.
+//
+// Starts a mailbox export job to export MIME-format email messages and calendar
+// items from the specified mailbox to the specified Amazon Simple Storage Service
+// (Amazon S3) bucket. For more information, see Exporting mailbox content (https://docs.aws.amazon.com/workmail/latest/adminguide/mail-export.html)
+// in the Amazon WorkMail Administrator Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkMail's
+// API operation StartMailboxExportJob for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidParameterException
+//   One or more of the input parameters don't match the service's restrictions.
+//
+//   * OrganizationNotFoundException
+//   An operation received a valid organization identifier that either doesn't
+//   belong or exist in the system.
+//
+//   * OrganizationStateException
+//   The organization must have a valid state (Active or Synchronizing) to perform
+//   certain operations on the organization or its members.
+//
+//   * EntityNotFoundException
+//   The identifier supplied for the user, group, or resource does not exist in
+//   your organization.
+//
+//   * LimitExceededException
+//   The request exceeds the limit of the resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/StartMailboxExportJob
+func (c *WorkMail) StartMailboxExportJob(input *StartMailboxExportJobInput) (*StartMailboxExportJobOutput, error) {
+	req, out := c.StartMailboxExportJobRequest(input)
+	return out, req.Send()
+}
+
+// StartMailboxExportJobWithContext is the same as StartMailboxExportJob with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartMailboxExportJob for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkMail) StartMailboxExportJobWithContext(ctx aws.Context, input *StartMailboxExportJobInput, opts ...request.Option) (*StartMailboxExportJobOutput, error) {
+	req, out := c.StartMailboxExportJobRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opTagResource = "TagResource"
 
 // TagResourceRequest generates a "aws/request.Request" representing the
@@ -4928,6 +5357,87 @@ func (s *BookingOptions) SetAutoDeclineConflictingRequests(v bool) *BookingOptio
 func (s *BookingOptions) SetAutoDeclineRecurringRequests(v bool) *BookingOptions {
 	s.AutoDeclineRecurringRequests = &v
 	return s
+}
+
+type CancelMailboxExportJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// The idempotency token for the client request.
+	ClientToken *string `min:"1" type:"string" idempotencyToken:"true"`
+
+	// The job ID.
+	//
+	// JobId is a required field
+	JobId *string `min:"1" type:"string" required:"true"`
+
+	// The organization ID.
+	//
+	// OrganizationId is a required field
+	OrganizationId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CancelMailboxExportJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelMailboxExportJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CancelMailboxExportJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CancelMailboxExportJobInput"}
+	if s.ClientToken != nil && len(*s.ClientToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClientToken", 1))
+	}
+	if s.JobId == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobId"))
+	}
+	if s.JobId != nil && len(*s.JobId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("JobId", 1))
+	}
+	if s.OrganizationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OrganizationId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClientToken sets the ClientToken field's value.
+func (s *CancelMailboxExportJobInput) SetClientToken(v string) *CancelMailboxExportJobInput {
+	s.ClientToken = &v
+	return s
+}
+
+// SetJobId sets the JobId field's value.
+func (s *CancelMailboxExportJobInput) SetJobId(v string) *CancelMailboxExportJobInput {
+	s.JobId = &v
+	return s
+}
+
+// SetOrganizationId sets the OrganizationId field's value.
+func (s *CancelMailboxExportJobInput) SetOrganizationId(v string) *CancelMailboxExportJobInput {
+	s.OrganizationId = &v
+	return s
+}
+
+type CancelMailboxExportJobOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s CancelMailboxExportJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelMailboxExportJobOutput) GoString() string {
+	return s.String()
 }
 
 type CreateAliasInput struct {
@@ -6044,6 +6554,186 @@ func (s *DescribeGroupOutput) SetName(v string) *DescribeGroupOutput {
 
 // SetState sets the State field's value.
 func (s *DescribeGroupOutput) SetState(v string) *DescribeGroupOutput {
+	s.State = &v
+	return s
+}
+
+type DescribeMailboxExportJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// The mailbox export job ID.
+	//
+	// JobId is a required field
+	JobId *string `min:"1" type:"string" required:"true"`
+
+	// The organization ID.
+	//
+	// OrganizationId is a required field
+	OrganizationId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeMailboxExportJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeMailboxExportJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeMailboxExportJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeMailboxExportJobInput"}
+	if s.JobId == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobId"))
+	}
+	if s.JobId != nil && len(*s.JobId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("JobId", 1))
+	}
+	if s.OrganizationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OrganizationId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetJobId sets the JobId field's value.
+func (s *DescribeMailboxExportJobInput) SetJobId(v string) *DescribeMailboxExportJobInput {
+	s.JobId = &v
+	return s
+}
+
+// SetOrganizationId sets the OrganizationId field's value.
+func (s *DescribeMailboxExportJobInput) SetOrganizationId(v string) *DescribeMailboxExportJobInput {
+	s.OrganizationId = &v
+	return s
+}
+
+type DescribeMailboxExportJobOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The mailbox export job description.
+	Description *string `type:"string"`
+
+	// The mailbox export job end timestamp.
+	EndTime *time.Time `type:"timestamp"`
+
+	// The identifier of the user or resource associated with the mailbox.
+	EntityId *string `min:"12" type:"string"`
+
+	// Error information for failed mailbox export jobs.
+	ErrorInfo *string `min:"1" type:"string"`
+
+	// The estimated progress of the mailbox export job, in percentage points.
+	EstimatedProgress *int64 `type:"integer"`
+
+	// The Amazon Resource Name (ARN) of the symmetric AWS Key Management Service
+	// (AWS KMS) key that encrypts the exported mailbox content.
+	KmsKeyArn *string `min:"20" type:"string"`
+
+	// The ARN of the AWS Identity and Access Management (IAM) role that grants
+	// write permission to the Amazon Simple Storage Service (Amazon S3) bucket.
+	RoleArn *string `min:"20" type:"string"`
+
+	// The name of the S3 bucket.
+	S3BucketName *string `min:"1" type:"string"`
+
+	// The path to the S3 bucket and file that the mailbox export job is exporting
+	// to.
+	S3Path *string `min:"1" type:"string"`
+
+	// The S3 bucket prefix.
+	S3Prefix *string `min:"1" type:"string"`
+
+	// The mailbox export job start timestamp.
+	StartTime *time.Time `type:"timestamp"`
+
+	// The state of the mailbox export job.
+	State *string `type:"string" enum:"MailboxExportJobState"`
+}
+
+// String returns the string representation
+func (s DescribeMailboxExportJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeMailboxExportJobOutput) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *DescribeMailboxExportJobOutput) SetDescription(v string) *DescribeMailboxExportJobOutput {
+	s.Description = &v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *DescribeMailboxExportJobOutput) SetEndTime(v time.Time) *DescribeMailboxExportJobOutput {
+	s.EndTime = &v
+	return s
+}
+
+// SetEntityId sets the EntityId field's value.
+func (s *DescribeMailboxExportJobOutput) SetEntityId(v string) *DescribeMailboxExportJobOutput {
+	s.EntityId = &v
+	return s
+}
+
+// SetErrorInfo sets the ErrorInfo field's value.
+func (s *DescribeMailboxExportJobOutput) SetErrorInfo(v string) *DescribeMailboxExportJobOutput {
+	s.ErrorInfo = &v
+	return s
+}
+
+// SetEstimatedProgress sets the EstimatedProgress field's value.
+func (s *DescribeMailboxExportJobOutput) SetEstimatedProgress(v int64) *DescribeMailboxExportJobOutput {
+	s.EstimatedProgress = &v
+	return s
+}
+
+// SetKmsKeyArn sets the KmsKeyArn field's value.
+func (s *DescribeMailboxExportJobOutput) SetKmsKeyArn(v string) *DescribeMailboxExportJobOutput {
+	s.KmsKeyArn = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *DescribeMailboxExportJobOutput) SetRoleArn(v string) *DescribeMailboxExportJobOutput {
+	s.RoleArn = &v
+	return s
+}
+
+// SetS3BucketName sets the S3BucketName field's value.
+func (s *DescribeMailboxExportJobOutput) SetS3BucketName(v string) *DescribeMailboxExportJobOutput {
+	s.S3BucketName = &v
+	return s
+}
+
+// SetS3Path sets the S3Path field's value.
+func (s *DescribeMailboxExportJobOutput) SetS3Path(v string) *DescribeMailboxExportJobOutput {
+	s.S3Path = &v
+	return s
+}
+
+// SetS3Prefix sets the S3Prefix field's value.
+func (s *DescribeMailboxExportJobOutput) SetS3Prefix(v string) *DescribeMailboxExportJobOutput {
+	s.S3Prefix = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *DescribeMailboxExportJobOutput) SetStartTime(v time.Time) *DescribeMailboxExportJobOutput {
+	s.StartTime = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *DescribeMailboxExportJobOutput) SetState(v string) *DescribeMailboxExportJobOutput {
 	s.State = &v
 	return s
 }
@@ -8026,6 +8716,100 @@ func (s *ListGroupsOutput) SetNextToken(v string) *ListGroupsOutput {
 	return s
 }
 
+type ListMailboxExportJobsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of results to return in a single call.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// The token to use to retrieve the next page of results.
+	NextToken *string `min:"1" type:"string"`
+
+	// The organization ID.
+	//
+	// OrganizationId is a required field
+	OrganizationId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListMailboxExportJobsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListMailboxExportJobsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListMailboxExportJobsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListMailboxExportJobsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+	if s.OrganizationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OrganizationId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListMailboxExportJobsInput) SetMaxResults(v int64) *ListMailboxExportJobsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListMailboxExportJobsInput) SetNextToken(v string) *ListMailboxExportJobsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetOrganizationId sets the OrganizationId field's value.
+func (s *ListMailboxExportJobsInput) SetOrganizationId(v string) *ListMailboxExportJobsInput {
+	s.OrganizationId = &v
+	return s
+}
+
+type ListMailboxExportJobsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The mailbox export job details.
+	Jobs []*MailboxExportJob `type:"list"`
+
+	// The token to use to retrieve the next page of results.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListMailboxExportJobsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListMailboxExportJobsOutput) GoString() string {
+	return s.String()
+}
+
+// SetJobs sets the Jobs field's value.
+func (s *ListMailboxExportJobsOutput) SetJobs(v []*MailboxExportJob) *ListMailboxExportJobsOutput {
+	s.Jobs = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListMailboxExportJobsOutput) SetNextToken(v string) *ListMailboxExportJobsOutput {
+	s.NextToken = &v
+	return s
+}
+
 type ListMailboxPermissionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8708,6 +9492,104 @@ func (s *MailDomainStateException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+// The details of a mailbox export job, including the user or resource ID associated
+// with the mailbox and the S3 bucket that the mailbox contents are exported
+// to.
+type MailboxExportJob struct {
+	_ struct{} `type:"structure"`
+
+	// The mailbox export job description.
+	Description *string `type:"string"`
+
+	// The mailbox export job end timestamp.
+	EndTime *time.Time `type:"timestamp"`
+
+	// The identifier of the user or resource associated with the mailbox.
+	EntityId *string `min:"12" type:"string"`
+
+	// The estimated progress of the mailbox export job, in percentage points.
+	EstimatedProgress *int64 `type:"integer"`
+
+	// The identifier of the mailbox export job.
+	JobId *string `min:"1" type:"string"`
+
+	// The name of the S3 bucket.
+	S3BucketName *string `min:"1" type:"string"`
+
+	// The path to the S3 bucket and file that the mailbox export job exports to.
+	S3Path *string `min:"1" type:"string"`
+
+	// The mailbox export job start timestamp.
+	StartTime *time.Time `type:"timestamp"`
+
+	// The state of the mailbox export job.
+	State *string `type:"string" enum:"MailboxExportJobState"`
+}
+
+// String returns the string representation
+func (s MailboxExportJob) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MailboxExportJob) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *MailboxExportJob) SetDescription(v string) *MailboxExportJob {
+	s.Description = &v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *MailboxExportJob) SetEndTime(v time.Time) *MailboxExportJob {
+	s.EndTime = &v
+	return s
+}
+
+// SetEntityId sets the EntityId field's value.
+func (s *MailboxExportJob) SetEntityId(v string) *MailboxExportJob {
+	s.EntityId = &v
+	return s
+}
+
+// SetEstimatedProgress sets the EstimatedProgress field's value.
+func (s *MailboxExportJob) SetEstimatedProgress(v int64) *MailboxExportJob {
+	s.EstimatedProgress = &v
+	return s
+}
+
+// SetJobId sets the JobId field's value.
+func (s *MailboxExportJob) SetJobId(v string) *MailboxExportJob {
+	s.JobId = &v
+	return s
+}
+
+// SetS3BucketName sets the S3BucketName field's value.
+func (s *MailboxExportJob) SetS3BucketName(v string) *MailboxExportJob {
+	s.S3BucketName = &v
+	return s
+}
+
+// SetS3Path sets the S3Path field's value.
+func (s *MailboxExportJob) SetS3Path(v string) *MailboxExportJob {
+	s.S3Path = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *MailboxExportJob) SetStartTime(v time.Time) *MailboxExportJob {
+	s.StartTime = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *MailboxExportJob) SetState(v string) *MailboxExportJob {
+	s.State = &v
+	return s
+}
+
 // The representation of a user or group.
 type Member struct {
 	_ struct{} `type:"structure"`
@@ -9319,7 +10201,7 @@ type PutRetentionPolicyInput struct {
 	_ struct{} `type:"structure"`
 
 	// The retention policy description.
-	Description *string `type:"string"`
+	Description *string `type:"string" sensitive:"true"`
 
 	// The retention policy folder configurations.
 	//
@@ -9788,6 +10670,175 @@ func (s *ResourceNotFoundException) StatusCode() int {
 // RequestID returns the service's response RequestID for request.
 func (s *ResourceNotFoundException) RequestID() string {
 	return s.RespMetadata.RequestID
+}
+
+type StartMailboxExportJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// The idempotency token for the client request.
+	ClientToken *string `min:"1" type:"string" idempotencyToken:"true"`
+
+	// The mailbox export job description.
+	Description *string `type:"string"`
+
+	// The identifier of the user or resource associated with the mailbox.
+	//
+	// EntityId is a required field
+	EntityId *string `min:"12" type:"string" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the symmetric AWS Key Management Service
+	// (AWS KMS) key that encrypts the exported mailbox content.
+	//
+	// KmsKeyArn is a required field
+	KmsKeyArn *string `min:"20" type:"string" required:"true"`
+
+	// The identifier associated with the organization.
+	//
+	// OrganizationId is a required field
+	OrganizationId *string `type:"string" required:"true"`
+
+	// The ARN of the AWS Identity and Access Management (IAM) role that grants
+	// write permission to the S3 bucket.
+	//
+	// RoleArn is a required field
+	RoleArn *string `min:"20" type:"string" required:"true"`
+
+	// The name of the S3 bucket.
+	//
+	// S3BucketName is a required field
+	S3BucketName *string `min:"1" type:"string" required:"true"`
+
+	// The S3 bucket prefix.
+	//
+	// S3Prefix is a required field
+	S3Prefix *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StartMailboxExportJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartMailboxExportJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartMailboxExportJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartMailboxExportJobInput"}
+	if s.ClientToken != nil && len(*s.ClientToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClientToken", 1))
+	}
+	if s.EntityId == nil {
+		invalidParams.Add(request.NewErrParamRequired("EntityId"))
+	}
+	if s.EntityId != nil && len(*s.EntityId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("EntityId", 12))
+	}
+	if s.KmsKeyArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("KmsKeyArn"))
+	}
+	if s.KmsKeyArn != nil && len(*s.KmsKeyArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("KmsKeyArn", 20))
+	}
+	if s.OrganizationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OrganizationId"))
+	}
+	if s.RoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
+	}
+	if s.RoleArn != nil && len(*s.RoleArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("RoleArn", 20))
+	}
+	if s.S3BucketName == nil {
+		invalidParams.Add(request.NewErrParamRequired("S3BucketName"))
+	}
+	if s.S3BucketName != nil && len(*s.S3BucketName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("S3BucketName", 1))
+	}
+	if s.S3Prefix == nil {
+		invalidParams.Add(request.NewErrParamRequired("S3Prefix"))
+	}
+	if s.S3Prefix != nil && len(*s.S3Prefix) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("S3Prefix", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClientToken sets the ClientToken field's value.
+func (s *StartMailboxExportJobInput) SetClientToken(v string) *StartMailboxExportJobInput {
+	s.ClientToken = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *StartMailboxExportJobInput) SetDescription(v string) *StartMailboxExportJobInput {
+	s.Description = &v
+	return s
+}
+
+// SetEntityId sets the EntityId field's value.
+func (s *StartMailboxExportJobInput) SetEntityId(v string) *StartMailboxExportJobInput {
+	s.EntityId = &v
+	return s
+}
+
+// SetKmsKeyArn sets the KmsKeyArn field's value.
+func (s *StartMailboxExportJobInput) SetKmsKeyArn(v string) *StartMailboxExportJobInput {
+	s.KmsKeyArn = &v
+	return s
+}
+
+// SetOrganizationId sets the OrganizationId field's value.
+func (s *StartMailboxExportJobInput) SetOrganizationId(v string) *StartMailboxExportJobInput {
+	s.OrganizationId = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *StartMailboxExportJobInput) SetRoleArn(v string) *StartMailboxExportJobInput {
+	s.RoleArn = &v
+	return s
+}
+
+// SetS3BucketName sets the S3BucketName field's value.
+func (s *StartMailboxExportJobInput) SetS3BucketName(v string) *StartMailboxExportJobInput {
+	s.S3BucketName = &v
+	return s
+}
+
+// SetS3Prefix sets the S3Prefix field's value.
+func (s *StartMailboxExportJobInput) SetS3Prefix(v string) *StartMailboxExportJobInput {
+	s.S3Prefix = &v
+	return s
+}
+
+type StartMailboxExportJobOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The job ID.
+	JobId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s StartMailboxExportJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartMailboxExportJobOutput) GoString() string {
+	return s.String()
+}
+
+// SetJobId sets the JobId field's value.
+func (s *StartMailboxExportJobOutput) SetJobId(v string) *StartMailboxExportJobOutput {
+	s.JobId = &v
+	return s
 }
 
 // Describes a tag applied to a resource.
@@ -10515,6 +11566,30 @@ func FolderName_Values() []string {
 		FolderNameSentItems,
 		FolderNameDrafts,
 		FolderNameJunkEmail,
+	}
+}
+
+const (
+	// MailboxExportJobStateRunning is a MailboxExportJobState enum value
+	MailboxExportJobStateRunning = "RUNNING"
+
+	// MailboxExportJobStateCompleted is a MailboxExportJobState enum value
+	MailboxExportJobStateCompleted = "COMPLETED"
+
+	// MailboxExportJobStateFailed is a MailboxExportJobState enum value
+	MailboxExportJobStateFailed = "FAILED"
+
+	// MailboxExportJobStateCancelled is a MailboxExportJobState enum value
+	MailboxExportJobStateCancelled = "CANCELLED"
+)
+
+// MailboxExportJobState_Values returns all elements of the MailboxExportJobState enum
+func MailboxExportJobState_Values() []string {
+	return []string{
+		MailboxExportJobStateRunning,
+		MailboxExportJobStateCompleted,
+		MailboxExportJobStateFailed,
+		MailboxExportJobStateCancelled,
 	}
 }
 

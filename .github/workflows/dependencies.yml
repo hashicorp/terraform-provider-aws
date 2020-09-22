@@ -5,19 +5,35 @@ on:
     branches:
       - master
       - 'release/**'
-  pull_request:
-    paths:
-      - awsproviderlint/** # go/analysis/analysistest requires vendoring
-      - go.mod
-      - go.sum
-      - vendor/**
-
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - synchronize
+     
 env:
   GO_VERSION: "1.14"
 
 jobs:
+  changes:
+    if: github.event_name == 'pull_request_target' && !contains(fromJSON('["bflad", "breathingdust", "DrFaust92", "ewbankkit", "gdavison", "maryelizbeth", "YakDriver", "renovate[bot]"]'), github.actor)
+    name: Changed Files Filter
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.filter.outputs.changed }}
+    steps:
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          changed:
+            - awsproviderlint/**
+            - go.mod
+            - go.sum
+            - vendor/**
   comment:
-    if: github.event_name == 'pull_request' && !contains(fromJSON('["anGie44", "bflad", "breathingdust", "DrFaust92", "ewbankkit", "gdavison", "maryelizbeth", "YakDriver", "renovate[bot]"]'), github.actor)
+    needs: changes
+    if: ${{ needs.changes.outputs.changed == 'true' }}
     name: Comment
     runs-on: ubuntu-latest
     steps:

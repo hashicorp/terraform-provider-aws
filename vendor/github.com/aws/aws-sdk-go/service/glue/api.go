@@ -1081,6 +1081,97 @@ func (c *Glue) BatchStopJobRunWithContext(ctx aws.Context, input *BatchStopJobRu
 	return out, req.Send()
 }
 
+const opBatchUpdatePartition = "BatchUpdatePartition"
+
+// BatchUpdatePartitionRequest generates a "aws/request.Request" representing the
+// client's request for the BatchUpdatePartition operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchUpdatePartition for more information on using the BatchUpdatePartition
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the BatchUpdatePartitionRequest method.
+//    req, resp := client.BatchUpdatePartitionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchUpdatePartition
+func (c *Glue) BatchUpdatePartitionRequest(input *BatchUpdatePartitionInput) (req *request.Request, output *BatchUpdatePartitionOutput) {
+	op := &request.Operation{
+		Name:       opBatchUpdatePartition,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &BatchUpdatePartitionInput{}
+	}
+
+	output = &BatchUpdatePartitionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchUpdatePartition API operation for AWS Glue.
+//
+// Updates one or more partitions in a batch operation.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation BatchUpdatePartition for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidInputException
+//   The input provided was not valid.
+//
+//   * EntityNotFoundException
+//   A specified entity does not exist
+//
+//   * OperationTimeoutException
+//   The operation timed out.
+//
+//   * InternalServiceException
+//   An internal service error occurred.
+//
+//   * EncryptionException
+//   An encryption operation failed.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/BatchUpdatePartition
+func (c *Glue) BatchUpdatePartition(input *BatchUpdatePartitionInput) (*BatchUpdatePartitionOutput, error) {
+	req, out := c.BatchUpdatePartitionRequest(input)
+	return out, req.Send()
+}
+
+// BatchUpdatePartitionWithContext is the same as BatchUpdatePartition with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchUpdatePartition for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) BatchUpdatePartitionWithContext(ctx aws.Context, input *BatchUpdatePartitionInput, opts ...request.Option) (*BatchUpdatePartitionOutput, error) {
+	req, out := c.BatchUpdatePartitionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCancelMLTaskRun = "CancelMLTaskRun"
 
 // CancelMLTaskRunRequest generates a "aws/request.Request" representing the
@@ -15052,6 +15143,219 @@ func (s *BatchStopJobRunSuccessfulSubmission) SetJobRunId(v string) *BatchStopJo
 	return s
 }
 
+// Contains information about a batch update partition error.
+type BatchUpdatePartitionFailureEntry struct {
+	_ struct{} `type:"structure"`
+
+	// The details about the batch update partition error.
+	ErrorDetail *ErrorDetail `type:"structure"`
+
+	// A list of values defining the partitions.
+	PartitionValueList []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s BatchUpdatePartitionFailureEntry) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchUpdatePartitionFailureEntry) GoString() string {
+	return s.String()
+}
+
+// SetErrorDetail sets the ErrorDetail field's value.
+func (s *BatchUpdatePartitionFailureEntry) SetErrorDetail(v *ErrorDetail) *BatchUpdatePartitionFailureEntry {
+	s.ErrorDetail = v
+	return s
+}
+
+// SetPartitionValueList sets the PartitionValueList field's value.
+func (s *BatchUpdatePartitionFailureEntry) SetPartitionValueList(v []*string) *BatchUpdatePartitionFailureEntry {
+	s.PartitionValueList = v
+	return s
+}
+
+type BatchUpdatePartitionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the catalog in which the partition is to be updated. Currently,
+	// this should be the AWS account ID.
+	CatalogId *string `min:"1" type:"string"`
+
+	// The name of the metadata database in which the partition is to be updated.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// A list of up to 100 BatchUpdatePartitionRequestEntry objects to update.
+	//
+	// Entries is a required field
+	Entries []*BatchUpdatePartitionRequestEntry `min:"1" type:"list" required:"true"`
+
+	// The name of the metadata table in which the partition is to be updated.
+	//
+	// TableName is a required field
+	TableName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchUpdatePartitionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchUpdatePartitionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchUpdatePartitionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchUpdatePartitionInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.Entries == nil {
+		invalidParams.Add(request.NewErrParamRequired("Entries"))
+	}
+	if s.Entries != nil && len(s.Entries) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Entries", 1))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 1))
+	}
+	if s.Entries != nil {
+		for i, v := range s.Entries {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Entries", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *BatchUpdatePartitionInput) SetCatalogId(v string) *BatchUpdatePartitionInput {
+	s.CatalogId = &v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *BatchUpdatePartitionInput) SetDatabaseName(v string) *BatchUpdatePartitionInput {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetEntries sets the Entries field's value.
+func (s *BatchUpdatePartitionInput) SetEntries(v []*BatchUpdatePartitionRequestEntry) *BatchUpdatePartitionInput {
+	s.Entries = v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *BatchUpdatePartitionInput) SetTableName(v string) *BatchUpdatePartitionInput {
+	s.TableName = &v
+	return s
+}
+
+type BatchUpdatePartitionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The errors encountered when trying to update the requested partitions. A
+	// list of BatchUpdatePartitionFailureEntry objects.
+	Errors []*BatchUpdatePartitionFailureEntry `type:"list"`
+}
+
+// String returns the string representation
+func (s BatchUpdatePartitionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchUpdatePartitionOutput) GoString() string {
+	return s.String()
+}
+
+// SetErrors sets the Errors field's value.
+func (s *BatchUpdatePartitionOutput) SetErrors(v []*BatchUpdatePartitionFailureEntry) *BatchUpdatePartitionOutput {
+	s.Errors = v
+	return s
+}
+
+// A structure that contains the values and structure used to update a partition.
+type BatchUpdatePartitionRequestEntry struct {
+	_ struct{} `type:"structure"`
+
+	// The structure used to update a partition.
+	//
+	// PartitionInput is a required field
+	PartitionInput *PartitionInput `type:"structure" required:"true"`
+
+	// A list of values defining the partitions.
+	//
+	// PartitionValueList is a required field
+	PartitionValueList []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchUpdatePartitionRequestEntry) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchUpdatePartitionRequestEntry) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchUpdatePartitionRequestEntry) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchUpdatePartitionRequestEntry"}
+	if s.PartitionInput == nil {
+		invalidParams.Add(request.NewErrParamRequired("PartitionInput"))
+	}
+	if s.PartitionValueList == nil {
+		invalidParams.Add(request.NewErrParamRequired("PartitionValueList"))
+	}
+	if s.PartitionInput != nil {
+		if err := s.PartitionInput.Validate(); err != nil {
+			invalidParams.AddNested("PartitionInput", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPartitionInput sets the PartitionInput field's value.
+func (s *BatchUpdatePartitionRequestEntry) SetPartitionInput(v *PartitionInput) *BatchUpdatePartitionRequestEntry {
+	s.PartitionInput = v
+	return s
+}
+
+// SetPartitionValueList sets the PartitionValueList field's value.
+func (s *BatchUpdatePartitionRequestEntry) SetPartitionValueList(v []*string) *BatchUpdatePartitionRequestEntry {
+	s.PartitionValueList = v
+	return s
+}
+
 // Defines a binary column statistics data.
 type BinaryColumnStatisticsData struct {
 	_ struct{} `type:"structure"`
@@ -16548,6 +16852,16 @@ type Connection struct {
 	//    * KAFKA_BOOTSTRAP_SERVERS - A comma-separated list of host and port pairs
 	//    that are the addresses of the Apache Kafka brokers in a Kafka cluster
 	//    to which a Kafka client will connect to and bootstrap itself.
+	//
+	//    * KAFKA_SSL_ENABLED - Whether to enable or disable SSL on an Apache Kafka
+	//    connection. Default value is "true".
+	//
+	//    * KAFKA_CUSTOM_CERT - The Amazon S3 URL for the private CA cert file (.pem
+	//    format). The default is an empty string.
+	//
+	//    * KAFKA_SKIP_CUSTOM_CERT_VALIDATION - Whether to skip the validation of
+	//    the CA cert file or not. AWS Glue validates for three algorithms: SHA256withRSA,
+	//    SHA384withRSA and SHA512withRSA. Default value is "false".
 	ConnectionProperties map[string]*string `type:"map"`
 
 	// The type of the connection. Currently, SFTP is not supported.
@@ -16657,6 +16971,9 @@ type ConnectionInput struct {
 	//    * KAFKA - Designates a connection to an Apache Kafka streaming platform.
 	//
 	//    * MONGODB - Designates a connection to a MongoDB document database.
+	//
+	//    * NETWORK - Designates a network connection to a data source within an
+	//    Amazon Virtual Private Cloud environment (Amazon VPC).
 	//
 	// SFTP is not supported.
 	//
