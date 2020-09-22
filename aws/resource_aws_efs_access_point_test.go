@@ -36,7 +36,6 @@ func testSweepEfsAccessPoints(region string) error {
 			id := aws.StringValue(filesystem.FileSystemId)
 			log.Printf("[INFO] Deleting access points for EFS File System: %s", id)
 
-			var errors error
 			input := &efs.DescribeAccessPointsInput{
 				FileSystemId: filesystem.FileSystemId,
 			}

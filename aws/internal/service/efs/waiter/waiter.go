@@ -1,9 +1,9 @@
 package waiter
 
 import (
-	"github.com/aws/aws-sdk-go/service/efs"
 	"time"
 
+	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
