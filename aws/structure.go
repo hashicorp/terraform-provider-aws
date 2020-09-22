@@ -4247,6 +4247,10 @@ func expandDynamoDbProjection(data map[string]interface{}) *dynamodb.Projection 
 		ProjectionType: aws.String(data["projection_type"].(string)),
 	}
 
+	if v, ok := data["non_key_attributes"].([]interface{}); ok && len(v) > 0 {
+		projection.NonKeyAttributes = expandStringList(v)
+	}
+
 	if v, ok := data["non_key_attributes"].(*schema.Set); ok && v.Len() > 0 {
 		projection.NonKeyAttributes = expandStringList(v.List())
 	}

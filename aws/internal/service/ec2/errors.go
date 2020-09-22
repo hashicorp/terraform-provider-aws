@@ -28,3 +28,8 @@ const (
 	InvalidSecurityGroupIDNotFound = "InvalidSecurityGroupID.NotFound"
 	InvalidGroupNotFound           = "InvalidGroup.NotFound"
 )
+
+const (
+	InvalidVpnGatewayAttachmentNotFound = "InvalidVpnGatewayAttachment.NotFound"
+	InvalidVpnGatewayIDNotFound         = "InvalidVpnGatewayID.NotFound"
+)

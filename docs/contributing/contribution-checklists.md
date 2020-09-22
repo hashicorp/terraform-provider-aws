@@ -535,6 +535,7 @@ into Terraform.
     label_map = {
       # ... other services ...
       "service/quicksight" = [
+        "aws/internal/service/quicksight/**/*",
         "**/*_quicksight_*",
         "**/quicksight_*",
       ],

@@ -451,7 +451,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_db_subnet_group" "test" {
   name       = "%[1]s"
-  subnet_ids = [aws_subnet.test.0.id, aws_subnet.test.1.id]
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_rds_cluster" "test" {
@@ -483,9 +483,9 @@ resource "aws_glue_connection" "test" {
   name = "%[1]s"
 
   physical_connection_requirements {
-    availability_zone      = aws_subnet.test.0.availability_zone
+    availability_zone      = aws_subnet.test[0].availability_zone
     security_group_id_list = [aws_security_group.test.id]
-    subnet_id              = aws_subnet.test.0.id
+    subnet_id              = aws_subnet.test[0].id
   }
 }
 `, rName)

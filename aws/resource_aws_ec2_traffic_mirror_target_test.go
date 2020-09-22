@@ -233,7 +233,7 @@ resource "aws_lb" "lb" {
   load_balancer_type = "network"
   subnets            = [aws_subnet.sub1.id, aws_subnet.sub2.id]
 
-  enable_deletion_protection  = false
+  enable_deletion_protection = false
 
   tags = {
     Name        = %[1]q
@@ -254,12 +254,12 @@ data "aws_ami" "amzn-linux" {
   most_recent = true
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn2-ami-hvm-2.0*"]
   }
 
   filter {
-    name = "architecture"
+    name   = "architecture"
     values = ["x86_64"]
   }
 
@@ -291,7 +291,7 @@ resource "aws_lb" "lb" {
   load_balancer_type = "network"
   subnets            = [aws_subnet.sub1.id, aws_subnet.sub2.id]
 
-  enable_deletion_protection  = false
+  enable_deletion_protection = false
 
   tags = {
     Name        = %[1]q
@@ -318,7 +318,7 @@ resource "aws_lb" "lb" {
   load_balancer_type = "network"
   subnets            = [aws_subnet.sub1.id, aws_subnet.sub2.id]
 
-  enable_deletion_protection  = false
+  enable_deletion_protection = false
 
   tags = {
     Name        = %[1]q

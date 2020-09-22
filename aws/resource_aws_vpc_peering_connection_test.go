@@ -667,6 +667,7 @@ func testAccVpcPeeringConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = %[1]q
   }
@@ -674,14 +675,15 @@ resource "aws_vpc" "test" {
 
 resource "aws_vpc" "peer" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = %[1]q
   }
 }
 
 resource "aws_vpc_peering_connection" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
+  vpc_id      = aws_vpc.test.id
+  peer_vpc_id = aws_vpc.peer.id
   auto_accept = true
 }
 `, rName)
@@ -691,6 +693,7 @@ func testAccVpcPeeringTagsConfig1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = %[1]q
   }
@@ -719,6 +722,7 @@ func testAccVpcPeeringTagsConfig2(rName, tagKey1, tagValue1, tagKey2, tagValue2 
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = %[1]q
   }
@@ -726,6 +730,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_vpc" "peer" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = %[1]q
   }
@@ -748,23 +753,26 @@ func testAccVpcPeeringConfig_options(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = %[1]q
   }
 }
 
 resource "aws_vpc" "peer" {
-  cidr_block = "10.1.0.0/16"
+  cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = %[1]q
   }
 }
 
 resource "aws_vpc_peering_connection" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
+  vpc_id      = aws_vpc.test.id
+  peer_vpc_id = aws_vpc.peer.id
   auto_accept = true
+
   tags = {
     Name = %[1]q
   }
@@ -785,6 +793,7 @@ func testAccVpcPeeringConfig_failedState(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = %[1]q
   }
@@ -792,14 +801,16 @@ resource "aws_vpc" "test" {
 
 resource "aws_vpc" "peer" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = %[1]q
   }
 }
 
 resource "aws_vpc_peering_connection" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
+  vpc_id      = aws_vpc.test.id
+  peer_vpc_id = aws_vpc.peer.id
+
   tags = {
     Name = %[1]q
   }
@@ -811,6 +822,7 @@ func testAccVpcPeeringConfig_region_autoAccept(rName string, autoAccept bool) st
 	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = %[1]q
   }
@@ -820,16 +832,18 @@ resource "aws_vpc" "peer" {
   provider = "awsalternate"
 
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = %[1]q
   }
 }
 
 resource "aws_vpc_peering_connection" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
+  vpc_id      = aws_vpc.test.id
+  peer_vpc_id = aws_vpc.peer.id
   peer_region = %[3]q
   auto_accept = %[2]t
+
   tags = {
     Name = %[1]q
   }
@@ -841,6 +855,7 @@ func testAccVpcPeeringConfig_autoAccept(rName string, autoAccept bool) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = %[1]q
   }
@@ -848,15 +863,17 @@ resource "aws_vpc" "test" {
 
 resource "aws_vpc" "peer" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = %[1]q
   }
 }
 
 resource "aws_vpc_peering_connection" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
+  vpc_id      = aws_vpc.test.id
+  peer_vpc_id = aws_vpc.peer.id
   auto_accept = %t
+
   tags = {
     Name = %[1]q
   }
@@ -868,23 +885,26 @@ func testAccVpcPeeringConfig_options_noAutoAccept(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = %[1]q
   }
 }
 
 resource "aws_vpc" "peer" {
-  cidr_block = "10.1.0.0/16"
+  cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = %[1]q
   }
 }
 
 resource "aws_vpc_peering_connection" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
+  vpc_id      = aws_vpc.test.id
+  peer_vpc_id = aws_vpc.peer.id
   auto_accept = false
+
   tags = {
     Name = %[1]q
   }

@@ -591,6 +591,7 @@ EOF
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
+
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
