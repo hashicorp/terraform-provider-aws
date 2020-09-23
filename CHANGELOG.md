@@ -12,6 +12,7 @@ ENHANCEMENTS
 * resource/aws_glue_job - add `non_overridable_arguments` argument [GH-14793]
 * data-source/aws_lb: Add `customer_owned_ipv4_pool` and `subnet_mapping` `outpost_id` attributes [GH-15170]
 * resource/aws_fsx_lustre_file_system: Add `kms_key_id` argument [GH-15057]
+* resource/aws_fsx_lustre_file_system: Add `mount_name` argument [GH-14313]
 * resource/aws_lb: Add `customer_owned_ipv4_pool` argument and `subnet_mapping` `outpost_id` attribute [GH-15170]
 * resource/aws_rds_cluster: Add `allow_major_version_upgrade` argument [GH-14709]
 * resource/aws_storagegateway_smb_file_share: Add `admin_user_list` argument [GH-12196]
