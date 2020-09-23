@@ -38,7 +38,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          issue-number: ${{ github.event.pull_request_target.number }}
+          issue-number: ${{ github.event.pull_request.number }}
           body: |-
             Thank you for your contribution! :rocket:
 
