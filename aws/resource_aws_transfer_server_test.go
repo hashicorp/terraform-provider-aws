@@ -132,8 +132,6 @@ func TestAccAWSTransferServer_Vpc(t *testing.T) {
 						resourceName, "endpoint_details.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(
 						resourceName, "endpoint_details.0.address_allocation_ids.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "vpce_security_group_ids.#", "1"),
 				),
 			},
 			{
@@ -150,8 +148,6 @@ func TestAccAWSTransferServer_Vpc(t *testing.T) {
 						resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(
 						resourceName, "endpoint_details.0.address_allocation_ids.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "vpce_security_group_ids.#", "0"),
 				),
 			},
 		},
@@ -769,10 +765,6 @@ resource "aws_transfer_server" "test" {
 		address_allocation_ids = ["${aws_eip.testa.id}"]
 		subnet_ids = ["${aws_subnet.test.id}"]
 	}
-
-	vpce_security_group_ids = [
-		aws_security_group.test.id
-	]
 }
 `
 
