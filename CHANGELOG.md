@@ -19,6 +19,7 @@ ENHANCEMENTS
 * resource/aws_appmesh_virtual_node: Add `mesh_owner` argument and `resource_owner` attribute [GH-14349]
 * resource/aws_appmesh_virtual_router: Add `mesh_owner` argument and `resource_owner` attribute [GH-14349]
 * resource/aws_appmesh_virtual_service: Add `mesh_owner` argument and `resource_owner` attribute [GH-14349]
+* resource_aws_glue_connection - support `NETWORK` connection type [GH-14818]
 * resource/aws_glue_job - add `non_overridable_arguments` argument [GH-14793]
 * resource_aws_glue_workflow - add `tags` argument [GH-14910]
 * resource_aws_glue_workflow - add `arn` attribute [GH-14910]
