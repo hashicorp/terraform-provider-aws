@@ -9,6 +9,8 @@ FEATURES
 ENHANCEMENTS
 
 * resource/aws_apigatewayv2_api: Add `disable_execute_api_endpoint` attribute [GH-15250]
+* resource/aws_apigatewayv2_authorizer: Add `authorizer_payload_format_version`, `authorizer_result_ttl_in_seconds` and `enable_simple_responses` attribute to support Lambda authorizers for HTTP APIs [GH-15232]
+* resource/aws_apigatewayv2_authorizer: Change `identity_sources` to an optional attribute [GH-15232]
 * resource/aws_glue_job - add `non_overridable_arguments` argument [GH-14793]
 * data-source/aws_lb: Add `customer_owned_ipv4_pool` and `subnet_mapping` `outpost_id` attributes [GH-15170]
 * resource/aws_fsx_lustre_file_system - add support for backup retention [GH-14446]
