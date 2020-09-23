@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -43,9 +43,12 @@ func resourceAwsIamUser() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateAwsIamUserName,
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringMatch(
+					regexp.MustCompile(`^[0-9A-Za-z=,.@\-_+]+$`),
+					"must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs",
+				),
 			},
 			"path": {
 				Type:     schema.TypeString,
@@ -78,7 +81,7 @@ func resourceAwsIamUserCreate(d *schema.ResourceData, meta interface{}) error {
 		UserName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("permissions_boundary"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("permissions_boundary"); ok {
 		request.PermissionsBoundary = aws.String(v.(string))
 	}
 
@@ -139,7 +142,7 @@ func resourceAwsIamUserRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
 
-	if d.HasChange("name") || d.HasChange("path") {
+	if d.HasChanges("name", "path") {
 		on, nn := d.GetChange("name")
 		_, np := d.GetChange("path")
 
@@ -247,16 +250,6 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-}
-
-func validateAwsIamUserName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !regexp.MustCompile(`^[0-9A-Za-z=,.@\-_+]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"only alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs allowed in %q: %q",
-			k, value))
-	}
-	return
 }
 
 func deleteAwsIamUserGroupMemberships(conn *iam.IAM, username string) error {

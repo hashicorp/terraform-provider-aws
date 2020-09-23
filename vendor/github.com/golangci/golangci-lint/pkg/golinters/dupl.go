@@ -34,7 +34,7 @@ func NewDupl() *goanalysis.Linter {
 		analyzer.Run = func(pass *analysis.Pass) (interface{}, error) {
 			var fileNames []string
 			for _, f := range pass.Files {
-				pos := pass.Fset.Position(f.Pos())
+				pos := pass.Fset.PositionFor(f.Pos(), false)
 				fileNames = append(fileNames, pos.Filename)
 			}
 
@@ -57,7 +57,7 @@ func NewDupl() *goanalysis.Linter {
 				text := fmt.Sprintf("%d-%d lines are duplicate of %s",
 					i.From.LineStart(), i.From.LineEnd(),
 					formatCode(dupl, lintCtx.Cfg))
-				res = append(res, goanalysis.NewIssue(&result.Issue{ //nolint:scopelint
+				res = append(res, goanalysis.NewIssue(&result.Issue{
 					Pos: token.Position{
 						Filename: i.From.Filename(),
 						Line:     i.From.LineStart(),

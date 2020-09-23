@@ -12,10 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -43,6 +43,7 @@ func resourceAwsElasticBeanstalkOptionSetting() *schema.Resource {
 }
 
 func resourceAwsElasticBeanstalkEnvironment() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsElasticBeanstalkEnvironmentCreate,
 		Read:   resourceAwsElasticBeanstalkEnvironmentRead,
@@ -778,8 +779,11 @@ func deleteElasticBeanstalkEnvironment(conn *elasticbeanstalk.ElasticBeanstalk, 
 
 func waitForElasticBeanstalkEnvironmentReady(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeout, pollInterval time.Duration, startTime time.Time) error {
 	stateConf := &resource.StateChangeConf{
-		Pending:      []string{"Launching", "Updating"},
-		Target:       []string{"Ready"},
+		Pending: []string{
+			elasticbeanstalk.EnvironmentStatusLaunching,
+			elasticbeanstalk.EnvironmentStatusUpdating,
+		},
+		Target:       []string{elasticbeanstalk.EnvironmentStatusReady},
 		Refresh:      elasticBeanstalkEnvironmentStateRefreshFunc(conn, id, startTime),
 		Timeout:      timeout,
 		Delay:        10 * time.Second,
@@ -793,8 +797,15 @@ func waitForElasticBeanstalkEnvironmentReady(conn *elasticbeanstalk.ElasticBeans
 
 func waitForElasticBeanstalkEnvironmentReadyIgnoreErrorEvents(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeout, pollInterval time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending:      []string{"Launching", "Updating"},
-		Target:       []string{"Ready"},
+		Pending: []string{
+			elasticbeanstalk.EnvironmentStatusLaunching,
+			elasticbeanstalk.EnvironmentStatusTerminating,
+			elasticbeanstalk.EnvironmentStatusUpdating,
+		},
+		Target: []string{
+			elasticbeanstalk.EnvironmentStatusReady,
+			elasticbeanstalk.EnvironmentStatusTerminated,
+		},
 		Refresh:      elasticBeanstalkEnvironmentIgnoreErrorEventsStateRefreshFunc(conn, id),
 		Timeout:      timeout,
 		Delay:        10 * time.Second,

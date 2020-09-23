@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/inspector"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAWSInspectorResourceGroup() *schema.Resource {
@@ -20,6 +20,7 @@ func resourceAWSInspectorResourceGroup() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 				Type:     schema.TypeMap,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"arn": {
 				Type:     schema.TypeString,

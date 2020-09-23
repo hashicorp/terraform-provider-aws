@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -50,6 +50,7 @@ func resourceAwsS3BucketAnalyticsConfiguration() *schema.Resource {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							AtLeastOneOf: filterAtLeastOneOfKeys,
+							Elem:         &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},

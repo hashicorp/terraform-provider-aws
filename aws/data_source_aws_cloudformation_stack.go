@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -46,10 +46,12 @@ func dataSourceAwsCloudFormationStack() *schema.Resource {
 			"parameters": {
 				Type:     schema.TypeMap,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"outputs": {
 				Type:     schema.TypeMap,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"timeout_in_minutes": {
 				Type:     schema.TypeInt,
@@ -111,7 +113,7 @@ func dataSourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	template, err := normalizeCloudFormationTemplate(*tOut.TemplateBody)
+	template, err := normalizeJsonOrYamlString(*tOut.TemplateBody)
 	if err != nil {
 		return fmt.Errorf("template body contains an invalid JSON or YAML: %s", err)
 	}

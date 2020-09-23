@@ -5242,7 +5242,7 @@ func (s *CreateBotVersionInput) SetName(v string) *CreateBotVersionInput {
 type CreateBotVersionOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The message that Amazon Lex uses to abort a conversation. For more information,
+	// The message that Amazon Lex uses to cancel a conversation. For more information,
 	// see PutBot.
 	AbortStatement *Statement `locationName:"abortStatement" type:"structure"`
 
@@ -5287,6 +5287,10 @@ type CreateBotVersionOutput struct {
 	// Indicates whether utterances entered by the user should be sent to Amazon
 	// Comprehend for sentiment analysis.
 	DetectSentiment *bool `locationName:"detectSentiment" type:"boolean"`
+
+	// Indicates whether the bot uses accuracy improvements. true indicates that
+	// the bot is using the imoprovements, otherwise, false.
+	EnableModelImprovements *bool `locationName:"enableModelImprovements" type:"boolean"`
 
 	// If status is FAILED, Amazon Lex provides the reason that it failed to build
 	// the bot.
@@ -5371,6 +5375,12 @@ func (s *CreateBotVersionOutput) SetDescription(v string) *CreateBotVersionOutpu
 // SetDetectSentiment sets the DetectSentiment field's value.
 func (s *CreateBotVersionOutput) SetDetectSentiment(v bool) *CreateBotVersionOutput {
 	s.DetectSentiment = &v
+	return s
+}
+
+// SetEnableModelImprovements sets the EnableModelImprovements field's value.
+func (s *CreateBotVersionOutput) SetEnableModelImprovements(v bool) *CreateBotVersionOutput {
+	s.EnableModelImprovements = &v
 	return s
 }
 
@@ -5513,6 +5523,10 @@ type CreateIntentVersionOutput struct {
 	// Describes how the intent is fulfilled.
 	FulfillmentActivity *FulfillmentActivity `locationName:"fulfillmentActivity" type:"structure"`
 
+	// Configuration information, if any, for connectin an Amazon Kendra index with
+	// the AMAZON.KendraSearchIntent intent.
+	KendraConfiguration *KendraConfiguration `locationName:"kendraConfiguration" type:"structure"`
+
 	// The date that the intent was updated.
 	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
@@ -5592,6 +5606,12 @@ func (s *CreateIntentVersionOutput) SetFollowUpPrompt(v *FollowUpPrompt) *Create
 // SetFulfillmentActivity sets the FulfillmentActivity field's value.
 func (s *CreateIntentVersionOutput) SetFulfillmentActivity(v *FulfillmentActivity) *CreateIntentVersionOutput {
 	s.FulfillmentActivity = v
+	return s
+}
+
+// SetKendraConfiguration sets the KendraConfiguration field's value.
+func (s *CreateIntentVersionOutput) SetKendraConfiguration(v *KendraConfiguration) *CreateIntentVersionOutput {
+	s.KendraConfiguration = v
 	return s
 }
 
@@ -7304,6 +7324,10 @@ type GetBotOutput struct {
 	// sentiment analysis.
 	DetectSentiment *bool `locationName:"detectSentiment" type:"boolean"`
 
+	// Indicates whether the bot uses accuracy improvements. true indicates that
+	// the bot is using the imoprovements, otherwise, false.
+	EnableModelImprovements *bool `locationName:"enableModelImprovements" type:"boolean"`
+
 	// If status is FAILED, Amazon Lex explains why it failed to build the bot.
 	FailureReason *string `locationName:"failureReason" type:"string"`
 
@@ -7323,6 +7347,15 @@ type GetBotOutput struct {
 
 	// The name of the bot.
 	Name *string `locationName:"name" min:"2" type:"string"`
+
+	// The score that determines where Amazon Lex inserts the AMAZON.FallbackIntent,
+	// AMAZON.KendraSearchIntent, or both when returning alternative intents in
+	// a PostContent (https://docs.aws.amazon.com/lex/latest/dg/API_runtime_PostContent.html)
+	// or PostText (https://docs.aws.amazon.com/lex/latest/dg/API_runtime_PostText.html)
+	// response. AMAZON.FallbackIntent is inserted if the confidence score for all
+	// intents is below this value. AMAZON.KendraSearchIntent is only inserted if
+	// it is configured for the bot.
+	NluIntentConfidenceThreshold *float64 `locationName:"nluIntentConfidenceThreshold" type:"double"`
 
 	// The status of the bot.
 	//
@@ -7399,6 +7432,12 @@ func (s *GetBotOutput) SetDetectSentiment(v bool) *GetBotOutput {
 	return s
 }
 
+// SetEnableModelImprovements sets the EnableModelImprovements field's value.
+func (s *GetBotOutput) SetEnableModelImprovements(v bool) *GetBotOutput {
+	s.EnableModelImprovements = &v
+	return s
+}
+
 // SetFailureReason sets the FailureReason field's value.
 func (s *GetBotOutput) SetFailureReason(v string) *GetBotOutput {
 	s.FailureReason = &v
@@ -7432,6 +7471,12 @@ func (s *GetBotOutput) SetLocale(v string) *GetBotOutput {
 // SetName sets the Name field's value.
 func (s *GetBotOutput) SetName(v string) *GetBotOutput {
 	s.Name = &v
+	return s
+}
+
+// SetNluIntentConfidenceThreshold sets the NluIntentConfidenceThreshold field's value.
+func (s *GetBotOutput) SetNluIntentConfidenceThreshold(v float64) *GetBotOutput {
+	s.NluIntentConfidenceThreshold = &v
 	return s
 }
 
@@ -8325,6 +8370,10 @@ type GetIntentOutput struct {
 	// Describes how the intent is fulfilled. For more information, see PutIntent.
 	FulfillmentActivity *FulfillmentActivity `locationName:"fulfillmentActivity" type:"structure"`
 
+	// Configuration information, if any, to connect to an Amazon Kendra index with
+	// the AMAZON.KendraSearchIntent intent.
+	KendraConfiguration *KendraConfiguration `locationName:"kendraConfiguration" type:"structure"`
+
 	// The date that the intent was updated. When you create a resource, the creation
 	// date and the last updated date are the same.
 	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
@@ -8404,6 +8453,12 @@ func (s *GetIntentOutput) SetFollowUpPrompt(v *FollowUpPrompt) *GetIntentOutput 
 // SetFulfillmentActivity sets the FulfillmentActivity field's value.
 func (s *GetIntentOutput) SetFulfillmentActivity(v *FulfillmentActivity) *GetIntentOutput {
 	s.FulfillmentActivity = v
+	return s
+}
+
+// SetKendraConfiguration sets the KendraConfiguration field's value.
+func (s *GetIntentOutput) SetKendraConfiguration(v *KendraConfiguration) *GetIntentOutput {
+	s.KendraConfiguration = v
 	return s
 }
 
@@ -9296,6 +9351,87 @@ func (s *InternalFailureException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+// Provides configuration information for the AMAZON.KendraSearchIntent intent.
+// When you use this intent, Amazon Lex searches the specified Amazon Kendra
+// index and returns documents from the index that match the user's utterance.
+// For more information, see AMAZON.KendraSearchIntent (http://docs.aws.amazon.com/lex/latest/dg/built-in-intent-kendra-search.html).
+type KendraConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the Amazon Kendra index that you want the
+	// AMAZON.KendraSearchIntent intent to search. The index must be in the same
+	// account and Region as the Amazon Lex bot. If the Amazon Kendra index does
+	// not exist, you get an exception when you call the PutIntent operation.
+	//
+	// KendraIndex is a required field
+	KendraIndex *string `locationName:"kendraIndex" min:"20" type:"string" required:"true"`
+
+	// A query filter that Amazon Lex sends to Amazon Kendra to filter the response
+	// from the query. The filter is in the format defined by Amazon Kendra. For
+	// more information, see Filtering queries (http://docs.aws.amazon.com/kendra/latest/dg/filtering.html).
+	//
+	// You can override this filter string with a new filter string at runtime.
+	QueryFilterString *string `locationName:"queryFilterString" type:"string"`
+
+	// The Amazon Resource Name (ARN) of an IAM role that has permission to search
+	// the Amazon Kendra index. The role must be in the same account and Region
+	// as the Amazon Lex bot. If the role does not exist, you get an exception when
+	// you call the PutIntent operation.
+	//
+	// Role is a required field
+	Role *string `locationName:"role" min:"20" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s KendraConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KendraConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *KendraConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "KendraConfiguration"}
+	if s.KendraIndex == nil {
+		invalidParams.Add(request.NewErrParamRequired("KendraIndex"))
+	}
+	if s.KendraIndex != nil && len(*s.KendraIndex) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("KendraIndex", 20))
+	}
+	if s.Role == nil {
+		invalidParams.Add(request.NewErrParamRequired("Role"))
+	}
+	if s.Role != nil && len(*s.Role) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("Role", 20))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKendraIndex sets the KendraIndex field's value.
+func (s *KendraConfiguration) SetKendraIndex(v string) *KendraConfiguration {
+	s.KendraIndex = &v
+	return s
+}
+
+// SetQueryFilterString sets the QueryFilterString field's value.
+func (s *KendraConfiguration) SetQueryFilterString(v string) *KendraConfiguration {
+	s.QueryFilterString = &v
+	return s
+}
+
+// SetRole sets the Role field's value.
+func (s *KendraConfiguration) SetRole(v string) *KendraConfiguration {
+	s.Role = &v
+	return s
+}
+
 // The request exceeded a limit. Try your request again.
 type LimitExceededException struct {
 	_            struct{}                  `type:"structure"`
@@ -10080,7 +10216,7 @@ type PutBotInput struct {
 
 	// When Amazon Lex can't understand the user's input in context, it tries to
 	// elicit the information a few times. After that, Amazon Lex sends the message
-	// defined in abortStatement to the user, and then aborts the conversation.
+	// defined in abortStatement to the user, and then cancels the conversation.
 	// To set the number of retries, use the valueElicitationPrompt field for the
 	// slot type.
 	//
@@ -10093,7 +10229,7 @@ type PutBotInput struct {
 	// the intents. This intent might require the CrustType slot. You specify the
 	// valueElicitationPrompt field when you create the CrustType slot.
 	//
-	// If you have defined a fallback intent the abort statement will not be sent
+	// If you have defined a fallback intent the cancel statement will not be sent
 	// to the user, the fallback intent is used instead. For more information, see
 	// AMAZON.FallbackIntent (https://docs.aws.amazon.com/lex/latest/dg/built-in-intent-fallback.html).
 	AbortStatement *Statement `locationName:"abortStatement" type:"structure"`
@@ -10180,6 +10316,39 @@ type PutBotInput struct {
 	// analysis. If you don't specify detectSentiment, the default is false.
 	DetectSentiment *bool `locationName:"detectSentiment" type:"boolean"`
 
+	// Set to true to enable access to natural language understanding improvements.
+	//
+	// When you set the enableModelImprovements parameter to true you can use the
+	// nluIntentConfidenceThreshold parameter to configure confidence scores. For
+	// more information, see Confidence Scores (https://docs.aws.amazon.com/lex/latest/dg/confidence-scores.html).
+	//
+	// You can only set the enableModelImprovements parameter in certain Regions.
+	// If you set the parameter to true, your bot has access to accuracy improvements.
+	//
+	// The Regions where you can set the enableModelImprovements parameter to true
+	// are:
+	//
+	//    * US East (N. Virginia) (us-east-1)
+	//
+	//    * US West (Oregon) (us-west-2)
+	//
+	//    * Asia Pacific (Sydney) (ap-southeast-2)
+	//
+	//    * EU (Ireland) (eu-west-1)
+	//
+	// In other Regions, the enableModelImprovements parameter is set to true by
+	// default. In these Regions setting the parameter to false throws a ValidationException
+	// exception.
+	//
+	//    * Asia Pacific (Singapore) (ap-southeast-1)
+	//
+	//    * Asia Pacific (Tokyo) (ap-northeast-1)
+	//
+	//    * EU (Frankfurt) (eu-central-1)
+	//
+	//    * EU (London) (eu-west-2)
+	EnableModelImprovements *bool `locationName:"enableModelImprovements" type:"boolean"`
+
 	// The maximum time in seconds that Amazon Lex retains the data gathered in
 	// a conversation.
 	//
@@ -10216,6 +10385,41 @@ type PutBotInput struct {
 	//
 	// Name is a required field
 	Name *string `location:"uri" locationName:"name" min:"2" type:"string" required:"true"`
+
+	// Determines the threshold where Amazon Lex will insert the AMAZON.FallbackIntent,
+	// AMAZON.KendraSearchIntent, or both when returning alternative intents in
+	// a PostContent (https://docs.aws.amazon.com/lex/latest/dg/API_runtime_PostContent.html)
+	// or PostText (https://docs.aws.amazon.com/lex/latest/dg/API_runtime_PostText.html)
+	// response. AMAZON.FallbackIntent and AMAZON.KendraSearchIntent are only inserted
+	// if they are configured for the bot.
+	//
+	// You must set the enableModelImprovements parameter to true to use confidence
+	// scores.
+	//
+	//    * US East (N. Virginia) (us-east-1)
+	//
+	//    * US West (Oregon) (us-west-2)
+	//
+	//    * Asia Pacific (Sydney) (ap-southeast-2)
+	//
+	//    * EU (Ireland) (eu-west-1)
+	//
+	// In other Regions, the enableModelImprovements parameter is set to true by
+	// default.
+	//
+	// For example, suppose a bot is configured with the confidence threshold of
+	// 0.80 and the AMAZON.FallbackIntent. Amazon Lex returns three alternative
+	// intents with the following confidence scores: IntentA (0.70), IntentB (0.60),
+	// IntentC (0.50). The response from the PostText operation would be:
+	//
+	//    * AMAZON.FallbackIntent
+	//
+	//    * IntentA
+	//
+	//    * IntentB
+	//
+	//    * IntentC
+	NluIntentConfidenceThreshold *float64 `locationName:"nluIntentConfidenceThreshold" type:"double"`
 
 	// If you set the processBehavior element to BUILD, Amazon Lex builds the bot
 	// so that it can be run. If you set the element to SAVE Amazon Lex saves the
@@ -10343,6 +10547,12 @@ func (s *PutBotInput) SetDetectSentiment(v bool) *PutBotInput {
 	return s
 }
 
+// SetEnableModelImprovements sets the EnableModelImprovements field's value.
+func (s *PutBotInput) SetEnableModelImprovements(v bool) *PutBotInput {
+	s.EnableModelImprovements = &v
+	return s
+}
+
 // SetIdleSessionTTLInSeconds sets the IdleSessionTTLInSeconds field's value.
 func (s *PutBotInput) SetIdleSessionTTLInSeconds(v int64) *PutBotInput {
 	s.IdleSessionTTLInSeconds = &v
@@ -10367,6 +10577,12 @@ func (s *PutBotInput) SetName(v string) *PutBotInput {
 	return s
 }
 
+// SetNluIntentConfidenceThreshold sets the NluIntentConfidenceThreshold field's value.
+func (s *PutBotInput) SetNluIntentConfidenceThreshold(v float64) *PutBotInput {
+	s.NluIntentConfidenceThreshold = &v
+	return s
+}
+
 // SetProcessBehavior sets the ProcessBehavior field's value.
 func (s *PutBotInput) SetProcessBehavior(v string) *PutBotInput {
 	s.ProcessBehavior = &v
@@ -10388,7 +10604,7 @@ func (s *PutBotInput) SetVoiceId(v string) *PutBotInput {
 type PutBotOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The message that Amazon Lex uses to abort a conversation. For more information,
+	// The message that Amazon Lex uses to cancel a conversation. For more information,
 	// see PutBot.
 	AbortStatement *Statement `locationName:"abortStatement" type:"structure"`
 
@@ -10440,6 +10656,10 @@ type PutBotOutput struct {
 	// the request, the detectSentiment field is false in the response.
 	DetectSentiment *bool `locationName:"detectSentiment" type:"boolean"`
 
+	// Indicates whether the bot uses accuracy improvements. true indicates that
+	// the bot is using the imoprovements, otherwise, false.
+	EnableModelImprovements *bool `locationName:"enableModelImprovements" type:"boolean"`
+
 	// If status is FAILED, Amazon Lex provides the reason that it failed to build
 	// the bot.
 	FailureReason *string `locationName:"failureReason" type:"string"`
@@ -10460,6 +10680,15 @@ type PutBotOutput struct {
 
 	// The name of the bot.
 	Name *string `locationName:"name" min:"2" type:"string"`
+
+	// The score that determines where Amazon Lex inserts the AMAZON.FallbackIntent,
+	// AMAZON.KendraSearchIntent, or both when returning alternative intents in
+	// a PostContent (https://docs.aws.amazon.com/lex/latest/dg/API_runtime_PostContent.html)
+	// or PostText (https://docs.aws.amazon.com/lex/latest/dg/API_runtime_PostText.html)
+	// response. AMAZON.FallbackIntent is inserted if the confidence score for all
+	// intents is below this value. AMAZON.KendraSearchIntent is only inserted if
+	// it is configured for the bot.
+	NluIntentConfidenceThreshold *float64 `locationName:"nluIntentConfidenceThreshold" type:"double"`
 
 	// When you send a request to create a bot with processBehavior set to BUILD,
 	// Amazon Lex sets the status response element to BUILDING.
@@ -10546,6 +10775,12 @@ func (s *PutBotOutput) SetDetectSentiment(v bool) *PutBotOutput {
 	return s
 }
 
+// SetEnableModelImprovements sets the EnableModelImprovements field's value.
+func (s *PutBotOutput) SetEnableModelImprovements(v bool) *PutBotOutput {
+	s.EnableModelImprovements = &v
+	return s
+}
+
 // SetFailureReason sets the FailureReason field's value.
 func (s *PutBotOutput) SetFailureReason(v string) *PutBotOutput {
 	s.FailureReason = &v
@@ -10579,6 +10814,12 @@ func (s *PutBotOutput) SetLocale(v string) *PutBotOutput {
 // SetName sets the Name field's value.
 func (s *PutBotOutput) SetName(v string) *PutBotOutput {
 	s.Name = &v
+	return s
+}
+
+// SetNluIntentConfidenceThreshold sets the NluIntentConfidenceThreshold field's value.
+func (s *PutBotOutput) SetNluIntentConfidenceThreshold(v float64) *PutBotOutput {
+	s.NluIntentConfidenceThreshold = &v
 	return s
 }
 
@@ -10693,6 +10934,11 @@ type PutIntentInput struct {
 	// process the intent (for example, place an order with a pizzeria).
 	FulfillmentActivity *FulfillmentActivity `locationName:"fulfillmentActivity" type:"structure"`
 
+	// Configuration information required to use the AMAZON.KendraSearchIntent intent
+	// to connect to an Amazon Kendra index. For more information, see AMAZON.KendraSearchIntent
+	// (http://docs.aws.amazon.com/lex/latest/dg/built-in-intent-kendra-search.html).
+	KendraConfiguration *KendraConfiguration `locationName:"kendraConfiguration" type:"structure"`
+
 	// The name of the intent. The name is not case sensitive.
 	//
 	// The name can't match a built-in intent name, or a built-in intent name with
@@ -10774,6 +11020,11 @@ func (s *PutIntentInput) Validate() error {
 			invalidParams.AddNested("FulfillmentActivity", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.KendraConfiguration != nil {
+		if err := s.KendraConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("KendraConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.RejectionStatement != nil {
 		if err := s.RejectionStatement.Validate(); err != nil {
 			invalidParams.AddNested("RejectionStatement", err.(request.ErrInvalidParams))
@@ -10844,6 +11095,12 @@ func (s *PutIntentInput) SetFulfillmentActivity(v *FulfillmentActivity) *PutInte
 	return s
 }
 
+// SetKendraConfiguration sets the KendraConfiguration field's value.
+func (s *PutIntentInput) SetKendraConfiguration(v *KendraConfiguration) *PutIntentInput {
+	s.KendraConfiguration = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *PutIntentInput) SetName(v string) *PutIntentInput {
 	s.Name = &v
@@ -10911,6 +11168,10 @@ type PutIntentOutput struct {
 	// the intent after the user provides all of the information required by the
 	// intent.
 	FulfillmentActivity *FulfillmentActivity `locationName:"fulfillmentActivity" type:"structure"`
+
+	// Configuration information, if any, required to connect to an Amazon Kendra
+	// index and use the AMAZON.KendraSearchIntent intent.
+	KendraConfiguration *KendraConfiguration `locationName:"kendraConfiguration" type:"structure"`
 
 	// The date that the intent was updated. When you create a resource, the creation
 	// date and last update dates are the same.
@@ -11000,6 +11261,12 @@ func (s *PutIntentOutput) SetFulfillmentActivity(v *FulfillmentActivity) *PutInt
 	return s
 }
 
+// SetKendraConfiguration sets the KendraConfiguration field's value.
+func (s *PutIntentOutput) SetKendraConfiguration(v *KendraConfiguration) *PutIntentOutput {
+	s.KendraConfiguration = v
+	return s
+}
+
 // SetLastUpdatedDate sets the LastUpdatedDate field's value.
 func (s *PutIntentOutput) SetLastUpdatedDate(v time.Time) *PutIntentOutput {
 	s.LastUpdatedDate = &v
@@ -11068,6 +11335,9 @@ type PutSlotTypeInput struct {
 	// type can take. Each value can have a list of synonyms, which are additional
 	// values that help train the machine learning model about the values that it
 	// resolves for a slot.
+	//
+	// A regular expression slot type doesn't require enumeration values. All other
+	// slot types require a list of enumeration values.
 	//
 	// When Amazon Lex resolves a slot value, it generates a resolution list that
 	// contains up to five possible values for the slot. If you are using a Lambda
@@ -11459,12 +11729,12 @@ type Slot struct {
 	// (https://docs.aws.amazon.com/lex/latest/dg/how-obfuscate.html).
 	ObfuscationSetting *string `locationName:"obfuscationSetting" type:"string" enum:"ObfuscationSetting"`
 
-	// Directs Lex the order in which to elicit this slot value from the user. For
-	// example, if the intent has two slots with priorities 1 and 2, AWS Lex first
-	// elicits a value for the slot with priority 1.
+	// Directs Amazon Lex the order in which to elicit this slot value from the
+	// user. For example, if the intent has two slots with priorities 1 and 2, AWS
+	// Amazon Lex first elicits a value for the slot with priority 1.
 	//
-	// If multiple slots share the same priority, the order in which Lex elicits
-	// values is arbitrary.
+	// If multiple slots share the same priority, the order in which Amazon Lex
+	// elicits values is arbitrary.
 	Priority *int64 `locationName:"priority" type:"integer"`
 
 	// A set of possible responses for the slot type used by text-based clients.
@@ -12322,6 +12592,15 @@ const (
 	ChannelStatusFailed = "FAILED"
 )
 
+// ChannelStatus_Values returns all elements of the ChannelStatus enum
+func ChannelStatus_Values() []string {
+	return []string{
+		ChannelStatusInProgress,
+		ChannelStatusCreated,
+		ChannelStatusFailed,
+	}
+}
+
 const (
 	// ChannelTypeFacebook is a ChannelType enum value
 	ChannelTypeFacebook = "Facebook"
@@ -12336,6 +12615,16 @@ const (
 	ChannelTypeKik = "Kik"
 )
 
+// ChannelType_Values returns all elements of the ChannelType enum
+func ChannelType_Values() []string {
+	return []string{
+		ChannelTypeFacebook,
+		ChannelTypeSlack,
+		ChannelTypeTwilioSms,
+		ChannelTypeKik,
+	}
+}
+
 const (
 	// ContentTypePlainText is a ContentType enum value
 	ContentTypePlainText = "PlainText"
@@ -12347,6 +12636,15 @@ const (
 	ContentTypeCustomPayload = "CustomPayload"
 )
 
+// ContentType_Values returns all elements of the ContentType enum
+func ContentType_Values() []string {
+	return []string{
+		ContentTypePlainText,
+		ContentTypeSsml,
+		ContentTypeCustomPayload,
+	}
+}
+
 const (
 	// DestinationCloudwatchLogs is a Destination enum value
 	DestinationCloudwatchLogs = "CLOUDWATCH_LOGS"
@@ -12354,6 +12652,14 @@ const (
 	// DestinationS3 is a Destination enum value
 	DestinationS3 = "S3"
 )
+
+// Destination_Values returns all elements of the Destination enum
+func Destination_Values() []string {
+	return []string{
+		DestinationCloudwatchLogs,
+		DestinationS3,
+	}
+}
 
 const (
 	// ExportStatusInProgress is a ExportStatus enum value
@@ -12366,6 +12672,15 @@ const (
 	ExportStatusFailed = "FAILED"
 )
 
+// ExportStatus_Values returns all elements of the ExportStatus enum
+func ExportStatus_Values() []string {
+	return []string{
+		ExportStatusInProgress,
+		ExportStatusReady,
+		ExportStatusFailed,
+	}
+}
+
 const (
 	// ExportTypeAlexaSkillsKit is a ExportType enum value
 	ExportTypeAlexaSkillsKit = "ALEXA_SKILLS_KIT"
@@ -12374,6 +12689,14 @@ const (
 	ExportTypeLex = "LEX"
 )
 
+// ExportType_Values returns all elements of the ExportType enum
+func ExportType_Values() []string {
+	return []string{
+		ExportTypeAlexaSkillsKit,
+		ExportTypeLex,
+	}
+}
+
 const (
 	// FulfillmentActivityTypeReturnIntent is a FulfillmentActivityType enum value
 	FulfillmentActivityTypeReturnIntent = "ReturnIntent"
@@ -12381,6 +12704,14 @@ const (
 	// FulfillmentActivityTypeCodeHook is a FulfillmentActivityType enum value
 	FulfillmentActivityTypeCodeHook = "CodeHook"
 )
+
+// FulfillmentActivityType_Values returns all elements of the FulfillmentActivityType enum
+func FulfillmentActivityType_Values() []string {
+	return []string{
+		FulfillmentActivityTypeReturnIntent,
+		FulfillmentActivityTypeCodeHook,
+	}
+}
 
 const (
 	// ImportStatusInProgress is a ImportStatus enum value
@@ -12393,6 +12724,15 @@ const (
 	ImportStatusFailed = "FAILED"
 )
 
+// ImportStatus_Values returns all elements of the ImportStatus enum
+func ImportStatus_Values() []string {
+	return []string{
+		ImportStatusInProgress,
+		ImportStatusComplete,
+		ImportStatusFailed,
+	}
+}
+
 const (
 	// LocaleEnUs is a Locale enum value
 	LocaleEnUs = "en-US"
@@ -12402,7 +12742,20 @@ const (
 
 	// LocaleDeDe is a Locale enum value
 	LocaleDeDe = "de-DE"
+
+	// LocaleEnAu is a Locale enum value
+	LocaleEnAu = "en-AU"
 )
+
+// Locale_Values returns all elements of the Locale enum
+func Locale_Values() []string {
+	return []string{
+		LocaleEnUs,
+		LocaleEnGb,
+		LocaleDeDe,
+		LocaleEnAu,
+	}
+}
 
 const (
 	// LogTypeAudio is a LogType enum value
@@ -12412,6 +12765,14 @@ const (
 	LogTypeText = "TEXT"
 )
 
+// LogType_Values returns all elements of the LogType enum
+func LogType_Values() []string {
+	return []string{
+		LogTypeAudio,
+		LogTypeText,
+	}
+}
+
 const (
 	// MergeStrategyOverwriteLatest is a MergeStrategy enum value
 	MergeStrategyOverwriteLatest = "OVERWRITE_LATEST"
@@ -12419,6 +12780,14 @@ const (
 	// MergeStrategyFailOnConflict is a MergeStrategy enum value
 	MergeStrategyFailOnConflict = "FAIL_ON_CONFLICT"
 )
+
+// MergeStrategy_Values returns all elements of the MergeStrategy enum
+func MergeStrategy_Values() []string {
+	return []string{
+		MergeStrategyOverwriteLatest,
+		MergeStrategyFailOnConflict,
+	}
+}
 
 const (
 	// ObfuscationSettingNone is a ObfuscationSetting enum value
@@ -12428,6 +12797,14 @@ const (
 	ObfuscationSettingDefaultObfuscation = "DEFAULT_OBFUSCATION"
 )
 
+// ObfuscationSetting_Values returns all elements of the ObfuscationSetting enum
+func ObfuscationSetting_Values() []string {
+	return []string{
+		ObfuscationSettingNone,
+		ObfuscationSettingDefaultObfuscation,
+	}
+}
+
 const (
 	// ProcessBehaviorSave is a ProcessBehavior enum value
 	ProcessBehaviorSave = "SAVE"
@@ -12435,6 +12812,14 @@ const (
 	// ProcessBehaviorBuild is a ProcessBehavior enum value
 	ProcessBehaviorBuild = "BUILD"
 )
+
+// ProcessBehavior_Values returns all elements of the ProcessBehavior enum
+func ProcessBehavior_Values() []string {
+	return []string{
+		ProcessBehaviorSave,
+		ProcessBehaviorBuild,
+	}
+}
 
 const (
 	// ReferenceTypeIntent is a ReferenceType enum value
@@ -12450,6 +12835,16 @@ const (
 	ReferenceTypeBotChannel = "BotChannel"
 )
 
+// ReferenceType_Values returns all elements of the ReferenceType enum
+func ReferenceType_Values() []string {
+	return []string{
+		ReferenceTypeIntent,
+		ReferenceTypeBot,
+		ReferenceTypeBotAlias,
+		ReferenceTypeBotChannel,
+	}
+}
+
 const (
 	// ResourceTypeBot is a ResourceType enum value
 	ResourceTypeBot = "BOT"
@@ -12461,6 +12856,15 @@ const (
 	ResourceTypeSlotType = "SLOT_TYPE"
 )
 
+// ResourceType_Values returns all elements of the ResourceType enum
+func ResourceType_Values() []string {
+	return []string{
+		ResourceTypeBot,
+		ResourceTypeIntent,
+		ResourceTypeSlotType,
+	}
+}
+
 const (
 	// SlotConstraintRequired is a SlotConstraint enum value
 	SlotConstraintRequired = "Required"
@@ -12469,6 +12873,14 @@ const (
 	SlotConstraintOptional = "Optional"
 )
 
+// SlotConstraint_Values returns all elements of the SlotConstraint enum
+func SlotConstraint_Values() []string {
+	return []string{
+		SlotConstraintRequired,
+		SlotConstraintOptional,
+	}
+}
+
 const (
 	// SlotValueSelectionStrategyOriginalValue is a SlotValueSelectionStrategy enum value
 	SlotValueSelectionStrategyOriginalValue = "ORIGINAL_VALUE"
@@ -12476,6 +12888,14 @@ const (
 	// SlotValueSelectionStrategyTopResolution is a SlotValueSelectionStrategy enum value
 	SlotValueSelectionStrategyTopResolution = "TOP_RESOLUTION"
 )
+
+// SlotValueSelectionStrategy_Values returns all elements of the SlotValueSelectionStrategy enum
+func SlotValueSelectionStrategy_Values() []string {
+	return []string{
+		SlotValueSelectionStrategyOriginalValue,
+		SlotValueSelectionStrategyTopResolution,
+	}
+}
 
 const (
 	// StatusBuilding is a Status enum value
@@ -12494,6 +12914,17 @@ const (
 	StatusNotBuilt = "NOT_BUILT"
 )
 
+// Status_Values returns all elements of the Status enum
+func Status_Values() []string {
+	return []string{
+		StatusBuilding,
+		StatusReady,
+		StatusReadyBasicTesting,
+		StatusFailed,
+		StatusNotBuilt,
+	}
+}
+
 const (
 	// StatusTypeDetected is a StatusType enum value
 	StatusTypeDetected = "Detected"
@@ -12501,3 +12932,11 @@ const (
 	// StatusTypeMissed is a StatusType enum value
 	StatusTypeMissed = "Missed"
 )
+
+// StatusType_Values returns all elements of the StatusType enum
+func StatusType_Values() []string {
+	return []string{
+		StatusTypeDetected,
+		StatusTypeMissed,
+	}
+}

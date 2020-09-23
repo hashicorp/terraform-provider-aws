@@ -8,9 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSDocDBClusterParameterGroup_basic(t *testing.T) {
@@ -162,9 +163,11 @@ func TestAccAWSDocDBClusterParameterGroup_Parameter(t *testing.T) {
 					testAccCheckAWSDocDBClusterParameterGroupExists(resourceName, &v),
 					testAccCheckAWSDocDBClusterParameterGroupAttributes(&v, parameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.3297634353.apply_method", "pending-reboot"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.3297634353.name", "tls"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.3297634353.value", "disabled"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"apply_method": "pending-reboot",
+						"name":         "tls",
+						"value":        "disabled",
+					}),
 				),
 			},
 			{
@@ -178,9 +181,11 @@ func TestAccAWSDocDBClusterParameterGroup_Parameter(t *testing.T) {
 					testAccCheckAWSDocDBClusterParameterGroupExists(resourceName, &v),
 					testAccCheckAWSDocDBClusterParameterGroupAttributes(&v, parameterGroupName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.4005179180.apply_method", "pending-reboot"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.4005179180.name", "tls"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.4005179180.value", "enabled"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"apply_method": "pending-reboot",
+						"name":         "tls",
+						"value":        "enabled",
+					}),
 				),
 			},
 		},
@@ -381,11 +386,11 @@ resource "aws_docdb_cluster_parameter_group" "bar" {
 const testAccAWSDocDBClusterParameterGroupConfig_namePrefix = `
 resource "aws_docdb_cluster_parameter_group" "test" {
   name_prefix = "tf-test-"
-  family = "docdb3.6"
+  family      = "docdb3.6"
 }
 `
 const testAccAWSDocDBClusterParameterGroupConfig_generatedName = `
 resource "aws_docdb_cluster_parameter_group" "test" {
-	family = "docdb3.6"
+  family = "docdb3.6"
 }
 `

@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -41,6 +41,7 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 			s["volume_tags"] = &schema.Schema{
 				Type:     schema.TypeMap,
 				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			}
 
 			s["spot_price"] = &schema.Schema{
@@ -122,6 +123,7 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 		SpotPrice:                    aws.String(d.Get("spot_price").(string)),
 		Type:                         aws.String(d.Get("spot_type").(string)),
 		InstanceInterruptionBehavior: aws.String(d.Get("instance_interruption_behaviour").(string)),
+		TagSpecifications:            ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeSpotInstancesRequest),
 
 		// Though the AWS API supports creating spot instance requests for multiple
 		// instances, for TF purposes we fix this to one instance per request.
@@ -190,7 +192,10 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 			log.Printf("[DEBUG] IAM Instance Profile appears to have no IAM roles, retrying...")
 			return resource.RetryableError(err)
 		}
-		return resource.NonRetryableError(err)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
 
 	if isResourceTimeoutError(err) {
@@ -224,12 +229,6 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 
 		if err != nil {
 			return fmt.Errorf("Error while waiting for spot request (%s) to resolve: %s", sir, err)
-		}
-	}
-
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
-			return fmt.Errorf("error adding EC2 Spot Instance Request (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -345,7 +344,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 			for _, ni := range instance.NetworkInterfaces {
 				if *ni.Attachment.DeviceIndex == 0 {
 					d.Set("subnet_id", ni.SubnetId)
-					d.Set("network_interface_id", ni.NetworkInterfaceId)
+					d.Set("primary_network_interface_id", ni.NetworkInterfaceId)
 					d.Set("associate_public_ip_address", ni.Association != nil)
 					d.Set("ipv6_address_count", len(ni.Ipv6Addresses))
 
@@ -356,7 +355,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 			}
 		} else {
 			d.Set("subnet_id", instance.SubnetId)
-			d.Set("network_interface_id", "")
+			d.Set("primary_network_interface_id", "")
 		}
 
 		if err := d.Set("ipv6_addresses", ipv6Addresses); err != nil {

@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -565,7 +565,7 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 		ApplicationName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("code"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("code"); ok {
 		createOpts.ApplicationCode = aws.String(v.(string))
 	}
 
@@ -704,10 +704,7 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 			CurrentApplicationVersionId: aws.Int64(int64(version)),
 		}
 
-		applicationUpdate, err := createApplicationUpdateOpts(d)
-		if err != nil {
-			return err
-		}
+		applicationUpdate := createApplicationUpdateOpts(d)
 
 		if !reflect.DeepEqual(applicationUpdate, &kinesisanalytics.ApplicationUpdate{}) {
 			updateApplicationOpts.SetApplicationUpdate(applicationUpdate)
@@ -1085,11 +1082,11 @@ func expandKinesisAnalyticsReferenceData(rd map[string]interface{}) *kinesisanal
 	return referenceData
 }
 
-func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalytics.ApplicationUpdate, error) {
+func createApplicationUpdateOpts(d *schema.ResourceData) *kinesisanalytics.ApplicationUpdate {
 	applicationUpdate := &kinesisanalytics.ApplicationUpdate{}
 
 	if d.HasChange("code") {
-		if v, ok := d.GetOk("code"); ok && v.(string) != "" {
+		if v, ok := d.GetOk("code"); ok {
 			applicationUpdate.ApplicationCodeUpdate = aws.String(v.(string))
 		}
 	}
@@ -1154,7 +1151,7 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalytics.Appl
 		}
 	}
 
-	return applicationUpdate, nil
+	return applicationUpdate
 }
 
 func expandKinesisAnalyticsInputUpdate(vL map[string]interface{}) *kinesisanalytics.InputUpdate {

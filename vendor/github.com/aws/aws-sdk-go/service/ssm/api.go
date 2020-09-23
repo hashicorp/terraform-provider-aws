@@ -449,15 +449,18 @@ func (c *SSM) CreateAssociationRequest(input *CreateAssociationInput) (req *requ
 
 // CreateAssociation API operation for Amazon Simple Systems Manager (SSM).
 //
-// Associates the specified Systems Manager document with the specified instances
-// or targets.
-//
-// When you associate a document with one or more instances using instance IDs
-// or tags, SSM Agent running on the instance processes the document and configures
-// the instance as specified.
-//
-// If you associate a document with an instance that already has an associated
-// document, the system returns the AssociationAlreadyExists exception.
+// A State Manager association defines the state that you want to maintain on
+// your instances. For example, an association can specify that anti-virus software
+// must be installed and running on your instances, or that certain ports must
+// be closed. For static targets, the association specifies a schedule for when
+// the configuration is reapplied. For dynamic targets, such as an AWS Resource
+// Group or an AWS Autoscaling Group, State Manager applies the configuration
+// when new instances are added to the group. The association also specifies
+// actions to take when applying the configuration. For example, an association
+// for anti-virus software might run once a day. If the software is not installed,
+// then State Manager installs it. If the software is installed, but the service
+// is not running, then the association might instruct State Manager to start
+// the service.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1509,7 +1512,7 @@ func (c *SSM) DeleteInventoryRequest(input *DeleteInventoryInput) (req *request.
 
 // DeleteInventory API operation for Amazon Simple Systems Manager (SSM).
 //
-// Delete a custom inventory type, or the data associated with a custom Inventory
+// Delete a custom inventory type or the data associated with a custom Inventory
 // type. Deleting a custom inventory type is also referred to as deleting a
 // custom inventory schema.
 //
@@ -2610,6 +2613,12 @@ func (c *SSM) DescribeAssociationExecutionTargetsRequest(input *DescribeAssociat
 		Name:       opDescribeAssociationExecutionTargets,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -2668,6 +2677,58 @@ func (c *SSM) DescribeAssociationExecutionTargetsWithContext(ctx aws.Context, in
 	return out, req.Send()
 }
 
+// DescribeAssociationExecutionTargetsPages iterates over the pages of a DescribeAssociationExecutionTargets operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeAssociationExecutionTargets method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeAssociationExecutionTargets operation.
+//    pageNum := 0
+//    err := client.DescribeAssociationExecutionTargetsPages(params,
+//        func(page *ssm.DescribeAssociationExecutionTargetsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeAssociationExecutionTargetsPages(input *DescribeAssociationExecutionTargetsInput, fn func(*DescribeAssociationExecutionTargetsOutput, bool) bool) error {
+	return c.DescribeAssociationExecutionTargetsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeAssociationExecutionTargetsPagesWithContext same as DescribeAssociationExecutionTargetsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeAssociationExecutionTargetsPagesWithContext(ctx aws.Context, input *DescribeAssociationExecutionTargetsInput, fn func(*DescribeAssociationExecutionTargetsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeAssociationExecutionTargetsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeAssociationExecutionTargetsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeAssociationExecutionTargetsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeAssociationExecutions = "DescribeAssociationExecutions"
 
 // DescribeAssociationExecutionsRequest generates a "aws/request.Request" representing the
@@ -2699,6 +2760,12 @@ func (c *SSM) DescribeAssociationExecutionsRequest(input *DescribeAssociationExe
 		Name:       opDescribeAssociationExecutions,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -2753,6 +2820,58 @@ func (c *SSM) DescribeAssociationExecutionsWithContext(ctx aws.Context, input *D
 	return out, req.Send()
 }
 
+// DescribeAssociationExecutionsPages iterates over the pages of a DescribeAssociationExecutions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeAssociationExecutions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeAssociationExecutions operation.
+//    pageNum := 0
+//    err := client.DescribeAssociationExecutionsPages(params,
+//        func(page *ssm.DescribeAssociationExecutionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeAssociationExecutionsPages(input *DescribeAssociationExecutionsInput, fn func(*DescribeAssociationExecutionsOutput, bool) bool) error {
+	return c.DescribeAssociationExecutionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeAssociationExecutionsPagesWithContext same as DescribeAssociationExecutionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeAssociationExecutionsPagesWithContext(ctx aws.Context, input *DescribeAssociationExecutionsInput, fn func(*DescribeAssociationExecutionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeAssociationExecutionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeAssociationExecutionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeAssociationExecutionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeAutomationExecutions = "DescribeAutomationExecutions"
 
 // DescribeAutomationExecutionsRequest generates a "aws/request.Request" representing the
@@ -2784,6 +2903,12 @@ func (c *SSM) DescribeAutomationExecutionsRequest(input *DescribeAutomationExecu
 		Name:       opDescribeAutomationExecutions,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -2841,6 +2966,58 @@ func (c *SSM) DescribeAutomationExecutionsWithContext(ctx aws.Context, input *De
 	return out, req.Send()
 }
 
+// DescribeAutomationExecutionsPages iterates over the pages of a DescribeAutomationExecutions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeAutomationExecutions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeAutomationExecutions operation.
+//    pageNum := 0
+//    err := client.DescribeAutomationExecutionsPages(params,
+//        func(page *ssm.DescribeAutomationExecutionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeAutomationExecutionsPages(input *DescribeAutomationExecutionsInput, fn func(*DescribeAutomationExecutionsOutput, bool) bool) error {
+	return c.DescribeAutomationExecutionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeAutomationExecutionsPagesWithContext same as DescribeAutomationExecutionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeAutomationExecutionsPagesWithContext(ctx aws.Context, input *DescribeAutomationExecutionsInput, fn func(*DescribeAutomationExecutionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeAutomationExecutionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeAutomationExecutionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeAutomationExecutionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeAutomationStepExecutions = "DescribeAutomationStepExecutions"
 
 // DescribeAutomationStepExecutionsRequest generates a "aws/request.Request" representing the
@@ -2872,6 +3049,12 @@ func (c *SSM) DescribeAutomationStepExecutionsRequest(input *DescribeAutomationS
 		Name:       opDescribeAutomationStepExecutions,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -2934,6 +3117,58 @@ func (c *SSM) DescribeAutomationStepExecutionsWithContext(ctx aws.Context, input
 	return out, req.Send()
 }
 
+// DescribeAutomationStepExecutionsPages iterates over the pages of a DescribeAutomationStepExecutions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeAutomationStepExecutions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeAutomationStepExecutions operation.
+//    pageNum := 0
+//    err := client.DescribeAutomationStepExecutionsPages(params,
+//        func(page *ssm.DescribeAutomationStepExecutionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeAutomationStepExecutionsPages(input *DescribeAutomationStepExecutionsInput, fn func(*DescribeAutomationStepExecutionsOutput, bool) bool) error {
+	return c.DescribeAutomationStepExecutionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeAutomationStepExecutionsPagesWithContext same as DescribeAutomationStepExecutionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeAutomationStepExecutionsPagesWithContext(ctx aws.Context, input *DescribeAutomationStepExecutionsInput, fn func(*DescribeAutomationStepExecutionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeAutomationStepExecutionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeAutomationStepExecutionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeAutomationStepExecutionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeAvailablePatches = "DescribeAvailablePatches"
 
 // DescribeAvailablePatchesRequest generates a "aws/request.Request" representing the
@@ -2965,6 +3200,12 @@ func (c *SSM) DescribeAvailablePatchesRequest(input *DescribeAvailablePatchesInp
 		Name:       opDescribeAvailablePatches,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -3011,6 +3252,58 @@ func (c *SSM) DescribeAvailablePatchesWithContext(ctx aws.Context, input *Descri
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// DescribeAvailablePatchesPages iterates over the pages of a DescribeAvailablePatches operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeAvailablePatches method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeAvailablePatches operation.
+//    pageNum := 0
+//    err := client.DescribeAvailablePatchesPages(params,
+//        func(page *ssm.DescribeAvailablePatchesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeAvailablePatchesPages(input *DescribeAvailablePatchesInput, fn func(*DescribeAvailablePatchesOutput, bool) bool) error {
+	return c.DescribeAvailablePatchesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeAvailablePatchesPagesWithContext same as DescribeAvailablePatchesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeAvailablePatchesPagesWithContext(ctx aws.Context, input *DescribeAvailablePatchesInput, fn func(*DescribeAvailablePatchesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeAvailablePatchesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeAvailablePatchesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeAvailablePatchesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opDescribeDocument = "DescribeDocument"
@@ -3217,6 +3510,12 @@ func (c *SSM) DescribeEffectiveInstanceAssociationsRequest(input *DescribeEffect
 		Name:       opDescribeEffectiveInstanceAssociations,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -3280,6 +3579,58 @@ func (c *SSM) DescribeEffectiveInstanceAssociationsWithContext(ctx aws.Context, 
 	return out, req.Send()
 }
 
+// DescribeEffectiveInstanceAssociationsPages iterates over the pages of a DescribeEffectiveInstanceAssociations operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeEffectiveInstanceAssociations method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeEffectiveInstanceAssociations operation.
+//    pageNum := 0
+//    err := client.DescribeEffectiveInstanceAssociationsPages(params,
+//        func(page *ssm.DescribeEffectiveInstanceAssociationsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeEffectiveInstanceAssociationsPages(input *DescribeEffectiveInstanceAssociationsInput, fn func(*DescribeEffectiveInstanceAssociationsOutput, bool) bool) error {
+	return c.DescribeEffectiveInstanceAssociationsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeEffectiveInstanceAssociationsPagesWithContext same as DescribeEffectiveInstanceAssociationsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeEffectiveInstanceAssociationsPagesWithContext(ctx aws.Context, input *DescribeEffectiveInstanceAssociationsInput, fn func(*DescribeEffectiveInstanceAssociationsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeEffectiveInstanceAssociationsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeEffectiveInstanceAssociationsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEffectiveInstanceAssociationsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeEffectivePatchesForPatchBaseline = "DescribeEffectivePatchesForPatchBaseline"
 
 // DescribeEffectivePatchesForPatchBaselineRequest generates a "aws/request.Request" representing the
@@ -3311,6 +3662,12 @@ func (c *SSM) DescribeEffectivePatchesForPatchBaselineRequest(input *DescribeEff
 		Name:       opDescribeEffectivePatchesForPatchBaseline,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -3350,8 +3707,7 @@ func (c *SSM) DescribeEffectivePatchesForPatchBaselineRequest(input *DescribeEff
 //
 //   * UnsupportedOperatingSystem
 //   The operating systems you specified is not supported, or the operation is
-//   not supported for the operating system. Valid operating systems include:
-//   Windows, AmazonLinux, RedhatEnterpriseLinux, and Ubuntu.
+//   not supported for the operating system.
 //
 //   * InternalServerError
 //   An error occurred on the server side.
@@ -3376,6 +3732,58 @@ func (c *SSM) DescribeEffectivePatchesForPatchBaselineWithContext(ctx aws.Contex
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// DescribeEffectivePatchesForPatchBaselinePages iterates over the pages of a DescribeEffectivePatchesForPatchBaseline operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeEffectivePatchesForPatchBaseline method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeEffectivePatchesForPatchBaseline operation.
+//    pageNum := 0
+//    err := client.DescribeEffectivePatchesForPatchBaselinePages(params,
+//        func(page *ssm.DescribeEffectivePatchesForPatchBaselineOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeEffectivePatchesForPatchBaselinePages(input *DescribeEffectivePatchesForPatchBaselineInput, fn func(*DescribeEffectivePatchesForPatchBaselineOutput, bool) bool) error {
+	return c.DescribeEffectivePatchesForPatchBaselinePagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeEffectivePatchesForPatchBaselinePagesWithContext same as DescribeEffectivePatchesForPatchBaselinePages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeEffectivePatchesForPatchBaselinePagesWithContext(ctx aws.Context, input *DescribeEffectivePatchesForPatchBaselineInput, fn func(*DescribeEffectivePatchesForPatchBaselineOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeEffectivePatchesForPatchBaselineInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeEffectivePatchesForPatchBaselineRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEffectivePatchesForPatchBaselineOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opDescribeInstanceAssociationsStatus = "DescribeInstanceAssociationsStatus"
@@ -3409,6 +3817,12 @@ func (c *SSM) DescribeInstanceAssociationsStatusRequest(input *DescribeInstanceA
 		Name:       opDescribeInstanceAssociationsStatus,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -3470,6 +3884,58 @@ func (c *SSM) DescribeInstanceAssociationsStatusWithContext(ctx aws.Context, inp
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// DescribeInstanceAssociationsStatusPages iterates over the pages of a DescribeInstanceAssociationsStatus operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeInstanceAssociationsStatus method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeInstanceAssociationsStatus operation.
+//    pageNum := 0
+//    err := client.DescribeInstanceAssociationsStatusPages(params,
+//        func(page *ssm.DescribeInstanceAssociationsStatusOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeInstanceAssociationsStatusPages(input *DescribeInstanceAssociationsStatusInput, fn func(*DescribeInstanceAssociationsStatusOutput, bool) bool) error {
+	return c.DescribeInstanceAssociationsStatusPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeInstanceAssociationsStatusPagesWithContext same as DescribeInstanceAssociationsStatusPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeInstanceAssociationsStatusPagesWithContext(ctx aws.Context, input *DescribeInstanceAssociationsStatusInput, fn func(*DescribeInstanceAssociationsStatusOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeInstanceAssociationsStatusInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeInstanceAssociationsStatusRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeInstanceAssociationsStatusOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opDescribeInstanceInformation = "DescribeInstanceInformation"
@@ -3672,6 +4138,12 @@ func (c *SSM) DescribeInstancePatchStatesRequest(input *DescribeInstancePatchSta
 		Name:       opDescribeInstancePatchStates,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -3723,6 +4195,58 @@ func (c *SSM) DescribeInstancePatchStatesWithContext(ctx aws.Context, input *Des
 	return out, req.Send()
 }
 
+// DescribeInstancePatchStatesPages iterates over the pages of a DescribeInstancePatchStates operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeInstancePatchStates method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeInstancePatchStates operation.
+//    pageNum := 0
+//    err := client.DescribeInstancePatchStatesPages(params,
+//        func(page *ssm.DescribeInstancePatchStatesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeInstancePatchStatesPages(input *DescribeInstancePatchStatesInput, fn func(*DescribeInstancePatchStatesOutput, bool) bool) error {
+	return c.DescribeInstancePatchStatesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeInstancePatchStatesPagesWithContext same as DescribeInstancePatchStatesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeInstancePatchStatesPagesWithContext(ctx aws.Context, input *DescribeInstancePatchStatesInput, fn func(*DescribeInstancePatchStatesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeInstancePatchStatesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeInstancePatchStatesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeInstancePatchStatesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeInstancePatchStatesForPatchGroup = "DescribeInstancePatchStatesForPatchGroup"
 
 // DescribeInstancePatchStatesForPatchGroupRequest generates a "aws/request.Request" representing the
@@ -3754,6 +4278,12 @@ func (c *SSM) DescribeInstancePatchStatesForPatchGroupRequest(input *DescribeIns
 		Name:       opDescribeInstancePatchStatesForPatchGroup,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -3810,6 +4340,58 @@ func (c *SSM) DescribeInstancePatchStatesForPatchGroupWithContext(ctx aws.Contex
 	return out, req.Send()
 }
 
+// DescribeInstancePatchStatesForPatchGroupPages iterates over the pages of a DescribeInstancePatchStatesForPatchGroup operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeInstancePatchStatesForPatchGroup method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeInstancePatchStatesForPatchGroup operation.
+//    pageNum := 0
+//    err := client.DescribeInstancePatchStatesForPatchGroupPages(params,
+//        func(page *ssm.DescribeInstancePatchStatesForPatchGroupOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeInstancePatchStatesForPatchGroupPages(input *DescribeInstancePatchStatesForPatchGroupInput, fn func(*DescribeInstancePatchStatesForPatchGroupOutput, bool) bool) error {
+	return c.DescribeInstancePatchStatesForPatchGroupPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeInstancePatchStatesForPatchGroupPagesWithContext same as DescribeInstancePatchStatesForPatchGroupPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeInstancePatchStatesForPatchGroupPagesWithContext(ctx aws.Context, input *DescribeInstancePatchStatesForPatchGroupInput, fn func(*DescribeInstancePatchStatesForPatchGroupOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeInstancePatchStatesForPatchGroupInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeInstancePatchStatesForPatchGroupRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeInstancePatchStatesForPatchGroupOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeInstancePatches = "DescribeInstancePatches"
 
 // DescribeInstancePatchesRequest generates a "aws/request.Request" representing the
@@ -3841,6 +4423,12 @@ func (c *SSM) DescribeInstancePatchesRequest(input *DescribeInstancePatchesInput
 		Name:       opDescribeInstancePatches,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -3909,6 +4497,58 @@ func (c *SSM) DescribeInstancePatchesWithContext(ctx aws.Context, input *Describ
 	return out, req.Send()
 }
 
+// DescribeInstancePatchesPages iterates over the pages of a DescribeInstancePatches operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeInstancePatches method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeInstancePatches operation.
+//    pageNum := 0
+//    err := client.DescribeInstancePatchesPages(params,
+//        func(page *ssm.DescribeInstancePatchesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeInstancePatchesPages(input *DescribeInstancePatchesInput, fn func(*DescribeInstancePatchesOutput, bool) bool) error {
+	return c.DescribeInstancePatchesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeInstancePatchesPagesWithContext same as DescribeInstancePatchesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeInstancePatchesPagesWithContext(ctx aws.Context, input *DescribeInstancePatchesInput, fn func(*DescribeInstancePatchesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeInstancePatchesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeInstancePatchesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeInstancePatchesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeInventoryDeletions = "DescribeInventoryDeletions"
 
 // DescribeInventoryDeletionsRequest generates a "aws/request.Request" representing the
@@ -3940,6 +4580,12 @@ func (c *SSM) DescribeInventoryDeletionsRequest(input *DescribeInventoryDeletion
 		Name:       opDescribeInventoryDeletions,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -3995,6 +4641,58 @@ func (c *SSM) DescribeInventoryDeletionsWithContext(ctx aws.Context, input *Desc
 	return out, req.Send()
 }
 
+// DescribeInventoryDeletionsPages iterates over the pages of a DescribeInventoryDeletions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeInventoryDeletions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeInventoryDeletions operation.
+//    pageNum := 0
+//    err := client.DescribeInventoryDeletionsPages(params,
+//        func(page *ssm.DescribeInventoryDeletionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeInventoryDeletionsPages(input *DescribeInventoryDeletionsInput, fn func(*DescribeInventoryDeletionsOutput, bool) bool) error {
+	return c.DescribeInventoryDeletionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeInventoryDeletionsPagesWithContext same as DescribeInventoryDeletionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeInventoryDeletionsPagesWithContext(ctx aws.Context, input *DescribeInventoryDeletionsInput, fn func(*DescribeInventoryDeletionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeInventoryDeletionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeInventoryDeletionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeInventoryDeletionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeMaintenanceWindowExecutionTaskInvocations = "DescribeMaintenanceWindowExecutionTaskInvocations"
 
 // DescribeMaintenanceWindowExecutionTaskInvocationsRequest generates a "aws/request.Request" representing the
@@ -4026,6 +4724,12 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTaskInvocationsRequest(input *De
 		Name:       opDescribeMaintenanceWindowExecutionTaskInvocations,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -4083,6 +4787,58 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTaskInvocationsWithContext(ctx a
 	return out, req.Send()
 }
 
+// DescribeMaintenanceWindowExecutionTaskInvocationsPages iterates over the pages of a DescribeMaintenanceWindowExecutionTaskInvocations operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeMaintenanceWindowExecutionTaskInvocations method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeMaintenanceWindowExecutionTaskInvocations operation.
+//    pageNum := 0
+//    err := client.DescribeMaintenanceWindowExecutionTaskInvocationsPages(params,
+//        func(page *ssm.DescribeMaintenanceWindowExecutionTaskInvocationsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeMaintenanceWindowExecutionTaskInvocationsPages(input *DescribeMaintenanceWindowExecutionTaskInvocationsInput, fn func(*DescribeMaintenanceWindowExecutionTaskInvocationsOutput, bool) bool) error {
+	return c.DescribeMaintenanceWindowExecutionTaskInvocationsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeMaintenanceWindowExecutionTaskInvocationsPagesWithContext same as DescribeMaintenanceWindowExecutionTaskInvocationsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeMaintenanceWindowExecutionTaskInvocationsPagesWithContext(ctx aws.Context, input *DescribeMaintenanceWindowExecutionTaskInvocationsInput, fn func(*DescribeMaintenanceWindowExecutionTaskInvocationsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeMaintenanceWindowExecutionTaskInvocationsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeMaintenanceWindowExecutionTaskInvocationsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeMaintenanceWindowExecutionTaskInvocationsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeMaintenanceWindowExecutionTasks = "DescribeMaintenanceWindowExecutionTasks"
 
 // DescribeMaintenanceWindowExecutionTasksRequest generates a "aws/request.Request" representing the
@@ -4114,6 +4870,12 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTasksRequest(input *DescribeMain
 		Name:       opDescribeMaintenanceWindowExecutionTasks,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -4170,6 +4932,58 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTasksWithContext(ctx aws.Context
 	return out, req.Send()
 }
 
+// DescribeMaintenanceWindowExecutionTasksPages iterates over the pages of a DescribeMaintenanceWindowExecutionTasks operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeMaintenanceWindowExecutionTasks method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeMaintenanceWindowExecutionTasks operation.
+//    pageNum := 0
+//    err := client.DescribeMaintenanceWindowExecutionTasksPages(params,
+//        func(page *ssm.DescribeMaintenanceWindowExecutionTasksOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeMaintenanceWindowExecutionTasksPages(input *DescribeMaintenanceWindowExecutionTasksInput, fn func(*DescribeMaintenanceWindowExecutionTasksOutput, bool) bool) error {
+	return c.DescribeMaintenanceWindowExecutionTasksPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeMaintenanceWindowExecutionTasksPagesWithContext same as DescribeMaintenanceWindowExecutionTasksPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeMaintenanceWindowExecutionTasksPagesWithContext(ctx aws.Context, input *DescribeMaintenanceWindowExecutionTasksInput, fn func(*DescribeMaintenanceWindowExecutionTasksOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeMaintenanceWindowExecutionTasksInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeMaintenanceWindowExecutionTasksRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeMaintenanceWindowExecutionTasksOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeMaintenanceWindowExecutions = "DescribeMaintenanceWindowExecutions"
 
 // DescribeMaintenanceWindowExecutionsRequest generates a "aws/request.Request" representing the
@@ -4201,6 +5015,12 @@ func (c *SSM) DescribeMaintenanceWindowExecutionsRequest(input *DescribeMaintena
 		Name:       opDescribeMaintenanceWindowExecutions,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -4251,6 +5071,58 @@ func (c *SSM) DescribeMaintenanceWindowExecutionsWithContext(ctx aws.Context, in
 	return out, req.Send()
 }
 
+// DescribeMaintenanceWindowExecutionsPages iterates over the pages of a DescribeMaintenanceWindowExecutions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeMaintenanceWindowExecutions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeMaintenanceWindowExecutions operation.
+//    pageNum := 0
+//    err := client.DescribeMaintenanceWindowExecutionsPages(params,
+//        func(page *ssm.DescribeMaintenanceWindowExecutionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeMaintenanceWindowExecutionsPages(input *DescribeMaintenanceWindowExecutionsInput, fn func(*DescribeMaintenanceWindowExecutionsOutput, bool) bool) error {
+	return c.DescribeMaintenanceWindowExecutionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeMaintenanceWindowExecutionsPagesWithContext same as DescribeMaintenanceWindowExecutionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeMaintenanceWindowExecutionsPagesWithContext(ctx aws.Context, input *DescribeMaintenanceWindowExecutionsInput, fn func(*DescribeMaintenanceWindowExecutionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeMaintenanceWindowExecutionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeMaintenanceWindowExecutionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeMaintenanceWindowExecutionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeMaintenanceWindowSchedule = "DescribeMaintenanceWindowSchedule"
 
 // DescribeMaintenanceWindowScheduleRequest generates a "aws/request.Request" representing the
@@ -4282,6 +5154,12 @@ func (c *SSM) DescribeMaintenanceWindowScheduleRequest(input *DescribeMaintenanc
 		Name:       opDescribeMaintenanceWindowSchedule,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -4338,6 +5216,58 @@ func (c *SSM) DescribeMaintenanceWindowScheduleWithContext(ctx aws.Context, inpu
 	return out, req.Send()
 }
 
+// DescribeMaintenanceWindowSchedulePages iterates over the pages of a DescribeMaintenanceWindowSchedule operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeMaintenanceWindowSchedule method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeMaintenanceWindowSchedule operation.
+//    pageNum := 0
+//    err := client.DescribeMaintenanceWindowSchedulePages(params,
+//        func(page *ssm.DescribeMaintenanceWindowScheduleOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeMaintenanceWindowSchedulePages(input *DescribeMaintenanceWindowScheduleInput, fn func(*DescribeMaintenanceWindowScheduleOutput, bool) bool) error {
+	return c.DescribeMaintenanceWindowSchedulePagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeMaintenanceWindowSchedulePagesWithContext same as DescribeMaintenanceWindowSchedulePages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeMaintenanceWindowSchedulePagesWithContext(ctx aws.Context, input *DescribeMaintenanceWindowScheduleInput, fn func(*DescribeMaintenanceWindowScheduleOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeMaintenanceWindowScheduleInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeMaintenanceWindowScheduleRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeMaintenanceWindowScheduleOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeMaintenanceWindowTargets = "DescribeMaintenanceWindowTargets"
 
 // DescribeMaintenanceWindowTargetsRequest generates a "aws/request.Request" representing the
@@ -4369,6 +5299,12 @@ func (c *SSM) DescribeMaintenanceWindowTargetsRequest(input *DescribeMaintenance
 		Name:       opDescribeMaintenanceWindowTargets,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -4425,6 +5361,58 @@ func (c *SSM) DescribeMaintenanceWindowTargetsWithContext(ctx aws.Context, input
 	return out, req.Send()
 }
 
+// DescribeMaintenanceWindowTargetsPages iterates over the pages of a DescribeMaintenanceWindowTargets operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeMaintenanceWindowTargets method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeMaintenanceWindowTargets operation.
+//    pageNum := 0
+//    err := client.DescribeMaintenanceWindowTargetsPages(params,
+//        func(page *ssm.DescribeMaintenanceWindowTargetsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeMaintenanceWindowTargetsPages(input *DescribeMaintenanceWindowTargetsInput, fn func(*DescribeMaintenanceWindowTargetsOutput, bool) bool) error {
+	return c.DescribeMaintenanceWindowTargetsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeMaintenanceWindowTargetsPagesWithContext same as DescribeMaintenanceWindowTargetsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeMaintenanceWindowTargetsPagesWithContext(ctx aws.Context, input *DescribeMaintenanceWindowTargetsInput, fn func(*DescribeMaintenanceWindowTargetsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeMaintenanceWindowTargetsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeMaintenanceWindowTargetsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeMaintenanceWindowTargetsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeMaintenanceWindowTasks = "DescribeMaintenanceWindowTasks"
 
 // DescribeMaintenanceWindowTasksRequest generates a "aws/request.Request" representing the
@@ -4456,6 +5444,12 @@ func (c *SSM) DescribeMaintenanceWindowTasksRequest(input *DescribeMaintenanceWi
 		Name:       opDescribeMaintenanceWindowTasks,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -4512,6 +5506,58 @@ func (c *SSM) DescribeMaintenanceWindowTasksWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
+// DescribeMaintenanceWindowTasksPages iterates over the pages of a DescribeMaintenanceWindowTasks operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeMaintenanceWindowTasks method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeMaintenanceWindowTasks operation.
+//    pageNum := 0
+//    err := client.DescribeMaintenanceWindowTasksPages(params,
+//        func(page *ssm.DescribeMaintenanceWindowTasksOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeMaintenanceWindowTasksPages(input *DescribeMaintenanceWindowTasksInput, fn func(*DescribeMaintenanceWindowTasksOutput, bool) bool) error {
+	return c.DescribeMaintenanceWindowTasksPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeMaintenanceWindowTasksPagesWithContext same as DescribeMaintenanceWindowTasksPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeMaintenanceWindowTasksPagesWithContext(ctx aws.Context, input *DescribeMaintenanceWindowTasksInput, fn func(*DescribeMaintenanceWindowTasksOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeMaintenanceWindowTasksInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeMaintenanceWindowTasksRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeMaintenanceWindowTasksOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeMaintenanceWindows = "DescribeMaintenanceWindows"
 
 // DescribeMaintenanceWindowsRequest generates a "aws/request.Request" representing the
@@ -4543,6 +5589,12 @@ func (c *SSM) DescribeMaintenanceWindowsRequest(input *DescribeMaintenanceWindow
 		Name:       opDescribeMaintenanceWindows,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -4591,6 +5643,58 @@ func (c *SSM) DescribeMaintenanceWindowsWithContext(ctx aws.Context, input *Desc
 	return out, req.Send()
 }
 
+// DescribeMaintenanceWindowsPages iterates over the pages of a DescribeMaintenanceWindows operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeMaintenanceWindows method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeMaintenanceWindows operation.
+//    pageNum := 0
+//    err := client.DescribeMaintenanceWindowsPages(params,
+//        func(page *ssm.DescribeMaintenanceWindowsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeMaintenanceWindowsPages(input *DescribeMaintenanceWindowsInput, fn func(*DescribeMaintenanceWindowsOutput, bool) bool) error {
+	return c.DescribeMaintenanceWindowsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeMaintenanceWindowsPagesWithContext same as DescribeMaintenanceWindowsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeMaintenanceWindowsPagesWithContext(ctx aws.Context, input *DescribeMaintenanceWindowsInput, fn func(*DescribeMaintenanceWindowsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeMaintenanceWindowsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeMaintenanceWindowsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeMaintenanceWindowsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeMaintenanceWindowsForTarget = "DescribeMaintenanceWindowsForTarget"
 
 // DescribeMaintenanceWindowsForTargetRequest generates a "aws/request.Request" representing the
@@ -4622,6 +5726,12 @@ func (c *SSM) DescribeMaintenanceWindowsForTargetRequest(input *DescribeMaintena
 		Name:       opDescribeMaintenanceWindowsForTarget,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -4671,6 +5781,58 @@ func (c *SSM) DescribeMaintenanceWindowsForTargetWithContext(ctx aws.Context, in
 	return out, req.Send()
 }
 
+// DescribeMaintenanceWindowsForTargetPages iterates over the pages of a DescribeMaintenanceWindowsForTarget operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeMaintenanceWindowsForTarget method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeMaintenanceWindowsForTarget operation.
+//    pageNum := 0
+//    err := client.DescribeMaintenanceWindowsForTargetPages(params,
+//        func(page *ssm.DescribeMaintenanceWindowsForTargetOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeMaintenanceWindowsForTargetPages(input *DescribeMaintenanceWindowsForTargetInput, fn func(*DescribeMaintenanceWindowsForTargetOutput, bool) bool) error {
+	return c.DescribeMaintenanceWindowsForTargetPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeMaintenanceWindowsForTargetPagesWithContext same as DescribeMaintenanceWindowsForTargetPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeMaintenanceWindowsForTargetPagesWithContext(ctx aws.Context, input *DescribeMaintenanceWindowsForTargetInput, fn func(*DescribeMaintenanceWindowsForTargetOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeMaintenanceWindowsForTargetInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeMaintenanceWindowsForTargetRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeMaintenanceWindowsForTargetOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeOpsItems = "DescribeOpsItems"
 
 // DescribeOpsItemsRequest generates a "aws/request.Request" representing the
@@ -4702,6 +5864,12 @@ func (c *SSM) DescribeOpsItemsRequest(input *DescribeOpsItemsInput) (req *reques
 		Name:       opDescribeOpsItems,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -4757,6 +5925,58 @@ func (c *SSM) DescribeOpsItemsWithContext(ctx aws.Context, input *DescribeOpsIte
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// DescribeOpsItemsPages iterates over the pages of a DescribeOpsItems operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeOpsItems method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeOpsItems operation.
+//    pageNum := 0
+//    err := client.DescribeOpsItemsPages(params,
+//        func(page *ssm.DescribeOpsItemsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeOpsItemsPages(input *DescribeOpsItemsInput, fn func(*DescribeOpsItemsOutput, bool) bool) error {
+	return c.DescribeOpsItemsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeOpsItemsPagesWithContext same as DescribeOpsItemsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeOpsItemsPagesWithContext(ctx aws.Context, input *DescribeOpsItemsInput, fn func(*DescribeOpsItemsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeOpsItemsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeOpsItemsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeOpsItemsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opDescribeParameters = "DescribeParameters"
@@ -4948,6 +6168,12 @@ func (c *SSM) DescribePatchBaselinesRequest(input *DescribePatchBaselinesInput) 
 		Name:       opDescribePatchBaselines,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -4994,6 +6220,58 @@ func (c *SSM) DescribePatchBaselinesWithContext(ctx aws.Context, input *Describe
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// DescribePatchBaselinesPages iterates over the pages of a DescribePatchBaselines operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribePatchBaselines method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribePatchBaselines operation.
+//    pageNum := 0
+//    err := client.DescribePatchBaselinesPages(params,
+//        func(page *ssm.DescribePatchBaselinesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribePatchBaselinesPages(input *DescribePatchBaselinesInput, fn func(*DescribePatchBaselinesOutput, bool) bool) error {
+	return c.DescribePatchBaselinesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribePatchBaselinesPagesWithContext same as DescribePatchBaselinesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribePatchBaselinesPagesWithContext(ctx aws.Context, input *DescribePatchBaselinesInput, fn func(*DescribePatchBaselinesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribePatchBaselinesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribePatchBaselinesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribePatchBaselinesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opDescribePatchGroupState = "DescribePatchGroupState"
@@ -5109,6 +6387,12 @@ func (c *SSM) DescribePatchGroupsRequest(input *DescribePatchGroupsInput) (req *
 		Name:       opDescribePatchGroups,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -5157,6 +6441,58 @@ func (c *SSM) DescribePatchGroupsWithContext(ctx aws.Context, input *DescribePat
 	return out, req.Send()
 }
 
+// DescribePatchGroupsPages iterates over the pages of a DescribePatchGroups operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribePatchGroups method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribePatchGroups operation.
+//    pageNum := 0
+//    err := client.DescribePatchGroupsPages(params,
+//        func(page *ssm.DescribePatchGroupsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribePatchGroupsPages(input *DescribePatchGroupsInput, fn func(*DescribePatchGroupsOutput, bool) bool) error {
+	return c.DescribePatchGroupsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribePatchGroupsPagesWithContext same as DescribePatchGroupsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribePatchGroupsPagesWithContext(ctx aws.Context, input *DescribePatchGroupsInput, fn func(*DescribePatchGroupsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribePatchGroupsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribePatchGroupsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribePatchGroupsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribePatchProperties = "DescribePatchProperties"
 
 // DescribePatchPropertiesRequest generates a "aws/request.Request" representing the
@@ -5188,6 +6524,12 @@ func (c *SSM) DescribePatchPropertiesRequest(input *DescribePatchPropertiesInput
 		Name:       opDescribePatchProperties,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -5210,10 +6552,6 @@ func (c *SSM) DescribePatchPropertiesRequest(input *DescribePatchPropertiesInput
 // The following section lists the properties that can be used in filters for
 // each major operating system type:
 //
-// WINDOWS
-//
-// Valid properties: PRODUCT, PRODUCT_FAMILY, CLASSIFICATION, MSRC_SEVERITY
-//
 // AMAZON_LINUX
 //
 // Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
@@ -5222,9 +6560,17 @@ func (c *SSM) DescribePatchPropertiesRequest(input *DescribePatchPropertiesInput
 //
 // Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
 //
-// UBUNTU
+// CENTOS
+//
+// Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
+//
+// DEBIAN
 //
 // Valid properties: PRODUCT, PRIORITY
+//
+// ORACLE_LINUX
+//
+// Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
 //
 // REDHAT_ENTERPRISE_LINUX
 //
@@ -5234,9 +6580,13 @@ func (c *SSM) DescribePatchPropertiesRequest(input *DescribePatchPropertiesInput
 //
 // Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
 //
-// CENTOS
+// UBUNTU
 //
-// Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
+// Valid properties: PRODUCT, PRIORITY
+//
+// WINDOWS
+//
+// Valid properties: PRODUCT, PRODUCT_FAMILY, CLASSIFICATION, MSRC_SEVERITY
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5271,6 +6621,58 @@ func (c *SSM) DescribePatchPropertiesWithContext(ctx aws.Context, input *Describ
 	return out, req.Send()
 }
 
+// DescribePatchPropertiesPages iterates over the pages of a DescribePatchProperties operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribePatchProperties method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribePatchProperties operation.
+//    pageNum := 0
+//    err := client.DescribePatchPropertiesPages(params,
+//        func(page *ssm.DescribePatchPropertiesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribePatchPropertiesPages(input *DescribePatchPropertiesInput, fn func(*DescribePatchPropertiesOutput, bool) bool) error {
+	return c.DescribePatchPropertiesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribePatchPropertiesPagesWithContext same as DescribePatchPropertiesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribePatchPropertiesPagesWithContext(ctx aws.Context, input *DescribePatchPropertiesInput, fn func(*DescribePatchPropertiesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribePatchPropertiesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribePatchPropertiesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribePatchPropertiesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeSessions = "DescribeSessions"
 
 // DescribeSessionsRequest generates a "aws/request.Request" representing the
@@ -5302,6 +6704,12 @@ func (c *SSM) DescribeSessionsRequest(input *DescribeSessionsInput) (req *reques
 		Name:       opDescribeSessions,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -5355,6 +6763,58 @@ func (c *SSM) DescribeSessionsWithContext(ctx aws.Context, input *DescribeSessio
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// DescribeSessionsPages iterates over the pages of a DescribeSessions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeSessions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeSessions operation.
+//    pageNum := 0
+//    err := client.DescribeSessionsPages(params,
+//        func(page *ssm.DescribeSessionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) DescribeSessionsPages(input *DescribeSessionsInput, fn func(*DescribeSessionsOutput, bool) bool) error {
+	return c.DescribeSessionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeSessionsPagesWithContext same as DescribeSessionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeSessionsPagesWithContext(ctx aws.Context, input *DescribeSessionsInput, fn func(*DescribeSessionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeSessionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeSessionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeSessionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opGetAutomationExecution = "GetAutomationExecution"
@@ -5489,8 +6949,14 @@ func (c *SSM) GetCalendarStateRequest(input *GetCalendarStateInput) (req *reques
 // of the calendar at a specific time, and returns the next time that the Change
 // Calendar state will transition. If you do not specify a time, GetCalendarState
 // assumes the current time. Change Calendar entries have two possible states:
-// OPEN or CLOSED. For more information about Systems Manager Change Calendar,
-// see AWS Systems Manager Change Calendar (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-change-calendar.html)
+// OPEN or CLOSED.
+//
+// If you specify more than one calendar in a request, the command returns the
+// status of OPEN only if all calendars in the request are open. If one or more
+// calendars in the request are closed, the status returned is CLOSED.
+//
+// For more information about Systems Manager Change Calendar, see AWS Systems
+// Manager Change Calendar (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-change-calendar.html)
 // in the AWS Systems Manager User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -5862,8 +7328,7 @@ func (c *SSM) GetDeployablePatchSnapshotForInstanceRequest(input *GetDeployableP
 //
 //   * UnsupportedOperatingSystem
 //   The operating systems you specified is not supported, or the operation is
-//   not supported for the operating system. Valid operating systems include:
-//   Windows, AmazonLinux, RedhatEnterpriseLinux, and Ubuntu.
+//   not supported for the operating system.
 //
 //   * UnsupportedFeatureRequiredException
 //   Microsoft application patching is only available on EC2 instances and advanced
@@ -6010,6 +7475,12 @@ func (c *SSM) GetInventoryRequest(input *GetInventoryInput) (req *request.Reques
 		Name:       opGetInventory,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -6078,6 +7549,58 @@ func (c *SSM) GetInventoryWithContext(ctx aws.Context, input *GetInventoryInput,
 	return out, req.Send()
 }
 
+// GetInventoryPages iterates over the pages of a GetInventory operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See GetInventory method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a GetInventory operation.
+//    pageNum := 0
+//    err := client.GetInventoryPages(params,
+//        func(page *ssm.GetInventoryOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) GetInventoryPages(input *GetInventoryInput, fn func(*GetInventoryOutput, bool) bool) error {
+	return c.GetInventoryPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetInventoryPagesWithContext same as GetInventoryPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) GetInventoryPagesWithContext(ctx aws.Context, input *GetInventoryInput, fn func(*GetInventoryOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *GetInventoryInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.GetInventoryRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*GetInventoryOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opGetInventorySchema = "GetInventorySchema"
 
 // GetInventorySchemaRequest generates a "aws/request.Request" representing the
@@ -6109,6 +7632,12 @@ func (c *SSM) GetInventorySchemaRequest(input *GetInventorySchemaInput) (req *re
 		Name:       opGetInventorySchema,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -6162,6 +7691,58 @@ func (c *SSM) GetInventorySchemaWithContext(ctx aws.Context, input *GetInventory
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// GetInventorySchemaPages iterates over the pages of a GetInventorySchema operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See GetInventorySchema method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a GetInventorySchema operation.
+//    pageNum := 0
+//    err := client.GetInventorySchemaPages(params,
+//        func(page *ssm.GetInventorySchemaOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) GetInventorySchemaPages(input *GetInventorySchemaInput, fn func(*GetInventorySchemaOutput, bool) bool) error {
+	return c.GetInventorySchemaPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetInventorySchemaPagesWithContext same as GetInventorySchemaPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) GetInventorySchemaPagesWithContext(ctx aws.Context, input *GetInventorySchemaInput, fn func(*GetInventorySchemaOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *GetInventorySchemaInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.GetInventorySchemaRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*GetInventorySchemaOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opGetMaintenanceWindow = "GetMaintenanceWindow"
@@ -6722,6 +8303,12 @@ func (c *SSM) GetOpsSummaryRequest(input *GetOpsSummaryInput) (req *request.Requ
 		Name:       opGetOpsSummary,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -6785,6 +8372,58 @@ func (c *SSM) GetOpsSummaryWithContext(ctx aws.Context, input *GetOpsSummaryInpu
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// GetOpsSummaryPages iterates over the pages of a GetOpsSummary operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See GetOpsSummary method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a GetOpsSummary operation.
+//    pageNum := 0
+//    err := client.GetOpsSummaryPages(params,
+//        func(page *ssm.GetOpsSummaryOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) GetOpsSummaryPages(input *GetOpsSummaryInput, fn func(*GetOpsSummaryOutput, bool) bool) error {
+	return c.GetOpsSummaryPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetOpsSummaryPagesWithContext same as GetOpsSummaryPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) GetOpsSummaryPagesWithContext(ctx aws.Context, input *GetOpsSummaryInput, fn func(*GetOpsSummaryOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *GetOpsSummaryInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.GetOpsSummaryRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*GetOpsSummaryOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opGetParameter = "GetParameter"
@@ -7687,6 +9326,12 @@ func (c *SSM) ListAssociationVersionsRequest(input *ListAssociationVersionsInput
 		Name:       opListAssociationVersions,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -7739,6 +9384,58 @@ func (c *SSM) ListAssociationVersionsWithContext(ctx aws.Context, input *ListAss
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListAssociationVersionsPages iterates over the pages of a ListAssociationVersions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListAssociationVersions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListAssociationVersions operation.
+//    pageNum := 0
+//    err := client.ListAssociationVersionsPages(params,
+//        func(page *ssm.ListAssociationVersionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) ListAssociationVersionsPages(input *ListAssociationVersionsInput, fn func(*ListAssociationVersionsOutput, bool) bool) error {
+	return c.ListAssociationVersionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListAssociationVersionsPagesWithContext same as ListAssociationVersionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) ListAssociationVersionsPagesWithContext(ctx aws.Context, input *ListAssociationVersionsInput, fn func(*ListAssociationVersionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListAssociationVersionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListAssociationVersionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListAssociationVersionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListAssociations = "ListAssociations"
@@ -8232,6 +9929,12 @@ func (c *SSM) ListComplianceItemsRequest(input *ListComplianceItemsInput) (req *
 		Name:       opListComplianceItems,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -8298,6 +10001,58 @@ func (c *SSM) ListComplianceItemsWithContext(ctx aws.Context, input *ListComplia
 	return out, req.Send()
 }
 
+// ListComplianceItemsPages iterates over the pages of a ListComplianceItems operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListComplianceItems method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListComplianceItems operation.
+//    pageNum := 0
+//    err := client.ListComplianceItemsPages(params,
+//        func(page *ssm.ListComplianceItemsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) ListComplianceItemsPages(input *ListComplianceItemsInput, fn func(*ListComplianceItemsOutput, bool) bool) error {
+	return c.ListComplianceItemsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListComplianceItemsPagesWithContext same as ListComplianceItemsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) ListComplianceItemsPagesWithContext(ctx aws.Context, input *ListComplianceItemsInput, fn func(*ListComplianceItemsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListComplianceItemsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListComplianceItemsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListComplianceItemsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListComplianceSummaries = "ListComplianceSummaries"
 
 // ListComplianceSummariesRequest generates a "aws/request.Request" representing the
@@ -8329,6 +10084,12 @@ func (c *SSM) ListComplianceSummariesRequest(input *ListComplianceSummariesInput
 		Name:       opListComplianceSummaries,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -8386,6 +10147,58 @@ func (c *SSM) ListComplianceSummariesWithContext(ctx aws.Context, input *ListCom
 	return out, req.Send()
 }
 
+// ListComplianceSummariesPages iterates over the pages of a ListComplianceSummaries operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListComplianceSummaries method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListComplianceSummaries operation.
+//    pageNum := 0
+//    err := client.ListComplianceSummariesPages(params,
+//        func(page *ssm.ListComplianceSummariesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) ListComplianceSummariesPages(input *ListComplianceSummariesInput, fn func(*ListComplianceSummariesOutput, bool) bool) error {
+	return c.ListComplianceSummariesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListComplianceSummariesPagesWithContext same as ListComplianceSummariesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) ListComplianceSummariesPagesWithContext(ctx aws.Context, input *ListComplianceSummariesInput, fn func(*ListComplianceSummariesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListComplianceSummariesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListComplianceSummariesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListComplianceSummariesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListDocumentVersions = "ListDocumentVersions"
 
 // ListDocumentVersionsRequest generates a "aws/request.Request" representing the
@@ -8417,6 +10230,12 @@ func (c *SSM) ListDocumentVersionsRequest(input *ListDocumentVersionsInput) (req
 		Name:       opListDocumentVersions,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -8469,6 +10288,58 @@ func (c *SSM) ListDocumentVersionsWithContext(ctx aws.Context, input *ListDocume
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListDocumentVersionsPages iterates over the pages of a ListDocumentVersions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListDocumentVersions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListDocumentVersions operation.
+//    pageNum := 0
+//    err := client.ListDocumentVersionsPages(params,
+//        func(page *ssm.ListDocumentVersionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) ListDocumentVersionsPages(input *ListDocumentVersionsInput, fn func(*ListDocumentVersionsOutput, bool) bool) error {
+	return c.ListDocumentVersionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListDocumentVersionsPagesWithContext same as ListDocumentVersionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) ListDocumentVersionsPagesWithContext(ctx aws.Context, input *ListDocumentVersionsInput, fn func(*ListDocumentVersionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListDocumentVersionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListDocumentVersionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListDocumentVersionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListDocuments = "ListDocuments"
@@ -8747,6 +10618,12 @@ func (c *SSM) ListResourceComplianceSummariesRequest(input *ListResourceComplian
 		Name:       opListResourceComplianceSummaries,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -8804,6 +10681,58 @@ func (c *SSM) ListResourceComplianceSummariesWithContext(ctx aws.Context, input 
 	return out, req.Send()
 }
 
+// ListResourceComplianceSummariesPages iterates over the pages of a ListResourceComplianceSummaries operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListResourceComplianceSummaries method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListResourceComplianceSummaries operation.
+//    pageNum := 0
+//    err := client.ListResourceComplianceSummariesPages(params,
+//        func(page *ssm.ListResourceComplianceSummariesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) ListResourceComplianceSummariesPages(input *ListResourceComplianceSummariesInput, fn func(*ListResourceComplianceSummariesOutput, bool) bool) error {
+	return c.ListResourceComplianceSummariesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListResourceComplianceSummariesPagesWithContext same as ListResourceComplianceSummariesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) ListResourceComplianceSummariesPagesWithContext(ctx aws.Context, input *ListResourceComplianceSummariesInput, fn func(*ListResourceComplianceSummariesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListResourceComplianceSummariesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListResourceComplianceSummariesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListResourceComplianceSummariesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListResourceDataSync = "ListResourceDataSync"
 
 // ListResourceDataSyncRequest generates a "aws/request.Request" representing the
@@ -8835,6 +10764,12 @@ func (c *SSM) ListResourceDataSyncRequest(input *ListResourceDataSyncInput) (req
 		Name:       opListResourceDataSync,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -8896,6 +10831,58 @@ func (c *SSM) ListResourceDataSyncWithContext(ctx aws.Context, input *ListResour
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListResourceDataSyncPages iterates over the pages of a ListResourceDataSync operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListResourceDataSync method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListResourceDataSync operation.
+//    pageNum := 0
+//    err := client.ListResourceDataSyncPages(params,
+//        func(page *ssm.ListResourceDataSyncOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *SSM) ListResourceDataSyncPages(input *ListResourceDataSyncInput, fn func(*ListResourceDataSyncOutput, bool) bool) error {
+	return c.ListResourceDataSyncPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListResourceDataSyncPagesWithContext same as ListResourceDataSyncPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) ListResourceDataSyncPagesWithContext(ctx aws.Context, input *ListResourceDataSyncInput, fn func(*ListResourceDataSyncOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListResourceDataSyncInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListResourceDataSyncRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListResourceDataSyncOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListTagsForResource = "ListTagsForResource"
@@ -11540,10 +13527,18 @@ func (c *SSM) UpdateMaintenanceWindowTaskRequest(input *UpdateMaintenanceWindowT
 //
 //    * MaxErrors
 //
-// If a parameter is null, then the corresponding field is not modified. Also,
-// if you set Replace to true, then all fields required by the RegisterTaskWithMaintenanceWindow
-// action are required for this request. Optional fields that aren't specified
-// are set to null.
+// If the value for a parameter in UpdateMaintenanceWindowTask is null, then
+// the corresponding field is not modified. If you set Replace to true, then
+// all fields required by the RegisterTaskWithMaintenanceWindow action are required
+// for this request. Optional fields that aren't specified are set to null.
+//
+// When you update a maintenance window task that has options specified in TaskInvocationParameters,
+// you must provide again all the TaskInvocationParameters values that you want
+// to retain. The values you do not specify again are removed. For example,
+// suppose that when you registered a Run Command task, you specified TaskInvocationParameters
+// values for Comment, NotificationConfig, and OutputS3BucketName. If you update
+// the maintenance window task and specify only a different OutputS3BucketName
+// value, the values for Comment and NotificationConfig are removed.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -12610,6 +14605,12 @@ func (s *AssociationAlreadyExists) RequestID() string {
 type AssociationDescription struct {
 	_ struct{} `type:"structure"`
 
+	// By default, when you create a new associations, the system runs it immediately
+	// after it is created and then according to the schedule you specified. Specify
+	// this option if you don't want an association to run immediately after you
+	// create it.
+	ApplyOnlyAtCronInterval *bool `type:"boolean"`
+
 	// The association ID.
 	AssociationId *string `type:"string"`
 
@@ -12714,6 +14715,12 @@ func (s AssociationDescription) String() string {
 // GoString returns the string representation
 func (s AssociationDescription) GoString() string {
 	return s.String()
+}
+
+// SetApplyOnlyAtCronInterval sets the ApplyOnlyAtCronInterval field's value.
+func (s *AssociationDescription) SetApplyOnlyAtCronInterval(v bool) *AssociationDescription {
+	s.ApplyOnlyAtCronInterval = &v
+	return s
 }
 
 // SetAssociationId sets the AssociationId field's value.
@@ -13503,6 +15510,12 @@ func (s *AssociationStatus) SetName(v string) *AssociationStatus {
 type AssociationVersionInfo struct {
 	_ struct{} `type:"structure"`
 
+	// By default, when you create a new associations, the system runs it immediately
+	// after it is created and then according to the schedule you specified. Specify
+	// this option if you don't want an association to run immediately after you
+	// create it.
+	ApplyOnlyAtCronInterval *bool `type:"boolean"`
+
 	// The ID created by the system when the association was created.
 	AssociationId *string `type:"string"`
 
@@ -13590,6 +15603,12 @@ func (s AssociationVersionInfo) String() string {
 // GoString returns the string representation
 func (s AssociationVersionInfo) GoString() string {
 	return s.String()
+}
+
+// SetApplyOnlyAtCronInterval sets the ApplyOnlyAtCronInterval field's value.
+func (s *AssociationVersionInfo) SetApplyOnlyAtCronInterval(v bool) *AssociationVersionInfo {
+	s.ApplyOnlyAtCronInterval = &v
+	return s
 }
 
 // SetAssociationId sets the AssociationId field's value.
@@ -13833,10 +15852,10 @@ type AttachmentsSource struct {
 	// to a document. The format for Value depends on the type of key you specify.
 	//
 	//    * For the key SourceUrl, the value is an S3 bucket location. For example:
-	//    "Values": [ "s3://my-bucket/my-folder" ]
+	//    "Values": [ "s3://doc-example-bucket/my-folder" ]
 	//
 	//    * For the key S3FileUrl, the value is a file in an S3 bucket. For example:
-	//    "Values": [ "s3://my-bucket/my-folder/my-file.py" ]
+	//    "Values": [ "s3://doc-example-bucket/my-folder/my-file.py" ]
 	//
 	//    * For the key AttachmentReference, the value is constructed from the name
 	//    of another SSM document in your account, a version number of that document,
@@ -15008,6 +17027,9 @@ type Command struct {
 	// that you specify. Targets is required if you don't provide one or more instance
 	// IDs in the call.
 	Targets []*Target `type:"list"`
+
+	// The TimeoutSeconds value specified for a command.
+	TimeoutSeconds *int64 `min:"30" type:"integer"`
 }
 
 // String returns the string representation
@@ -15158,7 +17180,16 @@ func (s *Command) SetTargets(v []*Target) *Command {
 	return s
 }
 
+// SetTimeoutSeconds sets the TimeoutSeconds field's value.
+func (s *Command) SetTimeoutSeconds(v int64) *Command {
+	s.TimeoutSeconds = &v
+	return s
+}
+
 // Describes a command filter.
+//
+// An instance ID can't be specified when a command status is Pending because
+// the command hasn't run on the instance yet.
 type CommandFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -15466,13 +17497,13 @@ type CommandPlugin struct {
 	// This was requested when issuing the command. For example, in the following
 	// response:
 	//
-	// test_folder/ab19cb99-a030-46dd-9dfc-8eSAMPLEPre-Fix/i-1234567876543/awsrunShellScript
+	// doc-example-bucket/ab19cb99-a030-46dd-9dfc-8eSAMPLEPre-Fix/i-02573cafcfEXAMPLE/awsrunShellScript
 	//
-	// test_folder is the name of the S3 bucket;
+	// doc-example-bucket is the name of the S3 bucket;
 	//
 	// ab19cb99-a030-46dd-9dfc-8eSAMPLEPre-Fix is the name of the S3 prefix;
 	//
-	// i-1234567876543 is the instance ID;
+	// i-02573cafcfEXAMPLE is the instance ID;
 	//
 	// awsrunShellScript is the name of the plugin.
 	OutputS3BucketName *string `min:"3" type:"string"`
@@ -15481,13 +17512,13 @@ type CommandPlugin struct {
 	// executions should be stored. This was requested when issuing the command.
 	// For example, in the following response:
 	//
-	// test_folder/ab19cb99-a030-46dd-9dfc-8eSAMPLEPre-Fix/i-1234567876543/awsrunShellScript
+	// doc-example-bucket/ab19cb99-a030-46dd-9dfc-8eSAMPLEPre-Fix/i-02573cafcfEXAMPLE/awsrunShellScript
 	//
-	// test_folder is the name of the S3 bucket;
+	// doc-example-bucket is the name of the S3 bucket;
 	//
 	// ab19cb99-a030-46dd-9dfc-8eSAMPLEPre-Fix is the name of the S3 prefix;
 	//
-	// i-1234567876543 is the instance ID;
+	// i-02573cafcfEXAMPLE is the instance ID;
 	//
 	// awsrunShellScript is the name of the plugin.
 	OutputS3KeyPrefix *string `type:"string"`
@@ -15828,7 +17859,8 @@ type ComplianceItemEntry struct {
 	// Severity is a required field
 	Severity *string `type:"string" required:"true" enum:"ComplianceSeverity"`
 
-	// The status of the compliance item. An item is either COMPLIANT or NON_COMPLIANT.
+	// The status of the compliance item. An item is either COMPLIANT, NON_COMPLIANT,
+	// or an empty string (for Windows patches that aren't applicable).
 	//
 	// Status is a required field
 	Status *string `type:"string" required:"true" enum:"ComplianceStatus"`
@@ -16339,6 +18371,12 @@ func (s *CreateAssociationBatchOutput) SetSuccessful(v []*AssociationDescription
 type CreateAssociationBatchRequestEntry struct {
 	_ struct{} `type:"structure"`
 
+	// By default, when you create a new associations, the system runs it immediately
+	// after it is created and then according to the schedule you specified. Specify
+	// this option if you don't want an association to run immediately after you
+	// create it.
+	ApplyOnlyAtCronInterval *bool `type:"boolean"`
+
 	// Specify a descriptive name for the association.
 	AssociationName *string `type:"string"`
 
@@ -16480,6 +18518,12 @@ func (s *CreateAssociationBatchRequestEntry) Validate() error {
 	return nil
 }
 
+// SetApplyOnlyAtCronInterval sets the ApplyOnlyAtCronInterval field's value.
+func (s *CreateAssociationBatchRequestEntry) SetApplyOnlyAtCronInterval(v bool) *CreateAssociationBatchRequestEntry {
+	s.ApplyOnlyAtCronInterval = &v
+	return s
+}
+
 // SetAssociationName sets the AssociationName field's value.
 func (s *CreateAssociationBatchRequestEntry) SetAssociationName(v string) *CreateAssociationBatchRequestEntry {
 	s.AssociationName = &v
@@ -16560,6 +18604,12 @@ func (s *CreateAssociationBatchRequestEntry) SetTargets(v []*Target) *CreateAsso
 
 type CreateAssociationInput struct {
 	_ struct{} `type:"structure"`
+
+	// By default, when you create a new associations, the system runs it immediately
+	// after it is created and then according to the schedule you specified. Specify
+	// this option if you don't want an association to run immediately after you
+	// create it.
+	ApplyOnlyAtCronInterval *bool `type:"boolean"`
 
 	// Specify a descriptive name for the association.
 	AssociationName *string `type:"string"`
@@ -16714,6 +18764,12 @@ func (s *CreateAssociationInput) Validate() error {
 	return nil
 }
 
+// SetApplyOnlyAtCronInterval sets the ApplyOnlyAtCronInterval field's value.
+func (s *CreateAssociationInput) SetApplyOnlyAtCronInterval(v bool) *CreateAssociationInput {
+	s.ApplyOnlyAtCronInterval = &v
+	return s
+}
+
 // SetAssociationName sets the AssociationName field's value.
 func (s *CreateAssociationInput) SetAssociationName(v string) *CreateAssociationInput {
 	s.AssociationName = &v
@@ -16828,7 +18884,7 @@ type CreateDocumentInput struct {
 	//
 	// For examples, see the following topics in the AWS Systems Manager User Guide.
 	//
-	//    * Create an SSM document (console) (https://docs.aws.amazon.com/systems-manager/latest/userguide/create-ssm-console.html)
+	//    * Create an SSM document (AWS API) (https://docs.aws.amazon.com/systems-manager/latest/userguide/create-ssm-document-api.html)
 	//
 	//    * Create an SSM document (AWS CLI) (https://docs.aws.amazon.com/systems-manager/latest/userguide/create-ssm-document-cli.html)
 	//
@@ -16849,7 +18905,7 @@ type CreateDocumentInput struct {
 	// You can't use the following strings as document name prefixes. These are
 	// reserved by AWS for use as document name prefixes:
 	//
-	//    * aws
+	//    * aws-
 	//
 	//    * amazon
 	//
@@ -17081,6 +19137,18 @@ type CreateMaintenanceWindowInput struct {
 	// Schedule is a required field
 	Schedule *string `min:"1" type:"string" required:"true"`
 
+	// The number of days to wait after the date and time specified by a CRON expression
+	// before running the maintenance window.
+	//
+	// For example, the following cron expression schedules a maintenance window
+	// to run on the third Tuesday of every month at 11:30 PM.
+	//
+	// cron(0 30 23 ? * TUE#3 *)
+	//
+	// If the schedule offset is 2, the maintenance window won't run until two days
+	// later.
+	ScheduleOffset *int64 `min:"1" type:"integer"`
+
 	// The time zone that the scheduled maintenance window executions are based
 	// on, in Internet Assigned Numbers Authority (IANA) format. For example: "America/Los_Angeles",
 	// "etc/UTC", or "Asia/Seoul". For more information, see the Time Zone Database
@@ -17152,6 +19220,9 @@ func (s *CreateMaintenanceWindowInput) Validate() error {
 	if s.Schedule != nil && len(*s.Schedule) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Schedule", 1))
 	}
+	if s.ScheduleOffset != nil && *s.ScheduleOffset < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ScheduleOffset", 1))
+	}
 	if s.Tags != nil {
 		for i, v := range s.Tags {
 			if v == nil {
@@ -17214,6 +19285,12 @@ func (s *CreateMaintenanceWindowInput) SetName(v string) *CreateMaintenanceWindo
 // SetSchedule sets the Schedule field's value.
 func (s *CreateMaintenanceWindowInput) SetSchedule(v string) *CreateMaintenanceWindowInput {
 	s.Schedule = &v
+	return s
+}
+
+// SetScheduleOffset sets the ScheduleOffset field's value.
+func (s *CreateMaintenanceWindowInput) SetScheduleOffset(v int64) *CreateMaintenanceWindowInput {
+	s.ScheduleOffset = &v
 	return s
 }
 
@@ -18084,7 +20161,7 @@ type DeleteInventoryInput struct {
 	_ struct{} `type:"structure"`
 
 	// User-provided idempotency token.
-	ClientToken *string `min:"1" type:"string" idempotencyToken:"true"`
+	ClientToken *string `type:"string" idempotencyToken:"true"`
 
 	// Use this option to view a summary of the deletion request without deleting
 	// any data or the data type. This option is useful when you only want to understand
@@ -18108,7 +20185,7 @@ type DeleteInventoryInput struct {
 	SchemaDeleteOption *string `type:"string" enum:"InventorySchemaDeleteOption"`
 
 	// The name of the custom inventory type for which you want to delete either
-	// all previously collected data, or the inventory type itself.
+	// all previously collected data or the inventory type itself.
 	//
 	// TypeName is a required field
 	TypeName *string `min:"1" type:"string" required:"true"`
@@ -18127,9 +20204,6 @@ func (s DeleteInventoryInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *DeleteInventoryInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteInventoryInput"}
-	if s.ClientToken != nil && len(*s.ClientToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("ClientToken", 1))
-	}
 	if s.TypeName == nil {
 		invalidParams.Add(request.NewErrParamRequired("TypeName"))
 	}
@@ -22155,6 +24229,15 @@ type DescribePatchGroupsInput struct {
 	_ struct{} `type:"structure"`
 
 	// One or more filters. Use a filter to return a more specific list of results.
+	//
+	// For DescribePatchGroups,valid filter keys include the following:
+	//
+	//    * NAME_PREFIX: The name of the patch group. Wildcards (*) are accepted.
+	//
+	//    * OPERATING_SYSTEM: The supported operating system type to return results
+	//    for. For valid operating system values, see GetDefaultPatchBaselineRequest$OperatingSystem
+	//    in CreatePatchBaseline. Examples: --filters Key=NAME_PREFIX,Values=MyPatchGroup*
+	//    --filters Key=OPERATING_SYSTEM,Values=AMAZON_LINUX_2
 	Filters []*PatchOrchestratorFilter `type:"list"`
 
 	// The maximum number of patch groups to return (per page).
@@ -22992,15 +25075,59 @@ func (s *DocumentIdentifier) SetVersionName(v string) *DocumentIdentifier {
 //
 // For keys, you can specify one or more tags that have been applied to a document.
 //
-// Other valid values include Owner, Name, PlatformTypes, and DocumentType.
+// You can also use AWS-provided keys, some of which have specific allowed values.
+// These keys and their associated values are as follows:
+//
+// DocumentType
+//
+//    * ApplicationConfiguration
+//
+//    * ApplicationConfigurationSchema
+//
+//    * Automation
+//
+//    * ChangeCalendar
+//
+//    * Command
+//
+//    * DeploymentStrategy
+//
+//    * Package
+//
+//    * Policy
+//
+//    * Session
+//
+// Owner
 //
 // Note that only one Owner can be specified in a request. For example: Key=Owner,Values=Self.
 //
-// If you use Name as a key, you can use a name prefix to return a list of documents.
-// For example, in the AWS CLI, to return a list of all documents that begin
-// with Te, run the following command:
+//    * Amazon
+//
+//    * Private
+//
+//    * Public
+//
+//    * Self
+//
+//    * ThirdParty
+//
+// PlatformTypes
+//
+//    * Linux
+//
+//    * Windows
+//
+// Name is another AWS-provided key. If you use Name as a key, you can use a
+// name prefix to return a list of documents. For example, in the AWS CLI, to
+// return a list of all documents that begin with Te, run the following command:
 //
 // aws ssm list-documents --filters Key=Name,Values=Te
+//
+// You can also use the TargetType AWS-provided key. For a list of valid resource
+// type values that can be used with this key, see AWS resource and property
+// types reference (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
+// in the AWS CloudFormation User Guide.
 //
 // If you specify more than two keys, only documents that are identified by
 // all the tags are returned in the results. If you specify more than two values
@@ -23009,7 +25136,7 @@ func (s *DocumentIdentifier) SetVersionName(v string) *DocumentIdentifier {
 //
 // To specify a custom key and value pair, use the format Key=tag:tagName,Values=valueName.
 //
-// For example, if you created a Key called region and are using the AWS CLI
+// For example, if you created a key called region and are using the AWS CLI
 // to call the list-documents command:
 //
 // aws ssm list-documents --filters Key=tag:region,Values=east,west Key=Owner,Values=Self
@@ -24022,6 +26149,8 @@ type GetCommandInvocationInput struct {
 	// (Optional) The name of the plugin for which you want detailed results. If
 	// the document contains only one plugin, the name can be omitted and the details
 	// will be returned.
+	//
+	// Plugin names are also referred to as step names in Systems Manager documents.
 	PluginName *string `min:"4" type:"string"`
 }
 
@@ -25582,6 +27711,10 @@ type GetMaintenanceWindowOutput struct {
 	// The schedule of the maintenance window in the form of a cron or rate expression.
 	Schedule *string `min:"1" type:"string"`
 
+	// The number of days to wait to run a maintenance window after the scheduled
+	// CRON expression date and time.
+	ScheduleOffset *int64 `min:"1" type:"integer"`
+
 	// The time zone that the scheduled maintenance window executions are based
 	// on, in Internet Assigned Numbers Authority (IANA) format. For example: "America/Los_Angeles",
 	// "etc/UTC", or "Asia/Seoul". For more information, see the Time Zone Database
@@ -25670,6 +27803,12 @@ func (s *GetMaintenanceWindowOutput) SetNextExecutionTime(v string) *GetMaintena
 // SetSchedule sets the Schedule field's value.
 func (s *GetMaintenanceWindowOutput) SetSchedule(v string) *GetMaintenanceWindowOutput {
 	s.Schedule = &v
+	return s
+}
+
+// SetScheduleOffset sets the ScheduleOffset field's value.
+func (s *GetMaintenanceWindowOutput) SetScheduleOffset(v int64) *GetMaintenanceWindowOutput {
+	s.ScheduleOffset = &v
 	return s
 }
 
@@ -26318,6 +28457,12 @@ type GetParametersByPathInput struct {
 	NextToken *string `type:"string"`
 
 	// Filters to limit the request results.
+	//
+	// For GetParametersByPath, the following filter Key names are supported: Type,
+	// KeyId, Label, and DataType.
+	//
+	// The following Key values are not supported for GetParametersByPath: tag,
+	// Name, Path, and Tier.
 	ParameterFilters []*ParameterStringFilter `type:"list"`
 
 	// The hierarchy for the parameter. Hierarchies start with a forward slash (/)
@@ -27418,8 +29563,12 @@ type InstanceInformation struct {
 	IPAddress *string `min:"1" type:"string"`
 
 	// The Amazon Identity and Access Management (IAM) role assigned to the on-premises
-	// Systems Manager managed instances. This call does not return the IAM role
-	// for EC2 instances.
+	// Systems Manager managed instance. This call does not return the IAM role
+	// for EC2 instances. To retrieve the IAM role for an EC2 instance, use the
+	// Amazon EC2 DescribeInstances action. For information, see DescribeInstances
+	// (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html)
+	// in the Amazon EC2 API Reference or describe-instances (http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html)
+	// in the AWS CLI Command Reference.
 	IamRole *string `type:"string"`
 
 	// The instance ID.
@@ -27440,7 +29589,17 @@ type InstanceInformation struct {
 	// The last date the association was successfully run.
 	LastSuccessfulAssociationExecutionDate *time.Time `type:"timestamp"`
 
-	// The name of the managed instance.
+	// The name assigned to an on-premises server or virtual machine (VM) when it
+	// is activated as a Systems Manager managed instance. The name is specified
+	// as the DefaultInstanceName property using the CreateActivation command. It
+	// is applied to the managed instance by specifying the Activation Code and
+	// Activation ID when you install SSM Agent on the instance, as explained in
+	// Install SSM Agent for a hybrid environment (Linux) (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-install-managed-linux.html)
+	// and Install SSM Agent for a hybrid environment (Windows) (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-install-managed-win.html).
+	// To retrieve the Name tag of an EC2 instance, use the Amazon EC2 DescribeInstances
+	// action. For information, see DescribeInstances (http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html)
+	// in the Amazon EC2 API Reference or describe-instances (http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html)
+	// in the AWS CLI Command Reference.
 	Name *string `type:"string"`
 
 	// Connection status of SSM Agent.
@@ -27746,7 +29905,7 @@ type InstancePatchState struct {
 	// instance was rebooted.
 	InstalledPendingRebootCount *int64 `type:"integer"`
 
-	// The number of instances with patches installed that are specified in a RejectedPatches
+	// The number of patches installed on an instance that are specified in a RejectedPatches
 	// list. Patches with a status of InstalledRejected were typically installed
 	// before they were added to a RejectedPatches list.
 	//
@@ -31946,7 +34105,7 @@ type ListCommandInvocationsInput struct {
 	Details *bool `type:"boolean"`
 
 	// (Optional) One or more filters. Use a filter to return a more specific list
-	// of results. Note that the DocumentName filter is not supported for ListCommandInvocations.
+	// of results.
 	Filters []*CommandFilter `min:"1" type:"list"`
 
 	// (Optional) The command execution details for a specific instance ID.
@@ -32081,6 +34240,9 @@ type ListCommandsInput struct {
 	Filters []*CommandFilter `min:"1" type:"list"`
 
 	// (Optional) Lists commands issued against this instance ID.
+	//
+	// You can't specify an instance ID in the same command that you specify Status
+	// = Pending. This is because the command has not reached the instance yet.
 	InstanceId *string `type:"string"`
 
 	// (Optional) The maximum number of items to return for this call. The call
@@ -32527,9 +34689,9 @@ type ListDocumentsInput struct {
 	// One or more DocumentKeyValuesFilter objects. Use a filter to return a more
 	// specific list of results. For keys, you can specify one or more key-value
 	// pair tags that have been applied to a document. Other valid keys include
-	// Owner, Name, PlatformTypes, and DocumentType. For example, to return documents
-	// you own use Key=Owner,Values=Self. To specify a custom key-value pair, use
-	// the format Key=tag:tagName,Values=valueName.
+	// Owner, Name, PlatformTypes, DocumentType, and TargetType. For example, to
+	// return documents you own use Key=Owner,Values=Self. To specify a custom key-value
+	// pair, use the format Key=tag:tagName,Values=valueName.
 	Filters []*DocumentKeyValuesFilter `type:"list"`
 
 	// The maximum number of items to return for this call. The call also returns
@@ -32928,7 +35090,7 @@ type ListResourceDataSyncInput struct {
 	NextToken *string `type:"string"`
 
 	// View a list of resource data syncs according to the sync type. Specify SyncToDestination
-	// to view resource data syncs that synchronize data to an Amazon S3 buckets.
+	// to view resource data syncs that synchronize data to an Amazon S3 bucket.
 	// Specify SyncFromSource to view resource data syncs from AWS Organizations
 	// or from multiple AWS Regions.
 	SyncType *string `min:"1" type:"string"`
@@ -33585,6 +35747,10 @@ type MaintenanceWindowIdentity struct {
 	// The schedule of the maintenance window in the form of a cron or rate expression.
 	Schedule *string `min:"1" type:"string"`
 
+	// The number of days to wait to run a maintenance window after the scheduled
+	// CRON expression date and time.
+	ScheduleOffset *int64 `min:"1" type:"integer"`
+
 	// The time zone that the scheduled maintenance window executions are based
 	// on, in Internet Assigned Numbers Authority (IANA) format.
 	ScheduleTimezone *string `type:"string"`
@@ -33652,6 +35818,12 @@ func (s *MaintenanceWindowIdentity) SetNextExecutionTime(v string) *MaintenanceW
 // SetSchedule sets the Schedule field's value.
 func (s *MaintenanceWindowIdentity) SetSchedule(v string) *MaintenanceWindowIdentity {
 	s.Schedule = &v
+	return s
+}
+
+// SetScheduleOffset sets the ScheduleOffset field's value.
+func (s *MaintenanceWindowIdentity) SetScheduleOffset(v int64) *MaintenanceWindowIdentity {
+	s.ScheduleOffset = &v
 	return s
 }
 
@@ -34607,7 +36779,7 @@ type OpsAggregator struct {
 	Aggregators []*OpsAggregator `min:"1" type:"list"`
 
 	// The name of an OpsItem attribute on which to limit the count of OpsItems.
-	AttributeName *string `type:"string"`
+	AttributeName *string `min:"1" type:"string"`
 
 	// The aggregator filters.
 	Filters []*OpsFilter `min:"1" type:"list"`
@@ -34637,6 +36809,9 @@ func (s *OpsAggregator) Validate() error {
 	}
 	if s.Aggregators != nil && len(s.Aggregators) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Aggregators", 1))
+	}
+	if s.AttributeName != nil && len(*s.AttributeName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AttributeName", 1))
 	}
 	if s.Filters != nil && len(s.Filters) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Filters", 1))
@@ -35605,6 +37780,10 @@ type Parameter struct {
 	// The Amazon Resource Name (ARN) of the parameter.
 	ARN *string `type:"string"`
 
+	// The data type of the parameter, such as text or aws:ec2:image. The default
+	// is text.
+	DataType *string `type:"string"`
+
 	// Date the parameter was last changed or updated and the parameter version
 	// was created.
 	LastModifiedDate *time.Time `type:"timestamp"`
@@ -35648,6 +37827,12 @@ func (s Parameter) GoString() string {
 // SetARN sets the ARN field's value.
 func (s *Parameter) SetARN(v string) *Parameter {
 	s.ARN = &v
+	return s
+}
+
+// SetDataType sets the DataType field's value.
+func (s *Parameter) SetDataType(v string) *Parameter {
+	s.DataType = &v
 	return s
 }
 
@@ -35758,6 +37943,10 @@ type ParameterHistory struct {
 	// a-zA-Z0-9_.-
 	AllowedPattern *string `type:"string"`
 
+	// The data type of the parameter, such as text or aws:ec2:image. The default
+	// is text.
+	DataType *string `type:"string"`
+
 	// Information about the parameter.
 	Description *string `type:"string"`
 
@@ -35808,6 +37997,12 @@ func (s ParameterHistory) GoString() string {
 // SetAllowedPattern sets the AllowedPattern field's value.
 func (s *ParameterHistory) SetAllowedPattern(v string) *ParameterHistory {
 	s.AllowedPattern = &v
+	return s
+}
+
+// SetDataType sets the DataType field's value.
+func (s *ParameterHistory) SetDataType(v string) *ParameterHistory {
+	s.DataType = &v
 	return s
 }
 
@@ -36046,6 +38241,10 @@ type ParameterMetadata struct {
 	// a-zA-Z0-9_.-
 	AllowedPattern *string `type:"string"`
 
+	// The data type of the parameter, such as text or aws:ec2:image. The default
+	// is text.
+	DataType *string `type:"string"`
+
 	// Description of the parameter actions.
 	Description *string `type:"string"`
 
@@ -36088,6 +38287,12 @@ func (s ParameterMetadata) GoString() string {
 // SetAllowedPattern sets the AllowedPattern field's value.
 func (s *ParameterMetadata) SetAllowedPattern(v string) *ParameterMetadata {
 	s.AllowedPattern = &v
+	return s
+}
+
+// SetDataType sets the DataType field's value.
+func (s *ParameterMetadata) SetDataType(v string) *ParameterMetadata {
+	s.DataType = &v
 	return s
 }
 
@@ -36259,24 +38464,24 @@ func (s *ParameterPatternMismatchException) RequestID() string {
 }
 
 // One or more filters. Use a filter to return a more specific list of results.
-//
-// The ParameterStringFilter object is used by the DescribeParameters and GetParametersByPath
-// API actions. However, not all of the pattern values listed for Key can be
-// used with both actions.
-//
-// For DescribeActions, all of the listed patterns are valid, with the exception
-// of Label.
-//
-// For GetParametersByPath, the following patterns listed for Key are not valid:
-// Name, Path, and Tier.
-//
-// For examples of CLI commands demonstrating valid parameter filter constructions,
-// see Searching for Systems Manager parameters (https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-search.html)
-// in the AWS Systems Manager User Guide.
 type ParameterStringFilter struct {
 	_ struct{} `type:"structure"`
 
 	// The name of the filter.
+	//
+	// The ParameterStringFilter object is used by the DescribeParameters and GetParametersByPath
+	// API actions. However, not all of the pattern values listed for Key can be
+	// used with both actions.
+	//
+	// For DescribeActions, all of the listed patterns are valid, with the exception
+	// of Label.
+	//
+	// For GetParametersByPath, the following patterns listed for Key are not valid:
+	// tag, Name, Path, and Tier.
+	//
+	// For examples of CLI commands demonstrating valid parameter filter constructions,
+	// see Searching for Systems Manager parameters (https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-search.html)
+	// in the AWS Systems Manager User Guide.
 	//
 	// Key is a required field
 	Key *string `min:"1" type:"string" required:"true"`
@@ -36287,8 +38492,8 @@ type ParameterStringFilter struct {
 	// and OneLevel.)
 	//
 	// For filters used with GetParametersByPath, valid options include Equals and
-	// BeginsWith. (Exception: For filters using the key Label, the only valid option
-	// is Equals.)
+	// BeginsWith. (Exception: For filters using Label as the Key name, the only
+	// valid option is Equals.)
 	Option *string `min:"1" type:"string"`
 
 	// The value you want to search for.
@@ -37656,6 +39861,22 @@ type PutParameterInput struct {
 	// AllowedPattern=^\d+$
 	AllowedPattern *string `type:"string"`
 
+	// The data type for a String parameter. Supported data types include plain
+	// text and Amazon Machine Image IDs.
+	//
+	// The following data type values are supported.
+	//
+	//    * text
+	//
+	//    * aws:ec2:image
+	//
+	// When you create a String parameter and specify aws:ec2:image, Systems Manager
+	// validates the parameter value is in the required format, such as ami-12345abcdeEXAMPLE,
+	// and that the specified AMI is available in your AWS account. For more information,
+	// see Native parameter support for Amazon Machine Image IDs (http://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-ec2-aliases.html)
+	// in the AWS Systems Manager User Guide.
+	DataType *string `type:"string"`
+
 	// Information about the parameter that you want to add to the system. Optional
 	// but recommended.
 	//
@@ -37823,18 +40044,22 @@ type PutParameterInput struct {
 
 	// The type of parameter that you want to add to the system.
 	//
+	// SecureString is not currently supported for AWS CloudFormation templates
+	// or in the China Regions.
+	//
 	// Items in a StringList must be separated by a comma (,). You can't use other
 	// punctuation or special character to escape items in the list. If you have
 	// a parameter value that requires a comma, then use the String data type.
 	//
-	// SecureString is not currently supported for AWS CloudFormation templates
-	// or in the China Regions.
-	//
-	// Type is a required field
-	Type *string `type:"string" required:"true" enum:"ParameterType"`
+	// Specifying a parameter type is not required when updating a parameter. You
+	// must specify a parameter type when creating a parameter.
+	Type *string `type:"string" enum:"ParameterType"`
 
 	// The parameter value that you want to add to the system. Standard parameters
 	// have a value limit of 4 KB. Advanced parameters have a value limit of 8 KB.
+	//
+	// Parameters can't be referenced or nested in the values of other parameters.
+	// You can't include {{}} or {{ssm:parameter-name}} in a parameter value.
 	//
 	// Value is a required field
 	Value *string `type:"string" required:"true"`
@@ -37865,9 +40090,6 @@ func (s *PutParameterInput) Validate() error {
 	if s.Policies != nil && len(*s.Policies) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Policies", 1))
 	}
-	if s.Type == nil {
-		invalidParams.Add(request.NewErrParamRequired("Type"))
-	}
 	if s.Value == nil {
 		invalidParams.Add(request.NewErrParamRequired("Value"))
 	}
@@ -37891,6 +40113,12 @@ func (s *PutParameterInput) Validate() error {
 // SetAllowedPattern sets the AllowedPattern field's value.
 func (s *PutParameterInput) SetAllowedPattern(v string) *PutParameterInput {
 	s.AllowedPattern = &v
+	return s
+}
+
+// SetDataType sets the DataType field's value.
+func (s *PutParameterInput) SetDataType(v string) *PutParameterInput {
+	s.DataType = &v
 	return s
 }
 
@@ -40271,11 +42499,18 @@ type SendCommandInput struct {
 	// --document-version "3"
 	DocumentVersion *string `type:"string"`
 
-	// The instance IDs where the command should run. You can specify a maximum
-	// of 50 IDs. If you prefer not to list individual instance IDs, you can instead
-	// send commands to a fleet of instances using the Targets parameter, which
-	// accepts EC2 tags. For more information about how to use targets, see Using
-	// targets and rate controls to send commands to a fleet (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html)
+	// The IDs of the instances where the command should run. Specifying instance
+	// IDs is most useful when you are targeting a limited number of instances,
+	// though you can specify up to 50 IDs.
+	//
+	// To target a larger number of instances, or if you prefer not to list individual
+	// instance IDs, we recommend using the Targets option instead. Using Targets,
+	// which accepts tag key-value pairs to identify the instances to send commands
+	// to, you can a send command to tens, hundreds, or thousands of instances at
+	// once.
+	//
+	// For more information about how to use targets, see Using targets and rate
+	// controls to send commands to a fleet (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html)
 	// in the AWS Systems Manager User Guide.
 	InstanceIds []*string `type:"list"`
 
@@ -40316,10 +42551,17 @@ type SendCommandInput struct {
 	// Service (Amazon SNS) notifications for Run Command commands.
 	ServiceRoleArn *string `type:"string"`
 
-	// (Optional) An array of search criteria that targets instances using a Key,Value
-	// combination that you specify. Targets is required if you don't provide one
-	// or more instance IDs in the call. For more information about how to use targets,
-	// see Sending commands to a fleet (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html)
+	// An array of search criteria that targets instances using a Key,Value combination
+	// that you specify. Specifying targets is most useful when you want to send
+	// a command to a large number of instances at once. Using Targets, which accepts
+	// tag key-value pairs to identify instances, you can send a command to tens,
+	// hundreds, or thousands of instances at once.
+	//
+	// To send a command to a smaller number of instances, you can use the InstanceIds
+	// option instead.
+	//
+	// For more information about how to use targets, see Sending commands to a
+	// fleet (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html)
 	// in the AWS Systems Manager User Guide.
 	Targets []*Target `type:"list"`
 
@@ -41244,8 +43486,10 @@ type StartSessionInput struct {
 	_ struct{} `type:"structure"`
 
 	// The name of the SSM document to define the parameters and plugin settings
-	// for the session. For example, SSM-SessionManagerRunShell. If no document
-	// name is provided, a shell to the instance is launched by default.
+	// for the session. For example, SSM-SessionManagerRunShell. You can call the
+	// GetDocument API to verify the document exists before attempting to start
+	// a session. If no document name is provided, a shell to the instance is launched
+	// by default.
 	DocumentName *string `type:"string"`
 
 	// Reserved for future use.
@@ -41885,9 +44129,11 @@ func (s *Tag) SetValue(v string) *Tag {
 //
 //    * Key=tag-key,Values=my-tag-key-1,my-tag-key-2
 //
-//    * (Maintenance window targets only) Key=resource-groups:Name,Values=resource-group-name
+//    * Run Command and Maintenance window targets only: Key=resource-groups:Name,Values=resource-group-name
 //
-//    * (Maintenance window targets only) Key=resource-groups:ResourceTypeFilters,Values=resource-type-1,resource-type-2
+//    * Maintenance window targets only: Key=resource-groups:ResourceTypeFilters,Values=resource-type-1,resource-type-2
+//
+//    * Automation targets only: Key=ResourceGroup;Values=resource-group-name
 //
 // For example:
 //
@@ -41897,20 +44143,22 @@ func (s *Tag) SetValue(v string) *Tag {
 //
 //    * Key=tag-key,Values=Name,Instance-Type,CostCenter
 //
-//    * (Maintenance window targets only) Key=resource-groups:Name,Values=ProductionResourceGroup
+//    * Run Command and Maintenance window targets only: Key=resource-groups:Name,Values=ProductionResourceGroup
 //    This example demonstrates how to target all resources in the resource
 //    group ProductionResourceGroup in your maintenance window.
 //
-//    * (Maintenance window targets only) Key=resource-groups:ResourceTypeFilters,Values=AWS::EC2::INSTANCE,AWS::EC2::VPC
+//    * Maintenance window targets only: Key=resource-groups:ResourceTypeFilters,Values=AWS::EC2::INSTANCE,AWS::EC2::VPC
 //    This example demonstrates how to target only EC2 instances and VPCs in
 //    your maintenance window.
 //
-//    * (State Manager association targets only) Key=InstanceIds,Values=* This
+//    * Automation targets only: Key=ResourceGroup,Values=MyResourceGroup
+//
+//    * State Manager association targets only: Key=InstanceIds,Values=* This
 //    example demonstrates how to target all managed instances in the AWS Region
 //    where the association was created.
 //
-// For information about how to send commands that target instances using Key,Value
-// parameters, see Targeting multiple instances (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-targeting)
+// For more information about how to send commands that target instances using
+// Key,Value parameters, see Targeting multiple instances (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-targeting)
 // in the AWS Systems Manager User Guide.
 type Target struct {
 	_ struct{} `type:"structure"`
@@ -42634,8 +44882,7 @@ func (s *UnsupportedInventorySchemaVersionException) RequestID() string {
 }
 
 // The operating systems you specified is not supported, or the operation is
-// not supported for the operating system. Valid operating systems include:
-// Windows, AmazonLinux, RedhatEnterpriseLinux, and Ubuntu.
+// not supported for the operating system.
 type UnsupportedOperatingSystem struct {
 	_            struct{}                  `type:"structure"`
 	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
@@ -42807,6 +45054,18 @@ func (s *UnsupportedPlatformType) RequestID() string {
 type UpdateAssociationInput struct {
 	_ struct{} `type:"structure"`
 
+	// By default, when you update an association, the system runs it immediately
+	// after it is updated and then according to the schedule you specified. Specify
+	// this option if you don't want an association to run immediately after you
+	// update it.
+	//
+	// Also, if you specified this option when you created the association, you
+	// can reset it. To do so, specify the no-apply-only-at-cron-interval parameter
+	// when you update the association from the command line. This parameter forces
+	// the association to run immediately after updating it and according to the
+	// interval specified.
+	ApplyOnlyAtCronInterval *bool `type:"boolean"`
+
 	// The ID of the association you want to update.
 	//
 	// AssociationId is a required field
@@ -42952,6 +45211,12 @@ func (s *UpdateAssociationInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetApplyOnlyAtCronInterval sets the ApplyOnlyAtCronInterval field's value.
+func (s *UpdateAssociationInput) SetApplyOnlyAtCronInterval(v bool) *UpdateAssociationInput {
+	s.ApplyOnlyAtCronInterval = &v
+	return s
 }
 
 // SetAssociationId sets the AssociationId field's value.
@@ -43406,6 +45671,18 @@ type UpdateMaintenanceWindowInput struct {
 	// The schedule of the maintenance window in the form of a cron or rate expression.
 	Schedule *string `min:"1" type:"string"`
 
+	// The number of days to wait after the date and time specified by a CRON expression
+	// before running the maintenance window.
+	//
+	// For example, the following cron expression schedules a maintenance window
+	// to run the third Tuesday of every month at 11:30 PM.
+	//
+	// cron(0 30 23 ? * TUE#3 *)
+	//
+	// If the schedule offset is 2, the maintenance window won't run until two days
+	// later.
+	ScheduleOffset *int64 `min:"1" type:"integer"`
+
 	// The time zone that the scheduled maintenance window executions are based
 	// on, in Internet Assigned Numbers Authority (IANA) format. For example: "America/Los_Angeles",
 	// "etc/UTC", or "Asia/Seoul". For more information, see the Time Zone Database
@@ -43448,6 +45725,9 @@ func (s *UpdateMaintenanceWindowInput) Validate() error {
 	}
 	if s.Schedule != nil && len(*s.Schedule) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Schedule", 1))
+	}
+	if s.ScheduleOffset != nil && *s.ScheduleOffset < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ScheduleOffset", 1))
 	}
 	if s.WindowId == nil {
 		invalidParams.Add(request.NewErrParamRequired("WindowId"))
@@ -43516,6 +45796,12 @@ func (s *UpdateMaintenanceWindowInput) SetSchedule(v string) *UpdateMaintenanceW
 	return s
 }
 
+// SetScheduleOffset sets the ScheduleOffset field's value.
+func (s *UpdateMaintenanceWindowInput) SetScheduleOffset(v int64) *UpdateMaintenanceWindowInput {
+	s.ScheduleOffset = &v
+	return s
+}
+
 // SetScheduleTimezone sets the ScheduleTimezone field's value.
 func (s *UpdateMaintenanceWindowInput) SetScheduleTimezone(v string) *UpdateMaintenanceWindowInput {
 	s.ScheduleTimezone = &v
@@ -43564,6 +45850,10 @@ type UpdateMaintenanceWindowOutput struct {
 
 	// The schedule of the maintenance window in the form of a cron or rate expression.
 	Schedule *string `min:"1" type:"string"`
+
+	// The number of days to wait to run a maintenance window after the scheduled
+	// CRON expression date and time.
+	ScheduleOffset *int64 `min:"1" type:"integer"`
 
 	// The time zone that the scheduled maintenance window executions are based
 	// on, in Internet Assigned Numbers Authority (IANA) format. For example: "America/Los_Angeles",
@@ -43635,6 +45925,12 @@ func (s *UpdateMaintenanceWindowOutput) SetName(v string) *UpdateMaintenanceWind
 // SetSchedule sets the Schedule field's value.
 func (s *UpdateMaintenanceWindowOutput) SetSchedule(v string) *UpdateMaintenanceWindowOutput {
 	s.Schedule = &v
+	return s
+}
+
+// SetScheduleOffset sets the ScheduleOffset field's value.
+func (s *UpdateMaintenanceWindowOutput) SetScheduleOffset(v int64) *UpdateMaintenanceWindowOutput {
+	s.ScheduleOffset = &v
 	return s
 }
 
@@ -43878,7 +46174,7 @@ type UpdateMaintenanceWindowTaskInput struct {
 	// Tasks that have the same priority are scheduled in parallel.
 	Priority *int64 `type:"integer"`
 
-	// If True, then all fields that are required by the RegisterTaskWithMaintenanceWndow
+	// If True, then all fields that are required by the RegisterTaskWithMaintenanceWindow
 	// action are also required for this API request. Optional fields that are not
 	// specified are set to null.
 	Replace *bool `type:"boolean"`
@@ -43907,6 +46203,14 @@ type UpdateMaintenanceWindowTaskInput struct {
 
 	// The parameters that the task should use during execution. Populate only the
 	// fields that match the task type. All other fields should be empty.
+	//
+	// When you update a maintenance window task that has options specified in TaskInvocationParameters,
+	// you must provide again all the TaskInvocationParameters values that you want
+	// to retain. The values you do not specify again are removed. For example,
+	// suppose that when you registered a Run Command task, you specified TaskInvocationParameters
+	// values for Comment, NotificationConfig, and OutputS3BucketName. If you update
+	// the maintenance window task and specify only a different OutputS3BucketName
+	// value, the values for Comment and NotificationConfig are removed.
 	TaskInvocationParameters *MaintenanceWindowTaskInvocationParameters `type:"structure"`
 
 	// The parameters to modify.
@@ -45029,6 +47333,17 @@ const (
 	AssociationComplianceSeverityUnspecified = "UNSPECIFIED"
 )
 
+// AssociationComplianceSeverity_Values returns all elements of the AssociationComplianceSeverity enum
+func AssociationComplianceSeverity_Values() []string {
+	return []string{
+		AssociationComplianceSeverityCritical,
+		AssociationComplianceSeverityHigh,
+		AssociationComplianceSeverityMedium,
+		AssociationComplianceSeverityLow,
+		AssociationComplianceSeverityUnspecified,
+	}
+}
+
 const (
 	// AssociationExecutionFilterKeyExecutionId is a AssociationExecutionFilterKey enum value
 	AssociationExecutionFilterKeyExecutionId = "ExecutionId"
@@ -45040,6 +47355,15 @@ const (
 	AssociationExecutionFilterKeyCreatedTime = "CreatedTime"
 )
 
+// AssociationExecutionFilterKey_Values returns all elements of the AssociationExecutionFilterKey enum
+func AssociationExecutionFilterKey_Values() []string {
+	return []string{
+		AssociationExecutionFilterKeyExecutionId,
+		AssociationExecutionFilterKeyStatus,
+		AssociationExecutionFilterKeyCreatedTime,
+	}
+}
+
 const (
 	// AssociationExecutionTargetsFilterKeyStatus is a AssociationExecutionTargetsFilterKey enum value
 	AssociationExecutionTargetsFilterKeyStatus = "Status"
@@ -45050,6 +47374,15 @@ const (
 	// AssociationExecutionTargetsFilterKeyResourceType is a AssociationExecutionTargetsFilterKey enum value
 	AssociationExecutionTargetsFilterKeyResourceType = "ResourceType"
 )
+
+// AssociationExecutionTargetsFilterKey_Values returns all elements of the AssociationExecutionTargetsFilterKey enum
+func AssociationExecutionTargetsFilterKey_Values() []string {
+	return []string{
+		AssociationExecutionTargetsFilterKeyStatus,
+		AssociationExecutionTargetsFilterKeyResourceId,
+		AssociationExecutionTargetsFilterKeyResourceType,
+	}
+}
 
 const (
 	// AssociationFilterKeyInstanceId is a AssociationFilterKey enum value
@@ -45077,6 +47410,20 @@ const (
 	AssociationFilterKeyResourceGroupName = "ResourceGroupName"
 )
 
+// AssociationFilterKey_Values returns all elements of the AssociationFilterKey enum
+func AssociationFilterKey_Values() []string {
+	return []string{
+		AssociationFilterKeyInstanceId,
+		AssociationFilterKeyName,
+		AssociationFilterKeyAssociationId,
+		AssociationFilterKeyAssociationStatusName,
+		AssociationFilterKeyLastExecutedBefore,
+		AssociationFilterKeyLastExecutedAfter,
+		AssociationFilterKeyAssociationName,
+		AssociationFilterKeyResourceGroupName,
+	}
+}
+
 const (
 	// AssociationFilterOperatorTypeEqual is a AssociationFilterOperatorType enum value
 	AssociationFilterOperatorTypeEqual = "EQUAL"
@@ -45087,6 +47434,15 @@ const (
 	// AssociationFilterOperatorTypeGreaterThan is a AssociationFilterOperatorType enum value
 	AssociationFilterOperatorTypeGreaterThan = "GREATER_THAN"
 )
+
+// AssociationFilterOperatorType_Values returns all elements of the AssociationFilterOperatorType enum
+func AssociationFilterOperatorType_Values() []string {
+	return []string{
+		AssociationFilterOperatorTypeEqual,
+		AssociationFilterOperatorTypeLessThan,
+		AssociationFilterOperatorTypeGreaterThan,
+	}
+}
 
 const (
 	// AssociationStatusNamePending is a AssociationStatusName enum value
@@ -45099,6 +47455,15 @@ const (
 	AssociationStatusNameFailed = "Failed"
 )
 
+// AssociationStatusName_Values returns all elements of the AssociationStatusName enum
+func AssociationStatusName_Values() []string {
+	return []string{
+		AssociationStatusNamePending,
+		AssociationStatusNameSuccess,
+		AssociationStatusNameFailed,
+	}
+}
+
 const (
 	// AssociationSyncComplianceAuto is a AssociationSyncCompliance enum value
 	AssociationSyncComplianceAuto = "AUTO"
@@ -45107,10 +47472,25 @@ const (
 	AssociationSyncComplianceManual = "MANUAL"
 )
 
+// AssociationSyncCompliance_Values returns all elements of the AssociationSyncCompliance enum
+func AssociationSyncCompliance_Values() []string {
+	return []string{
+		AssociationSyncComplianceAuto,
+		AssociationSyncComplianceManual,
+	}
+}
+
 const (
 	// AttachmentHashTypeSha256 is a AttachmentHashType enum value
 	AttachmentHashTypeSha256 = "Sha256"
 )
+
+// AttachmentHashType_Values returns all elements of the AttachmentHashType enum
+func AttachmentHashType_Values() []string {
+	return []string{
+		AttachmentHashTypeSha256,
+	}
+}
 
 const (
 	// AttachmentsSourceKeySourceUrl is a AttachmentsSourceKey enum value
@@ -45122,6 +47502,15 @@ const (
 	// AttachmentsSourceKeyAttachmentReference is a AttachmentsSourceKey enum value
 	AttachmentsSourceKeyAttachmentReference = "AttachmentReference"
 )
+
+// AttachmentsSourceKey_Values returns all elements of the AttachmentsSourceKey enum
+func AttachmentsSourceKey_Values() []string {
+	return []string{
+		AttachmentsSourceKeySourceUrl,
+		AttachmentsSourceKeyS3fileUrl,
+		AttachmentsSourceKeyAttachmentReference,
+	}
+}
 
 const (
 	// AutomationExecutionFilterKeyDocumentNamePrefix is a AutomationExecutionFilterKey enum value
@@ -45152,6 +47541,21 @@ const (
 	AutomationExecutionFilterKeyTagKey = "TagKey"
 )
 
+// AutomationExecutionFilterKey_Values returns all elements of the AutomationExecutionFilterKey enum
+func AutomationExecutionFilterKey_Values() []string {
+	return []string{
+		AutomationExecutionFilterKeyDocumentNamePrefix,
+		AutomationExecutionFilterKeyExecutionStatus,
+		AutomationExecutionFilterKeyExecutionId,
+		AutomationExecutionFilterKeyParentExecutionId,
+		AutomationExecutionFilterKeyCurrentAction,
+		AutomationExecutionFilterKeyStartTimeBefore,
+		AutomationExecutionFilterKeyStartTimeAfter,
+		AutomationExecutionFilterKeyAutomationType,
+		AutomationExecutionFilterKeyTagKey,
+	}
+}
+
 const (
 	// AutomationExecutionStatusPending is a AutomationExecutionStatus enum value
 	AutomationExecutionStatusPending = "Pending"
@@ -45178,6 +47582,20 @@ const (
 	AutomationExecutionStatusFailed = "Failed"
 )
 
+// AutomationExecutionStatus_Values returns all elements of the AutomationExecutionStatus enum
+func AutomationExecutionStatus_Values() []string {
+	return []string{
+		AutomationExecutionStatusPending,
+		AutomationExecutionStatusInProgress,
+		AutomationExecutionStatusWaiting,
+		AutomationExecutionStatusSuccess,
+		AutomationExecutionStatusTimedOut,
+		AutomationExecutionStatusCancelling,
+		AutomationExecutionStatusCancelled,
+		AutomationExecutionStatusFailed,
+	}
+}
+
 const (
 	// AutomationTypeCrossAccount is a AutomationType enum value
 	AutomationTypeCrossAccount = "CrossAccount"
@@ -45186,6 +47604,14 @@ const (
 	AutomationTypeLocal = "Local"
 )
 
+// AutomationType_Values returns all elements of the AutomationType enum
+func AutomationType_Values() []string {
+	return []string{
+		AutomationTypeCrossAccount,
+		AutomationTypeLocal,
+	}
+}
+
 const (
 	// CalendarStateOpen is a CalendarState enum value
 	CalendarStateOpen = "OPEN"
@@ -45193,6 +47619,14 @@ const (
 	// CalendarStateClosed is a CalendarState enum value
 	CalendarStateClosed = "CLOSED"
 )
+
+// CalendarState_Values returns all elements of the CalendarState enum
+func CalendarState_Values() []string {
+	return []string{
+		CalendarStateOpen,
+		CalendarStateClosed,
+	}
+}
 
 const (
 	// CommandFilterKeyInvokedAfter is a CommandFilterKey enum value
@@ -45210,6 +47644,17 @@ const (
 	// CommandFilterKeyDocumentName is a CommandFilterKey enum value
 	CommandFilterKeyDocumentName = "DocumentName"
 )
+
+// CommandFilterKey_Values returns all elements of the CommandFilterKey enum
+func CommandFilterKey_Values() []string {
+	return []string{
+		CommandFilterKeyInvokedAfter,
+		CommandFilterKeyInvokedBefore,
+		CommandFilterKeyStatus,
+		CommandFilterKeyExecutionStage,
+		CommandFilterKeyDocumentName,
+	}
+}
 
 const (
 	// CommandInvocationStatusPending is a CommandInvocationStatus enum value
@@ -45237,6 +47682,20 @@ const (
 	CommandInvocationStatusCancelling = "Cancelling"
 )
 
+// CommandInvocationStatus_Values returns all elements of the CommandInvocationStatus enum
+func CommandInvocationStatus_Values() []string {
+	return []string{
+		CommandInvocationStatusPending,
+		CommandInvocationStatusInProgress,
+		CommandInvocationStatusDelayed,
+		CommandInvocationStatusSuccess,
+		CommandInvocationStatusCancelled,
+		CommandInvocationStatusTimedOut,
+		CommandInvocationStatusFailed,
+		CommandInvocationStatusCancelling,
+	}
+}
+
 const (
 	// CommandPluginStatusPending is a CommandPluginStatus enum value
 	CommandPluginStatusPending = "Pending"
@@ -45256,6 +47715,18 @@ const (
 	// CommandPluginStatusFailed is a CommandPluginStatus enum value
 	CommandPluginStatusFailed = "Failed"
 )
+
+// CommandPluginStatus_Values returns all elements of the CommandPluginStatus enum
+func CommandPluginStatus_Values() []string {
+	return []string{
+		CommandPluginStatusPending,
+		CommandPluginStatusInProgress,
+		CommandPluginStatusSuccess,
+		CommandPluginStatusTimedOut,
+		CommandPluginStatusCancelled,
+		CommandPluginStatusFailed,
+	}
+}
 
 const (
 	// CommandStatusPending is a CommandStatus enum value
@@ -45280,6 +47751,19 @@ const (
 	CommandStatusCancelling = "Cancelling"
 )
 
+// CommandStatus_Values returns all elements of the CommandStatus enum
+func CommandStatus_Values() []string {
+	return []string{
+		CommandStatusPending,
+		CommandStatusInProgress,
+		CommandStatusSuccess,
+		CommandStatusCancelled,
+		CommandStatusFailed,
+		CommandStatusTimedOut,
+		CommandStatusCancelling,
+	}
+}
+
 const (
 	// ComplianceQueryOperatorTypeEqual is a ComplianceQueryOperatorType enum value
 	ComplianceQueryOperatorTypeEqual = "EQUAL"
@@ -45296,6 +47780,17 @@ const (
 	// ComplianceQueryOperatorTypeGreaterThan is a ComplianceQueryOperatorType enum value
 	ComplianceQueryOperatorTypeGreaterThan = "GREATER_THAN"
 )
+
+// ComplianceQueryOperatorType_Values returns all elements of the ComplianceQueryOperatorType enum
+func ComplianceQueryOperatorType_Values() []string {
+	return []string{
+		ComplianceQueryOperatorTypeEqual,
+		ComplianceQueryOperatorTypeNotEqual,
+		ComplianceQueryOperatorTypeBeginWith,
+		ComplianceQueryOperatorTypeLessThan,
+		ComplianceQueryOperatorTypeGreaterThan,
+	}
+}
 
 const (
 	// ComplianceSeverityCritical is a ComplianceSeverity enum value
@@ -45317,6 +47812,18 @@ const (
 	ComplianceSeverityUnspecified = "UNSPECIFIED"
 )
 
+// ComplianceSeverity_Values returns all elements of the ComplianceSeverity enum
+func ComplianceSeverity_Values() []string {
+	return []string{
+		ComplianceSeverityCritical,
+		ComplianceSeverityHigh,
+		ComplianceSeverityMedium,
+		ComplianceSeverityLow,
+		ComplianceSeverityInformational,
+		ComplianceSeverityUnspecified,
+	}
+}
+
 const (
 	// ComplianceStatusCompliant is a ComplianceStatus enum value
 	ComplianceStatusCompliant = "COMPLIANT"
@@ -45324,6 +47831,14 @@ const (
 	// ComplianceStatusNonCompliant is a ComplianceStatus enum value
 	ComplianceStatusNonCompliant = "NON_COMPLIANT"
 )
+
+// ComplianceStatus_Values returns all elements of the ComplianceStatus enum
+func ComplianceStatus_Values() []string {
+	return []string{
+		ComplianceStatusCompliant,
+		ComplianceStatusNonCompliant,
+	}
+}
 
 const (
 	// ComplianceUploadTypeComplete is a ComplianceUploadType enum value
@@ -45333,6 +47848,14 @@ const (
 	ComplianceUploadTypePartial = "PARTIAL"
 )
 
+// ComplianceUploadType_Values returns all elements of the ComplianceUploadType enum
+func ComplianceUploadType_Values() []string {
+	return []string{
+		ComplianceUploadTypeComplete,
+		ComplianceUploadTypePartial,
+	}
+}
+
 const (
 	// ConnectionStatusConnected is a ConnectionStatus enum value
 	ConnectionStatusConnected = "Connected"
@@ -45340,6 +47863,14 @@ const (
 	// ConnectionStatusNotConnected is a ConnectionStatus enum value
 	ConnectionStatusNotConnected = "NotConnected"
 )
+
+// ConnectionStatus_Values returns all elements of the ConnectionStatus enum
+func ConnectionStatus_Values() []string {
+	return []string{
+		ConnectionStatusConnected,
+		ConnectionStatusNotConnected,
+	}
+}
 
 const (
 	// DescribeActivationsFilterKeysActivationIds is a DescribeActivationsFilterKeys enum value
@@ -45351,6 +47882,15 @@ const (
 	// DescribeActivationsFilterKeysIamRole is a DescribeActivationsFilterKeys enum value
 	DescribeActivationsFilterKeysIamRole = "IamRole"
 )
+
+// DescribeActivationsFilterKeys_Values returns all elements of the DescribeActivationsFilterKeys enum
+func DescribeActivationsFilterKeys_Values() []string {
+	return []string{
+		DescribeActivationsFilterKeysActivationIds,
+		DescribeActivationsFilterKeysDefaultInstanceName,
+		DescribeActivationsFilterKeysIamRole,
+	}
+}
 
 const (
 	// DocumentFilterKeyName is a DocumentFilterKey enum value
@@ -45366,6 +47906,16 @@ const (
 	DocumentFilterKeyDocumentType = "DocumentType"
 )
 
+// DocumentFilterKey_Values returns all elements of the DocumentFilterKey enum
+func DocumentFilterKey_Values() []string {
+	return []string{
+		DocumentFilterKeyName,
+		DocumentFilterKeyOwner,
+		DocumentFilterKeyPlatformTypes,
+		DocumentFilterKeyDocumentType,
+	}
+}
+
 const (
 	// DocumentFormatYaml is a DocumentFormat enum value
 	DocumentFormatYaml = "YAML"
@@ -45377,6 +47927,15 @@ const (
 	DocumentFormatText = "TEXT"
 )
 
+// DocumentFormat_Values returns all elements of the DocumentFormat enum
+func DocumentFormat_Values() []string {
+	return []string{
+		DocumentFormatYaml,
+		DocumentFormatJson,
+		DocumentFormatText,
+	}
+}
+
 const (
 	// DocumentHashTypeSha256 is a DocumentHashType enum value
 	DocumentHashTypeSha256 = "Sha256"
@@ -45384,6 +47943,14 @@ const (
 	// DocumentHashTypeSha1 is a DocumentHashType enum value
 	DocumentHashTypeSha1 = "Sha1"
 )
+
+// DocumentHashType_Values returns all elements of the DocumentHashType enum
+func DocumentHashType_Values() []string {
+	return []string{
+		DocumentHashTypeSha256,
+		DocumentHashTypeSha1,
+	}
+}
 
 const (
 	// DocumentParameterTypeString is a DocumentParameterType enum value
@@ -45393,10 +47960,25 @@ const (
 	DocumentParameterTypeStringList = "StringList"
 )
 
+// DocumentParameterType_Values returns all elements of the DocumentParameterType enum
+func DocumentParameterType_Values() []string {
+	return []string{
+		DocumentParameterTypeString,
+		DocumentParameterTypeStringList,
+	}
+}
+
 const (
 	// DocumentPermissionTypeShare is a DocumentPermissionType enum value
 	DocumentPermissionTypeShare = "Share"
 )
+
+// DocumentPermissionType_Values returns all elements of the DocumentPermissionType enum
+func DocumentPermissionType_Values() []string {
+	return []string{
+		DocumentPermissionTypeShare,
+	}
+}
 
 // The status of a document.
 const (
@@ -45415,6 +47997,17 @@ const (
 	// DocumentStatusFailed is a DocumentStatus enum value
 	DocumentStatusFailed = "Failed"
 )
+
+// DocumentStatus_Values returns all elements of the DocumentStatus enum
+func DocumentStatus_Values() []string {
+	return []string{
+		DocumentStatusCreating,
+		DocumentStatusActive,
+		DocumentStatusUpdating,
+		DocumentStatusDeleting,
+		DocumentStatusFailed,
+	}
+}
 
 const (
 	// DocumentTypeCommand is a DocumentType enum value
@@ -45445,6 +48038,21 @@ const (
 	DocumentTypeChangeCalendar = "ChangeCalendar"
 )
 
+// DocumentType_Values returns all elements of the DocumentType enum
+func DocumentType_Values() []string {
+	return []string{
+		DocumentTypeCommand,
+		DocumentTypePolicy,
+		DocumentTypeAutomation,
+		DocumentTypeSession,
+		DocumentTypePackage,
+		DocumentTypeApplicationConfiguration,
+		DocumentTypeApplicationConfigurationSchema,
+		DocumentTypeDeploymentStrategy,
+		DocumentTypeChangeCalendar,
+	}
+}
+
 const (
 	// ExecutionModeAuto is a ExecutionMode enum value
 	ExecutionModeAuto = "Auto"
@@ -45452,6 +48060,14 @@ const (
 	// ExecutionModeInteractive is a ExecutionMode enum value
 	ExecutionModeInteractive = "Interactive"
 )
+
+// ExecutionMode_Values returns all elements of the ExecutionMode enum
+func ExecutionMode_Values() []string {
+	return []string{
+		ExecutionModeAuto,
+		ExecutionModeInteractive,
+	}
+}
 
 const (
 	// FaultClient is a Fault enum value
@@ -45463,6 +48079,15 @@ const (
 	// FaultUnknown is a Fault enum value
 	FaultUnknown = "Unknown"
 )
+
+// Fault_Values returns all elements of the Fault enum
+func Fault_Values() []string {
+	return []string{
+		FaultClient,
+		FaultServer,
+		FaultUnknown,
+	}
+}
 
 const (
 	// InstanceInformationFilterKeyInstanceIds is a InstanceInformationFilterKey enum value
@@ -45490,6 +48115,20 @@ const (
 	InstanceInformationFilterKeyAssociationStatus = "AssociationStatus"
 )
 
+// InstanceInformationFilterKey_Values returns all elements of the InstanceInformationFilterKey enum
+func InstanceInformationFilterKey_Values() []string {
+	return []string{
+		InstanceInformationFilterKeyInstanceIds,
+		InstanceInformationFilterKeyAgentVersion,
+		InstanceInformationFilterKeyPingStatus,
+		InstanceInformationFilterKeyPlatformTypes,
+		InstanceInformationFilterKeyActivationIds,
+		InstanceInformationFilterKeyIamRole,
+		InstanceInformationFilterKeyResourceType,
+		InstanceInformationFilterKeyAssociationStatus,
+	}
+}
+
 const (
 	// InstancePatchStateOperatorTypeEqual is a InstancePatchStateOperatorType enum value
 	InstancePatchStateOperatorTypeEqual = "Equal"
@@ -45504,6 +48143,16 @@ const (
 	InstancePatchStateOperatorTypeGreaterThan = "GreaterThan"
 )
 
+// InstancePatchStateOperatorType_Values returns all elements of the InstancePatchStateOperatorType enum
+func InstancePatchStateOperatorType_Values() []string {
+	return []string{
+		InstancePatchStateOperatorTypeEqual,
+		InstancePatchStateOperatorTypeNotEqual,
+		InstancePatchStateOperatorTypeLessThan,
+		InstancePatchStateOperatorTypeGreaterThan,
+	}
+}
+
 const (
 	// InventoryAttributeDataTypeString is a InventoryAttributeDataType enum value
 	InventoryAttributeDataTypeString = "string"
@@ -45512,6 +48161,14 @@ const (
 	InventoryAttributeDataTypeNumber = "number"
 )
 
+// InventoryAttributeDataType_Values returns all elements of the InventoryAttributeDataType enum
+func InventoryAttributeDataType_Values() []string {
+	return []string{
+		InventoryAttributeDataTypeString,
+		InventoryAttributeDataTypeNumber,
+	}
+}
+
 const (
 	// InventoryDeletionStatusInProgress is a InventoryDeletionStatus enum value
 	InventoryDeletionStatusInProgress = "InProgress"
@@ -45519,6 +48176,14 @@ const (
 	// InventoryDeletionStatusComplete is a InventoryDeletionStatus enum value
 	InventoryDeletionStatusComplete = "Complete"
 )
+
+// InventoryDeletionStatus_Values returns all elements of the InventoryDeletionStatus enum
+func InventoryDeletionStatus_Values() []string {
+	return []string{
+		InventoryDeletionStatusInProgress,
+		InventoryDeletionStatusComplete,
+	}
+}
 
 const (
 	// InventoryQueryOperatorTypeEqual is a InventoryQueryOperatorType enum value
@@ -45540,6 +48205,18 @@ const (
 	InventoryQueryOperatorTypeExists = "Exists"
 )
 
+// InventoryQueryOperatorType_Values returns all elements of the InventoryQueryOperatorType enum
+func InventoryQueryOperatorType_Values() []string {
+	return []string{
+		InventoryQueryOperatorTypeEqual,
+		InventoryQueryOperatorTypeNotEqual,
+		InventoryQueryOperatorTypeBeginWith,
+		InventoryQueryOperatorTypeLessThan,
+		InventoryQueryOperatorTypeGreaterThan,
+		InventoryQueryOperatorTypeExists,
+	}
+}
+
 const (
 	// InventorySchemaDeleteOptionDisableSchema is a InventorySchemaDeleteOption enum value
 	InventorySchemaDeleteOptionDisableSchema = "DisableSchema"
@@ -45547,6 +48224,14 @@ const (
 	// InventorySchemaDeleteOptionDeleteSchema is a InventorySchemaDeleteOption enum value
 	InventorySchemaDeleteOptionDeleteSchema = "DeleteSchema"
 )
+
+// InventorySchemaDeleteOption_Values returns all elements of the InventorySchemaDeleteOption enum
+func InventorySchemaDeleteOption_Values() []string {
+	return []string{
+		InventorySchemaDeleteOptionDisableSchema,
+		InventorySchemaDeleteOptionDeleteSchema,
+	}
+}
 
 const (
 	// LastResourceDataSyncStatusSuccessful is a LastResourceDataSyncStatus enum value
@@ -45558,6 +48243,15 @@ const (
 	// LastResourceDataSyncStatusInProgress is a LastResourceDataSyncStatus enum value
 	LastResourceDataSyncStatusInProgress = "InProgress"
 )
+
+// LastResourceDataSyncStatus_Values returns all elements of the LastResourceDataSyncStatus enum
+func LastResourceDataSyncStatus_Values() []string {
+	return []string{
+		LastResourceDataSyncStatusSuccessful,
+		LastResourceDataSyncStatusFailed,
+		LastResourceDataSyncStatusInProgress,
+	}
+}
 
 const (
 	// MaintenanceWindowExecutionStatusPending is a MaintenanceWindowExecutionStatus enum value
@@ -45585,6 +48279,20 @@ const (
 	MaintenanceWindowExecutionStatusSkippedOverlapping = "SKIPPED_OVERLAPPING"
 )
 
+// MaintenanceWindowExecutionStatus_Values returns all elements of the MaintenanceWindowExecutionStatus enum
+func MaintenanceWindowExecutionStatus_Values() []string {
+	return []string{
+		MaintenanceWindowExecutionStatusPending,
+		MaintenanceWindowExecutionStatusInProgress,
+		MaintenanceWindowExecutionStatusSuccess,
+		MaintenanceWindowExecutionStatusFailed,
+		MaintenanceWindowExecutionStatusTimedOut,
+		MaintenanceWindowExecutionStatusCancelling,
+		MaintenanceWindowExecutionStatusCancelled,
+		MaintenanceWindowExecutionStatusSkippedOverlapping,
+	}
+}
+
 const (
 	// MaintenanceWindowResourceTypeInstance is a MaintenanceWindowResourceType enum value
 	MaintenanceWindowResourceTypeInstance = "INSTANCE"
@@ -45592,6 +48300,14 @@ const (
 	// MaintenanceWindowResourceTypeResourceGroup is a MaintenanceWindowResourceType enum value
 	MaintenanceWindowResourceTypeResourceGroup = "RESOURCE_GROUP"
 )
+
+// MaintenanceWindowResourceType_Values returns all elements of the MaintenanceWindowResourceType enum
+func MaintenanceWindowResourceType_Values() []string {
+	return []string{
+		MaintenanceWindowResourceTypeInstance,
+		MaintenanceWindowResourceTypeResourceGroup,
+	}
+}
 
 const (
 	// MaintenanceWindowTaskTypeRunCommand is a MaintenanceWindowTaskType enum value
@@ -45606,6 +48322,16 @@ const (
 	// MaintenanceWindowTaskTypeLambda is a MaintenanceWindowTaskType enum value
 	MaintenanceWindowTaskTypeLambda = "LAMBDA"
 )
+
+// MaintenanceWindowTaskType_Values returns all elements of the MaintenanceWindowTaskType enum
+func MaintenanceWindowTaskType_Values() []string {
+	return []string{
+		MaintenanceWindowTaskTypeRunCommand,
+		MaintenanceWindowTaskTypeAutomation,
+		MaintenanceWindowTaskTypeStepFunctions,
+		MaintenanceWindowTaskTypeLambda,
+	}
+}
 
 const (
 	// NotificationEventAll is a NotificationEvent enum value
@@ -45627,6 +48353,18 @@ const (
 	NotificationEventFailed = "Failed"
 )
 
+// NotificationEvent_Values returns all elements of the NotificationEvent enum
+func NotificationEvent_Values() []string {
+	return []string{
+		NotificationEventAll,
+		NotificationEventInProgress,
+		NotificationEventSuccess,
+		NotificationEventTimedOut,
+		NotificationEventCancelled,
+		NotificationEventFailed,
+	}
+}
+
 const (
 	// NotificationTypeCommand is a NotificationType enum value
 	NotificationTypeCommand = "Command"
@@ -45634,6 +48372,14 @@ const (
 	// NotificationTypeInvocation is a NotificationType enum value
 	NotificationTypeInvocation = "Invocation"
 )
+
+// NotificationType_Values returns all elements of the NotificationType enum
+func NotificationType_Values() []string {
+	return []string{
+		NotificationTypeCommand,
+		NotificationTypeInvocation,
+	}
+}
 
 const (
 	// OperatingSystemWindows is a OperatingSystem enum value
@@ -45656,7 +48402,28 @@ const (
 
 	// OperatingSystemCentos is a OperatingSystem enum value
 	OperatingSystemCentos = "CENTOS"
+
+	// OperatingSystemOracleLinux is a OperatingSystem enum value
+	OperatingSystemOracleLinux = "ORACLE_LINUX"
+
+	// OperatingSystemDebian is a OperatingSystem enum value
+	OperatingSystemDebian = "DEBIAN"
 )
+
+// OperatingSystem_Values returns all elements of the OperatingSystem enum
+func OperatingSystem_Values() []string {
+	return []string{
+		OperatingSystemWindows,
+		OperatingSystemAmazonLinux,
+		OperatingSystemAmazonLinux2,
+		OperatingSystemUbuntu,
+		OperatingSystemRedhatEnterpriseLinux,
+		OperatingSystemSuse,
+		OperatingSystemCentos,
+		OperatingSystemOracleLinux,
+		OperatingSystemDebian,
+	}
+}
 
 const (
 	// OpsFilterOperatorTypeEqual is a OpsFilterOperatorType enum value
@@ -45678,6 +48445,18 @@ const (
 	OpsFilterOperatorTypeExists = "Exists"
 )
 
+// OpsFilterOperatorType_Values returns all elements of the OpsFilterOperatorType enum
+func OpsFilterOperatorType_Values() []string {
+	return []string{
+		OpsFilterOperatorTypeEqual,
+		OpsFilterOperatorTypeNotEqual,
+		OpsFilterOperatorTypeBeginWith,
+		OpsFilterOperatorTypeLessThan,
+		OpsFilterOperatorTypeGreaterThan,
+		OpsFilterOperatorTypeExists,
+	}
+}
+
 const (
 	// OpsItemDataTypeSearchableString is a OpsItemDataType enum value
 	OpsItemDataTypeSearchableString = "SearchableString"
@@ -45685,6 +48464,14 @@ const (
 	// OpsItemDataTypeString is a OpsItemDataType enum value
 	OpsItemDataTypeString = "String"
 )
+
+// OpsItemDataType_Values returns all elements of the OpsItemDataType enum
+func OpsItemDataType_Values() []string {
+	return []string{
+		OpsItemDataTypeSearchableString,
+		OpsItemDataTypeString,
+	}
+}
 
 const (
 	// OpsItemFilterKeyStatus is a OpsItemFilterKey enum value
@@ -45733,6 +48520,27 @@ const (
 	OpsItemFilterKeySeverity = "Severity"
 )
 
+// OpsItemFilterKey_Values returns all elements of the OpsItemFilterKey enum
+func OpsItemFilterKey_Values() []string {
+	return []string{
+		OpsItemFilterKeyStatus,
+		OpsItemFilterKeyCreatedBy,
+		OpsItemFilterKeySource,
+		OpsItemFilterKeyPriority,
+		OpsItemFilterKeyTitle,
+		OpsItemFilterKeyOpsItemId,
+		OpsItemFilterKeyCreatedTime,
+		OpsItemFilterKeyLastModifiedTime,
+		OpsItemFilterKeyOperationalData,
+		OpsItemFilterKeyOperationalDataKey,
+		OpsItemFilterKeyOperationalDataValue,
+		OpsItemFilterKeyResourceId,
+		OpsItemFilterKeyAutomationId,
+		OpsItemFilterKeyCategory,
+		OpsItemFilterKeySeverity,
+	}
+}
+
 const (
 	// OpsItemFilterOperatorEqual is a OpsItemFilterOperator enum value
 	OpsItemFilterOperatorEqual = "Equal"
@@ -45747,6 +48555,16 @@ const (
 	OpsItemFilterOperatorLessThan = "LessThan"
 )
 
+// OpsItemFilterOperator_Values returns all elements of the OpsItemFilterOperator enum
+func OpsItemFilterOperator_Values() []string {
+	return []string{
+		OpsItemFilterOperatorEqual,
+		OpsItemFilterOperatorContains,
+		OpsItemFilterOperatorGreaterThan,
+		OpsItemFilterOperatorLessThan,
+	}
+}
+
 const (
 	// OpsItemStatusOpen is a OpsItemStatus enum value
 	OpsItemStatusOpen = "Open"
@@ -45757,6 +48575,15 @@ const (
 	// OpsItemStatusResolved is a OpsItemStatus enum value
 	OpsItemStatusResolved = "Resolved"
 )
+
+// OpsItemStatus_Values returns all elements of the OpsItemStatus enum
+func OpsItemStatus_Values() []string {
+	return []string{
+		OpsItemStatusOpen,
+		OpsItemStatusInProgress,
+		OpsItemStatusResolved,
+	}
+}
 
 const (
 	// ParameterTierStandard is a ParameterTier enum value
@@ -45769,6 +48596,15 @@ const (
 	ParameterTierIntelligentTiering = "Intelligent-Tiering"
 )
 
+// ParameterTier_Values returns all elements of the ParameterTier enum
+func ParameterTier_Values() []string {
+	return []string{
+		ParameterTierStandard,
+		ParameterTierAdvanced,
+		ParameterTierIntelligentTiering,
+	}
+}
+
 const (
 	// ParameterTypeString is a ParameterType enum value
 	ParameterTypeString = "String"
@@ -45779,6 +48615,15 @@ const (
 	// ParameterTypeSecureString is a ParameterType enum value
 	ParameterTypeSecureString = "SecureString"
 )
+
+// ParameterType_Values returns all elements of the ParameterType enum
+func ParameterType_Values() []string {
+	return []string{
+		ParameterTypeString,
+		ParameterTypeStringList,
+		ParameterTypeSecureString,
+	}
+}
 
 const (
 	// ParametersFilterKeyName is a ParametersFilterKey enum value
@@ -45791,6 +48636,15 @@ const (
 	ParametersFilterKeyKeyId = "KeyId"
 )
 
+// ParametersFilterKey_Values returns all elements of the ParametersFilterKey enum
+func ParametersFilterKey_Values() []string {
+	return []string{
+		ParametersFilterKeyName,
+		ParametersFilterKeyType,
+		ParametersFilterKeyKeyId,
+	}
+}
+
 const (
 	// PatchActionAllowAsDependency is a PatchAction enum value
 	PatchActionAllowAsDependency = "ALLOW_AS_DEPENDENCY"
@@ -45798,6 +48652,14 @@ const (
 	// PatchActionBlock is a PatchAction enum value
 	PatchActionBlock = "BLOCK"
 )
+
+// PatchAction_Values returns all elements of the PatchAction enum
+func PatchAction_Values() []string {
+	return []string{
+		PatchActionAllowAsDependency,
+		PatchActionBlock,
+	}
+}
 
 const (
 	// PatchComplianceDataStateInstalled is a PatchComplianceDataState enum value
@@ -45822,6 +48684,19 @@ const (
 	PatchComplianceDataStateFailed = "FAILED"
 )
 
+// PatchComplianceDataState_Values returns all elements of the PatchComplianceDataState enum
+func PatchComplianceDataState_Values() []string {
+	return []string{
+		PatchComplianceDataStateInstalled,
+		PatchComplianceDataStateInstalledOther,
+		PatchComplianceDataStateInstalledPendingReboot,
+		PatchComplianceDataStateInstalledRejected,
+		PatchComplianceDataStateMissing,
+		PatchComplianceDataStateNotApplicable,
+		PatchComplianceDataStateFailed,
+	}
+}
+
 const (
 	// PatchComplianceLevelCritical is a PatchComplianceLevel enum value
 	PatchComplianceLevelCritical = "CRITICAL"
@@ -45842,6 +48717,18 @@ const (
 	PatchComplianceLevelUnspecified = "UNSPECIFIED"
 )
 
+// PatchComplianceLevel_Values returns all elements of the PatchComplianceLevel enum
+func PatchComplianceLevel_Values() []string {
+	return []string{
+		PatchComplianceLevelCritical,
+		PatchComplianceLevelHigh,
+		PatchComplianceLevelMedium,
+		PatchComplianceLevelLow,
+		PatchComplianceLevelInformational,
+		PatchComplianceLevelUnspecified,
+	}
+}
+
 const (
 	// PatchDeploymentStatusApproved is a PatchDeploymentStatus enum value
 	PatchDeploymentStatusApproved = "APPROVED"
@@ -45855,6 +48742,16 @@ const (
 	// PatchDeploymentStatusExplicitRejected is a PatchDeploymentStatus enum value
 	PatchDeploymentStatusExplicitRejected = "EXPLICIT_REJECTED"
 )
+
+// PatchDeploymentStatus_Values returns all elements of the PatchDeploymentStatus enum
+func PatchDeploymentStatus_Values() []string {
+	return []string{
+		PatchDeploymentStatusApproved,
+		PatchDeploymentStatusPendingApproval,
+		PatchDeploymentStatusExplicitApproved,
+		PatchDeploymentStatusExplicitRejected,
+	}
+}
 
 const (
 	// PatchFilterKeyPatchSet is a PatchFilterKey enum value
@@ -45885,6 +48782,21 @@ const (
 	PatchFilterKeySeverity = "SEVERITY"
 )
 
+// PatchFilterKey_Values returns all elements of the PatchFilterKey enum
+func PatchFilterKey_Values() []string {
+	return []string{
+		PatchFilterKeyPatchSet,
+		PatchFilterKeyProduct,
+		PatchFilterKeyProductFamily,
+		PatchFilterKeyClassification,
+		PatchFilterKeyMsrcSeverity,
+		PatchFilterKeyPatchId,
+		PatchFilterKeySection,
+		PatchFilterKeyPriority,
+		PatchFilterKeySeverity,
+	}
+}
+
 const (
 	// PatchOperationTypeScan is a PatchOperationType enum value
 	PatchOperationTypeScan = "Scan"
@@ -45892,6 +48804,14 @@ const (
 	// PatchOperationTypeInstall is a PatchOperationType enum value
 	PatchOperationTypeInstall = "Install"
 )
+
+// PatchOperationType_Values returns all elements of the PatchOperationType enum
+func PatchOperationType_Values() []string {
+	return []string{
+		PatchOperationTypeScan,
+		PatchOperationTypeInstall,
+	}
+}
 
 const (
 	// PatchPropertyProduct is a PatchProperty enum value
@@ -45913,6 +48833,18 @@ const (
 	PatchPropertySeverity = "SEVERITY"
 )
 
+// PatchProperty_Values returns all elements of the PatchProperty enum
+func PatchProperty_Values() []string {
+	return []string{
+		PatchPropertyProduct,
+		PatchPropertyProductFamily,
+		PatchPropertyClassification,
+		PatchPropertyMsrcSeverity,
+		PatchPropertyPriority,
+		PatchPropertySeverity,
+	}
+}
+
 const (
 	// PatchSetOs is a PatchSet enum value
 	PatchSetOs = "OS"
@@ -45920,6 +48852,14 @@ const (
 	// PatchSetApplication is a PatchSet enum value
 	PatchSetApplication = "APPLICATION"
 )
+
+// PatchSet_Values returns all elements of the PatchSet enum
+func PatchSet_Values() []string {
+	return []string{
+		PatchSetOs,
+		PatchSetApplication,
+	}
+}
 
 const (
 	// PingStatusOnline is a PingStatus enum value
@@ -45932,6 +48872,15 @@ const (
 	PingStatusInactive = "Inactive"
 )
 
+// PingStatus_Values returns all elements of the PingStatus enum
+func PingStatus_Values() []string {
+	return []string{
+		PingStatusOnline,
+		PingStatusConnectionLost,
+		PingStatusInactive,
+	}
+}
+
 const (
 	// PlatformTypeWindows is a PlatformType enum value
 	PlatformTypeWindows = "Windows"
@@ -45939,6 +48888,14 @@ const (
 	// PlatformTypeLinux is a PlatformType enum value
 	PlatformTypeLinux = "Linux"
 )
+
+// PlatformType_Values returns all elements of the PlatformType enum
+func PlatformType_Values() []string {
+	return []string{
+		PlatformTypeWindows,
+		PlatformTypeLinux,
+	}
+}
 
 const (
 	// RebootOptionRebootIfNeeded is a RebootOption enum value
@@ -45948,10 +48905,25 @@ const (
 	RebootOptionNoReboot = "NoReboot"
 )
 
+// RebootOption_Values returns all elements of the RebootOption enum
+func RebootOption_Values() []string {
+	return []string{
+		RebootOptionRebootIfNeeded,
+		RebootOptionNoReboot,
+	}
+}
+
 const (
 	// ResourceDataSyncS3FormatJsonSerDe is a ResourceDataSyncS3Format enum value
 	ResourceDataSyncS3FormatJsonSerDe = "JsonSerDe"
 )
+
+// ResourceDataSyncS3Format_Values returns all elements of the ResourceDataSyncS3Format enum
+func ResourceDataSyncS3Format_Values() []string {
+	return []string{
+		ResourceDataSyncS3FormatJsonSerDe,
+	}
+}
 
 const (
 	// ResourceTypeManagedInstance is a ResourceType enum value
@@ -45963,6 +48935,15 @@ const (
 	// ResourceTypeEc2instance is a ResourceType enum value
 	ResourceTypeEc2instance = "EC2Instance"
 )
+
+// ResourceType_Values returns all elements of the ResourceType enum
+func ResourceType_Values() []string {
+	return []string{
+		ResourceTypeManagedInstance,
+		ResourceTypeDocument,
+		ResourceTypeEc2instance,
+	}
+}
 
 const (
 	// ResourceTypeForTaggingDocument is a ResourceTypeForTagging enum value
@@ -45984,6 +48965,18 @@ const (
 	ResourceTypeForTaggingOpsItem = "OpsItem"
 )
 
+// ResourceTypeForTagging_Values returns all elements of the ResourceTypeForTagging enum
+func ResourceTypeForTagging_Values() []string {
+	return []string{
+		ResourceTypeForTaggingDocument,
+		ResourceTypeForTaggingManagedInstance,
+		ResourceTypeForTaggingMaintenanceWindow,
+		ResourceTypeForTaggingParameter,
+		ResourceTypeForTaggingPatchBaseline,
+		ResourceTypeForTaggingOpsItem,
+	}
+}
+
 const (
 	// SessionFilterKeyInvokedAfter is a SessionFilterKey enum value
 	SessionFilterKeyInvokedAfter = "InvokedAfter"
@@ -46001,6 +48994,17 @@ const (
 	SessionFilterKeyStatus = "Status"
 )
 
+// SessionFilterKey_Values returns all elements of the SessionFilterKey enum
+func SessionFilterKey_Values() []string {
+	return []string{
+		SessionFilterKeyInvokedAfter,
+		SessionFilterKeyInvokedBefore,
+		SessionFilterKeyTarget,
+		SessionFilterKeyOwner,
+		SessionFilterKeyStatus,
+	}
+}
+
 const (
 	// SessionStateActive is a SessionState enum value
 	SessionStateActive = "Active"
@@ -46008,6 +49012,14 @@ const (
 	// SessionStateHistory is a SessionState enum value
 	SessionStateHistory = "History"
 )
+
+// SessionState_Values returns all elements of the SessionState enum
+func SessionState_Values() []string {
+	return []string{
+		SessionStateActive,
+		SessionStateHistory,
+	}
+}
 
 const (
 	// SessionStatusConnected is a SessionStatus enum value
@@ -46029,6 +49041,18 @@ const (
 	SessionStatusFailed = "Failed"
 )
 
+// SessionStatus_Values returns all elements of the SessionStatus enum
+func SessionStatus_Values() []string {
+	return []string{
+		SessionStatusConnected,
+		SessionStatusConnecting,
+		SessionStatusDisconnected,
+		SessionStatusTerminated,
+		SessionStatusTerminating,
+		SessionStatusFailed,
+	}
+}
+
 const (
 	// SignalTypeApprove is a SignalType enum value
 	SignalTypeApprove = "Approve"
@@ -46045,6 +49069,17 @@ const (
 	// SignalTypeResume is a SignalType enum value
 	SignalTypeResume = "Resume"
 )
+
+// SignalType_Values returns all elements of the SignalType enum
+func SignalType_Values() []string {
+	return []string{
+		SignalTypeApprove,
+		SignalTypeReject,
+		SignalTypeStartStep,
+		SignalTypeStopStep,
+		SignalTypeResume,
+	}
+}
 
 const (
 	// StepExecutionFilterKeyStartTimeBefore is a StepExecutionFilterKey enum value
@@ -46066,6 +49101,18 @@ const (
 	StepExecutionFilterKeyAction = "Action"
 )
 
+// StepExecutionFilterKey_Values returns all elements of the StepExecutionFilterKey enum
+func StepExecutionFilterKey_Values() []string {
+	return []string{
+		StepExecutionFilterKeyStartTimeBefore,
+		StepExecutionFilterKeyStartTimeAfter,
+		StepExecutionFilterKeyStepExecutionStatus,
+		StepExecutionFilterKeyStepExecutionId,
+		StepExecutionFilterKeyStepName,
+		StepExecutionFilterKeyAction,
+	}
+}
+
 const (
 	// StopTypeComplete is a StopType enum value
 	StopTypeComplete = "Complete"
@@ -46073,3 +49120,11 @@ const (
 	// StopTypeCancel is a StopType enum value
 	StopTypeCancel = "Cancel"
 )
+
+// StopType_Values returns all elements of the StopType enum
+func StopType_Values() []string {
+	return []string{
+		StopTypeComplete,
+		StopTypeCancel,
+	}
+}

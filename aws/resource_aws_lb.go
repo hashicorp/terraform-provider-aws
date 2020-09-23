@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -11,10 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -110,10 +111,20 @@ func resourceAwsLb() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						"outpost_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"allocation_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+						},
+						"private_ipv4_address": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IsIPv4Address,
 						},
 					},
 				},
@@ -123,6 +134,9 @@ func resourceAwsLb() *schema.Resource {
 					buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))
 					if m["allocation_id"] != "" {
 						buf.WriteString(fmt.Sprintf("%s-", m["allocation_id"].(string)))
+					}
+					if m["private_ipv4_address"] != "" {
+						buf.WriteString(fmt.Sprintf("%s-", m["private_ipv4_address"].(string)))
 					}
 					return hashcode.String(buf.String())
 				},
@@ -202,6 +216,12 @@ func resourceAwsLb() *schema.Resource {
 				}, false),
 			},
 
+			"customer_owned_ipv4_pool": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -251,7 +271,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 		elbOpts.Tags = tags
 	}
 
-	if scheme, ok := d.GetOk("internal"); ok && scheme.(bool) {
+	if _, ok := d.GetOk("internal"); ok {
 		elbOpts.Scheme = aws.String("internal")
 	}
 
@@ -276,11 +296,19 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 			if subnetMap["allocation_id"].(string) != "" {
 				elbOpts.SubnetMappings[i].AllocationId = aws.String(subnetMap["allocation_id"].(string))
 			}
+
+			if subnetMap["private_ipv4_address"].(string) != "" {
+				elbOpts.SubnetMappings[i].PrivateIPv4Address = aws.String(subnetMap["private_ipv4_address"].(string))
+			}
 		}
 	}
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
 		elbOpts.IpAddressType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("customer_owned_ipv4_pool"); ok {
+		elbOpts.CustomerOwnedIpv4Pool = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] ALB create configuration: %#v", elbOpts)
@@ -686,9 +714,11 @@ func flattenSubnetMappingsFromAvailabilityZones(availabilityZones []*elbv2.Avail
 	for _, availabilityZone := range availabilityZones {
 		m := make(map[string]interface{})
 		m["subnet_id"] = aws.StringValue(availabilityZone.SubnetId)
+		m["outpost_id"] = aws.StringValue(availabilityZone.OutpostId)
 
 		for _, loadBalancerAddress := range availabilityZone.LoadBalancerAddresses {
 			m["allocation_id"] = aws.StringValue(loadBalancerAddress.AllocationId)
+			m["private_ipv4_address"] = aws.StringValue(loadBalancerAddress.PrivateIPv4Address)
 		}
 
 		l = append(l, m)
@@ -718,13 +748,14 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 	d.Set("arn", lb.LoadBalancerArn)
 	d.Set("arn_suffix", lbSuffixFromARN(lb.LoadBalancerArn))
 	d.Set("name", lb.LoadBalancerName)
-	d.Set("internal", (lb.Scheme != nil && aws.StringValue(lb.Scheme) == "internal"))
+	d.Set("internal", lb.Scheme != nil && aws.StringValue(lb.Scheme) == "internal")
 	d.Set("security_groups", flattenStringList(lb.SecurityGroups))
 	d.Set("vpc_id", lb.VpcId)
 	d.Set("zone_id", lb.CanonicalHostedZoneId)
 	d.Set("dns_name", lb.DNSName)
 	d.Set("ip_address_type", lb.IpAddressType)
 	d.Set("load_balancer_type", lb.Type)
+	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
 
 	if err := d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
 		return fmt.Errorf("error setting subnets: %s", err)
@@ -801,7 +832,7 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 // Load balancers of type 'network' cannot have their subnets updated at
 // this time. If the type is 'network' and subnets have changed, mark the
 // diff as a ForceNew operation
-func customizeDiffNLBSubnets(diff *schema.ResourceDiff, v interface{}) error {
+func customizeDiffNLBSubnets(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	// The current criteria for determining if the operation should be ForceNew:
 	// - lb of type "network"
 	// - existing resource (id is not "")

@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSTransferUser_basic(t *testing.T) {
@@ -188,6 +188,40 @@ func TestAccAWSTransferUser_UserName_Validation(t *testing.T) {
 	})
 }
 
+func TestAccAWSTransferUser_homeDirectoryMappings(t *testing.T) {
+	var conf transfer.DescribedUser
+	rName := acctest.RandString(10)
+	resourceName := "aws_transfer_user.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSTransferUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSTransferUserConfig_homeDirectoryMappings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferUserExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSTransferUserConfig_homeDirectoryMappingsUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferUserExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSTransferUserExists(n string, res *transfer.DescribedUser) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -219,7 +253,6 @@ func testAccCheckAWSTransferUserExists(n string, res *transfer.DescribedUser) re
 }
 
 func testAccCheckAWSTransferUserDisappears(serverConf *transfer.DescribedServer, userConf *transfer.DescribedUser) resource.TestCheckFunc {
-
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).transferconn
 
@@ -265,8 +298,7 @@ func testAccCheckAWSTransferUserDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSTransferUserConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+const testAccAWSTransferUserConfig_base = `
 resource "aws_transfer_server" "foo" {
   identity_provider_type = "SERVICE_MANAGED"
 
@@ -274,51 +306,55 @@ resource "aws_transfer_server" "foo" {
     NAME = "tf-acc-test-transfer-server"
   }
 }
+`
+
+func testAccAWSTransferUserConfig_basic(rName string) string {
+	return testAccAWSTransferUserConfig_base + fmt.Sprintf(`
 
 resource "aws_iam_role" "foo" {
   name = "tf-test-transfer-user-iam-role-%s"
 
   assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Effect": "Allow",
-			"Principal": {
-				"Service": "transfer.amazonaws.com"
-			},
-			"Action": "sts:AssumeRole"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "transfer.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
 }
 EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
   name = "tf-test-transfer-user-iam-policy-%s"
-  role = "${aws_iam_role.foo.id}"
+  role = aws_iam_role.foo.id
 
   policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid": "AllowFullAccesstoS3",
-			"Effect": "Allow",
-			"Action": [
-				"s3:*"
-			],
-			"Resource": "*"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowFullAccesstoS3",
+      "Effect": "Allow",
+      "Action": [
+        "s3:*"
+      ],
+      "Resource": "*"
+    }
+  ]
 }
 POLICY
 }
 
 resource "aws_transfer_user" "foo" {
-  server_id = "${aws_transfer_server.foo.id}"
+  server_id = aws_transfer_server.foo.id
   user_name = "tftestuser"
-  role      = "${aws_iam_role.foo.arn}"
+  role      = aws_iam_role.foo.arn
 }
 `, rName, rName)
 }
@@ -392,19 +428,12 @@ resource "aws_transfer_user" "foo" {
 }
 
 func testAccAWSTransferUserName_validation(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_transfer_server" "foo" {
-  identity_provider_type = "SERVICE_MANAGED"
-
-  tags = {
-    NAME = "tf-acc-test-transfer-server"
-  }
-}
+	return testAccAWSTransferUserConfig_base + fmt.Sprintf(`
 
 resource "aws_transfer_user" "foo" {
-  server_id = "${aws_transfer_server.foo.id}"
+  server_id = aws_transfer_server.foo.id
   user_name = "%s"
-  role      = "${aws_iam_role.foo.arn}"
+  role      = aws_iam_role.foo.arn
 }
 
 resource "aws_iam_role" "foo" {
@@ -412,16 +441,16 @@ resource "aws_iam_role" "foo" {
 
   assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Effect": "Allow",
-		"Principal": {
-			"Service": "transfer.amazonaws.com"
-		},
-		"Action": "sts:AssumeRole"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "transfer.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
 }
 EOF
 }
@@ -429,51 +458,44 @@ EOF
 }
 
 func testAccAWSTransferUserConfig_options(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_transfer_server" "foo" {
-  identity_provider_type = "SERVICE_MANAGED"
-
-  tags = {
-    NAME = "tf-acc-test-transfer-server"
-  }
-}
+	return testAccAWSTransferUserConfig_base + fmt.Sprintf(`
 
 resource "aws_iam_role" "foo" {
   name = "tf-test-transfer-user-iam-role-%s"
 
   assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Effect": "Allow",
-		"Principal": {
-			"Service": "transfer.amazonaws.com"
-		},
-		"Action": "sts:AssumeRole"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "transfer.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
 }
 EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
   name = "tf-test-transfer-user-iam-policy-%s"
-  role = "${aws_iam_role.foo.id}"
+  role = aws_iam_role.foo.id
 
   policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Sid": "AllowFullAccesstoS3",
-		"Effect": "Allow",
-		"Action": [
-			"s3:*"
-		],
-		"Resource": "*"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowFullAccesstoS3",
+      "Effect": "Allow",
+      "Action": [
+        "s3:*"
+      ],
+      "Resource": "*"
+    }
+  ]
 }
 POLICY
 }
@@ -522,10 +544,10 @@ data "aws_iam_policy_document" "foo" {
 }
 
 resource "aws_transfer_user" "foo" {
-  server_id      = "${aws_transfer_server.foo.id}"
+  server_id      = aws_transfer_server.foo.id
   user_name      = "tftestuser"
-  role           = "${aws_iam_role.foo.arn}"
-  policy         = "${data.aws_iam_policy_document.foo.json}"
+  role           = aws_iam_role.foo.arn
+  policy         = data.aws_iam_policy_document.foo.json
   home_directory = "/home/tftestuser"
 
   tags = {
@@ -538,51 +560,44 @@ resource "aws_transfer_user" "foo" {
 }
 
 func testAccAWSTransferUserConfig_modify(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_transfer_server" "foo" {
-  identity_provider_type = "SERVICE_MANAGED"
-
-  tags = {
-    NAME = "tf-acc-test-transfer-server"
-  }
-}
+	return testAccAWSTransferUserConfig_base + fmt.Sprintf(`
 
 resource "aws_iam_role" "foo" {
   name = "tf-test-transfer-user-iam-role-%s"
 
   assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Effect": "Allow",
-		"Principal": {
-			"Service": "transfer.amazonaws.com"
-		},
-		"Action": "sts:AssumeRole"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "transfer.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
 }
 EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
   name = "tf-test-transfer-user-iam-policy-%s"
-  role = "${aws_iam_role.foo.id}"
+  role = aws_iam_role.foo.id
 
   policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Sid": "AllowFullAccesstoS3",
-		"Effect": "Allow",
-		"Action": [
-			"s3:*"
-		],
-		"Resource": "*"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowFullAccesstoS3",
+      "Effect": "Allow",
+      "Action": [
+        "s3:*"
+      ],
+      "Resource": "*"
+    }
+  ]
 }
 POLICY
 }
@@ -629,10 +644,10 @@ data "aws_iam_policy_document" "foo" {
 }
 
 resource "aws_transfer_user" "foo" {
-  server_id      = "${aws_transfer_server.foo.id}"
+  server_id      = aws_transfer_server.foo.id
   user_name      = "tftestuser"
-  role           = "${aws_iam_role.foo.arn}"
-  policy         = "${data.aws_iam_policy_document.foo.json}"
+  role           = aws_iam_role.foo.arn
+  policy         = data.aws_iam_policy_document.foo.json
   home_directory = "/test"
 
   tags = {
@@ -644,51 +659,44 @@ resource "aws_transfer_user" "foo" {
 }
 
 func testAccAWSTransferUserConfig_forceNew(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_transfer_server" "foo" {
-  identity_provider_type = "SERVICE_MANAGED"
-
-  tags = {
-    NAME = "tf-acc-test-transfer-server"
-  }
-}
+	return testAccAWSTransferUserConfig_base + fmt.Sprintf(`
 
 resource "aws_iam_role" "foo" {
   name = "tf-test-transfer-user-iam-role-%s"
 
   assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Effect": "Allow",
-		"Principal": {
-			"Service": "transfer.amazonaws.com"
-		},
-		"Action": "sts:AssumeRole"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "transfer.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
 }
 EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
   name = "tf-test-transfer-user-iam-policy-%s"
-  role = "${aws_iam_role.foo.id}"
+  role = aws_iam_role.foo.id
 
   policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Sid": "AllowFullAccesstoS3",
-		"Effect": "Allow",
-		"Action": [
-			"s3:*"
-		],
-		"Resource": "*"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowFullAccesstoS3",
+      "Effect": "Allow",
+      "Action": [
+        "s3:*"
+      ],
+      "Resource": "*"
+    }
+  ]
 }
 POLICY
 }
@@ -737,10 +745,10 @@ data "aws_iam_policy_document" "foo" {
 }
 
 resource "aws_transfer_user" "foo" {
-  server_id      = "${aws_transfer_server.foo.id}"
+  server_id      = aws_transfer_server.foo.id
   user_name      = "tftestuser2"
-  role           = "${aws_iam_role.foo.arn}"
-  policy         = "${data.aws_iam_policy_document.foo.json}"
+  role           = aws_iam_role.foo.arn
+  policy         = data.aws_iam_policy_document.foo.json
   home_directory = "/home/tftestuser2"
 
   tags = {
@@ -749,4 +757,125 @@ resource "aws_transfer_user" "foo" {
   }
 }
 `, rName, rName)
+}
+
+func testAccAWSTransferUserConfig_homeDirectoryMappings(rName string) string {
+	return composeConfig(
+		testAccAWSTransferUserConfig_base,
+		fmt.Sprintf(`
+resource "aws_iam_role" "foo" {
+  name = "tf-test-transfer-user-iam-role-%[1]s"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "transfer.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "foo" {
+  name = "tf-test-transfer-user-iam-policy-%[1]s"
+  role = aws_iam_role.foo.id
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowFullAccesstoS3",
+      "Effect": "Allow",
+      "Action": [
+        "s3:*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_transfer_user" "foo" {
+  home_directory_type = "LOGICAL"
+  role                = aws_iam_role.foo.arn
+  server_id           = aws_transfer_server.foo.id
+  user_name           = "tftestuser"
+
+  home_directory_mappings {
+    entry  = "/your-personal-report.pdf"
+    target = "/bucket3/customized-reports/tftestuser.pdf" 
+  }
+}
+`, rName))
+}
+
+func testAccAWSTransferUserConfig_homeDirectoryMappingsUpdate(rName string) string {
+	return composeConfig(
+		testAccAWSTransferUserConfig_base,
+		fmt.Sprintf(`
+resource "aws_iam_role" "foo" {
+  name = "tf-test-transfer-user-iam-role-%[1]s"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "transfer.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "foo" {
+  name = "tf-test-transfer-user-iam-policy-%[1]s"
+  role = aws_iam_role.foo.id
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowFullAccesstoS3",
+      "Effect": "Allow",
+      "Action": [
+        "s3:*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_transfer_user" "foo" {
+  home_directory_type = "LOGICAL"
+  role                = aws_iam_role.foo.arn
+  server_id           = aws_transfer_server.foo.id
+  user_name           = "tftestuser"
+
+  home_directory_mappings {
+    entry  = "/your-personal-report.pdf"
+    target = "/bucket3/customized-reports/tftestuser.pdf" 
+  }
+
+  home_directory_mappings {
+    entry  = "/your-personal-report2.pdf"
+    target = "/bucket3/customized-reports2/tftestuser.pdf" 
+  }
+}
+`, rName))
 }
