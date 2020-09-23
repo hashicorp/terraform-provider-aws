@@ -149,6 +149,16 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(0, 35),
+				RequiredWith: []string{"daily_automatic_backup_start_time"},
+			},
+			"daily_automatic_backup_start_time": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(5, 5),
+					validation.StringMatch(regexp.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
+				),
 			},
 			"storage_type": {
 				Type:         schema.TypeString,
@@ -188,6 +198,10 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 
 	if v, ok := d.GetOk("automatic_backup_retention_days"); ok {
 		input.LustreConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("daily_automatic_backup_start_time"); ok {
+		input.LustreConfiguration.DailyAutomaticBackupStartTime = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("export_path"); ok {
@@ -263,6 +277,11 @@ func resourceAwsFsxLustreFileSystemUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("automatic_backup_retention_days") {
 		input.LustreConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(d.Get("automatic_backup_retention_days").(int)))
+		requestUpdate = true
+	}
+
+	if d.HasChange("daily_automatic_backup_start_time") {
+		input.LustreConfiguration.DailyAutomaticBackupStartTime = aws.String(d.Get("daily_automatic_backup_start_time").(string))
 		requestUpdate = true
 	}
 
@@ -356,6 +375,7 @@ func resourceAwsFsxLustreFileSystemRead(d *schema.ResourceData, meta interface{}
 	d.Set("vpc_id", filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", lustreConfig.WeeklyMaintenanceStartTime)
 	d.Set("automatic_backup_retention_days", lustreConfig.AutomaticBackupRetentionDays)
+	d.Set("daily_automatic_backup_start_time", lustreConfig.DailyAutomaticBackupStartTime)
 
 	return nil
 }
