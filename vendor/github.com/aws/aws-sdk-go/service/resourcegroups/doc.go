@@ -9,7 +9,7 @@
 // of resources that match the resource types specified in a query, and share
 // one or more tags or portions of tags. You can create a group of resources
 // based on their roles in your cloud infrastructure, lifecycle stages, regions,
-// application layers, or virtually any criteria. Resource groups enable you
+// application layers, or virtually any criteria. Resource Groups enable you
 // to automate management tasks, such as those in AWS Systems Manager Automation
 // documents, on tag-related resources in AWS Systems Manager. Groups of tagged
 // resources also let you quickly view a custom console in AWS Systems Manager
