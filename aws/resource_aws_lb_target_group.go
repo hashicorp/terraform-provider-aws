@@ -150,6 +150,7 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								"lb_cookie",
+								"source_ip",
 							}, false),
 						},
 						"cookie_duration": {
