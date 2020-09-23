@@ -5,6 +5,9 @@ FEATURES
 * **New Resource:** `aws_datasync_location_fsx_windows` ([#12686](https://github.com/terraform-providers/terraform-provider-aws/pull/12686))
 * **New Resource:** `aws_route53_resolver_query_log_config`. ([#14897](https://github.com/terraform-providers/terraform-provider-aws/pull/14897))
 * **New Resource:** `aws_route53_resolver_query_log_config_association`. ([#14901](https://github.com/terraform-providers/terraform-provider-aws/pull/14901))
+* **New Data Source:** `aws_rds_engine_version` ([#15228](https://github.com/terraform-providers/terraform-provider-aws/pull/15228))
+* **New Data Source:** `aws_docdb_engine_version` ([#15253](https://github.com/terraform-providers/terraform-provider-aws/pull/15253))
+* **New Data Source:** `aws_neptune_engine_version` ([#15259](https://github.com/terraform-providers/terraform-provider-aws/pull/15259))
 
 ENHANCEMENTS
 
