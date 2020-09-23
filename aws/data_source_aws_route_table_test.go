@@ -156,7 +156,7 @@ resource "aws_route_table_association" "b" {
 
 data "aws_route_table" "by_filter" {
   filter {
-    name = "association.route-table-association-id"
+    name   = "association.route-table-association-id"
     values = [aws_route_table_association.a.id]
   }
 
