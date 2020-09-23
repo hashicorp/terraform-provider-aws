@@ -41,7 +41,7 @@ jobs:
           comment-author: github-actions
           body-includes: Please note that typically Go dependency changes
       - name: PR Comment
-        if: ${{ steps.comment_found.outputs.comment-id == '' }}
+        if: ${{ steps.comment_found.outputs.comment-id }} == ''
         uses: peter-evans/create-or-update-comment@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
