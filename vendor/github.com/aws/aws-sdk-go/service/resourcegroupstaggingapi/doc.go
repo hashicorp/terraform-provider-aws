@@ -100,8 +100,6 @@
 //
 //    * AWS CodeCommit (https://docs.aws.amazon.com/codecommit)
 //
-//    * AWS CodeGuru Profiler (https://docs.aws.amazon.com/codeguru/latest/profiler-ug/)
-//
 //    * AWS CodePipeline (https://docs.aws.amazon.com/codepipeline)
 //
 //    * AWS CodeStar (https://docs.aws.amazon.com/codestar)
@@ -152,8 +150,6 @@
 //
 //    * Elastic Load Balancing (https://docs.aws.amazon.com/elasticloadbalancing)
 //
-//    * Amazon Elastic Inference (https://docs.aws.amazon.com/elastic-inference)
-//
 //    * Amazon ElastiCache (https://docs.aws.amazon.com/elasticache)
 //
 //    * Amazon Elasticsearch Service (https://docs.aws.amazon.com/elasticsearch-service)
@@ -172,10 +168,6 @@
 //
 //    * AWS Firewall Manager (https://docs.aws.amazon.com/firewall-manager)
 //
-//    * Amazon Forecast (https://docs.aws.amazon.com/forecast)
-//
-//    * Amazon Fraud Detector (https://docs.aws.amazon.com/frauddetector)
-//
 //    * Amazon FSx (https://docs.aws.amazon.com/fsx)
 //
 //    * Amazon S3 Glacier (https://docs.aws.amazon.com/s3/?id=docs_gateway#amazon-s3-glacier)
@@ -189,8 +181,6 @@
 //    * Amazon GuardDuty (https://docs.aws.amazon.com/guardduty)
 //
 //    * Amazon Inspector (https://docs.aws.amazon.com/inspector)
-//
-//    * Amazon Interactive Video Service (https://docs.aws.amazon.com/ivs)
 //
 //    * AWS IoT Analytics (https://docs.aws.amazon.com/iotanalytics)
 //
@@ -226,8 +216,6 @@
 //
 //    * AWS License Manager (https://docs.aws.amazon.com/license-manager)
 //
-//    * Amazon Lightsail (https://docs.aws.amazon.com/lightsail)
-//
 //    * Amazon Macie (https://docs.aws.amazon.com/macie)
 //
 //    * Amazon Machine Learning (https://docs.aws.amazon.com/machine-learning)
@@ -236,11 +224,7 @@
 //
 //    * Amazon MSK (https://docs.aws.amazon.com/msk)
 //
-//    * Amazon MSK (https://docs.aws.amazon.com/msk)
-//
 //    * Amazon Neptune (https://docs.aws.amazon.com/neptune)
-//
-//    * AWS Network Manager (https://docs.aws.amazon.com/vpc/latest/tgw/what-is-network-manager.html)
 //
 //    * AWS OpsWorks (https://docs.aws.amazon.com/opsworks)
 //
@@ -296,7 +280,7 @@
 //
 //    * Amazon VPC (https://docs.aws.amazon.com/vpc)
 //
-//    * AWS WAF (https://docs.aws.amazon.com/waf)
+//    * AWS WAFv2 (https://docs.aws.amazon.com/waf)
 //
 //    * AWS WAF Regional (https://docs.aws.amazon.com/waf)
 //
