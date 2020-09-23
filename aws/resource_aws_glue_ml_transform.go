@@ -242,7 +242,7 @@ func resourceAwsGlueMLTransformRead(d *schema.ResourceData, meta interface{}) er
 		return nil
 	}
 
-	log.Printf("setting Glue ML Transform: %#v", output)
+	log.Printf("[DEBUG] setting Glue ML Transform: %#v", output)
 
 	mlTransformArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
