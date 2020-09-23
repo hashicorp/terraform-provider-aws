@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -57,16 +56,6 @@ func resourceAwsTransferServer() *schema.Resource {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ConflictsWith: []string{"endpoint_details.0.address_allocation_ids", "endpoint_details.0.subnet_ids", "endpoint_details.0.vpc_id"},
-							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								value := v.(string)
-								validNamePattern := "^vpce-[0-9a-f]{17}$"
-								validName, nameMatchErr := regexp.MatchString(validNamePattern, value)
-								if !validName || nameMatchErr != nil {
-									errors = append(errors, fmt.Errorf(
-										"%q must match regex '%v'", k, validNamePattern))
-								}
-								return
-							},
 							DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
 								if n == "" && d.Get("endpoint_type").(string) == transfer.EndpointTypeVpc {
 									return true

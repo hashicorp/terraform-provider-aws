@@ -38,36 +38,6 @@ func resourceAwsTransferUser() *schema.Resource {
 				ValidateFunc:  validation.StringLenBetween(0, 1024),
 			},
 
-			"home_directory_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					transfer.HomeDirectoryTypeLogical,
-					transfer.HomeDirectoryTypePath,
-				}, false),
-			},
-
-			"home_directory_mappings": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      50,
-				ConflictsWith: []string{"home_directory", "policy"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"entry": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1024),
-						},
-						"target": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1024),
-						},
-					},
-				},
-			},
-
 			"home_directory_mappings": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -97,7 +67,6 @@ func resourceAwsTransferUser() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ConflictsWith:    []string{"home_directory_mappings"},
 				ValidateFunc:     validateIAMPolicyJson,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
