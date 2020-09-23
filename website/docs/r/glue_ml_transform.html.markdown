@@ -130,7 +130,7 @@ The following arguments are supported:
 * `role_arn` – (Required) The ARN of the IAM role associated with this ML Transform.
 * `description` – (Optional) Description of the ML Transform.
 * `glue_version` - (Optional) The version of glue to use, for example "1.0". For information about available versions, see the [AWS Glue Release Notes](https://docs.aws.amazon.com/glue/latest/dg/release-notes.html).
-* `max_capacity` – (Optional) he number of AWS Glue data processing units (DPUs) that are allocated to task runs for this transform. You can allocate from `2` to `100` DPUs; the default is 10. `max_capacity` is a mutually exclusive option with `number_of_workers` and `worker_type`.
+* `max_capacity` – (Optional) The number of AWS Glue data processing units (DPUs) that are allocated to task runs for this transform. You can allocate from `2` to `100` DPUs; the default is `10`. `max_capacity` is a mutually exclusive option with `number_of_workers` and `worker_type`.
 * `max_retries` – (Optional) The maximum number of times to retry this ML Transform if it fails.
 * `tags` - (Optional) Key-value map of resource tags
 * `timeout` – (Optional) The ML Transform timeout in minutes. The default is 2880 minutes (48 hours).
@@ -146,7 +146,7 @@ The following arguments are supported:
 
 ### parameters
 
-* `tansform_type` - (Required) The type of machine learning transform. For information about the types of machine learning transforms, see [Creating Machine Learning Transforms](http://docs.aws.amazon.com/glue/latest/dg/add-job-machine-learning-transform.html).
+* `transform_type` - (Required) The type of machine learning transform. For information about the types of machine learning transforms, see [Creating Machine Learning Transforms](http://docs.aws.amazon.com/glue/latest/dg/add-job-machine-learning-transform.html).
 * `find_matches_parameters` - (Required) The parameters for the find matches algorithm. see [Find Matches Parameters](#find_matches_parameters).
 
 #### find_matches_parameters
@@ -161,7 +161,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of Glue ML Transform.
-* `id` - ML Transform ID.
+* `id` - Glue ML Transform ID.
 * `label_count` - The number of labels available for this transform.
 * `schema` - The object that represents the schema that this transform accepts. see [Schema](#schema).
 
