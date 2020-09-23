@@ -33,7 +33,15 @@ jobs:
     name: Comment
     runs-on: ubuntu-latest
     steps:
+      - name: Find Existing PR Comment
+        id: comment_found
+        uses: peter-evans/find-comment@v1
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: github-actions
+          body-includes: Please note that typically Go dependency changes
       - name: PR Comment
+        if: ${{ steps.comment_found.outputs.comment-id == '' }}
         uses: peter-evans/create-or-update-comment@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
