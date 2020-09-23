@@ -32,10 +32,9 @@ func resourceAwsTransferUser() *schema.Resource {
 			},
 
 			"home_directory": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"home_directory_mappings"},
-				ValidateFunc:  validation.StringLenBetween(0, 1024),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 
 			"home_directory_mappings": {
