@@ -439,7 +439,7 @@ resource "aws_worklink_fleet" "test" {
 
   network {
     vpc_id             = aws_vpc.test.id
-    subnet_ids         = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+    subnet_ids         = aws_subnet.test[*].id
     security_group_ids = [aws_security_group.test.id]
   }
 }

@@ -10,6 +10,7 @@ on:
       - aws/core_acceptance_test.go
       - aws/data_source_aws_*_test.go
       - aws/resource_aws_[a-g]*_test.go
+      - aws/resource_aws_[t-z]*_test.go
 
 env:
   GO_VERSION: "1.14"
@@ -47,6 +48,13 @@ jobs:
             -o -name 'resource_aws_e*_test.go' \
             -o -name 'resource_aws_f*_test.go' \
             -o -name 'resource_aws_g*_test.go' \
+            -o -name 'resource_aws_t*_test.go' \
+            -o -name 'resource_aws_u*_test.go' \
+            -o -name 'resource_aws_v*_test.go' \
+            -o -name 'resource_aws_w*_test.go' \
+            -o -name 'resource_aws_x*_test.go' \
+            -o -name 'resource_aws_y*_test.go' \
+            -o -name 'resource_aws_z*_test.go' \
             \) \
             | sort -u \
             | grep -v resource_aws_apigatewayv2_domain_name_test.go \
@@ -85,6 +93,13 @@ jobs:
             -o -name 'resource_aws_e*_test.go' \
             -o -name 'resource_aws_f*_test.go' \
             -o -name 'resource_aws_g*_test.go' \
+            -o -name 'resource_aws_t*_test.go' \
+            -o -name 'resource_aws_u*_test.go' \
+            -o -name 'resource_aws_v*_test.go' \
+            -o -name 'resource_aws_w*_test.go' \
+            -o -name 'resource_aws_x*_test.go' \
+            -o -name 'resource_aws_y*_test.go' \
+            -o -name 'resource_aws_z*_test.go' \
             \) \
             | sort -u \
             | grep -v resource_aws_apigatewayv2_domain_name_test.go \

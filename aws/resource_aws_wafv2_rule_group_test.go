@@ -2223,11 +2223,11 @@ resource "aws_wafv2_rule_group" "test" {
     statement {
       ip_set_reference_statement {
         arn = aws_wafv2_ip_set.test.arn
-		ip_set_forwarded_ip_config {
-    	  fallback_behavior = "%[2]s"
-		  header_name       = "%[3]s"
-		  position          = "%[4]s"
-		}
+        ip_set_forwarded_ip_config {
+          fallback_behavior = "%[2]s"
+          header_name       = "%[3]s"
+          position          = "%[4]s"
+        }
       }
     }
 
