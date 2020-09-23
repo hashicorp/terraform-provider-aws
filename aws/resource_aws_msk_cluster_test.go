@@ -185,6 +185,37 @@ func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *t
 	})
 }
 
+func TestAccAWSMskCluster_ClientAuthentication_Sasl_Scram(t *testing.T) {
+	var cluster1 kafka.ClusterInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_msk_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckMskClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMskClusterConfigClientAuthenticationSaslScram(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bootstrap_brokers",     // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers_tls", // API may mutate ordering and selection of brokers to return
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSMskCluster_ConfigurationInfo_Revision(t *testing.T) {
 
 	var cluster1, cluster2 kafka.ClusterInfo
@@ -780,6 +811,54 @@ resource "aws_msk_cluster" "test" {
   client_authentication {
     tls {
       certificate_authority_arns = [aws_acmpca_certificate_authority.test.arn]
+    }
+  }
+
+  encryption_info {
+    encryption_in_transit {
+      client_broker = "TLS"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccMskClusterConfigClientAuthenticationSaslScram(rName string) string {
+	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name       = "AmazonMSK_test"
+  kms_key_id = aws_kms_key.test.key_id
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode({ username = "%s", password = "foobar" })
+}
+
+resource "aws_kms_key" "test" {
+  description = "test"
+}
+
+resource "aws_msk_sasl_scram_secret" "test" {
+  cluster_arn     = aws_msk_cluster.test.arn
+  secret_arn_list = [aws_secretsmanager_secret.test.arn]
+}
+
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.2.1"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
+    ebs_volume_size = 10
+    instance_type   = "kafka.m5.large"
+    security_groups = [aws_security_group.example_sg.id]
+  }
+
+  client_authentication {
+    sasl {
+      scram = true
     }
   }
 

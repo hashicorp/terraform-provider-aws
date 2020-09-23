@@ -27,6 +27,10 @@ func dataSourceAwsMskCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"bootstrap_brokers_sasl_scram": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cluster_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -101,6 +105,7 @@ func dataSourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("arn", aws.StringValue(cluster.ClusterArn))
 	d.Set("bootstrap_brokers", aws.StringValue(bootstrapBrokersoOutput.BootstrapBrokerString))
 	d.Set("bootstrap_brokers_tls", aws.StringValue(bootstrapBrokersoOutput.BootstrapBrokerStringTls))
+	d.Set("bootstrap_brokers_sasl_scram", aws.StringValue(bootstrapBrokersoOutput.BootstrapBrokerStringSaslScram))
 	d.Set("cluster_name", aws.StringValue(cluster.ClusterName))
 	d.Set("kafka_version", aws.StringValue(cluster.CurrentBrokerSoftwareInfo.KafkaVersion))
 	d.Set("number_of_broker_nodes", aws.Int64Value(cluster.NumberOfBrokerNodes))
