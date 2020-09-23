@@ -76,7 +76,6 @@ The following arguments are supported:
 * `logging_role` - (Optional) Amazon Resource Name (ARN) of an IAM role that allows the service to write your SFTP users’ activity to your Amazon CloudWatch logs for monitoring and auditing purposes.
 * `force_destroy` - (Optional) A boolean that indicates all users associated with the server should be deleted so that the Server can be destroyed without error. The default value is `false`.
 * `tags` - (Optional) A map of tags to assign to the resource.
-* `vpce_security_group_ids` (Optional) A List of security group IDs to be applied to the automatically created VPC endpoint.
 
 **endpoint_details** requires the following:
 
