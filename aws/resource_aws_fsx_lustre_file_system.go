@@ -149,7 +149,6 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(0, 35),
-				RequiredWith: []string{"daily_automatic_backup_start_time"},
 			},
 			"daily_automatic_backup_start_time": {
 				Type:     schema.TypeString,
