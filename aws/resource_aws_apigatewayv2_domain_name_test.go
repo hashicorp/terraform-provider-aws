@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -262,27 +263,34 @@ func TestAccAWSAPIGatewayV2DomainName_UpdateCertificate(t *testing.T) {
 
 func TestAccAWSAPIGatewayV2DomainName_MutualTlsAuthentication(t *testing.T) {
 	var v apigatewayv2.GetDomainNameOutput
+	var ca acmpca.CertificateAuthority
 	resourceName := "aws_apigatewayv2_domain_name.test"
-	certResourceName := "aws_acm_certificate.test.0"
+	acmCAResourceName := "aws_acmpca_certificate_authority.test"
+	acmCertificateResourceName := "aws_acm_certificate.test"
 	s3BucketObjectResourceName := "aws_s3_bucket_object.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	key := tlsRsaPrivateKeyPem(2048)
-	domainName := fmt.Sprintf("%s.example.com", rName)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, domainName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2DomainNameDestroy,
 		Steps: []resource.TestStep{
+			// We need to create and activate the CA before issuing a certificate.
 			{
-				Config: testAccAWSAPIGatewayV2DomainNameConfig_mututalTlsAuthentication(rName, certificate, key),
+				Config: testAccAWSAPIGatewayV2DomainNameConfigRootCA(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAcmpcaCertificateAuthorityExists(acmCAResourceName, &ca),
+					testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(&ca),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayV2DomainNameConfigMututalTlsAuthentication(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_name", acmCertificateResourceName, "domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_name_configuration.0.certificate_arn", certResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_name_configuration.0.certificate_arn", acmCertificateResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.endpoint_type", "REGIONAL"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_name_configuration.0.hosted_zone_id"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.security_policy", "TLS_1_2"),
@@ -294,13 +302,13 @@ func TestAccAWSAPIGatewayV2DomainName_MutualTlsAuthentication(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayV2DomainNameConfig_mututalTlsAuthenticationUpdated(rName, certificate, key),
+				Config: testAccAWSAPIGatewayV2DomainNameConfigMututalTlsAuthenticationUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_name", acmCertificateResourceName, "domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_name_configuration.0.certificate_arn", certResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_name_configuration.0.certificate_arn", acmCertificateResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.endpoint_type", "REGIONAL"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_name_configuration.0.hosted_zone_id"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.security_policy", "TLS_1_2"),
@@ -318,13 +326,13 @@ func TestAccAWSAPIGatewayV2DomainName_MutualTlsAuthentication(t *testing.T) {
 			},
 			// Test disabling mutual TLS authentication.
 			{
-				Config: testAccAWSAPIGatewayV2DomainNameConfig_basic(rName, certificate, key, 1, 0),
+				Config: testAccAWSAPIGatewayV2DomainNameConfigBasicWithPrivateCert(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2DomainNameExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_name", acmCertificateResourceName, "domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_name_configuration.0.certificate_arn", certResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_name_configuration.0.certificate_arn", acmCertificateResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.endpoint_type", "REGIONAL"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_name_configuration.0.hosted_zone_id"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.security_policy", "TLS_1_2"),
@@ -332,6 +340,14 @@ func TestAccAWSAPIGatewayV2DomainName_MutualTlsAuthentication(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
+			},
+			{
+				Config: testAccAWSAPIGatewayV2DomainNameConfigBasicWithPrivateCert(rName),
+				Check: resource.ComposeTestCheckFunc(
+					// CA must be DISABLED for deletion.
+					testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -387,7 +403,7 @@ func testAccCheckAWSAPIGatewayV2DomainNameExists(n string, v *apigatewayv2.GetDo
 	}
 }
 
-func testAccAWSAPIGatewayV2DomainNameConfig_base(rName, certificate, key string, count int) string {
+func testAccAWSAPIGatewayV2DomainNameConfigImportedCerts(rName, certificate, key string, count int) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   count = %[4]d
@@ -402,8 +418,35 @@ resource "aws_acm_certificate" "test" {
 `, rName, certificate, key, count)
 }
 
+func testAccAWSAPIGatewayV2DomainNameConfigRootCA(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  type                            = "ROOT"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+	signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = "%[1]s.com"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAWSAPIGatewayV2DomainNameConfigPrivateCert(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  domain_name               = "test.%[1]s.com"
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+}
+`, rName)
+}
+
 func testAccAWSAPIGatewayV2DomainNameConfig_basic(rName, certificate, key string, count, index int) string {
-	return composeConfig(testAccAWSAPIGatewayV2DomainNameConfig_base(rName, certificate, key, count), fmt.Sprintf(`
+	return composeConfig(testAccAWSAPIGatewayV2DomainNameConfigImportedCerts(rName, certificate, key, count), fmt.Sprintf(`
 resource "aws_apigatewayv2_domain_name" "test" {
   domain_name = "%[1]s.example.com"
 
@@ -417,7 +460,7 @@ resource "aws_apigatewayv2_domain_name" "test" {
 }
 
 func testAccAWSAPIGatewayV2DomainNameConfig_tags(rName, certificate, key string, count, index int) string {
-	return composeConfig(testAccAWSAPIGatewayV2DomainNameConfig_base(rName, certificate, key, count), fmt.Sprintf(`
+	return composeConfig(testAccAWSAPIGatewayV2DomainNameConfigImportedCerts(rName, certificate, key, count), fmt.Sprintf(`
 resource "aws_apigatewayv2_domain_name" "test" {
   domain_name = "%[1]s.example.com"
 
@@ -435,8 +478,28 @@ resource "aws_apigatewayv2_domain_name" "test" {
 `, rName, index))
 }
 
-func testAccAWSAPIGatewayV2DomainNameConfig_mututalTlsAuthentication(rName, certificate, key string) string {
-	return composeConfig(testAccAWSAPIGatewayV2DomainNameConfig_base(rName, certificate, key, 1), fmt.Sprintf(`
+func testAccAWSAPIGatewayV2DomainNameConfigBasicWithPrivateCert(rName string) string {
+	return composeConfig(
+		testAccAWSAPIGatewayV2DomainNameConfigRootCA(rName),
+		testAccAWSAPIGatewayV2DomainNameConfigPrivateCert(rName),
+		fmt.Sprintf(`
+resource "aws_apigatewayv2_domain_name" "test" {
+  domain_name = aws_acm_certificate.test.domain_name
+
+  domain_name_configuration {
+    certificate_arn = aws_acm_certificate.test.arn
+    endpoint_type   = "REGIONAL"
+    security_policy = "TLS_1_2"
+  }
+}
+`))
+}
+
+func testAccAWSAPIGatewayV2DomainNameConfigMututalTlsAuthentication(rName string) string {
+	return composeConfig(
+		testAccAWSAPIGatewayV2DomainNameConfigRootCA(rName),
+		testAccAWSAPIGatewayV2DomainNameConfigPrivateCert(rName),
+		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
@@ -448,10 +511,10 @@ resource "aws_s3_bucket_object" "test" {
 }
 
 resource "aws_apigatewayv2_domain_name" "test" {
-  domain_name = "%[1]s.example.com"
+  domain_name = aws_acm_certificate.test.domain_name
 
   domain_name_configuration {
-    certificate_arn = aws_acm_certificate.test[0].arn
+    certificate_arn = aws_acm_certificate.test.arn
     endpoint_type   = "REGIONAL"
     security_policy = "TLS_1_2"
   }
@@ -463,8 +526,11 @@ resource "aws_apigatewayv2_domain_name" "test" {
 `, rName))
 }
 
-func testAccAWSAPIGatewayV2DomainNameConfig_mututalTlsAuthenticationUpdated(rName, certificate, key string) string {
-	return composeConfig(testAccAWSAPIGatewayV2DomainNameConfig_base(rName, certificate, key, 1), fmt.Sprintf(`
+func testAccAWSAPIGatewayV2DomainNameConfigMututalTlsAuthenticationUpdated(rName string) string {
+	return composeConfig(
+		testAccAWSAPIGatewayV2DomainNameConfigRootCA(rName),
+		testAccAWSAPIGatewayV2DomainNameConfigPrivateCert(rName),
+		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
@@ -480,10 +546,10 @@ resource "aws_s3_bucket_object" "test" {
 }
 
 resource "aws_apigatewayv2_domain_name" "test" {
-  domain_name = "%[1]s.example.com"
+  domain_name = aws_acm_certificate.test.domain_name
 
   domain_name_configuration {
-    certificate_arn = aws_acm_certificate.test[0].arn
+    certificate_arn = aws_acm_certificate.test.arn
     endpoint_type   = "REGIONAL"
     security_policy = "TLS_1_2"
   }
