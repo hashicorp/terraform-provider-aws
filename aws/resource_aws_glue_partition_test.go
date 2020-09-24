@@ -213,7 +213,7 @@ func testAccGluePartitionConfig(rName string, parValue string) string {
 resource "aws_glue_partition" "test" {
   database_name    = aws_glue_catalog_database.test.name
   table_name       = aws_glue_catalog_table.test.name
-  partition_values =  ["%[1]s"]
+  partition_values = ["%[1]s"]
 }
 `, parValue)
 }
