@@ -816,7 +816,7 @@ resource "aws_subnet" "test" {
 resource "aws_ec2_transit_gateway" "test" {}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnet_ids         = aws_subnet.test[*].id
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test.id
 }
