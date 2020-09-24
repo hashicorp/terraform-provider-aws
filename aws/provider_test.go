@@ -1190,6 +1190,49 @@ func testAccPreCheckSkipError(err error) bool {
 	return false
 }
 
+// testSweepMaxJobs is the maximum number of goroutines to use in sweeping.
+// The actual number may be lower depending on the needed jobs.
+const testSweepMaxJobs = 20
+
+// testSweepUnitOfWorkFunc is a function type for a unit of sweeping work.
+type testSweepUnitOfWorkFunc func(id, region string) error
+
+// testSweepOrchestrator orchestrates goroutines to perform sweeping work.
+func testSweepOrchestrator(jobs []string, region string, f testSweepUnitOfWorkFunc) {
+	jobCount := testSweepMaxJobs
+	if len(jobs) < jobCount {
+		jobCount = len(jobs)
+	}
+
+	var wg sync.WaitGroup
+	jobChan := make(chan string, jobCount)
+
+	for workerID := 0; workerID < jobCount; workerID++ {
+		wg.Add(1)
+		go testSweepJob(f, region, jobChan, &wg)
+	}
+
+	for _, id := range jobs {
+		jobChan <- id
+	}
+
+	close(jobChan)
+	wg.Wait()
+}
+
+// testSweepJob should only be called by testSweepOrachestrator and calls the
+// work function for the sweep
+func testSweepJob(f testSweepUnitOfWorkFunc, region string, jobChan <-chan string, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for id := range jobChan {
+		err := f(id, region)
+		if err != nil {
+			log.Printf("[ERROR] sweeping error: %s", err)
+		}
+	}
+}
+
 // Check sweeper API call error for reasons to skip sweeping
 // These include missing API endpoints and unsupported API calls
 func testSweepSkipSweepError(err error) bool {

@@ -23,6 +23,31 @@ func init() {
 	})
 }
 
+func testSweepDbInstancesUnitOfWork(id, region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).rdsconn
+
+	log.Printf("[INFO] Deleting DB instance: %s", id)
+
+	_, err = conn.DeleteDBInstance(&rds.DeleteDBInstanceInput{
+		DBInstanceIdentifier: aws.String(id),
+		SkipFinalSnapshot:    aws.Bool(true),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to delete DB instance %s: %s", id, err)
+	}
+
+	err = waitUntilAwsDbInstanceIsDeleted(id, conn, 40*time.Minute)
+	if err != nil {
+		return fmt.Errorf("failure while waiting for DB instance %s to be deleted: %s", id, err)
+	}
+
+	return nil
+}
+
 func testSweepDbInstances(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
@@ -30,25 +55,10 @@ func testSweepDbInstances(region string) error {
 	}
 	conn := client.(*AWSClient).rdsconn
 
+	ids := make([]string, 0)
 	err = conn.DescribeDBInstancesPages(&rds.DescribeDBInstancesInput{}, func(out *rds.DescribeDBInstancesOutput, lastPage bool) bool {
 		for _, dbi := range out.DBInstances {
-			log.Printf("[INFO] Deleting DB instance: %s", *dbi.DBInstanceIdentifier)
-
-			_, err := conn.DeleteDBInstance(&rds.DeleteDBInstanceInput{
-				DBInstanceIdentifier: dbi.DBInstanceIdentifier,
-				SkipFinalSnapshot:    aws.Bool(true),
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete DB instance %s: %s",
-					*dbi.DBInstanceIdentifier, err)
-				continue
-			}
-
-			err = waitUntilAwsDbInstanceIsDeleted(*dbi.DBInstanceIdentifier, conn, 40*time.Minute)
-			if err != nil {
-				log.Printf("[ERROR] Failure while waiting for DB instance %s to be deleted: %s",
-					*dbi.DBInstanceIdentifier, err)
-			}
+			ids = append(ids, aws.StringValue(dbi.DBInstanceIdentifier))
 		}
 		return !lastPage
 	})
@@ -59,6 +69,8 @@ func testSweepDbInstances(region string) error {
 		}
 		return fmt.Errorf("Error retrieving DB instances: %s", err)
 	}
+
+	testSweepOrchestrator(ids, region, testSweepDbInstancesUnitOfWork)
 
 	return nil
 }
