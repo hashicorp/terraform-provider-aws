@@ -633,8 +633,8 @@ resource "aws_glue_catalog_table" "test" {
 func testAccAWSGlueMLTransformBasicConfig(rName string) string {
 	return testAccAWSGlueMLTransformConfigBase(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
-  name         = %[1]q
-  role_arn     = aws_iam_role.test.arn
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
 
   input_record_tables {
     database_name = aws_glue_catalog_table.test.database_name
@@ -657,8 +657,8 @@ resource "aws_glue_ml_transform" "test" {
 func testAccAWSGlueMLTransformTypeFindMatchesFullConfig(rName string, enforce bool, tradeOff float64) string {
 	return testAccAWSGlueMLTransformConfigBase(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
-  name         = %[1]q
-  role_arn     = aws_iam_role.test.arn
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
 
   input_record_tables {
     database_name = aws_glue_catalog_table.test.database_name
@@ -684,9 +684,9 @@ resource "aws_glue_ml_transform" "test" {
 func testAccAWSGlueMLTransformConfigDescription(rName, description string) string {
 	return testAccAWSGlueMLTransformConfigBase(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
-  name         = %[1]q
-  description  = %[2]q
-  role_arn     = aws_iam_role.test.arn
+  name        = %[1]q
+  description = %[2]q
+  role_arn    = aws_iam_role.test.arn
 
   input_record_tables {
     database_name = aws_glue_catalog_table.test.database_name
@@ -734,9 +734,9 @@ resource "aws_glue_ml_transform" "test" {
 func testAccAWSGlueMLTransformConfigMaxRetries(rName string, maxRetries int) string {
 	return testAccAWSGlueMLTransformConfigBase(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
-  name         = %[1]q
-  max_retries  = %[2]d
-  role_arn     = aws_iam_role.test.arn
+  name        = %[1]q
+  max_retries = %[2]d
+  role_arn    = aws_iam_role.test.arn
 
   input_record_tables {
     database_name = aws_glue_catalog_table.test.database_name
@@ -759,8 +759,8 @@ resource "aws_glue_ml_transform" "test" {
 func testAccAWSGlueMLTransformConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return testAccAWSGlueMLTransformConfigBase(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
-  name         = %[1]q
-  role_arn     = aws_iam_role.test.arn
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
 
   input_record_tables {
     database_name = aws_glue_catalog_table.test.database_name
@@ -787,8 +787,8 @@ resource "aws_glue_ml_transform" "test" {
 func testAccAWSGlueMLTransformConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccAWSGlueMLTransformConfigBase(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
-  name         = %[1]q
-  role_arn     = aws_iam_role.test.arn
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
 
   input_record_tables {
     database_name = aws_glue_catalog_table.test.database_name
@@ -816,9 +816,9 @@ resource "aws_glue_ml_transform" "test" {
 func testAccAWSGlueMLTransformConfigTimeout(rName string, timeout int) string {
 	return testAccAWSGlueMLTransformConfigBase(rName) + fmt.Sprintf(`
 resource "aws_glue_ml_transform" "test" {
-  name         = %[1]q
-  timeout      = %[2]d
-  role_arn     = aws_iam_role.test.arn
+  name     = %[1]q
+  timeout  = %[2]d
+  role_arn = aws_iam_role.test.arn
 
   input_record_tables {
     database_name = aws_glue_catalog_table.test.database_name
