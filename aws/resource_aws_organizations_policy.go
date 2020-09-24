@@ -70,7 +70,7 @@ func resourceAwsOrganizationsPolicyCreate(d *schema.ResourceData, meta interface
 		Description: aws.String(d.Get("description").(string)),
 		Name:        aws.String(d.Get("name").(string)),
 		Type:        aws.String(d.Get("type").(string)),
-		Tags:    keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().OrganizationsTags(),
+		Tags:        keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().OrganizationsTags(),
 	}
 
 	log.Printf("[DEBUG] Creating Organizations Policy: %s", input)
@@ -135,7 +135,7 @@ func resourceAwsOrganizationsPolicyRead(d *schema.ResourceData, meta interface{}
 	d.Set("name", resp.Policy.PolicySummary.Name)
 	d.Set("type", resp.Policy.PolicySummary.Type)
 
-    tags, err := keyvaluetags.OrganizationsListTags(conn, d.Id())
+	tags, err := keyvaluetags.OrganizationsListTags(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error listing tags: %s", err)
 	}
@@ -172,7 +172,7 @@ func resourceAwsOrganizationsPolicyUpdate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error updating Organizations Policy: %s", err)
 	}
 
-    if d.HasChange("tags") {
+	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.OrganizationsUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
