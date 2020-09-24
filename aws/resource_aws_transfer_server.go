@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/transfer"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -171,6 +171,8 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 	if attr, ok := d.GetOk("endpoint_details"); ok {
 		createOpts.EndpointDetails = expandTransferServerEndpointDetails(attr.([]interface{}))
 
+		// Prevent the following error: InvalidRequestException: AddressAllocationIds cannot be set in CreateServer
+		// Reference: https://docs.aws.amazon.com/transfer/latest/userguide/API_EndpointDetails.html#TransferFamily-Type-EndpointDetails-AddressAllocationIds
 		if createOpts.EndpointDetails.AddressAllocationIds != nil {
 			createOpts.EndpointDetails.AddressAllocationIds = nil
 			updateAfterCreate = true
@@ -190,13 +192,60 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(*resp.ServerId)
 
+	stateChangeConf := &resource.StateChangeConf{
+		Pending: []string{transfer.StateStarting},
+		Target:  []string{transfer.StateOnline},
+		Refresh: refreshTransferServerStatus(conn, d.Id()),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+		Delay:   10 * time.Second,
+	}
+
+	if _, err := stateChangeConf.WaitForState(); err != nil {
+		return fmt.Errorf("error waiting for Transfer Server (%s) to start: %w", d.Id(), err)
+	}
+
 	if updateAfterCreate {
+		if err := stopAndWaitForTransferServer(d.Id(), conn, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return err
+		}
+
 		updateOpts := &transfer.UpdateServerInput{
 			ServerId:        aws.String(d.Id()),
 			EndpointDetails: expandTransferServerEndpointDetails(d.Get("endpoint_details").([]interface{})),
 		}
 
-		if err := doTransferServerUpdate(d, updateOpts, conn, meta.(*AWSClient).ec2conn, true); err != nil {
+		// EIPs cannot be assigned directly on server creation, so the server must
+		// be created, stopped, and updated. The Transfer API will return a state
+		// of ONLINE before the underlying VPC Endpoint is available and attempting
+		// to assign the EIPs will return an error until that EC2 API process is
+		// complete:
+		//   ConflictException: VPC Endpoint state is not yet available
+		// To prevent accessing the EC2 API directly to check the VPC Endpoint
+		// state, which can require confusing IAM permissions and have other
+		// eventual consistency consideration, we retry only via the Transfer API.
+		err := resource.Retry(Ec2VpcEndpointCreationTimeout, func() *resource.RetryError {
+			_, err := conn.UpdateServer(updateOpts)
+
+			if tfawserr.ErrMessageContains(err, transfer.ErrCodeConflictException, "VPC Endpoint state is not yet available") {
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if isResourceTimeoutError(err) {
+			_, err = conn.UpdateServer(updateOpts)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error updating Transfer Server (%s): %w", d.Id(), err)
+		}
+
+		if err := startAndWaitForTransferServer(d.Id(), conn, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return err
 		}
 	}
@@ -285,6 +334,7 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 			updateOpts.EndpointDetails = expandTransferServerEndpointDetails(attr.([]interface{}))
 		}
 
+		// Prevent the following error: InvalidRequestException: Server must be OFFLINE to change AddressAllocationIds
 		if d.HasChange("endpoint_details.0.address_allocation_ids") {
 			stopFlag = true
 		}
@@ -298,8 +348,20 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if updateFlag {
-		if err := doTransferServerUpdate(d, updateOpts, conn, meta.(*AWSClient).ec2conn, stopFlag); err != nil {
-			return err
+		if stopFlag {
+			if err := stopAndWaitForTransferServer(d.Id(), conn, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return err
+			}
+		}
+
+		if _, err := conn.UpdateServer(updateOpts); err != nil {
+			return fmt.Errorf("error updating Transfer Server (%s): %w", d.Id(), err)
+		}
+
+		if stopFlag {
+			if err := startAndWaitForTransferServer(d.Id(), conn, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -423,20 +485,20 @@ func expandTransferServerEndpointDetails(l []interface{}) *transfer.EndpointDeta
 
 	out := &transfer.EndpointDetails{}
 
-	if v, ok := e["vpc_endpoint_id"]; ok && v != "" {
-		out.VpcEndpointId = aws.String(v.(string))
+	if v, ok := e["vpc_endpoint_id"].(string); ok && v != "" {
+		out.VpcEndpointId = aws.String(v)
 	}
 
-	if v, ok := e["address_allocation_ids"]; ok {
-		out.AddressAllocationIds = expandStringSet(v.(*schema.Set))
+	if v, ok := e["address_allocation_ids"].(*schema.Set); ok && v.Len() > 0 {
+		out.AddressAllocationIds = expandStringSet(v)
 	}
 
-	if v, ok := e["subnet_ids"]; ok {
-		out.SubnetIds = expandStringSet(v.(*schema.Set))
+	if v, ok := e["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+		out.SubnetIds = expandStringSet(v)
 	}
 
-	if v, ok := e["vpc_id"]; ok {
-		out.VpcId = aws.String(v.(string))
+	if v, ok := e["vpc_id"].(string); ok && v != "" {
+		out.VpcId = aws.String(v)
 	}
 
 	return out
@@ -462,36 +524,6 @@ func flattenTransferServerEndpointDetails(endpointDetails *transfer.EndpointDeta
 	}
 
 	return []interface{}{e}
-}
-
-func doTransferServerUpdate(d *schema.ResourceData, updateOpts *transfer.UpdateServerInput, transferConn *transfer.Transfer, ec2Conn *ec2.EC2, stopFlag bool) error {
-	if stopFlag {
-		if err := waitForTransferServerVPCEndpointState(transferConn, ec2Conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return fmt.Errorf("error waiting for Transfer Server VPC Endpoint (%s) to start: %s", d.Id(), err)
-		}
-
-		if err := stopAndWaitForTransferServer(d.Id(), transferConn, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return err
-		}
-	}
-
-	_, err := transferConn.UpdateServer(updateOpts)
-	if err != nil {
-		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] Transfer Server (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error updating Transfer Server (%s): %s", d.Id(), err)
-	}
-
-	if stopFlag {
-		if err := startAndWaitForTransferServer(d.Id(), transferConn, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func stopAndWaitForTransferServer(serverId string, conn *transfer.Transfer, timeout time.Duration) error {
@@ -560,19 +592,9 @@ func describeTransferServer(conn *transfer.Transfer, serverId string) (*transfer
 
 	resp, err := conn.DescribeServer(params)
 
+	if resp == nil {
+		return nil, err
+	}
+
 	return resp.Server, err
-}
-
-func waitForTransferServerVPCEndpointState(transferConn *transfer.Transfer, ec2Conn *ec2.EC2, serverId string, timeout time.Duration) error {
-	server, err := describeTransferServer(transferConn, serverId)
-
-	if err != nil {
-		return err
-	}
-
-	if err := vpcEndpointWaitUntilAvailable(ec2Conn, *server.EndpointDetails.VpcEndpointId, timeout); err != nil {
-		return err
-	}
-
-	return nil
 }
