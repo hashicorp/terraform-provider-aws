@@ -5,6 +5,7 @@ on:
       - master
   pull_request:
     paths:
+      - .github/workflows/examples.yml
       - examples/**
 
 env:
@@ -43,7 +44,7 @@ jobs:
         # Needed to use the output of `terraform validate -json`
         terraform_wrapper: false
     - name: install tflint
-      run: go install github.com/terraform-linters/tflint
+      run: cd tools && go install github.com/terraform-linters/tflint
     - name: terraform
       run: |
         for DIR in $(find ./examples -type f -name '*.tf' -exec dirname {} \; | sort -u); do

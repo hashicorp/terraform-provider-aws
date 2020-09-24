@@ -95,7 +95,7 @@ jobs:
           git clone --branch json-output --single-branch https://github.com/gdavison/terrafmt terrafmt
           cd terrafmt
           go install
-      - run: go install github.com/terraform-linters/tflint
+      - run: cd tools && go install github.com/terraform-linters/tflint
       - run: |
           exit_code=0
 
