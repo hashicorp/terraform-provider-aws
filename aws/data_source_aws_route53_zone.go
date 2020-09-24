@@ -73,15 +73,11 @@ func dataSourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) erro
 	name, nameExists := d.GetOk("name")
 	name = name.(string)
 	id, idExists := d.GetOk("zone_id")
-	vpcId, vpcIdExists := d.GetOk("vpc_id")
+	vpcID, vpcIDExists := d.GetOk("vpc_id")
 	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws()
 
 	if nameExists && idExists {
 		return fmt.Errorf("zone_id and name arguments can't be used together")
-	}
-
-	if !nameExists && !idExists {
-		return fmt.Errorf("Either name or zone_id must be set")
 	}
 
 	var nextMarker *string
@@ -100,16 +96,16 @@ func dataSourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) erro
 			return fmt.Errorf("Error finding Route 53 Hosted Zone: %v", err)
 		}
 		for _, hostedZone := range resp.HostedZones {
-			hostedZoneId := cleanZoneID(aws.StringValue(hostedZone.Id))
-			if idExists && hostedZoneId == id.(string) {
+			hostedZoneID := cleanZoneID(aws.StringValue(hostedZone.Id))
+			if idExists && hostedZoneID == id.(string) {
 				hostedZoneFound = hostedZone
 				break
 				// we check if the name is the same as requested and if private zone field is the same as requested or if there is a vpc_id
-			} else if (trimTrailingPeriod(aws.StringValue(hostedZone.Name)) == trimTrailingPeriod(name)) && (aws.BoolValue(hostedZone.Config.PrivateZone) == d.Get("private_zone").(bool) || (aws.BoolValue(hostedZone.Config.PrivateZone) && vpcIdExists)) {
+			} else if (trimTrailingPeriod(aws.StringValue(hostedZone.Name)) == trimTrailingPeriod(name)) && (aws.BoolValue(hostedZone.Config.PrivateZone) == d.Get("private_zone").(bool) || (aws.BoolValue(hostedZone.Config.PrivateZone) && vpcIDExists)) {
 				matchingVPC := false
-				if vpcIdExists {
+				if vpcIDExists {
 					reqHostedZone := &route53.GetHostedZoneInput{}
-					reqHostedZone.Id = aws.String(hostedZoneId)
+					reqHostedZone.Id = aws.String(hostedZoneID)
 
 					respHostedZone, errHostedZone := conn.GetHostedZone(reqHostedZone)
 					if errHostedZone != nil {
@@ -117,7 +113,7 @@ func dataSourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) erro
 					}
 					// we go through all VPCs
 					for _, vpc := range respHostedZone.VPCs {
-						if aws.StringValue(vpc.VPCId) == vpcId.(string) {
+						if aws.StringValue(vpc.VPCId) == vpcID.(string) {
 							matchingVPC = true
 							break
 						}
@@ -128,7 +124,7 @@ func dataSourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) erro
 				// we check if tags match
 				matchingTags := true
 				if len(tags) > 0 {
-					listTags, err := keyvaluetags.Route53ListTags(conn, hostedZoneId, route53.TagResourceTypeHostedzone)
+					listTags, err := keyvaluetags.Route53ListTags(conn, hostedZoneID, route53.TagResourceTypeHostedzone)
 
 					if err != nil {
 						return fmt.Errorf("Error finding Route 53 Hosted Zone: %w", err)

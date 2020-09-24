@@ -35,11 +35,10 @@ resource "aws_route53_record" "www" {
 ## Argument Reference
 
 The arguments of this data source act as filters for querying the available
-Hosted Zone. You have to use `zone_id` or `name`, not both of them. The given filter must match exactly one
+Hosted Zone. You cannot use both `zone_id` and `name`. The given filter must match exactly one
 Hosted Zone. If you use `name` field for private Hosted Zone, you need to add `private_zone` field to `true`
 
 * `zone_id` - (Optional) The Hosted Zone id of the desired Hosted Zone.
-
 * `name` - (Optional) The Hosted Zone name of the desired Hosted Zone.
 * `private_zone` - (Optional) Used with `name` field to get a private Hosted Zone.
 * `vpc_id` - (Optional) Used with `name` field to get a private Hosted Zone associated with the vpc_id (in this case, private_zone is not mandatory).
