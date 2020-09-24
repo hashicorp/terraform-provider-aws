@@ -138,9 +138,9 @@ SNS topic to send ElastiCache notifications to. Example:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The ARN of the created ElastiCache Cluster.
 * `cache_nodes` - List of node objects including `id`, `address`, `port` and `availability_zone`.
    Referenceable e.g. as `${aws_elasticache_cluster.bar.cache_nodes.0.address}`
-
 * `configuration_endpoint` - (Memcached only) The configuration endpoint to allow host discovery.
 * `cluster_address` - (Memcached only) The DNS name of the cache cluster without the port appended.
 

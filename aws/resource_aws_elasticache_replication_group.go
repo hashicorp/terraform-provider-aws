@@ -34,6 +34,10 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"at_rest_encryption_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -520,6 +524,16 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 			return fmt.Errorf("error setting tags: %w", err)
 		}
 	}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "elasticache",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("replicationgroup:%s", d.Id()),
+	}.String()
+
+	d.Set("arn", arn)
 
 	return nil
 }
