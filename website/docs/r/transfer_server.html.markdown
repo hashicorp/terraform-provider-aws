@@ -79,7 +79,10 @@ The following arguments are supported:
 
 **endpoint_details** requires the following:
 
-* `vpc_endpoint_id` - (Required) The ID of the VPC endpoint.
+* `vpc_endpoint_id` - (Optional) The ID of the VPC endpoint. This property can only be used when `endpoint_type` is set to `VPC_ENDPOINT`
+* `address_allocation_ids` - (Optional) A list of address allocation IDs that are required to attach an Elastic IP address to your SFTP server's endpoint. This property can only be used when `endpoint_type` is set to `VPC`.
+* `subnet_ids` - (Optional) A list of subnet IDs that are required to host your SFTP server endpoint in your VPC. This property can only be used when `endpoint_type` is set to `VPC`.
+* `vpc_id` - (Optional) The VPC ID of the virtual private cloud in which the SFTP server's endpoint will be hosted. This property can only be used when `endpoint_type` is set to `VPC`.
 
 ## Attributes Reference
 In addition to all arguments above, the following attributes are exported:
