@@ -8,6 +8,7 @@ FEATURES
 * **New Data Source:** `aws_rds_engine_version` ([#15228](https://github.com/terraform-providers/terraform-provider-aws/pull/15228))
 * **New Data Source:** `aws_docdb_engine_version` ([#15253](https://github.com/terraform-providers/terraform-provider-aws/pull/15253))
 * **New Data Source:** `aws_neptune_engine_version` ([#15259](https://github.com/terraform-providers/terraform-provider-aws/pull/15259))
+* **New Data Source:** `aws_workspaces_image` [GH-11428]
 
 ENHANCEMENTS
 
