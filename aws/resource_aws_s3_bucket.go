@@ -76,6 +76,14 @@ func resourceAwsS3Bucket() *schema.Resource {
 				Default:       "private",
 				Optional:      true,
 				ConflictsWith: []string{"grant"},
+				ValidateFunc: validation.StringInSlice([]string{
+					s3.BucketCannedACLPrivate,
+					s3.BucketCannedACLPublicRead,
+					s3.BucketCannedACLPublicReadWrite,
+					s3.BucketCannedACLAWSExecRead,
+					s3.BucketCannedACLAuthenticatedRead,
+					s3.BucketCannedACLLogDeliveryWrite,
+				}, false),
 			},
 
 			"grant": {
