@@ -307,9 +307,8 @@ func updateCrawlerInput(crawlerName string, d *schema.ResourceData) (*glue.Updat
 
 	crawlerInput.SchemaChangePolicy = expandGlueSchemaChangePolicy(d.Get("schema_change_policy").([]interface{}))
 
-	if tablePrefix, ok := d.GetOk("table_prefix"); ok {
-		crawlerInput.TablePrefix = aws.String(tablePrefix.(string))
-	}
+	crawlerInput.TablePrefix = aws.String(d.Get("table_prefix").(string))
+
 	if configuration, ok := d.GetOk("configuration"); ok {
 		crawlerInput.Configuration = aws.String(configuration.(string))
 	}
