@@ -31314,8 +31314,14 @@ const (
 	// BucketCannedACLPublicReadWrite is a BucketCannedACL enum value
 	BucketCannedACLPublicReadWrite = "public-read-write"
 
+	// BucketCannedACLAWSExecRead is a BucketCannedACL enum value
+	BucketCannedACLAWSExecRead = "aws-exec-read"
+
 	// BucketCannedACLAuthenticatedRead is a BucketCannedACL enum value
 	BucketCannedACLAuthenticatedRead = "authenticated-read"
+
+	// BucketCannedACLLogDeliveryWrite is a BucketCannedACL enum value
+	BucketCannedACLLogDeliveryWrite = "log-delivery-write"
 )
 
 // BucketCannedACL_Values returns all elements of the BucketCannedACL enum
@@ -31324,7 +31330,9 @@ func BucketCannedACL_Values() []string {
 		BucketCannedACLPrivate,
 		BucketCannedACLPublicRead,
 		BucketCannedACLPublicReadWrite,
+		BucketCannedACLAWSExecRead,
 		BucketCannedACLAuthenticatedRead,
+		BucketCannedACLLogDeliveryWrite,
 	}
 }
 
