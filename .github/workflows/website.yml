@@ -17,7 +17,6 @@ on:
 env:
   GO_VERSION: "1.14"
   GO111MODULE: on
-  TFLINT_VERSION: "v0.18.0"
 
 jobs:
   markdown-link-check:
@@ -96,7 +95,7 @@ jobs:
           git clone --branch json-output --single-branch https://github.com/gdavison/terrafmt terrafmt
           cd terrafmt
           go install
-      - run: curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | sh
+      - run: go install github.com/terraform-linters/tflint
       - run: |
           exit_code=0
 
@@ -124,6 +123,14 @@ jobs:
                 rules+=(
                 "--disable-rule=terraform_deprecated_interpolation"
                 "--disable-rule=terraform_deprecated_index"
+                )
+            elif [[ "$filename" == "./website/docs/guides/version-3-upgrade.html.md" ]]; then
+                # ./website/docs/guides/version-3-upgrade.html.md has one example showing migration from
+                # pre-0.12 syntax to 0.12 syntax. We can't customize rules per block, and adding a
+                # tflint-ignore directive to documentation is not ideal.
+                rules+=(
+                "--disable-rule=terraform_deprecated_interpolation"
+                "--enable-rule=terraform_deprecated_index"
                 )
             else
                 rules+=(
