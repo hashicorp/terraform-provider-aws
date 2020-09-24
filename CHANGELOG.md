@@ -31,6 +31,7 @@ ENHANCEMENTS
 * resource/aws_fsx_lustre_file_system: Add `kms_key_id` argument [GH-15057]
 * resource/aws_fsx_lustre_file_system: Add `mount_name` argument [GH-14313]
 * resource/aws_lb: Add `customer_owned_ipv4_pool` argument and `subnet_mapping` `outpost_id` attribute [GH-15170]
+* resource/aws_organizations_policy: Add `tags` argument [GH-15316]
 * resource/aws_rds_cluster: Add `allow_major_version_upgrade` argument [GH-14709]
 * resource/aws_storagegateway_smb_file_share: Add `admin_user_list` argument [GH-12196]
 * resource/aws_transfer_user: Add `home_directory_mappings` configuration blocks and `home_directory_type` argument [GH-13591]
