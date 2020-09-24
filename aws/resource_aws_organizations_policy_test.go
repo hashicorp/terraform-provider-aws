@@ -113,6 +113,58 @@ func testAccAwsOrganizationsPolicy_description(t *testing.T) {
 	})
 }
 
+func testAccAwsOrganizationsPolicy_tags(t *testing.T) {
+	var p1, p2, p3, p4 organizations.Policy
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_organizations_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOrganizationsPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOrganizationsPolicyConfig_TagA(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsPolicyExists(resourceName, &p1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.TerraformProviderAwsTest", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Alpha", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAwsOrganizationsPolicyConfig_TagB(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsPolicyExists(resourceName, &p2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.TerraformProviderAwsTest", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Beta", "1"),
+				),
+			},
+			{
+				Config: testAccAwsOrganizationsPolicyConfig_TagC(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsPolicyExists(resourceName, &p3),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.TerraformProviderAwsTest", "true"),
+				),
+			},
+			{
+				Config: testAccAwsOrganizationsPolicyConfig_NoTag(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsPolicyExists(resourceName, &p4),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAwsOrganizationsPolicy_type_AI_OPT_OUT(t *testing.T) {
 	var policy organizations.Policy
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -381,6 +433,112 @@ EOF
   depends_on = [aws_organizations_organization.test]
 }
 `, description, rName)
+}
+
+func testAccAwsOrganizationsPolicyConfig_TagA(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_organization" "test" {}
+
+resource "aws_organizations_policy" "test" {
+  content = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+
+  name        = "%s"
+
+  depends_on = [aws_organizations_organization.test]
+
+  tags = {
+    TerraformProviderAwsTest = true
+    Alpha                    = 1
+  }
+}
+`, rName)
+}
+
+func testAccAwsOrganizationsPolicyConfig_TagB(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_organization" "test" {}
+
+resource "aws_organizations_policy" "test" {
+  content = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+
+  name        = "%s"
+
+  depends_on = [aws_organizations_organization.test]
+
+  tags = {
+    TerraformProviderAwsTest = true
+    Beta                     = 1
+  }
+}
+`, rName)
+}
+
+func testAccAwsOrganizationsPolicyConfig_TagC(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_organization" "test" {}
+
+resource "aws_organizations_policy" "test" {
+  content = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+
+  name        = "%s"
+
+  depends_on = [aws_organizations_organization.test]
+
+  tags = {
+    TerraformProviderAwsTest = true
+  }
+}
+`, rName)
+}
+
+func testAccAwsOrganizationsPolicyConfig_NoTag(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_organization" "test" {}
+
+resource "aws_organizations_policy" "test" {
+  content = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+
+  name        = "%s"
+
+  depends_on = [aws_organizations_organization.test]
+}
+`, rName)
 }
 
 func testAccAwsOrganizationsPolicyConfig_Required(rName, content string) string {
