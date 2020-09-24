@@ -43,6 +43,7 @@ BUG FIXES
 
 * resource/aws_dynamodb_table: Ensure changes in `name`, `range_key`, `projection_type`, or `non_key_attributes` of a `local_secondary_index` configuration block force resource recreation [GH-12335]
 * resource/aws_dynamodb_table: Ensure `local_secondary_index` `non_key_attributes` are sent through API requests on resource creation [GH-15115]
+* resource/aws_efs_mount_target: Increase create timeout to 30 minutes [GH-15293]
 * resource/aws_fsx_lustre_file_system: Change `aws_fsx_lustre_file_system's`'s `network_interface_ids` to `TypeList` to preserve ordering. [GH-14314]
 * resource/aws_neptune_cluster_instance: Add `configuring-enhanced-monitoring` to expected states when creating and updating [GH-15284]
 * resource/aws_vpn_gateway: Increase VPC detachment timeout to 30 minutes [GH-15201]
