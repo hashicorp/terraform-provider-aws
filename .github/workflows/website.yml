@@ -116,9 +116,7 @@ jobs:
               "--disable-rule=aws_transfer_ssh_key_invalid_body"
               "--disable-rule=aws_worklink_website_certificate_authority_association_invalid_certificate"
           )
-          find ./website/docs -type f \( -name '*.md' -o -name '*.markdown' \) \
-            | sort -u \
-            | while read -r filename ; do
+          while read -r filename; do
             rules=("${shared_rules[@]}")
             if [[ "$filename" == "./website/docs/guides/version-2-upgrade.html.md" ]]; then
                 # ./website/docs/guides/version-2-upgrade.html.md should still include pre-0.12 syntax,
@@ -140,6 +138,6 @@ jobs:
             lint_exitcode=$?
             set -e
             if [ $lint_exitcode -ne 0 ]; then exit_code=1; fi
-          done
+          done < <(find ./website/docs -type f \( -name '*.md' -o -name '*.markdown' \) | sort -u)
 
           exit $exit_code
