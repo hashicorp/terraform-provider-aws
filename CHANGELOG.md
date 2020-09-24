@@ -37,6 +37,7 @@ ENHANCEMENTS
 * resource/aws_organizations_policy: Add `tags` argument [GH-15316]
 * resource/aws_rds_cluster: Add `allow_major_version_upgrade` argument [GH-14709]
 * resource/aws_storagegateway_smb_file_share: Add `admin_user_list` argument [GH-12196]
+* resource/aws_transfer_server: Support `VPC` value for `endpoint_type` argument and add `endpoint_details` configuration block `address_allocation_ids`, `subnet_ids`, and `vpc_id` arguments [GH-12599]
 * resource/aws_transfer_user: Add `home_directory_mappings` configuration blocks and `home_directory_type` argument [GH-13591]
 
 BUG FIXES
