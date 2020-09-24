@@ -23,6 +23,7 @@ ENHANCEMENTS
 * resource/aws_elasticsearch_domain: Support `AUDIT_LOGS` log type [GH-15218]
 * resource/aws_glue_connection: Support `NETWORK` connection type [GH-14818]
 * resource/aws_glue_crawler: Add support for `scan_all` and `scan_rate` arguments for ddb targets [GH-14819]
+* resource/aws_glue_crawler: Allow removing `table_prefix` [GH-15268]
 * resource/aws_glue_job: Add `non_overridable_arguments` argument [GH-14793]
 * resource/aws_glue_workflow: Add `tags` argument [GH-14910]
 * resource/aws_glue_workflow: Add `arn` attribute [GH-14910]
