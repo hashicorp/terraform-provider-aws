@@ -467,6 +467,38 @@ func TestAccAwsBackupPlan_Rule_CopyAction_CrossRegion(t *testing.T) {
 	})
 }
 
+func TestAccAwsBackupPlan_AdvancedBackupSetting(t *testing.T) {
+	var plan backup.GetBackupPlanOutput
+	resourceName := "aws_backup_plan.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsBackupPlanConfigAdvancedBackupSetting(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists(resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "advanced_backup_setting.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_backup_setting.*", map[string]string{
+						"backup_options.%":          "1",
+						"backup_options.WindowsVSS": "enabled",
+						"resource_type":             "EC2",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsBackupPlan_disappears(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
@@ -886,6 +918,36 @@ resource "aws_backup_plan" "test" {
 
       destination_vault_arn = aws_backup_vault.test2.arn
     }
+  }
+}
+`, rName)
+}
+
+func testAccAwsBackupPlanConfigAdvancedBackupSetting(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = "%[1]s-1"
+}
+
+resource "aws_backup_plan" "test" {
+  name = %[1]q
+
+  rule {
+    rule_name         = %[1]q
+    target_vault_name = aws_backup_vault.test.name
+    schedule          = "cron(0 12 * * ? *)"
+
+    lifecycle {
+      cold_storage_after = 30
+      delete_after       = 180
+    }
+  }
+
+  advanced_backup_setting {
+    backup_options = {
+      WindowsVSS = "enabled"
+    }
+    resource_type = "EC2"
   }
 }
 `, rName)
