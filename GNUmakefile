@@ -162,6 +162,7 @@ tools:
 	cd tools && GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
 	cd tools && GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
 	cd tools && GO111MODULE=on go install github.com/katbyte/terrafmt
+	cd tools && GO111MODULE=on go install github.com/terraform-linters/tflint
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
