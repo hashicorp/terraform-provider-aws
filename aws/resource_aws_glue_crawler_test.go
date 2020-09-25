@@ -1780,7 +1780,7 @@ resource "aws_glue_crawler" "test" {
 
   s3_target {
     connection_name = aws_glue_connection.test.name
-    path       = "s3://bucket1"
+    path            = "s3://bucket1"
   }
 }
 `, rName)
