@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/finder"
 )
 
 var (
@@ -818,50 +819,43 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
-	name := d.Get("name").(string)
 
-	describeOpts := &kinesisanalyticsv2.DescribeApplicationInput{
-		ApplicationName: aws.String(name),
-	}
-	resp, err := conn.DescribeApplication(describeOpts)
+	application, err := finder.ApplicationByName(conn, d.Get("name").(string))
+
 	if isAWSErr(err, kinesisanalyticsv2.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] Kinesis Analytics Application (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Kinesis Analytics v2 Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Kinesis Analytics Application (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
 	}
 
-	arn := aws.StringValue(resp.ApplicationDetail.ApplicationARN)
-	d.Set("name", aws.StringValue(resp.ApplicationDetail.ApplicationName))
+	arn := aws.StringValue(application.ApplicationARN)
 	d.Set("arn", arn)
-	d.Set("service_execution_role", aws.StringValue(resp.ApplicationDetail.ServiceExecutionRole))
-	runtime := aws.StringValue(resp.ApplicationDetail.RuntimeEnvironment)
+	d.Set("create_timestamp", aws.TimeValue(application.CreateTimestamp).Format(time.RFC3339))
+	d.Set("description", aws.StringValue(application.ApplicationDescription))
+	d.Set("last_update_timestamp", aws.TimeValue(application.LastUpdateTimestamp).Format(time.RFC3339))
+	d.Set("name", application.ApplicationName)
+	runtime := aws.StringValue(application.RuntimeEnvironment)
 	d.Set("runtime", runtime)
-	d.Set("version", int(aws.Int64Value(resp.ApplicationDetail.ApplicationVersionId)))
+	d.Set("service_execution_role", aws.StringValue(application.ServiceExecutionRole))
+	d.Set("status", aws.StringValue(application.ApplicationStatus))
+	d.Set("version", int(aws.Int64Value(application.ApplicationVersionId)))
 
-	if err := d.Set("application_configuration", flattenKinesisAnalyticsV2ApplicationConfiguration(runtime, resp.ApplicationDetail.ApplicationConfigurationDescription)); err != nil {
+	if err := d.Set("application_configuration", flattenKinesisAnalyticsV2ApplicationConfiguration(runtime, application.ApplicationConfigurationDescription)); err != nil {
 		return fmt.Errorf("error setting application_configuration: %s", err)
 	}
 
-	if err := d.Set("cloudwatch_logging_options", flattenKinesisAnalyticsV2CloudwatchLoggingOptions(resp.ApplicationDetail.CloudWatchLoggingOptionDescriptions)); err != nil {
-		return fmt.Errorf("error setting cloudwatch_logging_options: %s", err)
-	}
-	d.Set("create_timestamp", aws.TimeValue(resp.ApplicationDetail.CreateTimestamp).Format(time.RFC3339))
-	d.Set("description", aws.StringValue(resp.ApplicationDetail.ApplicationDescription))
-	d.Set("last_update_timestamp", aws.TimeValue(resp.ApplicationDetail.LastUpdateTimestamp).Format(time.RFC3339))
-	d.Set("status", aws.StringValue(resp.ApplicationDetail.ApplicationStatus))
-
-	if err := d.Set("cloudwatch_logging_options", flattenKinesisAnalyticsV2CloudwatchLoggingOptions(resp.ApplicationDetail.CloudWatchLoggingOptionDescriptions)); err != nil {
+	if err := d.Set("cloudwatch_logging_options", flattenKinesisAnalyticsV2CloudwatchLoggingOptions(application.CloudWatchLoggingOptionDescriptions)); err != nil {
 		return fmt.Errorf("error setting cloudwatch_logging_options: %s", err)
 	}
 
 	tags, err := keyvaluetags.Kinesisanalyticsv2ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Kinesis Analytics Application (%s): %s", arn, err)
+		return fmt.Errorf("error listing tags forKinesis Analytics v2 Application (%s): %s", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

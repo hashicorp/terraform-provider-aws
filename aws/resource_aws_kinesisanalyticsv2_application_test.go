@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -751,25 +751,27 @@ func TestAccAWSKinesisAnalyticsV2Application_tags(t *testing.T) {
 }
 
 func testAccCheckKinesisAnalyticsV2ApplicationDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).kinesisanalyticsv2conn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kinesisanalyticsv2_application" {
 			continue
 		}
-		conn := testAccProvider.Meta().(*AWSClient).kinesisanalyticsv2conn
-		describeOpts := &kinesisanalyticsv2.DescribeApplicationInput{
-			ApplicationName: aws.String(rs.Primary.Attributes["name"]),
+
+		_, err := finder.ApplicationByName(conn, rs.Primary.Attributes["name"])
+		if isAWSErr(err, kinesisanalyticsv2.ErrCodeResourceNotFoundException, "") {
+			continue
 		}
-		resp, err := conn.DescribeApplication(describeOpts)
-		if err == nil {
-			if resp.ApplicationDetail != nil && *resp.ApplicationDetail.ApplicationStatus != kinesisanalyticsv2.ApplicationStatusDeleting {
-				return fmt.Errorf("Error: Application still exists")
-			}
+		if err != nil {
+			return err
 		}
+
+		return fmt.Errorf("Kinesis Analytics v2 Application %s still exists", rs.Primary.ID)
 	}
 	return nil
 }
 
-func testAccCheckKinesisAnalyticsV2ApplicationExists(n string, application *kinesisanalyticsv2.ApplicationDetail) resource.TestCheckFunc {
+func testAccCheckKinesisAnalyticsV2ApplicationExists(n string, v *kinesisanalyticsv2.ApplicationDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -777,19 +779,17 @@ func testAccCheckKinesisAnalyticsV2ApplicationExists(n string, application *kine
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Kinesis Analytics Application ID is set")
+			return fmt.Errorf("No Kinesis Analytics v2 Application ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).kinesisanalyticsv2conn
-		describeOpts := &kinesisanalyticsv2.DescribeApplicationInput{
-			ApplicationName: aws.String(rs.Primary.Attributes["name"]),
-		}
-		resp, err := conn.DescribeApplication(describeOpts)
+
+		application, err := finder.ApplicationByName(conn, rs.Primary.Attributes["name"])
 		if err != nil {
 			return err
 		}
 
-		*application = *resp.ApplicationDetail
+		*v = *application
 
 		return nil
 	}
