@@ -127,6 +127,16 @@ func resourceAwsGlueCrawler() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"scan_all": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"scan_rate": {
+							Type:         schema.TypeFloat,
+							Optional:     true,
+							ValidateFunc: validation.FloatBetween(0.1, 1.5),
+						},
 					},
 				},
 			},
@@ -297,9 +307,8 @@ func updateCrawlerInput(crawlerName string, d *schema.ResourceData) (*glue.Updat
 
 	crawlerInput.SchemaChangePolicy = expandGlueSchemaChangePolicy(d.Get("schema_change_policy").([]interface{}))
 
-	if tablePrefix, ok := d.GetOk("table_prefix"); ok {
-		crawlerInput.TablePrefix = aws.String(tablePrefix.(string))
-	}
+	crawlerInput.TablePrefix = aws.String(d.Get("table_prefix").(string))
+
 	if configuration, ok := d.GetOk("configuration"); ok {
 		crawlerInput.Configuration = aws.String(configuration.(string))
 	}
@@ -373,7 +382,12 @@ func expandGlueDynamoDBTargets(targets []interface{}) []*glue.DynamoDBTarget {
 
 func expandGlueDynamoDBTarget(cfg map[string]interface{}) *glue.DynamoDBTarget {
 	target := &glue.DynamoDBTarget{
-		Path: aws.String(cfg["path"].(string)),
+		Path:    aws.String(cfg["path"].(string)),
+		ScanAll: aws.Bool(cfg["scan_all"].(bool)),
+	}
+
+	if v, ok := cfg["scan_rate"].(float64); ok && v != 0 {
+		target.ScanRate = aws.Float64(v)
 	}
 
 	return target
@@ -615,6 +629,8 @@ func flattenGlueDynamoDBTargets(dynamodbTargets []*glue.DynamoDBTarget) []map[st
 	for _, dynamodbTarget := range dynamodbTargets {
 		attrs := make(map[string]interface{})
 		attrs["path"] = aws.StringValue(dynamodbTarget.Path)
+		attrs["scan_all"] = aws.BoolValue(dynamodbTarget.ScanAll)
+		attrs["scan_rate"] = aws.Float64Value(dynamodbTarget.ScanRate)
 
 		result = append(result, attrs)
 	}

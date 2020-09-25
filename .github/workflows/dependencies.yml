@@ -5,29 +5,50 @@ on:
     branches:
       - master
       - 'release/**'
-  pull_request:
-    paths:
-      - awsproviderlint/** # go/analysis/analysistest requires vendoring
-      - go.mod
-      - go.sum
-      - vendor/**
+  pull_request_target:
 
 env:
   GO_VERSION: "1.14"
 
 jobs:
+  changes:
+    if: github.event_name == 'pull_request_target' && !contains(fromJSON('["anGie44", "bflad", "breathingdust", "DrFaust92", "ewbankkit", "gdavison", "maryelizbeth", "YakDriver", "renovate[bot]"]'), github.actor)
+    name: Filter Changes
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.filter.outputs.changed }}
+    steps:
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            changed:
+              - awsproviderlint/**
+              - go.mod
+              - go.sum
+              - vendor/**
   comment:
-    if: github.event_name == 'pull_request' && !contains(fromJSON('["anGie44", "bflad", "breathingdust", "DrFaust92", "ewbankkit", "gdavison", "maryelizbeth", "YakDriver", "renovate[bot]"]'), github.actor)
+    needs: changes
+    if: ${{ needs.changes.outputs.changed == 'true' }}
     name: Comment
     runs-on: ubuntu-latest
     steps:
+      - name: Find Existing PR Comment
+        id: prc
+        uses: peter-evans/find-comment@v1
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: "Please note that typically Go dependency changes"
+      - run: echo ${{ steps.prc.outputs.comment-id }}
       - name: PR Comment
-        uses: unsplash/comment-on-pr@v1.2.0
+        if: ${{ steps.prc.outputs.comment-id == '' }}
+        uses: peter-evans/create-or-update-comment@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          check_duplicate_msg: true
-          msg: |-
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |-
             Thank you for your contribution! :rocket:
 
             Please note that typically Go dependency changes are handled in this repository by Renovate Bot or the maintainers. This is to prevent pull request merge conflicts and further delay reviews of contributions. Remove any changes to the `go.mod`, `go.sum`, and `vendor/` files and commit them into this pull request.

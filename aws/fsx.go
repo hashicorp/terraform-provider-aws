@@ -75,3 +75,17 @@ func waitForFsxFileSystemDeletion(conn *fsx.FSx, id string, timeout time.Duratio
 
 	return err
 }
+
+func waitForFsxFileSystemUpdate(conn *fsx.FSx, id string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{fsx.FileSystemLifecycleUpdating},
+		Target:  []string{fsx.FileSystemLifecycleAvailable},
+		Refresh: refreshFsxFileSystemLifecycle(conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}

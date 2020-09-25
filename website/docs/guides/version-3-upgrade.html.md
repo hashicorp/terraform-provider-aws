@@ -23,6 +23,7 @@ Upgrade topics:
 - [Provider Custom Service Endpoint Updates](#provider-custom-service-endpoint-updates)
 - [Data Source: aws_availability_zones](#data-source-aws_availability_zones)
 - [Data Source: aws_lambda_invocation](#data-source-aws_lambda_invocation)
+- [Data Source: aws_launch_template](#data-source-aws_launch_template)
 - [Data Source: aws_route53_resolver_rule](#data-source-aws_route53_resolver_rule)
 - [Data Source: aws_route53_zone](#data-source-aws_route53_zone)
 - [Resource: aws_acm_certificate](#resource-aws_acm_certificate)
@@ -216,6 +217,21 @@ output "lambda_result" {
   value = jsondecode(data.aws_lambda_invocation.example.result)["key1"]
 }
 ```
+
+## Data Source: aws_launch_template
+
+### Error raised if no matching launch template is found
+
+Previously, when a launch template matching the criteria was not found the data source would have been `null`.
+Now this could produce errors similar to the below:
+
+```
+data.aws_launch_template.current: Refreshing state...
+
+Error: error reading launch template: empty output
+```
+
+Configuration that depend on the previous behavior will need to be updated.
 
 ## Data Source: aws_route53_resolver_rule
 
@@ -754,6 +770,8 @@ resource "aws_codepipeline" "example" {
   }
 }
 ```
+
+The configuration could be updated as follows:
 
 ```bash
 $ TF_VAR_github_token=<token> terraform apply

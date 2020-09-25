@@ -41,3 +41,11 @@ The following attributes are exported:
 * `hsm_id` - The id of the HSM module.
 * `hsm_state` - The state of the HSM module.
 * `hsm_eni_id` - The id of the ENI interface allocated for HSM module.
+
+## Import
+
+HSM modules can be imported using their HSM ID, e.g.
+
+```
+$ terraform import aws_cloudhsm_v2_hsm.bar hsm-quo8dahtaca
+```

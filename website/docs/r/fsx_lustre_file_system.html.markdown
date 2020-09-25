@@ -33,7 +33,9 @@ The following arguments are supported:
 * `tags` - (Optional) A map of tags to assign to the file system.
 * `weekly_maintenance_start_time` - (Optional) The preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
 * `deployment_type` - (Optional) - The filesystem deployment type. One of: `SCRATCH_1`, `SCRATCH_2`, `PERSISTENT_1`.
+* `kms_key_id` - (Optional) ARN for the KMS Key to encrypt the file system at rest, applicable for `PERSISTENT_1`. Defaults to an AWS managed KMS Key.
 * `per_unit_storage_throughput` - (Optional) - Describes the amount of read and write throughput for each 1 tebibyte of storage, in MB/s/TiB, required for the `PERSISTENT_1` deployment_type. For valid values, see the [AWS documentation](https://docs.aws.amazon.com/fsx/latest/APIReference/API_CreateFileSystemLustreConfiguration.html).
+* `automatic_backup_retention_days` - (Optional) The number of days to retain automatic backups. Setting this to 0 disables automatic backups. You can retain automatic backups for a maximum of 35 days. only valid for `PERSISTENT_1` deployment_type.
 
 ## Attributes Reference
 
@@ -42,7 +44,8 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name of the file system.
 * `dns_name` - DNS name for the file system, e.g. `fs-12345678.fsx.us-west-2.amazonaws.com`
 * `id` - Identifier of the file system, e.g. `fs-12345678`
-* `network_interface_ids` - Set of Elastic Network Interface identifiers from which the file system is accessible.
+* `network_interface_ids` - Set of Elastic Network Interface identifiers from which the file system is accessible. As explained in the [documentation](https://docs.aws.amazon.com/fsx/latest/LustreGuide/mounting-on-premises.html), the first network interface returned is the primary network interface.
+* `mount_name` - The value to be used when mounting the filesystem.
 * `owner_id` - AWS account identifier that created the file system.
 * `vpc_id` - Identifier of the Virtual Private Cloud for the file system.
 

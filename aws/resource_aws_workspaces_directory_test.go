@@ -62,7 +62,12 @@ func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
 	iamRoleDataSourceName := "data.aws_iam_role.workspaces-default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
@@ -78,7 +83,7 @@ func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.restart_workspace", "true"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.switch_running_mode", "false"),
 					resource.TestCheckResourceAttr(resourceName, "dns_ip_addresses.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "directory_type", "SIMPLE_AD"),
+					resource.TestCheckResourceAttr(resourceName, "directory_type", workspaces.WorkspaceDirectoryTypeSimpleAd),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_name", directoryResourceName, "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "alias", directoryResourceName, "alias"),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_id", directoryResourceName, "id"),
@@ -128,7 +133,12 @@ func TestAccAwsWorkspacesDirectory_disappears(t *testing.T) {
 	resourceName := "aws_workspaces_directory.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
@@ -151,7 +161,12 @@ func TestAccAwsWorkspacesDirectory_subnetIds(t *testing.T) {
 	resourceName := "aws_workspaces_directory.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
@@ -178,7 +193,12 @@ func TestAccAwsWorkspacesDirectory_tags(t *testing.T) {
 	resourceName := "aws_workspaces_directory.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
@@ -372,6 +392,22 @@ func TestFlattenSelfServicePermissions(t *testing.T) {
 		if !reflect.DeepEqual(actual, c.expected) {
 			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
 		}
+	}
+}
+
+func testAccPreCheckWorkspacesDirectory(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).workspacesconn
+
+	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
+
+	_, err := conn.DescribeWorkspaceDirectories(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 

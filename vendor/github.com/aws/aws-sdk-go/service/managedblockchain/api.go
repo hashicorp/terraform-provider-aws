@@ -1084,7 +1084,7 @@ func (c *ManagedBlockchain) ListInvitationsRequest(input *ListInvitationsInput) 
 
 // ListInvitations API operation for Amazon Managed Blockchain.
 //
-// Returns a listing of all invitations made on the specified network.
+// Returns a listing of all invitations for the current AWS account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5323,6 +5323,9 @@ type Node struct {
 	// The unique identifier of the network that the node is in.
 	NetworkId *string `min:"1" type:"string"`
 
+	// The state database that the node uses. Values are LevelDB or CouchDB.
+	StateDB *string `type:"string" enum:"StateDBType"`
+
 	// The status of the node.
 	Status *string `type:"string" enum:"NodeStatus"`
 }
@@ -5385,6 +5388,12 @@ func (s *Node) SetNetworkId(v string) *Node {
 	return s
 }
 
+// SetStateDB sets the StateDB field's value.
+func (s *Node) SetStateDB(v string) *Node {
+	s.StateDB = &v
+	return s
+}
+
 // SetStatus sets the Status field's value.
 func (s *Node) SetStatus(v string) *Node {
 	s.Status = &v
@@ -5408,6 +5417,11 @@ type NodeConfiguration struct {
 	// Configuration properties for logging events associated with a peer node owned
 	// by a member in a Managed Blockchain network.
 	LogPublishingConfiguration *NodeLogPublishingConfiguration `type:"structure"`
+
+	// The state database that the node uses. Values are LevelDB or CouchDB. When
+	// using an Amazon Managed Blockchain network with Hyperledger Fabric version
+	// 1.4 or later, the default is CouchDB.
+	StateDB *string `type:"string" enum:"StateDBType"`
 }
 
 // String returns the string representation
@@ -5451,6 +5465,12 @@ func (s *NodeConfiguration) SetInstanceType(v string) *NodeConfiguration {
 // SetLogPublishingConfiguration sets the LogPublishingConfiguration field's value.
 func (s *NodeConfiguration) SetLogPublishingConfiguration(v *NodeLogPublishingConfiguration) *NodeConfiguration {
 	s.LogPublishingConfiguration = v
+	return s
+}
+
+// SetStateDB sets the StateDB field's value.
+func (s *NodeConfiguration) SetStateDB(v string) *NodeConfiguration {
+	s.StateDB = &v
 	return s
 }
 
@@ -6884,6 +6904,22 @@ func ProposalStatus_Values() []string {
 		ProposalStatusRejected,
 		ProposalStatusExpired,
 		ProposalStatusActionFailed,
+	}
+}
+
+const (
+	// StateDBTypeLevelDb is a StateDBType enum value
+	StateDBTypeLevelDb = "LevelDB"
+
+	// StateDBTypeCouchDb is a StateDBType enum value
+	StateDBTypeCouchDb = "CouchDB"
+)
+
+// StateDBType_Values returns all elements of the StateDBType enum
+func StateDBType_Values() []string {
+	return []string{
+		StateDBTypeLevelDb,
+		StateDBTypeCouchDb,
 	}
 }
 

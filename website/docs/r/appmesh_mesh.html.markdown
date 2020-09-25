@@ -59,6 +59,8 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the service mesh.
 * `created_date` - The creation date of the service mesh.
 * `last_updated_date` - The last update date of the service mesh.
+* `mesh_owner` - The AWS account ID of the service mesh's owner.
+* `resource_owner` - The resource owner's AWS account ID.
 
 ## Import
 

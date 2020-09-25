@@ -70,11 +70,6 @@ behavior "deprecated_import_commenter" "sdkv1_deprecated" {
   EOF
 }
 
-behavior "opened_pull_request_labeler" "triage" {
-  labels             = ["needs-triage"]
-  skip_collaborators = true
-}
-
 queued_behavior "release_commenter" "releases" {
   repo_prefix = "terraform-provider-"
 
@@ -345,6 +340,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/iam" = [
       "aws_iam_",
     ],
+    "service/identitystore" = [
+      "aws_identitystore_",
+    ],
     "service/imagebuilder" = [
       "aws_imagebuilder_",
     ],
@@ -531,6 +529,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/ssm" = [
       "aws_ssm_",
+    ],
+    "service/ssoadmin" = [
+      "aws_ssoadmin_",
     ],
     "service/storagegateway" = [
       "aws_storagegateway_",
@@ -1075,6 +1076,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_iam_*",
       "**/iam_*"
     ]
+    "service/identitystore" = [
+      "aws/internal/service/identitystore/**/*",
+      "**/*_identitystore_*",
+      "**/identitystore_*"
+    ]
     "service/imagebuilder" = [
       "aws/internal/service/imagebuilder/**/*",
       "**/*_imagebuilder_*",
@@ -1388,6 +1394,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/ssm/**/*",
       "**/*_ssm_*",
       "**/ssm_*"
+    ]
+    "service/ssoadmin" = [
+      "aws/internal/service/ssoadmin/**/*",
+      "**/*_ssoadmin_*",
+      "**/ssoadmin_*"
     ]
     "service/storagegateway" = [
       "aws/internal/service/storagegateway/**/*",

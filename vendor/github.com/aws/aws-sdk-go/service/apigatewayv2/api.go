@@ -6434,6 +6434,12 @@ type Api struct {
 	// The description of the API.
 	Description *string `locationName:"description" type:"string"`
 
+	// Specifies whether clients can invoke your API by using the default execute-api
+	// endpoint. By default, clients can invoke your API with the default https://{api_id}.execute-api.{region}.amazonaws.com
+	// endpoint. To require that clients use a custom domain name to invoke your
+	// API, disable the default endpoint.
+	DisableExecuteApiEndpoint *bool `locationName:"disableExecuteApiEndpoint" type:"boolean"`
+
 	// Avoid validating models when creating a deployment. Supported only for WebSocket
 	// APIs.
 	DisableSchemaValidation *bool `locationName:"disableSchemaValidation" type:"boolean"`
@@ -6520,6 +6526,12 @@ func (s *Api) SetCreatedDate(v time.Time) *Api {
 // SetDescription sets the Description field's value.
 func (s *Api) SetDescription(v string) *Api {
 	s.Description = &v
+	return s
+}
+
+// SetDisableExecuteApiEndpoint sets the DisableExecuteApiEndpoint field's value.
+func (s *Api) SetDisableExecuteApiEndpoint(v bool) *Api {
+	s.DisableExecuteApiEndpoint = &v
 	return s
 }
 
@@ -7006,6 +7018,8 @@ type CreateApiInput struct {
 	// A string with a length between [0-1024].
 	Description *string `locationName:"description" type:"string"`
 
+	DisableExecuteApiEndpoint *bool `locationName:"disableExecuteApiEndpoint" type:"boolean"`
+
 	DisableSchemaValidation *bool `locationName:"disableSchemaValidation" type:"boolean"`
 
 	// A string with a length between [1-128].
@@ -7092,6 +7106,12 @@ func (s *CreateApiInput) SetCredentialsArn(v string) *CreateApiInput {
 // SetDescription sets the Description field's value.
 func (s *CreateApiInput) SetDescription(v string) *CreateApiInput {
 	s.Description = &v
+	return s
+}
+
+// SetDisableExecuteApiEndpoint sets the DisableExecuteApiEndpoint field's value.
+func (s *CreateApiInput) SetDisableExecuteApiEndpoint(v bool) *CreateApiInput {
+	s.DisableExecuteApiEndpoint = &v
 	return s
 }
 
@@ -7302,6 +7322,8 @@ type CreateApiOutput struct {
 	// A string with a length between [0-1024].
 	Description *string `locationName:"description" type:"string"`
 
+	DisableExecuteApiEndpoint *bool `locationName:"disableExecuteApiEndpoint" type:"boolean"`
+
 	DisableSchemaValidation *bool `locationName:"disableSchemaValidation" type:"boolean"`
 
 	ImportInfo []*string `locationName:"importInfo" type:"list"`
@@ -7375,6 +7397,12 @@ func (s *CreateApiOutput) SetCreatedDate(v time.Time) *CreateApiOutput {
 // SetDescription sets the Description field's value.
 func (s *CreateApiOutput) SetDescription(v string) *CreateApiOutput {
 	s.Description = &v
+	return s
+}
+
+// SetDisableExecuteApiEndpoint sets the DisableExecuteApiEndpoint field's value.
+func (s *CreateApiOutput) SetDisableExecuteApiEndpoint(v bool) *CreateApiOutput {
+	s.DisableExecuteApiEndpoint = &v
 	return s
 }
 
@@ -7844,6 +7872,11 @@ type CreateDomainNameInput struct {
 	// The domain name configurations.
 	DomainNameConfigurations []*DomainNameConfiguration `locationName:"domainNameConfigurations" type:"list"`
 
+	// If specified, API Gateway performs two-way authentication between the client
+	// and the server. Clients must present a trusted certificate to access your
+	// API.
+	MutualTlsAuthentication *MutualTlsAuthenticationInput `locationName:"mutualTlsAuthentication" type:"structure"`
+
 	// Represents a collection of tags associated with the resource.
 	Tags map[string]*string `locationName:"tags" type:"map"`
 }
@@ -7883,6 +7916,12 @@ func (s *CreateDomainNameInput) SetDomainNameConfigurations(v []*DomainNameConfi
 	return s
 }
 
+// SetMutualTlsAuthentication sets the MutualTlsAuthentication field's value.
+func (s *CreateDomainNameInput) SetMutualTlsAuthentication(v *MutualTlsAuthenticationInput) *CreateDomainNameInput {
+	s.MutualTlsAuthentication = v
+	return s
+}
+
 // SetTags sets the Tags field's value.
 func (s *CreateDomainNameInput) SetTags(v map[string]*string) *CreateDomainNameInput {
 	s.Tags = v
@@ -7902,6 +7941,11 @@ type CreateDomainNameOutput struct {
 
 	// The domain name configurations.
 	DomainNameConfigurations []*DomainNameConfiguration `locationName:"domainNameConfigurations" type:"list"`
+
+	// If specified, API Gateway performs two-way authentication between the client
+	// and the server. Clients must present a trusted certificate to access your
+	// API.
+	MutualTlsAuthentication *MutualTlsAuthentication `locationName:"mutualTlsAuthentication" type:"structure"`
 
 	// Represents a collection of tags associated with the resource.
 	Tags map[string]*string `locationName:"tags" type:"map"`
@@ -7932,6 +7976,12 @@ func (s *CreateDomainNameOutput) SetDomainName(v string) *CreateDomainNameOutput
 // SetDomainNameConfigurations sets the DomainNameConfigurations field's value.
 func (s *CreateDomainNameOutput) SetDomainNameConfigurations(v []*DomainNameConfiguration) *CreateDomainNameOutput {
 	s.DomainNameConfigurations = v
+	return s
+}
+
+// SetMutualTlsAuthentication sets the MutualTlsAuthentication field's value.
+func (s *CreateDomainNameOutput) SetMutualTlsAuthentication(v *MutualTlsAuthentication) *CreateDomainNameOutput {
+	s.MutualTlsAuthentication = v
 	return s
 }
 
@@ -10782,6 +10832,9 @@ type DomainName struct {
 	// The domain name configurations.
 	DomainNameConfigurations []*DomainNameConfiguration `locationName:"domainNameConfigurations" type:"list"`
 
+	// The mutual TLS authentication configuration for a custom domain name.
+	MutualTlsAuthentication *MutualTlsAuthentication `locationName:"mutualTlsAuthentication" type:"structure"`
+
 	// The collection of tags associated with a domain name.
 	Tags map[string]*string `locationName:"tags" type:"map"`
 }
@@ -10811,6 +10864,12 @@ func (s *DomainName) SetDomainName(v string) *DomainName {
 // SetDomainNameConfigurations sets the DomainNameConfigurations field's value.
 func (s *DomainName) SetDomainNameConfigurations(v []*DomainNameConfiguration) *DomainName {
 	s.DomainNameConfigurations = v
+	return s
+}
+
+// SetMutualTlsAuthentication sets the MutualTlsAuthentication field's value.
+func (s *DomainName) SetMutualTlsAuthentication(v *MutualTlsAuthentication) *DomainName {
+	s.MutualTlsAuthentication = v
 	return s
 }
 
@@ -11298,6 +11357,8 @@ type GetApiOutput struct {
 	// A string with a length between [0-1024].
 	Description *string `locationName:"description" type:"string"`
 
+	DisableExecuteApiEndpoint *bool `locationName:"disableExecuteApiEndpoint" type:"boolean"`
+
 	DisableSchemaValidation *bool `locationName:"disableSchemaValidation" type:"boolean"`
 
 	ImportInfo []*string `locationName:"importInfo" type:"list"`
@@ -11371,6 +11432,12 @@ func (s *GetApiOutput) SetCreatedDate(v time.Time) *GetApiOutput {
 // SetDescription sets the Description field's value.
 func (s *GetApiOutput) SetDescription(v string) *GetApiOutput {
 	s.Description = &v
+	return s
+}
+
+// SetDisableExecuteApiEndpoint sets the DisableExecuteApiEndpoint field's value.
+func (s *GetApiOutput) SetDisableExecuteApiEndpoint(v bool) *GetApiOutput {
+	s.DisableExecuteApiEndpoint = &v
 	return s
 }
 
@@ -12011,6 +12078,11 @@ type GetDomainNameOutput struct {
 	// The domain name configurations.
 	DomainNameConfigurations []*DomainNameConfiguration `locationName:"domainNameConfigurations" type:"list"`
 
+	// If specified, API Gateway performs two-way authentication between the client
+	// and the server. Clients must present a trusted certificate to access your
+	// API.
+	MutualTlsAuthentication *MutualTlsAuthentication `locationName:"mutualTlsAuthentication" type:"structure"`
+
 	// Represents a collection of tags associated with the resource.
 	Tags map[string]*string `locationName:"tags" type:"map"`
 }
@@ -12040,6 +12112,12 @@ func (s *GetDomainNameOutput) SetDomainName(v string) *GetDomainNameOutput {
 // SetDomainNameConfigurations sets the DomainNameConfigurations field's value.
 func (s *GetDomainNameOutput) SetDomainNameConfigurations(v []*DomainNameConfiguration) *GetDomainNameOutput {
 	s.DomainNameConfigurations = v
+	return s
+}
+
+// SetMutualTlsAuthentication sets the MutualTlsAuthentication field's value.
+func (s *GetDomainNameOutput) SetMutualTlsAuthentication(v *MutualTlsAuthentication) *GetDomainNameOutput {
+	s.MutualTlsAuthentication = v
 	return s
 }
 
@@ -14122,6 +14200,8 @@ type ImportApiOutput struct {
 	// A string with a length between [0-1024].
 	Description *string `locationName:"description" type:"string"`
 
+	DisableExecuteApiEndpoint *bool `locationName:"disableExecuteApiEndpoint" type:"boolean"`
+
 	DisableSchemaValidation *bool `locationName:"disableSchemaValidation" type:"boolean"`
 
 	ImportInfo []*string `locationName:"importInfo" type:"list"`
@@ -14195,6 +14275,12 @@ func (s *ImportApiOutput) SetCreatedDate(v time.Time) *ImportApiOutput {
 // SetDescription sets the Description field's value.
 func (s *ImportApiOutput) SetDescription(v string) *ImportApiOutput {
 	s.Description = &v
+	return s
+}
+
+// SetDisableExecuteApiEndpoint sets the DisableExecuteApiEndpoint field's value.
+func (s *ImportApiOutput) SetDisableExecuteApiEndpoint(v bool) *ImportApiOutput {
+	s.DisableExecuteApiEndpoint = &v
 	return s
 }
 
@@ -14719,6 +14805,100 @@ func (s *Model) SetSchema(v string) *Model {
 	return s
 }
 
+// If specified, API Gateway performs two-way authentication between the client
+// and the server. Clients must present a trusted certificate to access your
+// API.
+type MutualTlsAuthentication struct {
+	_ struct{} `type:"structure"`
+
+	// An Amazon S3 URL that specifies the truststore for mutual TLS authentication,
+	// for example, s3://bucket-name/key-name. The truststore can contain certificates
+	// from public or private certificate authorities. To update the truststore,
+	// upload a new version to S3, and then update your custom domain name to use
+	// the new version. To update the truststore, you must have permissions to access
+	// the S3 object.
+	TruststoreUri *string `locationName:"truststoreUri" type:"string"`
+
+	// The version of the S3 object that contains your truststore. To specify a
+	// version, you must have versioning enabled for the S3 bucket.
+	TruststoreVersion *string `locationName:"truststoreVersion" type:"string"`
+
+	// A list of warnings that API Gateway returns while processing your truststore.
+	// Invalid certificates produce warnings. Mutual TLS is still enabled, but some
+	// clients might not be able to access your API. To resolve warnings, upload
+	// a new truststore to S3, and then update you domain name to use the new version.
+	TruststoreWarnings []*string `locationName:"truststoreWarnings" type:"list"`
+}
+
+// String returns the string representation
+func (s MutualTlsAuthentication) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MutualTlsAuthentication) GoString() string {
+	return s.String()
+}
+
+// SetTruststoreUri sets the TruststoreUri field's value.
+func (s *MutualTlsAuthentication) SetTruststoreUri(v string) *MutualTlsAuthentication {
+	s.TruststoreUri = &v
+	return s
+}
+
+// SetTruststoreVersion sets the TruststoreVersion field's value.
+func (s *MutualTlsAuthentication) SetTruststoreVersion(v string) *MutualTlsAuthentication {
+	s.TruststoreVersion = &v
+	return s
+}
+
+// SetTruststoreWarnings sets the TruststoreWarnings field's value.
+func (s *MutualTlsAuthentication) SetTruststoreWarnings(v []*string) *MutualTlsAuthentication {
+	s.TruststoreWarnings = v
+	return s
+}
+
+// If specified, API Gateway performs two-way authentication between the client
+// and the server. Clients must present a trusted certificate to access your
+// API.
+type MutualTlsAuthenticationInput struct {
+	_ struct{} `type:"structure"`
+
+	// An Amazon S3 URL that specifies the truststore for mutual TLS authentication,
+	// for example, s3://bucket-name/key-name. The truststore can contain certificates
+	// from public or private certificate authorities. To update the truststore,
+	// upload a new version to S3, and then update your custom domain name to use
+	// the new version. To update the truststore, you must have permissions to access
+	// the S3 object.
+	TruststoreUri *string `locationName:"truststoreUri" type:"string"`
+
+	// The version of the S3 object that contains your truststore. To specify a
+	// version, you must have versioning enabled for the S3 bucket.
+	TruststoreVersion *string `locationName:"truststoreVersion" type:"string"`
+}
+
+// String returns the string representation
+func (s MutualTlsAuthenticationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MutualTlsAuthenticationInput) GoString() string {
+	return s.String()
+}
+
+// SetTruststoreUri sets the TruststoreUri field's value.
+func (s *MutualTlsAuthenticationInput) SetTruststoreUri(v string) *MutualTlsAuthenticationInput {
+	s.TruststoreUri = &v
+	return s
+}
+
+// SetTruststoreVersion sets the TruststoreVersion field's value.
+func (s *MutualTlsAuthenticationInput) SetTruststoreVersion(v string) *MutualTlsAuthenticationInput {
+	s.TruststoreVersion = &v
+	return s
+}
+
 // The resource specified in the request was not found. See the message field
 // for more information.
 type NotFoundException struct {
@@ -14897,6 +15077,8 @@ type ReimportApiOutput struct {
 	// A string with a length between [0-1024].
 	Description *string `locationName:"description" type:"string"`
 
+	DisableExecuteApiEndpoint *bool `locationName:"disableExecuteApiEndpoint" type:"boolean"`
+
 	DisableSchemaValidation *bool `locationName:"disableSchemaValidation" type:"boolean"`
 
 	ImportInfo []*string `locationName:"importInfo" type:"list"`
@@ -14970,6 +15152,12 @@ func (s *ReimportApiOutput) SetCreatedDate(v time.Time) *ReimportApiOutput {
 // SetDescription sets the Description field's value.
 func (s *ReimportApiOutput) SetDescription(v string) *ReimportApiOutput {
 	s.Description = &v
+	return s
+}
+
+// SetDisableExecuteApiEndpoint sets the DisableExecuteApiEndpoint field's value.
+func (s *ReimportApiOutput) SetDisableExecuteApiEndpoint(v bool) *ReimportApiOutput {
+	s.DisableExecuteApiEndpoint = &v
 	return s
 }
 
@@ -15781,6 +15969,8 @@ type UpdateApiInput struct {
 	// A string with a length between [0-1024].
 	Description *string `locationName:"description" type:"string"`
 
+	DisableExecuteApiEndpoint *bool `locationName:"disableExecuteApiEndpoint" type:"boolean"`
+
 	DisableSchemaValidation *bool `locationName:"disableSchemaValidation" type:"boolean"`
 
 	// A string with a length between [1-128].
@@ -15863,6 +16053,12 @@ func (s *UpdateApiInput) SetCredentialsArn(v string) *UpdateApiInput {
 // SetDescription sets the Description field's value.
 func (s *UpdateApiInput) SetDescription(v string) *UpdateApiInput {
 	s.Description = &v
+	return s
+}
+
+// SetDisableExecuteApiEndpoint sets the DisableExecuteApiEndpoint field's value.
+func (s *UpdateApiInput) SetDisableExecuteApiEndpoint(v bool) *UpdateApiInput {
+	s.DisableExecuteApiEndpoint = &v
 	return s
 }
 
@@ -16071,6 +16267,8 @@ type UpdateApiOutput struct {
 	// A string with a length between [0-1024].
 	Description *string `locationName:"description" type:"string"`
 
+	DisableExecuteApiEndpoint *bool `locationName:"disableExecuteApiEndpoint" type:"boolean"`
+
 	DisableSchemaValidation *bool `locationName:"disableSchemaValidation" type:"boolean"`
 
 	ImportInfo []*string `locationName:"importInfo" type:"list"`
@@ -16144,6 +16342,12 @@ func (s *UpdateApiOutput) SetCreatedDate(v time.Time) *UpdateApiOutput {
 // SetDescription sets the Description field's value.
 func (s *UpdateApiOutput) SetDescription(v string) *UpdateApiOutput {
 	s.Description = &v
+	return s
+}
+
+// SetDisableExecuteApiEndpoint sets the DisableExecuteApiEndpoint field's value.
+func (s *UpdateApiOutput) SetDisableExecuteApiEndpoint(v bool) *UpdateApiOutput {
+	s.DisableExecuteApiEndpoint = &v
 	return s
 }
 
@@ -16616,6 +16820,11 @@ type UpdateDomainNameInput struct {
 
 	// The domain name configurations.
 	DomainNameConfigurations []*DomainNameConfiguration `locationName:"domainNameConfigurations" type:"list"`
+
+	// If specified, API Gateway performs two-way authentication between the client
+	// and the server. Clients must present a trusted certificate to access your
+	// API.
+	MutualTlsAuthentication *MutualTlsAuthenticationInput `locationName:"mutualTlsAuthentication" type:"structure"`
 }
 
 // String returns the string representation
@@ -16656,6 +16865,12 @@ func (s *UpdateDomainNameInput) SetDomainNameConfigurations(v []*DomainNameConfi
 	return s
 }
 
+// SetMutualTlsAuthentication sets the MutualTlsAuthentication field's value.
+func (s *UpdateDomainNameInput) SetMutualTlsAuthentication(v *MutualTlsAuthenticationInput) *UpdateDomainNameInput {
+	s.MutualTlsAuthentication = v
+	return s
+}
+
 type UpdateDomainNameOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -16669,6 +16884,11 @@ type UpdateDomainNameOutput struct {
 
 	// The domain name configurations.
 	DomainNameConfigurations []*DomainNameConfiguration `locationName:"domainNameConfigurations" type:"list"`
+
+	// If specified, API Gateway performs two-way authentication between the client
+	// and the server. Clients must present a trusted certificate to access your
+	// API.
+	MutualTlsAuthentication *MutualTlsAuthentication `locationName:"mutualTlsAuthentication" type:"structure"`
 
 	// Represents a collection of tags associated with the resource.
 	Tags map[string]*string `locationName:"tags" type:"map"`
@@ -16699,6 +16919,12 @@ func (s *UpdateDomainNameOutput) SetDomainName(v string) *UpdateDomainNameOutput
 // SetDomainNameConfigurations sets the DomainNameConfigurations field's value.
 func (s *UpdateDomainNameOutput) SetDomainNameConfigurations(v []*DomainNameConfiguration) *UpdateDomainNameOutput {
 	s.DomainNameConfigurations = v
+	return s
+}
+
+// SetMutualTlsAuthentication sets the MutualTlsAuthentication field's value.
+func (s *UpdateDomainNameOutput) SetMutualTlsAuthentication(v *MutualTlsAuthentication) *UpdateDomainNameOutput {
+	s.MutualTlsAuthentication = v
 	return s
 }
 
