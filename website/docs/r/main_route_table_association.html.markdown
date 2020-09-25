@@ -10,6 +10,16 @@ description: |-
 
 Provides a resource for managing the main routing table of a VPC.
 
+It is recommended you **do not** use both `aws_main_route_table_association` to
+manage the default route table **and** use the `aws_default_route_table`,
+due to possible conflict in routes.
+
+For more information about Route Tables, see the AWS Documentation on
+[Route Tables][aws-route-tables].
+
+For more information about managing normal Route Tables in Terraform, see our
+documentation on [aws_route_table][tf-route-tables].
+
 ## Example Usage
 
 ```hcl
@@ -42,3 +52,6 @@ The "Delete" action for a `main_route_table_association` consists of resetting
 this original table as the Main Route Table for the VPC. You'll see this
 additional Route Table in the AWS console; it must remain intact in order for
 the `main_route_table_association` delete to work properly.
+
+[aws-route-tables]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html#Route_Replacing_Main_Table
+[tf-route-tables]: /docs/providers/aws/r/route_table.html
