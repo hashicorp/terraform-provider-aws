@@ -87,15 +87,15 @@ func TestAccDataSourceAwsEc2InstanceType_attributes(t *testing.T) {
 
 const testAccDataSourceEc2InstanceType = `
 data "aws_ec2_instance_type" "metal" {
-	instance_type="i3en.metal"
+  instance_type="i3en.metal"
 }
 data "aws_ec2_instance_type" "gpu" {
-	instance_type="g2.2xlarge"
+  instance_type="g2.2xlarge"
 }
 data "aws_ec2_instance_type" "fpga" {
-	instance_type="f1.2xlarge"
+  instance_type="f1.2xlarge"
 }
 data "aws_ec2_instance_type" "accelerator" {
-	instance_type="inf1.xlarge"
+  instance_type="inf1.xlarge"
 }
 `
