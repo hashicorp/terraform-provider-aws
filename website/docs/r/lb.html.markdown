@@ -120,6 +120,7 @@ for load balancers of type `network` will force a recreation of the resource.
 * `enable_cross_zone_load_balancing` - (Optional) If true, cross-zone load balancing of the load balancer will be enabled.
    This is a `network` load balancer feature. Defaults to `false`.
 * `enable_http2` - (Optional) Indicates whether HTTP/2 is enabled in `application` load balancers. Defaults to `true`.
+* `customer_owned_ipv4_pool` - (Optional) The ID of the customer owned ipv4 pool to use for this load balancer.
 * `ip_address_type` - (Optional) The type of IP addresses used by the subnets for your load balancer. The possible values are `ipv4` and `dualstack`
 * `tags` - (Optional) A map of tags to assign to the resource.
 
@@ -144,6 +145,7 @@ The following attributes are exported in addition to the arguments listed above:
 * `arn_suffix` - The ARN suffix for use with CloudWatch Metrics.
 * `dns_name` - The DNS name of the load balancer.
 * `zone_id` - The canonical hosted zone ID of the load balancer (to be used in a Route 53 Alias record).
+* `subnet_mapping.*.outpost_id` - ID of the Outpost containing the load balancer.
 
 ## Timeouts
 

@@ -15,6 +15,31 @@ Use the navigation to the left to read about the available resources.
 
 ## Example Usage
 
+Terraform 0.13 and later:
+
+```hcl
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.0"
+    }
+  }
+}
+
+# Configure the AWS Provider
+provider "aws" {
+  region = "us-east-1"
+}
+
+# Create a VPC
+resource "aws_vpc" "example" {
+  cidr_block = "10.0.0.0/16"
+}
+```
+
+Terraform 0.12 and earlier:
+
 ```hcl
 # Configure the AWS Provider
 provider "aws" {
@@ -266,6 +291,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
     - [`aws_glue_job` resource](/docs/providers/aws/r/glue_job.html)
     - [`aws_glue_trigger` resource](/docs/providers/aws/r/glue_trigger.html)
     - [`aws_glue_user_defined_function` resource](/docs/providers/aws/r/glue_user_defined_function.html)
+    - [`aws_glue_workflow` resource](/docs/providers/aws/r/glue_workflow.html)
     - [`aws_guardduty_detector` resource](/docs/providers/aws/r/guardduty_detector.html)
     - [`aws_guardduty_ipset` resource](/docs/providers/aws/r/guardduty_ipset.html)
     - [`aws_guardduty_threatintelset` resource](/docs/providers/aws/r/guardduty_threatintelset.html)

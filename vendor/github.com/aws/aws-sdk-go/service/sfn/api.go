@@ -172,10 +172,11 @@ func (c *SFN) CreateStateMachineRequest(input *CreateStateMachineInput) (req *re
 //
 // CreateStateMachine is an idempotent API. Subsequent requests won’t create
 // a duplicate resource if it was already created. CreateStateMachine's idempotency
-// check is based on the state machine name, definition, type, and LoggingConfiguration.
-// If a following request has a different roleArn or tags, Step Functions will
-// ignore these differences and treat it as an idempotent request of the previous.
-// In this case, roleArn and tags will not be updated, even if they are different.
+// check is based on the state machine name, definition, type, LoggingConfiguration
+// and TracingConfiguration. If a following request has a different roleArn
+// or tags, Step Functions will ignore these differences and treat it as an
+// idempotent request of the previous. In this case, roleArn and tags will not
+// be updated, even if they are different.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -195,6 +196,10 @@ func (c *SFN) CreateStateMachineRequest(input *CreateStateMachineInput) (req *re
 //   The provided name is invalid.
 //
 //   * InvalidLoggingConfiguration
+//
+//   * InvalidTracingConfiguration
+//   Your tracingConfiguration key does not match, or enabled has not been set
+//   to true or false.
 //
 //   * StateMachineAlreadyExists
 //   A state machine with the same name but a different definition or role ARN
@@ -2243,6 +2248,10 @@ func (c *SFN) UpdateStateMachineRequest(input *UpdateStateMachineInput) (req *re
 //
 //   * InvalidLoggingConfiguration
 //
+//   * InvalidTracingConfiguration
+//   Your tracingConfiguration key does not match, or enabled has not been set
+//   to true or false.
+//
 //   * MissingRequiredParameter
 //   Request is missing a required parameter. This error occurs if both definition
 //   and roleArn are not specified.
@@ -2731,12 +2740,12 @@ func (s *ActivityWorkerLimitExceeded) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
-// Provides details about execution input.
+// Provides details about execution input or output.
 type CloudWatchEventsExecutionDataDetails struct {
 	_ struct{} `type:"structure"`
 
 	// Indicates whether input or output was included in the response. Always true
-	// for API calls, but may be false for CloudWatch Events.
+	// for API calls.
 	Included *bool `locationName:"included" type:"boolean"`
 }
 
@@ -2967,6 +2976,9 @@ type CreateStateMachineInput struct {
 	// _ . : / = + - @.
 	Tags []*Tag `locationName:"tags" type:"list"`
 
+	// Selects whether AWS X-Ray tracing is enabled.
+	TracingConfiguration *TracingConfiguration `locationName:"tracingConfiguration" type:"structure"`
+
 	// Determines whether a Standard or Express state machine is created. The default
 	// is STANDARD. You cannot update the type of a state machine once it has been
 	// created.
@@ -3053,6 +3065,12 @@ func (s *CreateStateMachineInput) SetRoleArn(v string) *CreateStateMachineInput 
 // SetTags sets the Tags field's value.
 func (s *CreateStateMachineInput) SetTags(v []*Tag) *CreateStateMachineInput {
 	s.Tags = v
+	return s
+}
+
+// SetTracingConfiguration sets the TracingConfiguration field's value.
+func (s *CreateStateMachineInput) SetTracingConfiguration(v *TracingConfiguration) *CreateStateMachineInput {
+	s.TracingConfiguration = v
 	return s
 }
 
@@ -3364,7 +3382,7 @@ type DescribeExecutionOutput struct {
 	// apply to the payload size, and are expressed as bytes in UTF-8 encoding.
 	Input *string `locationName:"input" type:"string" sensitive:"true"`
 
-	// Provides details about execution input.
+	// Provides details about execution input or output.
 	InputDetails *CloudWatchEventsExecutionDataDetails `locationName:"inputDetails" type:"structure"`
 
 	// The name of the execution.
@@ -3392,7 +3410,7 @@ type DescribeExecutionOutput struct {
 	// this field is null.
 	Output *string `locationName:"output" type:"string" sensitive:"true"`
 
-	// Provides details about execution input.
+	// Provides details about execution input or output.
 	OutputDetails *CloudWatchEventsExecutionDataDetails `locationName:"outputDetails" type:"structure"`
 
 	// The date the execution is started.
@@ -3412,6 +3430,9 @@ type DescribeExecutionOutput struct {
 
 	// If the execution has already ended, the date the execution stopped.
 	StopDate *time.Time `locationName:"stopDate" type:"timestamp"`
+
+	// The AWS X-Ray trace header which was passed to the execution.
+	TraceHeader *string `locationName:"traceHeader" type:"string"`
 }
 
 // String returns the string representation
@@ -3481,6 +3502,12 @@ func (s *DescribeExecutionOutput) SetStatus(v string) *DescribeExecutionOutput {
 // SetStopDate sets the StopDate field's value.
 func (s *DescribeExecutionOutput) SetStopDate(v time.Time) *DescribeExecutionOutput {
 	s.StopDate = &v
+	return s
+}
+
+// SetTraceHeader sets the TraceHeader field's value.
+func (s *DescribeExecutionOutput) SetTraceHeader(v string) *DescribeExecutionOutput {
+	s.TraceHeader = &v
 	return s
 }
 
@@ -3554,6 +3581,9 @@ type DescribeStateMachineForExecutionOutput struct {
 	// StateMachineArn is a required field
 	StateMachineArn *string `locationName:"stateMachineArn" min:"1" type:"string" required:"true"`
 
+	// Selects whether AWS X-Ray tracing is enabled.
+	TracingConfiguration *TracingConfiguration `locationName:"tracingConfiguration" type:"structure"`
+
 	// The date and time the state machine associated with an execution was updated.
 	// For a newly created state machine, this is the creation date.
 	//
@@ -3598,6 +3628,12 @@ func (s *DescribeStateMachineForExecutionOutput) SetRoleArn(v string) *DescribeS
 // SetStateMachineArn sets the StateMachineArn field's value.
 func (s *DescribeStateMachineForExecutionOutput) SetStateMachineArn(v string) *DescribeStateMachineForExecutionOutput {
 	s.StateMachineArn = &v
+	return s
+}
+
+// SetTracingConfiguration sets the TracingConfiguration field's value.
+func (s *DescribeStateMachineForExecutionOutput) SetTracingConfiguration(v *TracingConfiguration) *DescribeStateMachineForExecutionOutput {
+	s.TracingConfiguration = v
 	return s
 }
 
@@ -3700,6 +3736,9 @@ type DescribeStateMachineOutput struct {
 	// The current status of the state machine.
 	Status *string `locationName:"status" type:"string" enum:"StateMachineStatus"`
 
+	// Selects whether AWS X-Ray tracing is enabled.
+	TracingConfiguration *TracingConfiguration `locationName:"tracingConfiguration" type:"structure"`
+
 	// The type of the state machine (STANDARD or EXPRESS).
 	//
 	// Type is a required field
@@ -3755,6 +3794,12 @@ func (s *DescribeStateMachineOutput) SetStateMachineArn(v string) *DescribeState
 // SetStatus sets the Status field's value.
 func (s *DescribeStateMachineOutput) SetStatus(v string) *DescribeStateMachineOutput {
 	s.Status = &v
+	return s
+}
+
+// SetTracingConfiguration sets the TracingConfiguration field's value.
+func (s *DescribeStateMachineOutput) SetTracingConfiguration(v *TracingConfiguration) *DescribeStateMachineOutput {
+	s.TracingConfiguration = v
 	return s
 }
 
@@ -4774,12 +4819,12 @@ func (s *HistoryEvent) SetType(v string) *HistoryEvent {
 	return s
 }
 
-// Contains details about the data from an execution's events. Always true for
-// API calls, but may be false for CloudWatch Logs.
+// Provides details about input or output in an execution history event.
 type HistoryEventExecutionDataDetails struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates whether input or output was truncated in the response. Always false.
+	// Indicates whether input or output was truncated in the response. Always false
+	// for API calls.
 	Truncated *bool `locationName:"truncated" type:"boolean"`
 }
 
@@ -5187,6 +5232,63 @@ func (s *InvalidToken) StatusCode() int {
 
 // RequestID returns the service's response RequestID for request.
 func (s *InvalidToken) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Your tracingConfiguration key does not match, or enabled has not been set
+// to true or false.
+type InvalidTracingConfiguration struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidTracingConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidTracingConfiguration) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidTracingConfiguration(v protocol.ResponseMetadata) error {
+	return &InvalidTracingConfiguration{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidTracingConfiguration) Code() string {
+	return "InvalidTracingConfiguration"
+}
+
+// Message returns the exception's message.
+func (s *InvalidTracingConfiguration) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidTracingConfiguration) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidTracingConfiguration) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidTracingConfiguration) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidTracingConfiguration) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
@@ -6298,6 +6400,10 @@ type StartExecutionInput struct {
 	//
 	// StateMachineArn is a required field
 	StateMachineArn *string `locationName:"stateMachineArn" min:"1" type:"string" required:"true"`
+
+	// Passes the AWS X-Ray trace header. The trace header can also be passed in
+	// the request payload.
+	TraceHeader *string `locationName:"traceHeader" type:"string"`
 }
 
 // String returns the string representation
@@ -6344,6 +6450,12 @@ func (s *StartExecutionInput) SetName(v string) *StartExecutionInput {
 // SetStateMachineArn sets the StateMachineArn field's value.
 func (s *StartExecutionInput) SetStateMachineArn(v string) *StartExecutionInput {
 	s.StateMachineArn = &v
+	return s
+}
+
+// SetTraceHeader sets the TraceHeader field's value.
+func (s *StartExecutionInput) SetTraceHeader(v string) *StartExecutionInput {
+	s.TraceHeader = &v
 	return s
 }
 
@@ -7680,6 +7792,31 @@ func (s *TooManyTags) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+// Selects whether or not the state machine's AWS X-Ray tracing is enabled.
+// Default is false
+type TracingConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// When set to true, AWS X-Ray tracing is enabled.
+	Enabled *bool `locationName:"enabled" type:"boolean"`
+}
+
+// String returns the string representation
+func (s TracingConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TracingConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *TracingConfiguration) SetEnabled(v bool) *TracingConfiguration {
+	s.Enabled = &v
+	return s
+}
+
 type UntagResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7766,6 +7903,9 @@ type UpdateStateMachineInput struct {
 	//
 	// StateMachineArn is a required field
 	StateMachineArn *string `locationName:"stateMachineArn" min:"1" type:"string" required:"true"`
+
+	// Selects whether AWS X-Ray tracing is enabled.
+	TracingConfiguration *TracingConfiguration `locationName:"tracingConfiguration" type:"structure"`
 }
 
 // String returns the string representation
@@ -7826,6 +7966,12 @@ func (s *UpdateStateMachineInput) SetRoleArn(v string) *UpdateStateMachineInput 
 // SetStateMachineArn sets the StateMachineArn field's value.
 func (s *UpdateStateMachineInput) SetStateMachineArn(v string) *UpdateStateMachineInput {
 	s.StateMachineArn = &v
+	return s
+}
+
+// SetTracingConfiguration sets the TracingConfiguration field's value.
+func (s *UpdateStateMachineInput) SetTracingConfiguration(v *TracingConfiguration) *UpdateStateMachineInput {
+	s.TracingConfiguration = v
 	return s
 }
 

@@ -162,6 +162,45 @@ func TestAccAWSLB_NLB_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSLB_ALB_outpost(t *testing.T) {
+	var conf elbv2.LoadBalancer
+	lbName := fmt.Sprintf("testaccawslb-outpost-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	resourceName := "aws_lb.lb_test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBConfig_outpost(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", "false"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf("loadbalancer/app/%s/.+", lbName))),
+					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
+					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "30"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_type", "application"),
+					resource.TestCheckResourceAttr(resourceName, "name", lbName),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "TestAccAWSALB_outpost"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "subnet_mapping.0.outpost_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "customer_owned_ipv4_pool"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLB_networkLoadbalancerEIP(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	resourceName := "aws_lb.lb_test"
@@ -1379,6 +1418,93 @@ resource "aws_security_group" "alb_test" {
 
   tags = {
     Name = "TestAccAWSALB_basic"
+  }
+}
+`, lbName))
+}
+
+func testAccAWSLBConfig_outpost(lbName string) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+data "aws_outposts_outposts" "test" {}
+
+data "aws_outposts_outpost" "test" {
+  id = tolist(data.aws_outposts_outposts.test.ids)[0]
+}
+
+data "aws_ec2_coip_pools" "test" {}
+
+data "aws_ec2_local_gateway_route_table" "test" {
+  outpost_arn = tolist(data.aws_outposts_outposts.test.arns)[0]
+}
+
+resource "aws_ec2_local_gateway_route_table_vpc_association" "test" {
+  local_gateway_route_table_id = data.aws_ec2_local_gateway_route_table.test.id
+  vpc_id                       = aws_vpc.alb_test.id
+}
+
+resource "aws_route_table" "test" {
+  vpc_id     = aws_vpc.alb_test.id
+  depends_on = [aws_ec2_local_gateway_route_table_vpc_association.test]
+}
+
+resource "aws_route_table_association" "a" {
+  subnet_id      = aws_subnet.alb_test.id
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_lb" "lb_test" {
+  name                       = "%s"
+  security_groups            = [aws_security_group.alb_test.id]
+  customer_owned_ipv4_pool   = tolist(data.aws_ec2_coip_pools.test.pool_ids)[0]
+  idle_timeout               = 30
+  enable_deletion_protection = false
+  subnets                    = [aws_subnet.alb_test.id]
+
+  tags = {
+    Name = "TestAccAWSALB_outpost"
+  }
+}
+
+resource "aws_vpc" "alb_test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-lb-outpost"
+  }
+}
+
+resource "aws_subnet" "alb_test" {
+  vpc_id            = aws_vpc.alb_test.id
+  cidr_block        = "10.0.0.0/24"
+  availability_zone = data.aws_outposts_outpost.test.availability_zone
+  outpost_arn       = data.aws_outposts_outpost.test.arn
+
+  tags = {
+    Name = "tf-acc-lb-outpost"
+  }
+}
+
+resource "aws_security_group" "alb_test" {
+  name        = "allow_all_alb_test"
+  description = "Used for ALB Testing"
+  vpc_id      = aws_vpc.alb_test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "TestAccAWSALB_outpost"
   }
 }
 `, lbName))

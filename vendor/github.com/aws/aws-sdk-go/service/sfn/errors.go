@@ -89,6 +89,13 @@ const (
 	// The provided token is invalid.
 	ErrCodeInvalidToken = "InvalidToken"
 
+	// ErrCodeInvalidTracingConfiguration for service response error code
+	// "InvalidTracingConfiguration".
+	//
+	// Your tracingConfiguration key does not match, or enabled has not been set
+	// to true or false.
+	ErrCodeInvalidTracingConfiguration = "InvalidTracingConfiguration"
+
 	// ErrCodeMissingRequiredParameter for service response error code
 	// "MissingRequiredParameter".
 	//
@@ -164,6 +171,7 @@ var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
 	"InvalidName":                  newErrorInvalidName,
 	"InvalidOutput":                newErrorInvalidOutput,
 	"InvalidToken":                 newErrorInvalidToken,
+	"InvalidTracingConfiguration":  newErrorInvalidTracingConfiguration,
 	"MissingRequiredParameter":     newErrorMissingRequiredParameter,
 	"ResourceNotFound":             newErrorResourceNotFound,
 	"StateMachineAlreadyExists":    newErrorStateMachineAlreadyExists,

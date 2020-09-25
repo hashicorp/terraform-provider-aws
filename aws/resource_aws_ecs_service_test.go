@@ -1862,7 +1862,7 @@ resource "aws_ecs_service" "main" {
 
   network_configuration {
     security_groups  = [aws_security_group.allow_all_a.id, aws_security_group.allow_all_b.id]
-    subnets          = [aws_subnet.main[0].id, aws_subnet.main[1].id]
+    subnets          = aws_subnet.main[*].id
     assign_public_ip = %s
   }
 }
@@ -1960,7 +1960,7 @@ resource "aws_ecs_service" "main" {
 
   network_configuration {
     security_groups  = [aws_security_group.allow_all_a.id, aws_security_group.allow_all_b.id]
-    subnets          = [aws_subnet.main[0].id, aws_subnet.main[1].id]
+    subnets          = aws_subnet.main[*].id
     assign_public_ip = false
   }
 }
@@ -2079,7 +2079,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_lb" "main" {
   name     = "%s"
   internal = true
-  subnets  = [aws_subnet.main[0].id, aws_subnet.main[1].id]
+  subnets  = aws_subnet.main[*].id
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -2214,7 +2214,7 @@ EOF
 
 resource "aws_elb" "main" {
   internal = true
-  subnets  = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = 8080
@@ -2376,7 +2376,7 @@ EOF
 
 resource "aws_elb" "main" {
   internal = true
-  subnets  = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = %[6]d
@@ -2649,7 +2649,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_lb" "main" {
   name     = "%s"
   internal = true
-  subnets  = [aws_subnet.main[0].id, aws_subnet.main[1].id]
+  subnets  = aws_subnet.main[*].id
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -2758,7 +2758,7 @@ resource "aws_lb_target_group" "static" {
 resource "aws_lb" "main" {
   name     = "%s"
   internal = true
-  subnets  = [aws_subnet.main[0].id, aws_subnet.main[1].id]
+  subnets  = aws_subnet.main[*].id
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -2903,7 +2903,7 @@ resource "aws_ecs_service" "main" {
   desired_count   = 1
   network_configuration {
     security_groups = [%s]
-    subnets         = [aws_subnet.main[0].id, aws_subnet.main[1].id]
+    subnets         = aws_subnet.main[*].id
   }
 }
 `, sg1Name, sg2Name, clusterName, tdName, svcName, securityGroups)
@@ -3004,7 +3004,7 @@ resource "aws_ecs_service" "test" {
 
   network_configuration {
     security_groups = [aws_security_group.test.id]
-    subnets         = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+    subnets         = aws_subnet.test[*].id
   }
 }
 `, rName, rName, rName, clusterName, tdName, svcName)
@@ -3211,7 +3211,7 @@ resource "aws_subnet" "test" {
 resource "aws_lb" "test" {
   internal = true
   name     = %[1]q
-  subnets  = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnets  = aws_subnet.test[*].id
 }
 
 resource "aws_lb_listener" "test" {

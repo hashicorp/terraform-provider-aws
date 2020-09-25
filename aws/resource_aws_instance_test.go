@@ -212,7 +212,7 @@ func TestAccAWSInstance_inEc2Classic(t *testing.T) {
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
@@ -769,7 +769,7 @@ func TestAccAWSInstance_disableApiTermination(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_vpc(t *testing.T) {
+func TestAccAWSInstance_dedicatedInstance(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
@@ -782,9 +782,10 @@ func TestAccAWSInstance_vpc(t *testing.T) {
 		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigVPC(rName),
+				Config: testAccEc2InstanceConfigDedicatedInstance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tenancy", "dedicated"),
 					resource.TestCheckResourceAttr(resourceName, "user_data", "562a3e32810edf6ff09994f050f12e799452379d"),
 				),
 			},
@@ -1165,7 +1166,7 @@ func TestAccAWSInstance_instanceProfileChange(t *testing.T) {
 			{
 				Config: testAccInstanceConfigWithInstanceProfile(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStopInstance(&v), // GH-8262
+					testAccCheckStopInstance(&v), // GH-8262: Error on EC2 instance role change when stopped
 				),
 			},
 			{
@@ -1453,6 +1454,7 @@ func TestAccAWSInstance_changeInstanceType(t *testing.T) {
 				Config: testAccInstanceConfigWithSmallInstanceType(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.medium"),
 				),
 			},
 			{
@@ -1465,6 +1467,7 @@ func TestAccAWSInstance_changeInstanceType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &after),
 					testAccCheckInstanceNotRecreated(t, &before, &after),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.large"),
 				),
 			},
 		},
@@ -3284,7 +3287,7 @@ func testAccAvailableAZsNoOptInDefaultExcludeConfig() string {
 func testAccAvailableAZsNoOptInExcludeConfig(excludeZoneIds ...string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-  exclude_zone_ids = ["%[1]v"]
+  exclude_zone_ids = ["%[1]s"]
   state            = "available"
 
   filter {
@@ -3366,7 +3369,9 @@ resource "aws_security_group" "sg" {
 }
 
 resource "aws_instance" "test" {
-  ami             = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+
+  # tflint-ignore: aws_instance_previous_type
   instance_type   = "m3.medium"
   security_groups = [aws_security_group.sg.name]
 }
@@ -3401,7 +3406,9 @@ resource "aws_ebs_volume" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-instance-store.id
+  ami = data.aws_ami.amzn-ami-minimal-hvm-instance-store.id
+
+  # tflint-ignore: aws_instance_previous_type
   instance_type = "m1.small"
   subnet_id     = aws_subnet.test.id
   user_data     = "foo:-with-character's"
@@ -3421,7 +3428,7 @@ resource "aws_instance" "test" {
   ami       = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   subnet_id = aws_subnet.test.id
 
-  instance_type    = "m1.small"
+  instance_type    = "t2.small"
   user_data_base64 = base64encode("hello world")
 }
 `))
@@ -3433,7 +3440,7 @@ resource "aws_instance" "test" {
   ami       = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   subnet_id = aws_subnet.test.id
 
-  instance_type = "m3.medium"
+  instance_type = "t2.medium"
 
   tags = {
     Name = "tf-acctest"
@@ -3448,7 +3455,7 @@ resource "aws_instance" "test" {
   ami       = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   subnet_id = aws_subnet.test.id
 
-  instance_type = "m3.large"
+  instance_type = "t2.large"
 
   tags = {
     Name = "tf-acctest"
@@ -3460,12 +3467,8 @@ resource "aws_instance" "test" {
 func testAccInstanceGP2IopsDevice() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-
-  # In order to attach an encrypted volume to an instance you need to have an
-  # m3.medium or larger. See "Supported Instance Types" in:
-  # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html
-  instance_type = "m3.medium"
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.medium"
 
   root_block_device {
     volume_type = "gp2"
@@ -3478,12 +3481,8 @@ resource "aws_instance" "test" {
 func testAccInstanceGP2WithIopsValue() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-
-  # In order to attach an encrypted volume to an instance you need to have an
-  # m3.medium or larger. See "Supported Instance Types" in:
-  # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html
-  instance_type = "m3.medium"
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.medium"
 
   root_block_device {
     volume_type = "gp2"
@@ -3502,6 +3501,7 @@ resource "aws_instance" "test" {
 
   # Only certain instance types support ephemeral root instance stores.
   # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html
+  # tflint-ignore: aws_instance_previous_type
   instance_type = "m3.medium"
 }
 `))
@@ -3528,6 +3528,7 @@ data "aws_ami" "test" {
 resource "aws_instance" "test" {
   ami = data.aws_ami.test.id
 
+  # tflint-ignore: aws_instance_previous_type
   instance_type = "c3.large"
 
   root_block_device {
@@ -3553,7 +3554,7 @@ func testAccAwsEc2InstanceEbsRootDeviceBasic() string {
 resource "aws_instance" "test" {
   ami = data.aws_ami.ami.id
 
-  instance_type = "m3.medium"
+  instance_type = "t2.medium"
 }
 `)
 }
@@ -3571,7 +3572,7 @@ func testAccAwsEc2InstanceRootBlockDeviceWithIOPS(size, delete, volumeType, iops
 resource "aws_instance" "test" {
   ami = data.aws_ami.ami.id
 
-  instance_type = "m3.medium"
+  instance_type = "t2.medium"
 
   root_block_device {
     volume_size           = %[1]s
@@ -3618,10 +3619,7 @@ func testAccAwsEc2InstanceConfigBlockDevicesWithDeleteOnTerminate(size, delete s
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 
-  # In order to attach an encrypted volume to an instance you need to have an
-  # m3.medium or larger. See "Supported Instance Types" in:
-  # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html
-  instance_type = "m3.medium"
+  instance_type = "t2.medium"
 
   root_block_device {
     volume_type           = "gp2"
@@ -3661,7 +3659,7 @@ func testAccInstanceConfigSourceDestEnable(rName string) string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + `
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m1.small"
+  instance_type = "t2.small"
   subnet_id     = aws_subnet.test.id
 }
 `
@@ -3671,7 +3669,7 @@ func testAccInstanceConfigSourceDestDisable(rName string) string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + `
 resource "aws_instance" "test" {
   ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type     = "m1.small"
+  instance_type     = "t2.small"
   subnet_id         = aws_subnet.test.id
   source_dest_check = false
 }
@@ -3682,17 +3680,19 @@ func testAccInstanceConfigDisableAPITermination(rName string, val bool) string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type           = "m1.small"
+  instance_type           = "t2.small"
   subnet_id               = aws_subnet.test.id
   disable_api_termination = %[1]t
 }
 `, val)
 }
 
-func testAccInstanceConfigVPC(rName string) string {
+func testAccEc2InstanceConfigDedicatedInstance(rName string) string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + `
 resource "aws_instance" "test" {
-  ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+
+  # tflint-ignore: aws_instance_previous_type
   instance_type               = "m1.small"
   subnet_id                   = aws_subnet.test.id
   associate_public_ip_address = true
@@ -3751,7 +3751,7 @@ resource "aws_placement_group" "test" {
 # Limitations: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#concepts-placement-groups
 resource "aws_instance" "test" {
   ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "c3.large"
+  instance_type               = "c5.large"
   subnet_id                   = aws_subnet.test.id
   associate_public_ip_address = true
   placement_group             = aws_placement_group.test.name
@@ -3813,7 +3813,7 @@ func testAccCheckInstanceConfigTags() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m1.small"
+  instance_type = "t2.small"
 
   tags = {
     test = "test2"
@@ -3831,10 +3831,7 @@ resource "aws_kms_key" "test" {
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 
-  # In order to attach an encrypted volume to an instance you need to have an
-  # m3.medium or larger. See "Supported Instance Types" in:
-  # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html
-  instance_type = "m3.medium"
+  instance_type = "t2.medium"
 
   root_block_device {
     volume_type = "gp2"
@@ -3913,7 +3910,7 @@ func testAccCheckInstanceConfigNoVolumeTags() string {
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 
-  instance_type = "m3.medium"
+  instance_type = "t2.medium"
 
   root_block_device {
     volume_type = "gp2"
@@ -3946,12 +3943,11 @@ resource "aws_instance" "test" {
 `))
 }
 
-var testAccCheckInstanceConfigEBSBlockDeviceInvalidIops = composeConfig(testAccAwsEc2InstanceAmiWithEbsRootVolume,
-	`
+var testAccCheckInstanceConfigEBSBlockDeviceInvalidIops = composeConfig(testAccAwsEc2InstanceAmiWithEbsRootVolume, `
 resource "aws_instance" "test" {
   ami = data.aws_ami.ami.id
 
-  instance_type = "m3.medium"
+  instance_type = "t2.medium"
 
   ebs_block_device {
     device_name = "/dev/sdc"
@@ -3967,7 +3963,7 @@ func testAccCheckInstanceConfigWithVolumeTags() string {
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 
-  instance_type = "m3.medium"
+  instance_type = "t2.medium"
 
   root_block_device {
     volume_type = "gp2"
@@ -4009,7 +4005,7 @@ func testAccCheckInstanceConfigWithVolumeTagsUpdate() string {
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 
-  instance_type = "m3.medium"
+  instance_type = "t2.medium"
 
   root_block_device {
     volume_type = "gp2"
@@ -4051,7 +4047,7 @@ func testAccCheckInstanceConfigTagsUpdate() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m1.small"
+  instance_type = "t2.small"
 
   tags = {
     test2 = "test3"
@@ -4088,7 +4084,7 @@ EOF
 
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m1.small"
+  instance_type = "t2.small"
 
   tags = {
     Name = %[1]q
@@ -4130,7 +4126,7 @@ resource "aws_iam_instance_profile" "test" {
 
 resource "aws_instance" "test" {
   ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type        = "m1.small"
+  instance_type        = "t2.small"
   iam_instance_profile = aws_iam_instance_profile.test.name
 
   tags = {
@@ -4175,13 +4171,13 @@ resource "aws_instance" "test" {
 }
 
 func testAccInstanceNetworkInstanceSecurityGroups(rName string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() +
-		testAccAwsInstanceVpcConfig(rName, false) +
-		testAccAwsInstanceVpcSecurityGroupConfig(rName) +
-		`
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAwsInstanceVpcConfig(rName, false),
+		testAccAwsInstanceVpcSecurityGroupConfig(rName), `
 resource "aws_instance" "test" {
   ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "t1.micro"
+  instance_type               = "t2.micro"
   vpc_security_group_ids      = [aws_security_group.test.id]
   subnet_id                   = aws_subnet.test.id
   associate_public_ip_address = true
@@ -4193,17 +4189,17 @@ resource "aws_eip" "test" {
   vpc        = true
   depends_on = [aws_internet_gateway.test]
 }
-`
+`)
 }
 
 func testAccInstanceNetworkInstanceVPCSecurityGroupIDs(rName string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() +
-		testAccAwsInstanceVpcConfig(rName, false) +
-		testAccAwsInstanceVpcSecurityGroupConfig(rName) +
-		`
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAwsInstanceVpcConfig(rName, false),
+		testAccAwsInstanceVpcSecurityGroupConfig(rName), `
 resource "aws_instance" "test" {
   ami                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type          = "t1.micro"
+  instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.test.id]
   subnet_id              = aws_subnet.test.id
   depends_on             = [aws_internet_gateway.test]
@@ -4214,17 +4210,17 @@ resource "aws_eip" "test" {
   vpc        = true
   depends_on = [aws_internet_gateway.test]
 }
-`
+`)
 }
 
 func testAccInstanceNetworkInstanceVPCRemoveSecurityGroupIDs(rName string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() +
-		testAccAwsInstanceVpcConfig(rName, false) +
-		testAccAwsInstanceVpcSecurityGroupConfig(rName) +
-		`
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAwsInstanceVpcConfig(rName, false),
+		testAccAwsInstanceVpcSecurityGroupConfig(rName), `
 resource "aws_instance" "test" {
   ami                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type          = "t1.micro"
+  instance_type          = "t2.micro"
   vpc_security_group_ids = []
   subnet_id              = aws_subnet.test.id
   depends_on             = [aws_internet_gateway.test]
@@ -4235,7 +4231,7 @@ resource "aws_eip" "test" {
   vpc        = true
   depends_on = [aws_internet_gateway.test]
 }
-`
+`)
 }
 
 func testAccInstanceConfigKeyPair(rName string) string {
@@ -4247,7 +4243,7 @@ resource "aws_key_pair" "test" {
 
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
+  instance_type = "t2.micro"
   key_name      = aws_key_pair.test.key_name
 
   tags = {
@@ -4261,7 +4257,9 @@ func testAccInstanceConfigRootBlockDeviceMismatch(rName string) string {
 	return testAccAwsInstanceVpcConfig(rName, false) + `
 resource "aws_instance" "test" {
   # This is an AMI in us-west-2 with RootDeviceName: "/dev/sda1"; actual root: "/dev/sda"
-  ami           = "ami-ef5b69df"
+  ami = "ami-ef5b69df"
+
+  # tflint-ignore: aws_instance_previous_type
   instance_type = "t1.micro"
   subnet_id     = aws_subnet.test.id
 
@@ -4382,7 +4380,7 @@ resource "aws_network_interface" "primary" {
   }
 }
 
-// Attach previously created network interface, observe no state diff on instance resource
+# Attach previously created network interface, observe no state diff on instance resource
 resource "aws_network_interface" "secondary" {
   subnet_id   = aws_subnet.test.id
   private_ips = ["10.1.1.43"]
@@ -4786,7 +4784,7 @@ func testAccInstanceConfig_creditSpecification_isNotAppliedToNonBurstable(rName 
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + `
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m1.small"
+  instance_type = "t2.small"
   subnet_id     = aws_subnet.test.id
 
   credit_specification {
@@ -5046,22 +5044,9 @@ resource "aws_subnet" "test" {
 }
 
 func testAccInstanceConfigHibernation(hibernation bool) string {
-	return fmt.Sprintf(`
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -5091,7 +5076,7 @@ resource "aws_instance" "test" {
     volume_size = 20
   }
 }
-`, hibernation)
+`, hibernation))
 }
 
 func testAccInstanceConfigMetadataOptions(rName string) string {
@@ -5147,7 +5132,8 @@ resource "aws_instance" "test" {
 func testAccAwsEc2InstanceConfigDynamicEBSBlockDevices() string {
 	return composeConfig(testAccLatestAmazonLinuxPvEbsAmiConfig(), `
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-pv-ebs.id
+  ami = data.aws_ami.amzn-ami-minimal-pv-ebs.id
+  # tflint-ignore: aws_instance_previous_type
   instance_type = "m3.medium"
 
   dynamic "ebs_block_device" {
@@ -5172,10 +5158,10 @@ func testAccAvailableEc2InstanceTypeForRegion(preferredInstanceTypes ...string) 
 data "aws_ec2_instance_type_offering" "available" {
   filter {
     name   = "instance-type"
-    values = ["%[1]v"]
+    values = ["%[1]s"]
   }
 
-  preferred_instance_types = ["%[1]v"]
+  preferred_instance_types = ["%[1]s"]
 }
 `, strings.Join(preferredInstanceTypes, "\", \""))
 }
@@ -5196,7 +5182,7 @@ func testAccAvailableEc2InstanceTypeForAvailabilityZone(availabilityZoneName str
 data "aws_ec2_instance_type_offering" "available" {
   filter {
     name   = "instance-type"
-    values = ["%[2]v"]
+    values = ["%[2]s"]
   }
 
   filter {
@@ -5205,7 +5191,7 @@ data "aws_ec2_instance_type_offering" "available" {
   }
 
   location_type            = "availability-zone"
-  preferred_instance_types = ["%[2]v"]
+  preferred_instance_types = ["%[2]s"]
 }
 `, availabilityZoneName, strings.Join(preferredInstanceTypes, "\", \""))
 }

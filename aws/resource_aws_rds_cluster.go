@@ -44,6 +44,11 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Computed: true,
 			},
 
+			"allow_major_version_upgrade": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"availability_zones": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -980,6 +985,10 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	req := &rds.ModifyDBClusterInput{
 		ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
 		DBClusterIdentifier: aws.String(d.Id()),
+	}
+
+	if v, ok := d.GetOk("allow_major_version_upgrade"); ok {
+		req.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
 	}
 
 	if d.HasChange("backtrack_window") {

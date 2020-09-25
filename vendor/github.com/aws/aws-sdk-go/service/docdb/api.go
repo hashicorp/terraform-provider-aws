@@ -146,8 +146,8 @@ func (c *DocDB) ApplyPendingMaintenanceActionRequest(input *ApplyPendingMaintena
 
 // ApplyPendingMaintenanceAction API operation for Amazon DocumentDB with MongoDB compatibility.
 //
-// Applies a pending maintenance action to a resource (for example, to a DB
-// instance).
+// Applies a pending maintenance action to a resource (for example, to an Amazon
+// DocumentDB instance).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -320,10 +320,12 @@ func (c *DocDB) CopyDBClusterSnapshotRequest(input *CopyDBClusterSnapshotInput) 
 // Copies a snapshot of a cluster.
 //
 // To copy a cluster snapshot from a shared manual cluster snapshot, SourceDBClusterSnapshotIdentifier
-// must be the Amazon Resource Name (ARN) of the shared cluster snapshot.
+// must be the Amazon Resource Name (ARN) of the shared cluster snapshot. You
+// can only copy a shared DB cluster snapshot, whether encrypted or not, in
+// the same AWS Region.
 //
 // To cancel the copy operation after it is in progress, delete the target cluster
-// snapshot identified by TargetDBClusterSnapshotIdentifier while that DB cluster
+// snapshot identified by TargetDBClusterSnapshotIdentifier while that cluster
 // snapshot is in the copying status.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -550,24 +552,19 @@ func (c *DocDB) CreateDBClusterParameterGroupRequest(input *CreateDBClusterParam
 // Creates a new cluster parameter group.
 //
 // Parameters in a cluster parameter group apply to all of the instances in
-// a DB cluster.
+// a cluster.
 //
 // A cluster parameter group is initially created with the default parameters
-// for the database engine used by instances in the cluster. To provide custom
-// values for any of the parameters, you must modify the group after you create
-// it. After you create a DB cluster parameter group, you must associate it
-// with your cluster. For the new DB cluster parameter group and associated
-// settings to take effect, you must then reboot the instances in the cluster
-// without failover.
-//
-// After you create a cluster parameter group, you should wait at least 5 minutes
-// before creating your first cluster that uses that cluster parameter group
-// as the default parameter group. This allows Amazon DocumentDB to fully complete
-// the create action before the cluster parameter group is used as the default
-// for a new cluster. This step is especially important for parameters that
-// are critical when creating the default database for a cluster, such as the
-// character set for the default database defined by the character_set_database
-// parameter.
+// for the database engine used by instances in the cluster. In Amazon DocumentDB,
+// you cannot make modifications directly to the default.docdb3.6 cluster parameter
+// group. If your Amazon DocumentDB cluster is using the default cluster parameter
+// group and you want to modify a value in it, you must first create a new parameter
+// group (https://docs.aws.amazon.com/documentdb/latest/developerguide/cluster_parameter_group-create.html)
+// or copy an existing parameter group (https://docs.aws.amazon.com/documentdb/latest/developerguide/cluster_parameter_group-copy.html),
+// modify it, and then apply the modified parameter group to your cluster. For
+// the new cluster parameter group and associated settings to take effect, you
+// must then reboot the instances in the cluster without failover. For more
+// information, see Modifying Amazon DocumentDB Cluster Parameter Groups (https://docs.aws.amazon.com/documentdb/latest/developerguide/cluster_parameter_group-modify.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1395,6 +1392,12 @@ func (c *DocDB) DescribeCertificatesRequest(input *DescribeCertificatesInput) (r
 		Name:       opDescribeCertificates,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "MaxRecords",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1444,6 +1447,58 @@ func (c *DocDB) DescribeCertificatesWithContext(ctx aws.Context, input *Describe
 	return out, req.Send()
 }
 
+// DescribeCertificatesPages iterates over the pages of a DescribeCertificates operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeCertificates method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeCertificates operation.
+//    pageNum := 0
+//    err := client.DescribeCertificatesPages(params,
+//        func(page *docdb.DescribeCertificatesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *DocDB) DescribeCertificatesPages(input *DescribeCertificatesInput, fn func(*DescribeCertificatesOutput, bool) bool) error {
+	return c.DescribeCertificatesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeCertificatesPagesWithContext same as DescribeCertificatesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DocDB) DescribeCertificatesPagesWithContext(ctx aws.Context, input *DescribeCertificatesInput, fn func(*DescribeCertificatesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeCertificatesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeCertificatesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeCertificatesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeDBClusterParameterGroups = "DescribeDBClusterParameterGroups"
 
 // DescribeDBClusterParameterGroupsRequest generates a "aws/request.Request" representing the
@@ -1475,6 +1530,12 @@ func (c *DocDB) DescribeDBClusterParameterGroupsRequest(input *DescribeDBCluster
 		Name:       opDescribeDBClusterParameterGroups,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "MaxRecords",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1525,6 +1586,58 @@ func (c *DocDB) DescribeDBClusterParameterGroupsWithContext(ctx aws.Context, inp
 	return out, req.Send()
 }
 
+// DescribeDBClusterParameterGroupsPages iterates over the pages of a DescribeDBClusterParameterGroups operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeDBClusterParameterGroups method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeDBClusterParameterGroups operation.
+//    pageNum := 0
+//    err := client.DescribeDBClusterParameterGroupsPages(params,
+//        func(page *docdb.DescribeDBClusterParameterGroupsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *DocDB) DescribeDBClusterParameterGroupsPages(input *DescribeDBClusterParameterGroupsInput, fn func(*DescribeDBClusterParameterGroupsOutput, bool) bool) error {
+	return c.DescribeDBClusterParameterGroupsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeDBClusterParameterGroupsPagesWithContext same as DescribeDBClusterParameterGroupsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DocDB) DescribeDBClusterParameterGroupsPagesWithContext(ctx aws.Context, input *DescribeDBClusterParameterGroupsInput, fn func(*DescribeDBClusterParameterGroupsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeDBClusterParameterGroupsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeDBClusterParameterGroupsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDBClusterParameterGroupsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeDBClusterParameters = "DescribeDBClusterParameters"
 
 // DescribeDBClusterParametersRequest generates a "aws/request.Request" representing the
@@ -1556,6 +1669,12 @@ func (c *DocDB) DescribeDBClusterParametersRequest(input *DescribeDBClusterParam
 		Name:       opDescribeDBClusterParameters,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "MaxRecords",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1602,6 +1721,58 @@ func (c *DocDB) DescribeDBClusterParametersWithContext(ctx aws.Context, input *D
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// DescribeDBClusterParametersPages iterates over the pages of a DescribeDBClusterParameters operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeDBClusterParameters method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeDBClusterParameters operation.
+//    pageNum := 0
+//    err := client.DescribeDBClusterParametersPages(params,
+//        func(page *docdb.DescribeDBClusterParametersOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *DocDB) DescribeDBClusterParametersPages(input *DescribeDBClusterParametersInput, fn func(*DescribeDBClusterParametersOutput, bool) bool) error {
+	return c.DescribeDBClusterParametersPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeDBClusterParametersPagesWithContext same as DescribeDBClusterParametersPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DocDB) DescribeDBClusterParametersPagesWithContext(ctx aws.Context, input *DescribeDBClusterParametersInput, fn func(*DescribeDBClusterParametersOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeDBClusterParametersInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeDBClusterParametersRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDBClusterParametersOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opDescribeDBClusterSnapshotAttributes = "DescribeDBClusterSnapshotAttributes"
@@ -1721,6 +1892,12 @@ func (c *DocDB) DescribeDBClusterSnapshotsRequest(input *DescribeDBClusterSnapsh
 		Name:       opDescribeDBClusterSnapshots,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "MaxRecords",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1768,6 +1945,58 @@ func (c *DocDB) DescribeDBClusterSnapshotsWithContext(ctx aws.Context, input *De
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// DescribeDBClusterSnapshotsPages iterates over the pages of a DescribeDBClusterSnapshots operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeDBClusterSnapshots method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeDBClusterSnapshots operation.
+//    pageNum := 0
+//    err := client.DescribeDBClusterSnapshotsPages(params,
+//        func(page *docdb.DescribeDBClusterSnapshotsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *DocDB) DescribeDBClusterSnapshotsPages(input *DescribeDBClusterSnapshotsInput, fn func(*DescribeDBClusterSnapshotsOutput, bool) bool) error {
+	return c.DescribeDBClusterSnapshotsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeDBClusterSnapshotsPagesWithContext same as DescribeDBClusterSnapshotsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DocDB) DescribeDBClusterSnapshotsPagesWithContext(ctx aws.Context, input *DescribeDBClusterSnapshotsInput, fn func(*DescribeDBClusterSnapshotsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeDBClusterSnapshotsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeDBClusterSnapshotsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDBClusterSnapshotsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opDescribeDBClusters = "DescribeDBClusters"
@@ -2767,6 +2996,12 @@ func (c *DocDB) DescribePendingMaintenanceActionsRequest(input *DescribePendingM
 		Name:       opDescribePendingMaintenanceActions,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "MaxRecords",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -2814,6 +3049,58 @@ func (c *DocDB) DescribePendingMaintenanceActionsWithContext(ctx aws.Context, in
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// DescribePendingMaintenanceActionsPages iterates over the pages of a DescribePendingMaintenanceActions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribePendingMaintenanceActions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribePendingMaintenanceActions operation.
+//    pageNum := 0
+//    err := client.DescribePendingMaintenanceActionsPages(params,
+//        func(page *docdb.DescribePendingMaintenanceActionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *DocDB) DescribePendingMaintenanceActionsPages(input *DescribePendingMaintenanceActionsInput, fn func(*DescribePendingMaintenanceActionsOutput, bool) bool) error {
+	return c.DescribePendingMaintenanceActionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribePendingMaintenanceActionsPagesWithContext same as DescribePendingMaintenanceActionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DocDB) DescribePendingMaintenanceActionsPagesWithContext(ctx aws.Context, input *DescribePendingMaintenanceActionsInput, fn func(*DescribePendingMaintenanceActionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribePendingMaintenanceActionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribePendingMaintenanceActionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribePendingMaintenanceActionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opFailoverDBCluster = "FailoverDBCluster"
@@ -4239,7 +4526,7 @@ type AddTagsToResourceInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon DocumentDB resource that the tags are added to. This value is
-	// an Amazon Resource Name (ARN).
+	// an Amazon Resource Name .
 	//
 	// ResourceName is a required field
 	ResourceName *string `type:"string" required:"true"`
@@ -4562,7 +4849,7 @@ type CopyDBClusterParameterGroupInput struct {
 	//    or a valid ARN.
 	//
 	//    * If the source parameter group is in a different AWS Region than the
-	//    copy, specify a valid cluster parameter group ARN; for example, arn:aws:rds:us-east-1:123456789012:cluster-pg:custom-cluster-group1.
+	//    copy, specify a valid cluster parameter group ARN; for example, arn:aws:rds:us-east-1:123456789012:sample-cluster:sample-parameter-group.
 	//
 	// SourceDBClusterParameterGroupIdentifier is a required field
 	SourceDBClusterParameterGroupIdentifier *string `type:"string" required:"true"`
@@ -4693,7 +4980,7 @@ type CopyDBClusterSnapshotInput struct {
 	// to the AWS KMS key ID that you want to use to encrypt the copy of the cluster
 	// snapshot in the destination Region. AWS KMS encryption keys are specific
 	// to the AWS Region that they are created in, and you can't use encryption
-	// keys from one Region in another Region.
+	// keys from one AWS Region in another AWS Region.
 	//
 	// If you copy an unencrypted cluster snapshot and specify a value for the KmsKeyId
 	// parameter, an error is returned.
@@ -4701,40 +4988,39 @@ type CopyDBClusterSnapshotInput struct {
 
 	// The URL that contains a Signature Version 4 signed request for the CopyDBClusterSnapshot
 	// API action in the AWS Region that contains the source cluster snapshot to
-	// copy. You must use the PreSignedUrl parameter when copying an encrypted cluster
-	// snapshot from another AWS Region.
+	// copy. You must use the PreSignedUrl parameter when copying a cluster snapshot
+	// from another AWS Region.
 	//
-	// The presigned URL must be a valid request for the CopyDBSClusterSnapshot
-	// API action that can be executed in the source AWS Region that contains the
-	// encrypted DB cluster snapshot to be copied. The presigned URL request must
-	// contain the following parameter values:
+	// If you are using an AWS SDK tool or the AWS CLI, you can specify SourceRegion
+	// (or --source-region for the AWS CLI) instead of specifying PreSignedUrl manually.
+	// Specifying SourceRegion autogenerates a pre-signed URL that is a valid request
+	// for the operation that can be executed in the source AWS Region.
 	//
-	//    * KmsKeyId - The AWS KMS key identifier for the key to use to encrypt
-	//    the copy of the cluster snapshot in the destination AWS Region. This is
-	//    the same identifier for both the CopyDBClusterSnapshot action that is
-	//    called in the destination AWS Region, and the action contained in the
-	//    presigned URL.
+	// The presigned URL must be a valid request for the CopyDBClusterSnapshot API
+	// action that can be executed in the source AWS Region that contains the cluster
+	// snapshot to be copied. The presigned URL request must contain the following
+	// parameter values:
 	//
-	//    * DestinationRegion - The name of the AWS Region that the DB cluster snapshot
-	//    will be created in.
+	//    * SourceRegion - The ID of the region that contains the snapshot to be
+	//    copied.
 	//
-	//    * SourceDBClusterSnapshotIdentifier - The cluster snapshot identifier
-	//    for the encrypted cluster snapshot to be copied. This identifier must
-	//    be in the Amazon Resource Name (ARN) format for the source AWS Region.
-	//    For example, if you are copying an encrypted cluster snapshot from the
-	//    us-west-2 AWS Region, then your SourceDBClusterSnapshotIdentifier looks
-	//    like the following example: arn:aws:rds:us-west-2:123456789012:cluster-snapshot:my-cluster-snapshot-20161115.
+	//    * SourceDBClusterSnapshotIdentifier - The identifier for the the encrypted
+	//    cluster snapshot to be copied. This identifier must be in the Amazon Resource
+	//    Name (ARN) format for the source AWS Region. For example, if you are copying
+	//    an encrypted cluster snapshot from the us-east-1 AWS Region, then your
+	//    SourceDBClusterSnapshotIdentifier looks something like the following:
+	//    arn:aws:rds:us-east-1:12345678012:sample-cluster:sample-cluster-snapshot.
+	//
+	//    * TargetDBClusterSnapshotIdentifier - The identifier for the new cluster
+	//    snapshot to be created. This parameter isn't case sensitive.
 	PreSignedUrl *string `type:"string"`
 
 	// The identifier of the cluster snapshot to copy. This parameter is not case
 	// sensitive.
 	//
-	// You can't copy an encrypted, shared cluster snapshot from one AWS Region
-	// to another.
-	//
 	// Constraints:
 	//
-	//    * Must specify a valid system snapshot in the "available" state.
+	//    * Must specify a valid system snapshot in the available state.
 	//
 	//    * If the source snapshot is in the same AWS Region as the copy, specify
 	//    a valid snapshot identifier.
@@ -4903,7 +5189,9 @@ type CreateDBClusterInput struct {
 	DeletionProtection *bool `type:"boolean"`
 
 	// A list of log types that need to be enabled for exporting to Amazon CloudWatch
-	// Logs.
+	// Logs. You can enable audit logs or profiler logs. For more information, see
+	// Auditing Amazon DocumentDB Events (https://docs.aws.amazon.com/documentdb/latest/developerguide/event-auditing.html)
+	// and Profiling Amazon DocumentDB Operations (https://docs.aws.amazon.com/documentdb/latest/developerguide/profiling.html).
 	EnableCloudwatchLogsExports []*string `type:"list"`
 
 	// The name of the database engine to be used for this cluster.
@@ -4965,6 +5253,9 @@ type CreateDBClusterInput struct {
 
 	// The port number on which the instances in the cluster accept connections.
 	Port *int64 `type:"integer"`
+
+	// Not currently supported.
+	PreSignedUrl *string `type:"string"`
 
 	// The daily time range during which automated backups are created if automated
 	// backups are enabled using the BackupRetentionPeriod parameter.
@@ -5113,6 +5404,12 @@ func (s *CreateDBClusterInput) SetMasterUsername(v string) *CreateDBClusterInput
 // SetPort sets the Port field's value.
 func (s *CreateDBClusterInput) SetPort(v int64) *CreateDBClusterInput {
 	s.Port = &v
+	return s
+}
+
+// SetPreSignedUrl sets the PreSignedUrl field's value.
+func (s *CreateDBClusterInput) SetPreSignedUrl(v string) *CreateDBClusterInput {
+	s.PreSignedUrl = &v
 	return s
 }
 
@@ -5393,10 +5690,6 @@ type CreateDBInstanceInput struct {
 	// Region.
 	//
 	// Example: us-east-1d
-	//
-	// Constraint: The AvailabilityZone parameter can't be specified if the MultiAZ
-	// parameter is set to true. The specified Availability Zone must be in the
-	// same AWS Region as the current endpoint.
 	AvailabilityZone *string `type:"string"`
 
 	// The identifier of the cluster that the instance will belong to.
@@ -7991,7 +8284,7 @@ type DescribeDBEngineVersionsInput struct {
 
 	// The database engine version to return.
 	//
-	// Example: 5.1.49
+	// Example: 3.6.0
 	EngineVersion *string `type:"string"`
 
 	// This parameter is not currently supported.

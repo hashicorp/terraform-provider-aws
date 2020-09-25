@@ -82,6 +82,8 @@ func testAccAwsAppmeshMesh_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appmesh", regexp.MustCompile(`mesh/.+`)),
 				),
 			},
