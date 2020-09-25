@@ -2,15 +2,82 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
+	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_kinesisanalyticsv2_application", &resource.Sweeper{
+		Name: "aws_kinesisanalyticsv2_application",
+		F:    testSweepKinesisAnalyticsV2Application,
+	})
+}
+
+func testSweepKinesisAnalyticsV2Application(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).kinesisanalyticsv2conn
+	input := &kinesisanalyticsv2.ListApplicationsInput{}
+	var sweeperErrs *multierror.Error
+
+	for {
+		output, err := conn.ListApplications(input)
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Kinesis Analytics v2 Application sweep for %s: %s", region, err)
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("error retrieving Kinesis Analytics v2 Applications: %w", err)
+		}
+
+		for _, applicationSummary := range output.ApplicationSummaries {
+			arn := aws.StringValue(applicationSummary.ApplicationARN)
+			name := aws.StringValue(applicationSummary.ApplicationName)
+
+			application, err := finder.ApplicationByName(conn, name)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", arn, err)
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+
+			log.Printf("[INFO] Deleting Kinesis Analytics v2 Application: %s", arn)
+			r := resourceAwsKinesisAnalyticsV2Application()
+			d := r.Data(nil)
+			d.SetId(arn)
+			d.Set("create_timestamp", aws.TimeValue(application.CreateTimestamp).Format(time.RFC3339))
+			d.Set("name", name)
+			err = r.Delete(d, client)
+
+			if err != nil {
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
+				continue
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+		input.NextToken = output.NextToken
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSKinesisAnalyticsV2Application_basic(t *testing.T) {
 	var application kinesisanalyticsv2.ApplicationDetail
