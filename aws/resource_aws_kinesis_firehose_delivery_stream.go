@@ -66,13 +66,10 @@ func requestConfigurationSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"content_encoding": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Default:  firehose.ContentEncodingNone,
-					ValidateFunc: validation.StringInSlice([]string{
-						firehose.HttpEndpointContentEncodingGzip,
-						firehose.HttpEndpointContentEncodingNone,
-					}, false),
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      firehose.ContentEncodingNone,
+					ValidateFunc: validation.StringInSlice(firehose.ContentEncoding_Values(), false),
 				},
 
 				"common_attributes": {
