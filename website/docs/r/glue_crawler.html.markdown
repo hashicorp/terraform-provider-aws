@@ -120,6 +120,7 @@ The following arguments are supported:
 ### s3_target Argument Reference
 
 * `path` - (Required) The path to the Amazon S3 target.
+* `connection_name` - (Optional) The name of a connection which allows crawler to access data in S3 within a VPC.
 * `exclusions` - (Optional) A list of glob patterns used to exclude from the crawl.
 
 ### catalog_target Argument Reference
