@@ -26,7 +26,7 @@ const (
 	firehoseDestinationTypeElasticsearch = "elasticsearch"
 	firehoseDestinationTypeRedshift      = "redshift"
 	firehoseDestinationTypeSplunk        = "splunk"
-	firehoseDestinationTypeHttpEndpoint  = "HttpEndpoint"
+	firehoseDestinationTypeHttpEndpoint  = "http_endpoint"
 )
 
 func cloudWatchLoggingOptionsSchema() *schema.Schema {
@@ -51,32 +51,6 @@ func cloudWatchLoggingOptionsSchema() *schema.Schema {
 				"log_stream_name": {
 					Type:     schema.TypeString,
 					Optional: true,
-				},
-			},
-		},
-	}
-}
-
-func bufferingHintsOptionsSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		MaxItems: 1,
-		Optional: true,
-		Computed: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"size_in_mb": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      300,
-					ValidateFunc: validation.IntBetween(60, 900),
-				},
-
-				"interval_in_seconds": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					Default:      5,
-					ValidateFunc: validation.IntBetween(1, 64),
 				},
 			},
 		},
@@ -615,6 +589,32 @@ func flattenFirehoseSchemaConfiguration(sc *firehose.SchemaConfiguration) []map[
 	return []map[string]interface{}{m}
 }
 
+func flattenRequestConfiguration(rc *firehose.HttpEndpointRequestConfiguration) []map[string]interface{} {
+	if rc == nil {
+		return []map[string]interface{}{}
+	}
+
+	requestConfiguration := make([]map[string]interface{}, 1)
+
+	commonAttributes := make([]interface{}, 0)
+	for _, params := range rc.CommonAttributes {
+		name := aws.StringValue(params.AttributeName)
+		value := aws.StringValue(params.AttributeValue)
+
+		commonAttributes = append(commonAttributes, map[string]interface{}{
+			"name":  name,
+			"value": value,
+		})
+	}
+
+	requestConfiguration[0] = map[string]interface{}{
+		"common_attributes": commonAttributes,
+		"content_encoding":  aws.StringValue(rc.ContentEncoding),
+	}
+
+	return requestConfiguration
+}
+
 func flattenProcessingConfiguration(pc *firehose.ProcessingConfiguration, roleArn string) []map[string]interface{} {
 	if pc == nil {
 		return []map[string]interface{}{}
@@ -767,58 +767,25 @@ func flattenFirehoseHttpEndpointConfiguration(description *firehose.HttpEndpoint
 		return []map[string]interface{}{}
 	}
 	m := map[string]interface{}{
-		"url":  aws.StringValue(description.EndpointConfiguration.Url),
-		"name": aws.StringValue(description.EndpointConfiguration.Name),
-		//	"access_key":                 aws.StringValue(description.EndpointConfiguration.AccessKey),
+		"url":                        aws.StringValue(description.EndpointConfiguration.Url),
+		"name":                       aws.StringValue(description.EndpointConfiguration.Name),
 		"role_arn":                   aws.StringValue(description.RoleARN),
 		"s3_backup_mode":             aws.StringValue(description.S3BackupMode),
 		"request_configuration":      flattenRequestConfiguration(description.RequestConfiguration),
-		"buffering_hints":            flattenBufferingHints(description.BufferingHints),
 		"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
-		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, ""),
+		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
 	}
 
 	if description.RetryOptions != nil {
 		m["retry_duration"] = int(aws.Int64Value(description.RetryOptions.DurationInSeconds))
 	}
 
+	if description.BufferingHints != nil {
+		m["buffering_interval"] = int(aws.Int64Value(description.BufferingHints.IntervalInSeconds))
+		m["buffering_size"] = int(aws.Int64Value(description.BufferingHints.SizeInMBs))
+	}
+
 	return []map[string]interface{}{m}
-}
-
-func flattenBufferingHints(bh *firehose.HttpEndpointBufferingHints) []interface{} {
-	if bh == nil {
-		return []interface{}{}
-	}
-
-	BufferingHints := map[string]interface{}{
-		"size_in_mb":          aws.Int64Value(bh.SizeInMBs),
-		"interval_in_seconds": aws.Int64Value(bh.IntervalInSeconds),
-	}
-	return []interface{}{BufferingHints}
-}
-
-func flattenRequestConfiguration(rc *firehose.HttpEndpointRequestConfiguration) []interface{} {
-	if rc == nil {
-		return []interface{}{}
-	}
-
-	attributes := make([]interface{}, len(rc.CommonAttributes))
-	for _, params := range rc.CommonAttributes {
-		name := aws.StringValue(params.AttributeName)
-		value := aws.StringValue(params.AttributeValue)
-
-		attributes = append(attributes, map[string]interface{}{
-			"attribute_name":  name,
-			"attribute_value": value,
-		})
-	}
-
-	RequestConfiguration := map[string]interface{}{
-		"attributes":       attributes,
-		"content_encoding": aws.StringValue(rc.ContentEncoding),
-	}
-
-	return []interface{}{RequestConfiguration}
 }
 
 func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
@@ -928,6 +895,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 					firehoseDestinationTypeRedshift,
 					firehoseDestinationTypeElasticsearch,
 					firehoseDestinationTypeSplunk,
+					firehoseDestinationTypeHttpEndpoint,
 				}, false),
 			},
 
@@ -1482,7 +1450,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 				},
 			},
 
-			"HttpEndpoint_configuration": {
+			"http_endpoint_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -1499,22 +1467,21 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 
 						"name": {
 							Type:     schema.TypeString,
-							Required: false,
+							Optional: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 256),
-								validation.StringMatch(regexp.MustCompile(`^(?!\s*$).+$`), ""),
 							),
 						},
 
-						"access_key ": {
+						"access_key": {
 							Type:         schema.TypeString,
-							Required:     false,
+							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 4096),
 						},
 
-						"role_arn ": {
+						"role_arn": {
 							Type:         schema.TypeString,
-							Required:     false,
+							Optional:     true,
 							ValidateFunc: validateArn,
 						},
 
@@ -1532,9 +1499,21 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 							ValidateFunc: validation.IntBetween(0, 7200),
 						},
 
-						"request_configuration": requestConfigurationSchema(),
+						"buffering_interval": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      300,
+							ValidateFunc: validation.IntBetween(60, 900),
+						},
 
-						"buffering_hints_options": bufferingHintsOptionsSchema(),
+						"buffering_size": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      5,
+							ValidateFunc: validation.IntBetween(1, 100),
+						},
+
+						"request_configuration": requestConfigurationSchema(),
 
 						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
 
@@ -2280,9 +2259,15 @@ func createHttpEndpointConfig(d *schema.ResourceData, s3Config *firehose.S3Desti
 
 	configuration.EndpointConfiguration = extractHttpEndpointConfiguration(HttpEndpoint)
 
-	if _, ok := HttpEndpoint["buffering_hints"]; ok {
-		configuration.BufferingHints = extractHttpEndpointBufferingHints(HttpEndpoint)
+	bufferingHints := &firehose.HttpEndpointBufferingHints{}
+
+	if bufferingInterval, ok := HttpEndpoint["buffering_interval"].(int); ok {
+		bufferingHints.IntervalInSeconds = aws.Int64(int64(bufferingInterval))
 	}
+	if bufferingSize, ok := HttpEndpoint["buffering_size"].(int); ok {
+		bufferingHints.SizeInMBs = aws.Int64(int64(bufferingSize))
+	}
+	configuration.BufferingHints = bufferingHints
 
 	if _, ok := HttpEndpoint["processing_configuration"]; ok {
 		configuration.ProcessingConfiguration = extractProcessingConfiguration(HttpEndpoint)
@@ -2318,9 +2303,15 @@ func updateHttpEndpointConfig(d *schema.ResourceData, s3Update *firehose.S3Desti
 
 	configuration.EndpointConfiguration = extractHttpEndpointConfiguration(HttpEndpoint)
 
-	if _, ok := HttpEndpoint["buffering_hints"]; ok {
-		configuration.BufferingHints = extractHttpEndpointBufferingHints(HttpEndpoint)
+	bufferingHints := &firehose.HttpEndpointBufferingHints{}
+
+	if bufferingInterval, ok := HttpEndpoint["buffering_interval"].(int); ok {
+		bufferingHints.IntervalInSeconds = aws.Int64(int64(bufferingInterval))
 	}
+	if bufferingSize, ok := HttpEndpoint["buffering_size"].(int); ok {
+		bufferingHints.SizeInMBs = aws.Int64(int64(bufferingSize))
+	}
+	configuration.BufferingHints = bufferingHints
 
 	if _, ok := HttpEndpoint["processing_configuration"]; ok {
 		configuration.ProcessingConfiguration = extractProcessingConfiguration(HttpEndpoint)
@@ -2341,64 +2332,40 @@ func updateHttpEndpointConfig(d *schema.ResourceData, s3Update *firehose.S3Desti
 	return configuration, nil
 }
 
-func extractCommonAttributes(ca map[string]interface{}) *firehose.HttpEndpointCommonAttribute {
-	CommonAttributes := &firehose.HttpEndpointCommonAttribute{}
+func extractCommonAttributes(ca []interface{}) []*firehose.HttpEndpointCommonAttribute {
+	CommonAttributes := make([]*firehose.HttpEndpointCommonAttribute, 0, len(ca))
 
-	if contentEncoding, ok := ca["content_encoding"]; ok {
-		CommonAttributes.ContentEncoding = aws.String(contentEncoding.(string))
-	}
+	for _, raw := range ca {
+		data := raw.(map[string]interface{})
 
-	if commonAttributes, ok := ca["common_attributes"]; ok {
-		CommonAttributes.CommonAttributes = extractCommonAttributes(commonAttributes)
+		a := &firehose.HttpEndpointCommonAttribute{
+			AttributeName:  aws.String(data["name"].(string)),
+			AttributeValue: aws.String(data["value"].(string)),
+		}
+		CommonAttributes = append(CommonAttributes, a)
 	}
 
 	return CommonAttributes
 }
-/*
-func expandAwsCloudTrailEventSelector(configured []interface{}) []*cloudtrail.EventSelector {
-	eventSelectors := make([]*cloudtrail.EventSelector, 0, len(configured))
-
-	for _, raw := range configured {
-		data := raw.(map[string]interface{})
-		dataResources := expandAwsCloudTrailEventSelectorDataResource(data["data_resource"].([]interface{}))
-
-		es := &cloudtrail.EventSelector{
-			IncludeManagementEvents: aws.Bool(data["include_management_events"].(bool)),
-			ReadWriteType:           aws.String(data["read_write_type"].(string)),
-			DataResources:           dataResources,
-		}
-		eventSelectors = append(eventSelectors, es)
-	}
-
-	return eventSelectors
-}
-*/
 
 func extractRequestConfiguration(rc map[string]interface{}) *firehose.HttpEndpointRequestConfiguration {
+	config := rc["request_configuration"].([]interface{})
+	if len(config) == 0 {
+		return nil
+	}
+
+	requestConfig := config[0].(map[string]interface{})
 	RequestConfiguration := &firehose.HttpEndpointRequestConfiguration{}
 
-	if contentEncoding, ok := rc["content_encoding"]; ok {
+	if contentEncoding, ok := requestConfig["content_encoding"]; ok {
 		RequestConfiguration.ContentEncoding = aws.String(contentEncoding.(string))
 	}
 
-	if commonAttributes, ok := rc["common_attributes"]; ok {
-		RequestConfiguration.CommonAttributes = extractCommonAttributes(commonAttributes)
+	if commonAttributes, ok := requestConfig["common_attributes"]; ok {
+		RequestConfiguration.CommonAttributes = extractCommonAttributes(commonAttributes.([]interface{}))
 	}
 
 	return RequestConfiguration
-}
-
-func extractHttpEndpointBufferingHints(bh map[string]interface{}) *firehose.HttpEndpointBufferingHints {
-	bufferingHints := &firehose.HttpEndpointBufferingHints{}
-
-	if bufferingInterval, ok := bh["interval_in_seconds"].(int); ok {
-		bufferingHints.IntervalInSeconds = aws.Int64(int64(bufferingInterval))
-	}
-	if bufferingSize, ok := bh["size_in_mb"].(int); ok {
-		bufferingHints.SizeInMBs = aws.Int64(int64(bufferingSize))
-	}
-
-	return bufferingHints
 }
 
 func extractHttpEndpointConfiguration(ep map[string]interface{}) *firehose.HttpEndpointConfiguration {
