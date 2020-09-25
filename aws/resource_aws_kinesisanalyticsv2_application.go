@@ -18,6 +18,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/waiter"
 )
 
 var (
@@ -1026,12 +1027,13 @@ func resourceAwsKinesisAnalyticsV2ApplicationDelete(d *schema.ResourceData, meta
 	if isAWSErr(deleteErr, kinesisanalyticsv2.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
-	deleteErr = waitForDeleteKinesisAnalyticsV2Application(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-	if deleteErr != nil {
-		return fmt.Errorf("error waiting for deletion of Kinesis Analytics Application (%s): %s", d.Id(), deleteErr)
+
+	_, err := waiter.ApplicationDeleted(conn, name, d.Timeout(schema.TimeoutDelete))
+
+	if err != nil {
+		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) deletion: %w", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Kinesis Analytics Application deleted: %v", d.Id())
 	return nil
 }
 
@@ -2242,44 +2244,6 @@ func flattenKinesisAnalyticsV2ReferenceDataSources(dataSources []*kinesisanalyti
 	}
 
 	return s
-}
-
-func waitForDeleteKinesisAnalyticsV2Application(conn *kinesisanalyticsv2.KinesisAnalyticsV2, applicationId string, timeout time.Duration) error {
-	stateConf := resource.StateChangeConf{
-		Pending: []string{
-			kinesisanalyticsv2.ApplicationStatusRunning,
-			kinesisanalyticsv2.ApplicationStatusDeleting,
-		},
-		Target:  []string{""},
-		Timeout: timeout,
-		Refresh: refreshKinesisAnalyticsApplicationStatusV2(conn, applicationId),
-	}
-	application, err := stateConf.WaitForState()
-	if err != nil {
-		if isAWSErr(err, kinesisanalyticsv2.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
-	}
-	if application == nil {
-		return nil
-	}
-	return err
-}
-
-func refreshKinesisAnalyticsApplicationStatusV2(conn *kinesisanalyticsv2.KinesisAnalyticsV2, applicationId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := conn.DescribeApplication(&kinesisanalyticsv2.DescribeApplicationInput{
-			ApplicationName: aws.String(applicationId),
-		})
-		if err != nil {
-			return nil, "", err
-		}
-		application := output.ApplicationDetail
-		if application == nil {
-			return application, "", fmt.Errorf("Kinesis Analytics Application (%s) could not be found.", applicationId)
-		}
-		return application, aws.StringValue(application.ApplicationStatus), nil
-	}
 }
 
 func runtimeIsFlink(runtime string) bool {
