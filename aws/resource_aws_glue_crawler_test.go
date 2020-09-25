@@ -1762,7 +1762,7 @@ resource "aws_glue_connection" "test" {
 
   connection_type = "NETWORK"
 
-  name = "%s"
+  name = "%[1]s"
 
   physical_connection_requirements {
     availability_zone      = aws_subnet.test[0].availability_zone
@@ -1783,7 +1783,7 @@ resource "aws_glue_crawler" "test" {
     path       = "s3://bucket1"
   }
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccGlueCrawlerConfig_S3Target_Exclusions2(rName, exclusion1, exclusion2 string) string {
