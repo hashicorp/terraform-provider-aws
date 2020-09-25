@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
@@ -54,7 +53,7 @@ func TestAccAWSKinesisAnalyticsV2Application_disappears(t *testing.T) {
 				Config: testAccKinesisAnalyticsV2Application_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &application),
-					testAccCheckKinesisAnalyticsV2ApplicationDisappears(&application),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsKinesisAnalyticsV2Application(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -794,36 +793,6 @@ func testAccCheckKinesisAnalyticsV2ApplicationExists(n string, application *kine
 
 		return nil
 	}
-}
-
-func testAccCheckKinesisAnalyticsV2ApplicationDisappears(desc *kinesisanalyticsv2.ApplicationDetail) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
-		conn := testAccProvider.Meta().(*AWSClient).kinesisanalyticsv2conn
-		describeOpts := &kinesisanalyticsv2.DescribeApplicationInput{
-			ApplicationName: desc.ApplicationName,
-		}
-		deleteInput := &kinesisanalyticsv2.DeleteApplicationInput{
-			ApplicationName: desc.ApplicationName,
-			CreateTimestamp: desc.CreateTimestamp,
-		}
-		_, err := conn.DeleteApplication(deleteInput)
-		if err != nil {
-			return err
-		}
-		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-			resp, err := conn.DescribeApplication(describeOpts)
-			if err == nil {
-				if resp.ApplicationDetail != nil && *resp.ApplicationDetail.ApplicationStatus == kinesisanalyticsv2.ApplicationStatusDeleting {
-					return resource.RetryableError(fmt.Errorf("Application still exists"))
-				}
-			}
-			return nil
-		})
-
-		return err
-	}
-
 }
 
 func testAccPreCheckAWSKinesisAnalyticsV2(t *testing.T) {
