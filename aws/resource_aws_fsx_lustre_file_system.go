@@ -64,6 +64,10 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(1, 512000),
 			},
+			"mount_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"network_interface_ids": {
 				// As explained in https://docs.aws.amazon.com/fsx/latest/LustreGuide/mounting-on-premises.html, the first
 				// network_interface_id is the primary one, so ordering matters. Use TypeList instead of TypeSet to preserve it.
@@ -121,6 +125,13 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 					fsx.LustreDeploymentTypePersistent1,
 				}, false),
 			},
+			"kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
+			},
 			"per_unit_storage_throughput": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -152,6 +163,11 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 		LustreConfiguration: &fsx.CreateFileSystemLustreConfiguration{
 			DeploymentType: aws.String(d.Get("deployment_type").(string)),
 		},
+	}
+
+	//Applicable only for TypePersistent1
+	if v, ok := d.GetOk("kms_key_id"); ok {
+		input.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("automatic_backup_retention_days"); ok {
@@ -291,6 +307,11 @@ func resourceAwsFsxLustreFileSystemRead(d *schema.ResourceData, meta interface{}
 	d.Set("deployment_type", lustreConfig.DeploymentType)
 	if lustreConfig.PerUnitStorageThroughput != nil {
 		d.Set("per_unit_storage_throughput", lustreConfig.PerUnitStorageThroughput)
+	}
+	d.Set("mount_name", filesystem.LustreConfiguration.MountName)
+
+	if filesystem.KmsKeyId != nil {
+		d.Set("kms_key_id", filesystem.KmsKeyId)
 	}
 
 	if err := d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds)); err != nil {

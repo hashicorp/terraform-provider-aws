@@ -1226,15 +1226,15 @@ resource "aws_s3_bucket_object" "object" {
 func testAccAWSS3BucketObjectEtagEncryption(randInt int, source string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
-  bucket = "tf-object-test-bucket-%d"
+  bucket = "tf-object-test-bucket-%[1]d"
 }
 
 resource "aws_s3_bucket_object" "object" {
   bucket                 = aws_s3_bucket.object_bucket.bucket
   key                    = "test-key"
   server_side_encryption = "AES256"
-  source                 = %[1]q
-  etag                   = filemd5(%[1]q)
+  source                 = %[2]q
+  etag                   = filemd5(%[2]q)
 }
 `, randInt, source)
 }
@@ -1566,14 +1566,14 @@ func testAccAWSS3BucketObjectConfig_NonVersioned(randInt int, source string) str
 
 	return testAccProviderConfigAssumeRolePolicy(policy) + fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket_3" {
-  bucket = "tf-object-test-bucket-%d"
+  bucket = "tf-object-test-bucket-%[1]d"
 }
 
 resource "aws_s3_bucket_object" "object" {
   bucket = aws_s3_bucket.object_bucket_3.bucket
   key    = "updateable-key"
-  source = %[1]q
-  etag   = filemd5(%[1]q)
+  source = %[2]q
+  etag   = filemd5(%[2]q)
 }
 `, randInt, source)
 }

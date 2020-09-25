@@ -9,8 +9,7 @@ on:
       - .github/workflows/acctest-terraform-lint.yml
       - aws/core_acceptance_test.go
       - aws/data_source_aws_*_test.go
-      - aws/resource_aws_[a-g]*_test.go
-      - aws/resource_aws_[o-s]*_test.go
+      - aws/resource_aws_[a-s]*_test.go
 
 env:
   GO_VERSION: "1.14"
@@ -48,6 +47,13 @@ jobs:
             -o -name 'resource_aws_e*_test.go' \
             -o -name 'resource_aws_f*_test.go' \
             -o -name 'resource_aws_g*_test.go' \
+            -o -name 'resource_aws_h*_test.go' \
+            -o -name 'resource_aws_i*_test.go' \
+            -o -name 'resource_aws_j*_test.go' \
+            -o -name 'resource_aws_k*_test.go' \
+            -o -name 'resource_aws_l*_test.go' \
+            -o -name 'resource_aws_m*_test.go' \
+            -o -name 'resource_aws_n*_test.go' \
             -o -name 'resource_aws_o*_test.go' \
             -o -name 'resource_aws_p*_test.go' \
             -o -name 'resource_aws_q*_test.go' \
@@ -59,6 +65,8 @@ jobs:
             | grep -v resource_aws_dynamodb_table_test.go \
             | grep -v resource_aws_ecs_capacity_provider_test.go \
             | grep -v resource_aws_efs_file_system_test.go \
+            | grep -v resource_aws_kinesis_stream_test.go \
+            | grep -v resource_aws_kms_grant_test.go \
             | grep -v resource_aws_quicksight_user_test.go \
             | grep -v resource_aws_s3_bucket_object_test.go \
             | grep -v resource_aws_sns_platform_application_test.go \
@@ -94,6 +102,13 @@ jobs:
             -o -name 'resource_aws_e*_test.go' \
             -o -name 'resource_aws_f*_test.go' \
             -o -name 'resource_aws_g*_test.go' \
+            -o -name 'resource_aws_h*_test.go' \
+            -o -name 'resource_aws_i*_test.go' \
+            -o -name 'resource_aws_j*_test.go' \
+            -o -name 'resource_aws_k*_test.go' \
+            -o -name 'resource_aws_l*_test.go' \
+            -o -name 'resource_aws_m*_test.go' \
+            -o -name 'resource_aws_n*_test.go' \
             -o -name 'resource_aws_o*_test.go' \
             -o -name 'resource_aws_p*_test.go' \
             -o -name 'resource_aws_q*_test.go' \
@@ -106,6 +121,9 @@ jobs:
             | grep -v resource_aws_ecs_capacity_provider_test.go \
             | grep -v resource_aws_efs_file_system_test.go \
             | grep -v resource_aws_elasticache_cluster_test.go \
+            | grep -v resource_aws_kinesis_stream_test.go \
+            | grep -v resource_aws_kms_grant_test.go \
+            | grep -v resource_aws_lambda_permission_test.go \
             | grep -v resource_aws_quicksight_user_test.go \
             | grep -v resource_aws_s3_bucket_object_test.go \
             | grep -v resource_aws_sns_platform_application_test.go \

@@ -104,6 +104,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name to use for the route.
 * `mesh_name` - (Required) The name of the service mesh in which to create the route.
+* `mesh_owner` - (Optional) The AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `virtual_router_name` - (Required) The name of the virtual router in which to create the route.
 * `spec` - (Required) The route specification to apply.
 * `tags` - (Optional) A map of tags to assign to the resource.
@@ -169,6 +170,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the route.
 * `created_date` - The creation date of the route.
 * `last_updated_date` - The last update date of the route.
+* `resource_owner` - The resource owner's AWS account ID.
 
 ## Import
 
@@ -178,3 +180,5 @@ e.g.
 ```
 $ terraform import aws_appmesh_virtual_route.serviceb simpleapp/serviceB/serviceB-route
 ```
+
+[1]: /docs/providers/aws/index.html

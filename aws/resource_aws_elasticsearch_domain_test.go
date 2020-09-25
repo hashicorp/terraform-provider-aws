@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -570,7 +571,7 @@ func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_Disabled(t *testing.T
 	})
 }
 
-func TestAccAWSElasticSearchDomain_LogPublishingOptions(t *testing.T) {
+func TestAccAWSElasticSearchDomain_LogPublishingOptions_IndexSlowLogs(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 	resourceId := fmt.Sprintf("tf-test-%d", ri)
@@ -582,9 +583,106 @@ func TestAccAWSElasticSearchDomain_LogPublishingOptions(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainConfig_LogPublishingOptions(ri),
+				Config: testAccESDomainConfig_LogPublishingOptions(ri, elasticsearch.LogTypeIndexSlowLogs),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
+						"log_type": elasticsearch.LogTypeIndexSlowLogs,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     resourceId,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticSearchDomain_LogPublishingOptions_SearchSlowLogs(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+	resourceId := fmt.Sprintf("tf-test-%d", ri)
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_LogPublishingOptions(ri, elasticsearch.LogTypeSearchSlowLogs),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
+						"log_type": elasticsearch.LogTypeSearchSlowLogs,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     resourceId,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticSearchDomain_LogPublishingOptions_EsApplicationLogs(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+	resourceId := fmt.Sprintf("tf-test-%d", ri)
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_LogPublishingOptions(ri, elasticsearch.LogTypeEsApplicationLogs),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
+						"log_type": elasticsearch.LogTypeEsApplicationLogs,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     resourceId,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticSearchDomain_LogPublishingOptions_AuditLogs(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+	resourceId := fmt.Sprintf("tf-test-%d", ri)
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_LogPublishingOptions(ri, elasticsearch.LogTypeAuditLogs),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
+						"log_type": elasticsearch.LogTypeAuditLogs,
+					}),
 				),
 			},
 			{
@@ -2071,17 +2169,17 @@ resource "aws_elasticsearch_domain" "test" {
 `, domainName)
 }
 
-func testAccESDomainConfig_LogPublishingOptions(randInt int) string {
+func testAccESDomain_LogPublishingOptions_BaseConfig(randInt int) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {
 }
 
 resource "aws_cloudwatch_log_group" "test" {
-  name = "tf-test-%d"
+  name = "tf-test-%[1]d"
 }
 
 resource "aws_cloudwatch_log_resource_policy" "example" {
-  policy_name = "tf-cwlp-%d"
+  policy_name = "tf-cwlp-%[1]d"
 
   policy_document = <<CONFIG
 {
@@ -2103,21 +2201,53 @@ resource "aws_cloudwatch_log_resource_policy" "example" {
 }
 CONFIG
 }
+`, randInt)
+}
 
+func testAccESDomainConfig_LogPublishingOptions(randInt int, logType string) string {
+	var auditLogsConfig string
+	if logType == elasticsearch.LogTypeAuditLogs {
+		auditLogsConfig = `
+	  	advanced_security_options {
+			enabled                        = true
+			internal_user_database_enabled = true
+			master_user_options {
+			  master_user_name     = "testmasteruser"
+			  master_user_password = "Barbarbarbar1!"
+			}
+	  	}
+	
+		domain_endpoint_options {
+	  		enforce_https       = true
+	  		tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+		}
+	
+		encrypt_at_rest {
+			enabled = true
+		}
+	
+		node_to_node_encryption {
+			enabled = true
+		}`
+	}
+	return composeConfig(testAccESDomain_LogPublishingOptions_BaseConfig(randInt), fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = "tf-test-%d"
+  domain_name           = "tf-test-%d"
+  elasticsearch_version = "7.1" # needed for ESApplication/Audit Log Types
 
   ebs_options {
     ebs_enabled = true
     volume_size = 10
   }
 
+    %s
+
   log_publishing_options {
-    log_type                 = "INDEX_SLOW_LOGS"
+    log_type                 = "%s"
     cloudwatch_log_group_arn = aws_cloudwatch_log_group.test.arn
   }
 }
-`, randInt, randInt, randInt)
+`, randInt, auditLogsConfig, logType))
 }
 
 func testAccESDomainConfig_CognitoOptions(randInt int, includeCognitoOptions bool) string {
@@ -2140,16 +2270,16 @@ data "aws_partition" "current" {
 }
 
 resource "aws_cognito_user_pool" "example" {
-  name = "tf-test-%d"
+  name = "tf-test-%[1]d"
 }
 
 resource "aws_cognito_user_pool_domain" "example" {
-  domain       = "tf-test-%d"
+  domain       = "tf-test-%[1]d"
   user_pool_id = aws_cognito_user_pool.example.id
 }
 
 resource "aws_cognito_identity_pool" "example" {
-  identity_pool_name               = "tf_test_%d"
+  identity_pool_name               = "tf_test_%[1]d"
   allow_unauthenticated_identities = false
 
   lifecycle {
@@ -2158,7 +2288,7 @@ resource "aws_cognito_identity_pool" "example" {
 }
 
 resource "aws_iam_role" "example" {
-  name               = "tf-test-%d"
+  name               = "tf-test-%[1]d"
   path               = "/service-role/"
   assume_role_policy = data.aws_iam_policy_document.assume-role-policy.json
 }
@@ -2182,7 +2312,7 @@ resource "aws_iam_role_policy_attachment" "example" {
 }
 
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = "tf-test-%d"
+  domain_name = "tf-test-%[1]d"
 
   elasticsearch_version = "6.0"
 
@@ -2198,5 +2328,5 @@ resource "aws_elasticsearch_domain" "test" {
     aws_iam_role_policy_attachment.example,
   ]
 }
-`, randInt, randInt, randInt, randInt, randInt, cognitoOptions)
+`, randInt, cognitoOptions)
 }

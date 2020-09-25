@@ -202,6 +202,7 @@ func Provider() *schema.Provider {
 			"aws_db_snapshot":                                dataSourceAwsDbSnapshot(),
 			"aws_db_subnet_group":                            dataSourceAwsDbSubnetGroup(),
 			"aws_directory_service_directory":                dataSourceAwsDirectoryServiceDirectory(),
+			"aws_docdb_engine_version":                       dataSourceAwsDocdbEngineVersion(),
 			"aws_docdb_orderable_db_instance":                dataSourceAwsDocdbOrderableDbInstance(),
 			"aws_dx_gateway":                                 dataSourceAwsDxGateway(),
 			"aws_dynamodb_table":                             dataSourceAwsDynamoDbTable(),
@@ -287,6 +288,7 @@ func Provider() *schema.Provider {
 			"aws_msk_configuration":                          dataSourceAwsMskConfiguration(),
 			"aws_nat_gateway":                                dataSourceAwsNatGateway(),
 			"aws_neptune_orderable_db_instance":              dataSourceAwsNeptuneOrderableDbInstance(),
+			"aws_neptune_engine_version":                     dataSourceAwsNeptuneEngineVersion(),
 			"aws_network_acls":                               dataSourceAwsNetworkAcls(),
 			"aws_network_interface":                          dataSourceAwsNetworkInterface(),
 			"aws_network_interfaces":                         dataSourceAwsNetworkInterfaces(),
@@ -304,6 +306,7 @@ func Provider() *schema.Provider {
 			"aws_qldb_ledger":                                dataSourceAwsQLDBLedger(),
 			"aws_ram_resource_share":                         dataSourceAwsRamResourceShare(),
 			"aws_rds_cluster":                                dataSourceAwsRdsCluster(),
+			"aws_rds_engine_version":                         dataSourceAwsRdsEngineVersion(),
 			"aws_rds_orderable_db_instance":                  dataSourceAwsRdsOrderableDbInstance(),
 			"aws_redshift_cluster":                           dataSourceAwsRedshiftCluster(),
 			"aws_redshift_service_account":                   dataSourceAwsRedshiftServiceAccount(),
@@ -359,6 +362,8 @@ func Provider() *schema.Provider {
 			"aws_wafv2_web_acl":                              dataSourceAwsWafv2WebACL(),
 			"aws_workspaces_bundle":                          dataSourceAwsWorkspacesBundle(),
 			"aws_workspaces_directory":                       dataSourceAwsWorkspacesDirectory(),
+			"aws_workspaces_image":                           dataSourceAwsWorkspacesImage(),
+
 			// Adding the Aliases for the ALB -> LB Rename
 			"aws_lb":               dataSourceAwsLb(),
 			"aws_alb":              dataSourceAwsLb(),
