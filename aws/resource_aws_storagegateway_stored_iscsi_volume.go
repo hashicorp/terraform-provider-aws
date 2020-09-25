@@ -195,20 +195,16 @@ func resourceAwsStorageGatewayStoredIscsiVolumeRead(d *schema.ResourceData, meta
 	arn := aws.StringValue(volume.VolumeARN)
 	d.Set("arn", arn)
 	d.Set("disk_id", volume.VolumeDiskId)
-	d.Set("snapshot_id", aws.StringValue(volume.SourceSnapshotId))
+	d.Set("snapshot_id", volume.SourceSnapshotId)
 	d.Set("volume_arn", arn)
-	d.Set("volume_id", aws.StringValue(volume.VolumeId))
+	d.Set("volume_id", volume.VolumeId)
 	d.Set("volume_type", volume.VolumeType)
-	d.Set("volume_size_in_bytes", int(aws.Int64Value(volume.VolumeSizeInBytes)))
+	d.Set("volume_size_in_bytes", volume.VolumeSizeInBytes)
 	d.Set("volume_status", volume.VolumeStatus)
 	d.Set("volume_attachment_status", volume.VolumeAttachmentStatus)
 	d.Set("preserve_existing_data", volume.PreservedExistingData)
 	d.Set("kms_key", volume.KMSKey)
-	if volume.KMSKey != nil {
-		d.Set("kms_encrypted", true)
-	} else {
-		d.Set("kms_encrypted", false)
-	}
+	d.Set("kms_encrypted", volume.KMSKey != nil)
 
 	tags, err := keyvaluetags.StoragegatewayListTags(conn, arn)
 	if err != nil {
@@ -218,22 +214,21 @@ func resourceAwsStorageGatewayStoredIscsiVolumeRead(d *schema.ResourceData, meta
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	if volume.VolumeiSCSIAttributes != nil {
-		d.Set("chap_enabled", aws.BoolValue(volume.VolumeiSCSIAttributes.ChapEnabled))
-		d.Set("lun_number", int(aws.Int64Value(volume.VolumeiSCSIAttributes.LunNumber)))
-		d.Set("network_interface_id", aws.StringValue(volume.VolumeiSCSIAttributes.NetworkInterfaceId))
-		d.Set("network_interface_port", int(aws.Int64Value(volume.VolumeiSCSIAttributes.NetworkInterfacePort)))
+	attr := volume.VolumeiSCSIAttributes
+	d.Set("chap_enabled", attr.ChapEnabled)
+	d.Set("lun_number", attr.LunNumber)
+	d.Set("network_interface_id", attr.NetworkInterfaceId)
+	d.Set("network_interface_port", attr.NetworkInterfacePort)
 
-		targetARN := aws.StringValue(volume.VolumeiSCSIAttributes.TargetARN)
-		d.Set("target_arn", targetARN)
+	targetARN := aws.StringValue(attr.TargetARN)
+	d.Set("target_arn", targetARN)
 
-		gatewayARN, targetName, err := parseStorageGatewayVolumeGatewayARNAndTargetNameFromARN(targetARN)
-		if err != nil {
-			return fmt.Errorf("error parsing Storage Gateway volume gateway ARN and target name from target ARN %q: %w", targetARN, err)
-		}
-		d.Set("gateway_arn", gatewayARN)
-		d.Set("target_name", targetName)
+	gatewayARN, targetName, err := parseStorageGatewayVolumeGatewayARNAndTargetNameFromARN(targetARN)
+	if err != nil {
+		return fmt.Errorf("error parsing Storage Gateway volume gateway ARN and target name from target ARN %q: %w", targetARN, err)
 	}
+	d.Set("gateway_arn", gatewayARN)
+	d.Set("target_name", targetName)
 
 	return nil
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSStorageGatewayStoredIscsiVolume_Basic(t *testing.T) {
+func TestAccAWSStorageGatewayStoredIscsiVolume_basic(t *testing.T) {
 	var storedIscsiVolume storagegateway.StorediSCSIVolume
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
@@ -37,10 +37,11 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "snapshot_id", ""),
 					testAccMatchResourceAttrRegionalARN(resourceName, "target_arn", "storagegateway", regexp.MustCompile(fmt.Sprintf(`gateway/sgw-.+/target/iqn.1997-05.com.amazon:%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "target_name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "volume_id", "aws_ebs_volume.test", "id"),
+					resource.TestMatchResourceAttr(resourceName, "volume_id", regexp.MustCompile(`^vol-+`)),
 					testAccMatchResourceAttrRegionalARN(resourceName, "volume_arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.`)),
 					resource.TestCheckResourceAttr(resourceName, "volume_size_in_bytes", "10737418240"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "false"),
 				),
 			},
 			{
@@ -80,7 +81,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_kms(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayStoredIscsiVolume_Tags(t *testing.T) {
+func TestAccAWSStorageGatewayStoredIscsiVolume_tags(t *testing.T) {
 	var storedIscsiVolume storagegateway.StorediSCSIVolume
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
@@ -127,7 +128,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayStoredIscsiVolume_SnapshotId(t *testing.T) {
+func TestAccAWSStorageGatewayStoredIscsiVolume_snapshotId(t *testing.T) {
 	var storedIscsiVolume storagegateway.StorediSCSIVolume
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
@@ -150,7 +151,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_SnapshotId(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "snapshot_id", "aws_ebs_snapshot.test", "id"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "target_arn", "storagegateway", regexp.MustCompile(fmt.Sprintf(`gateway/sgw-.+/target/iqn.1997-05.com.amazon:%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "target_name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "volume_id", "aws_ebs_volume.test", "id"),
+					resource.TestMatchResourceAttr(resourceName, "volume_id", regexp.MustCompile(`^vol-+`)),
 					testAccMatchResourceAttrRegionalARN(resourceName, "volume_arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.`)),
 					resource.TestCheckResourceAttr(resourceName, "volume_size_in_bytes", "10737418240"),
 				),
@@ -252,6 +253,33 @@ func testAccCheckAWSStorageGatewayStoredIscsiVolumeDestroy(s *terraform.State) e
 
 func testAccAWSStorageGatewayStoredIscsiVolumeConfigBase(rName string) string {
 	return testAccAWSStorageGatewayGatewayConfig_GatewayType_Stored(rName) + fmt.Sprintf(`
+resource "aws_ebs_volume" "buffer" {
+  availability_zone = aws_instance.test.availability_zone
+  size              = 10
+  type              = "gp2"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_volume_attachment" "buffer" {
+  device_name  = "/dev/xvdc"
+  force_detach = true
+  instance_id  = aws_instance.test.id
+  volume_id    = aws_ebs_volume.buffer.id
+}
+
+data "aws_storagegateway_local_disk" "buffer" {
+  disk_node   = aws_volume_attachment.buffer.device_name
+  gateway_arn = aws_storagegateway_gateway.test.arn
+}
+
+resource "aws_storagegateway_working_storage" "buffer" {
+  disk_id     = data.aws_storagegateway_local_disk.buffer.id
+  gateway_arn = aws_storagegateway_gateway.test.arn
+}
+
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
   size              = 10
@@ -263,14 +291,14 @@ resource "aws_ebs_volume" "test" {
 }
 
 resource "aws_volume_attachment" "test" {
-  device_name  = "/dev/xvdc"
+  device_name  = "/dev/xvdb"
   force_detach = true
   instance_id  = aws_instance.test.id
   volume_id    = aws_ebs_volume.test.id
 }
 
 data "aws_storagegateway_local_disk" "test" {
-  disk_path   = aws_volume_attachment.test.device_name
+  disk_node   = aws_volume_attachment.test.device_name
   gateway_arn = aws_storagegateway_gateway.test.arn
 }
 `, rName)
@@ -283,7 +311,7 @@ resource "aws_storagegateway_stored_iscsi_volume" "test" {
   network_interface_id   = aws_instance.test.private_ip
   target_name            = %[1]q
   preserve_existing_data = false
-  disk_id                = data.aws_storagegateway_local_disk.test.id
+  disk_id                = data.aws_storagegateway_local_disk.test.disk_id
 }
 `, rName)
 }
