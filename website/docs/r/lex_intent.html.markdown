@@ -273,6 +273,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 
 The following attributes are exported in addition to the arguments listed above:
 
+* `arn` - The ARN of the Lex intent.
 * `checksum` - Checksum identifying the version of the intent that was created. The checksum is not
 included as an argument because the resource will add it automatically when updating the intent.
 * `created_date` - The date when the intent version was created.

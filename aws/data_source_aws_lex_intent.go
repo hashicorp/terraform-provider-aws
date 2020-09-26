@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -16,6 +17,10 @@ func dataSourceAwsLexIntent() *schema.Resource {
 		Read: dataSourceAwsLexIntentRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"checksum": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -66,8 +71,17 @@ func dataSourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error 
 		Version: aws.String(d.Get("version").(string)),
 	})
 	if err != nil {
-		return fmt.Errorf("error getting intent %s: %s", intentName, err)
+		return fmt.Errorf("error getting intent %s: %w", intentName, err)
 	}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "lex",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("intent:%s", d.Get("name").(string)),
+	}
+	d.Set("arn", arn.String())
 
 	d.Set("checksum", resp.Checksum)
 	d.Set("created_date", resp.CreatedDate.Format(time.RFC3339))
