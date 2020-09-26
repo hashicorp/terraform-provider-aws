@@ -12,13 +12,13 @@ Provides a resource to control the association of a Service Catalog Product with
 
 This is necessary for a product to be provisioned, as it must be in at least one portfolio.
 
-In most cases this is simple and straightforward. 
-However, there are some pathological edge cases that can arise 
-as the association is not an identifiable resource in the usual sense. 
+In most cases this is simple and straightforward.
+However, there are some pathological edge cases that can arise
+as the association is not an identifiable resource in the usual sense.
 For instance if an association between a given portfolio and product were created twice,
-with two instances in Terraform, and then one of them is deleted, 
+with two instances in Terraform, and then one of them is deleted,
 there would be one instance remaining in Terraform but
-the association be absent in AWS until the remaining Terraform instance is re-applied.   
+the association be absent in AWS until the remaining Terraform instance is re-applied.
 
 
 ## Example Usage
@@ -47,7 +47,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Service Catalog Portfolio-Product Associations can be imported using the ID constructed 
+Service Catalog Portfolio-Product Associations can be imported using the ID constructed
 from the portfolio and product ids, e.g.
 
 ```
