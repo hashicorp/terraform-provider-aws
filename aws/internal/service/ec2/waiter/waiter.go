@@ -73,9 +73,9 @@ func ClientVpnEndpointDeleted(conn *ec2.EC2, id string) (*ec2.ClientVpnEndpoint,
 }
 
 const (
-	ClientVpnAuthorizationRuleActiveTimeout = 5 * time.Minute
+	ClientVpnAuthorizationRuleActiveTimeout = 10 * time.Minute
 
-	ClientVpnAuthorizationRuleRevokedTimeout = 5 * time.Minute
+	ClientVpnAuthorizationRuleRevokedTimeout = 10 * time.Minute
 )
 
 func ClientVpnAuthorizationRuleAuthorized(conn *ec2.EC2, authorizationRuleID string) (*ec2.AuthorizationRule, error) {
