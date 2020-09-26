@@ -17,8 +17,8 @@ func dataSourceAwsidentityStoreUser() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"identity_store_id": {
-				Type:         schema.TypeString,
-				Required:     true,
+				Type:     schema.TypeString,
+				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]*$`), "must match [a-zA-Z0-9-]"),
@@ -37,7 +37,7 @@ func dataSourceAwsidentityStoreUser() *schema.Resource {
 			},
 
 			"user_name": {
-				Type:     schema.TypeString,
+				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"user_id"},

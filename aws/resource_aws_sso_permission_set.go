@@ -54,9 +54,9 @@ func resourceAwsSsoPermissionSet() *schema.Resource {
 			},
 
 			"instance_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(10, 1224),
 					validation.StringMatch(regexp.MustCompile(`^arn:aws:sso:::instance/(sso)?ins-[a-zA-Z0-9-.]{16}$`), "must match arn:aws:sso:::instance/(sso)?ins-[a-zA-Z0-9-.]{16}"),
@@ -64,9 +64,9 @@ func resourceAwsSsoPermissionSet() *schema.Resource {
 			},
 
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 32),
 					validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]+$`), "must match [\\w+=,.@-]"),
@@ -83,8 +83,8 @@ func resourceAwsSsoPermissionSet() *schema.Resource {
 			},
 
 			"session_duration": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 
@@ -107,8 +107,8 @@ func resourceAwsSsoPermissionSet() *schema.Resource {
 			"managed_policies": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
 					ValidateFunc: validateArn,
 				},
 			},
