@@ -1,14 +1,16 @@
 package aws
 
 import (
-	"fmt"
-	"log"
-	"sort"
-	"time"
+	// "fmt"
+	// "log"
+	// "sort"
+	// "time"
+	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/identitystore"
+	// "github.com/aws/aws-sdk-go/aws"
+	// "github.com/aws/aws-sdk-go/service/identitystore"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func dataSourceAwsidentityStoreGroup() *schema.Resource {
@@ -51,7 +53,7 @@ func dataSourceAwsidentityStoreGroup() *schema.Resource {
 }
 
 func dataSourceAwsidentityStoreGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).identitystoreconn
+	// conn := meta.(*AWSClient).identitystoreconn
 	// TODO
 	return nil
 }

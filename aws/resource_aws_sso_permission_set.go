@@ -1,16 +1,17 @@
 package aws
 
 import (
-	"fmt"
-	"log"
-	"time"
+	// "fmt"
+	// "log"
+	// "time"
+	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	// "github.com/aws/aws-sdk-go/aws"
+	// "github.com/aws/aws-sdk-go/service/ssoadmin"
+	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	// "github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsSsoPermissionSet() *schema.Resource {
@@ -119,26 +120,26 @@ func resourceAwsSsoPermissionSet() *schema.Resource {
 }
 
 func resourceAwsSsoPermissionSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	// conn := meta.(*AWSClient).ssoadminconn
 	// TODO
 	// d.SetId(*resp.PermissionSetArn)
 	return resourceAwsSsoPermissionSetRead(d, meta)
 }
 
 func resourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	// conn := meta.(*AWSClient).ssoadminconn
 	// TODO
 	return nil
 }
 
 func resourceAwsSsoPermissionSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	// conn := meta.(*AWSClient).ssoadminconn
 	// TODO
 	return resourceAwsSsoPermissionSetRead(d, meta)
 }
 
 func resourceAwsSsoPermissionSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	// conn := meta.(*AWSClient).ssoadminconn
 	// TODO
 	return nil
 }

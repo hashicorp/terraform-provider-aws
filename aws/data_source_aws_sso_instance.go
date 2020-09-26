@@ -1,13 +1,13 @@
 package aws
 
 import (
-	"fmt"
-	"log"
-	"sort"
-	"time"
+	// "fmt"
+	// "log"
+	// "sort"
+	// "time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	// "github.com/aws/aws-sdk-go/aws"
+	// "github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -30,7 +30,7 @@ func dataSourceAwsSsoInstance() *schema.Resource {
 }
 
 func dataSourceAwsSsoInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	// conn := meta.(*AWSClient).ssoadminconn
 	// TODO
 	return nil
 }
