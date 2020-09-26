@@ -29,7 +29,7 @@ resource "aws_servicecatalog_provisioned_product" "test" {
 
 The following arguments are supported:
 
-* `notification_arns` - (Optional) SNS topic ARNs to which to publish stack-related events 
+* `notification_arns` - (Optional) SNS topic ARNs to which to publish stack-related events
 * `path_id` - (Optional) The path identifier of the product. This value is optional if the product has a default path, and required if the product has more than one path.
 * `product_id` - (Required) The product identifier
 * `provisioned_product_name` (Required) A user-friendly name for the provisioned product. This value must be unique for the AWS account and cannot be updated after the product is provisioned.
