@@ -87,10 +87,6 @@ func resourceAwsStorageGatewayStoredIscsiVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"volume_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"volume_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -196,7 +192,6 @@ func resourceAwsStorageGatewayStoredIscsiVolumeRead(d *schema.ResourceData, meta
 	d.Set("arn", arn)
 	d.Set("disk_id", volume.VolumeDiskId)
 	d.Set("snapshot_id", volume.SourceSnapshotId)
-	d.Set("volume_arn", arn)
 	d.Set("volume_id", volume.VolumeId)
 	d.Set("volume_type", volume.VolumeType)
 	d.Set("volume_size_in_bytes", volume.VolumeSizeInBytes)
