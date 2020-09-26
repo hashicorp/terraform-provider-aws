@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -145,11 +145,11 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 		params.EndpointConfiguration = expandApiGatewayEndpointConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("api_key_source"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("api_key_source"); ok {
 		params.ApiKeySource = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("policy"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("policy"); ok {
 		params.Policy = aws.String(v.(string))
 	}
 

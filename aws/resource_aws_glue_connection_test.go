@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -273,6 +273,29 @@ func TestAccAWSGlueConnection_PhysicalConnectionRequirements(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueConnection_disappears(t *testing.T) {
+	var connection glue.Connection
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueConnectionConfig_Required(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueConnection(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSGlueConnectionExists(resourceName string, connection *glue.Connection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -427,7 +450,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_security_group" "test" {
   name   = "%[1]s"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   ingress {
     from_port = 1
@@ -440,9 +463,9 @@ resource "aws_security_group" "test" {
 resource "aws_subnet" "test" {
   count = 2
 
-  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "terraform-testacc-glue-connection-base"
@@ -451,23 +474,23 @@ resource "aws_subnet" "test" {
 
 resource "aws_db_subnet_group" "test" {
   name       = "%[1]s"
-  subnet_ids = ["${aws_subnet.test.0.id}", "${aws_subnet.test.1.id}"]
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier              = "%[1]s"
   database_name                   = "gluedatabase"
   db_cluster_parameter_group_name = "default.aurora-mysql5.7"
-  db_subnet_group_name            = "${aws_db_subnet_group.test.name}"
+  db_subnet_group_name            = aws_db_subnet_group.test.name
   engine                          = "aurora-mysql"
   master_password                 = "gluepassword"
   master_username                 = "glueusername"
   skip_final_snapshot             = true
-  vpc_security_group_ids          = ["${aws_security_group.test.id}"]
+  vpc_security_group_ids          = [aws_security_group.test.id]
 }
 
 resource "aws_rds_cluster_instance" "test" {
-  cluster_identifier = "${aws_rds_cluster.test.id}"
+  cluster_identifier = aws_rds_cluster.test.id
   engine             = "aurora-mysql"
   identifier         = "%[1]s"
   instance_class     = "db.t2.medium"
@@ -476,16 +499,16 @@ resource "aws_rds_cluster_instance" "test" {
 resource "aws_glue_connection" "test" {
   connection_properties = {
     JDBC_CONNECTION_URL = "jdbc:mysql://${aws_rds_cluster.test.endpoint}/${aws_rds_cluster.test.database_name}"
-    PASSWORD            = "${aws_rds_cluster.test.master_password}"
-    USERNAME            = "${aws_rds_cluster.test.master_username}"
+    PASSWORD            = aws_rds_cluster.test.master_password
+    USERNAME            = aws_rds_cluster.test.master_username
   }
 
   name = "%[1]s"
 
   physical_connection_requirements {
-    availability_zone      = "${aws_subnet.test.0.availability_zone}"
-    security_group_id_list = ["${aws_security_group.test.id}"]
-    subnet_id              = "${aws_subnet.test.0.id}"
+    availability_zone      = aws_subnet.test[0].availability_zone
+    security_group_id_list = [aws_security_group.test.id]
+    subnet_id              = aws_subnet.test[0].id
   }
 }
 `, rName)
@@ -513,7 +536,7 @@ resource "aws_glue_connection" "test" {
     PASSWORD       = "testpassword"
     USERNAME       = "testusername"
   }
-  
+
   connection_type = "MONGODB"
 
   name = "%s"
@@ -525,9 +548,9 @@ func testAccAWSGlueConnectionConfig_Kafka(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_connection" "test" {
   connection_properties = {
-	KAFKA_BOOTSTRAP_SERVERS = "a.terraformtest.com:9094,b.terraformtest.com:9094"
+    KAFKA_BOOTSTRAP_SERVERS = "a.terraformtest.com:9094,b.terraformtest.com:9094"
   }
-  
+
   connection_type = "KAFKA"
 
   name = "%s"

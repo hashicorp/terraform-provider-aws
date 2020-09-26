@@ -2236,10 +2236,6 @@ func (c *RDS) CreateDBProxyRequest(input *CreateDBProxyInput) (req *request.Requ
 
 // CreateDBProxy API operation for Amazon Relational Database Service.
 //
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Creates a new DB proxy.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2608,11 +2604,12 @@ func (c *RDS) CreateEventSubscriptionRequest(input *CreateEventSubscriptionInput
 // or the SNS API. To obtain an ARN with SNS, you must create a topic in Amazon
 // SNS and subscribe to the topic. The ARN is displayed in the SNS console.
 //
-// You can specify the type of source (SourceType) you want to be notified of,
-// provide a list of RDS sources (SourceIds) that triggers the events, and provide
-// a list of event categories (EventCategories) for events you want to be notified
-// of. For example, you can specify SourceType = db-instance, SourceIds = mydbinstance1,
-// mydbinstance2 and EventCategories = Availability, Backup.
+// You can specify the type of source (SourceType) that you want to be notified
+// of and provide a list of RDS sources (SourceIds) that triggers the events.
+// You can also provide a list of event categories (EventCategories) for events
+// that you want to be notified of. For example, you can specify SourceType
+// = db-instance, SourceIds = mydbinstance1, mydbinstance2 and EventCategories
+// = Availability, Backup.
 //
 // If you specify both the SourceType and SourceIds, such as SourceType = db-instance
 // and SourceIdentifier = myDBInstance1, you are notified of all the db-instance
@@ -3645,10 +3642,6 @@ func (c *RDS) DeleteDBProxyRequest(input *DeleteDBProxyInput) (req *request.Requ
 
 // DeleteDBProxy API operation for Amazon Relational Database Service.
 //
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Deletes an existing proxy.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4319,10 +4312,6 @@ func (c *RDS) DeregisterDBProxyTargetsRequest(input *DeregisterDBProxyTargetsInp
 }
 
 // DeregisterDBProxyTargets API operation for Amazon Relational Database Service.
-//
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
 //
 // Remove the association between one or more DBProxyTarget data structures
 // and a DBProxyTargetGroup.
@@ -6560,10 +6549,6 @@ func (c *RDS) DescribeDBProxiesRequest(input *DescribeDBProxiesInput) (req *requ
 
 // DescribeDBProxies API operation for Amazon Relational Database Service.
 //
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Returns information about DB proxies.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -6701,10 +6686,6 @@ func (c *RDS) DescribeDBProxyTargetGroupsRequest(input *DescribeDBProxyTargetGro
 }
 
 // DescribeDBProxyTargetGroups API operation for Amazon Relational Database Service.
-//
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
 //
 // Returns information about DB proxy target groups, represented by DBProxyTargetGroup
 // data structures.
@@ -6851,10 +6832,6 @@ func (c *RDS) DescribeDBProxyTargetsRequest(input *DescribeDBProxyTargetsInput) 
 }
 
 // DescribeDBProxyTargets API operation for Amazon Relational Database Service.
-//
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
 //
 // Returns information about DBProxyTarget objects. This API supports pagination.
 //
@@ -7718,8 +7695,8 @@ func (c *RDS) DescribeEventCategoriesRequest(input *DescribeEventCategoriesInput
 //
 // Displays a list of categories for all event source types, or, if specified,
 // for a specified source type. You can see a list of the event categories and
-// source types in the Events (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Events.html)
-// topic in the Amazon RDS User Guide.
+// source types in Events (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Events.html)
+// in the Amazon RDS User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7940,9 +7917,10 @@ func (c *RDS) DescribeEventsRequest(input *DescribeEventsInput) (req *request.Re
 
 // DescribeEvents API operation for Amazon Relational Database Service.
 //
-// Returns events related to DB instances, DB security groups, DB snapshots,
-// and DB parameter groups for the past 14 days. Events specific to a particular
-// DB instance, DB security group, database snapshot, or DB parameter group
+// Returns events related to DB instances, DB clusters, DB parameter groups,
+// DB security groups, DB snapshots, and DB cluster snapshots for the past 14
+// days. Events specific to a particular DB instances, DB clusters, DB parameter
+// groups, DB security groups, DB snapshots, and DB cluster snapshots group
 // can be obtained by providing the name as a parameter. By default, the past
 // hour of events are returned.
 //
@@ -10658,6 +10636,12 @@ func (c *RDS) ModifyDBInstanceRequest(input *ModifyDBInstanceInput) (req *reques
 //
 //   * ErrCodeBackupPolicyNotFoundFault "BackupPolicyNotFoundFault"
 //
+//   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
+//   An error occurred accessing an AWS KMS key.
+//
+//   * ErrCodeInvalidDBClusterStateFault "InvalidDBClusterStateFault"
+//   The requested operation can't be performed while the cluster is in this state.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/ModifyDBInstance
 func (c *RDS) ModifyDBInstance(input *ModifyDBInstanceInput) (*ModifyDBInstanceOutput, error) {
 	req, out := c.ModifyDBInstanceRequest(input)
@@ -10825,10 +10809,6 @@ func (c *RDS) ModifyDBProxyRequest(input *ModifyDBProxyInput) (req *request.Requ
 
 // ModifyDBProxy API operation for Amazon Relational Database Service.
 //
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Changes the settings for an existing DB proxy.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -10915,10 +10895,6 @@ func (c *RDS) ModifyDBProxyTargetGroupRequest(input *ModifyDBProxyTargetGroupInp
 }
 
 // ModifyDBProxyTargetGroup API operation for Amazon Relational Database Service.
-//
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
 //
 // Modifies the properties of a DBProxyTargetGroup.
 //
@@ -11293,10 +11269,9 @@ func (c *RDS) ModifyEventSubscriptionRequest(input *ModifyEventSubscriptionInput
 // a subscription, use the AddSourceIdentifierToSubscription and RemoveSourceIdentifierFromSubscription
 // calls.
 //
-// You can see a list of the event categories for a given SourceType in the
-// Events (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Events.html)
-// topic in the Amazon RDS User Guide or by using the DescribeEventCategories
-// action.
+// You can see a list of the event categories for a given source type (SourceType)
+// in Events (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Events.html)
+// in the Amazon RDS User Guide or by using the DescribeEventCategories operation.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11911,10 +11886,6 @@ func (c *RDS) RegisterDBProxyTargetsRequest(input *RegisterDBProxyTargetsInput) 
 }
 
 // RegisterDBProxyTargets API operation for Amazon Relational Database Service.
-//
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
 //
 // Associate one or more DBProxyTarget data structures with a DBProxyTargetGroup.
 //
@@ -12655,10 +12626,10 @@ func (c *RDS) RestoreDBClusterFromS3Request(input *RestoreDBClusterFromS3Input) 
 
 // RestoreDBClusterFromS3 API operation for Amazon Relational Database Service.
 //
-// Creates an Amazon Aurora DB cluster from data stored in an Amazon S3 bucket.
-// Amazon RDS must be authorized to access the Amazon S3 bucket and the data
-// must be created using the Percona XtraBackup utility as described in Migrating
-// Data to an Amazon Aurora MySQL DB Cluster (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Migrating.html)
+// Creates an Amazon Aurora DB cluster from MySQL data stored in an Amazon S3
+// bucket. Amazon RDS must be authorized to access the Amazon S3 bucket and
+// the data must be created using the Percona XtraBackup utility as described
+// in Migrating Data from MySQL by Using an Amazon S3 Bucket (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Migrating.ExtMySQL.html#AuroraMySQL.Migrating.ExtMySQL.S3)
 // in the Amazon Aurora User Guide.
 //
 // This action only restores the DB cluster, not the DB instances for that DB
@@ -12670,7 +12641,8 @@ func (c *RDS) RestoreDBClusterFromS3Request(input *RestoreDBClusterFromS3Input) 
 // For more information on Amazon Aurora, see What Is Amazon Aurora? (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_AuroraOverview.html)
 // in the Amazon Aurora User Guide.
 //
-// This action only applies to Aurora DB clusters.
+// This action only applies to Aurora DB clusters. The source DB engine must
+// be MySQL.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -14389,8 +14361,13 @@ func (c *RDS) StopDBInstanceWithContext(ctx aws.Context, input *StopDBInstanceIn
 //    * EventSubscriptions - The number of event subscriptions per account.
 //    The used value is the count of the event subscriptions in the account.
 //
-//    * ManualSnapshots - The number of manual DB snapshots per account. The
-//    used value is the count of the manual DB snapshots in the account.
+//    * ManualClusterSnapshots - The number of manual DB cluster snapshots per
+//    account. The used value is the count of the manual DB cluster snapshots
+//    in the account.
+//
+//    * ManualSnapshots - The number of manual DB instance snapshots per account.
+//    The used value is the count of the manual DB instance snapshots in the
+//    account.
 //
 //    * OptionGroups - The number of DB option groups per account, excluding
 //    default option groups. The used value is the count of nondefault DB option
@@ -14620,17 +14597,23 @@ type AddSourceIdentifierToSubscriptionInput struct {
 	//
 	// Constraints:
 	//
-	//    * If the source type is a DB instance, then a DBInstanceIdentifier must
+	//    * If the source type is a DB instance, a DBInstanceIdentifier value must
 	//    be supplied.
 	//
-	//    * If the source type is a DB security group, a DBSecurityGroupName must
+	//    * If the source type is a DB cluster, a DBClusterIdentifier value must
 	//    be supplied.
 	//
-	//    * If the source type is a DB parameter group, a DBParameterGroupName must
+	//    * If the source type is a DB parameter group, a DBParameterGroupName value
+	//    must be supplied.
+	//
+	//    * If the source type is a DB security group, a DBSecurityGroupName value
+	//    must be supplied.
+	//
+	//    * If the source type is a DB snapshot, a DBSnapshotIdentifier value must
 	//    be supplied.
 	//
-	//    * If the source type is a DB snapshot, a DBSnapshotIdentifier must be
-	//    supplied.
+	//    * If the source type is a DB cluster snapshot, a DBClusterSnapshotIdentifier
+	//    value must be supplied.
 	//
 	// SourceIdentifier is a required field
 	SourceIdentifier *string `type:"string" required:"true"`
@@ -15609,10 +15592,6 @@ func (s *CloudwatchLogsExportConfiguration) SetEnableLogTypes(v []*string) *Clou
 	return s
 }
 
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Specifies the settings that control the size and behavior of the connection
 // pool associated with a DBProxyTargetGroup.
 type ConnectionPoolConfiguration struct {
@@ -15632,8 +15611,6 @@ type ConnectionPoolConfiguration struct {
 	// has identical settings such as time zone and character set. For multiple
 	// statements, use semicolons as the separator. You can also include multiple
 	// variables in a single SET statement, such as SET x=1, y=2.
-	//
-	// InitQuery is not currently supported for PostgreSQL.
 	//
 	// Default: no initialization query
 	InitQuery *string `type:"string"`
@@ -15708,10 +15685,6 @@ func (s *ConnectionPoolConfiguration) SetSessionPinningFilters(v []*string) *Con
 	return s
 }
 
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Displays the settings that control the size and behavior of the connection
 // pool associated with a DBProxyTarget.
 type ConnectionPoolConfigurationInfo struct {
@@ -15728,8 +15701,6 @@ type ConnectionPoolConfigurationInfo struct {
 	// is empty by default. For multiple statements, use semicolons as the separator.
 	// You can also include multiple variables in a single SET statement, such as
 	// SET x=1, y=2.
-	//
-	// InitQuery is not currently supported for PostgreSQL.
 	InitQuery *string `type:"string"`
 
 	// The maximum size of the connection pool for each target in a target group.
@@ -16872,7 +16843,9 @@ type CreateDBClusterEndpointOutput struct {
 	StaticMembers []*string `type:"list"`
 
 	// The current status of the endpoint. One of: creating, available, deleting,
-	// modifying.
+	// inactive, modifying. The inactive state applies to an endpoint that can't
+	// be used for a certain kind of cluster, such as a writer endpoint for a read-only
+	// secondary cluster in a global database.
 	Status *string `type:"string"`
 }
 
@@ -17934,6 +17907,9 @@ type CreateDBInstanceInput struct {
 	//
 	//    * Must contain 1 to 64 letters or numbers.
 	//
+	//    * Must begin with a letter. Subsequent characters can be letters, underscores,
+	//    or digits (0-9).
+	//
 	//    * Can't be a word reserved by the specified database engine
 	//
 	// MariaDB
@@ -17944,6 +17920,9 @@ type CreateDBInstanceInput struct {
 	// Constraints:
 	//
 	//    * Must contain 1 to 64 letters or numbers.
+	//
+	//    * Must begin with a letter. Subsequent characters can be letters, underscores,
+	//    or digits (0-9).
 	//
 	//    * Can't be a word reserved by the specified database engine
 	//
@@ -17957,8 +17936,8 @@ type CreateDBInstanceInput struct {
 	//
 	//    * Must contain 1 to 63 letters, numbers, or underscores.
 	//
-	//    * Must begin with a letter or an underscore. Subsequent characters can
-	//    be letters, underscores, or digits (0-9).
+	//    * Must begin with a letter. Subsequent characters can be letters, underscores,
+	//    or digits (0-9).
 	//
 	//    * Can't be a word reserved by the specified database engine
 	//
@@ -18028,18 +18007,10 @@ type CreateDBInstanceInput struct {
 	DeletionProtection *bool `type:"boolean"`
 
 	// The Active Directory directory ID to create the DB instance in. Currently,
-	// only Microsoft SQL Server and Oracle DB instances can be created in an Active
-	// Directory Domain.
+	// only MySQL, Microsoft SQL Server, Oracle, and PostgreSQL DB instances can
+	// be created in an Active Directory Domain.
 	//
-	// For Microsoft SQL Server DB instances, Amazon RDS can use Windows Authentication
-	// to authenticate users that connect to the DB instance. For more information,
-	// see Using Windows Authentication with an Amazon RDS DB Instance Running Microsoft
-	// SQL Server (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_SQLServerWinAuth.html)
-	// in the Amazon RDS User Guide.
-	//
-	// For Oracle DB instances, Amazon RDS can use Kerberos Authentication to authenticate
-	// users that connect to the DB instance. For more information, see Using Kerberos
-	// Authentication with Amazon RDS for Oracle (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-kerberos.html)
+	// For more information, see Kerberos Authentication (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/kerberos-authentication.html)
 	// in the Amazon RDS User Guide.
 	Domain *string `type:"string"`
 
@@ -18940,17 +18911,11 @@ type CreateDBInstanceReadReplicaInput struct {
 	// DestinationRegion is used for presigning the request to a given region.
 	DestinationRegion *string `type:"string"`
 
-	// The Active Directory directory ID to create the DB instance in.
+	// The Active Directory directory ID to create the DB instance in. Currently,
+	// only MySQL, Microsoft SQL Server, Oracle, and PostgreSQL DB instances can
+	// be created in an Active Directory Domain.
 	//
-	// For Oracle DB instances, Amazon RDS can use Kerberos Authentication to authenticate
-	// users that connect to the DB instance. For more information, see Using Kerberos
-	// Authentication with Amazon RDS for Oracle (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-kerberos.html)
-	// in the Amazon RDS User Guide.
-	//
-	// For Microsoft SQL Server DB instances, Amazon RDS can use Windows Authentication
-	// to authenticate users that connect to the DB instance. For more information,
-	// see Using Windows Authentication with an Amazon RDS DB Instance Running Microsoft
-	// SQL Server (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_SQLServerWinAuth.html)
+	// For more information, see Kerberos Authentication (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/kerberos-authentication.html)
 	// in the Amazon RDS User Guide.
 	Domain *string `type:"string"`
 
@@ -19121,6 +19086,22 @@ type CreateDBInstanceReadReplicaInput struct {
 	//
 	// For more information, see CreateDBInstance.
 	PubliclyAccessible *bool `type:"boolean"`
+
+	// The open mode of the replica database: mounted or read-only.
+	//
+	// This parameter is only supported for Oracle DB instances.
+	//
+	// Mounted DB replicas are included in Oracle Enterprise Edition. The main use
+	// case for mounted replicas is cross-Region disaster recovery. The primary
+	// database doesn't use Active Data Guard to transmit information to the mounted
+	// replica. Because it doesn't accept user connections, a mounted replica can't
+	// serve a read-only workload.
+	//
+	// You can create a combination of mounted and read-only DB replicas for the
+	// same primary DB instance. For more information, see Working with Oracle Read
+	// Replicas for Amazon RDS (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-read-replicas.html)
+	// in the Amazon RDS User Guide.
+	ReplicaMode *string `type:"string" enum:"ReplicaMode"`
 
 	// The identifier of the DB instance that will act as the source for the read
 	// replica. Each DB instance can have up to five read replicas.
@@ -19366,6 +19347,12 @@ func (s *CreateDBInstanceReadReplicaInput) SetProcessorFeatures(v []*ProcessorFe
 // SetPubliclyAccessible sets the PubliclyAccessible field's value.
 func (s *CreateDBInstanceReadReplicaInput) SetPubliclyAccessible(v bool) *CreateDBInstanceReadReplicaInput {
 	s.PubliclyAccessible = &v
+	return s
+}
+
+// SetReplicaMode sets the ReplicaMode field's value.
+func (s *CreateDBInstanceReadReplicaInput) SetReplicaMode(v string) *CreateDBInstanceReadReplicaInput {
+	s.ReplicaMode = &v
 	return s
 }
 
@@ -20047,11 +20034,10 @@ type CreateEventSubscriptionInput struct {
 	// not active.
 	Enabled *bool `type:"boolean"`
 
-	// A list of event categories for a SourceType that you want to subscribe to.
-	// You can see a list of the categories for a given SourceType in the Events
-	// (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Events.html)
-	// topic in the Amazon RDS User Guide or by using the DescribeEventCategories
-	// action.
+	// A list of event categories for a particular source type (SourceType) that
+	// you want to subscribe to. You can see a list of the categories for a given
+	// source type in Events (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Events.html)
+	// in the Amazon RDS User Guide or by using the DescribeEventCategories operation.
 	EventCategories []*string `locationNameList:"EventCategory" type:"list"`
 
 	// The Amazon Resource Name (ARN) of the SNS topic created for event notification.
@@ -20068,24 +20054,30 @@ type CreateEventSubscriptionInput struct {
 	//
 	// Constraints:
 	//
-	//    * If SourceIds are supplied, SourceType must also be provided.
+	//    * If a SourceIds value is supplied, SourceType must also be provided.
 	//
-	//    * If the source type is a DB instance, then a DBInstanceIdentifier must
+	//    * If the source type is a DB instance, a DBInstanceIdentifier value must
 	//    be supplied.
 	//
-	//    * If the source type is a DB security group, a DBSecurityGroupName must
+	//    * If the source type is a DB cluster, a DBClusterIdentifier value must
 	//    be supplied.
 	//
-	//    * If the source type is a DB parameter group, a DBParameterGroupName must
+	//    * If the source type is a DB parameter group, a DBParameterGroupName value
+	//    must be supplied.
+	//
+	//    * If the source type is a DB security group, a DBSecurityGroupName value
+	//    must be supplied.
+	//
+	//    * If the source type is a DB snapshot, a DBSnapshotIdentifier value must
 	//    be supplied.
 	//
-	//    * If the source type is a DB snapshot, a DBSnapshotIdentifier must be
-	//    supplied.
+	//    * If the source type is a DB cluster snapshot, a DBClusterSnapshotIdentifier
+	//    value must be supplied.
 	SourceIds []*string `locationNameList:"SourceId" type:"list"`
 
 	// The type of source that is generating the events. For example, if you want
-	// to be notified of events generated by a DB instance, you would set this parameter
-	// to db-instance. if this value isn't specified, all events are returned.
+	// to be notified of events generated by a DB instance, you set this parameter
+	// to db-instance. If this value isn't specified, all events are returned.
 	//
 	// Valid values: db-instance | db-cluster | db-parameter-group | db-security-group
 	// | db-snapshot | db-cluster-snapshot
@@ -21109,7 +21101,9 @@ type DBClusterEndpoint struct {
 	StaticMembers []*string `type:"list"`
 
 	// The current status of the endpoint. One of: creating, available, deleting,
-	// modifying.
+	// inactive, modifying. The inactive state applies to an endpoint that can't
+	// be used for a certain kind of cluster, such as a writer endpoint for a read-only
+	// secondary cluster in a global database.
 	Status *string `type:"string"`
 }
 
@@ -21760,9 +21754,17 @@ type DBEngineVersion struct {
 	// of the CreateDBInstance action.
 	SupportedTimezones []*Timezone `locationNameList:"Timezone" type:"list"`
 
+	// A value that indicates whether you can use Aurora global databases with a
+	// specific DB engine version.
+	SupportsGlobalDatabases *bool `type:"boolean"`
+
 	// A value that indicates whether the engine version supports exporting the
 	// log types specified by ExportableLogTypes to CloudWatch Logs.
 	SupportsLogExportsToCloudwatchLogs *bool `type:"boolean"`
+
+	// A value that indicates whether you can use Aurora parallel query with a specific
+	// DB engine version.
+	SupportsParallelQuery *bool `type:"boolean"`
 
 	// Indicates whether the database engine version supports read replicas.
 	SupportsReadReplica *bool `type:"boolean"`
@@ -21854,9 +21856,21 @@ func (s *DBEngineVersion) SetSupportedTimezones(v []*Timezone) *DBEngineVersion 
 	return s
 }
 
+// SetSupportsGlobalDatabases sets the SupportsGlobalDatabases field's value.
+func (s *DBEngineVersion) SetSupportsGlobalDatabases(v bool) *DBEngineVersion {
+	s.SupportsGlobalDatabases = &v
+	return s
+}
+
 // SetSupportsLogExportsToCloudwatchLogs sets the SupportsLogExportsToCloudwatchLogs field's value.
 func (s *DBEngineVersion) SetSupportsLogExportsToCloudwatchLogs(v bool) *DBEngineVersion {
 	s.SupportsLogExportsToCloudwatchLogs = &v
+	return s
+}
+
+// SetSupportsParallelQuery sets the SupportsParallelQuery field's value.
+func (s *DBEngineVersion) SetSupportsParallelQuery(v bool) *DBEngineVersion {
+	s.SupportsParallelQuery = &v
 	return s
 }
 
@@ -22117,6 +22131,13 @@ type DBInstance struct {
 	// Contains the identifier of the source DB instance if this DB instance is
 	// a read replica.
 	ReadReplicaSourceDBInstanceIdentifier *string `type:"string"`
+
+	// The open mode of an Oracle read replica. The default is open-read-only. For
+	// more information, see Working with Oracle Read Replicas for Amazon RDS (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-read-replicas.html)
+	// in the Amazon RDS User Guide.
+	//
+	// This attribute is only supported in RDS for Oracle.
+	ReplicaMode *string `type:"string" enum:"ReplicaMode"`
 
 	// If present, specifies the name of the secondary Availability Zone for a DB
 	// instance with multi-AZ support.
@@ -22459,6 +22480,12 @@ func (s *DBInstance) SetReadReplicaDBInstanceIdentifiers(v []*string) *DBInstanc
 // SetReadReplicaSourceDBInstanceIdentifier sets the ReadReplicaSourceDBInstanceIdentifier field's value.
 func (s *DBInstance) SetReadReplicaSourceDBInstanceIdentifier(v string) *DBInstance {
 	s.ReadReplicaSourceDBInstanceIdentifier = &v
+	return s
+}
+
+// SetReplicaMode sets the ReplicaMode field's value.
+func (s *DBInstance) SetReplicaMode(v string) *DBInstance {
+	s.ReplicaMode = &v
 	return s
 }
 
@@ -22987,10 +23014,6 @@ func (s *DBParameterGroupStatus) SetParameterApplyStatus(v string) *DBParameterG
 	return s
 }
 
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // The data structure representing a proxy managed by the RDS Proxy.
 //
 // This data type is used as a response element in the DescribeDBProxies action.
@@ -23154,10 +23177,6 @@ func (s *DBProxy) SetVpcSubnetIds(v []*string) *DBProxy {
 	return s
 }
 
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Contains the details for an RDS Proxy target. It represents an RDS DB instance
 // or Aurora DB cluster that the proxy can connect to. One or more targets are
 // associated with an RDS Proxy target group.
@@ -23245,10 +23264,6 @@ func (s *DBProxyTarget) SetType(v string) *DBProxyTarget {
 	return s
 }
 
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Represents a set of RDS DB instances, Aurora DB clusters, or both that a
 // proxy can connect to. Currently, each target group is associated with exactly
 // one RDS DB instance or Aurora DB cluster.
@@ -24060,7 +24075,9 @@ type DeleteDBClusterEndpointOutput struct {
 	StaticMembers []*string `type:"list"`
 
 	// The current status of the endpoint. One of: creating, available, deleting,
-	// modifying.
+	// inactive, modifying. The inactive state applies to an endpoint that can't
+	// be used for a certain kind of cluster, such as a writer endpoint for a read-only
+	// secondary cluster in a global database.
 	Status *string `type:"string"`
 }
 
@@ -25693,7 +25710,7 @@ type DescribeDBClusterEndpointsInput struct {
 	// db-cluster-endpoint-id, db-cluster-endpoint-status. Values for the db-cluster-endpoint-type
 	// filter can be one or more of: reader, writer, custom. Values for the db-cluster-endpoint-custom-type
 	// filter can be one or more of: reader, any. Values for the db-cluster-endpoint-status
-	// filter can be one or more of: available, creating, deleting, modifying.
+	// filter can be one or more of: available, creating, deleting, inactive, modifying.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// An optional pagination token provided by a previous DescribeDBClusterEndpoints
@@ -28490,7 +28507,8 @@ type DescribeEventCategoriesInput struct {
 
 	// The type of source that is generating the events.
 	//
-	// Valid values: db-instance | db-parameter-group | db-security-group | db-snapshot
+	// Valid values: db-instance | db-cluster | db-parameter-group | db-security-group
+	// | db-snapshot | db-cluster-snapshot
 	SourceType *string `type:"string"`
 }
 
@@ -28536,7 +28554,7 @@ func (s *DescribeEventCategoriesInput) SetSourceType(v string) *DescribeEventCat
 	return s
 }
 
-// Data returned from the DescribeEventCategories action.
+// Data returned from the DescribeEventCategories operation.
 type DescribeEventCategoriesOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -28716,16 +28734,23 @@ type DescribeEventsInput struct {
 	//
 	//    * If SourceIdentifier is supplied, SourceType must also be provided.
 	//
-	//    * If the source type is DBInstance, then a DBInstanceIdentifier must be
-	//    supplied.
-	//
-	//    * If the source type is DBSecurityGroup, a DBSecurityGroupName must be
-	//    supplied.
-	//
-	//    * If the source type is DBParameterGroup, a DBParameterGroupName must
+	//    * If the source type is a DB instance, a DBInstanceIdentifier value must
 	//    be supplied.
 	//
-	//    * If the source type is DBSnapshot, a DBSnapshotIdentifier must be supplied.
+	//    * If the source type is a DB cluster, a DBClusterIdentifier value must
+	//    be supplied.
+	//
+	//    * If the source type is a DB parameter group, a DBParameterGroupName value
+	//    must be supplied.
+	//
+	//    * If the source type is a DB security group, a DBSecurityGroupName value
+	//    must be supplied.
+	//
+	//    * If the source type is a DB snapshot, a DBSnapshotIdentifier value must
+	//    be supplied.
+	//
+	//    * If the source type is a DB cluster snapshot, a DBClusterSnapshotIdentifier
+	//    value must be supplied.
 	//
 	//    * Can't end with a hyphen or contain two consecutive hyphens.
 	SourceIdentifier *string `type:"string"`
@@ -30799,7 +30824,7 @@ func (s *Event) SetSourceType(v string) *Event {
 }
 
 // Contains the results of a successful invocation of the DescribeEventCategories
-// action.
+// operation.
 type EventCategoriesMap struct {
 	_ struct{} `type:"structure"`
 
@@ -32243,7 +32268,9 @@ type ModifyDBClusterEndpointOutput struct {
 	StaticMembers []*string `type:"list"`
 
 	// The current status of the endpoint. One of: creating, available, deleting,
-	// modifying.
+	// inactive, modifying. The inactive state applies to an endpoint that can't
+	// be used for a certain kind of cluster, such as a writer endpoint for a read-only
+	// secondary cluster in a global database.
 	Status *string `type:"string"`
 }
 
@@ -32411,6 +32438,9 @@ type ModifyDBClusterInput struct {
 	// The Active Directory directory ID to move the DB cluster to. Specify none
 	// to remove the cluster from its current domain. The domain must be created
 	// prior to this operation.
+	//
+	// For more information, see Kerberos Authentication (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/kerberos-authentication.html)
+	// in the Amazon Aurora User Guide.
 	Domain *string `type:"string"`
 
 	// Specify the name of the IAM role to be used when making API calls to the
@@ -33138,18 +33168,10 @@ type ModifyDBInstanceInput struct {
 
 	// The Active Directory directory ID to move the DB instance to. Specify none
 	// to remove the instance from its current domain. The domain must be created
-	// prior to this operation. Currently, only Microsoft SQL Server and Oracle
-	// DB instances can be created in an Active Directory Domain.
+	// prior to this operation. Currently, only MySQL, Microsoft SQL Server, Oracle,
+	// and PostgreSQL DB instances can be created in an Active Directory Domain.
 	//
-	// For Microsoft SQL Server DB instances, Amazon RDS can use Windows Authentication
-	// to authenticate users that connect to the DB instance. For more information,
-	// see Using Windows Authentication with an Amazon RDS DB Instance Running Microsoft
-	// SQL Server (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_SQLServerWinAuth.html)
-	// in the Amazon RDS User Guide.
-	//
-	// For Oracle DB instances, Amazon RDS can use Kerberos Authentication to authenticate
-	// users that connect to the DB instance. For more information, see Using Kerberos
-	// Authentication with Amazon RDS for Oracle (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-kerberos.html)
+	// For more information, see Kerberos Authentication (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/kerberos-authentication.html)
 	// in the Amazon RDS User Guide.
 	Domain *string `type:"string"`
 
@@ -33405,6 +33427,20 @@ type ModifyDBInstanceInput struct {
 	// Changes to the PubliclyAccessible parameter are applied immediately regardless
 	// of the value of the ApplyImmediately parameter.
 	PubliclyAccessible *bool `type:"boolean"`
+
+	// A value that sets the open mode of a replica database to either mounted or
+	// read-only.
+	//
+	// Currently, this parameter is only supported for Oracle DB instances.
+	//
+	// Mounted DB replicas are included in Oracle Enterprise Edition. The main use
+	// case for mounted replicas is cross-Region disaster recovery. The primary
+	// database doesn't use Active Data Guard to transmit information to the mounted
+	// replica. Because it doesn't accept user connections, a mounted replica can't
+	// serve a read-only workload. For more information, see Working with Oracle
+	// Read Replicas for Amazon RDS (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-read-replicas.html)
+	// in the Amazon RDS User Guide.
+	ReplicaMode *string `type:"string" enum:"ReplicaMode"`
 
 	// Specifies the storage type to be associated with the DB instance.
 	//
@@ -33696,6 +33732,12 @@ func (s *ModifyDBInstanceInput) SetPromotionTier(v int64) *ModifyDBInstanceInput
 // SetPubliclyAccessible sets the PubliclyAccessible field's value.
 func (s *ModifyDBInstanceInput) SetPubliclyAccessible(v bool) *ModifyDBInstanceInput {
 	s.PubliclyAccessible = &v
+	return s
+}
+
+// SetReplicaMode sets the ReplicaMode field's value.
+func (s *ModifyDBInstanceInput) SetReplicaMode(v string) *ModifyDBInstanceInput {
+	s.ReplicaMode = &v
 	return s
 }
 
@@ -34375,11 +34417,10 @@ type ModifyEventSubscriptionInput struct {
 	// A value that indicates whether to activate the subscription.
 	Enabled *bool `type:"boolean"`
 
-	// A list of event categories for a SourceType that you want to subscribe to.
-	// You can see a list of the categories for a given SourceType in the Events
-	// (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Events.html)
-	// topic in the Amazon RDS User Guide or by using the DescribeEventCategories
-	// action.
+	// A list of event categories for a source type (SourceType) that you want to
+	// subscribe to. You can see a list of the categories for a given source type
+	// in Events (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Events.html)
+	// in the Amazon RDS User Guide or by using the DescribeEventCategories operation.
 	EventCategories []*string `locationNameList:"EventCategory" type:"list"`
 
 	// The Amazon Resource Name (ARN) of the SNS topic created for event notification.
@@ -34391,7 +34432,8 @@ type ModifyEventSubscriptionInput struct {
 	// to be notified of events generated by a DB instance, you would set this parameter
 	// to db-instance. If this value isn't specified, all events are returned.
 	//
-	// Valid values: db-instance | db-parameter-group | db-security-group | db-snapshot
+	// Valid values: db-instance | db-cluster | db-parameter-group | db-security-group
+	// | db-snapshot | db-cluster-snapshot
 	SourceType *string `type:"string"`
 
 	// The name of the RDS event notification subscription.
@@ -35416,6 +35458,13 @@ type OrderableDBInstanceOption struct {
 	// Indicates whether a DB instance is Multi-AZ capable.
 	MultiAZCapable *bool `type:"boolean"`
 
+	// Whether a DB instance supports RDS on Outposts.
+	//
+	// For more information about RDS on Outposts, see Amazon RDS on AWS Outposts
+	// (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html)
+	// in the Amazon RDS User Guide.
+	OutpostCapable *bool `type:"boolean"`
+
 	// Indicates whether a DB instance can have a read replica.
 	ReadReplicaCapable *bool `type:"boolean"`
 
@@ -35432,6 +35481,10 @@ type OrderableDBInstanceOption struct {
 	// Indicates whether a DB instance supports Enhanced Monitoring at intervals
 	// from 1 to 60 seconds.
 	SupportsEnhancedMonitoring *bool `type:"boolean"`
+
+	// A value that indicates whether you can use Aurora global databases with a
+	// specific combination of other DB engine attributes.
+	SupportsGlobalDatabases *bool `type:"boolean"`
 
 	// Indicates whether a DB instance supports IAM database authentication.
 	SupportsIAMDatabaseAuthentication *bool `type:"boolean"`
@@ -35550,6 +35603,12 @@ func (s *OrderableDBInstanceOption) SetMultiAZCapable(v bool) *OrderableDBInstan
 	return s
 }
 
+// SetOutpostCapable sets the OutpostCapable field's value.
+func (s *OrderableDBInstanceOption) SetOutpostCapable(v bool) *OrderableDBInstanceOption {
+	s.OutpostCapable = &v
+	return s
+}
+
 // SetReadReplicaCapable sets the ReadReplicaCapable field's value.
 func (s *OrderableDBInstanceOption) SetReadReplicaCapable(v bool) *OrderableDBInstanceOption {
 	s.ReadReplicaCapable = &v
@@ -35571,6 +35630,12 @@ func (s *OrderableDBInstanceOption) SetSupportedEngineModes(v []*string) *Ordera
 // SetSupportsEnhancedMonitoring sets the SupportsEnhancedMonitoring field's value.
 func (s *OrderableDBInstanceOption) SetSupportsEnhancedMonitoring(v bool) *OrderableDBInstanceOption {
 	s.SupportsEnhancedMonitoring = &v
+	return s
+}
+
+// SetSupportsGlobalDatabases sets the SupportsGlobalDatabases field's value.
+func (s *OrderableDBInstanceOption) SetSupportsGlobalDatabases(v bool) *OrderableDBInstanceOption {
+	s.SupportsGlobalDatabases = &v
 	return s
 }
 
@@ -35613,6 +35678,34 @@ func (s *OrderableDBInstanceOption) SetSupportsStorageEncryption(v bool) *Ordera
 // SetVpc sets the Vpc field's value.
 func (s *OrderableDBInstanceOption) SetVpc(v bool) *OrderableDBInstanceOption {
 	s.Vpc = &v
+	return s
+}
+
+// A data type that represents an Outpost.
+//
+// For more information about RDS on Outposts, see Amazon RDS on AWS Outposts
+// (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html)
+// in the Amazon RDS User Guide.
+type Outpost struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the Outpost.
+	Arn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s Outpost) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Outpost) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *Outpost) SetArn(v string) *Outpost {
+	s.Arn = &v
 	return s
 }
 
@@ -37517,9 +37610,10 @@ type RestoreDBClusterFromS3Input struct {
 	// in the Amazon Aurora User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
-	// The name of the database engine to be used for the restored DB cluster.
+	// The name of the database engine to be used for this DB cluster.
 	//
-	// Valid Values: aurora, aurora-postgresql
+	// Valid Values: aurora (for MySQL 5.6-compatible Aurora), aurora-mysql (for
+	// MySQL 5.7-compatible Aurora), and aurora-postgresql
 	//
 	// Engine is a required field
 	Engine *string `type:"string" required:"true"`
@@ -37663,7 +37757,7 @@ type RestoreDBClusterFromS3Input struct {
 	//
 	// MySQL versions 5.5, 5.6, and 5.7 are supported.
 	//
-	// Example: 5.6.40
+	// Example: 5.6.40, 5.7.28
 	//
 	// SourceEngineVersion is a required field
 	SourceEngineVersion *string `type:"string" required:"true"`
@@ -38007,7 +38101,12 @@ type RestoreDBClusterFromSnapshotInput struct {
 	DeletionProtection *bool `type:"boolean"`
 
 	// Specify the Active Directory directory ID to restore the DB cluster in. The
-	// domain must be created prior to this operation.
+	// domain must be created prior to this operation. Currently, only MySQL, Microsoft
+	// SQL Server, Oracle, and PostgreSQL DB instances can be created in an Active
+	// Directory Domain.
+	//
+	// For more information, see Kerberos Authentication (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/kerberos-authentication.html)
+	// in the Amazon RDS User Guide.
 	Domain *string `type:"string"`
 
 	// Specify the name of the IAM role to be used when making API calls to the
@@ -38748,19 +38847,11 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	DeletionProtection *bool `type:"boolean"`
 
 	// Specify the Active Directory directory ID to restore the DB instance in.
-	// The domain must be created prior to this operation. Currently, only Microsoft
-	// SQL Server and Oracle DB instances can be created in an Active Directory
-	// Domain.
+	// The domain must be created prior to this operation. Currently, only MySQL,
+	// Microsoft SQL Server, Oracle, and PostgreSQL DB instances can be created
+	// in an Active Directory Domain.
 	//
-	// For Microsoft SQL Server DB instances, Amazon RDS can use Windows Authentication
-	// to authenticate users that connect to the DB instance. For more information,
-	// see Using Windows Authentication with an Amazon RDS DB Instance Running Microsoft
-	// SQL Server (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_SQLServerWinAuth.html)
-	// in the Amazon RDS User Guide.
-	//
-	// For Oracle DB instances, Amazon RDS can use Kerberos Authentication to authenticate
-	// users that connect to the DB instance. For more information, see Using Kerberos
-	// Authentication with Amazon RDS for Oracle (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-kerberos.html)
+	// For more information, see Kerberos Authentication (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/kerberos-authentication.html)
 	// in the Amazon RDS User Guide.
 	Domain *string `type:"string"`
 
@@ -39839,19 +39930,11 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	DeletionProtection *bool `type:"boolean"`
 
 	// Specify the Active Directory directory ID to restore the DB instance in.
-	// The domain must be created prior to this operation. Currently, only Microsoft
-	// SQL Server and Oracle DB instances can be created in an Active Directory
-	// Domain.
+	// The domain must be created prior to this operation. Currently, only MySQL,
+	// Microsoft SQL Server, Oracle, and PostgreSQL DB instances can be created
+	// in an Active Directory Domain.
 	//
-	// For Microsoft SQL Server DB instances, Amazon RDS can use Windows Authentication
-	// to authenticate users that connect to the DB instance. For more information,
-	// see Using Windows Authentication with an Amazon RDS DB Instance Running Microsoft
-	// SQL Server (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_SQLServerWinAuth.html)
-	// in the Amazon RDS User Guide.
-	//
-	// For Oracle DB instances, Amazon RDS can use Kerberos Authentication to authenticate
-	// users that connect to the DB instance. For more information, see Using Kerberos
-	// Authentication with Amazon RDS for Oracle (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-kerberos.html)
+	// For more information, see Kerberos Authentication (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/kerberos-authentication.html)
 	// in the Amazon RDS User Guide.
 	Domain *string `type:"string"`
 
@@ -40924,9 +41007,27 @@ type StartExportTaskInput struct {
 
 	// The ID of the AWS KMS key to use to encrypt the snapshot exported to Amazon
 	// S3. The KMS key ID is the Amazon Resource Name (ARN), the KMS key identifier,
-	// or the KMS key alias for the KMS encryption key. The IAM role used for the
-	// snapshot export must have encryption and decryption permissions to use this
-	// KMS key.
+	// or the KMS key alias for the KMS encryption key. The caller of this operation
+	// must be authorized to execute the following operations. These can be set
+	// in the KMS key policy:
+	//
+	//    * GrantOperation.Encrypt
+	//
+	//    * GrantOperation.Decrypt
+	//
+	//    * GrantOperation.GenerateDataKey
+	//
+	//    * GrantOperation.GenerateDataKeyWithoutPlaintext
+	//
+	//    * GrantOperation.ReEncryptFrom
+	//
+	//    * GrantOperation.ReEncryptTo
+	//
+	//    * GrantOperation.CreateGrant
+	//
+	//    * GrantOperation.DescribeKey
+	//
+	//    * GrantOperation.RetireGrant
 	//
 	// KmsKeyId is a required field
 	KmsKeyId *string `type:"string" required:"true"`
@@ -41423,8 +41524,8 @@ func (s *StopDBInstanceOutput) SetDBInstance(v *DBInstance) *StopDBInstanceOutpu
 	return s
 }
 
-// This data type is used as a response element in the DescribeDBSubnetGroups
-// action.
+// This data type is used as a response element for the DescribeDBSubnetGroups
+// operation.
 type Subnet struct {
 	_ struct{} `type:"structure"`
 
@@ -41434,10 +41535,17 @@ type Subnet struct {
 	// type.
 	SubnetAvailabilityZone *AvailabilityZone `type:"structure"`
 
-	// Specifies the identifier of the subnet.
+	// The identifier of the subnet.
 	SubnetIdentifier *string `type:"string"`
 
-	// Specifies the status of the subnet.
+	// If the subnet is associated with an Outpost, this value specifies the Outpost.
+	//
+	// For more information about RDS on Outposts, see Amazon RDS on AWS Outposts
+	// (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html)
+	// in the Amazon RDS User Guide.
+	SubnetOutpost *Outpost `type:"structure"`
+
+	// The status of the subnet.
 	SubnetStatus *string `type:"string"`
 }
 
@@ -41460,6 +41568,12 @@ func (s *Subnet) SetSubnetAvailabilityZone(v *AvailabilityZone) *Subnet {
 // SetSubnetIdentifier sets the SubnetIdentifier field's value.
 func (s *Subnet) SetSubnetIdentifier(v string) *Subnet {
 	s.SubnetIdentifier = &v
+	return s
+}
+
+// SetSubnetOutpost sets the SubnetOutpost field's value.
+func (s *Subnet) SetSubnetOutpost(v *Outpost) *Subnet {
+	s.SubnetOutpost = v
 	return s
 }
 
@@ -41508,10 +41622,6 @@ func (s *Tag) SetValue(v string) *Tag {
 	return s
 }
 
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Information about the connection health of an RDS Proxy target.
 type TargetHealth struct {
 	_ struct{} `type:"structure"`
@@ -41646,10 +41756,6 @@ func (s *UpgradeTarget) SetIsMajorVersionUpgrade(v bool) *UpgradeTarget {
 	return s
 }
 
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Specifies the details of authentication used by a proxy to log in as a specific
 // database user.
 type UserAuthConfig struct {
@@ -41716,10 +41822,6 @@ func (s *UserAuthConfig) SetUserName(v string) *UserAuthConfig {
 	return s
 }
 
-//
-// This is prerelease documentation for the RDS Database Proxy feature in preview
-// release. It is subject to change.
-//
 // Returns the details of authentication used by a proxy to log in as a specific
 // database user.
 type UserAuthConfigInfo struct {
@@ -42002,6 +42104,14 @@ const (
 	ActivityStreamModeAsync = "async"
 )
 
+// ActivityStreamMode_Values returns all elements of the ActivityStreamMode enum
+func ActivityStreamMode_Values() []string {
+	return []string{
+		ActivityStreamModeSync,
+		ActivityStreamModeAsync,
+	}
+}
+
 const (
 	// ActivityStreamStatusStopped is a ActivityStreamStatus enum value
 	ActivityStreamStatusStopped = "stopped"
@@ -42016,6 +42126,16 @@ const (
 	ActivityStreamStatusStopping = "stopping"
 )
 
+// ActivityStreamStatus_Values returns all elements of the ActivityStreamStatus enum
+func ActivityStreamStatus_Values() []string {
+	return []string{
+		ActivityStreamStatusStopped,
+		ActivityStreamStatusStarting,
+		ActivityStreamStatusStarted,
+		ActivityStreamStatusStopping,
+	}
+}
+
 const (
 	// ApplyMethodImmediate is a ApplyMethod enum value
 	ApplyMethodImmediate = "immediate"
@@ -42024,10 +42144,25 @@ const (
 	ApplyMethodPendingReboot = "pending-reboot"
 )
 
+// ApplyMethod_Values returns all elements of the ApplyMethod enum
+func ApplyMethod_Values() []string {
+	return []string{
+		ApplyMethodImmediate,
+		ApplyMethodPendingReboot,
+	}
+}
+
 const (
 	// AuthSchemeSecrets is a AuthScheme enum value
 	AuthSchemeSecrets = "SECRETS"
 )
+
+// AuthScheme_Values returns all elements of the AuthScheme enum
+func AuthScheme_Values() []string {
+	return []string{
+		AuthSchemeSecrets,
+	}
+}
 
 const (
 	// DBProxyStatusAvailable is a DBProxyStatus enum value
@@ -42058,6 +42193,21 @@ const (
 	DBProxyStatusReactivating = "reactivating"
 )
 
+// DBProxyStatus_Values returns all elements of the DBProxyStatus enum
+func DBProxyStatus_Values() []string {
+	return []string{
+		DBProxyStatusAvailable,
+		DBProxyStatusModifying,
+		DBProxyStatusIncompatibleNetwork,
+		DBProxyStatusInsufficientResourceLimits,
+		DBProxyStatusCreating,
+		DBProxyStatusDeleting,
+		DBProxyStatusSuspended,
+		DBProxyStatusSuspending,
+		DBProxyStatusReactivating,
+	}
+}
+
 const (
 	// EngineFamilyMysql is a EngineFamily enum value
 	EngineFamilyMysql = "MYSQL"
@@ -42066,6 +42216,14 @@ const (
 	EngineFamilyPostgresql = "POSTGRESQL"
 )
 
+// EngineFamily_Values returns all elements of the EngineFamily enum
+func EngineFamily_Values() []string {
+	return []string{
+		EngineFamilyMysql,
+		EngineFamilyPostgresql,
+	}
+}
+
 const (
 	// IAMAuthModeDisabled is a IAMAuthMode enum value
 	IAMAuthModeDisabled = "DISABLED"
@@ -42073,6 +42231,30 @@ const (
 	// IAMAuthModeRequired is a IAMAuthMode enum value
 	IAMAuthModeRequired = "REQUIRED"
 )
+
+// IAMAuthMode_Values returns all elements of the IAMAuthMode enum
+func IAMAuthMode_Values() []string {
+	return []string{
+		IAMAuthModeDisabled,
+		IAMAuthModeRequired,
+	}
+}
+
+const (
+	// ReplicaModeOpenReadOnly is a ReplicaMode enum value
+	ReplicaModeOpenReadOnly = "open-read-only"
+
+	// ReplicaModeMounted is a ReplicaMode enum value
+	ReplicaModeMounted = "mounted"
+)
+
+// ReplicaMode_Values returns all elements of the ReplicaMode enum
+func ReplicaMode_Values() []string {
+	return []string{
+		ReplicaModeOpenReadOnly,
+		ReplicaModeMounted,
+	}
+}
 
 const (
 	// SourceTypeDbInstance is a SourceType enum value
@@ -42094,6 +42276,18 @@ const (
 	SourceTypeDbClusterSnapshot = "db-cluster-snapshot"
 )
 
+// SourceType_Values returns all elements of the SourceType enum
+func SourceType_Values() []string {
+	return []string{
+		SourceTypeDbInstance,
+		SourceTypeDbParameterGroup,
+		SourceTypeDbSecurityGroup,
+		SourceTypeDbSnapshot,
+		SourceTypeDbCluster,
+		SourceTypeDbClusterSnapshot,
+	}
+}
+
 const (
 	// TargetHealthReasonUnreachable is a TargetHealthReason enum value
 	TargetHealthReasonUnreachable = "UNREACHABLE"
@@ -42108,6 +42302,16 @@ const (
 	TargetHealthReasonPendingProxyCapacity = "PENDING_PROXY_CAPACITY"
 )
 
+// TargetHealthReason_Values returns all elements of the TargetHealthReason enum
+func TargetHealthReason_Values() []string {
+	return []string{
+		TargetHealthReasonUnreachable,
+		TargetHealthReasonConnectionFailed,
+		TargetHealthReasonAuthFailure,
+		TargetHealthReasonPendingProxyCapacity,
+	}
+}
+
 const (
 	// TargetStateRegistering is a TargetState enum value
 	TargetStateRegistering = "REGISTERING"
@@ -42119,6 +42323,15 @@ const (
 	TargetStateUnavailable = "UNAVAILABLE"
 )
 
+// TargetState_Values returns all elements of the TargetState enum
+func TargetState_Values() []string {
+	return []string{
+		TargetStateRegistering,
+		TargetStateAvailable,
+		TargetStateUnavailable,
+	}
+}
+
 const (
 	// TargetTypeRdsInstance is a TargetType enum value
 	TargetTypeRdsInstance = "RDS_INSTANCE"
@@ -42129,6 +42342,15 @@ const (
 	// TargetTypeTrackedCluster is a TargetType enum value
 	TargetTypeTrackedCluster = "TRACKED_CLUSTER"
 )
+
+// TargetType_Values returns all elements of the TargetType enum
+func TargetType_Values() []string {
+	return []string{
+		TargetTypeRdsInstance,
+		TargetTypeRdsServerlessEndpoint,
+		TargetTypeTrackedCluster,
+	}
+}
 
 const (
 	// WriteForwardingStatusEnabled is a WriteForwardingStatus enum value
@@ -42146,3 +42368,14 @@ const (
 	// WriteForwardingStatusUnknown is a WriteForwardingStatus enum value
 	WriteForwardingStatusUnknown = "unknown"
 )
+
+// WriteForwardingStatus_Values returns all elements of the WriteForwardingStatus enum
+func WriteForwardingStatus_Values() []string {
+	return []string{
+		WriteForwardingStatusEnabled,
+		WriteForwardingStatusDisabled,
+		WriteForwardingStatusEnabling,
+		WriteForwardingStatusDisabling,
+		WriteForwardingStatusUnknown,
+	}
+}

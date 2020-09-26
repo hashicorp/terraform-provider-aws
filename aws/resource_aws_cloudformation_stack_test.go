@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -569,6 +569,7 @@ resource "aws_cloudformation_stack" "test" {
 }
 BODY
 
+
   parameters = {
     TopicName = "%[1]s"
   }
@@ -578,7 +579,7 @@ BODY
 
 var testAccAWSCloudFormationStackConfig_allAttributesWithBodies_tpl = `
 resource "aws_cloudformation_stack" "test" {
-  name = "%[1]s"
+  name          = "%[1]s"
   template_body = <<STACK
 {
   "Parameters" : {
@@ -638,15 +639,15 @@ STACK
     VpcCIDR = "10.0.0.0/16"
   }
 
-  policy_body = <<POLICY
+  policy_body        = <<POLICY
 %[2]s
 POLICY
-  capabilities = ["CAPABILITY_IAM"]
-  notification_arns = ["${aws_sns_topic.cf-updates.arn}"]
-  on_failure = "DELETE"
+  capabilities       = ["CAPABILITY_IAM"]
+  notification_arns  = ["${aws_sns_topic.cf-updates.arn}"]
+  on_failure         = "DELETE"
   timeout_in_minutes = 10
   tags = {
-    First = "Mickey"
+    First  = "Mickey"
     Second = "Mouse"
   }
 }
@@ -717,7 +718,7 @@ resource "aws_cloudformation_stack" "test" {
 }
 STACK
 
-  on_failure = "DELETE"
+  on_failure         = "DELETE"
   timeout_in_minutes = 1
 }
 `
@@ -759,6 +760,7 @@ resource "aws_s3_bucket" "b" {
 }
 POLICY
 
+
   website {
     index_document = "index.html"
     error_document = "error.html"
@@ -766,7 +768,7 @@ POLICY
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket = "${aws_s3_bucket.b.id}"
+  bucket = aws_s3_bucket.b.id
   key    = "%[2]s"
   source = "test-fixtures/cloudformation-template.json"
 }
@@ -808,6 +810,7 @@ resource "aws_s3_bucket" "b" {
 }
 POLICY
 
+
   website {
     index_document = "index.html"
     error_document = "error.html"
@@ -815,7 +818,7 @@ POLICY
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket = "${aws_s3_bucket.b.id}"
+  bucket = aws_s3_bucket.b.id
   key    = "%[2]s"
   source = "test-fixtures/cloudformation-template.yaml"
 }
@@ -839,7 +842,7 @@ func testAccAWSCloudFormationStackConfig_withTransform(rName string) string {
 resource "aws_cloudformation_stack" "with-transform" {
   name = "%[1]s"
 
-  template_body      = <<STACK
+  template_body = <<STACK
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Transform": "AWS::Serverless-2016-10-31",
@@ -882,6 +885,8 @@ resource "aws_cloudformation_stack" "with-transform" {
   }
 }
 STACK
+
+
   capabilities       = ["CAPABILITY_AUTO_EXPAND"]
   on_failure         = "DELETE"
   timeout_in_minutes = 10

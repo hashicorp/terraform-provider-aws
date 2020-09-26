@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -10,11 +11,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -36,13 +37,13 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			func(diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				return validateDynamoDbStreamSpec(diff)
 			},
-			func(diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				return validateDynamoDbTableAttributes(diff)
 			},
-			func(diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				if diff.Id() != "" && diff.HasChange("server_side_encryption") {
 					o, n := diff.GetChange("server_side_encryption")
 					if isDynamoDbTableOptionDisabled(o) && isDynamoDbTableOptionDisabled(n) {
@@ -51,7 +52,7 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 				}
 				return nil
 			},
-			func(diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				if diff.Id() != "" && diff.HasChange("point_in_time_recovery") {
 					o, n := diff.GetChange("point_in_time_recovery")
 					if isDynamoDbTableOptionDisabled(o) && isDynamoDbTableOptionDisabled(n) {
@@ -157,18 +158,22 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"range_key": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"projection_type": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"non_key_attributes": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
@@ -210,7 +215,7 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 							Required: true,
 						},
 						"non_key_attributes": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},

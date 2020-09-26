@@ -9,10 +9,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -30,8 +30,8 @@ func TestAccAwsDxHostedPublicVirtualInterface_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-public-vif-%s", acctest.RandString(10))
 	amazonAddress := "175.45.176.5/28"
 	customerAddress := "175.45.176.6/28"
-	bgpAsn := randIntRange(64512, 65534)
-	vlan := randIntRange(2049, 4094)
+	bgpAsn := acctest.RandIntRange(64512, 65534)
+	vlan := acctest.RandIntRange(2049, 4094)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -90,8 +90,8 @@ func TestAccAwsDxHostedPublicVirtualInterface_AccepterTags(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-public-vif-%s", acctest.RandString(10))
 	amazonAddress := "175.45.176.7/28"
 	customerAddress := "175.45.176.8/28"
-	bgpAsn := randIntRange(64512, 65534)
-	vlan := randIntRange(2049, 4094)
+	bgpAsn := acctest.RandIntRange(64512, 65534)
+	vlan := acctest.RandIntRange(2049, 4094)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -177,7 +177,7 @@ resource "aws_dx_hosted_public_virtual_interface" "test" {
   connection_id    = %[1]q
   customer_address = %[4]q
   name             = %[2]q
-  owner_account_id = "${data.aws_caller_identity.accepter.account_id}"
+  owner_account_id = data.aws_caller_identity.accepter.account_id
   vlan             = %[6]d
 
   route_filter_prefixes = [
@@ -188,7 +188,7 @@ resource "aws_dx_hosted_public_virtual_interface" "test" {
 
 # Accepter
 data "aws_caller_identity" "accepter" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 `, cid, rName, amzAddr, custAddr, bgpAsn, vlan)
 }
@@ -196,9 +196,9 @@ data "aws_caller_identity" "accepter" {
 func testAccDxHostedPublicVirtualInterfaceConfig_basic(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
 	return testAccDxHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan) + `
 resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
-  virtual_interface_id = "${aws_dx_hosted_public_virtual_interface.test.id}"
+  virtual_interface_id = aws_dx_hosted_public_virtual_interface.test.id
 }
 `
 }
@@ -206,9 +206,9 @@ resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
 func testAccDxHostedPublicVirtualInterfaceConfig_accepterTags(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
 	return testAccDxHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan) + fmt.Sprintf(`
 resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
-  virtual_interface_id = "${aws_dx_hosted_public_virtual_interface.test.id}"
+  virtual_interface_id = aws_dx_hosted_public_virtual_interface.test.id
 
   tags = {
     Name = %[1]q
@@ -222,9 +222,9 @@ resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
 func testAccDxHostedPublicVirtualInterfaceConfig_accepterTagsUpdated(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
 	return testAccDxHostedPublicVirtualInterfaceConfig_base(cid, rName, amzAddr, custAddr, bgpAsn, vlan) + fmt.Sprintf(`
 resource "aws_dx_hosted_public_virtual_interface_accepter" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
-  virtual_interface_id = "${aws_dx_hosted_public_virtual_interface.test.id}"
+  virtual_interface_id = aws_dx_hosted_public_virtual_interface.test.id
 
   tags = {
     Name = %[1]q

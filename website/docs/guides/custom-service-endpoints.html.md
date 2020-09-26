@@ -122,13 +122,13 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>guardduty</code></li>
   <li><code>greengrass</code></li>
   <li><code>iam</code></li>
+  <li><code>identitystore</code></li>
   <li><code>imagebuilder</code></li>
   <li><code>inspector</code></li>
   <li><code>iot</code></li>
   <li><code>iotanalytics</code></li>
   <li><code>iotevents</code></li>
   <li><code>kafka</code></li>
-  <li><code>kinesis_analytics</code> (<b>DEPRECATED</b> Use <code>kinesisanalytics</code> instead)</li>
   <li><code>kinesis</code></li>
   <li><code>kinesisanalytics</code></li>
   <li><code>kinesisanalyticsv2</code></li>
@@ -159,7 +159,6 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>pricing</code></li>
   <li><code>qldb</code></li>
   <li><code>quicksight</code></li>
-  <li><code>r53</code></li> (<b>DEPRECATED</b> Use <code>route53</code> instead)</li>
   <li><code>ram</code></li>
   <li><code>rds</code></li>
   <li><code>redshift</code></li>
@@ -183,6 +182,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>sns</code></li>
   <li><code>sqs</code></li>
   <li><code>ssm</code></li>
+  <li><code>ssoadmin</code></li>
   <li><code>stepfunctions</code></li>
   <li><code>storagegateway</code></li>
   <li><code>sts</code></li>

@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccDataSourceAwsEfsFileSystem_id(t *testing.T) {
@@ -125,7 +125,7 @@ const testAccDataSourceAwsEfsFileSystemNameConfig = `
 resource "aws_efs_file_system" "test" {}
 
 data "aws_efs_file_system" "test" {
-  creation_token = "${aws_efs_file_system.test.creation_token}"
+  creation_token = aws_efs_file_system.test.creation_token
 }
 `
 
@@ -133,6 +133,6 @@ const testAccDataSourceAwsEfsFileSystemIDConfig = `
 resource "aws_efs_file_system" "test" {}
 
 data "aws_efs_file_system" "test" {
-  file_system_id = "${aws_efs_file_system.test.id}"
+  file_system_id = aws_efs_file_system.test.id
 }
 `

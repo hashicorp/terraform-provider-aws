@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -66,7 +66,7 @@ func dataSourceAwsVpcDhcpOptionsRead(d *schema.ResourceData, meta interface{}) e
 
 	input := &ec2.DescribeDhcpOptionsInput{}
 
-	if v, ok := d.GetOk("dhcp_options_id"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("dhcp_options_id"); ok {
 		input.DhcpOptionsIds = []*string{aws.String(v.(string))}
 	}
 
