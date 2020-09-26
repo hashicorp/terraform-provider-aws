@@ -28,7 +28,7 @@ The Terraform state associated with existing resources will automatically be mig
 ```hcl
 resource "aws_appmesh_virtual_node" "serviceb1" {
   name      = "serviceBv1"
-  mesh_name = "${aws_appmesh_mesh.simple.id}"
+  mesh_name = aws_appmesh_mesh.simple.id
 
   spec {
     backend {
@@ -62,7 +62,7 @@ resource "aws_service_discovery_http_namespace" "example" {
 
 resource "aws_appmesh_virtual_node" "serviceb1" {
   name      = "serviceBv1"
-  mesh_name = "${aws_appmesh_mesh.simple.id}"
+  mesh_name = aws_appmesh_mesh.simple.id
 
   spec {
     backend {
@@ -85,7 +85,7 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
         }
 
         service_name   = "serviceb1"
-        namespace_name = "${aws_service_discovery_http_namespace.example.name}"
+        namespace_name = aws_service_discovery_http_namespace.example.name
       }
     }
   }
@@ -97,7 +97,7 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
 ```hcl
 resource "aws_appmesh_virtual_node" "serviceb1" {
   name      = "serviceBv1"
-  mesh_name = "${aws_appmesh_mesh.simple.id}"
+  mesh_name = aws_appmesh_mesh.simple.id
 
   spec {
     backend {
@@ -136,7 +136,7 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
 ```hcl
 resource "aws_appmesh_virtual_node" "serviceb1" {
   name      = "serviceBv1"
-  mesh_name = "${aws_appmesh_mesh.simple.id}"
+  mesh_name = aws_appmesh_mesh.simple.id
 
   spec {
     backend {
@@ -175,6 +175,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name to use for the virtual node.
 * `mesh_name` - (Required) The name of the service mesh in which to create the virtual node.
+* `mesh_owner` - (Optional) The AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `spec` - (Required) The virtual node specification to apply.
 * `tags` - (Optional) A map of tags to assign to the resource.
 
@@ -187,7 +188,7 @@ The `spec` object supports the following:
 
 The `backend` object supports the following:
 
-* `virtual_service` - (Optional) Specifies a virtual service to use as a backend for a virtual node.
+* `virtual_service` - (Required) Specifies a virtual service to use as a backend for a virtual node.
 
 The `virtual_service` object supports the following:
 
@@ -249,6 +250,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the virtual node.
 * `created_date` - The creation date of the virtual node.
 * `last_updated_date` - The last update date of the virtual node.
+* `resource_owner` - The resource owner's AWS account ID.
 
 ## Import
 
@@ -258,3 +260,5 @@ e.g.
 ```
 $ terraform import aws_appmesh_virtual_node.serviceb1 simpleapp/serviceBv1
 ```
+
+[1]: /docs/providers/aws/index.html

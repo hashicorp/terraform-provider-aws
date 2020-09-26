@@ -6,13 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix = "tf-acc-test"
@@ -201,8 +201,8 @@ func testAccSagemakerNotebookInstanceLifecycleConfigurationConfig_Update(rName s
 	return fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "test" {
   name      = %q
-  on_create = "${base64encode("echo bla")}"
-  on_start  = "${base64encode("echo blub")}"
+  on_create = base64encode("echo bla")
+  on_start  = base64encode("echo blub")
 }
 `, rName)
 }

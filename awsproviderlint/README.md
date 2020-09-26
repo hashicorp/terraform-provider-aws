@@ -28,6 +28,12 @@ The `awsproviderlint` tool extends the `tfproviderlint` tool and its checks. See
 | [AWSR001](passes/AWSR001/README.md) | check for `fmt.Sprintf()` calls using `.amazonaws.com` domain suffix |
 | [AWSR002](passes/AWSR002/README.md) | check for `d.Set()` of `tags` attribute that should include `IgnoreConfig()` |
 
+### AWS Validation Checks
+
+| Check | Description |
+|---|---|
+| [AWSV001](passes/AWSV001) | check for `validation.StringInSlice()` calls using `[]string` parameter |
+
 ## Development and Testing
 
 This project is built on the [`tfproviderlint`](https://github.com/bflad/tfproviderlint) project and the [`go/analysis`](https://godoc.org/golang.org/x/tools/go/analysis) framework.

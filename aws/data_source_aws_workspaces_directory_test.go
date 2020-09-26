@@ -3,8 +3,8 @@ package aws
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
@@ -45,7 +45,7 @@ func TestAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
 func testAccDataSourceAwsWorkspacesDirectoryConfig(rName string) string {
 	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + `
 resource "aws_workspaces_directory" "test" {
-  directory_id = "${aws_directory_service_directory.main.id}"
+  directory_id = aws_directory_service_directory.main.id
 
   self_service_permissions {
     change_compute_type  = false
@@ -57,7 +57,7 @@ resource "aws_workspaces_directory" "test" {
 }
 
 data "aws_workspaces_directory" "test" {
-  directory_id = "${aws_workspaces_directory.test.id}"
+  directory_id = aws_workspaces_directory.test.id
 }
 
 data "aws_iam_role" "workspaces-default" {

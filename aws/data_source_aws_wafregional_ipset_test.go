@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsWafRegionalIPSet_basic(t *testing.T) {
@@ -36,10 +36,11 @@ func TestAccDataSourceAwsWafRegionalIPSet_basic(t *testing.T) {
 func testAccDataSourceAwsWafRegionalIPSet_Name(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
-  name        = %[1]q
+  name = %[1]q
 }
+
 data "aws_wafregional_ipset" "ipset" {
-  name = "${aws_wafregional_ipset.ipset.name}"
+  name = aws_wafregional_ipset.ipset.name
 }
 `, name)
 }

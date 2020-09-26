@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -426,11 +426,11 @@ resource "aws_ecs_cluster" "test" {
 func testAccAWSEcsClusterCapacityProviderConfig(rName string) string {
 	return testAccAWSEcsCapacityProviderConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
-	name = %q
+  name = %q
 
-	auto_scaling_group_provider {
-		auto_scaling_group_arn = aws_autoscaling_group.test.arn
-	}
+  auto_scaling_group_provider {
+    auto_scaling_group_arn = aws_autoscaling_group.test.arn
+  }
 }
 `, rName)
 }
@@ -438,15 +438,15 @@ resource "aws_ecs_capacity_provider" "test" {
 func testAccAWSEcsClusterSingleCapacityProvider(rName, providerName string) string {
 	return testAccAWSEcsClusterCapacityProviderConfig(providerName) + fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	capacity_providers = [aws_ecs_capacity_provider.test.name]
+  capacity_providers = [aws_ecs_capacity_provider.test.name]
 
-	default_capacity_provider_strategy {
-		base = 1
-		capacity_provider = aws_ecs_capacity_provider.test.name
-		weight = 1
-	}
+  default_capacity_provider_strategy {
+    base              = 1
+    capacity_provider = aws_ecs_capacity_provider.test.name
+    weight            = 1
+  }
 }
 `, rName)
 }
@@ -454,20 +454,20 @@ resource "aws_ecs_cluster" "test" {
 func testAccAWSEcsClusterCapacityProviders(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	capacity_providers = ["FARGATE_SPOT", "FARGATE"]
+  capacity_providers = ["FARGATE_SPOT", "FARGATE"]
 
-	default_capacity_provider_strategy {
-		capacity_provider = "FARGATE_SPOT"
-		weight = 1
-		base   = 1
-	}
+  default_capacity_provider_strategy {
+    capacity_provider = "FARGATE_SPOT"
+    weight            = 1
+    base              = 1
+  }
 
-	default_capacity_provider_strategy {
-		capacity_provider = "FARGATE"
-		weight = 1
-	}
+  default_capacity_provider_strategy {
+    capacity_provider = "FARGATE"
+    weight            = 1
+  }
 }
 `, rName)
 }
@@ -475,20 +475,20 @@ resource "aws_ecs_cluster" "test" {
 func testAccAWSEcsClusterCapacityProvidersReOrdered(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	capacity_providers = ["FARGATE", "FARGATE_SPOT"]
+  capacity_providers = ["FARGATE", "FARGATE_SPOT"]
 
-	default_capacity_provider_strategy {
-		capacity_provider = "FARGATE"
-		weight = 1
-	}
+  default_capacity_provider_strategy {
+    capacity_provider = "FARGATE"
+    weight            = 1
+  }
 
-	default_capacity_provider_strategy {
-		capacity_provider = "FARGATE_SPOT"
-		weight = 1
-		base   = 1
-	}
+  default_capacity_provider_strategy {
+    capacity_provider = "FARGATE_SPOT"
+    weight            = 1
+    base              = 1
+  }
 }
 `, rName)
 }
@@ -496,15 +496,15 @@ resource "aws_ecs_cluster" "test" {
 func testAccAWSEcsClusterCapacityProvidersFargate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	capacity_providers = ["FARGATE"]
+  capacity_providers = ["FARGATE"]
 
-	default_capacity_provider_strategy {
-		base = 1
-		capacity_provider = "FARGATE"
-		weight = 1
-	}
+  default_capacity_provider_strategy {
+    base              = 1
+    capacity_provider = "FARGATE"
+    weight            = 1
+  }
 }
 `, rName)
 }
@@ -512,15 +512,15 @@ resource "aws_ecs_cluster" "test" {
 func testAccAWSEcsClusterCapacityProvidersFargateSpot(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	capacity_providers = ["FARGATE_SPOT"]
+  capacity_providers = ["FARGATE_SPOT"]
 
-	default_capacity_provider_strategy {
-		base = 1
-		capacity_provider = "FARGATE_SPOT"
-		weight = 1
-	}
+  default_capacity_provider_strategy {
+    base              = 1
+    capacity_provider = "FARGATE_SPOT"
+    weight            = 1
+  }
 }
 `, rName)
 }
@@ -528,15 +528,15 @@ resource "aws_ecs_cluster" "test" {
 func testAccAWSEcsClusterCapacityProvidersFargateBoth(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	capacity_providers = ["FARGATE", "FARGATE_SPOT"]
+  capacity_providers = ["FARGATE", "FARGATE_SPOT"]
 
-	default_capacity_provider_strategy {
-		base = 1
-		capacity_provider = "FARGATE_SPOT"
-		weight = 1
-	}
+  default_capacity_provider_strategy {
+    base              = 1
+    capacity_provider = "FARGATE_SPOT"
+    weight            = 1
+  }
 }
 `, rName)
 }
@@ -544,9 +544,9 @@ resource "aws_ecs_cluster" "test" {
 func testAccAWSEcsClusterCapacityProvidersFargateNoStrategy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	capacity_providers = ["FARGATE"]
+  capacity_providers = ["FARGATE"]
 }
 `, rName)
 }
@@ -554,9 +554,9 @@ resource "aws_ecs_cluster" "test" {
 func testAccAWSEcsClusterCapacityProvidersFargateSpotNoStrategy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	capacity_providers = ["FARGATE_SPOT"]
+  capacity_providers = ["FARGATE_SPOT"]
 }
 `, rName)
 }
@@ -579,8 +579,8 @@ func testAccAWSEcsClusterConfigContainerInsights(rName string) string {
 resource "aws_ecs_cluster" "test" {
   name = %q
   setting {
-	name = "containerInsights"
-	value = "enabled"
+    name  = "containerInsights"
+    value = "enabled"
   }
 }
 `, rName)
@@ -591,8 +591,8 @@ func testAccAWSEcsClusterConfigContainerInsightsDisable(rName string) string {
 resource "aws_ecs_cluster" "test" {
   name = %q
   setting {
-	name = "containerInsights"
-	value = "disabled"
+    name  = "containerInsights"
+    value = "disabled"
   }
 }
 `, rName)

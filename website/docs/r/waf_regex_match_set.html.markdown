@@ -22,7 +22,7 @@ resource "aws_waf_regex_match_set" "example" {
       type = "HEADER"
     }
 
-    regex_pattern_set_id = "${aws_waf_regex_pattern_set.example.id}"
+    regex_pattern_set_id = aws_waf_regex_pattern_set.example.id
     text_transformation  = "NONE"
   }
 }

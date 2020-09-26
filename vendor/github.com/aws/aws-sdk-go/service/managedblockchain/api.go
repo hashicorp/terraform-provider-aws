@@ -1084,7 +1084,7 @@ func (c *ManagedBlockchain) ListInvitationsRequest(input *ListInvitationsInput) 
 
 // ListInvitations API operation for Amazon Managed Blockchain.
 //
-// Returns a listing of all invitations made on the specified network.
+// Returns a listing of all invitations for the current AWS account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5323,6 +5323,9 @@ type Node struct {
 	// The unique identifier of the network that the node is in.
 	NetworkId *string `min:"1" type:"string"`
 
+	// The state database that the node uses. Values are LevelDB or CouchDB.
+	StateDB *string `type:"string" enum:"StateDBType"`
+
 	// The status of the node.
 	Status *string `type:"string" enum:"NodeStatus"`
 }
@@ -5385,6 +5388,12 @@ func (s *Node) SetNetworkId(v string) *Node {
 	return s
 }
 
+// SetStateDB sets the StateDB field's value.
+func (s *Node) SetStateDB(v string) *Node {
+	s.StateDB = &v
+	return s
+}
+
 // SetStatus sets the Status field's value.
 func (s *Node) SetStatus(v string) *Node {
 	s.Status = &v
@@ -5408,6 +5417,11 @@ type NodeConfiguration struct {
 	// Configuration properties for logging events associated with a peer node owned
 	// by a member in a Managed Blockchain network.
 	LogPublishingConfiguration *NodeLogPublishingConfiguration `type:"structure"`
+
+	// The state database that the node uses. Values are LevelDB or CouchDB. When
+	// using an Amazon Managed Blockchain network with Hyperledger Fabric version
+	// 1.4 or later, the default is CouchDB.
+	StateDB *string `type:"string" enum:"StateDBType"`
 }
 
 // String returns the string representation
@@ -5451,6 +5465,12 @@ func (s *NodeConfiguration) SetInstanceType(v string) *NodeConfiguration {
 // SetLogPublishingConfiguration sets the LogPublishingConfiguration field's value.
 func (s *NodeConfiguration) SetLogPublishingConfiguration(v *NodeLogPublishingConfiguration) *NodeConfiguration {
 	s.LogPublishingConfiguration = v
+	return s
+}
+
+// SetStateDB sets the StateDB field's value.
+func (s *NodeConfiguration) SetStateDB(v string) *NodeConfiguration {
+	s.StateDB = &v
 	return s
 }
 
@@ -6715,10 +6735,25 @@ const (
 	EditionStandard = "STANDARD"
 )
 
+// Edition_Values returns all elements of the Edition enum
+func Edition_Values() []string {
+	return []string{
+		EditionStarter,
+		EditionStandard,
+	}
+}
+
 const (
 	// FrameworkHyperledgerFabric is a Framework enum value
 	FrameworkHyperledgerFabric = "HYPERLEDGER_FABRIC"
 )
+
+// Framework_Values returns all elements of the Framework enum
+func Framework_Values() []string {
+	return []string{
+		FrameworkHyperledgerFabric,
+	}
+}
 
 const (
 	// InvitationStatusPending is a InvitationStatus enum value
@@ -6736,6 +6771,17 @@ const (
 	// InvitationStatusExpired is a InvitationStatus enum value
 	InvitationStatusExpired = "EXPIRED"
 )
+
+// InvitationStatus_Values returns all elements of the InvitationStatus enum
+func InvitationStatus_Values() []string {
+	return []string{
+		InvitationStatusPending,
+		InvitationStatusAccepted,
+		InvitationStatusAccepting,
+		InvitationStatusRejected,
+		InvitationStatusExpired,
+	}
+}
 
 const (
 	// MemberStatusCreating is a MemberStatus enum value
@@ -6757,6 +6803,18 @@ const (
 	MemberStatusDeleted = "DELETED"
 )
 
+// MemberStatus_Values returns all elements of the MemberStatus enum
+func MemberStatus_Values() []string {
+	return []string{
+		MemberStatusCreating,
+		MemberStatusAvailable,
+		MemberStatusCreateFailed,
+		MemberStatusUpdating,
+		MemberStatusDeleting,
+		MemberStatusDeleted,
+	}
+}
+
 const (
 	// NetworkStatusCreating is a NetworkStatus enum value
 	NetworkStatusCreating = "CREATING"
@@ -6773,6 +6831,17 @@ const (
 	// NetworkStatusDeleted is a NetworkStatus enum value
 	NetworkStatusDeleted = "DELETED"
 )
+
+// NetworkStatus_Values returns all elements of the NetworkStatus enum
+func NetworkStatus_Values() []string {
+	return []string{
+		NetworkStatusCreating,
+		NetworkStatusAvailable,
+		NetworkStatusCreateFailed,
+		NetworkStatusDeleting,
+		NetworkStatusDeleted,
+	}
+}
 
 const (
 	// NodeStatusCreating is a NodeStatus enum value
@@ -6797,6 +6866,19 @@ const (
 	NodeStatusFailed = "FAILED"
 )
 
+// NodeStatus_Values returns all elements of the NodeStatus enum
+func NodeStatus_Values() []string {
+	return []string{
+		NodeStatusCreating,
+		NodeStatusAvailable,
+		NodeStatusCreateFailed,
+		NodeStatusUpdating,
+		NodeStatusDeleting,
+		NodeStatusDeleted,
+		NodeStatusFailed,
+	}
+}
+
 const (
 	// ProposalStatusInProgress is a ProposalStatus enum value
 	ProposalStatusInProgress = "IN_PROGRESS"
@@ -6814,6 +6896,33 @@ const (
 	ProposalStatusActionFailed = "ACTION_FAILED"
 )
 
+// ProposalStatus_Values returns all elements of the ProposalStatus enum
+func ProposalStatus_Values() []string {
+	return []string{
+		ProposalStatusInProgress,
+		ProposalStatusApproved,
+		ProposalStatusRejected,
+		ProposalStatusExpired,
+		ProposalStatusActionFailed,
+	}
+}
+
+const (
+	// StateDBTypeLevelDb is a StateDBType enum value
+	StateDBTypeLevelDb = "LevelDB"
+
+	// StateDBTypeCouchDb is a StateDBType enum value
+	StateDBTypeCouchDb = "CouchDB"
+)
+
+// StateDBType_Values returns all elements of the StateDBType enum
+func StateDBType_Values() []string {
+	return []string{
+		StateDBTypeLevelDb,
+		StateDBTypeCouchDb,
+	}
+}
+
 const (
 	// ThresholdComparatorGreaterThan is a ThresholdComparator enum value
 	ThresholdComparatorGreaterThan = "GREATER_THAN"
@@ -6822,6 +6931,14 @@ const (
 	ThresholdComparatorGreaterThanOrEqualTo = "GREATER_THAN_OR_EQUAL_TO"
 )
 
+// ThresholdComparator_Values returns all elements of the ThresholdComparator enum
+func ThresholdComparator_Values() []string {
+	return []string{
+		ThresholdComparatorGreaterThan,
+		ThresholdComparatorGreaterThanOrEqualTo,
+	}
+}
+
 const (
 	// VoteValueYes is a VoteValue enum value
 	VoteValueYes = "YES"
@@ -6829,3 +6946,11 @@ const (
 	// VoteValueNo is a VoteValue enum value
 	VoteValueNo = "NO"
 )
+
+// VoteValue_Values returns all elements of the VoteValue enum
+func VoteValue_Values() []string {
+	return []string{
+		VoteValueYes,
+		VoteValueNo,
+	}
+}

@@ -162,12 +162,17 @@ func (c *Organizations) AcceptHandshakeRequest(input *AcceptHandshakeInput) (req
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -217,6 +222,12 @@ func (c *Organizations) AcceptHandshakeRequest(input *AcceptHandshakeInput) (req
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ConcurrentModificationException
 //   The target of the operation is currently being modified by a different request.
@@ -309,6 +320,8 @@ func (c *Organizations) AttachPolicyRequest(input *AttachPolicyInput) (req *requ
 // Attaches a policy to a root, an organizational unit (OU), or an individual
 // account. How the policy affects accounts depends on the type of policy. Refer
 // to the AWS Organizations User Guide for information about each policy type:
+//
+//    * AISERVICES_OPT_OUT_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_ai-opt-out.html)
 //
 //    * BACKUP_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html)
 //
@@ -491,12 +504,17 @@ func (c *Organizations) AttachPolicyRequest(input *AttachPolicyInput) (req *requ
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -547,6 +565,12 @@ func (c *Organizations) AttachPolicyRequest(input *AttachPolicyInput) (req *requ
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
 //
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
+//
 //   * PolicyNotFoundException
 //   We can't find a policy with the PolicyId that you specified.
 //
@@ -562,7 +586,7 @@ func (c *Organizations) AttachPolicyRequest(input *AttachPolicyInput) (req *requ
 //   error. Try again later.
 //
 //   * TargetNotFoundException
-//   We can't find a root, OU, or account with the TargetId that you specified.
+//   We can't find a root, OU, account, or policy with the TargetId that you specified.
 //
 //   * TooManyRequestsException
 //   You have sent too many requests in too short a period of time. The quota
@@ -694,12 +718,17 @@ func (c *Organizations) CancelHandshakeRequest(input *CancelHandshakeInput) (req
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -749,6 +778,12 @@ func (c *Organizations) CancelHandshakeRequest(input *CancelHandshakeInput) (req
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -849,6 +884,9 @@ func (c *Organizations) CreateAccountRequest(input *CreateAccountInput) (req *re
 // creates the required service-linked role named AWSServiceRoleForOrganizations.
 // For more information, see AWS Organizations and Service-Linked Roles (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services.html#orgs_integrate_services-using_slrs)
 // in the AWS Organizations User Guide.
+//
+// If the request includes tags, then the requester must have the organizations:TagResource
+// permission.
 //
 // AWS Organizations preconfigures the new member account with a role (named
 // OrganizationAccountAccessRole by default) that grants users in the master
@@ -1063,12 +1101,17 @@ func (c *Organizations) CreateAccountRequest(input *CreateAccountInput) (req *re
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -1118,6 +1161,12 @@ func (c *Organizations) CreateAccountRequest(input *CreateAccountInput) (req *re
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * FinalizingOrganizationException
 //   AWS Organizations couldn't perform the operation because your organization
@@ -1218,10 +1267,12 @@ func (c *Organizations) CreateGovCloudAccountRequest(input *CreateGovCloudAccoun
 //    * You call this action from the master account of your organization in
 //    the commercial Region.
 //
-//    * You have the organizations:CreateGovCloudAccount permission. AWS Organizations
-//    creates the required service-linked role named AWSServiceRoleForOrganizations.
-//    For more information, see AWS Organizations and Service-Linked Roles (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services.html#orgs_integrate_services-using_slrs)
-//    in the AWS Organizations User Guide.
+//    * You have the organizations:CreateGovCloudAccount permission.
+//
+// AWS Organizations automatically creates the required service-linked role
+// named AWSServiceRoleForOrganizations. For more information, see AWS Organizations
+// and Service-Linked Roles (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services.html#orgs_integrate_services-using_slrs)
+// in the AWS Organizations User Guide.
 //
 // AWS automatically enables AWS CloudTrail for AWS GovCloud (US) accounts,
 // but you should also do the following:
@@ -1231,6 +1282,12 @@ func (c *Organizations) CreateGovCloudAccountRequest(input *CreateGovCloudAccoun
 //    * Create an S3 bucket for AWS CloudTrail log storage. For more information,
 //    see Verifying AWS CloudTrail Is Enabled (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/verifying-cloudtrail.html)
 //    in the AWS GovCloud User Guide.
+//
+// If the request includes tags, then the requester must have the organizations:TagResource
+// permission. The tags are attached to the commercial account associated with
+// the GovCloud account, rather than the GovCloud account itself. To add tags
+// to the GovCloud account, call the TagResource operation in the GovCloud Region
+// after the new GovCloud account exists.
 //
 // You call this action from the master account of your organization in the
 // commercial Region to create a standalone AWS account in the AWS GovCloud
@@ -1265,8 +1322,8 @@ func (c *Organizations) CreateGovCloudAccountRequest(input *CreateGovCloudAccoun
 // A role is created in the new account in the commercial Region that allows
 // the master account in the organization in the commercial Region to assume
 // it. An AWS GovCloud (US) account is then created and associated with the
-// commercial account that you just created. A role is created in the new AWS
-// GovCloud (US) account that can be assumed by the AWS GovCloud (US) account
+// commercial account that you just created. A role is also created in the new
+// AWS GovCloud (US) account that can be assumed by the AWS GovCloud (US) account
 // that is associated with the master account of the commercial organization.
 // For more information and to view a diagram that explains how account access
 // works, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
@@ -1477,12 +1534,17 @@ func (c *Organizations) CreateGovCloudAccountRequest(input *CreateGovCloudAccoun
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -1532,6 +1594,12 @@ func (c *Organizations) CreateGovCloudAccountRequest(input *CreateGovCloudAccoun
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * FinalizingOrganizationException
 //   AWS Organizations couldn't perform the operation because your organization
@@ -1621,7 +1689,7 @@ func (c *Organizations) CreateOrganizationRequest(input *CreateOrganizationInput
 // CreateOrganization API operation for AWS Organizations.
 //
 // Creates an AWS organization. The account whose user is calling the CreateOrganization
-// operation automatically becomes the master account (https://docs.aws.amazon.com/IAM/latest/UserGuide/orgs_getting-started_concepts.html#account)
+// operation automatically becomes the master account (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_getting-started_concepts.html#account)
 // of the new organization.
 //
 // This operation must be called using credentials from the account that is
@@ -1805,12 +1873,17 @@ func (c *Organizations) CreateOrganizationRequest(input *CreateOrganizationInput
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -1860,6 +1933,12 @@ func (c *Organizations) CreateOrganizationRequest(input *CreateOrganizationInput
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -1952,6 +2031,9 @@ func (c *Organizations) CreateOrganizationalUnitRequest(input *CreateOrganizatio
 //
 // For more information about OUs, see Managing Organizational Units (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_ous.html)
 // in the AWS Organizations User Guide.
+//
+// If the request includes tags, then the requester must have the organizations:TagResource
+// permission.
 //
 // This operation can be called only from the organization's master account.
 //
@@ -2128,12 +2210,17 @@ func (c *Organizations) CreateOrganizationalUnitRequest(input *CreateOrganizatio
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -2183,6 +2270,12 @@ func (c *Organizations) CreateOrganizationalUnitRequest(input *CreateOrganizatio
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ParentNotFoundException
 //   We can't find a root or OU with the ParentId that you specified.
@@ -2270,6 +2363,9 @@ func (c *Organizations) CreatePolicyRequest(input *CreatePolicyInput) (req *requ
 //
 // For more information about policies and their use, see Managing Organization
 // Policies (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies.html).
+//
+// If the request includes tags, then the requester must have the organizations:TagResource
+// permission.
 //
 // This operation can be called only from the organization's master account.
 //
@@ -2446,12 +2542,17 @@ func (c *Organizations) CreatePolicyRequest(input *CreatePolicyInput) (req *requ
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -2501,6 +2602,12 @@ func (c *Organizations) CreatePolicyRequest(input *CreatePolicyInput) (req *requ
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * MalformedPolicyDocumentException
 //   The provided policy document doesn't meet the requirements of the specified
@@ -2646,12 +2753,17 @@ func (c *Organizations) DeclineHandshakeRequest(input *DeclineHandshakeInput) (r
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -2701,6 +2813,12 @@ func (c *Organizations) DeclineHandshakeRequest(input *DeclineHandshakeInput) (r
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -2815,12 +2933,17 @@ func (c *Organizations) DeleteOrganizationRequest(input *DeleteOrganizationInput
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -2870,6 +2993,12 @@ func (c *Organizations) DeleteOrganizationRequest(input *DeleteOrganizationInput
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * OrganizationNotEmptyException
 //   The organization isn't empty. To delete an organization, you must first remove
@@ -2990,12 +3119,17 @@ func (c *Organizations) DeleteOrganizationalUnitRequest(input *DeleteOrganizatio
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -3045,6 +3179,12 @@ func (c *Organizations) DeleteOrganizationalUnitRequest(input *DeleteOrganizatio
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * OrganizationalUnitNotEmptyException
 //   The specified OU is not empty. Move all accounts to another root or to other
@@ -3169,12 +3309,17 @@ func (c *Organizations) DeletePolicyRequest(input *DeletePolicyInput) (req *requ
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -3224,6 +3369,12 @@ func (c *Organizations) DeletePolicyRequest(input *DeletePolicyInput) (req *requ
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * PolicyInUseException
 //   The policy is attached to one or more entities. You must detach it from all
@@ -3316,6 +3467,11 @@ func (c *Organizations) DeregisterDelegatedAdministratorRequest(input *Deregiste
 //
 // Removes the specified member AWS account as a delegated administrator for
 // the specified AWS service.
+//
+// Deregistering a delegated administrator can have unintended impacts on the
+// functionality of the enabled AWS service. See the documentation for the enabled
+// service before you deregister a delegated administrator so that you understand
+// any potential impacts.
 //
 // You can run this action only for AWS services that support this feature.
 // For a current list of services that support it, see the column Supports Delegated
@@ -3503,12 +3659,17 @@ func (c *Organizations) DeregisterDelegatedAdministratorRequest(input *Deregiste
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -3558,6 +3719,12 @@ func (c *Organizations) DeregisterDelegatedAdministratorRequest(input *Deregiste
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * TooManyRequestsException
 //   You have sent too many requests in too short a period of time. The quota
@@ -3677,12 +3844,17 @@ func (c *Organizations) DescribeAccountRequest(input *DescribeAccountInput) (req
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -3732,6 +3904,12 @@ func (c *Organizations) DescribeAccountRequest(input *DescribeAccountInput) (req
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -3847,12 +4025,17 @@ func (c *Organizations) DescribeCreateAccountStatusRequest(input *DescribeCreate
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -3902,6 +4085,12 @@ func (c *Organizations) DescribeCreateAccountStatusRequest(input *DescribeCreate
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -4170,7 +4359,7 @@ func (c *Organizations) DescribeEffectivePolicyRequest(input *DescribeEffectiveP
 //   the AWS Organizations User Guide.
 //
 //   * TargetNotFoundException
-//   We can't find a root, OU, or account with the TargetId that you specified.
+//   We can't find a root, OU, account, or policy with the TargetId that you specified.
 //
 //   * EffectivePolicyNotFoundException
 //   If you ran this action on the master account, this policy type is not enabled.
@@ -4186,12 +4375,17 @@ func (c *Organizations) DescribeEffectivePolicyRequest(input *DescribeEffectiveP
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -4241,6 +4435,12 @@ func (c *Organizations) DescribeEffectivePolicyRequest(input *DescribeEffectiveP
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * UnsupportedAPIEndpointException
 //   This action isn't available in the current AWS Region.
@@ -4351,12 +4551,17 @@ func (c *Organizations) DescribeHandshakeRequest(input *DescribeHandshakeInput) 
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -4406,6 +4611,12 @@ func (c *Organizations) DescribeHandshakeRequest(input *DescribeHandshakeInput) 
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -4627,12 +4838,17 @@ func (c *Organizations) DescribeOrganizationalUnitRequest(input *DescribeOrganiz
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -4682,6 +4898,12 @@ func (c *Organizations) DescribeOrganizationalUnitRequest(input *DescribeOrganiz
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * OrganizationalUnitNotFoundException
 //   We can't find an OU with the OrganizationalUnitId that you specified.
@@ -4796,12 +5018,17 @@ func (c *Organizations) DescribePolicyRequest(input *DescribePolicyInput) (req *
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -4851,6 +5078,12 @@ func (c *Organizations) DescribePolicyRequest(input *DescribePolicyInput) (req *
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * PolicyNotFoundException
 //   We can't find a policy with the PolicyId that you specified.
@@ -5125,12 +5358,17 @@ func (c *Organizations) DetachPolicyRequest(input *DetachPolicyInput) (req *requ
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -5181,6 +5419,12 @@ func (c *Organizations) DetachPolicyRequest(input *DetachPolicyInput) (req *requ
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
 //
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
+//
 //   * PolicyNotAttachedException
 //   The policy isn't attached to the specified target in the specified root.
 //
@@ -5192,7 +5436,7 @@ func (c *Organizations) DetachPolicyRequest(input *DetachPolicyInput) (req *requ
 //   error. Try again later.
 //
 //   * TargetNotFoundException
-//   We can't find a root, OU, or account with the TargetId that you specified.
+//   We can't find a root, OU, account, or policy with the TargetId that you specified.
 //
 //   * TooManyRequestsException
 //   You have sent too many requests in too short a period of time. The quota
@@ -5474,12 +5718,17 @@ func (c *Organizations) DisableAWSServiceAccessRequest(input *DisableAWSServiceA
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -5529,6 +5778,12 @@ func (c *Organizations) DisableAWSServiceAccessRequest(input *DisableAWSServiceA
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -5798,12 +6053,17 @@ func (c *Organizations) DisablePolicyTypeRequest(input *DisablePolicyTypeInput) 
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -5853,6 +6113,12 @@ func (c *Organizations) DisablePolicyTypeRequest(input *DisablePolicyTypeInput) 
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * PolicyTypeNotEnabledException
 //   The specified policy type isn't currently enabled in this root. You can't
@@ -6141,12 +6407,17 @@ func (c *Organizations) EnableAWSServiceAccessRequest(input *EnableAWSServiceAcc
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -6196,6 +6467,12 @@ func (c *Organizations) EnableAWSServiceAccessRequest(input *EnableAWSServiceAcc
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -6380,12 +6657,17 @@ func (c *Organizations) EnableAllFeaturesRequest(input *EnableAllFeaturesInput) 
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -6435,6 +6717,12 @@ func (c *Organizations) EnableAllFeaturesRequest(input *EnableAllFeaturesInput) 
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -6699,12 +6987,17 @@ func (c *Organizations) EnablePolicyTypeRequest(input *EnablePolicyTypeInput) (r
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -6754,6 +7047,12 @@ func (c *Organizations) EnablePolicyTypeRequest(input *EnablePolicyTypeInput) (r
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * PolicyTypeAlreadyEnabledException
 //   The specified policy type is already enabled in the specified root.
@@ -6870,6 +7169,9 @@ func (c *Organizations) InviteAccountToOrganizationRequest(input *InviteAccountT
 //    organization is still initializing, wait one hour and then try again.
 //    If the error persists after an hour, contact AWS Support (https://console.aws.amazon.com/support/home#/).
 //
+// If the request includes tags, then the requester must have the organizations:TagResource
+// permission.
+//
 // This operation can be called only from the organization's master account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -6948,6 +7250,145 @@ func (c *Organizations) InviteAccountToOrganizationRequest(input *InviteAccountT
 //   to resend an invitation to an account, ensure that existing handshakes that
 //   might be considered duplicates are canceled or declined.
 //
+//   * ConstraintViolationException
+//   Performing this operation violates a minimum or maximum value limit. For
+//   example, attempting to remove the last service control policy (SCP) from
+//   an OU or root, inviting or creating too many accounts to the organization,
+//   or attaching too many policies to an account, OU, or root. This exception
+//   includes a reason that contains additional information about the violated
+//   limit:
+//
+//   Some of the reasons in the following list might not be applicable to this
+//   specific API or operation.
+//
+//      * ACCOUNT_CANNOT_LEAVE_ORGANIZAION: You attempted to remove the master
+//      account from the organization. You can't remove the master account. Instead,
+//      after you remove all member accounts, delete the organization itself.
+//
+//      * ACCOUNT_CANNOT_LEAVE_WITHOUT_EULA: You attempted to remove an account
+//      from the organization that doesn't yet have enough information to exist
+//      as a standalone account. This account requires you to first agree to the
+//      AWS Customer Agreement. Follow the steps at Removing a member account
+//      from your organization (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#orgs_manage_accounts_remove-from-master)in
+//      the AWS Organizations User Guide.
+//
+//      * ACCOUNT_CANNOT_LEAVE_WITHOUT_PHONE_VERIFICATION: You attempted to remove
+//      an account from the organization that doesn't yet have enough information
+//      to exist as a standalone account. This account requires you to first complete
+//      phone verification. Follow the steps at Removing a member account from
+//      your organization (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#orgs_manage_accounts_remove-from-master)
+//      in the AWS Organizations User Guide.
+//
+//      * ACCOUNT_CREATION_RATE_LIMIT_EXCEEDED: You attempted to exceed the number
+//      of accounts that you can create in one day.
+//
+//      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
+//      the number of accounts in an organization. If you need more accounts,
+//      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
+//      request an increase in your limit. Or the number of invitations that you
+//      tried to send would cause you to exceed the limit of accounts in your
+//      organization. Send fewer invitations or contact AWS Support to request
+//      an increase in the number of accounts. Deleted and closed accounts still
+//      count toward your limit. If you get this exception when running a command
+//      immediately after creating the organization, wait one hour and try again.
+//      After an hour, if the command continues to fail with this error, contact
+//      AWS Support (https://console.aws.amazon.com/support/home#/).
+//
+//      * CANNOT_REGISTER_MASTER_AS_DELEGATED_ADMINISTRATOR: You attempted to
+//      register the master account of the organization as a delegated administrator
+//      for an AWS service integrated with Organizations. You can designate only
+//      a member account as a delegated administrator.
+//
+//      * CANNOT_REMOVE_DELEGATED_ADMINISTRATOR_FROM_ORG: You attempted to remove
+//      an account that is registered as a delegated administrator for a service
+//      integrated with your organization. To complete this operation, you must
+//      first deregister this account as a delegated administrator.
+//
+//      * CREATE_ORGANIZATION_IN_BILLING_MODE_UNSUPPORTED_REGION: To create an
+//      organization in the specified region, you must enable all features mode.
+//
+//      * DELEGATED_ADMINISTRATOR_EXISTS_FOR_THIS_SERVICE: You attempted to register
+//      an AWS account as a delegated administrator for an AWS service that already
+//      has a delegated administrator. To complete this operation, you must first
+//      deregister any existing delegated administrators for this service.
+//
+//      * EMAIL_VERIFICATION_CODE_EXPIRED: The email verification code is only
+//      valid for a limited period of time. You must resubmit the request and
+//      generate a new verfication code.
+//
+//      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
+//      handshakes that you can send in one day.
+//
+//      * MASTER_ACCOUNT_ADDRESS_DOES_NOT_MATCH_MARKETPLACE: To create an account
+//      in this organization, you first must migrate the organization's master
+//      account to the marketplace that corresponds to the master account's address.
+//      For example, accounts with India addresses must be associated with the
+//      AISPL marketplace. All accounts in an organization must be associated
+//      with the same marketplace.
+//
+//      * MASTER_ACCOUNT_MISSING_BUSINESS_LICENSE: Applies only to the AWS Regions
+//      in China. To create an organization, the master must have an valid business
+//      license. For more information, contact customer support.
+//
+//      * MASTER_ACCOUNT_MISSING_CONTACT_INFO: To complete this operation, you
+//      must first provide a valid contact address and phone number for the master
+//      account. Then try the operation again.
+//
+//      * MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED: To complete this operation, the
+//      master account must have an associated account in the AWS GovCloud (US-West)
+//      Region. For more information, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
+//      in the AWS GovCloud User Guide.
+//
+//      * MASTER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To create an organization
+//      with this master account, you first must associate a valid payment instrument,
+//      such as a credit card, with the account. Follow the steps at To leave
+//      an organization when all required account information has not yet been
+//      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
+//      in the AWS Organizations User Guide.
+//
+//      * MAX_DELEGATED_ADMINISTRATORS_FOR_SERVICE_LIMIT_EXCEEDED: You attempted
+//      to register more delegated administrators than allowed for the service
+//      principal.
+//
+//      * MAX_POLICY_TYPE_ATTACHMENT_LIMIT_EXCEEDED: You attempted to exceed the
+//      number of policies of a certain type that can be attached to an entity
+//      at one time.
+//
+//      * MAX_TAG_LIMIT_EXCEEDED: You have exceeded the number of tags allowed
+//      on this resource.
+//
+//      * MEMBER_ACCOUNT_PAYMENT_INSTRUMENT_REQUIRED: To complete this operation
+//      with this member account, you first must associate a valid payment instrument,
+//      such as a credit card, with the account. Follow the steps at To leave
+//      an organization when all required account information has not yet been
+//      provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
+//      in the AWS Organizations User Guide.
+//
+//      * MIN_POLICY_TYPE_ATTACHMENT_LIMIT_EXCEEDED: You attempted to detach a
+//      policy from an entity that would cause the entity to have fewer than the
+//      minimum number of policies of a certain type required.
+//
+//      * ORGANIZATION_NOT_IN_ALL_FEATURES_MODE: You attempted to perform an operation
+//      that requires the organization to be configured to support all features.
+//      An organization that supports only consolidated billing features can't
+//      perform this operation.
+//
+//      * OU_DEPTH_LIMIT_EXCEEDED: You attempted to create an OU tree that is
+//      too many levels deep.
+//
+//      * OU_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the number of OUs
+//      that you can have in an organization.
+//
+//      * POLICY_CONTENT_LIMIT_EXCEEDED: You attempted to create a policy that
+//      is larger than the maximum size.
+//
+//      * POLICY_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the number of
+//      policies that you can have in an organization.
+//
+//      * TAG_POLICY_VIOLATION: You attempted to create or update a resource with
+//      tags that are not compliant with the tag policy requirements for this
+//      account.
+//
 //   * InvalidInputException
 //   The requested operation failed because you provided invalid values for one
 //   or more of the request parameters. This exception includes a reason that
@@ -6956,12 +7397,17 @@ func (c *Organizations) InviteAccountToOrganizationRequest(input *InviteAccountT
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -7011,6 +7457,12 @@ func (c *Organizations) InviteAccountToOrganizationRequest(input *InviteAccountT
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * FinalizingOrganizationException
 //   AWS Organizations couldn't perform the operation because your organization
@@ -7114,19 +7566,23 @@ func (c *Organizations) LeaveOrganizationRequest(input *LeaveOrganizationInput) 
 //    account. When you create an account in an organization using the AWS Organizations
 //    console, API, or CLI commands, the information required of standalone
 //    accounts is not automatically collected. For each account that you want
-//    to make standalone, you must do the following steps: Accept the end user
-//    license agreement (EULA) Choose a support plan Provide and verify the
-//    required contact information Provide a current payment method AWS uses
-//    the payment method to charge for any billable (not free tier) AWS activity
-//    that occurs while the account isn't attached to an organization. Follow
-//    the steps at To leave an organization when all required account information
-//    has not yet been provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
+//    to make standalone, you must perform the following steps. If any of the
+//    steps are already completed for this account, that step doesn't appear.
+//    Choose a support plan Provide and verify the required contact information
+//    Provide a current payment method AWS uses the payment method to charge
+//    for any billable (not free tier) AWS activity that occurs while the account
+//    isn't attached to an organization. Follow the steps at To leave an organization
+//    when all required account information has not yet been provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 //    in the AWS Organizations User Guide.
 //
 //    * You can leave an organization only after you enable IAM user access
 //    to billing in your account. For more information, see Activating Access
 //    to the Billing and Cost Management Console (http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/grantaccess.html#ControllingAccessWebsite-Activate)
 //    in the AWS Billing and Cost Management User Guide.
+//
+//    * After the account leaves the organization, all tags that were attached
+//    to the account object in the organization are deleted. AWS accounts outside
+//    of an organization do not support tags.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7303,12 +7759,17 @@ func (c *Organizations) LeaveOrganizationRequest(input *LeaveOrganizationInput) 
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -7358,6 +7819,12 @@ func (c *Organizations) LeaveOrganizationRequest(input *LeaveOrganizationInput) 
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * MasterCannotLeaveOrganizationException
 //   You can't remove a master account from an organization. If you want the master
@@ -7627,12 +8094,17 @@ func (c *Organizations) ListAWSServiceAccessForOrganizationRequest(input *ListAW
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -7682,6 +8154,12 @@ func (c *Organizations) ListAWSServiceAccessForOrganizationRequest(input *ListAW
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -7861,12 +8339,17 @@ func (c *Organizations) ListAccountsRequest(input *ListAccountsInput) (req *requ
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -7916,6 +8399,12 @@ func (c *Organizations) ListAccountsRequest(input *ListAccountsInput) (req *requ
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -8094,12 +8583,17 @@ func (c *Organizations) ListAccountsForParentRequest(input *ListAccountsForParen
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -8149,6 +8643,12 @@ func (c *Organizations) ListAccountsForParentRequest(input *ListAccountsForParen
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ParentNotFoundException
 //   We can't find a root or OU with the ParentId that you specified.
@@ -8328,12 +8828,17 @@ func (c *Organizations) ListChildrenRequest(input *ListChildrenInput) (req *requ
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -8383,6 +8888,12 @@ func (c *Organizations) ListChildrenRequest(input *ListChildrenInput) (req *requ
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ParentNotFoundException
 //   We can't find a root or OU with the ParentId that you specified.
@@ -8561,12 +9072,17 @@ func (c *Organizations) ListCreateAccountStatusRequest(input *ListCreateAccountS
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -8616,6 +9132,12 @@ func (c *Organizations) ListCreateAccountStatusRequest(input *ListCreateAccountS
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -8928,12 +9450,17 @@ func (c *Organizations) ListDelegatedAdministratorsRequest(input *ListDelegatedA
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -8983,6 +9510,12 @@ func (c *Organizations) ListDelegatedAdministratorsRequest(input *ListDelegatedA
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * TooManyRequestsException
 //   You have sent too many requests in too short a period of time. The quota
@@ -9302,12 +9835,17 @@ func (c *Organizations) ListDelegatedServicesForAccountRequest(input *ListDelega
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -9357,6 +9895,12 @@ func (c *Organizations) ListDelegatedServicesForAccountRequest(input *ListDelega
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * TooManyRequestsException
 //   You have sent too many requests in too short a period of time. The quota
@@ -9509,8 +10053,7 @@ func (c *Organizations) ListHandshakesForAccountRequest(input *ListHandshakesFor
 // of results even when there are more results available. The NextToken response
 // parameter value is null only when there are no more results to display.
 //
-// This operation can be called only from the organization's master account
-// or by a member account that is a delegated administrator for an AWS service.
+// This operation can be called from any account in the organization.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9539,12 +10082,17 @@ func (c *Organizations) ListHandshakesForAccountRequest(input *ListHandshakesFor
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -9594,6 +10142,12 @@ func (c *Organizations) ListHandshakesForAccountRequest(input *ListHandshakesFor
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -9779,12 +10333,17 @@ func (c *Organizations) ListHandshakesForOrganizationRequest(input *ListHandshak
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -9834,6 +10393,12 @@ func (c *Organizations) ListHandshakesForOrganizationRequest(input *ListHandshak
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -10008,12 +10573,17 @@ func (c *Organizations) ListOrganizationalUnitsForParentRequest(input *ListOrgan
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -10063,6 +10633,12 @@ func (c *Organizations) ListOrganizationalUnitsForParentRequest(input *ListOrgan
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ParentNotFoundException
 //   We can't find a root or OU with the ParentId that you specified.
@@ -10248,12 +10824,17 @@ func (c *Organizations) ListParentsRequest(input *ListParentsInput) (req *reques
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -10303,6 +10884,12 @@ func (c *Organizations) ListParentsRequest(input *ListParentsInput) (req *reques
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -10477,12 +11064,17 @@ func (c *Organizations) ListPoliciesRequest(input *ListPoliciesInput) (req *requ
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -10532,6 +11124,12 @@ func (c *Organizations) ListPoliciesRequest(input *ListPoliciesInput) (req *requ
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -10711,12 +11309,17 @@ func (c *Organizations) ListPoliciesForTargetRequest(input *ListPoliciesForTarge
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -10767,12 +11370,18 @@ func (c *Organizations) ListPoliciesForTargetRequest(input *ListPoliciesForTarge
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
 //
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
+//
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
 //   error. Try again later.
 //
 //   * TargetNotFoundException
-//   We can't find a root, OU, or account with the TargetId that you specified.
+//   We can't find a root, OU, account, or policy with the TargetId that you specified.
 //
 //   * TooManyRequestsException
 //   You have sent too many requests in too short a period of time. The quota
@@ -10952,12 +11561,17 @@ func (c *Organizations) ListRootsRequest(input *ListRootsInput) (req *request.Re
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -11007,6 +11621,12 @@ func (c *Organizations) ListRootsRequest(input *ListRootsInput) (req *request.Re
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -11144,9 +11764,17 @@ func (c *Organizations) ListTagsForResourceRequest(input *ListTagsForResourceInp
 
 // ListTagsForResource API operation for AWS Organizations.
 //
-// Lists tags for the specified resource.
+// Lists tags that are attached to the specified resource.
 //
-// Currently, you can list tags on an account in AWS Organizations.
+// You can attach tags to the following resources in AWS Organizations.
+//
+//    * AWS account
+//
+//    * Organization root
+//
+//    * Organizational unit (OU)
+//
+//    * Policy (any type)
 //
 // This operation can be called only from the organization's master account
 // or by a member account that is a delegated administrator for an AWS service.
@@ -11171,7 +11799,7 @@ func (c *Organizations) ListTagsForResourceRequest(input *ListTagsForResourceInp
 //   must use the credentials of an account that belongs to an organization.
 //
 //   * TargetNotFoundException
-//   We can't find a root, OU, or account with the TargetId that you specified.
+//   We can't find a root, OU, account, or policy with the TargetId that you specified.
 //
 //   * InvalidInputException
 //   The requested operation failed because you provided invalid values for one
@@ -11181,12 +11809,17 @@ func (c *Organizations) ListTagsForResourceRequest(input *ListTagsForResourceInp
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -11236,6 +11869,12 @@ func (c *Organizations) ListTagsForResourceRequest(input *ListTagsForResourceInp
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -11411,12 +12050,17 @@ func (c *Organizations) ListTargetsForPolicyRequest(input *ListTargetsForPolicyI
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -11466,6 +12110,12 @@ func (c *Organizations) ListTargetsForPolicyRequest(input *ListTargetsForPolicyI
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * PolicyNotFoundException
 //   We can't find a policy with the PolicyId that you specified.
@@ -11632,12 +12282,17 @@ func (c *Organizations) MoveAccountRequest(input *MoveAccountInput) (req *reques
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -11687,6 +12342,12 @@ func (c *Organizations) MoveAccountRequest(input *MoveAccountInput) (req *reques
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * SourceParentNotFoundException
 //   We can't find a source root or OU with the ParentId that you specified.
@@ -11981,12 +12642,17 @@ func (c *Organizations) RegisterDelegatedAdministratorRequest(input *RegisterDel
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -12036,6 +12702,12 @@ func (c *Organizations) RegisterDelegatedAdministratorRequest(input *RegisterDel
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * TooManyRequestsException
 //   You have sent too many requests in too short a period of time. The quota
@@ -12130,20 +12802,23 @@ func (c *Organizations) RemoveAccountFromOrganizationRequest(input *RemoveAccoun
 // This operation can be called only from the organization's master account.
 // Member accounts can remove themselves with LeaveOrganization instead.
 //
-// You can remove an account from your organization only if the account is configured
-// with the information required to operate as a standalone account. When you
-// create an account in an organization using the AWS Organizations console,
-// API, or CLI commands, the information required of standalone accounts is
-// not automatically collected. For an account that you want to make standalone,
-// you must accept the end user license agreement (EULA), choose a support plan,
-// provide and verify the required contact information, and provide a current
-// payment method. AWS uses the payment method to charge for any billable (not
-// free tier) AWS activity that occurs while the account isn't attached to an
-// organization. To remove an account that doesn't yet have this information,
-// you must sign in as the member account and follow the steps at To leave an
-// organization when all required account information has not yet been provided
-// (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
-// in the AWS Organizations User Guide.
+//    * You can remove an account from your organization only if the account
+//    is configured with the information required to operate as a standalone
+//    account. When you create an account in an organization using the AWS Organizations
+//    console, API, or CLI commands, the information required of standalone
+//    accounts is not automatically collected. For an account that you want
+//    to make standalone, you must choose a support plan, provide and verify
+//    the required contact information, and provide a current payment method.
+//    AWS uses the payment method to charge for any billable (not free tier)
+//    AWS activity that occurs while the account isn't attached to an organization.
+//    To remove an account that doesn't yet have this information, you must
+//    sign in as the member account and follow the steps at To leave an organization
+//    when all required account information has not yet been provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
+//    in the AWS Organizations User Guide.
+//
+//    * After the account leaves the organization, all tags that were attached
+//    to the account object in the organization are deleted. AWS accounts outside
+//    of an organization do not support tags.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -12320,12 +12995,17 @@ func (c *Organizations) RemoveAccountFromOrganizationRequest(input *RemoveAccoun
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -12375,6 +13055,12 @@ func (c *Organizations) RemoveAccountFromOrganizationRequest(input *RemoveAccoun
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * MasterCannotLeaveOrganizationException
 //   You can't remove a master account from an organization. If you want the master
@@ -12462,7 +13148,15 @@ func (c *Organizations) TagResourceRequest(input *TagResourceInput) (req *reques
 //
 // Adds one or more tags to the specified resource.
 //
-// Currently, you can tag and untag accounts in AWS Organizations.
+// Currently, you can attach tags to the following resources in AWS Organizations.
+//
+//    * AWS account
+//
+//    * Organization root
+//
+//    * Organizational unit (OU)
+//
+//    * Policy (any type)
 //
 // This operation can be called only from the organization's master account.
 //
@@ -12490,7 +13184,7 @@ func (c *Organizations) TagResourceRequest(input *TagResourceInput) (req *reques
 //   must use the credentials of an account that belongs to an organization.
 //
 //   * TargetNotFoundException
-//   We can't find a root, OU, or account with the TargetId that you specified.
+//   We can't find a root, OU, account, or policy with the TargetId that you specified.
 //
 //   * ConstraintViolationException
 //   Performing this operation violates a minimum or maximum value limit. For
@@ -12639,12 +13333,17 @@ func (c *Organizations) TagResourceRequest(input *TagResourceInput) (req *reques
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -12694,6 +13393,12 @@ func (c *Organizations) TagResourceRequest(input *TagResourceInput) (req *reques
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -12774,9 +13479,17 @@ func (c *Organizations) UntagResourceRequest(input *UntagResourceInput) (req *re
 
 // UntagResource API operation for AWS Organizations.
 //
-// Removes a tag from the specified resource.
+// Removes any tags with the specified keys from the specified resource.
 //
-// Currently, you can tag and untag accounts in AWS Organizations.
+// You can attach tags to the following resources in AWS Organizations.
+//
+//    * AWS account
+//
+//    * Organization root
+//
+//    * Organizational unit (OU)
+//
+//    * Policy (any type)
 //
 // This operation can be called only from the organization's master account.
 //
@@ -12804,7 +13517,7 @@ func (c *Organizations) UntagResourceRequest(input *UntagResourceInput) (req *re
 //   must use the credentials of an account that belongs to an organization.
 //
 //   * TargetNotFoundException
-//   We can't find a root, OU, or account with the TargetId that you specified.
+//   We can't find a root, OU, account, or policy with the TargetId that you specified.
 //
 //   * ConstraintViolationException
 //   Performing this operation violates a minimum or maximum value limit. For
@@ -12953,12 +13666,17 @@ func (c *Organizations) UntagResourceRequest(input *UntagResourceInput) (req *re
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -13008,6 +13726,12 @@ func (c *Organizations) UntagResourceRequest(input *UntagResourceInput) (req *re
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * ServiceException
 //   AWS Organizations can't complete your request because of an internal service
@@ -13127,12 +13851,17 @@ func (c *Organizations) UpdateOrganizationalUnitRequest(input *UpdateOrganizatio
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -13182,6 +13911,12 @@ func (c *Organizations) UpdateOrganizationalUnitRequest(input *UpdateOrganizatio
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * OrganizationalUnitNotFoundException
 //   We can't find an OU with the OrganizationalUnitId that you specified.
@@ -13443,12 +14178,17 @@ func (c *Organizations) UpdatePolicyRequest(input *UpdatePolicyInput) (req *requ
 //   Some of the reasons in the following list might not be applicable to this
 //   specific API or operation.
 //
+//      * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//      the same entity.
+//
 //      * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //      can't be modified.
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //      * INVALID_ENUM: You specified an invalid value.
+//
+//      * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -13498,6 +14238,12 @@ func (c *Organizations) UpdatePolicyRequest(input *UpdatePolicyInput) (req *requ
 //
 //      * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //      between entities in the same root.
+//
+//      * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//      target entity.
+//
+//      * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//      isn't recognized.
 //
 //   * MalformedPolicyDocumentException
 //   The provided policy document doesn't meet the requirements of the specified
@@ -14724,6 +15470,17 @@ type CreateAccountInput struct {
 	// this parameter. The pattern can include uppercase letters, lowercase letters,
 	// digits with no spaces, and any of the following characters: =,.@-
 	RoleName *string `type:"string"`
+
+	// A list of tags that you want to attach to the newly created account. For
+	// each tag in the list, you must specify both a tag key and a value. You can
+	// set the value to an empty string, but you can't set it to null. For more
+	// information about tagging, see Tagging AWS Organizations resources (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_tagging.html)
+	// in the AWS Organizations User Guide.
+	//
+	// If any one of the tags is invalid or if you exceed the allowed number of
+	// tags for an account, then the entire request fails and the account is not
+	// created.
+	Tags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -14750,6 +15507,16 @@ func (s *CreateAccountInput) Validate() error {
 	}
 	if s.Email != nil && len(*s.Email) < 6 {
 		invalidParams.Add(request.NewErrParamMinLen("Email", 6))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -14779,6 +15546,12 @@ func (s *CreateAccountInput) SetIamUserAccessToBilling(v string) *CreateAccountI
 // SetRoleName sets the RoleName field's value.
 func (s *CreateAccountInput) SetRoleName(v string) *CreateAccountInput {
 	s.RoleName = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateAccountInput) SetTags(v []*Tag) *CreateAccountInput {
+	s.Tags = v
 	return s
 }
 
@@ -14835,6 +15608,9 @@ type CreateAccountStatus struct {
 	//    * ACCOUNT_LIMIT_EXCEEDED: The account could not be created because you
 	//    have reached the limit on the number of accounts in your organization.
 	//
+	//    * CONCURRENT_ACCOUNT_MODIFICATION: You already submitted a request with
+	//    the same information.
+	//
 	//    * EMAIL_ALREADY_EXISTS: The account could not be created because another
 	//    AWS account with that email address already exists.
 	//
@@ -14850,6 +15626,12 @@ type CreateAccountStatus struct {
 	//
 	//    * INTERNAL_FAILURE: The account could not be created because of an internal
 	//    failure. Try again later. If the problem persists, contact Customer Support.
+	//
+	//    * MISSING_BUSINESS_VALIDATION: The AWS account that owns your organization
+	//    has not received Business Validation.
+	//
+	//    * MISSING_PAYMENT_INSTRUMENT: You must configure the master account with
+	//    a valid payment method, such as a credit card.
 	FailureReason *string `type:"string" enum:"CreateAccountFailureReason"`
 
 	// If the account was created successfully, the unique identifier (ID) of the
@@ -15039,6 +15821,22 @@ type CreateGovCloudAccountInput struct {
 	// this parameter. The pattern can include uppercase letters, lowercase letters,
 	// digits with no spaces, and any of the following characters: =,.@-
 	RoleName *string `type:"string"`
+
+	// A list of tags that you want to attach to the newly created account. These
+	// tags are attached to the commercial account associated with the GovCloud
+	// account, and not to the GovCloud account itself. To add tags to the actual
+	// GovCloud account, call the TagResource operation in the GovCloud region after
+	// the new GovCloud account exists.
+	//
+	// For each tag in the list, you must specify both a tag key and a value. You
+	// can set the value to an empty string, but you can't set it to null. For more
+	// information about tagging, see Tagging AWS Organizations resources (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_tagging.html)
+	// in the AWS Organizations User Guide.
+	//
+	// If any one of the tags is invalid or if you exceed the allowed number of
+	// tags for an account, then the entire request fails and the account is not
+	// created.
+	Tags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -15065,6 +15863,16 @@ func (s *CreateGovCloudAccountInput) Validate() error {
 	}
 	if s.Email != nil && len(*s.Email) < 6 {
 		invalidParams.Add(request.NewErrParamMinLen("Email", 6))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -15094,6 +15902,12 @@ func (s *CreateGovCloudAccountInput) SetIamUserAccessToBilling(v string) *Create
 // SetRoleName sets the RoleName field's value.
 func (s *CreateGovCloudAccountInput) SetRoleName(v string) *CreateGovCloudAccountInput {
 	s.RoleName = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateGovCloudAccountInput) SetTags(v []*Tag) *CreateGovCloudAccountInput {
+	s.Tags = v
 	return s
 }
 
@@ -15204,6 +16018,16 @@ type CreateOrganizationalUnitInput struct {
 	//
 	// ParentId is a required field
 	ParentId *string `type:"string" required:"true"`
+
+	// A list of tags that you want to attach to the newly created OU. For each
+	// tag in the list, you must specify both a tag key and a value. You can set
+	// the value to an empty string, but you can't set it to null. For more information
+	// about tagging, see Tagging AWS Organizations resources (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_tagging.html)
+	// in the AWS Organizations User Guide.
+	//
+	// If any one of the tags is invalid or if you exceed the allowed number of
+	// tags for an OU, then the entire request fails and the OU is not created.
+	Tags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -15228,6 +16052,16 @@ func (s *CreateOrganizationalUnitInput) Validate() error {
 	if s.ParentId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ParentId"))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -15244,6 +16078,12 @@ func (s *CreateOrganizationalUnitInput) SetName(v string) *CreateOrganizationalU
 // SetParentId sets the ParentId field's value.
 func (s *CreateOrganizationalUnitInput) SetParentId(v string) *CreateOrganizationalUnitInput {
 	s.ParentId = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateOrganizationalUnitInput) SetTags(v []*Tag) *CreateOrganizationalUnitInput {
+	s.Tags = v
 	return s
 }
 
@@ -15293,7 +16133,19 @@ type CreatePolicyInput struct {
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
 
+	// A list of tags that you want to attach to the newly created policy. For each
+	// tag in the list, you must specify both a tag key and a value. You can set
+	// the value to an empty string, but you can't set it to null. For more information
+	// about tagging, see Tagging AWS Organizations resources (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_tagging.html)
+	// in the AWS Organizations User Guide.
+	//
+	// If any one of the tags is invalid or if you exceed the allowed number of
+	// tags for a policy, then the entire request fails and the policy is not created.
+	Tags []*Tag `type:"list"`
+
 	// The type of policy to create. You can specify one of the following values:
+	//
+	//    * AISERVICES_OPT_OUT_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_ai-opt-out.html)
 	//
 	//    * BACKUP_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html)
 	//
@@ -15336,6 +16188,16 @@ func (s *CreatePolicyInput) Validate() error {
 	if s.Type == nil {
 		invalidParams.Add(request.NewErrParamRequired("Type"))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -15358,6 +16220,12 @@ func (s *CreatePolicyInput) SetDescription(v string) *CreatePolicyInput {
 // SetName sets the Name field's value.
 func (s *CreatePolicyInput) SetName(v string) *CreatePolicyInput {
 	s.Name = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreatePolicyInput) SetTags(v []*Tag) *CreatePolicyInput {
+	s.Tags = v
 	return s
 }
 
@@ -15937,6 +16805,8 @@ type DescribeEffectivePolicyInput struct {
 	// The type of policy that you want information about. You can specify one of
 	// the following values:
 	//
+	//    * AISERVICES_OPT_OUT_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_ai-opt-out.html)
+	//
 	//    * BACKUP_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html)
 	//
 	//    * TAG_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies.html)
@@ -16092,6 +16962,11 @@ type DescribeOrganizationOutput struct {
 	_ struct{} `type:"structure"`
 
 	// A structure that contains information about the organization.
+	//
+	// The AvailablePolicyTypes part of the response is deprecated, and you shouldn't
+	// use it in your apps. It doesn't include any policy type supported by Organizations
+	// other than SCPs. To determine which policy types are enabled in your organization,
+	// use the ListRoots operation.
 	Organization *Organization `type:"structure"`
 }
 
@@ -16449,6 +17324,8 @@ type DisablePolicyTypeInput struct {
 
 	// The policy type that you want to disable in this root. You can specify one
 	// of the following values:
+	//
+	//    * AISERVICES_OPT_OUT_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_ai-opt-out.html)
 	//
 	//    * BACKUP_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html)
 	//
@@ -17026,6 +17903,8 @@ type EnablePolicyTypeInput struct {
 
 	// The policy type that you want to enable. You can specify one of the following
 	// values:
+	//
+	//    * AISERVICES_OPT_OUT_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_ai-opt-out.html)
 	//
 	//    * BACKUP_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html)
 	//
@@ -17777,12 +18656,17 @@ func (s *InvalidHandshakeTransitionException) RequestID() string {
 // Some of the reasons in the following list might not be applicable to this
 // specific API or operation.
 //
+//    * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+//    the same entity.
+//
 //    * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 //    can't be modified.
 //
 //    * INPUT_REQUIRED: You must include a value for all required parameters.
 //
 //    * INVALID_ENUM: You specified an invalid value.
+//
+//    * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 //
 //    * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //    characters.
@@ -17832,6 +18716,12 @@ func (s *InvalidHandshakeTransitionException) RequestID() string {
 //
 //    * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 //    between entities in the same root.
+//
+//    * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+//    target entity.
+//
+//    * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+//    isn't recognized.
 type InvalidInputException struct {
 	_            struct{}                  `type:"structure"`
 	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
@@ -17896,6 +18786,26 @@ type InviteAccountToOrganizationInput struct {
 	// the recipient account owner.
 	Notes *string `type:"string" sensitive:"true"`
 
+	// A list of tags that you want to attach to the account when it becomes a member
+	// of the organization. For each tag in the list, you must specify both a tag
+	// key and a value. You can set the value to an empty string, but you can't
+	// set it to null. For more information about tagging, see Tagging AWS Organizations
+	// resources (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_tagging.html)
+	// in the AWS Organizations User Guide.
+	//
+	// Any tags in the request are checked for compliance with any applicable tag
+	// policies when the request is made. The request is rejected if the tags in
+	// the request don't match the requirements of the policy at that time. Tag
+	// policy compliance is not checked again when the invitation is accepted and
+	// the tags are actually attached to the account. That means that if the tag
+	// policy changes between the invitation and the acceptance, then that tags
+	// could potentially be non-compliant.
+	//
+	// If any one of the tags is invalid or if you exceed the allowed number of
+	// tags for an account, then the entire request fails and invitations are not
+	// sent.
+	Tags []*Tag `type:"list"`
+
 	// The identifier (ID) of the AWS account that you want to invite to join your
 	// organization. This is a JSON object that contains the following elements:
 	//
@@ -17932,6 +18842,16 @@ func (s *InviteAccountToOrganizationInput) Validate() error {
 	if s.Target == nil {
 		invalidParams.Add(request.NewErrParamRequired("Target"))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 	if s.Target != nil {
 		if err := s.Target.Validate(); err != nil {
 			invalidParams.AddNested("Target", err.(request.ErrInvalidParams))
@@ -17947,6 +18867,12 @@ func (s *InviteAccountToOrganizationInput) Validate() error {
 // SetNotes sets the Notes field's value.
 func (s *InviteAccountToOrganizationInput) SetNotes(v string) *InviteAccountToOrganizationInput {
 	s.Notes = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *InviteAccountToOrganizationInput) SetTags(v []*Tag) *InviteAccountToOrganizationInput {
+	s.Tags = v
 	return s
 }
 
@@ -19195,6 +20121,8 @@ type ListPoliciesForTargetInput struct {
 	// The type of policy that you want to include in the returned list. You must
 	// specify one of the following values:
 	//
+	//    * AISERVICES_OPT_OUT_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_ai-opt-out.html)
+	//
 	//    * BACKUP_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html)
 	//
 	//    * SERVICE_CONTROL_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scp.html)
@@ -19334,6 +20262,8 @@ type ListPoliciesInput struct {
 
 	// Specifies the type of policy that you want to include in the response. You
 	// must specify one of the following values:
+	//
+	//    * AISERVICES_OPT_OUT_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_ai-opt-out.html)
 	//
 	//    * BACKUP_POLICY (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html)
 	//
@@ -19543,7 +20473,20 @@ type ListTagsForResourceInput struct {
 	// NextToken response to indicate where the output should continue from.
 	NextToken *string `type:"string"`
 
-	// The ID of the resource that you want to retrieve tags for.
+	// The ID of the resource with the tags to list.
+	//
+	// You can specify any of the following taggable resources.
+	//
+	//    * AWS account – specify the account ID number.
+	//
+	//    * Organizational unit – specify the OU ID that begins with ou- and looks
+	//    similar to: ou-1a2b-34uvwxyz
+	//
+	//    * Root – specify the root ID that begins with r- and looks similar to:
+	//    r-1a2b
+	//
+	//    * Policy – specify the policy ID that begins with p- andlooks similar
+	//    to: p-12abcdefg3
 	//
 	// ResourceId is a required field
 	ResourceId *string `type:"string" required:"true"`
@@ -19967,14 +20910,12 @@ type Organization struct {
 	// in the AWS Organizations User Guide.
 	Arn *string `type:"string"`
 
-	// A list of policy types that are enabled for this organization. For example,
-	// if your organization has all features enabled, then service control policies
-	// (SCPs) are included in the list.
 	//
-	// Even if a policy type is shown as available in the organization, you can
-	// separately enable and disable them at the root level by using EnablePolicyType
-	// and DisablePolicyType. Use ListRoots to see the status of a policy type in
-	// that root.
+	// Do not use. This field is deprecated and doesn't provide complete information
+	// about the policies in your organization.
+	//
+	// To determine the policies that are enabled and available for use in your
+	// organization, use the ListRoots operation instead.
 	AvailablePolicyTypes []*PolicyTypeSummary `type:"list"`
 
 	// Specifies the functionality that currently is available to the organization.
@@ -21387,8 +22328,17 @@ func (s *SourceParentNotFoundException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
-// A custom key-value pair associated with a resource such as an account within
-// your organization.
+// A custom key-value pair associated with a resource within your organization.
+//
+// You can attach tags to any of the following organization resources.
+//
+//    * AWS account
+//
+//    * Organizational unit (OU)
+//
+//    * Organization root
+//
+//    * Policy
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -21454,9 +22404,27 @@ type TagResourceInput struct {
 	// ResourceId is a required field
 	ResourceId *string `type:"string" required:"true"`
 
-	// The tag to add to the specified resource. You must specify both a tag key
-	// and value. You can set the value of a tag to an empty string, but you can't
-	// set it to null.
+	// A list of tags to add to the specified resource.
+	//
+	// You can specify any of the following taggable resources.
+	//
+	//    * AWS account – specify the account ID number.
+	//
+	//    * Organizational unit – specify the OU ID that begins with ou- and looks
+	//    similar to: ou-1a2b-34uvwxyz
+	//
+	//    * Root – specify the root ID that begins with r- and looks similar to:
+	//    r-1a2b
+	//
+	//    * Policy – specify the policy ID that begins with p- andlooks similar
+	//    to: p-12abcdefg3
+	//
+	// For each tag in the list, you must specify both a tag key and a value. You
+	// can set the value to an empty string, but you can't set it to null.
+	//
+	// If any one of the tags is invalid or if you exceed the allowed number of
+	// tags for an account user, then the entire request fails and the account is
+	// not created.
 	//
 	// Tags is a required field
 	Tags []*Tag `type:"list" required:"true"`
@@ -21524,7 +22492,7 @@ func (s TagResourceOutput) GoString() string {
 	return s.String()
 }
 
-// We can't find a root, OU, or account with the TargetId that you specified.
+// We can't find a root, OU, account, or policy with the TargetId that you specified.
 type TargetNotFoundException struct {
 	_            struct{}                  `type:"structure"`
 	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
@@ -21702,12 +22670,25 @@ func (s *UnsupportedAPIEndpointException) RequestID() string {
 type UntagResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the resource to remove the tag from.
+	// The ID of the resource to remove a tag from.
+	//
+	// You can specify any of the following taggable resources.
+	//
+	//    * AWS account – specify the account ID number.
+	//
+	//    * Organizational unit – specify the OU ID that begins with ou- and looks
+	//    similar to: ou-1a2b-34uvwxyz
+	//
+	//    * Root – specify the root ID that begins with r- and looks similar to:
+	//    r-1a2b
+	//
+	//    * Policy – specify the policy ID that begins with p- andlooks similar
+	//    to: p-12abcdefg3
 	//
 	// ResourceId is a required field
 	ResourceId *string `type:"string" required:"true"`
 
-	// The tag to remove from the specified resource.
+	// The list of keys for tags to remove from the specified resource.
 	//
 	// TagKeys is a required field
 	TagKeys []*string `type:"list" required:"true"`
@@ -21960,6 +22941,13 @@ const (
 	AccessDeniedForDependencyExceptionReasonAccessDeniedDuringCreateServiceLinkedRole = "ACCESS_DENIED_DURING_CREATE_SERVICE_LINKED_ROLE"
 )
 
+// AccessDeniedForDependencyExceptionReason_Values returns all elements of the AccessDeniedForDependencyExceptionReason enum
+func AccessDeniedForDependencyExceptionReason_Values() []string {
+	return []string{
+		AccessDeniedForDependencyExceptionReasonAccessDeniedDuringCreateServiceLinkedRole,
+	}
+}
+
 const (
 	// AccountJoinedMethodInvited is a AccountJoinedMethod enum value
 	AccountJoinedMethodInvited = "INVITED"
@@ -21968,6 +22956,14 @@ const (
 	AccountJoinedMethodCreated = "CREATED"
 )
 
+// AccountJoinedMethod_Values returns all elements of the AccountJoinedMethod enum
+func AccountJoinedMethod_Values() []string {
+	return []string{
+		AccountJoinedMethodInvited,
+		AccountJoinedMethodCreated,
+	}
+}
+
 const (
 	// AccountStatusActive is a AccountStatus enum value
 	AccountStatusActive = "ACTIVE"
@@ -21975,6 +22971,14 @@ const (
 	// AccountStatusSuspended is a AccountStatus enum value
 	AccountStatusSuspended = "SUSPENDED"
 )
+
+// AccountStatus_Values returns all elements of the AccountStatus enum
+func AccountStatus_Values() []string {
+	return []string{
+		AccountStatusActive,
+		AccountStatusSuspended,
+	}
+}
 
 const (
 	// ActionTypeInvite is a ActionType enum value
@@ -21990,6 +22994,16 @@ const (
 	ActionTypeAddOrganizationsServiceLinkedRole = "ADD_ORGANIZATIONS_SERVICE_LINKED_ROLE"
 )
 
+// ActionType_Values returns all elements of the ActionType enum
+func ActionType_Values() []string {
+	return []string{
+		ActionTypeInvite,
+		ActionTypeEnableAllFeatures,
+		ActionTypeApproveAllFeatures,
+		ActionTypeAddOrganizationsServiceLinkedRole,
+	}
+}
+
 const (
 	// ChildTypeAccount is a ChildType enum value
 	ChildTypeAccount = "ACCOUNT"
@@ -21997,6 +23011,14 @@ const (
 	// ChildTypeOrganizationalUnit is a ChildType enum value
 	ChildTypeOrganizationalUnit = "ORGANIZATIONAL_UNIT"
 )
+
+// ChildType_Values returns all elements of the ChildType enum
+func ChildType_Values() []string {
+	return []string{
+		ChildTypeAccount,
+		ChildTypeOrganizationalUnit,
+	}
+}
 
 const (
 	// ConstraintViolationExceptionReasonAccountNumberLimitExceeded is a ConstraintViolationExceptionReason enum value
@@ -22084,6 +23106,40 @@ const (
 	ConstraintViolationExceptionReasonMasterAccountMissingBusinessLicense = "MASTER_ACCOUNT_MISSING_BUSINESS_LICENSE"
 )
 
+// ConstraintViolationExceptionReason_Values returns all elements of the ConstraintViolationExceptionReason enum
+func ConstraintViolationExceptionReason_Values() []string {
+	return []string{
+		ConstraintViolationExceptionReasonAccountNumberLimitExceeded,
+		ConstraintViolationExceptionReasonHandshakeRateLimitExceeded,
+		ConstraintViolationExceptionReasonOuNumberLimitExceeded,
+		ConstraintViolationExceptionReasonOuDepthLimitExceeded,
+		ConstraintViolationExceptionReasonPolicyNumberLimitExceeded,
+		ConstraintViolationExceptionReasonPolicyContentLimitExceeded,
+		ConstraintViolationExceptionReasonMaxPolicyTypeAttachmentLimitExceeded,
+		ConstraintViolationExceptionReasonMinPolicyTypeAttachmentLimitExceeded,
+		ConstraintViolationExceptionReasonAccountCannotLeaveOrganization,
+		ConstraintViolationExceptionReasonAccountCannotLeaveWithoutEula,
+		ConstraintViolationExceptionReasonAccountCannotLeaveWithoutPhoneVerification,
+		ConstraintViolationExceptionReasonMasterAccountPaymentInstrumentRequired,
+		ConstraintViolationExceptionReasonMemberAccountPaymentInstrumentRequired,
+		ConstraintViolationExceptionReasonAccountCreationRateLimitExceeded,
+		ConstraintViolationExceptionReasonMasterAccountAddressDoesNotMatchMarketplace,
+		ConstraintViolationExceptionReasonMasterAccountMissingContactInfo,
+		ConstraintViolationExceptionReasonMasterAccountNotGovcloudEnabled,
+		ConstraintViolationExceptionReasonOrganizationNotInAllFeaturesMode,
+		ConstraintViolationExceptionReasonCreateOrganizationInBillingModeUnsupportedRegion,
+		ConstraintViolationExceptionReasonEmailVerificationCodeExpired,
+		ConstraintViolationExceptionReasonWaitPeriodActive,
+		ConstraintViolationExceptionReasonMaxTagLimitExceeded,
+		ConstraintViolationExceptionReasonTagPolicyViolation,
+		ConstraintViolationExceptionReasonMaxDelegatedAdministratorsForServiceLimitExceeded,
+		ConstraintViolationExceptionReasonCannotRegisterMasterAsDelegatedAdministrator,
+		ConstraintViolationExceptionReasonCannotRemoveDelegatedAdministratorFromOrg,
+		ConstraintViolationExceptionReasonDelegatedAdministratorExistsForThisService,
+		ConstraintViolationExceptionReasonMasterAccountMissingBusinessLicense,
+	}
+}
+
 const (
 	// CreateAccountFailureReasonAccountLimitExceeded is a CreateAccountFailureReason enum value
 	CreateAccountFailureReasonAccountLimitExceeded = "ACCOUNT_LIMIT_EXCEEDED"
@@ -22105,7 +23161,28 @@ const (
 
 	// CreateAccountFailureReasonGovcloudAccountAlreadyExists is a CreateAccountFailureReason enum value
 	CreateAccountFailureReasonGovcloudAccountAlreadyExists = "GOVCLOUD_ACCOUNT_ALREADY_EXISTS"
+
+	// CreateAccountFailureReasonMissingBusinessValidation is a CreateAccountFailureReason enum value
+	CreateAccountFailureReasonMissingBusinessValidation = "MISSING_BUSINESS_VALIDATION"
+
+	// CreateAccountFailureReasonMissingPaymentInstrument is a CreateAccountFailureReason enum value
+	CreateAccountFailureReasonMissingPaymentInstrument = "MISSING_PAYMENT_INSTRUMENT"
 )
+
+// CreateAccountFailureReason_Values returns all elements of the CreateAccountFailureReason enum
+func CreateAccountFailureReason_Values() []string {
+	return []string{
+		CreateAccountFailureReasonAccountLimitExceeded,
+		CreateAccountFailureReasonEmailAlreadyExists,
+		CreateAccountFailureReasonInvalidAddress,
+		CreateAccountFailureReasonInvalidEmail,
+		CreateAccountFailureReasonConcurrentAccountModification,
+		CreateAccountFailureReasonInternalFailure,
+		CreateAccountFailureReasonGovcloudAccountAlreadyExists,
+		CreateAccountFailureReasonMissingBusinessValidation,
+		CreateAccountFailureReasonMissingPaymentInstrument,
+	}
+}
 
 const (
 	// CreateAccountStateInProgress is a CreateAccountState enum value
@@ -22118,13 +23195,34 @@ const (
 	CreateAccountStateFailed = "FAILED"
 )
 
+// CreateAccountState_Values returns all elements of the CreateAccountState enum
+func CreateAccountState_Values() []string {
+	return []string{
+		CreateAccountStateInProgress,
+		CreateAccountStateSucceeded,
+		CreateAccountStateFailed,
+	}
+}
+
 const (
 	// EffectivePolicyTypeTagPolicy is a EffectivePolicyType enum value
 	EffectivePolicyTypeTagPolicy = "TAG_POLICY"
 
 	// EffectivePolicyTypeBackupPolicy is a EffectivePolicyType enum value
 	EffectivePolicyTypeBackupPolicy = "BACKUP_POLICY"
+
+	// EffectivePolicyTypeAiservicesOptOutPolicy is a EffectivePolicyType enum value
+	EffectivePolicyTypeAiservicesOptOutPolicy = "AISERVICES_OPT_OUT_POLICY"
 )
+
+// EffectivePolicyType_Values returns all elements of the EffectivePolicyType enum
+func EffectivePolicyType_Values() []string {
+	return []string{
+		EffectivePolicyTypeTagPolicy,
+		EffectivePolicyTypeBackupPolicy,
+		EffectivePolicyTypeAiservicesOptOutPolicy,
+	}
+}
 
 const (
 	// HandshakeConstraintViolationExceptionReasonAccountNumberLimitExceeded is a HandshakeConstraintViolationExceptionReason enum value
@@ -22152,6 +23250,20 @@ const (
 	HandshakeConstraintViolationExceptionReasonOrganizationMembershipChangeRateLimitExceeded = "ORGANIZATION_MEMBERSHIP_CHANGE_RATE_LIMIT_EXCEEDED"
 )
 
+// HandshakeConstraintViolationExceptionReason_Values returns all elements of the HandshakeConstraintViolationExceptionReason enum
+func HandshakeConstraintViolationExceptionReason_Values() []string {
+	return []string{
+		HandshakeConstraintViolationExceptionReasonAccountNumberLimitExceeded,
+		HandshakeConstraintViolationExceptionReasonHandshakeRateLimitExceeded,
+		HandshakeConstraintViolationExceptionReasonAlreadyInAnOrganization,
+		HandshakeConstraintViolationExceptionReasonOrganizationAlreadyHasAllFeatures,
+		HandshakeConstraintViolationExceptionReasonInviteDisabledDuringEnableAllFeatures,
+		HandshakeConstraintViolationExceptionReasonPaymentInstrumentRequired,
+		HandshakeConstraintViolationExceptionReasonOrganizationFromDifferentSellerOfRecord,
+		HandshakeConstraintViolationExceptionReasonOrganizationMembershipChangeRateLimitExceeded,
+	}
+}
+
 const (
 	// HandshakePartyTypeAccount is a HandshakePartyType enum value
 	HandshakePartyTypeAccount = "ACCOUNT"
@@ -22162,6 +23274,15 @@ const (
 	// HandshakePartyTypeEmail is a HandshakePartyType enum value
 	HandshakePartyTypeEmail = "EMAIL"
 )
+
+// HandshakePartyType_Values returns all elements of the HandshakePartyType enum
+func HandshakePartyType_Values() []string {
+	return []string{
+		HandshakePartyTypeAccount,
+		HandshakePartyTypeOrganization,
+		HandshakePartyTypeEmail,
+	}
+}
 
 const (
 	// HandshakeResourceTypeAccount is a HandshakeResourceType enum value
@@ -22189,6 +23310,20 @@ const (
 	HandshakeResourceTypeParentHandshake = "PARENT_HANDSHAKE"
 )
 
+// HandshakeResourceType_Values returns all elements of the HandshakeResourceType enum
+func HandshakeResourceType_Values() []string {
+	return []string{
+		HandshakeResourceTypeAccount,
+		HandshakeResourceTypeOrganization,
+		HandshakeResourceTypeOrganizationFeatureSet,
+		HandshakeResourceTypeEmail,
+		HandshakeResourceTypeMasterEmail,
+		HandshakeResourceTypeMasterName,
+		HandshakeResourceTypeNotes,
+		HandshakeResourceTypeParentHandshake,
+	}
+}
+
 const (
 	// HandshakeStateRequested is a HandshakeState enum value
 	HandshakeStateRequested = "REQUESTED"
@@ -22209,6 +23344,18 @@ const (
 	HandshakeStateExpired = "EXPIRED"
 )
 
+// HandshakeState_Values returns all elements of the HandshakeState enum
+func HandshakeState_Values() []string {
+	return []string{
+		HandshakeStateRequested,
+		HandshakeStateOpen,
+		HandshakeStateCanceled,
+		HandshakeStateAccepted,
+		HandshakeStateDeclined,
+		HandshakeStateExpired,
+	}
+}
+
 const (
 	// IAMUserAccessToBillingAllow is a IAMUserAccessToBilling enum value
 	IAMUserAccessToBillingAllow = "ALLOW"
@@ -22216,6 +23363,14 @@ const (
 	// IAMUserAccessToBillingDeny is a IAMUserAccessToBilling enum value
 	IAMUserAccessToBillingDeny = "DENY"
 )
+
+// IAMUserAccessToBilling_Values returns all elements of the IAMUserAccessToBilling enum
+func IAMUserAccessToBilling_Values() []string {
+	return []string{
+		IAMUserAccessToBillingAllow,
+		IAMUserAccessToBillingDeny,
+	}
+}
 
 const (
 	// InvalidInputExceptionReasonInvalidPartyTypeTarget is a InvalidInputExceptionReason enum value
@@ -22281,9 +23436,41 @@ const (
 	// InvalidInputExceptionReasonInvalidSystemTagsParameter is a InvalidInputExceptionReason enum value
 	InvalidInputExceptionReasonInvalidSystemTagsParameter = "INVALID_SYSTEM_TAGS_PARAMETER"
 
+	// InvalidInputExceptionReasonDuplicateTagKey is a InvalidInputExceptionReason enum value
+	InvalidInputExceptionReasonDuplicateTagKey = "DUPLICATE_TAG_KEY"
+
 	// InvalidInputExceptionReasonTargetNotSupported is a InvalidInputExceptionReason enum value
 	InvalidInputExceptionReasonTargetNotSupported = "TARGET_NOT_SUPPORTED"
 )
+
+// InvalidInputExceptionReason_Values returns all elements of the InvalidInputExceptionReason enum
+func InvalidInputExceptionReason_Values() []string {
+	return []string{
+		InvalidInputExceptionReasonInvalidPartyTypeTarget,
+		InvalidInputExceptionReasonInvalidSyntaxOrganizationArn,
+		InvalidInputExceptionReasonInvalidSyntaxPolicyId,
+		InvalidInputExceptionReasonInvalidEnum,
+		InvalidInputExceptionReasonInvalidEnumPolicyType,
+		InvalidInputExceptionReasonInvalidListMember,
+		InvalidInputExceptionReasonMaxLengthExceeded,
+		InvalidInputExceptionReasonMaxValueExceeded,
+		InvalidInputExceptionReasonMinLengthExceeded,
+		InvalidInputExceptionReasonMinValueExceeded,
+		InvalidInputExceptionReasonImmutablePolicy,
+		InvalidInputExceptionReasonInvalidPattern,
+		InvalidInputExceptionReasonInvalidPatternTargetId,
+		InvalidInputExceptionReasonInputRequired,
+		InvalidInputExceptionReasonInvalidNextToken,
+		InvalidInputExceptionReasonMaxLimitExceededFilter,
+		InvalidInputExceptionReasonMovingAccountBetweenDifferentRoots,
+		InvalidInputExceptionReasonInvalidFullNameTarget,
+		InvalidInputExceptionReasonUnrecognizedServicePrincipal,
+		InvalidInputExceptionReasonInvalidRoleName,
+		InvalidInputExceptionReasonInvalidSystemTagsParameter,
+		InvalidInputExceptionReasonDuplicateTagKey,
+		InvalidInputExceptionReasonTargetNotSupported,
+	}
+}
 
 const (
 	// OrganizationFeatureSetAll is a OrganizationFeatureSet enum value
@@ -22293,6 +23480,14 @@ const (
 	OrganizationFeatureSetConsolidatedBilling = "CONSOLIDATED_BILLING"
 )
 
+// OrganizationFeatureSet_Values returns all elements of the OrganizationFeatureSet enum
+func OrganizationFeatureSet_Values() []string {
+	return []string{
+		OrganizationFeatureSetAll,
+		OrganizationFeatureSetConsolidatedBilling,
+	}
+}
+
 const (
 	// ParentTypeRoot is a ParentType enum value
 	ParentTypeRoot = "ROOT"
@@ -22300,6 +23495,14 @@ const (
 	// ParentTypeOrganizationalUnit is a ParentType enum value
 	ParentTypeOrganizationalUnit = "ORGANIZATIONAL_UNIT"
 )
+
+// ParentType_Values returns all elements of the ParentType enum
+func ParentType_Values() []string {
+	return []string{
+		ParentTypeRoot,
+		ParentTypeOrganizationalUnit,
+	}
+}
 
 const (
 	// PolicyTypeServiceControlPolicy is a PolicyType enum value
@@ -22310,7 +23513,20 @@ const (
 
 	// PolicyTypeBackupPolicy is a PolicyType enum value
 	PolicyTypeBackupPolicy = "BACKUP_POLICY"
+
+	// PolicyTypeAiservicesOptOutPolicy is a PolicyType enum value
+	PolicyTypeAiservicesOptOutPolicy = "AISERVICES_OPT_OUT_POLICY"
 )
+
+// PolicyType_Values returns all elements of the PolicyType enum
+func PolicyType_Values() []string {
+	return []string{
+		PolicyTypeServiceControlPolicy,
+		PolicyTypeTagPolicy,
+		PolicyTypeBackupPolicy,
+		PolicyTypeAiservicesOptOutPolicy,
+	}
+}
 
 const (
 	// PolicyTypeStatusEnabled is a PolicyTypeStatus enum value
@@ -22323,6 +23539,15 @@ const (
 	PolicyTypeStatusPendingDisable = "PENDING_DISABLE"
 )
 
+// PolicyTypeStatus_Values returns all elements of the PolicyTypeStatus enum
+func PolicyTypeStatus_Values() []string {
+	return []string{
+		PolicyTypeStatusEnabled,
+		PolicyTypeStatusPendingEnable,
+		PolicyTypeStatusPendingDisable,
+	}
+}
+
 const (
 	// TargetTypeAccount is a TargetType enum value
 	TargetTypeAccount = "ACCOUNT"
@@ -22333,3 +23558,12 @@ const (
 	// TargetTypeRoot is a TargetType enum value
 	TargetTypeRoot = "ROOT"
 )
+
+// TargetType_Values returns all elements of the TargetType enum
+func TargetType_Values() []string {
+	return []string{
+		TargetTypeAccount,
+		TargetTypeOrganizationalUnit,
+		TargetTypeRoot,
+	}
+}

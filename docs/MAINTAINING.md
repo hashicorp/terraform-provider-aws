@@ -5,7 +5,7 @@
 - [Pull Requests](#pull-requests)
     - [Pull Request Review Process](#pull-request-review-process)
         - [Dependency Updates](#dependency-updates)
-            - [Go Default Version Update](#go-default-version-update)        
+            - [Go Default Version Update](#go-default-version-update)
             - [AWS Go SDK Updates](#aws-go-sdk-updates)
             - [golangci-lint Updates](#golangci-lint-updates)
             - [Terraform Plugin SDK Updates](#terraform-plugin-sdk-updates)
@@ -18,6 +18,7 @@
 - [Branch Dictionary](#branch-dictionary)
 - [Environment Variable Dictionary](#environment-variable-dictionary)
 - [Label Dictionary](#label-dictionary)
+- [Release Process](#release-process)
 
 <!-- /TOC -->
 
@@ -33,7 +34,7 @@ Incoming issues are classified using labels. These are assigned either by automa
 
 ### Pull Request Review Process
 
-Throughout the review process our first priority is to interact with contributors with kindness, empathy and in accordance with the [Guidelines](https://www.hashicorp.com/community-guidelines) and [Principles](https://www.hashicorp.com/our-principles/) of Hashicorp. 
+Throughout the review process our first priority is to interact with contributors with kindness, empathy and in accordance with the [Guidelines](https://www.hashicorp.com/community-guidelines) and [Principles](https://www.hashicorp.com/our-principles/) of Hashicorp.
 
 Our contributors are often working within the provider as a hobby, or not in their main line of work so we need to give adequate time for response. By default this is two weeks, but it is worth considering taking on the work to complete the PR ourselves if the administrative effort of waiting for a response is greater than just resolving the issues ourselves (Don't wait two weeks, or add a context shift for yourself and the contributor to fix a typo). As long as we use their commits, contributions will be recorded by Github and as always ensure to thank the contributor for their work. Roadmap items are another area where we would consider taking on the work ourselves more quickly in order to meet the commitments made to our users.
 
@@ -99,7 +100,7 @@ Almost exclusively, `github.com/aws/aws-sdk-go` updates are additive in nature. 
 
 Authentication changes:
 
-Occassionally, there will be changes listed in the authentication pieces of the AWS Go SDK codebase, e.g. changes to `aws/session`. The AWS Go SDK `CHANGELOG` should include a relevant description of these changes under a heading such as `SDK Enhancements` or `SDK Bug Fixes`. If they seem worthy of a callout in the Terraform AWS Provider `CHANGELOG`, then upon merging we should include a similar message prefixed with the `provider` subsystem, e.g. `* provider: ...`.
+Occasionally, there will be changes listed in the authentication pieces of the AWS Go SDK codebase, e.g. changes to `aws/session`. The AWS Go SDK `CHANGELOG` should include a relevant description of these changes under a heading such as `SDK Enhancements` or `SDK Bug Fixes`. If they seem worthy of a callout in the Terraform AWS Provider `CHANGELOG`, then upon merging we should include a similar message prefixed with the `provider` subsystem, e.g. `* provider: ...`.
 
 Additionally, if a `CHANGELOG` addition seemed appropriate, this dependency and version should also be updated in the Terraform S3 Backend, which currently lives in Terraform Core. An example of this can be found with https://github.com/terraform-providers/terraform-provider-aws/pull/9305 and https://github.com/hashicorp/terraform/pull/22055.
 
@@ -175,14 +176,14 @@ provider "aws" {
 ```markdown
 NOTES:
 
-* provider: Region validation now automatically supports the new `XX-XXXXX-#` (Location) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [AWS Documentation](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation (e.g. `error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`) or AWS operations will throw their own errors (e.g. `data.aws_availability_zones.current: Error fetching Availability Zones: AuthFailure: AWS was not able to validate the provided access credentials`). [GH-####]
+* provider: Region validation now automatically supports the new `XX-XXXXX-#` (Location) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [AWS Documentation](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation (e.g. `error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`) or AWS operations will throw their own errors (e.g. `data.aws_availability_zones.available: Error fetching Availability Zones: AuthFailure: AWS was not able to validate the provided access credentials`). [GH-####]
 
 ENHANCEMENTS:
 
 * provider: Support automatic region validation for `XX-XXXXX-#` [GH-####]
 ```
 
-- Follow the [Contributing Guide](https://github.com/terraform-providers/terraform-provider-aws/blob/master/.github/CONTRIBUTING.md#new-region) to submit updates for various data sources to support the new region
+- Follow the [Contributing Guide](contributing/contribution-checklists.md#new-region) to submit updates for various data sources to support the new region
 - Submit the dependency update to the Terraform S3 Backend by running the following:
 
 ```shell
@@ -317,7 +318,7 @@ The fix for this has been merged and will release with version X.Y.Z of the Terr
 
 The CHANGELOG is intended to show operator-impacting changes to the codebase for a particular version. If every change or commit to the code resulted in an entry, the CHANGELOG would become less useful for operators. The lists below are general guidelines on when a decision needs to be made to decide whether a change should have an entry.
 
-#### Changes that should have a CHANGELOG entry:
+#### Changes that should have a CHANGELOG entry
 
 - New Resources and Data Sources
 - New full-length documentation guides (e.g. EKS Getting Started Guide, IAM Policy Documents with Terraform)
@@ -326,11 +327,11 @@ The CHANGELOG is intended to show operator-impacting changes to the codebase for
 - Deprecations
 - Removals
 
-#### Changes that may have a CHANGELOG entry:
+#### Changes that may have a CHANGELOG entry
 
 - Dependency updates: If the update contains relevant bug fixes or enhancements that affect operators, those should be called out.
 
-#### Changes that should _not_ have a CHANGELOG entry:
+#### Changes that should _not_ have a CHANGELOG entry
 
 - Resource and provider documentation updates
 - Testing updates
@@ -338,6 +339,7 @@ The CHANGELOG is intended to show operator-impacting changes to the codebase for
 ## Breaking Changes
 
 When breaking changes to the provider are necessary we release them in a major version. If an issue or PR necessitates a breaking change, then the following procedure should be observed:
+
 - Add the `breaking-change` label.
 - Add the issue/PR to the next major version milestone.
 - Leave a comment why this is a breaking change or otherwise only being considered for a major version update. If possible, detail any changes that might be made for the contributor to accomplish the task without a breaking change.
@@ -512,3 +514,14 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 [upstream]: https://github.com/terraform-providers/terraform-provider-aws/labels/upstream
 [waiting-response-badge]: https://img.shields.io/badge/waiting--response-5319e7
 [waiting-response]: https://github.com/terraform-providers/terraform-provider-aws/labels/waiting-response
+
+## Release Process
+
+- Create a milestone for the next release after this release (generally, the next milestone will be a minor version increase unless previously decided for a major or patch version)
+- Check the existing release milestone for open items and either work through them or move them to the next milestone
+- Run the HashiCorp (non-OSS) TeamCity release job either via:
+    - Slack command: `/tcrelease aws #.#.#` (no `v` prefix)
+    - Web interface: With the `DEPLOYMENT_TARGET_VERSION` matching the expected release milestone and `DEPLOYMENT_NEXT_VERSION` matching the next release milestone
+- Wait for the TeamCity release job to complete either by watching the build logs or Slack notifications
+- Close the release milestone
+- Create a new GitHub release with the release title exactly matching the tag and milestone (e.g. `v2.22.0`) and copy the entries from the CHANGELOG to the release notes. This will trigger [HashiBot](https://github.com/apps/hashibot) release comments.

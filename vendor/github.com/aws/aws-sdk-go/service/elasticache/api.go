@@ -1201,11 +1201,9 @@ func (c *ElastiCache) CreateReplicationGroupRequest(input *CreateReplicationGrou
 //
 // When a Redis (cluster mode disabled) replication group has been successfully
 // created, you can add one or more read replicas to it, up to a total of 5
-// read replicas. You cannot alter a Redis (cluster mode enabled) replication
-// group after it has been created. However, if you need to increase or decrease
-// the number of node groups (console: shards), you can avail yourself of ElastiCache
-// for Redis' enhanced backup and restore. For more information, see Restoring
-// From a Backup with Cluster Resizing (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/backups-restoring.html)
+// read replicas. If you need to increase or decrease the number of node groups
+// (console: shards), you can avail yourself of ElastiCache for Redis' scaling.
+// For more information, see Scaling ElastiCache for Redis Clusters (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Scaling.html)
 // in the ElastiCache User Guide.
 //
 // This operation is valid for Redis only.
@@ -6417,7 +6415,7 @@ func (c *ElastiCache) TestFailoverRequest(input *TestFailoverInput) (req *reques
 //    in the ElastiCache User Guide DescribeEvents (https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeEvents.html)
 //    in the ElastiCache API Reference
 //
-// Also see, Testing Multi-AZ with Automatic Failover (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/AutoFailover.html#auto-failover-test)
+// Also see, Testing Multi-AZ (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/AutoFailover.html#auto-failover-test)
 // in the ElastiCache User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -7987,8 +7985,7 @@ type ConfigureShard struct {
 	//
 	// The minimum number of replicas in a shard or replication group is:
 	//
-	//    * Redis (cluster mode disabled) If Multi-AZ with Automatic Failover is
-	//    enabled: 1 If Multi-AZ with Automatic Failover is not enable: 0
+	//    * Redis (cluster mode disabled) If Multi-AZ: 1 If Multi-AZ: 0
 	//
 	//    * Redis (cluster mode enabled): 0 (though you will not be able to failover
 	//    to a replica if your primary node fails)
@@ -9025,15 +9022,6 @@ type CreateReplicationGroupInput struct {
 	// replication groups.
 	//
 	// Default: false
-	//
-	// Amazon ElastiCache for Redis does not support Multi-AZ with automatic failover
-	// on:
-	//
-	//    * Redis versions earlier than 2.8.6.
-	//
-	//    * Redis (cluster mode disabled): T1 node types.
-	//
-	//    * Redis (cluster mode enabled): T1 node types.
 	AutomaticFailoverEnabled *bool `type:"boolean"`
 
 	// The compute and memory capacity of the nodes in the node group (shard).
@@ -9817,8 +9805,8 @@ type DecreaseReplicaCountInput struct {
 	//
 	// The minimum number of replicas in a shard or replication group is:
 	//
-	//    * Redis (cluster mode disabled) If Multi-AZ with Automatic Failover is
-	//    enabled: 1 If Multi-AZ with Automatic Failover is not enabled: 0
+	//    * Redis (cluster mode disabled) If Multi-AZ is enabled: 1 If Multi-AZ
+	//    is not enabled: 0
 	//
 	//    * Redis (cluster mode enabled): 0 (though you will not be able to failover
 	//    to a replica if your primary node fails)
@@ -13815,15 +13803,6 @@ type ModifyReplicationGroupInput struct {
 	// primary if the existing primary encounters a failure.
 	//
 	// Valid values: true | false
-	//
-	// Amazon ElastiCache for Redis does not support Multi-AZ with automatic failover
-	// on:
-	//
-	//    * Redis versions earlier than 2.8.6.
-	//
-	//    * Redis (cluster mode disabled): T1 node types.
-	//
-	//    * Redis (cluster mode enabled): T1 node types.
 	AutomaticFailoverEnabled *bool `type:"boolean"`
 
 	// A valid cache node type that you want to scale this replication group to.
@@ -15428,17 +15407,7 @@ type ReplicationGroup struct {
 	// The date the auth token was last modified
 	AuthTokenLastModifiedDate *time.Time `type:"timestamp"`
 
-	// Indicates the status of Multi-AZ with automatic failover for this Redis replication
-	// group.
-	//
-	// Amazon ElastiCache for Redis does not support Multi-AZ with automatic failover
-	// on:
-	//
-	//    * Redis versions earlier than 2.8.6.
-	//
-	//    * Redis (cluster mode disabled): T1 node types.
-	//
-	//    * Redis (cluster mode enabled): T1 node types.
+	// Indicates the status of automatic failover for this Redis replication group.
 	AutomaticFailover *string `type:"string" enum:"AutomaticFailoverStatus"`
 
 	// The name of the compute and memory capacity node type for each node in the
@@ -15670,17 +15639,7 @@ type ReplicationGroupPendingModifiedValues struct {
 	// The auth token status
 	AuthTokenStatus *string `type:"string" enum:"AuthTokenUpdateStatus"`
 
-	// Indicates the status of Multi-AZ with automatic failover for this Redis replication
-	// group.
-	//
-	// Amazon ElastiCache for Redis does not support Multi-AZ with automatic failover
-	// on:
-	//
-	//    * Redis versions earlier than 2.8.6.
-	//
-	//    * Redis (cluster mode disabled): T1 node types.
-	//
-	//    * Redis (cluster mode enabled): T1 node types.
+	// Indicates the status of automatic failover for this Redis replication group.
 	AutomaticFailoverStatus *string `type:"string" enum:"PendingAutomaticFailoverStatus"`
 
 	// The primary cluster ID that is applied immediately (if --apply-immediately
@@ -16446,17 +16405,8 @@ type Snapshot struct {
 	// This parameter is currently disabled.
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
 
-	// Indicates the status of Multi-AZ with automatic failover for the source Redis
-	// replication group.
-	//
-	// Amazon ElastiCache for Redis does not support Multi-AZ with automatic failover
-	// on:
-	//
-	//    * Redis versions earlier than 2.8.6.
-	//
-	//    * Redis (cluster mode disabled): T1 node types.
-	//
-	//    * Redis (cluster mode enabled): T1 node types.
+	// Indicates the status of automatic failover for the source Redis replication
+	// group.
 	AutomaticFailover *string `type:"string" enum:"AutomaticFailoverStatus"`
 
 	// The date and time when the source cluster was created.
@@ -17298,6 +17248,14 @@ const (
 	AZModeCrossAz = "cross-az"
 )
 
+// AZMode_Values returns all elements of the AZMode enum
+func AZMode_Values() []string {
+	return []string{
+		AZModeSingleAz,
+		AZModeCrossAz,
+	}
+}
+
 const (
 	// AuthTokenUpdateStatusSetting is a AuthTokenUpdateStatus enum value
 	AuthTokenUpdateStatusSetting = "SETTING"
@@ -17306,6 +17264,14 @@ const (
 	AuthTokenUpdateStatusRotating = "ROTATING"
 )
 
+// AuthTokenUpdateStatus_Values returns all elements of the AuthTokenUpdateStatus enum
+func AuthTokenUpdateStatus_Values() []string {
+	return []string{
+		AuthTokenUpdateStatusSetting,
+		AuthTokenUpdateStatusRotating,
+	}
+}
+
 const (
 	// AuthTokenUpdateStrategyTypeSet is a AuthTokenUpdateStrategyType enum value
 	AuthTokenUpdateStrategyTypeSet = "SET"
@@ -17313,6 +17279,14 @@ const (
 	// AuthTokenUpdateStrategyTypeRotate is a AuthTokenUpdateStrategyType enum value
 	AuthTokenUpdateStrategyTypeRotate = "ROTATE"
 )
+
+// AuthTokenUpdateStrategyType_Values returns all elements of the AuthTokenUpdateStrategyType enum
+func AuthTokenUpdateStrategyType_Values() []string {
+	return []string{
+		AuthTokenUpdateStrategyTypeSet,
+		AuthTokenUpdateStrategyTypeRotate,
+	}
+}
 
 const (
 	// AutomaticFailoverStatusEnabled is a AutomaticFailoverStatus enum value
@@ -17328,6 +17302,16 @@ const (
 	AutomaticFailoverStatusDisabling = "disabling"
 )
 
+// AutomaticFailoverStatus_Values returns all elements of the AutomaticFailoverStatus enum
+func AutomaticFailoverStatus_Values() []string {
+	return []string{
+		AutomaticFailoverStatusEnabled,
+		AutomaticFailoverStatusDisabled,
+		AutomaticFailoverStatusEnabling,
+		AutomaticFailoverStatusDisabling,
+	}
+}
+
 const (
 	// ChangeTypeImmediate is a ChangeType enum value
 	ChangeTypeImmediate = "immediate"
@@ -17335,6 +17319,14 @@ const (
 	// ChangeTypeRequiresReboot is a ChangeType enum value
 	ChangeTypeRequiresReboot = "requires-reboot"
 )
+
+// ChangeType_Values returns all elements of the ChangeType enum
+func ChangeType_Values() []string {
+	return []string{
+		ChangeTypeImmediate,
+		ChangeTypeRequiresReboot,
+	}
+}
 
 const (
 	// MultiAZStatusEnabled is a MultiAZStatus enum value
@@ -17344,6 +17336,14 @@ const (
 	MultiAZStatusDisabled = "disabled"
 )
 
+// MultiAZStatus_Values returns all elements of the MultiAZStatus enum
+func MultiAZStatus_Values() []string {
+	return []string{
+		MultiAZStatusEnabled,
+		MultiAZStatusDisabled,
+	}
+}
+
 const (
 	// NodeUpdateInitiatedBySystem is a NodeUpdateInitiatedBy enum value
 	NodeUpdateInitiatedBySystem = "system"
@@ -17351,6 +17351,14 @@ const (
 	// NodeUpdateInitiatedByCustomer is a NodeUpdateInitiatedBy enum value
 	NodeUpdateInitiatedByCustomer = "customer"
 )
+
+// NodeUpdateInitiatedBy_Values returns all elements of the NodeUpdateInitiatedBy enum
+func NodeUpdateInitiatedBy_Values() []string {
+	return []string{
+		NodeUpdateInitiatedBySystem,
+		NodeUpdateInitiatedByCustomer,
+	}
+}
 
 const (
 	// NodeUpdateStatusNotApplied is a NodeUpdateStatus enum value
@@ -17372,6 +17380,18 @@ const (
 	NodeUpdateStatusComplete = "complete"
 )
 
+// NodeUpdateStatus_Values returns all elements of the NodeUpdateStatus enum
+func NodeUpdateStatus_Values() []string {
+	return []string{
+		NodeUpdateStatusNotApplied,
+		NodeUpdateStatusWaitingToStart,
+		NodeUpdateStatusInProgress,
+		NodeUpdateStatusStopping,
+		NodeUpdateStatusStopped,
+		NodeUpdateStatusComplete,
+	}
+}
+
 const (
 	// PendingAutomaticFailoverStatusEnabled is a PendingAutomaticFailoverStatus enum value
 	PendingAutomaticFailoverStatusEnabled = "enabled"
@@ -17379,6 +17399,14 @@ const (
 	// PendingAutomaticFailoverStatusDisabled is a PendingAutomaticFailoverStatus enum value
 	PendingAutomaticFailoverStatusDisabled = "disabled"
 )
+
+// PendingAutomaticFailoverStatus_Values returns all elements of the PendingAutomaticFailoverStatus enum
+func PendingAutomaticFailoverStatus_Values() []string {
+	return []string{
+		PendingAutomaticFailoverStatusEnabled,
+		PendingAutomaticFailoverStatusDisabled,
+	}
+}
 
 const (
 	// ServiceUpdateSeverityCritical is a ServiceUpdateSeverity enum value
@@ -17394,6 +17422,16 @@ const (
 	ServiceUpdateSeverityLow = "low"
 )
 
+// ServiceUpdateSeverity_Values returns all elements of the ServiceUpdateSeverity enum
+func ServiceUpdateSeverity_Values() []string {
+	return []string{
+		ServiceUpdateSeverityCritical,
+		ServiceUpdateSeverityImportant,
+		ServiceUpdateSeverityMedium,
+		ServiceUpdateSeverityLow,
+	}
+}
+
 const (
 	// ServiceUpdateStatusAvailable is a ServiceUpdateStatus enum value
 	ServiceUpdateStatusAvailable = "available"
@@ -17405,10 +17443,26 @@ const (
 	ServiceUpdateStatusExpired = "expired"
 )
 
+// ServiceUpdateStatus_Values returns all elements of the ServiceUpdateStatus enum
+func ServiceUpdateStatus_Values() []string {
+	return []string{
+		ServiceUpdateStatusAvailable,
+		ServiceUpdateStatusCancelled,
+		ServiceUpdateStatusExpired,
+	}
+}
+
 const (
 	// ServiceUpdateTypeSecurityUpdate is a ServiceUpdateType enum value
 	ServiceUpdateTypeSecurityUpdate = "security-update"
 )
+
+// ServiceUpdateType_Values returns all elements of the ServiceUpdateType enum
+func ServiceUpdateType_Values() []string {
+	return []string{
+		ServiceUpdateTypeSecurityUpdate,
+	}
+}
 
 const (
 	// SlaMetYes is a SlaMet enum value
@@ -17420,6 +17474,15 @@ const (
 	// SlaMetNA is a SlaMet enum value
 	SlaMetNA = "n/a"
 )
+
+// SlaMet_Values returns all elements of the SlaMet enum
+func SlaMet_Values() []string {
+	return []string{
+		SlaMetYes,
+		SlaMetNo,
+		SlaMetNA,
+	}
+}
 
 const (
 	// SourceTypeCacheCluster is a SourceType enum value
@@ -17437,6 +17500,17 @@ const (
 	// SourceTypeReplicationGroup is a SourceType enum value
 	SourceTypeReplicationGroup = "replication-group"
 )
+
+// SourceType_Values returns all elements of the SourceType enum
+func SourceType_Values() []string {
+	return []string{
+		SourceTypeCacheCluster,
+		SourceTypeCacheParameterGroup,
+		SourceTypeCacheSecurityGroup,
+		SourceTypeCacheSubnetGroup,
+		SourceTypeReplicationGroup,
+	}
+}
 
 const (
 	// UpdateActionStatusNotApplied is a UpdateActionStatus enum value
@@ -17466,3 +17540,18 @@ const (
 	// UpdateActionStatusNotApplicable is a UpdateActionStatus enum value
 	UpdateActionStatusNotApplicable = "not-applicable"
 )
+
+// UpdateActionStatus_Values returns all elements of the UpdateActionStatus enum
+func UpdateActionStatus_Values() []string {
+	return []string{
+		UpdateActionStatusNotApplied,
+		UpdateActionStatusWaitingToStart,
+		UpdateActionStatusInProgress,
+		UpdateActionStatusStopping,
+		UpdateActionStatusStopped,
+		UpdateActionStatusComplete,
+		UpdateActionStatusScheduling,
+		UpdateActionStatusScheduled,
+		UpdateActionStatusNotApplicable,
+	}
+}
