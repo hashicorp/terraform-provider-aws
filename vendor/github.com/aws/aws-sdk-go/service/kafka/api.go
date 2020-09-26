@@ -13,6 +13,200 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/restjson"
 )
 
+const opBatchAssociateScramSecret = "BatchAssociateScramSecret"
+
+// BatchAssociateScramSecretRequest generates a "aws/request.Request" representing the
+// client's request for the BatchAssociateScramSecret operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchAssociateScramSecret for more information on using the BatchAssociateScramSecret
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the BatchAssociateScramSecretRequest method.
+//    req, resp := client.BatchAssociateScramSecretRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/BatchAssociateScramSecret
+func (c *Kafka) BatchAssociateScramSecretRequest(input *BatchAssociateScramSecretInput) (req *request.Request, output *BatchAssociateScramSecretOutput) {
+	op := &request.Operation{
+		Name:       opBatchAssociateScramSecret,
+		HTTPMethod: "POST",
+		HTTPPath:   "/v1/clusters/{clusterArn}/scram-secrets",
+	}
+
+	if input == nil {
+		input = &BatchAssociateScramSecretInput{}
+	}
+
+	output = &BatchAssociateScramSecretOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchAssociateScramSecret API operation for Managed Streaming for Kafka.
+//
+// Associates one or more Scram Secrets with an Amazon MSK cluster.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation BatchAssociateScramSecret for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//   Returns information about an error.
+//
+//   * UnauthorizedException
+//   Returns information about an error.
+//
+//   * InternalServerErrorException
+//   Returns information about an error.
+//
+//   * ForbiddenException
+//   Returns information about an error.
+//
+//   * NotFoundException
+//   Returns information about an error.
+//
+//   * ServiceUnavailableException
+//   Returns information about an error.
+//
+//   * TooManyRequestsException
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/BatchAssociateScramSecret
+func (c *Kafka) BatchAssociateScramSecret(input *BatchAssociateScramSecretInput) (*BatchAssociateScramSecretOutput, error) {
+	req, out := c.BatchAssociateScramSecretRequest(input)
+	return out, req.Send()
+}
+
+// BatchAssociateScramSecretWithContext is the same as BatchAssociateScramSecret with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchAssociateScramSecret for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) BatchAssociateScramSecretWithContext(ctx aws.Context, input *BatchAssociateScramSecretInput, opts ...request.Option) (*BatchAssociateScramSecretOutput, error) {
+	req, out := c.BatchAssociateScramSecretRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opBatchDisassociateScramSecret = "BatchDisassociateScramSecret"
+
+// BatchDisassociateScramSecretRequest generates a "aws/request.Request" representing the
+// client's request for the BatchDisassociateScramSecret operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchDisassociateScramSecret for more information on using the BatchDisassociateScramSecret
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the BatchDisassociateScramSecretRequest method.
+//    req, resp := client.BatchDisassociateScramSecretRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/BatchDisassociateScramSecret
+func (c *Kafka) BatchDisassociateScramSecretRequest(input *BatchDisassociateScramSecretInput) (req *request.Request, output *BatchDisassociateScramSecretOutput) {
+	op := &request.Operation{
+		Name:       opBatchDisassociateScramSecret,
+		HTTPMethod: "PATCH",
+		HTTPPath:   "/v1/clusters/{clusterArn}/scram-secrets",
+	}
+
+	if input == nil {
+		input = &BatchDisassociateScramSecretInput{}
+	}
+
+	output = &BatchDisassociateScramSecretOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchDisassociateScramSecret API operation for Managed Streaming for Kafka.
+//
+// Disassociates one or more Scram Secrets from an Amazon MSK cluster.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation BatchDisassociateScramSecret for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//   Returns information about an error.
+//
+//   * UnauthorizedException
+//   Returns information about an error.
+//
+//   * InternalServerErrorException
+//   Returns information about an error.
+//
+//   * ForbiddenException
+//   Returns information about an error.
+//
+//   * NotFoundException
+//   Returns information about an error.
+//
+//   * ServiceUnavailableException
+//   Returns information about an error.
+//
+//   * TooManyRequestsException
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/BatchDisassociateScramSecret
+func (c *Kafka) BatchDisassociateScramSecret(input *BatchDisassociateScramSecretInput) (*BatchDisassociateScramSecretOutput, error) {
+	req, out := c.BatchDisassociateScramSecretRequest(input)
+	return out, req.Send()
+}
+
+// BatchDisassociateScramSecretWithContext is the same as BatchDisassociateScramSecret with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchDisassociateScramSecret for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) BatchDisassociateScramSecretWithContext(ctx aws.Context, input *BatchDisassociateScramSecretInput, opts ...request.Option) (*BatchDisassociateScramSecretOutput, error) {
+	req, out := c.BatchDisassociateScramSecretRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateCluster = "CreateCluster"
 
 // CreateClusterRequest generates a "aws/request.Request" representing the
@@ -291,6 +485,95 @@ func (c *Kafka) DeleteCluster(input *DeleteClusterInput) (*DeleteClusterOutput, 
 // for more information on using Contexts.
 func (c *Kafka) DeleteClusterWithContext(ctx aws.Context, input *DeleteClusterInput, opts ...request.Option) (*DeleteClusterOutput, error) {
 	req, out := c.DeleteClusterRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteConfiguration = "DeleteConfiguration"
+
+// DeleteConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteConfiguration for more information on using the DeleteConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteConfigurationRequest method.
+//    req, resp := client.DeleteConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/DeleteConfiguration
+func (c *Kafka) DeleteConfigurationRequest(input *DeleteConfigurationInput) (req *request.Request, output *DeleteConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opDeleteConfiguration,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/v1/configurations/{arn}",
+	}
+
+	if input == nil {
+		input = &DeleteConfigurationInput{}
+	}
+
+	output = &DeleteConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteConfiguration API operation for Managed Streaming for Kafka.
+//
+// Deletes the specified MSK configuration. The configuration must be in the
+// ACTIVE or DELETE_FAILED state.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation DeleteConfiguration for usage and error information.
+//
+// Returned Error Types:
+//   * NotFoundException
+//   Returns information about an error.
+//
+//   * BadRequestException
+//   Returns information about an error.
+//
+//   * InternalServerErrorException
+//   Returns information about an error.
+//
+//   * ForbiddenException
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/DeleteConfiguration
+func (c *Kafka) DeleteConfiguration(input *DeleteConfigurationInput) (*DeleteConfigurationOutput, error) {
+	req, out := c.DeleteConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// DeleteConfigurationWithContext is the same as DeleteConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) DeleteConfigurationWithContext(ctx aws.Context, input *DeleteConfigurationInput, opts ...request.Option) (*DeleteConfigurationOutput, error) {
+	req, out := c.DeleteConfigurationRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1741,6 +2024,161 @@ func (c *Kafka) ListNodesPagesWithContext(ctx aws.Context, input *ListNodesInput
 	return p.Err()
 }
 
+const opListScramSecrets = "ListScramSecrets"
+
+// ListScramSecretsRequest generates a "aws/request.Request" representing the
+// client's request for the ListScramSecrets operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListScramSecrets for more information on using the ListScramSecrets
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListScramSecretsRequest method.
+//    req, resp := client.ListScramSecretsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/ListScramSecrets
+func (c *Kafka) ListScramSecretsRequest(input *ListScramSecretsInput) (req *request.Request, output *ListScramSecretsOutput) {
+	op := &request.Operation{
+		Name:       opListScramSecrets,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/clusters/{clusterArn}/scram-secrets",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListScramSecretsInput{}
+	}
+
+	output = &ListScramSecretsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListScramSecrets API operation for Managed Streaming for Kafka.
+//
+// Returns a list of the Scram Secrets associated with an Amazon MSK cluster.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation ListScramSecrets for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//   Returns information about an error.
+//
+//   * UnauthorizedException
+//   Returns information about an error.
+//
+//   * InternalServerErrorException
+//   Returns information about an error.
+//
+//   * ForbiddenException
+//   Returns information about an error.
+//
+//   * NotFoundException
+//   Returns information about an error.
+//
+//   * ServiceUnavailableException
+//   Returns information about an error.
+//
+//   * TooManyRequestsException
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/ListScramSecrets
+func (c *Kafka) ListScramSecrets(input *ListScramSecretsInput) (*ListScramSecretsOutput, error) {
+	req, out := c.ListScramSecretsRequest(input)
+	return out, req.Send()
+}
+
+// ListScramSecretsWithContext is the same as ListScramSecrets with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListScramSecrets for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) ListScramSecretsWithContext(ctx aws.Context, input *ListScramSecretsInput, opts ...request.Option) (*ListScramSecretsOutput, error) {
+	req, out := c.ListScramSecretsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListScramSecretsPages iterates over the pages of a ListScramSecrets operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListScramSecrets method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListScramSecrets operation.
+//    pageNum := 0
+//    err := client.ListScramSecretsPages(params,
+//        func(page *kafka.ListScramSecretsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Kafka) ListScramSecretsPages(input *ListScramSecretsInput, fn func(*ListScramSecretsOutput, bool) bool) error {
+	return c.ListScramSecretsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListScramSecretsPagesWithContext same as ListScramSecretsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) ListScramSecretsPagesWithContext(ctx aws.Context, input *ListScramSecretsInput, fn func(*ListScramSecretsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListScramSecretsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListScramSecretsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListScramSecretsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListTagsForResource = "ListTagsForResource"
 
 // ListTagsForResourceRequest generates a "aws/request.Request" representing the
@@ -1821,6 +2259,103 @@ func (c *Kafka) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsF
 // for more information on using Contexts.
 func (c *Kafka) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsForResourceInput, opts ...request.Option) (*ListTagsForResourceOutput, error) {
 	req, out := c.ListTagsForResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opRebootBroker = "RebootBroker"
+
+// RebootBrokerRequest generates a "aws/request.Request" representing the
+// client's request for the RebootBroker operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RebootBroker for more information on using the RebootBroker
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RebootBrokerRequest method.
+//    req, resp := client.RebootBrokerRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/RebootBroker
+func (c *Kafka) RebootBrokerRequest(input *RebootBrokerInput) (req *request.Request, output *RebootBrokerOutput) {
+	op := &request.Operation{
+		Name:       opRebootBroker,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v1/clusters/{clusterArn}/reboot-broker",
+	}
+
+	if input == nil {
+		input = &RebootBrokerInput{}
+	}
+
+	output = &RebootBrokerOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// RebootBroker API operation for Managed Streaming for Kafka.
+//
+// Executes a reboot on a broker.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation RebootBroker for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//   Returns information about an error.
+//
+//   * UnauthorizedException
+//   Returns information about an error.
+//
+//   * InternalServerErrorException
+//   Returns information about an error.
+//
+//   * ForbiddenException
+//   Returns information about an error.
+//
+//   * NotFoundException
+//   Returns information about an error.
+//
+//   * ServiceUnavailableException
+//   Returns information about an error.
+//
+//   * TooManyRequestsException
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/RebootBroker
+func (c *Kafka) RebootBroker(input *RebootBrokerInput) (*RebootBrokerOutput, error) {
+	req, out := c.RebootBrokerRequest(input)
+	return out, req.Send()
+}
+
+// RebootBrokerWithContext is the same as RebootBroker with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RebootBroker for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) RebootBrokerWithContext(ctx aws.Context, input *RebootBrokerInput, opts ...request.Option) (*RebootBrokerOutput, error) {
+	req, out := c.RebootBrokerRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2374,6 +2909,98 @@ func (c *Kafka) UpdateClusterKafkaVersionWithContext(ctx aws.Context, input *Upd
 	return out, req.Send()
 }
 
+const opUpdateConfiguration = "UpdateConfiguration"
+
+// UpdateConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateConfiguration for more information on using the UpdateConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateConfigurationRequest method.
+//    req, resp := client.UpdateConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/UpdateConfiguration
+func (c *Kafka) UpdateConfigurationRequest(input *UpdateConfigurationInput) (req *request.Request, output *UpdateConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opUpdateConfiguration,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v1/configurations/{arn}",
+	}
+
+	if input == nil {
+		input = &UpdateConfigurationInput{}
+	}
+
+	output = &UpdateConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateConfiguration API operation for Managed Streaming for Kafka.
+//
+// Updates an existing MSK configuration. The configuration must be in the Active
+// state.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation UpdateConfiguration for usage and error information.
+//
+// Returned Error Types:
+//   * ServiceUnavailableException
+//   Returns information about an error.
+//
+//   * BadRequestException
+//   Returns information about an error.
+//
+//   * UnauthorizedException
+//   Returns information about an error.
+//
+//   * InternalServerErrorException
+//   Returns information about an error.
+//
+//   * ForbiddenException
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/UpdateConfiguration
+func (c *Kafka) UpdateConfiguration(input *UpdateConfigurationInput) (*UpdateConfigurationOutput, error) {
+	req, out := c.UpdateConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// UpdateConfigurationWithContext is the same as UpdateConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) UpdateConfigurationWithContext(ctx aws.Context, input *UpdateConfigurationInput, opts ...request.Option) (*UpdateConfigurationOutput, error) {
+	req, out := c.UpdateConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateMonitoring = "UpdateMonitoring"
 
 // UpdateMonitoringRequest generates a "aws/request.Request" representing the
@@ -2523,6 +3150,180 @@ func (s *BadRequestException) StatusCode() int {
 // RequestID returns the service's response RequestID for request.
 func (s *BadRequestException) RequestID() string {
 	return s.RespMetadata.RequestID
+}
+
+// Request body for BatchAssociateScramSecret.
+type BatchAssociateScramSecretInput struct {
+	_ struct{} `type:"structure"`
+
+	// ClusterArn is a required field
+	ClusterArn *string `location:"uri" locationName:"clusterArn" type:"string" required:"true"`
+
+	// List of AWS Secrets Manager secret ARNs.
+	//
+	// SecretArnList is a required field
+	SecretArnList []*string `locationName:"secretArnList" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchAssociateScramSecretInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchAssociateScramSecretInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchAssociateScramSecretInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchAssociateScramSecretInput"}
+	if s.ClusterArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterArn"))
+	}
+	if s.ClusterArn != nil && len(*s.ClusterArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClusterArn", 1))
+	}
+	if s.SecretArnList == nil {
+		invalidParams.Add(request.NewErrParamRequired("SecretArnList"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *BatchAssociateScramSecretInput) SetClusterArn(v string) *BatchAssociateScramSecretInput {
+	s.ClusterArn = &v
+	return s
+}
+
+// SetSecretArnList sets the SecretArnList field's value.
+func (s *BatchAssociateScramSecretInput) SetSecretArnList(v []*string) *BatchAssociateScramSecretInput {
+	s.SecretArnList = v
+	return s
+}
+
+// Response body for BatchAssociateScramSecret.
+type BatchAssociateScramSecretOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the cluster.
+	ClusterArn *string `locationName:"clusterArn" type:"string"`
+
+	// List of errors when associating secrets to cluster.
+	UnprocessedScramSecrets []*UnprocessedScramSecret `locationName:"unprocessedScramSecrets" type:"list"`
+}
+
+// String returns the string representation
+func (s BatchAssociateScramSecretOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchAssociateScramSecretOutput) GoString() string {
+	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *BatchAssociateScramSecretOutput) SetClusterArn(v string) *BatchAssociateScramSecretOutput {
+	s.ClusterArn = &v
+	return s
+}
+
+// SetUnprocessedScramSecrets sets the UnprocessedScramSecrets field's value.
+func (s *BatchAssociateScramSecretOutput) SetUnprocessedScramSecrets(v []*UnprocessedScramSecret) *BatchAssociateScramSecretOutput {
+	s.UnprocessedScramSecrets = v
+	return s
+}
+
+// Request body for BatchDisassociateScramSecret.
+type BatchDisassociateScramSecretInput struct {
+	_ struct{} `type:"structure"`
+
+	// ClusterArn is a required field
+	ClusterArn *string `location:"uri" locationName:"clusterArn" type:"string" required:"true"`
+
+	// List of AWS Secrets Manager secret ARNs.
+	//
+	// SecretArnList is a required field
+	SecretArnList []*string `locationName:"secretArnList" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchDisassociateScramSecretInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchDisassociateScramSecretInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchDisassociateScramSecretInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchDisassociateScramSecretInput"}
+	if s.ClusterArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterArn"))
+	}
+	if s.ClusterArn != nil && len(*s.ClusterArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClusterArn", 1))
+	}
+	if s.SecretArnList == nil {
+		invalidParams.Add(request.NewErrParamRequired("SecretArnList"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *BatchDisassociateScramSecretInput) SetClusterArn(v string) *BatchDisassociateScramSecretInput {
+	s.ClusterArn = &v
+	return s
+}
+
+// SetSecretArnList sets the SecretArnList field's value.
+func (s *BatchDisassociateScramSecretInput) SetSecretArnList(v []*string) *BatchDisassociateScramSecretInput {
+	s.SecretArnList = v
+	return s
+}
+
+// Response body for BatchDisassociateScramSecret.
+type BatchDisassociateScramSecretOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the cluster.
+	ClusterArn *string `locationName:"clusterArn" type:"string"`
+
+	// List of errors when disassociating secrets to cluster.
+	UnprocessedScramSecrets []*UnprocessedScramSecret `locationName:"unprocessedScramSecrets" type:"list"`
+}
+
+// String returns the string representation
+func (s BatchDisassociateScramSecretOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchDisassociateScramSecretOutput) GoString() string {
+	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *BatchDisassociateScramSecretOutput) SetClusterArn(v string) *BatchDisassociateScramSecretOutput {
+	s.ClusterArn = &v
+	return s
+}
+
+// SetUnprocessedScramSecrets sets the UnprocessedScramSecrets field's value.
+func (s *BatchDisassociateScramSecretOutput) SetUnprocessedScramSecrets(v []*UnprocessedScramSecret) *BatchDisassociateScramSecretOutput {
+	s.UnprocessedScramSecrets = v
+	return s
 }
 
 // Specifies the EBS volume upgrade information. The broker identifier must
@@ -2864,6 +3665,8 @@ func (s *BrokerSoftwareInfo) SetKafkaVersion(v string) *BrokerSoftwareInfo {
 type ClientAuthentication struct {
 	_ struct{} `type:"structure"`
 
+	Sasl *Sasl `locationName:"sasl" type:"structure"`
+
 	// Details for ClientAuthentication using TLS.
 	Tls *Tls `locationName:"tls" type:"structure"`
 }
@@ -2876,6 +3679,12 @@ func (s ClientAuthentication) String() string {
 // GoString returns the string representation
 func (s ClientAuthentication) GoString() string {
 	return s.String()
+}
+
+// SetSasl sets the Sasl field's value.
+func (s *ClientAuthentication) SetSasl(v *Sasl) *ClientAuthentication {
+	s.Sasl = v
+	return s
 }
 
 // SetTls sets the Tls field's value.
@@ -3335,6 +4144,11 @@ type Configuration struct {
 	//
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
+
+	// The state of a configuration.
+	//
+	// State is a required field
+	State *string `locationName:"state" type:"string" required:"true" enum:"ConfigurationState"`
 }
 
 // String returns the string representation
@@ -3380,6 +4194,12 @@ func (s *Configuration) SetLatestRevision(v *ConfigurationRevision) *Configurati
 // SetName sets the Name field's value.
 func (s *Configuration) SetName(v string) *Configuration {
 	s.Name = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *Configuration) SetState(v string) *Configuration {
+	s.State = &v
 	return s
 }
 
@@ -3849,6 +4669,10 @@ type CreateConfigurationOutput struct {
 	// The name of the configuration. Configuration names are strings that match
 	// the regex "^[0-9A-Za-z-]+$".
 	Name *string `locationName:"name" type:"string"`
+
+	// The state of the configuration. The possible states are ACTIVE, DELETING
+	// and DELETE_FAILED.
+	State *string `locationName:"state" type:"string" enum:"ConfigurationState"`
 }
 
 // String returns the string representation
@@ -3882,6 +4706,12 @@ func (s *CreateConfigurationOutput) SetLatestRevision(v *ConfigurationRevision) 
 // SetName sets the Name field's value.
 func (s *CreateConfigurationOutput) SetName(v string) *CreateConfigurationOutput {
 	s.Name = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *CreateConfigurationOutput) SetState(v string) *CreateConfigurationOutput {
+	s.State = &v
 	return s
 }
 
@@ -3961,6 +4791,82 @@ func (s *DeleteClusterOutput) SetClusterArn(v string) *DeleteClusterOutput {
 
 // SetState sets the State field's value.
 func (s *DeleteClusterOutput) SetState(v string) *DeleteClusterOutput {
+	s.State = &v
+	return s
+}
+
+// Request body for DeleteConfiguration.
+type DeleteConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the configuration.
+	//
+	// Arn is a required field
+	Arn *string `location:"uri" locationName:"arn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteConfigurationInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *DeleteConfigurationInput) SetArn(v string) *DeleteConfigurationInput {
+	s.Arn = &v
+	return s
+}
+
+// Response body for DeleteConfiguration.
+type DeleteConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the configuration.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// The state of the configuration. The possible states are ACTIVE, DELETING
+	// and DELETE_FAILED.
+	State *string `locationName:"state" type:"string" enum:"ConfigurationState"`
+}
+
+// String returns the string representation
+func (s DeleteConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *DeleteConfigurationOutput) SetArn(v string) *DeleteConfigurationOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *DeleteConfigurationOutput) SetState(v string) *DeleteConfigurationOutput {
 	s.State = &v
 	return s
 }
@@ -4152,6 +5058,10 @@ type DescribeConfigurationOutput struct {
 	// The name of the configuration. Configuration names are strings that match
 	// the regex "^[0-9A-Za-z-]+$".
 	Name *string `locationName:"name" type:"string"`
+
+	// The state of the configuration. The possible states are ACTIVE, DELETING
+	// and DELETE_FAILED.
+	State *string `locationName:"state" type:"string" enum:"ConfigurationState"`
 }
 
 // String returns the string representation
@@ -4197,6 +5107,12 @@ func (s *DescribeConfigurationOutput) SetLatestRevision(v *ConfigurationRevision
 // SetName sets the Name field's value.
 func (s *DescribeConfigurationOutput) SetName(v string) *DescribeConfigurationOutput {
 	s.Name = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *DescribeConfigurationOutput) SetState(v string) *DescribeConfigurationOutput {
+	s.State = &v
 	return s
 }
 
@@ -4674,6 +5590,11 @@ type GetBootstrapBrokersOutput struct {
 	// A string containing one or more hostname:port pairs.
 	BootstrapBrokerString *string `locationName:"bootstrapBrokerString" type:"string"`
 
+	// A string containing one or more DNS names (or IP) and SASL SCRAM port pairs.
+	// The following is an example.
+	//  { "BootstrapBrokerStringSaslScram": "b-3.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9096,b-1.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9096,b-2.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9096"}
+	BootstrapBrokerStringSaslScram *string `locationName:"bootstrapBrokerStringSaslScram" type:"string"`
+
 	// A string containing one or more DNS names (or IP) and TLS port pairs. The
 	// following is an example.
 	//  { "BootstrapBrokerStringTls": "b-3.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094,b-1.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094,b-2.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094"}
@@ -4693,6 +5614,12 @@ func (s GetBootstrapBrokersOutput) GoString() string {
 // SetBootstrapBrokerString sets the BootstrapBrokerString field's value.
 func (s *GetBootstrapBrokersOutput) SetBootstrapBrokerString(v string) *GetBootstrapBrokersOutput {
 	s.BootstrapBrokerString = &v
+	return s
+}
+
+// SetBootstrapBrokerStringSaslScram sets the BootstrapBrokerStringSaslScram field's value.
+func (s *GetBootstrapBrokersOutput) SetBootstrapBrokerStringSaslScram(v string) *GetBootstrapBrokersOutput {
+	s.BootstrapBrokerStringSaslScram = &v
 	return s
 }
 
@@ -5424,6 +6351,97 @@ func (s *ListNodesOutput) SetNodeInfoList(v []*NodeInfo) *ListNodesOutput {
 	return s
 }
 
+type ListScramSecretsInput struct {
+	_ struct{} `type:"structure"`
+
+	// ClusterArn is a required field
+	ClusterArn *string `location:"uri" locationName:"clusterArn" type:"string" required:"true"`
+
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListScramSecretsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListScramSecretsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListScramSecretsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListScramSecretsInput"}
+	if s.ClusterArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterArn"))
+	}
+	if s.ClusterArn != nil && len(*s.ClusterArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClusterArn", 1))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *ListScramSecretsInput) SetClusterArn(v string) *ListScramSecretsInput {
+	s.ClusterArn = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListScramSecretsInput) SetMaxResults(v int64) *ListScramSecretsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListScramSecretsInput) SetNextToken(v string) *ListScramSecretsInput {
+	s.NextToken = &v
+	return s
+}
+
+// Information about scram secrets associated to the cluster.
+type ListScramSecretsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Paginated results marker.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// The list of scram secrets associated with the cluster.
+	SecretArnList []*string `locationName:"secretArnList" type:"list"`
+}
+
+// String returns the string representation
+func (s ListScramSecretsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListScramSecretsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListScramSecretsOutput) SetNextToken(v string) *ListScramSecretsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetSecretArnList sets the SecretArnList field's value.
+func (s *ListScramSecretsOutput) SetSecretArnList(v []*string) *ListScramSecretsOutput {
+	s.SecretArnList = v
+	return s
+}
+
 type ListTagsForResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5960,6 +6978,93 @@ func (s *PrometheusInfo) SetNodeExporter(v *NodeExporterInfo) *PrometheusInfo {
 	return s
 }
 
+// Request body for RebootBrokerNode action.
+type RebootBrokerInput struct {
+	_ struct{} `type:"structure"`
+
+	// The list of broker ids to be rebooted.
+	//
+	// BrokerIds is a required field
+	BrokerIds []*string `locationName:"brokerIds" type:"list" required:"true"`
+
+	// ClusterArn is a required field
+	ClusterArn *string `location:"uri" locationName:"clusterArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RebootBrokerInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RebootBrokerInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RebootBrokerInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RebootBrokerInput"}
+	if s.BrokerIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("BrokerIds"))
+	}
+	if s.ClusterArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterArn"))
+	}
+	if s.ClusterArn != nil && len(*s.ClusterArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClusterArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBrokerIds sets the BrokerIds field's value.
+func (s *RebootBrokerInput) SetBrokerIds(v []*string) *RebootBrokerInput {
+	s.BrokerIds = v
+	return s
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *RebootBrokerInput) SetClusterArn(v string) *RebootBrokerInput {
+	s.ClusterArn = &v
+	return s
+}
+
+// Response body for RebootBrokers action.
+type RebootBrokerOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the cluster.
+	ClusterArn *string `locationName:"clusterArn" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the cluster operation.
+	ClusterOperationArn *string `locationName:"clusterOperationArn" type:"string"`
+}
+
+// String returns the string representation
+func (s RebootBrokerOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RebootBrokerOutput) GoString() string {
+	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *RebootBrokerOutput) SetClusterArn(v string) *RebootBrokerOutput {
+	s.ClusterArn = &v
+	return s
+}
+
+// SetClusterOperationArn sets the ClusterOperationArn field's value.
+func (s *RebootBrokerOutput) SetClusterOperationArn(v string) *RebootBrokerOutput {
+	s.ClusterOperationArn = &v
+	return s
+}
+
 // The details of the Amazon S3 destination for broker logs.
 type S3 struct {
 	_ struct{} `type:"structure"`
@@ -6014,6 +7119,50 @@ func (s *S3) SetEnabled(v bool) *S3 {
 // SetPrefix sets the Prefix field's value.
 func (s *S3) SetPrefix(v string) *S3 {
 	s.Prefix = &v
+	return s
+}
+
+type Sasl struct {
+	_ struct{} `type:"structure"`
+
+	Scram *Scram `locationName:"scram" type:"structure"`
+}
+
+// String returns the string representation
+func (s Sasl) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Sasl) GoString() string {
+	return s.String()
+}
+
+// SetScram sets the Scram field's value.
+func (s *Sasl) SetScram(v *Scram) *Sasl {
+	s.Scram = v
+	return s
+}
+
+type Scram struct {
+	_ struct{} `type:"structure"`
+
+	Enabled *bool `locationName:"enabled" type:"boolean"`
+}
+
+// String returns the string representation
+func (s Scram) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Scram) GoString() string {
+	return s.String()
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *Scram) SetEnabled(v bool) *Scram {
+	s.Enabled = &v
 	return s
 }
 
@@ -6320,6 +7469,44 @@ func (s *UnauthorizedException) StatusCode() int {
 // RequestID returns the service's response RequestID for request.
 func (s *UnauthorizedException) RequestID() string {
 	return s.RespMetadata.RequestID
+}
+
+type UnprocessedScramSecret struct {
+	_ struct{} `type:"structure"`
+
+	ErrorCode *string `locationName:"errorCode" type:"string"`
+
+	ErrorMessage *string `locationName:"errorMessage" type:"string"`
+
+	SecretArn *string `locationName:"secretArn" type:"string"`
+}
+
+// String returns the string representation
+func (s UnprocessedScramSecret) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnprocessedScramSecret) GoString() string {
+	return s.String()
+}
+
+// SetErrorCode sets the ErrorCode field's value.
+func (s *UnprocessedScramSecret) SetErrorCode(v string) *UnprocessedScramSecret {
+	s.ErrorCode = &v
+	return s
+}
+
+// SetErrorMessage sets the ErrorMessage field's value.
+func (s *UnprocessedScramSecret) SetErrorMessage(v string) *UnprocessedScramSecret {
+	s.ErrorMessage = &v
+	return s
+}
+
+// SetSecretArn sets the SecretArn field's value.
+func (s *UnprocessedScramSecret) SetSecretArn(v string) *UnprocessedScramSecret {
+	s.SecretArn = &v
+	return s
 }
 
 type UntagResourceInput struct {
@@ -6831,6 +8018,104 @@ func (s *UpdateClusterKafkaVersionOutput) SetClusterOperationArn(v string) *Upda
 	return s
 }
 
+// Request body for UpdateConfiguration.
+type UpdateConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the configuration.
+	//
+	// Arn is a required field
+	Arn *string `location:"uri" locationName:"arn" type:"string" required:"true"`
+
+	// The description of the configuration.
+	Description *string `locationName:"description" type:"string"`
+
+	// ServerProperties is automatically base64 encoded/decoded by the SDK.
+	//
+	// ServerProperties is a required field
+	ServerProperties []byte `locationName:"serverProperties" type:"blob" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateConfigurationInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	}
+	if s.ServerProperties == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServerProperties"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *UpdateConfigurationInput) SetArn(v string) *UpdateConfigurationInput {
+	s.Arn = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *UpdateConfigurationInput) SetDescription(v string) *UpdateConfigurationInput {
+	s.Description = &v
+	return s
+}
+
+// SetServerProperties sets the ServerProperties field's value.
+func (s *UpdateConfigurationInput) SetServerProperties(v []byte) *UpdateConfigurationInput {
+	s.ServerProperties = v
+	return s
+}
+
+// Response body for UpdateConfiguration.
+type UpdateConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the configuration.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// Latest revision of the configuration.
+	LatestRevision *ConfigurationRevision `locationName:"latestRevision" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *UpdateConfigurationOutput) SetArn(v string) *UpdateConfigurationOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetLatestRevision sets the LatestRevision field's value.
+func (s *UpdateConfigurationOutput) SetLatestRevision(v *ConfigurationRevision) *UpdateConfigurationOutput {
+	s.LatestRevision = v
+	return s
+}
+
 // Request body for UpdateMonitoring.
 type UpdateMonitoringInput struct {
 	_ struct{} `type:"structure"`
@@ -7026,6 +8311,13 @@ const (
 	BrokerAZDistributionDefault = "DEFAULT"
 )
 
+// BrokerAZDistribution_Values returns all elements of the BrokerAZDistribution enum
+func BrokerAZDistribution_Values() []string {
+	return []string{
+		BrokerAZDistributionDefault,
+	}
+}
+
 // Client-broker encryption in transit setting.
 const (
 	// ClientBrokerTls is a ClientBroker enum value
@@ -7037,6 +8329,15 @@ const (
 	// ClientBrokerPlaintext is a ClientBroker enum value
 	ClientBrokerPlaintext = "PLAINTEXT"
 )
+
+// ClientBroker_Values returns all elements of the ClientBroker enum
+func ClientBroker_Values() []string {
+	return []string{
+		ClientBrokerTls,
+		ClientBrokerTlsPlaintext,
+		ClientBrokerPlaintext,
+	}
+}
 
 // The state of a Kafka cluster.
 const (
@@ -7056,6 +8357,38 @@ const (
 	ClusterStateFailed = "FAILED"
 )
 
+// ClusterState_Values returns all elements of the ClusterState enum
+func ClusterState_Values() []string {
+	return []string{
+		ClusterStateActive,
+		ClusterStateCreating,
+		ClusterStateUpdating,
+		ClusterStateDeleting,
+		ClusterStateFailed,
+	}
+}
+
+// The state of a configuration.
+const (
+	// ConfigurationStateActive is a ConfigurationState enum value
+	ConfigurationStateActive = "ACTIVE"
+
+	// ConfigurationStateDeleting is a ConfigurationState enum value
+	ConfigurationStateDeleting = "DELETING"
+
+	// ConfigurationStateDeleteFailed is a ConfigurationState enum value
+	ConfigurationStateDeleteFailed = "DELETE_FAILED"
+)
+
+// ConfigurationState_Values returns all elements of the ConfigurationState enum
+func ConfigurationState_Values() []string {
+	return []string{
+		ConfigurationStateActive,
+		ConfigurationStateDeleting,
+		ConfigurationStateDeleteFailed,
+	}
+}
+
 // Specifies which metrics are gathered for the MSK cluster. This property has
 // three possible values: DEFAULT, PER_BROKER, and PER_TOPIC_PER_BROKER. For
 // a list of the metrics associated with each of these three levels of monitoring,
@@ -7071,6 +8404,15 @@ const (
 	EnhancedMonitoringPerTopicPerBroker = "PER_TOPIC_PER_BROKER"
 )
 
+// EnhancedMonitoring_Values returns all elements of the EnhancedMonitoring enum
+func EnhancedMonitoring_Values() []string {
+	return []string{
+		EnhancedMonitoringDefault,
+		EnhancedMonitoringPerBroker,
+		EnhancedMonitoringPerTopicPerBroker,
+	}
+}
+
 // The status of a Kafka version.
 const (
 	// KafkaVersionStatusActive is a KafkaVersionStatus enum value
@@ -7080,8 +8422,23 @@ const (
 	KafkaVersionStatusDeprecated = "DEPRECATED"
 )
 
+// KafkaVersionStatus_Values returns all elements of the KafkaVersionStatus enum
+func KafkaVersionStatus_Values() []string {
+	return []string{
+		KafkaVersionStatusActive,
+		KafkaVersionStatusDeprecated,
+	}
+}
+
 // The broker or Zookeeper node.
 const (
 	// NodeTypeBroker is a NodeType enum value
 	NodeTypeBroker = "BROKER"
 )
+
+// NodeType_Values returns all elements of the NodeType enum
+func NodeType_Values() []string {
+	return []string{
+		NodeTypeBroker,
+	}
+}

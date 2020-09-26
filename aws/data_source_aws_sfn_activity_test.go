@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccAWSStepFunctionsActivityDataSource_basic(t *testing.T) {
@@ -42,8 +42,9 @@ func testAccCheckAWSStepFunctionsActivityDataSourceConfig_ActivityArn(rName stri
 resource aws_sfn_activity "test" {
   name = "%s"
 }
+
 data aws_sfn_activity "test" {
-  arn = "${aws_sfn_activity.test.id}"
+  arn = aws_sfn_activity.test.id
 }
 `, rName)
 }
@@ -53,8 +54,9 @@ func testAccCheckAWSStepFunctionsActivityDataSourceConfig_ActivityName(rName str
 resource aws_sfn_activity "test" {
   name = "%s"
 }
+
 data aws_sfn_activity "test" {
-  name = "${aws_sfn_activity.test.name}"
+  name = aws_sfn_activity.test.name
 }
 `, rName)
 }

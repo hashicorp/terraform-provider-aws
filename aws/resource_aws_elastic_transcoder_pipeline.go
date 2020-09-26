@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsElasticTranscoderPipeline() *schema.Resource {
@@ -202,7 +202,7 @@ func resourceAwsElasticTranscoderPipelineCreate(d *schema.ResourceData, meta int
 		ThumbnailConfig: expandETPiplineOutputConfig(d, "thumbnail_config"),
 	}
 
-	if v, ok := d.GetOk("output_bucket"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("output_bucket"); ok {
 		req.OutputBucket = aws.String(v.(string))
 	}
 

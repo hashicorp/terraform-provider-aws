@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 var defaultEgressAcl = &ec2.NetworkAclEntry{
@@ -288,7 +288,7 @@ resource "aws_vpc" "tftestvpc" {
 }
 
 resource "aws_default_network_acl" "default" {
-  default_network_acl_id = "${aws_vpc.tftestvpc.default_network_acl_id}"
+  default_network_acl_id = aws_vpc.tftestvpc.default_network_acl_id
 
   tags = {
     Name = "tf-acc-default-acl-basic"
@@ -306,15 +306,15 @@ resource "aws_vpc" "tftestvpc" {
 }
 
 resource "aws_default_network_acl" "default" {
-  default_network_acl_id = "${aws_vpc.tftestvpc.default_network_acl_id}"
+  default_network_acl_id = aws_vpc.tftestvpc.default_network_acl_id
 
   ingress {
-    protocol   = -1
-    rule_no    = 101
-    action     = "allow"
+    protocol        = -1
+    rule_no         = 101
+    action          = "allow"
     ipv6_cidr_block = "::/0"
-    from_port  = 0
-    to_port    = 0
+    from_port       = 0
+    to_port         = 0
   }
 
   tags = {
@@ -333,7 +333,7 @@ resource "aws_vpc" "tftestvpc" {
 }
 
 resource "aws_default_network_acl" "default" {
-  default_network_acl_id = "${aws_vpc.tftestvpc.default_network_acl_id}"
+  default_network_acl_id = aws_vpc.tftestvpc.default_network_acl_id
 
   egress {
     protocol   = -1
@@ -361,7 +361,7 @@ resource "aws_vpc" "foo" {
 
 resource "aws_subnet" "one" {
   cidr_block = "10.1.111.0/24"
-  vpc_id     = "${aws_vpc.foo.id}"
+  vpc_id     = aws_vpc.foo.id
 
   tags = {
     Name = "tf-acc-default-network-acl-one"
@@ -370,7 +370,7 @@ resource "aws_subnet" "one" {
 
 resource "aws_subnet" "two" {
   cidr_block = "10.1.1.0/24"
-  vpc_id     = "${aws_vpc.foo.id}"
+  vpc_id     = aws_vpc.foo.id
 
   tags = {
     Name = "tf-acc-default-network-acl-two"
@@ -378,7 +378,7 @@ resource "aws_subnet" "two" {
 }
 
 resource "aws_network_acl" "bar" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
 
   tags = {
     Name = "tf-acc-default-acl-subnets"
@@ -386,9 +386,9 @@ resource "aws_network_acl" "bar" {
 }
 
 resource "aws_default_network_acl" "default" {
-  default_network_acl_id = "${aws_vpc.foo.default_network_acl_id}"
+  default_network_acl_id = aws_vpc.foo.default_network_acl_id
 
-  subnet_ids = ["${aws_subnet.one.id}", "${aws_subnet.two.id}"]
+  subnet_ids = [aws_subnet.one.id, aws_subnet.two.id]
 
   tags = {
     Name = "tf-acc-default-acl-subnets"
@@ -407,7 +407,7 @@ resource "aws_vpc" "foo" {
 
 resource "aws_subnet" "one" {
   cidr_block = "10.1.111.0/24"
-  vpc_id     = "${aws_vpc.foo.id}"
+  vpc_id     = aws_vpc.foo.id
 
   tags = {
     Name = "tf-acc-default-network-acl-subnets-remove-one"
@@ -416,7 +416,7 @@ resource "aws_subnet" "one" {
 
 resource "aws_subnet" "two" {
   cidr_block = "10.1.1.0/24"
-  vpc_id     = "${aws_vpc.foo.id}"
+  vpc_id     = aws_vpc.foo.id
 
   tags = {
     Name = "tf-acc-default-network-acl-subnets-remove-two"
@@ -424,7 +424,7 @@ resource "aws_subnet" "two" {
 }
 
 resource "aws_network_acl" "bar" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
 
   tags = {
     Name = "tf-acc-default-acl-subnets-remove"
@@ -432,7 +432,7 @@ resource "aws_network_acl" "bar" {
 }
 
 resource "aws_default_network_acl" "default" {
-  default_network_acl_id = "${aws_vpc.foo.default_network_acl_id}"
+  default_network_acl_id = aws_vpc.foo.default_network_acl_id
 
   tags = {
     Name = "tf-acc-default-acl-subnets-remove"
@@ -451,7 +451,7 @@ resource "aws_vpc" "foo" {
 
 resource "aws_subnet" "one" {
   cidr_block = "10.1.111.0/24"
-  vpc_id     = "${aws_vpc.foo.id}"
+  vpc_id     = aws_vpc.foo.id
 
   tags = {
     Name = "tf-acc-default-network-acl-subnets-move-one"
@@ -460,7 +460,7 @@ resource "aws_subnet" "one" {
 
 resource "aws_subnet" "two" {
   cidr_block = "10.1.1.0/24"
-  vpc_id     = "${aws_vpc.foo.id}"
+  vpc_id     = aws_vpc.foo.id
 
   tags = {
     Name = "tf-acc-default-network-acl-subnets-move-two"
@@ -468,9 +468,9 @@ resource "aws_subnet" "two" {
 }
 
 resource "aws_network_acl" "bar" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
 
-  subnet_ids = ["${aws_subnet.one.id}", "${aws_subnet.two.id}"]
+  subnet_ids = [aws_subnet.one.id, aws_subnet.two.id]
 
   tags = {
     Name = "tf-acc-default-acl-subnets-move"
@@ -478,9 +478,9 @@ resource "aws_network_acl" "bar" {
 }
 
 resource "aws_default_network_acl" "default" {
-  default_network_acl_id = "${aws_vpc.foo.default_network_acl_id}"
+  default_network_acl_id = aws_vpc.foo.default_network_acl_id
 
-  depends_on = ["aws_network_acl.bar"]
+  depends_on = [aws_network_acl.bar]
 
   tags = {
     Name = "tf-acc-default-acl-subnets-move"
@@ -490,16 +490,16 @@ resource "aws_default_network_acl" "default" {
 
 const testAccAWSDefaultNetworkConfig_basicIpv6Vpc = `
 resource "aws_vpc" "tftestvpc" {
-	cidr_block = "10.1.0.0/16"
-	assign_generated_ipv6_cidr_block = true
+  cidr_block                       = "10.1.0.0/16"
+  assign_generated_ipv6_cidr_block = true
 
-	tags = {
-		Name = "terraform-testacc-default-network-acl-basic-ipv6-vpc"
-	}
+  tags = {
+    Name = "terraform-testacc-default-network-acl-basic-ipv6-vpc"
+  }
 }
 
 resource "aws_default_network_acl" "default" {
-  default_network_acl_id = "${aws_vpc.tftestvpc.default_network_acl_id}"
+  default_network_acl_id = aws_vpc.tftestvpc.default_network_acl_id
 
   tags = {
     Name = "tf-acc-default-acl-subnets-basic-ipv6-vpc"
