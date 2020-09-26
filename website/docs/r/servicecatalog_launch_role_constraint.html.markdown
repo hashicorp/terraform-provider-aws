@@ -10,7 +10,7 @@ description: |-
 
 Provides a resource to control the roles that are permitted to launch a product in a specific portfolio.
 
-If you specify the `local_role_name` property, when an account uses the launch constraint, the IAM role with that name in the account will be used. This allows launch-role constraints to be account-agnostic so the administrator can create fewer resources per shared account. 
+If you specify the `local_role_name` property, when an account uses the launch constraint, the IAM role with that name in the account will be used. This allows launch-role constraints to be account-agnostic so the administrator can create fewer resources per shared account.
 
 ## Example Usage
 
@@ -33,7 +33,7 @@ The following arguments are supported:
 * `portfolio_id` - (Required) The portfolio identifier.
 * `product_id` - (Required) The product identifier.
 
-You are required to specify either the `role_arn` or the `local_role_name` but can't use both. 
+You are required to specify either the `role_arn` or the `local_role_name` but can't use both.
 
 ## Attributes Reference
 

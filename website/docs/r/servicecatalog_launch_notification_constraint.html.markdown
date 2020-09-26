@@ -10,9 +10,9 @@ description: |-
 
 Provides a resource to control the notifications that are applied to a product in a specific portfolio when the end users launches it.
 
-When the end users launches the product, they will see the rules you have applied using constraints. 
-You can apply constraints to a product once it is put into a portfolio. 
-Constraints are active as soon as you create them, and they're applied to all current versions of a product that have not been launched. 
+When the end users launches the product, they will see the rules you have applied using constraints.
+You can apply constraints to a product once it is put into a portfolio.
+Constraints are active as soon as you create them, and they're applied to all current versions of a product that have not been launched.
 
 ## Example Usage
 
