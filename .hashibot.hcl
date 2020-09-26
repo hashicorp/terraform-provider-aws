@@ -1164,6 +1164,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_macie_*",
       "**/macie_*"
     ]
+    "service/macie2" = [
+      "aws/internal/service/macie2/**/*",
+      "**/*_macie2_*",
+      "**/macie2_*"
+    ]
     "service/marketplacecatalog" = [
       "aws/internal/service/marketplacecatalog/**/*",
       "**/*_marketplace_catalog_*",
