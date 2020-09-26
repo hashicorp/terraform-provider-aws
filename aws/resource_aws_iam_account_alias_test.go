@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSIAMAccountAlias_serial(t *testing.T) {
@@ -162,7 +162,7 @@ resource "aws_iam_account_alias" "test" {
 }
 
 data "aws_iam_account_alias" "current" {
-  depends_on = ["aws_iam_account_alias.test"]
+  depends_on = [aws_iam_account_alias.test]
 }
 `, rstring)
 }

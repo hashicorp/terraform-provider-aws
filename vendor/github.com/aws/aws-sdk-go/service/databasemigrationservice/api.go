@@ -61,7 +61,9 @@ func (c *DatabaseMigrationService) AddTagsToResourceRequest(input *AddTagsToReso
 // Adds metadata tags to an AWS DMS resource, including replication instance,
 // endpoint, security group, and migration task. These tags can also be used
 // with cost allocation reporting to track cost associated with DMS resources,
-// or used in a Condition statement in an IAM policy for DMS.
+// or used in a Condition statement in an IAM policy for DMS. For more information,
+// see Tag (https://docs.aws.amazon.com/dms/latest/APIReference/API_Tag.html)
+// data type description.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -171,6 +173,97 @@ func (c *DatabaseMigrationService) ApplyPendingMaintenanceAction(input *ApplyPen
 // for more information on using Contexts.
 func (c *DatabaseMigrationService) ApplyPendingMaintenanceActionWithContext(ctx aws.Context, input *ApplyPendingMaintenanceActionInput, opts ...request.Option) (*ApplyPendingMaintenanceActionOutput, error) {
 	req, out := c.ApplyPendingMaintenanceActionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCancelReplicationTaskAssessmentRun = "CancelReplicationTaskAssessmentRun"
+
+// CancelReplicationTaskAssessmentRunRequest generates a "aws/request.Request" representing the
+// client's request for the CancelReplicationTaskAssessmentRun operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CancelReplicationTaskAssessmentRun for more information on using the CancelReplicationTaskAssessmentRun
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CancelReplicationTaskAssessmentRunRequest method.
+//    req, resp := client.CancelReplicationTaskAssessmentRunRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/CancelReplicationTaskAssessmentRun
+func (c *DatabaseMigrationService) CancelReplicationTaskAssessmentRunRequest(input *CancelReplicationTaskAssessmentRunInput) (req *request.Request, output *CancelReplicationTaskAssessmentRunOutput) {
+	op := &request.Operation{
+		Name:       opCancelReplicationTaskAssessmentRun,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CancelReplicationTaskAssessmentRunInput{}
+	}
+
+	output = &CancelReplicationTaskAssessmentRunOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CancelReplicationTaskAssessmentRun API operation for AWS Database Migration Service.
+//
+// Cancels a single premigration assessment run.
+//
+// This operation prevents any individual assessments from running if they haven't
+// started running. It also attempts to cancel any individual assessments that
+// are currently running.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Database Migration Service's
+// API operation CancelReplicationTaskAssessmentRun for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedFault
+//   AWS DMS was denied access to the endpoint. Check that the role is correctly
+//   configured.
+//
+//   * ResourceNotFoundFault
+//   The resource could not be found.
+//
+//   * InvalidResourceStateFault
+//   The resource is in a state that prevents it from being used for database
+//   migration.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/CancelReplicationTaskAssessmentRun
+func (c *DatabaseMigrationService) CancelReplicationTaskAssessmentRun(input *CancelReplicationTaskAssessmentRunInput) (*CancelReplicationTaskAssessmentRunOutput, error) {
+	req, out := c.CancelReplicationTaskAssessmentRunRequest(input)
+	return out, req.Send()
+}
+
+// CancelReplicationTaskAssessmentRunWithContext is the same as CancelReplicationTaskAssessmentRun with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CancelReplicationTaskAssessmentRun for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DatabaseMigrationService) CancelReplicationTaskAssessmentRunWithContext(ctx aws.Context, input *CancelReplicationTaskAssessmentRunInput, opts ...request.Option) (*CancelReplicationTaskAssessmentRunOutput, error) {
+	req, out := c.CancelReplicationTaskAssessmentRunRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -444,9 +537,9 @@ func (c *DatabaseMigrationService) CreateReplicationInstanceRequest(input *Creat
 // AWS DMS requires that your account have certain roles with appropriate permissions
 // before you can create a replication instance. For information on the required
 // roles, see Creating the IAM Roles to Use With the AWS CLI and AWS DMS API
-// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.APIRole.html).
+// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.html#CHAP_Security.APIRole).
 // For information on the required permissions, see IAM Permissions Needed to
-// Use AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.IAMPermissions.html).
+// Use AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.html#CHAP_Security.IAMPermissions).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1295,6 +1388,97 @@ func (c *DatabaseMigrationService) DeleteReplicationTaskWithContext(ctx aws.Cont
 	return out, req.Send()
 }
 
+const opDeleteReplicationTaskAssessmentRun = "DeleteReplicationTaskAssessmentRun"
+
+// DeleteReplicationTaskAssessmentRunRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteReplicationTaskAssessmentRun operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteReplicationTaskAssessmentRun for more information on using the DeleteReplicationTaskAssessmentRun
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteReplicationTaskAssessmentRunRequest method.
+//    req, resp := client.DeleteReplicationTaskAssessmentRunRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DeleteReplicationTaskAssessmentRun
+func (c *DatabaseMigrationService) DeleteReplicationTaskAssessmentRunRequest(input *DeleteReplicationTaskAssessmentRunInput) (req *request.Request, output *DeleteReplicationTaskAssessmentRunOutput) {
+	op := &request.Operation{
+		Name:       opDeleteReplicationTaskAssessmentRun,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteReplicationTaskAssessmentRunInput{}
+	}
+
+	output = &DeleteReplicationTaskAssessmentRunOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteReplicationTaskAssessmentRun API operation for AWS Database Migration Service.
+//
+// Deletes the record of a single premigration assessment run.
+//
+// This operation removes all metadata that AWS DMS maintains about this assessment
+// run. However, the operation leaves untouched all information about this assessment
+// run that is stored in your Amazon S3 bucket.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Database Migration Service's
+// API operation DeleteReplicationTaskAssessmentRun for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedFault
+//   AWS DMS was denied access to the endpoint. Check that the role is correctly
+//   configured.
+//
+//   * ResourceNotFoundFault
+//   The resource could not be found.
+//
+//   * InvalidResourceStateFault
+//   The resource is in a state that prevents it from being used for database
+//   migration.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DeleteReplicationTaskAssessmentRun
+func (c *DatabaseMigrationService) DeleteReplicationTaskAssessmentRun(input *DeleteReplicationTaskAssessmentRunInput) (*DeleteReplicationTaskAssessmentRunOutput, error) {
+	req, out := c.DeleteReplicationTaskAssessmentRunRequest(input)
+	return out, req.Send()
+}
+
+// DeleteReplicationTaskAssessmentRunWithContext is the same as DeleteReplicationTaskAssessmentRun with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteReplicationTaskAssessmentRun for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DatabaseMigrationService) DeleteReplicationTaskAssessmentRunWithContext(ctx aws.Context, input *DeleteReplicationTaskAssessmentRunInput, opts ...request.Option) (*DeleteReplicationTaskAssessmentRunOutput, error) {
+	req, out := c.DeleteReplicationTaskAssessmentRunRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeAccountAttributes = "DescribeAccountAttributes"
 
 // DescribeAccountAttributesRequest generates a "aws/request.Request" representing the
@@ -1375,6 +1559,171 @@ func (c *DatabaseMigrationService) DescribeAccountAttributesWithContext(ctx aws.
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+const opDescribeApplicableIndividualAssessments = "DescribeApplicableIndividualAssessments"
+
+// DescribeApplicableIndividualAssessmentsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeApplicableIndividualAssessments operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeApplicableIndividualAssessments for more information on using the DescribeApplicableIndividualAssessments
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeApplicableIndividualAssessmentsRequest method.
+//    req, resp := client.DescribeApplicableIndividualAssessmentsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeApplicableIndividualAssessments
+func (c *DatabaseMigrationService) DescribeApplicableIndividualAssessmentsRequest(input *DescribeApplicableIndividualAssessmentsInput) (req *request.Request, output *DescribeApplicableIndividualAssessmentsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeApplicableIndividualAssessments,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "MaxRecords",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribeApplicableIndividualAssessmentsInput{}
+	}
+
+	output = &DescribeApplicableIndividualAssessmentsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeApplicableIndividualAssessments API operation for AWS Database Migration Service.
+//
+// Provides a list of individual assessments that you can specify for a new
+// premigration assessment run, given one or more parameters.
+//
+// If you specify an existing migration task, this operation provides the default
+// individual assessments you can specify for that task. Otherwise, the specified
+// parameters model elements of a possible migration task on which to base a
+// premigration assessment run.
+//
+// To use these migration task modeling parameters, you must specify an existing
+// replication instance, a source database engine, a target database engine,
+// and a migration type. This combination of parameters potentially limits the
+// default individual assessments available for an assessment run created for
+// a corresponding migration task.
+//
+// If you specify no parameters, this operation provides a list of all possible
+// individual assessments that you can specify for an assessment run. If you
+// specify any one of the task modeling parameters, you must specify all of
+// them or the operation cannot provide a list of individual assessments. The
+// only parameter that you can specify alone is for an existing migration task.
+// The specified task definition then determines the default list of individual
+// assessments that you can specify in an assessment run for the task.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Database Migration Service's
+// API operation DescribeApplicableIndividualAssessments for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedFault
+//   AWS DMS was denied access to the endpoint. Check that the role is correctly
+//   configured.
+//
+//   * ResourceNotFoundFault
+//   The resource could not be found.
+//
+//   * InvalidResourceStateFault
+//   The resource is in a state that prevents it from being used for database
+//   migration.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeApplicableIndividualAssessments
+func (c *DatabaseMigrationService) DescribeApplicableIndividualAssessments(input *DescribeApplicableIndividualAssessmentsInput) (*DescribeApplicableIndividualAssessmentsOutput, error) {
+	req, out := c.DescribeApplicableIndividualAssessmentsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeApplicableIndividualAssessmentsWithContext is the same as DescribeApplicableIndividualAssessments with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeApplicableIndividualAssessments for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DatabaseMigrationService) DescribeApplicableIndividualAssessmentsWithContext(ctx aws.Context, input *DescribeApplicableIndividualAssessmentsInput, opts ...request.Option) (*DescribeApplicableIndividualAssessmentsOutput, error) {
+	req, out := c.DescribeApplicableIndividualAssessmentsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribeApplicableIndividualAssessmentsPages iterates over the pages of a DescribeApplicableIndividualAssessments operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeApplicableIndividualAssessments method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeApplicableIndividualAssessments operation.
+//    pageNum := 0
+//    err := client.DescribeApplicableIndividualAssessmentsPages(params,
+//        func(page *databasemigrationservice.DescribeApplicableIndividualAssessmentsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *DatabaseMigrationService) DescribeApplicableIndividualAssessmentsPages(input *DescribeApplicableIndividualAssessmentsInput, fn func(*DescribeApplicableIndividualAssessmentsOutput, bool) bool) error {
+	return c.DescribeApplicableIndividualAssessmentsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeApplicableIndividualAssessmentsPagesWithContext same as DescribeApplicableIndividualAssessmentsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DatabaseMigrationService) DescribeApplicableIndividualAssessmentsPagesWithContext(ctx aws.Context, input *DescribeApplicableIndividualAssessmentsInput, fn func(*DescribeApplicableIndividualAssessmentsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeApplicableIndividualAssessmentsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeApplicableIndividualAssessmentsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeApplicableIndividualAssessmentsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opDescribeCertificates = "DescribeCertificates"
@@ -3182,6 +3531,290 @@ func (c *DatabaseMigrationService) DescribeReplicationTaskAssessmentResultsPages
 	return p.Err()
 }
 
+const opDescribeReplicationTaskAssessmentRuns = "DescribeReplicationTaskAssessmentRuns"
+
+// DescribeReplicationTaskAssessmentRunsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeReplicationTaskAssessmentRuns operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeReplicationTaskAssessmentRuns for more information on using the DescribeReplicationTaskAssessmentRuns
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeReplicationTaskAssessmentRunsRequest method.
+//    req, resp := client.DescribeReplicationTaskAssessmentRunsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationTaskAssessmentRuns
+func (c *DatabaseMigrationService) DescribeReplicationTaskAssessmentRunsRequest(input *DescribeReplicationTaskAssessmentRunsInput) (req *request.Request, output *DescribeReplicationTaskAssessmentRunsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeReplicationTaskAssessmentRuns,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "MaxRecords",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribeReplicationTaskAssessmentRunsInput{}
+	}
+
+	output = &DescribeReplicationTaskAssessmentRunsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeReplicationTaskAssessmentRuns API operation for AWS Database Migration Service.
+//
+// Returns a paginated list of premigration assessment runs based on filter
+// settings.
+//
+// These filter settings can specify a combination of premigration assessment
+// runs, migration tasks, replication instances, and assessment run status values.
+//
+// This operation doesn't return information about individual assessments. For
+// this information, see the DescribeReplicationTaskIndividualAssessments operation.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Database Migration Service's
+// API operation DescribeReplicationTaskAssessmentRuns for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundFault
+//   The resource could not be found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationTaskAssessmentRuns
+func (c *DatabaseMigrationService) DescribeReplicationTaskAssessmentRuns(input *DescribeReplicationTaskAssessmentRunsInput) (*DescribeReplicationTaskAssessmentRunsOutput, error) {
+	req, out := c.DescribeReplicationTaskAssessmentRunsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeReplicationTaskAssessmentRunsWithContext is the same as DescribeReplicationTaskAssessmentRuns with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeReplicationTaskAssessmentRuns for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DatabaseMigrationService) DescribeReplicationTaskAssessmentRunsWithContext(ctx aws.Context, input *DescribeReplicationTaskAssessmentRunsInput, opts ...request.Option) (*DescribeReplicationTaskAssessmentRunsOutput, error) {
+	req, out := c.DescribeReplicationTaskAssessmentRunsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribeReplicationTaskAssessmentRunsPages iterates over the pages of a DescribeReplicationTaskAssessmentRuns operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeReplicationTaskAssessmentRuns method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeReplicationTaskAssessmentRuns operation.
+//    pageNum := 0
+//    err := client.DescribeReplicationTaskAssessmentRunsPages(params,
+//        func(page *databasemigrationservice.DescribeReplicationTaskAssessmentRunsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *DatabaseMigrationService) DescribeReplicationTaskAssessmentRunsPages(input *DescribeReplicationTaskAssessmentRunsInput, fn func(*DescribeReplicationTaskAssessmentRunsOutput, bool) bool) error {
+	return c.DescribeReplicationTaskAssessmentRunsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeReplicationTaskAssessmentRunsPagesWithContext same as DescribeReplicationTaskAssessmentRunsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DatabaseMigrationService) DescribeReplicationTaskAssessmentRunsPagesWithContext(ctx aws.Context, input *DescribeReplicationTaskAssessmentRunsInput, fn func(*DescribeReplicationTaskAssessmentRunsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeReplicationTaskAssessmentRunsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeReplicationTaskAssessmentRunsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReplicationTaskAssessmentRunsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
+const opDescribeReplicationTaskIndividualAssessments = "DescribeReplicationTaskIndividualAssessments"
+
+// DescribeReplicationTaskIndividualAssessmentsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeReplicationTaskIndividualAssessments operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeReplicationTaskIndividualAssessments for more information on using the DescribeReplicationTaskIndividualAssessments
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeReplicationTaskIndividualAssessmentsRequest method.
+//    req, resp := client.DescribeReplicationTaskIndividualAssessmentsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationTaskIndividualAssessments
+func (c *DatabaseMigrationService) DescribeReplicationTaskIndividualAssessmentsRequest(input *DescribeReplicationTaskIndividualAssessmentsInput) (req *request.Request, output *DescribeReplicationTaskIndividualAssessmentsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeReplicationTaskIndividualAssessments,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "MaxRecords",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribeReplicationTaskIndividualAssessmentsInput{}
+	}
+
+	output = &DescribeReplicationTaskIndividualAssessmentsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeReplicationTaskIndividualAssessments API operation for AWS Database Migration Service.
+//
+// Returns a paginated list of individual assessments based on filter settings.
+//
+// These filter settings can specify a combination of premigration assessment
+// runs, migration tasks, and assessment status values.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Database Migration Service's
+// API operation DescribeReplicationTaskIndividualAssessments for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundFault
+//   The resource could not be found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribeReplicationTaskIndividualAssessments
+func (c *DatabaseMigrationService) DescribeReplicationTaskIndividualAssessments(input *DescribeReplicationTaskIndividualAssessmentsInput) (*DescribeReplicationTaskIndividualAssessmentsOutput, error) {
+	req, out := c.DescribeReplicationTaskIndividualAssessmentsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeReplicationTaskIndividualAssessmentsWithContext is the same as DescribeReplicationTaskIndividualAssessments with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeReplicationTaskIndividualAssessments for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DatabaseMigrationService) DescribeReplicationTaskIndividualAssessmentsWithContext(ctx aws.Context, input *DescribeReplicationTaskIndividualAssessmentsInput, opts ...request.Option) (*DescribeReplicationTaskIndividualAssessmentsOutput, error) {
+	req, out := c.DescribeReplicationTaskIndividualAssessmentsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribeReplicationTaskIndividualAssessmentsPages iterates over the pages of a DescribeReplicationTaskIndividualAssessments operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeReplicationTaskIndividualAssessments method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeReplicationTaskIndividualAssessments operation.
+//    pageNum := 0
+//    err := client.DescribeReplicationTaskIndividualAssessmentsPages(params,
+//        func(page *databasemigrationservice.DescribeReplicationTaskIndividualAssessmentsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *DatabaseMigrationService) DescribeReplicationTaskIndividualAssessmentsPages(input *DescribeReplicationTaskIndividualAssessmentsInput, fn func(*DescribeReplicationTaskIndividualAssessmentsOutput, bool) bool) error {
+	return c.DescribeReplicationTaskIndividualAssessmentsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeReplicationTaskIndividualAssessmentsPagesWithContext same as DescribeReplicationTaskIndividualAssessmentsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DatabaseMigrationService) DescribeReplicationTaskIndividualAssessmentsPagesWithContext(ctx aws.Context, input *DescribeReplicationTaskIndividualAssessmentsInput, fn func(*DescribeReplicationTaskIndividualAssessmentsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeReplicationTaskIndividualAssessmentsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeReplicationTaskIndividualAssessmentsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReplicationTaskIndividualAssessmentsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeReplicationTasks = "DescribeReplicationTasks"
 
 // DescribeReplicationTasksRequest generates a "aws/request.Request" representing the
@@ -3736,7 +4369,10 @@ func (c *DatabaseMigrationService) ListTagsForResourceRequest(input *ListTagsFor
 
 // ListTagsForResource API operation for AWS Database Migration Service.
 //
-// Lists all tags for an AWS DMS resource.
+// Lists all metadata tags attached to an AWS DMS resource, including replication
+// instance, endpoint, security group, and migration task. For more information,
+// see Tag (https://docs.aws.amazon.com/dms/latest/APIReference/API_Tag.html)
+// data type description.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4566,7 +5202,10 @@ func (c *DatabaseMigrationService) RemoveTagsFromResourceRequest(input *RemoveTa
 
 // RemoveTagsFromResource API operation for AWS Database Migration Service.
 //
-// Removes metadata tags from a DMS resource.
+// Removes metadata tags from an AWS DMS resource, including replication instance,
+// endpoint, security group, and migration task. For more information, see Tag
+// (https://docs.aws.amazon.com/dms/latest/APIReference/API_Tag.html) data type
+// description.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4771,6 +5410,130 @@ func (c *DatabaseMigrationService) StartReplicationTaskAssessment(input *StartRe
 // for more information on using Contexts.
 func (c *DatabaseMigrationService) StartReplicationTaskAssessmentWithContext(ctx aws.Context, input *StartReplicationTaskAssessmentInput, opts ...request.Option) (*StartReplicationTaskAssessmentOutput, error) {
 	req, out := c.StartReplicationTaskAssessmentRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opStartReplicationTaskAssessmentRun = "StartReplicationTaskAssessmentRun"
+
+// StartReplicationTaskAssessmentRunRequest generates a "aws/request.Request" representing the
+// client's request for the StartReplicationTaskAssessmentRun operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartReplicationTaskAssessmentRun for more information on using the StartReplicationTaskAssessmentRun
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartReplicationTaskAssessmentRunRequest method.
+//    req, resp := client.StartReplicationTaskAssessmentRunRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/StartReplicationTaskAssessmentRun
+func (c *DatabaseMigrationService) StartReplicationTaskAssessmentRunRequest(input *StartReplicationTaskAssessmentRunInput) (req *request.Request, output *StartReplicationTaskAssessmentRunOutput) {
+	op := &request.Operation{
+		Name:       opStartReplicationTaskAssessmentRun,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StartReplicationTaskAssessmentRunInput{}
+	}
+
+	output = &StartReplicationTaskAssessmentRunOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartReplicationTaskAssessmentRun API operation for AWS Database Migration Service.
+//
+// Starts a new premigration assessment run for one or more individual assessments
+// of a migration task.
+//
+// The assessments that you can specify depend on the source and target database
+// engine and the migration type defined for the given task. To run this operation,
+// your migration task must already be created. After you run this operation,
+// you can review the status of each individual assessment. You can also run
+// the migration task manually after the assessment run and its individual assessments
+// complete.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Database Migration Service's
+// API operation StartReplicationTaskAssessmentRun for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedFault
+//   AWS DMS was denied access to the endpoint. Check that the role is correctly
+//   configured.
+//
+//   * ResourceNotFoundFault
+//   The resource could not be found.
+//
+//   * InvalidResourceStateFault
+//   The resource is in a state that prevents it from being used for database
+//   migration.
+//
+//   * KMSAccessDeniedFault
+//   The ciphertext references a key that doesn't exist or that the DMS account
+//   doesn't have access to.
+//
+//   * KMSDisabledFault
+//   The specified master key (CMK) isn't enabled.
+//
+//   * KMSFault
+//   An AWS Key Management Service (AWS KMS) error is preventing access to AWS
+//   KMS.
+//
+//   * KMSInvalidStateFault
+//   The state of the specified AWS KMS resource isn't valid for this request.
+//
+//   * KMSNotFoundFault
+//   The specified AWS KMS entity or resource can't be found.
+//
+//   * KMSKeyNotAccessibleFault
+//   AWS DMS cannot access the AWS KMS key.
+//
+//   * S3AccessDeniedFault
+//   Insufficient privileges are preventing access to an Amazon S3 object.
+//
+//   * S3ResourceNotFoundFault
+//   A specified Amazon S3 bucket, bucket folder, or other object can't be found.
+//
+//   * ResourceAlreadyExistsFault
+//   The resource you are attempting to create already exists.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/StartReplicationTaskAssessmentRun
+func (c *DatabaseMigrationService) StartReplicationTaskAssessmentRun(input *StartReplicationTaskAssessmentRunInput) (*StartReplicationTaskAssessmentRunOutput, error) {
+	req, out := c.StartReplicationTaskAssessmentRunRequest(input)
+	return out, req.Send()
+}
+
+// StartReplicationTaskAssessmentRunWithContext is the same as StartReplicationTaskAssessmentRun with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartReplicationTaskAssessmentRun for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DatabaseMigrationService) StartReplicationTaskAssessmentRunWithContext(ctx aws.Context, input *StartReplicationTaskAssessmentRunInput, opts ...request.Option) (*StartReplicationTaskAssessmentRunOutput, error) {
+	req, out := c.StartReplicationTaskAssessmentRunRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5220,7 +5983,11 @@ func (s *ApplyPendingMaintenanceActionOutput) SetResourcePendingMaintenanceActio
 	return s
 }
 
-// The name of an Availability Zone for use during database migration.
+// The name of an Availability Zone for use during database migration. AvailabilityZone
+// is an optional parameter to the CreateReplicationInstance (https://docs.aws.amazon.com/dms/latest/APIReference/API_CreateReplicationInstance.html)
+// operation, and it’s value relates to the AWS Region of an endpoint. For
+// example, the availability zone of an endpoint in the us-east-1 region might
+// be us-east-1a, us-east-1b, us-east-1c, or us-east-1d.
 type AvailabilityZone struct {
 	_ struct{} `type:"structure"`
 
@@ -5241,6 +6008,67 @@ func (s AvailabilityZone) GoString() string {
 // SetName sets the Name field's value.
 func (s *AvailabilityZone) SetName(v string) *AvailabilityZone {
 	s.Name = &v
+	return s
+}
+
+type CancelReplicationTaskAssessmentRunInput struct {
+	_ struct{} `type:"structure"`
+
+	// Amazon Resource Name (ARN) of the premigration assessment run to be canceled.
+	//
+	// ReplicationTaskAssessmentRunArn is a required field
+	ReplicationTaskAssessmentRunArn *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CancelReplicationTaskAssessmentRunInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelReplicationTaskAssessmentRunInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CancelReplicationTaskAssessmentRunInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CancelReplicationTaskAssessmentRunInput"}
+	if s.ReplicationTaskAssessmentRunArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReplicationTaskAssessmentRunArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetReplicationTaskAssessmentRunArn sets the ReplicationTaskAssessmentRunArn field's value.
+func (s *CancelReplicationTaskAssessmentRunInput) SetReplicationTaskAssessmentRunArn(v string) *CancelReplicationTaskAssessmentRunInput {
+	s.ReplicationTaskAssessmentRunArn = &v
+	return s
+}
+
+type CancelReplicationTaskAssessmentRunOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ReplicationTaskAssessmentRun object for the canceled assessment run.
+	ReplicationTaskAssessmentRun *ReplicationTaskAssessmentRun `type:"structure"`
+}
+
+// String returns the string representation
+func (s CancelReplicationTaskAssessmentRunOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelReplicationTaskAssessmentRunOutput) GoString() string {
+	return s.String()
+}
+
+// SetReplicationTaskAssessmentRun sets the ReplicationTaskAssessmentRun field's value.
+func (s *CancelReplicationTaskAssessmentRunOutput) SetReplicationTaskAssessmentRun(v *ReplicationTaskAssessmentRun) *CancelReplicationTaskAssessmentRunOutput {
+	s.ReplicationTaskAssessmentRun = v
 	return s
 }
 
@@ -5477,7 +6305,7 @@ type CreateEndpointInput struct {
 
 	// The database endpoint identifier. Identifiers must begin with a letter and
 	// must contain only ASCII letters, digits, and hyphens. They can't end with
-	// a hyphen or contain two consecutive hyphens.
+	// a hyphen, or contain two consecutive hyphens.
 	//
 	// EndpointIdentifier is a required field
 	EndpointIdentifier *string `type:"string" required:"true"`
@@ -5490,7 +6318,7 @@ type CreateEndpointInput struct {
 	// The type of engine for the endpoint. Valid values, depending on the EndpointType
 	// value, include "mysql", "oracle", "postgres", "mariadb", "aurora", "aurora-postgresql",
 	// "redshift", "s3", "db2", "azuredb", "sybase", "dynamodb", "mongodb", "kinesis",
-	// "kafka", "elasticsearch", "documentdb", "sqlserver", and "neptune".
+	// "kafka", "elasticsearch", "docdb", "sqlserver", and "neptune".
 	//
 	// EngineName is a required field
 	EngineName *string `type:"string" required:"true"`
@@ -5505,6 +6333,12 @@ type CreateEndpointInput struct {
 	// see Working with AWS DMS Endpoints (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Endpoints.html)
 	// in the AWS Database Migration Service User Guide.
 	ExtraConnectionAttributes *string `type:"string"`
+
+	// Settings in JSON format for the source IBM Db2 LUW endpoint. For information
+	// about other available settings, see Extra connection attributes when using
+	// Db2 LUW as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.DB2.html)
+	// in the AWS Database Migration Service User Guide.
+	IBMDb2Settings *IBMDb2Settings `type:"structure"`
 
 	// Settings in JSON format for the target Apache Kafka endpoint. For more information
 	// about the available settings, see Using Apache Kafka as a Target for AWS
@@ -5528,11 +6362,27 @@ type CreateEndpointInput struct {
 	// account has a different default encryption key for each AWS Region.
 	KmsKeyId *string `type:"string"`
 
+	// Settings in JSON format for the source and target Microsoft SQL Server endpoint.
+	// For information about other available settings, see Extra connection attributes
+	// when using SQL Server as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.SQLServer.html)
+	// and Extra connection attributes when using SQL Server as a target for AWS
+	// DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.SQLServer.html)
+	// in the AWS Database Migration Service User Guide.
+	MicrosoftSQLServerSettings *MicrosoftSQLServerSettings `type:"structure"`
+
 	// Settings in JSON format for the source MongoDB endpoint. For more information
 	// about the available settings, see Using MongoDB as a Target for AWS Database
 	// Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html#CHAP_Source.MongoDB.Configuration)
 	// in the AWS Database Migration Service User Guide.
 	MongoDbSettings *MongoDbSettings `type:"structure"`
+
+	// Settings in JSON format for the source and target MySQL endpoint. For information
+	// about other available settings, see Extra connection attributes when using
+	// MySQL as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MySQL.html)
+	// and Extra connection attributes when using a MySQL-compatible database as
+	// a target for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.MySQL.html)
+	// in the AWS Database Migration Service User Guide.
+	MySQLSettings *MySQLSettings `type:"structure"`
 
 	// Settings in JSON format for the target Amazon Neptune endpoint. For more
 	// information about the available settings, see Specifying Endpoint Settings
@@ -5540,11 +6390,27 @@ type CreateEndpointInput struct {
 	// in the AWS Database Migration Service User Guide.
 	NeptuneSettings *NeptuneSettings `type:"structure"`
 
+	// Settings in JSON format for the source and target Oracle endpoint. For information
+	// about other available settings, see Extra connection attributes when using
+	// Oracle as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.Oracle.html)
+	// and Extra connection attributes when using Oracle as a target for AWS DMS
+	// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Oracle.html)
+	// in the AWS Database Migration Service User Guide.
+	OracleSettings *OracleSettings `type:"structure"`
+
 	// The password to be used to log in to the endpoint database.
 	Password *string `type:"string" sensitive:"true"`
 
 	// The port used by the endpoint database.
 	Port *int64 `type:"integer"`
+
+	// Settings in JSON format for the source and target PostgreSQL endpoint. For
+	// information about other available settings, see Extra connection attributes
+	// when using PostgreSQL as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html)
+	// and Extra connection attributes when using PostgreSQL as a target for AWS
+	// DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.PostgreSQL.html)
+	// in the AWS Database Migration Service User Guide.
+	PostgreSQLSettings *PostgreSQLSettings `type:"structure"`
 
 	// Provides information that defines an Amazon Redshift endpoint.
 	RedshiftSettings *RedshiftSettings `type:"structure"`
@@ -5565,6 +6431,14 @@ type CreateEndpointInput struct {
 	// The Secure Sockets Layer (SSL) mode to use for the SSL connection. The default
 	// is none
 	SslMode *string `type:"string" enum:"DmsSslModeValue"`
+
+	// Settings in JSON format for the source and target SAP ASE endpoint. For information
+	// about other available settings, see Extra connection attributes when using
+	// SAP ASE as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.SAP.html)
+	// and Extra connection attributes when using SAP ASE as a target for AWS DMS
+	// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.SAP.html) in
+	// the AWS Database Migration Service User Guide.
+	SybaseSettings *SybaseSettings `type:"structure"`
 
 	// One or more tags to be assigned to the endpoint.
 	Tags []*Tag `type:"list"`
@@ -5677,6 +6551,12 @@ func (s *CreateEndpointInput) SetExtraConnectionAttributes(v string) *CreateEndp
 	return s
 }
 
+// SetIBMDb2Settings sets the IBMDb2Settings field's value.
+func (s *CreateEndpointInput) SetIBMDb2Settings(v *IBMDb2Settings) *CreateEndpointInput {
+	s.IBMDb2Settings = v
+	return s
+}
+
 // SetKafkaSettings sets the KafkaSettings field's value.
 func (s *CreateEndpointInput) SetKafkaSettings(v *KafkaSettings) *CreateEndpointInput {
 	s.KafkaSettings = v
@@ -5695,15 +6575,33 @@ func (s *CreateEndpointInput) SetKmsKeyId(v string) *CreateEndpointInput {
 	return s
 }
 
+// SetMicrosoftSQLServerSettings sets the MicrosoftSQLServerSettings field's value.
+func (s *CreateEndpointInput) SetMicrosoftSQLServerSettings(v *MicrosoftSQLServerSettings) *CreateEndpointInput {
+	s.MicrosoftSQLServerSettings = v
+	return s
+}
+
 // SetMongoDbSettings sets the MongoDbSettings field's value.
 func (s *CreateEndpointInput) SetMongoDbSettings(v *MongoDbSettings) *CreateEndpointInput {
 	s.MongoDbSettings = v
 	return s
 }
 
+// SetMySQLSettings sets the MySQLSettings field's value.
+func (s *CreateEndpointInput) SetMySQLSettings(v *MySQLSettings) *CreateEndpointInput {
+	s.MySQLSettings = v
+	return s
+}
+
 // SetNeptuneSettings sets the NeptuneSettings field's value.
 func (s *CreateEndpointInput) SetNeptuneSettings(v *NeptuneSettings) *CreateEndpointInput {
 	s.NeptuneSettings = v
+	return s
+}
+
+// SetOracleSettings sets the OracleSettings field's value.
+func (s *CreateEndpointInput) SetOracleSettings(v *OracleSettings) *CreateEndpointInput {
+	s.OracleSettings = v
 	return s
 }
 
@@ -5716,6 +6614,12 @@ func (s *CreateEndpointInput) SetPassword(v string) *CreateEndpointInput {
 // SetPort sets the Port field's value.
 func (s *CreateEndpointInput) SetPort(v int64) *CreateEndpointInput {
 	s.Port = &v
+	return s
+}
+
+// SetPostgreSQLSettings sets the PostgreSQLSettings field's value.
+func (s *CreateEndpointInput) SetPostgreSQLSettings(v *PostgreSQLSettings) *CreateEndpointInput {
+	s.PostgreSQLSettings = v
 	return s
 }
 
@@ -5746,6 +6650,12 @@ func (s *CreateEndpointInput) SetServiceAccessRoleArn(v string) *CreateEndpointI
 // SetSslMode sets the SslMode field's value.
 func (s *CreateEndpointInput) SetSslMode(v string) *CreateEndpointInput {
 	s.SslMode = &v
+	return s
+}
+
+// SetSybaseSettings sets the SybaseSettings field's value.
+func (s *CreateEndpointInput) SetSybaseSettings(v *SybaseSettings) *CreateEndpointInput {
+	s.SybaseSettings = v
 	return s
 }
 
@@ -5948,6 +6858,9 @@ type CreateReplicationInstanceInput struct {
 	DnsNameServers *string `type:"string"`
 
 	// The engine version number of the replication instance.
+	//
+	// If an engine version number is not specified when a replication instance
+	// is created, the default is the latest engine version available.
 	EngineVersion *string `type:"string"`
 
 	// An AWS KMS key identifier that is used to encrypt the data on the replication
@@ -6291,9 +7204,9 @@ type CreateReplicationTaskInput struct {
 	// Indicates when you want a change data capture (CDC) operation to stop. The
 	// value can be either server time or commit time.
 	//
-	// Server time example: --cdc-stop-position “server_time:3018-02-09T12:12:12”
+	// Server time example: --cdc-stop-position “server_time:2018-02-09T12:12:12”
 	//
-	// Commit time example: --cdc-stop-position “commit_time: 3018-02-09T12:12:12
+	// Commit time example: --cdc-stop-position “commit_time: 2018-02-09T12:12:12
 	// “
 	CdcStopPosition *string `type:"string"`
 
@@ -6856,6 +7769,67 @@ func (s DeleteReplicationSubnetGroupOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteReplicationTaskAssessmentRunInput struct {
+	_ struct{} `type:"structure"`
+
+	// Amazon Resource Name (ARN) of the premigration assessment run to be deleted.
+	//
+	// ReplicationTaskAssessmentRunArn is a required field
+	ReplicationTaskAssessmentRunArn *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteReplicationTaskAssessmentRunInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteReplicationTaskAssessmentRunInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteReplicationTaskAssessmentRunInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteReplicationTaskAssessmentRunInput"}
+	if s.ReplicationTaskAssessmentRunArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReplicationTaskAssessmentRunArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetReplicationTaskAssessmentRunArn sets the ReplicationTaskAssessmentRunArn field's value.
+func (s *DeleteReplicationTaskAssessmentRunInput) SetReplicationTaskAssessmentRunArn(v string) *DeleteReplicationTaskAssessmentRunInput {
+	s.ReplicationTaskAssessmentRunArn = &v
+	return s
+}
+
+type DeleteReplicationTaskAssessmentRunOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ReplicationTaskAssessmentRun object for the deleted assessment run.
+	ReplicationTaskAssessmentRun *ReplicationTaskAssessmentRun `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteReplicationTaskAssessmentRunOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteReplicationTaskAssessmentRunOutput) GoString() string {
+	return s.String()
+}
+
+// SetReplicationTaskAssessmentRun sets the ReplicationTaskAssessmentRun field's value.
+func (s *DeleteReplicationTaskAssessmentRunOutput) SetReplicationTaskAssessmentRun(v *ReplicationTaskAssessmentRun) *DeleteReplicationTaskAssessmentRunOutput {
+	s.ReplicationTaskAssessmentRun = v
+	return s
+}
+
 type DeleteReplicationTaskInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6972,10 +7946,136 @@ func (s *DescribeAccountAttributesOutput) SetUniqueAccountIdentifier(v string) *
 	return s
 }
 
+type DescribeApplicableIndividualAssessmentsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Optional pagination token provided by a previous request. If this parameter
+	// is specified, the response includes only records beyond the marker, up to
+	// the value specified by MaxRecords.
+	Marker *string `type:"string"`
+
+	// Maximum number of records to include in the response. If more records exist
+	// than the specified MaxRecords value, a pagination token called a marker is
+	// included in the response so that the remaining results can be retrieved.
+	MaxRecords *int64 `type:"integer"`
+
+	// Name of the migration type that each provided individual assessment must
+	// support.
+	MigrationType *string `type:"string" enum:"MigrationTypeValue"`
+
+	// ARN of a replication instance on which you want to base the default list
+	// of individual assessments.
+	ReplicationInstanceArn *string `type:"string"`
+
+	// Amazon Resource Name (ARN) of a migration task on which you want to base
+	// the default list of individual assessments.
+	ReplicationTaskArn *string `type:"string"`
+
+	// Name of a database engine that the specified replication instance supports
+	// as a source.
+	SourceEngineName *string `type:"string"`
+
+	// Name of a database engine that the specified replication instance supports
+	// as a target.
+	TargetEngineName *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeApplicableIndividualAssessmentsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeApplicableIndividualAssessmentsInput) GoString() string {
+	return s.String()
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeApplicableIndividualAssessmentsInput) SetMarker(v string) *DescribeApplicableIndividualAssessmentsInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxRecords sets the MaxRecords field's value.
+func (s *DescribeApplicableIndividualAssessmentsInput) SetMaxRecords(v int64) *DescribeApplicableIndividualAssessmentsInput {
+	s.MaxRecords = &v
+	return s
+}
+
+// SetMigrationType sets the MigrationType field's value.
+func (s *DescribeApplicableIndividualAssessmentsInput) SetMigrationType(v string) *DescribeApplicableIndividualAssessmentsInput {
+	s.MigrationType = &v
+	return s
+}
+
+// SetReplicationInstanceArn sets the ReplicationInstanceArn field's value.
+func (s *DescribeApplicableIndividualAssessmentsInput) SetReplicationInstanceArn(v string) *DescribeApplicableIndividualAssessmentsInput {
+	s.ReplicationInstanceArn = &v
+	return s
+}
+
+// SetReplicationTaskArn sets the ReplicationTaskArn field's value.
+func (s *DescribeApplicableIndividualAssessmentsInput) SetReplicationTaskArn(v string) *DescribeApplicableIndividualAssessmentsInput {
+	s.ReplicationTaskArn = &v
+	return s
+}
+
+// SetSourceEngineName sets the SourceEngineName field's value.
+func (s *DescribeApplicableIndividualAssessmentsInput) SetSourceEngineName(v string) *DescribeApplicableIndividualAssessmentsInput {
+	s.SourceEngineName = &v
+	return s
+}
+
+// SetTargetEngineName sets the TargetEngineName field's value.
+func (s *DescribeApplicableIndividualAssessmentsInput) SetTargetEngineName(v string) *DescribeApplicableIndividualAssessmentsInput {
+	s.TargetEngineName = &v
+	return s
+}
+
+type DescribeApplicableIndividualAssessmentsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// List of names for the individual assessments supported by the premigration
+	// assessment run that you start based on the specified request parameters.
+	// For more information on the available individual assessments, including compatibility
+	// with different migration task configurations, see Working with premigration
+	// assessment runs (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.AssessmentReport.html)
+	// in the AWS Database Migration Service User Guide.
+	IndividualAssessmentNames []*string `type:"list"`
+
+	// Pagination token returned for you to pass to a subsequent request. If you
+	// pass this token as the Marker value in a subsequent request, the response
+	// includes only records beyond the marker, up to the value specified in the
+	// request by MaxRecords.
+	Marker *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeApplicableIndividualAssessmentsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeApplicableIndividualAssessmentsOutput) GoString() string {
+	return s.String()
+}
+
+// SetIndividualAssessmentNames sets the IndividualAssessmentNames field's value.
+func (s *DescribeApplicableIndividualAssessmentsOutput) SetIndividualAssessmentNames(v []*string) *DescribeApplicableIndividualAssessmentsOutput {
+	s.IndividualAssessmentNames = v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeApplicableIndividualAssessmentsOutput) SetMarker(v string) *DescribeApplicableIndividualAssessmentsOutput {
+	s.Marker = &v
+	return s
+}
+
 type DescribeCertificatesInput struct {
 	_ struct{} `type:"structure"`
 
-	// Filters applied to the certificate described in the form of key-value pairs.
+	// Filters applied to the certificates described in the form of key-value pairs.
 	Filters []*Filter `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
@@ -7180,7 +8280,7 @@ func (s *DescribeConnectionsOutput) SetMarker(v string) *DescribeConnectionsOutp
 type DescribeEndpointTypesInput struct {
 	_ struct{} `type:"structure"`
 
-	// Filters applied to the describe action.
+	// Filters applied to the endpoint types.
 	//
 	// Valid filter names: engine-name | endpoint-type
 	Filters []*Filter `type:"list"`
@@ -7285,7 +8385,7 @@ func (s *DescribeEndpointTypesOutput) SetSupportedEndpointTypes(v []*SupportedEn
 type DescribeEndpointsInput struct {
 	_ struct{} `type:"structure"`
 
-	// Filters applied to the describe action.
+	// Filters applied to the endpoints.
 	//
 	// Valid filter names: endpoint-arn | endpoint-type | endpoint-id | engine-name
 	Filters []*Filter `type:"list"`
@@ -7390,7 +8490,7 @@ func (s *DescribeEndpointsOutput) SetMarker(v string) *DescribeEndpointsOutput {
 type DescribeEventCategoriesInput struct {
 	_ struct{} `type:"structure"`
 
-	// Filters applied to the action.
+	// Filters applied to the event categories.
 	Filters []*Filter `type:"list"`
 
 	// The type of AWS DMS resource that generates events.
@@ -7467,7 +8567,7 @@ func (s *DescribeEventCategoriesOutput) SetEventCategoryGroupList(v []*EventCate
 type DescribeEventSubscriptionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// Filters applied to the action.
+	// Filters applied to event subscriptions.
 	Filters []*Filter `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
@@ -7588,7 +8688,7 @@ type DescribeEventsInput struct {
 	// A list of event categories for the source type that you've chosen.
 	EventCategories []*string `type:"list"`
 
-	// Filters applied to the action.
+	// Filters applied to events.
 	Filters []*Filter `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
@@ -8092,7 +9192,7 @@ func (s *DescribeReplicationInstanceTaskLogsOutput) SetReplicationInstanceTaskLo
 type DescribeReplicationInstancesInput struct {
 	_ struct{} `type:"structure"`
 
-	// Filters applied to the describe action.
+	// Filters applied to replication instances.
 	//
 	// Valid filter names: replication-instance-arn | replication-instance-id |
 	// replication-instance-class | engine-version
@@ -8198,7 +9298,7 @@ func (s *DescribeReplicationInstancesOutput) SetReplicationInstances(v []*Replic
 type DescribeReplicationSubnetGroupsInput struct {
 	_ struct{} `type:"structure"`
 
-	// Filters applied to the describe action.
+	// Filters applied to replication subnet groups.
 	//
 	// Valid filter names: replication-subnet-group-id
 	Filters []*Filter `type:"list"`
@@ -8394,10 +9494,218 @@ func (s *DescribeReplicationTaskAssessmentResultsOutput) SetReplicationTaskAsses
 	return s
 }
 
+type DescribeReplicationTaskAssessmentRunsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Filters applied to the premigration assessment runs described in the form
+	// of key-value pairs.
+	//
+	// Valid filter names: replication-task-assessment-run-arn, replication-task-arn,
+	// replication-instance-arn, status
+	Filters []*Filter `type:"list"`
+
+	// An optional pagination token provided by a previous request. If this parameter
+	// is specified, the response includes only records beyond the marker, up to
+	// the value specified by MaxRecords.
+	Marker *string `type:"string"`
+
+	// The maximum number of records to include in the response. If more records
+	// exist than the specified MaxRecords value, a pagination token called a marker
+	// is included in the response so that the remaining results can be retrieved.
+	MaxRecords *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s DescribeReplicationTaskAssessmentRunsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeReplicationTaskAssessmentRunsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeReplicationTaskAssessmentRunsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeReplicationTaskAssessmentRunsInput"}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeReplicationTaskAssessmentRunsInput) SetFilters(v []*Filter) *DescribeReplicationTaskAssessmentRunsInput {
+	s.Filters = v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeReplicationTaskAssessmentRunsInput) SetMarker(v string) *DescribeReplicationTaskAssessmentRunsInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxRecords sets the MaxRecords field's value.
+func (s *DescribeReplicationTaskAssessmentRunsInput) SetMaxRecords(v int64) *DescribeReplicationTaskAssessmentRunsInput {
+	s.MaxRecords = &v
+	return s
+}
+
+type DescribeReplicationTaskAssessmentRunsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A pagination token returned for you to pass to a subsequent request. If you
+	// pass this token as the Marker value in a subsequent request, the response
+	// includes only records beyond the marker, up to the value specified in the
+	// request by MaxRecords.
+	Marker *string `type:"string"`
+
+	// One or more premigration assessment runs as specified by Filters.
+	ReplicationTaskAssessmentRuns []*ReplicationTaskAssessmentRun `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeReplicationTaskAssessmentRunsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeReplicationTaskAssessmentRunsOutput) GoString() string {
+	return s.String()
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeReplicationTaskAssessmentRunsOutput) SetMarker(v string) *DescribeReplicationTaskAssessmentRunsOutput {
+	s.Marker = &v
+	return s
+}
+
+// SetReplicationTaskAssessmentRuns sets the ReplicationTaskAssessmentRuns field's value.
+func (s *DescribeReplicationTaskAssessmentRunsOutput) SetReplicationTaskAssessmentRuns(v []*ReplicationTaskAssessmentRun) *DescribeReplicationTaskAssessmentRunsOutput {
+	s.ReplicationTaskAssessmentRuns = v
+	return s
+}
+
+type DescribeReplicationTaskIndividualAssessmentsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Filters applied to the individual assessments described in the form of key-value
+	// pairs.
+	//
+	// Valid filter names: replication-task-assessment-run-arn, replication-task-arn,
+	// status
+	Filters []*Filter `type:"list"`
+
+	// An optional pagination token provided by a previous request. If this parameter
+	// is specified, the response includes only records beyond the marker, up to
+	// the value specified by MaxRecords.
+	Marker *string `type:"string"`
+
+	// The maximum number of records to include in the response. If more records
+	// exist than the specified MaxRecords value, a pagination token called a marker
+	// is included in the response so that the remaining results can be retrieved.
+	MaxRecords *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s DescribeReplicationTaskIndividualAssessmentsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeReplicationTaskIndividualAssessmentsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeReplicationTaskIndividualAssessmentsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeReplicationTaskIndividualAssessmentsInput"}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeReplicationTaskIndividualAssessmentsInput) SetFilters(v []*Filter) *DescribeReplicationTaskIndividualAssessmentsInput {
+	s.Filters = v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeReplicationTaskIndividualAssessmentsInput) SetMarker(v string) *DescribeReplicationTaskIndividualAssessmentsInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxRecords sets the MaxRecords field's value.
+func (s *DescribeReplicationTaskIndividualAssessmentsInput) SetMaxRecords(v int64) *DescribeReplicationTaskIndividualAssessmentsInput {
+	s.MaxRecords = &v
+	return s
+}
+
+type DescribeReplicationTaskIndividualAssessmentsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A pagination token returned for you to pass to a subsequent request. If you
+	// pass this token as the Marker value in a subsequent request, the response
+	// includes only records beyond the marker, up to the value specified in the
+	// request by MaxRecords.
+	Marker *string `type:"string"`
+
+	// One or more individual assessments as specified by Filters.
+	ReplicationTaskIndividualAssessments []*ReplicationTaskIndividualAssessment `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeReplicationTaskIndividualAssessmentsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeReplicationTaskIndividualAssessmentsOutput) GoString() string {
+	return s.String()
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeReplicationTaskIndividualAssessmentsOutput) SetMarker(v string) *DescribeReplicationTaskIndividualAssessmentsOutput {
+	s.Marker = &v
+	return s
+}
+
+// SetReplicationTaskIndividualAssessments sets the ReplicationTaskIndividualAssessments field's value.
+func (s *DescribeReplicationTaskIndividualAssessmentsOutput) SetReplicationTaskIndividualAssessments(v []*ReplicationTaskIndividualAssessment) *DescribeReplicationTaskIndividualAssessmentsOutput {
+	s.ReplicationTaskIndividualAssessments = v
+	return s
+}
+
 type DescribeReplicationTasksInput struct {
 	_ struct{} `type:"structure"`
 
-	// Filters applied to the describe action.
+	// Filters applied to replication tasks.
 	//
 	// Valid filter names: replication-task-arn | replication-task-id | migration-type
 	// | endpoint-arn | replication-instance-arn
@@ -8612,7 +9920,7 @@ func (s *DescribeSchemasOutput) SetSchemas(v []*string) *DescribeSchemasOutput {
 type DescribeTableStatisticsInput struct {
 	_ struct{} `type:"structure"`
 
-	// Filters applied to the describe table statistics action.
+	// Filters applied to table statistics.
 	//
 	// Valid filter names: schema-name | table-name | table-state
 	//
@@ -8924,7 +10232,7 @@ type Endpoint struct {
 	// "BucketName": "string", "CompressionType": "none"|"gzip" }
 	DmsTransferSettings *DmsTransferSettings `type:"structure"`
 
-	// The settings for the target DynamoDB database. For more information, see
+	// The settings for the DynamoDB target endpoint. For more information, see
 	// the DynamoDBSettings structure.
 	DynamoDbSettings *DynamoDbSettings `type:"structure"`
 
@@ -8964,6 +10272,10 @@ type Endpoint struct {
 	// Additional connection attributes used to connect to the endpoint.
 	ExtraConnectionAttributes *string `type:"string"`
 
+	// The settings for the IBM Db2 LUW source endpoint. For more information, see
+	// the IBMDb2Settings structure.
+	IBMDb2Settings *IBMDb2Settings `type:"structure"`
+
 	// The settings for the Apache Kafka target endpoint. For more information,
 	// see the KafkaSettings structure.
 	KafkaSettings *KafkaSettings `type:"structure"`
@@ -8982,16 +10294,32 @@ type Endpoint struct {
 	// account has a different default encryption key for each AWS Region.
 	KmsKeyId *string `type:"string"`
 
+	// The settings for the Microsoft SQL Server source and target endpoint. For
+	// more information, see the MicrosoftSQLServerSettings structure.
+	MicrosoftSQLServerSettings *MicrosoftSQLServerSettings `type:"structure"`
+
 	// The settings for the MongoDB source endpoint. For more information, see the
 	// MongoDbSettings structure.
 	MongoDbSettings *MongoDbSettings `type:"structure"`
+
+	// The settings for the MySQL source and target endpoint. For more information,
+	// see the MySQLSettings structure.
+	MySQLSettings *MySQLSettings `type:"structure"`
 
 	// The settings for the Amazon Neptune target endpoint. For more information,
 	// see the NeptuneSettings structure.
 	NeptuneSettings *NeptuneSettings `type:"structure"`
 
+	// The settings for the Oracle source and target endpoint. For more information,
+	// see the OracleSettings structure.
+	OracleSettings *OracleSettings `type:"structure"`
+
 	// The port value used to access the endpoint.
 	Port *int64 `type:"integer"`
+
+	// The settings for the PostgreSQL source and target endpoint. For more information,
+	// see the PostgreSQLSettings structure.
+	PostgreSQLSettings *PostgreSQLSettings `type:"structure"`
 
 	// Settings for the Amazon Redshift endpoint.
 	RedshiftSettings *RedshiftSettings `type:"structure"`
@@ -9011,6 +10339,10 @@ type Endpoint struct {
 
 	// The status of the endpoint.
 	Status *string `type:"string"`
+
+	// The settings for the SAP ASE source and target endpoint. For more information,
+	// see the SybaseSettings structure.
+	SybaseSettings *SybaseSettings `type:"structure"`
 
 	// The user name used to connect to the endpoint.
 	Username *string `type:"string"`
@@ -9104,6 +10436,12 @@ func (s *Endpoint) SetExtraConnectionAttributes(v string) *Endpoint {
 	return s
 }
 
+// SetIBMDb2Settings sets the IBMDb2Settings field's value.
+func (s *Endpoint) SetIBMDb2Settings(v *IBMDb2Settings) *Endpoint {
+	s.IBMDb2Settings = v
+	return s
+}
+
 // SetKafkaSettings sets the KafkaSettings field's value.
 func (s *Endpoint) SetKafkaSettings(v *KafkaSettings) *Endpoint {
 	s.KafkaSettings = v
@@ -9122,9 +10460,21 @@ func (s *Endpoint) SetKmsKeyId(v string) *Endpoint {
 	return s
 }
 
+// SetMicrosoftSQLServerSettings sets the MicrosoftSQLServerSettings field's value.
+func (s *Endpoint) SetMicrosoftSQLServerSettings(v *MicrosoftSQLServerSettings) *Endpoint {
+	s.MicrosoftSQLServerSettings = v
+	return s
+}
+
 // SetMongoDbSettings sets the MongoDbSettings field's value.
 func (s *Endpoint) SetMongoDbSettings(v *MongoDbSettings) *Endpoint {
 	s.MongoDbSettings = v
+	return s
+}
+
+// SetMySQLSettings sets the MySQLSettings field's value.
+func (s *Endpoint) SetMySQLSettings(v *MySQLSettings) *Endpoint {
+	s.MySQLSettings = v
 	return s
 }
 
@@ -9134,9 +10484,21 @@ func (s *Endpoint) SetNeptuneSettings(v *NeptuneSettings) *Endpoint {
 	return s
 }
 
+// SetOracleSettings sets the OracleSettings field's value.
+func (s *Endpoint) SetOracleSettings(v *OracleSettings) *Endpoint {
+	s.OracleSettings = v
+	return s
+}
+
 // SetPort sets the Port field's value.
 func (s *Endpoint) SetPort(v int64) *Endpoint {
 	s.Port = &v
+	return s
+}
+
+// SetPostgreSQLSettings sets the PostgreSQLSettings field's value.
+func (s *Endpoint) SetPostgreSQLSettings(v *PostgreSQLSettings) *Endpoint {
+	s.PostgreSQLSettings = v
 	return s
 }
 
@@ -9173,6 +10535,12 @@ func (s *Endpoint) SetSslMode(v string) *Endpoint {
 // SetStatus sets the Status field's value.
 func (s *Endpoint) SetStatus(v string) *Endpoint {
 	s.Status = &v
+	return s
+}
+
+// SetSybaseSettings sets the SybaseSettings field's value.
+func (s *Endpoint) SetSybaseSettings(v *SybaseSettings) *Endpoint {
+	s.SybaseSettings = v
 	return s
 }
 
@@ -9247,7 +10615,9 @@ func (s *Event) SetSourceType(v string) *Event {
 }
 
 // Lists categories of events subscribed to, and generated by, the applicable
-// AWS DMS resource type.
+// AWS DMS resource type. This data type appears in response to the DescribeEventCategories
+// (https://docs.aws.amazon.com/dms/latest/APIReference/API_EventCategoryGroup.html)
+// action.
 type EventCategoryGroup struct {
 	_ struct{} `type:"structure"`
 
@@ -9392,17 +10762,19 @@ func (s *EventSubscription) SetSubscriptionCreationTime(v string) *EventSubscrip
 	return s
 }
 
-// Identifies the name and value of a source filter object used to limit the
-// number and type of records transferred from your source to your target.
+// Identifies the name and value of a filter object. This filter is used to
+// limit the number and type of AWS DMS objects that are returned for a particular
+// Describe* or similar operation.
 type Filter struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the filter.
+	// The name of the filter as specified for a Describe* or similar operation.
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
 
-	// The filter value.
+	// The filter value, which can specify one or more values used to narrow the
+	// returned results.
 	//
 	// Values is a required field
 	Values []*string `type:"list" required:"true"`
@@ -9443,6 +10815,66 @@ func (s *Filter) SetName(v string) *Filter {
 // SetValues sets the Values field's value.
 func (s *Filter) SetValues(v []*string) *Filter {
 	s.Values = v
+	return s
+}
+
+// Provides information that defines an IBM Db2 LUW endpoint.
+type IBMDb2Settings struct {
+	_ struct{} `type:"structure"`
+
+	// Database name for the endpoint.
+	DatabaseName *string `type:"string"`
+
+	// Endpoint connection password.
+	Password *string `type:"string" sensitive:"true"`
+
+	// Endpoint TCP port.
+	Port *int64 `type:"integer"`
+
+	// Fully qualified domain name of the endpoint.
+	ServerName *string `type:"string"`
+
+	// Endpoint connection user name.
+	Username *string `type:"string"`
+}
+
+// String returns the string representation
+func (s IBMDb2Settings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IBMDb2Settings) GoString() string {
+	return s.String()
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *IBMDb2Settings) SetDatabaseName(v string) *IBMDb2Settings {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetPassword sets the Password field's value.
+func (s *IBMDb2Settings) SetPassword(v string) *IBMDb2Settings {
+	s.Password = &v
+	return s
+}
+
+// SetPort sets the Port field's value.
+func (s *IBMDb2Settings) SetPort(v int64) *IBMDb2Settings {
+	s.Port = &v
+	return s
+}
+
+// SetServerName sets the ServerName field's value.
+func (s *IBMDb2Settings) SetServerName(v string) *IBMDb2Settings {
+	s.ServerName = &v
+	return s
+}
+
+// SetUsername sets the Username field's value.
+func (s *IBMDb2Settings) SetUsername(v string) *IBMDb2Settings {
+	s.Username = &v
 	return s
 }
 
@@ -9876,6 +11308,63 @@ func (s *KMSDisabledFault) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+// An AWS Key Management Service (AWS KMS) error is preventing access to AWS
+// KMS.
+type KMSFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s KMSFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KMSFault) GoString() string {
+	return s.String()
+}
+
+func newErrorKMSFault(v protocol.ResponseMetadata) error {
+	return &KMSFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *KMSFault) Code() string {
+	return "KMSFault"
+}
+
+// Message returns the exception's message.
+func (s *KMSFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *KMSFault) OrigErr() error {
+	return nil
+}
+
+func (s *KMSFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *KMSFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *KMSFault) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // The state of the specified AWS KMS resource isn't valid for this request.
 type KMSInvalidStateFault struct {
 	_            struct{}                  `type:"structure"`
@@ -10111,6 +11600,46 @@ type KafkaSettings struct {
 	// "ec2-12-345-678-901.compute-1.amazonaws.com:2345".
 	Broker *string `type:"string"`
 
+	// Shows detailed control information for table definition, column definition,
+	// and table and column changes in the Kafka message output. The default is
+	// false.
+	IncludeControlDetails *bool `type:"boolean"`
+
+	// Include NULL and empty columns for records migrated to the endpoint. The
+	// default is false.
+	IncludeNullAndEmpty *bool `type:"boolean"`
+
+	// Shows the partition value within the Kafka message output, unless the partition
+	// type is schema-table-type. The default is false.
+	IncludePartitionValue *bool `type:"boolean"`
+
+	// Includes any data definition language (DDL) operations that change the table
+	// in the control data, such as rename-table, drop-table, add-column, drop-column,
+	// and rename-column. The default is false.
+	IncludeTableAlterOperations *bool `type:"boolean"`
+
+	// Provides detailed transaction information from the source database. This
+	// information includes a commit timestamp, a log position, and values for transaction_id,
+	// previous transaction_id, and transaction_record_id (the record offset within
+	// a transaction). The default is false.
+	IncludeTransactionDetails *bool `type:"boolean"`
+
+	// The output format for the records created on the endpoint. The message format
+	// is JSON (default) or JSON_UNFORMATTED (a single line with no tab).
+	MessageFormat *string `type:"string" enum:"MessageFormatValue"`
+
+	// The maximum size in bytes for records created on the endpoint The default
+	// is 1,000,000.
+	MessageMaxBytes *int64 `type:"integer"`
+
+	// Prefixes schema and table names to partition values, when the partition type
+	// is primary-key-type. Doing this increases data distribution among Kafka partitions.
+	// For example, suppose that a SysBench schema has thousands of tables and each
+	// table has only limited range for a primary key. In this case, the same primary
+	// key is sent from thousands of tables to the same partition, which causes
+	// throttling. The default is false.
+	PartitionIncludeSchemaTable *bool `type:"boolean"`
+
 	// The topic to which you migrate the data. If you don't specify a topic, AWS
 	// DMS specifies "kafka-default-topic" as the migration topic.
 	Topic *string `type:"string"`
@@ -10132,6 +11661,54 @@ func (s *KafkaSettings) SetBroker(v string) *KafkaSettings {
 	return s
 }
 
+// SetIncludeControlDetails sets the IncludeControlDetails field's value.
+func (s *KafkaSettings) SetIncludeControlDetails(v bool) *KafkaSettings {
+	s.IncludeControlDetails = &v
+	return s
+}
+
+// SetIncludeNullAndEmpty sets the IncludeNullAndEmpty field's value.
+func (s *KafkaSettings) SetIncludeNullAndEmpty(v bool) *KafkaSettings {
+	s.IncludeNullAndEmpty = &v
+	return s
+}
+
+// SetIncludePartitionValue sets the IncludePartitionValue field's value.
+func (s *KafkaSettings) SetIncludePartitionValue(v bool) *KafkaSettings {
+	s.IncludePartitionValue = &v
+	return s
+}
+
+// SetIncludeTableAlterOperations sets the IncludeTableAlterOperations field's value.
+func (s *KafkaSettings) SetIncludeTableAlterOperations(v bool) *KafkaSettings {
+	s.IncludeTableAlterOperations = &v
+	return s
+}
+
+// SetIncludeTransactionDetails sets the IncludeTransactionDetails field's value.
+func (s *KafkaSettings) SetIncludeTransactionDetails(v bool) *KafkaSettings {
+	s.IncludeTransactionDetails = &v
+	return s
+}
+
+// SetMessageFormat sets the MessageFormat field's value.
+func (s *KafkaSettings) SetMessageFormat(v string) *KafkaSettings {
+	s.MessageFormat = &v
+	return s
+}
+
+// SetMessageMaxBytes sets the MessageMaxBytes field's value.
+func (s *KafkaSettings) SetMessageMaxBytes(v int64) *KafkaSettings {
+	s.MessageMaxBytes = &v
+	return s
+}
+
+// SetPartitionIncludeSchemaTable sets the PartitionIncludeSchemaTable field's value.
+func (s *KafkaSettings) SetPartitionIncludeSchemaTable(v bool) *KafkaSettings {
+	s.PartitionIncludeSchemaTable = &v
+	return s
+}
+
 // SetTopic sets the Topic field's value.
 func (s *KafkaSettings) SetTopic(v string) *KafkaSettings {
 	s.Topic = &v
@@ -10146,22 +11723,26 @@ type KinesisSettings struct {
 
 	// Shows detailed control information for table definition, column definition,
 	// and table and column changes in the Kinesis message output. The default is
-	// False.
+	// false.
 	IncludeControlDetails *bool `type:"boolean"`
 
+	// Include NULL and empty columns for records migrated to the endpoint. The
+	// default is false.
+	IncludeNullAndEmpty *bool `type:"boolean"`
+
 	// Shows the partition value within the Kinesis message output, unless the partition
-	// type is schema-table-type. The default is False.
+	// type is schema-table-type. The default is false.
 	IncludePartitionValue *bool `type:"boolean"`
 
 	// Includes any data definition language (DDL) operations that change the table
 	// in the control data, such as rename-table, drop-table, add-column, drop-column,
-	// and rename-column. The default is False.
+	// and rename-column. The default is false.
 	IncludeTableAlterOperations *bool `type:"boolean"`
 
 	// Provides detailed transaction information from the source database. This
 	// information includes a commit timestamp, a log position, and values for transaction_id,
 	// previous transaction_id, and transaction_record_id (the record offset within
-	// a transaction). The default is False.
+	// a transaction). The default is false.
 	IncludeTransactionDetails *bool `type:"boolean"`
 
 	// The output format for the records created on the endpoint. The message format
@@ -10173,7 +11754,7 @@ type KinesisSettings struct {
 	// shards. For example, suppose that a SysBench schema has thousands of tables
 	// and each table has only limited range for a primary key. In this case, the
 	// same primary key is sent from thousands of tables to the same shard, which
-	// causes throttling. The default is False.
+	// causes throttling. The default is false.
 	PartitionIncludeSchemaTable *bool `type:"boolean"`
 
 	// The Amazon Resource Name (ARN) for the AWS Identity and Access Management
@@ -10197,6 +11778,12 @@ func (s KinesisSettings) GoString() string {
 // SetIncludeControlDetails sets the IncludeControlDetails field's value.
 func (s *KinesisSettings) SetIncludeControlDetails(v bool) *KinesisSettings {
 	s.IncludeControlDetails = &v
+	return s
+}
+
+// SetIncludeNullAndEmpty sets the IncludeNullAndEmpty field's value.
+func (s *KinesisSettings) SetIncludeNullAndEmpty(v bool) *KinesisSettings {
+	s.IncludeNullAndEmpty = &v
 	return s
 }
 
@@ -10304,6 +11891,66 @@ func (s *ListTagsForResourceOutput) SetTagList(v []*Tag) *ListTagsForResourceOut
 	return s
 }
 
+// Provides information that defines a Microsoft SQL Server endpoint.
+type MicrosoftSQLServerSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Database name for the endpoint.
+	DatabaseName *string `type:"string"`
+
+	// Endpoint connection password.
+	Password *string `type:"string" sensitive:"true"`
+
+	// Endpoint TCP port.
+	Port *int64 `type:"integer"`
+
+	// Fully qualified domain name of the endpoint.
+	ServerName *string `type:"string"`
+
+	// Endpoint connection user name.
+	Username *string `type:"string"`
+}
+
+// String returns the string representation
+func (s MicrosoftSQLServerSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MicrosoftSQLServerSettings) GoString() string {
+	return s.String()
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *MicrosoftSQLServerSettings) SetDatabaseName(v string) *MicrosoftSQLServerSettings {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetPassword sets the Password field's value.
+func (s *MicrosoftSQLServerSettings) SetPassword(v string) *MicrosoftSQLServerSettings {
+	s.Password = &v
+	return s
+}
+
+// SetPort sets the Port field's value.
+func (s *MicrosoftSQLServerSettings) SetPort(v int64) *MicrosoftSQLServerSettings {
+	s.Port = &v
+	return s
+}
+
+// SetServerName sets the ServerName field's value.
+func (s *MicrosoftSQLServerSettings) SetServerName(v string) *MicrosoftSQLServerSettings {
+	s.ServerName = &v
+	return s
+}
+
+// SetUsername sets the Username field's value.
+func (s *MicrosoftSQLServerSettings) SetUsername(v string) *MicrosoftSQLServerSettings {
+	s.Username = &v
+	return s
+}
+
 type ModifyEndpointInput struct {
 	_ struct{} `type:"structure"`
 
@@ -10371,6 +12018,12 @@ type ModifyEndpointInput struct {
 	// pass the empty string ("") as an argument.
 	ExtraConnectionAttributes *string `type:"string"`
 
+	// Settings in JSON format for the source IBM Db2 LUW endpoint. For information
+	// about other available settings, see Extra connection attributes when using
+	// Db2 LUW as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.DB2.ConnectionAttrib)
+	// in the AWS Database Migration Service User Guide.
+	IBMDb2Settings *IBMDb2Settings `type:"structure"`
+
 	// Settings in JSON format for the target Apache Kafka endpoint. For more information
 	// about the available settings, see Using Apache Kafka as a Target for AWS
 	// Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kafka.html)
@@ -10383,11 +12036,27 @@ type ModifyEndpointInput struct {
 	// in the AWS Database Migration Service User Guide.
 	KinesisSettings *KinesisSettings `type:"structure"`
 
+	// Settings in JSON format for the source and target Microsoft SQL Server endpoint.
+	// For information about other available settings, see Extra connection attributes
+	// when using SQL Server as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.SQLServer.ConnectionAttrib)
+	// and Extra connection attributes when using SQL Server as a target for AWS
+	// DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.SQLServer.ConnectionAttrib)
+	// in the AWS Database Migration Service User Guide.
+	MicrosoftSQLServerSettings *MicrosoftSQLServerSettings `type:"structure"`
+
 	// Settings in JSON format for the source MongoDB endpoint. For more information
 	// about the available settings, see the configuration properties section in
 	// Using MongoDB as a Target for AWS Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html)
 	// in the AWS Database Migration Service User Guide.
 	MongoDbSettings *MongoDbSettings `type:"structure"`
+
+	// Settings in JSON format for the source and target MySQL endpoint. For information
+	// about other available settings, see Extra connection attributes when using
+	// MySQL as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MySQL.ConnectionAttrib)
+	// and Extra connection attributes when using a MySQL-compatible database as
+	// a target for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.MySQL.ConnectionAttrib)
+	// in the AWS Database Migration Service User Guide.
+	MySQLSettings *MySQLSettings `type:"structure"`
 
 	// Settings in JSON format for the target Amazon Neptune endpoint. For more
 	// information about the available settings, see Specifying Endpoint Settings
@@ -10395,11 +12064,27 @@ type ModifyEndpointInput struct {
 	// in the AWS Database Migration Service User Guide.
 	NeptuneSettings *NeptuneSettings `type:"structure"`
 
+	// Settings in JSON format for the source and target Oracle endpoint. For information
+	// about other available settings, see Extra connection attributes when using
+	// Oracle as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.Oracle.ConnectionAttrib)
+	// and Extra connection attributes when using Oracle as a target for AWS DMS
+	// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Oracle.ConnectionAttrib)
+	// in the AWS Database Migration Service User Guide.
+	OracleSettings *OracleSettings `type:"structure"`
+
 	// The password to be used to login to the endpoint database.
 	Password *string `type:"string" sensitive:"true"`
 
 	// The port used by the endpoint database.
 	Port *int64 `type:"integer"`
+
+	// Settings in JSON format for the source and target PostgreSQL endpoint. For
+	// information about other available settings, see Extra connection attributes
+	// when using PostgreSQL as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.ConnectionAttrib)
+	// and Extra connection attributes when using PostgreSQL as a target for AWS
+	// DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.PostgreSQL.ConnectionAttrib)
+	// in the AWS Database Migration Service User Guide.
+	PostgreSQLSettings *PostgreSQLSettings `type:"structure"`
 
 	// Provides information that defines an Amazon Redshift endpoint.
 	RedshiftSettings *RedshiftSettings `type:"structure"`
@@ -10419,6 +12104,14 @@ type ModifyEndpointInput struct {
 
 	// The SSL mode used to connect to the endpoint. The default value is none.
 	SslMode *string `type:"string" enum:"DmsSslModeValue"`
+
+	// Settings in JSON format for the source and target SAP ASE endpoint. For information
+	// about other available settings, see Extra connection attributes when using
+	// SAP ASE as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.SAP.ConnectionAttrib)
+	// and Extra connection attributes when using SAP ASE as a target for AWS DMS
+	// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.SAP.ConnectionAttrib)
+	// in the AWS Database Migration Service User Guide.
+	SybaseSettings *SybaseSettings `type:"structure"`
 
 	// The user name to be used to login to the endpoint database.
 	Username *string `type:"string"`
@@ -10528,6 +12221,12 @@ func (s *ModifyEndpointInput) SetExtraConnectionAttributes(v string) *ModifyEndp
 	return s
 }
 
+// SetIBMDb2Settings sets the IBMDb2Settings field's value.
+func (s *ModifyEndpointInput) SetIBMDb2Settings(v *IBMDb2Settings) *ModifyEndpointInput {
+	s.IBMDb2Settings = v
+	return s
+}
+
 // SetKafkaSettings sets the KafkaSettings field's value.
 func (s *ModifyEndpointInput) SetKafkaSettings(v *KafkaSettings) *ModifyEndpointInput {
 	s.KafkaSettings = v
@@ -10540,15 +12239,33 @@ func (s *ModifyEndpointInput) SetKinesisSettings(v *KinesisSettings) *ModifyEndp
 	return s
 }
 
+// SetMicrosoftSQLServerSettings sets the MicrosoftSQLServerSettings field's value.
+func (s *ModifyEndpointInput) SetMicrosoftSQLServerSettings(v *MicrosoftSQLServerSettings) *ModifyEndpointInput {
+	s.MicrosoftSQLServerSettings = v
+	return s
+}
+
 // SetMongoDbSettings sets the MongoDbSettings field's value.
 func (s *ModifyEndpointInput) SetMongoDbSettings(v *MongoDbSettings) *ModifyEndpointInput {
 	s.MongoDbSettings = v
 	return s
 }
 
+// SetMySQLSettings sets the MySQLSettings field's value.
+func (s *ModifyEndpointInput) SetMySQLSettings(v *MySQLSettings) *ModifyEndpointInput {
+	s.MySQLSettings = v
+	return s
+}
+
 // SetNeptuneSettings sets the NeptuneSettings field's value.
 func (s *ModifyEndpointInput) SetNeptuneSettings(v *NeptuneSettings) *ModifyEndpointInput {
 	s.NeptuneSettings = v
+	return s
+}
+
+// SetOracleSettings sets the OracleSettings field's value.
+func (s *ModifyEndpointInput) SetOracleSettings(v *OracleSettings) *ModifyEndpointInput {
+	s.OracleSettings = v
 	return s
 }
 
@@ -10561,6 +12278,12 @@ func (s *ModifyEndpointInput) SetPassword(v string) *ModifyEndpointInput {
 // SetPort sets the Port field's value.
 func (s *ModifyEndpointInput) SetPort(v int64) *ModifyEndpointInput {
 	s.Port = &v
+	return s
+}
+
+// SetPostgreSQLSettings sets the PostgreSQLSettings field's value.
+func (s *ModifyEndpointInput) SetPostgreSQLSettings(v *PostgreSQLSettings) *ModifyEndpointInput {
+	s.PostgreSQLSettings = v
 	return s
 }
 
@@ -10591,6 +12314,12 @@ func (s *ModifyEndpointInput) SetServiceAccessRoleArn(v string) *ModifyEndpointI
 // SetSslMode sets the SslMode field's value.
 func (s *ModifyEndpointInput) SetSslMode(v string) *ModifyEndpointInput {
 	s.SslMode = &v
+	return s
+}
+
+// SetSybaseSettings sets the SybaseSettings field's value.
+func (s *ModifyEndpointInput) SetSybaseSettings(v *SybaseSettings) *ModifyEndpointInput {
+	s.SybaseSettings = v
 	return s
 }
 
@@ -10761,6 +12490,9 @@ type ModifyReplicationInstanceInput struct {
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
 
 	// The engine version number of the replication instance.
+	//
+	// When modifying a major engine version of an instance, also set AllowMajorVersionUpgrade
+	// to true.
 	EngineVersion *string `type:"string"`
 
 	// Specifies whether the replication instance is a Multi-AZ deployment. You
@@ -11036,9 +12768,9 @@ type ModifyReplicationTaskInput struct {
 	// Indicates when you want a change data capture (CDC) operation to stop. The
 	// value can be either server time or commit time.
 	//
-	// Server time example: --cdc-stop-position “server_time:3018-02-09T12:12:12”
+	// Server time example: --cdc-stop-position “server_time:2018-02-09T12:12:12”
 	//
-	// Commit time example: --cdc-stop-position “commit_time: 3018-02-09T12:12:12
+	// Commit time example: --cdc-stop-position “commit_time: 2018-02-09T12:12:12
 	// “
 	CdcStopPosition *string `type:"string"`
 
@@ -11322,6 +13054,66 @@ func (s *MongoDbSettings) SetUsername(v string) *MongoDbSettings {
 	return s
 }
 
+// Provides information that defines a MySQL endpoint.
+type MySQLSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Database name for the endpoint.
+	DatabaseName *string `type:"string"`
+
+	// Endpoint connection password.
+	Password *string `type:"string" sensitive:"true"`
+
+	// Endpoint TCP port.
+	Port *int64 `type:"integer"`
+
+	// Fully qualified domain name of the endpoint.
+	ServerName *string `type:"string"`
+
+	// Endpoint connection user name.
+	Username *string `type:"string"`
+}
+
+// String returns the string representation
+func (s MySQLSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MySQLSettings) GoString() string {
+	return s.String()
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *MySQLSettings) SetDatabaseName(v string) *MySQLSettings {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetPassword sets the Password field's value.
+func (s *MySQLSettings) SetPassword(v string) *MySQLSettings {
+	s.Password = &v
+	return s
+}
+
+// SetPort sets the Port field's value.
+func (s *MySQLSettings) SetPort(v int64) *MySQLSettings {
+	s.Port = &v
+	return s
+}
+
+// SetServerName sets the ServerName field's value.
+func (s *MySQLSettings) SetServerName(v string) *MySQLSettings {
+	s.ServerName = &v
+	return s
+}
+
+// SetUsername sets the Username field's value.
+func (s *MySQLSettings) SetUsername(v string) *MySQLSettings {
+	s.Username = &v
+	return s
+}
+
 // Provides information that defines an Amazon Neptune endpoint.
 type NeptuneSettings struct {
 	_ struct{} `type:"structure"`
@@ -11433,6 +13225,138 @@ func (s *NeptuneSettings) SetS3BucketName(v string) *NeptuneSettings {
 // SetServiceAccessRoleArn sets the ServiceAccessRoleArn field's value.
 func (s *NeptuneSettings) SetServiceAccessRoleArn(v string) *NeptuneSettings {
 	s.ServiceAccessRoleArn = &v
+	return s
+}
+
+// Provides information that defines an Oracle endpoint.
+type OracleSettings struct {
+	_ struct{} `type:"structure"`
+
+	// For an Oracle source endpoint, your Oracle Automatic Storage Management (ASM)
+	// password. You can set this value from the asm_user_password value. You set
+	// this value as part of the comma-separated value that you set to the Password
+	// request parameter when you create the endpoint to access transaction logs
+	// using Binary Reader. For more information, see Configuration for change data
+	// capture (CDC) on an Oracle source database (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.Oracle.html#dms/latest/userguide/CHAP_Source.Oracle.html#CHAP_Source.Oracle.CDC.Configuration).
+	AsmPassword *string `type:"string" sensitive:"true"`
+
+	// For an Oracle source endpoint, your ASM server address. You can set this
+	// value from the asm_server value. You set asm_server as part of the extra
+	// connection attribute string to access an Oracle server with Binary Reader
+	// that uses ASM. For more information, see Configuration for change data capture
+	// (CDC) on an Oracle source database (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.Oracle.html#dms/latest/userguide/CHAP_Source.Oracle.html#CHAP_Source.Oracle.CDC.Configuration).
+	AsmServer *string `type:"string"`
+
+	// For an Oracle source endpoint, your ASM user name. You can set this value
+	// from the asm_user value. You set asm_user as part of the extra connection
+	// attribute string to access an Oracle server with Binary Reader that uses
+	// ASM. For more information, see Configuration for change data capture (CDC)
+	// on an Oracle source database (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.Oracle.html#dms/latest/userguide/CHAP_Source.Oracle.html#CHAP_Source.Oracle.CDC.Configuration).
+	AsmUser *string `type:"string"`
+
+	// Database name for the endpoint.
+	DatabaseName *string `type:"string"`
+
+	// Endpoint connection password.
+	Password *string `type:"string" sensitive:"true"`
+
+	// Endpoint TCP port.
+	Port *int64 `type:"integer"`
+
+	// For an Oracle source endpoint, the transparent data encryption (TDE) password
+	// required by AWM DMS to access Oracle redo logs encrypted by TDE using Binary
+	// Reader. It is also the TDE_Password part of the comma-separated value you
+	// set to the Password request parameter when you create the endpoint. The SecurityDbEncryptian
+	// setting is related to this SecurityDbEncryptionName setting. For more information,
+	// see Supported encryption methods for using Oracle as a source for AWS DMS
+	// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.Oracle.html#CHAP_Source.Oracle.Encryption)
+	// in the AWS Database Migration Service User Guide.
+	SecurityDbEncryption *string `type:"string" sensitive:"true"`
+
+	// For an Oracle source endpoint, the name of a key used for the transparent
+	// data encryption (TDE) of the columns and tablespaces in an Oracle source
+	// database that is encrypted using TDE. The key value is the value of the SecurityDbEncryption
+	// setting. For more information on setting the key name value of SecurityDbEncryptionName,
+	// see the information and example for setting the securityDbEncryptionName
+	// extra connection attribute in Supported encryption methods for using Oracle
+	// as a source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.Oracle.html#CHAP_Source.Oracle.Encryption)
+	// in the AWS Database Migration Service User Guide.
+	SecurityDbEncryptionName *string `type:"string"`
+
+	// Fully qualified domain name of the endpoint.
+	ServerName *string `type:"string"`
+
+	// Endpoint connection user name.
+	Username *string `type:"string"`
+}
+
+// String returns the string representation
+func (s OracleSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OracleSettings) GoString() string {
+	return s.String()
+}
+
+// SetAsmPassword sets the AsmPassword field's value.
+func (s *OracleSettings) SetAsmPassword(v string) *OracleSettings {
+	s.AsmPassword = &v
+	return s
+}
+
+// SetAsmServer sets the AsmServer field's value.
+func (s *OracleSettings) SetAsmServer(v string) *OracleSettings {
+	s.AsmServer = &v
+	return s
+}
+
+// SetAsmUser sets the AsmUser field's value.
+func (s *OracleSettings) SetAsmUser(v string) *OracleSettings {
+	s.AsmUser = &v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *OracleSettings) SetDatabaseName(v string) *OracleSettings {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetPassword sets the Password field's value.
+func (s *OracleSettings) SetPassword(v string) *OracleSettings {
+	s.Password = &v
+	return s
+}
+
+// SetPort sets the Port field's value.
+func (s *OracleSettings) SetPort(v int64) *OracleSettings {
+	s.Port = &v
+	return s
+}
+
+// SetSecurityDbEncryption sets the SecurityDbEncryption field's value.
+func (s *OracleSettings) SetSecurityDbEncryption(v string) *OracleSettings {
+	s.SecurityDbEncryption = &v
+	return s
+}
+
+// SetSecurityDbEncryptionName sets the SecurityDbEncryptionName field's value.
+func (s *OracleSettings) SetSecurityDbEncryptionName(v string) *OracleSettings {
+	s.SecurityDbEncryptionName = &v
+	return s
+}
+
+// SetServerName sets the ServerName field's value.
+func (s *OracleSettings) SetServerName(v string) *OracleSettings {
+	s.ServerName = &v
+	return s
+}
+
+// SetUsername sets the Username field's value.
+func (s *OracleSettings) SetUsername(v string) *OracleSettings {
+	s.Username = &v
 	return s
 }
 
@@ -11629,6 +13553,66 @@ func (s *PendingMaintenanceAction) SetOptInStatus(v string) *PendingMaintenanceA
 	return s
 }
 
+// Provides information that defines a PostgreSQL endpoint.
+type PostgreSQLSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Database name for the endpoint.
+	DatabaseName *string `type:"string"`
+
+	// Endpoint connection password.
+	Password *string `type:"string" sensitive:"true"`
+
+	// Endpoint TCP port.
+	Port *int64 `type:"integer"`
+
+	// Fully qualified domain name of the endpoint.
+	ServerName *string `type:"string"`
+
+	// Endpoint connection user name.
+	Username *string `type:"string"`
+}
+
+// String returns the string representation
+func (s PostgreSQLSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PostgreSQLSettings) GoString() string {
+	return s.String()
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *PostgreSQLSettings) SetDatabaseName(v string) *PostgreSQLSettings {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetPassword sets the Password field's value.
+func (s *PostgreSQLSettings) SetPassword(v string) *PostgreSQLSettings {
+	s.Password = &v
+	return s
+}
+
+// SetPort sets the Port field's value.
+func (s *PostgreSQLSettings) SetPort(v int64) *PostgreSQLSettings {
+	s.Port = &v
+	return s
+}
+
+// SetServerName sets the ServerName field's value.
+func (s *PostgreSQLSettings) SetServerName(v string) *PostgreSQLSettings {
+	s.ServerName = &v
+	return s
+}
+
+// SetUsername sets the Username field's value.
+func (s *PostgreSQLSettings) SetUsername(v string) *PostgreSQLSettings {
+	s.Username = &v
+	return s
+}
+
 type RebootReplicationInstanceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11751,6 +13735,11 @@ type RedshiftSettings struct {
 	// The type of server-side encryption that you want to use for your data. This
 	// encryption type is part of the endpoint settings or the extra connections
 	// attributes for Amazon S3. You can choose either SSE_S3 (the default) or SSE_KMS.
+	//
+	// For the ModifyEndpoint operation, you can change the existing value of the
+	// EncryptionMode parameter from SSE_KMS to SSE_S3. But you can’t change the
+	// existing value from SSE_S3 to SSE_KMS.
+	//
 	// To use SSE_S3, create an AWS Identity and Access Management (IAM) role with
 	// a policy that allows "arn:aws:s3:::*" to use the following actions: "s3:PutObject",
 	// "s3:ListBucket"
@@ -12166,6 +14155,16 @@ func (s *ReloadTablesInput) Validate() error {
 	if s.TablesToReload == nil {
 		invalidParams.Add(request.NewErrParamRequired("TablesToReload"))
 	}
+	if s.TablesToReload != nil {
+		for i, v := range s.TablesToReload {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "TablesToReload", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -12302,6 +14301,12 @@ type ReplicationInstance struct {
 	DnsNameServers *string `type:"string"`
 
 	// The engine version number of the replication instance.
+	//
+	// If an engine version number is not specified when a replication instance
+	// is created, the default is the latest engine version available.
+	//
+	// When modifying a major engine version of an instance, also set AllowMajorVersionUpgrade
+	// to true.
 	EngineVersion *string `type:"string"`
 
 	// The expiration date of the free replication instance that is part of the
@@ -12329,7 +14334,8 @@ type ReplicationInstance struct {
 	// The pending modification values.
 	PendingModifiedValues *ReplicationPendingModifiedValues `type:"structure"`
 
-	// The maintenance window times for the replication instance.
+	// The maintenance window times for the replication instance. Any pending upgrades
+	// to the replication instance are performed during this time.
 	PreferredMaintenanceWindow *string `type:"string"`
 
 	// Specifies the accessibility options for the replication instance. A value
@@ -12341,15 +14347,16 @@ type ReplicationInstance struct {
 	ReplicationInstanceArn *string `type:"string"`
 
 	// The compute and memory capacity of the replication instance as defined for
-	// the specified replication instance class.
+	// the specified replication instance class. It is a required parameter, although
+	// a defualt value is pre-selected in the DMS console.
 	//
 	// For more information on the settings and capacities for the available replication
 	// instance classes, see Selecting the right AWS DMS replication instance for
 	// your migration (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.html#CHAP_ReplicationInstance.InDepth).
 	ReplicationInstanceClass *string `type:"string"`
 
-	// The replication instance identifier. This parameter is stored as a lowercase
-	// string.
+	// The replication instance identifier is a required parameter. This parameter
+	// is stored as a lowercase string.
 	//
 	// Constraints:
 	//
@@ -12608,8 +14615,8 @@ func (s *ReplicationInstanceTaskLog) SetReplicationTaskName(v string) *Replicati
 }
 
 // Provides information about the values of pending modifications to a replication
-// instance. This data type is an object of the ReplicationInstance user-defined
-// data type.
+// instance. This data type is an object of the ReplicationInstance (https://docs.aws.amazon.com/dms/latest/APIReference/API_ReplicationInstance.html)
+// user-defined data type.
 type ReplicationPendingModifiedValues struct {
 	_ struct{} `type:"structure"`
 
@@ -12807,13 +14814,13 @@ type ReplicationTask struct {
 	// Indicates when you want a change data capture (CDC) operation to stop. The
 	// value can be either server time or commit time.
 	//
-	// Server time example: --cdc-stop-position “server_time:3018-02-09T12:12:12”
+	// Server time example: --cdc-stop-position “server_time:2018-02-09T12:12:12”
 	//
-	// Commit time example: --cdc-stop-position “commit_time: 3018-02-09T12:12:12
+	// Commit time example: --cdc-stop-position “commit_time: 2018-02-09T12:12:12
 	// “
 	CdcStopPosition *string `type:"string"`
 
-	// The last error (failure) message generated for the replication instance.
+	// The last error (failure) message generated for the replication task.
 	LastFailureMessage *string `type:"string"`
 
 	// The type of migration.
@@ -13083,6 +15090,278 @@ func (s *ReplicationTaskAssessmentResult) SetReplicationTaskLastAssessmentDate(v
 // SetS3ObjectUrl sets the S3ObjectUrl field's value.
 func (s *ReplicationTaskAssessmentResult) SetS3ObjectUrl(v string) *ReplicationTaskAssessmentResult {
 	s.S3ObjectUrl = &v
+	return s
+}
+
+// Provides information that describes a premigration assessment run that you
+// have started using the StartReplicationTaskAssessmentRun operation.
+//
+// Some of the information appears based on other operations that can return
+// the ReplicationTaskAssessmentRun object.
+type ReplicationTaskAssessmentRun struct {
+	_ struct{} `type:"structure"`
+
+	// Indication of the completion progress for the individual assessments specified
+	// to run.
+	AssessmentProgress *ReplicationTaskAssessmentRunProgress `type:"structure"`
+
+	// Unique name of the assessment run.
+	AssessmentRunName *string `type:"string"`
+
+	// Last message generated by an individual assessment failure.
+	LastFailureMessage *string `type:"string"`
+
+	// ARN of the migration task associated with this premigration assessment run.
+	ReplicationTaskArn *string `type:"string"`
+
+	// Amazon Resource Name (ARN) of this assessment run.
+	ReplicationTaskAssessmentRunArn *string `type:"string"`
+
+	// Date on which the assessment run was created using the StartReplicationTaskAssessmentRun
+	// operation.
+	ReplicationTaskAssessmentRunCreationDate *time.Time `type:"timestamp"`
+
+	// Encryption mode used to encrypt the assessment run results.
+	ResultEncryptionMode *string `type:"string"`
+
+	// ARN of the AWS KMS encryption key used to encrypt the assessment run results.
+	ResultKmsKeyArn *string `type:"string"`
+
+	// Amazon S3 bucket where AWS DMS stores the results of this assessment run.
+	ResultLocationBucket *string `type:"string"`
+
+	// Folder in an Amazon S3 bucket where AWS DMS stores the results of this assessment
+	// run.
+	ResultLocationFolder *string `type:"string"`
+
+	// ARN of the service role used to start the assessment run using the StartReplicationTaskAssessmentRun
+	// operation.
+	ServiceAccessRoleArn *string `type:"string"`
+
+	// Assessment run status.
+	//
+	// This status can have one of the following values:
+	//
+	//    * "cancelling" – The assessment run was canceled by the CancelReplicationTaskAssessmentRun
+	//    operation.
+	//
+	//    * "deleting" – The assessment run was deleted by the DeleteReplicationTaskAssessmentRun
+	//    operation.
+	//
+	//    * "failed" – At least one individual assessment completed with a failed
+	//    status.
+	//
+	//    * "error-provisioning" – An internal error occurred while resources
+	//    were provisioned (during provisioning status).
+	//
+	//    * "error-executing" – An internal error occurred while individual assessments
+	//    ran (during running status).
+	//
+	//    * "invalid state" – The assessment run is in an unknown state.
+	//
+	//    * "passed" – All individual assessments have completed, and none has
+	//    a failed status.
+	//
+	//    * "provisioning" – Resources required to run individual assessments
+	//    are being provisioned.
+	//
+	//    * "running" – Individual assessments are being run.
+	//
+	//    * "starting" – The assessment run is starting, but resources are not
+	//    yet being provisioned for individual assessments.
+	Status *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ReplicationTaskAssessmentRun) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicationTaskAssessmentRun) GoString() string {
+	return s.String()
+}
+
+// SetAssessmentProgress sets the AssessmentProgress field's value.
+func (s *ReplicationTaskAssessmentRun) SetAssessmentProgress(v *ReplicationTaskAssessmentRunProgress) *ReplicationTaskAssessmentRun {
+	s.AssessmentProgress = v
+	return s
+}
+
+// SetAssessmentRunName sets the AssessmentRunName field's value.
+func (s *ReplicationTaskAssessmentRun) SetAssessmentRunName(v string) *ReplicationTaskAssessmentRun {
+	s.AssessmentRunName = &v
+	return s
+}
+
+// SetLastFailureMessage sets the LastFailureMessage field's value.
+func (s *ReplicationTaskAssessmentRun) SetLastFailureMessage(v string) *ReplicationTaskAssessmentRun {
+	s.LastFailureMessage = &v
+	return s
+}
+
+// SetReplicationTaskArn sets the ReplicationTaskArn field's value.
+func (s *ReplicationTaskAssessmentRun) SetReplicationTaskArn(v string) *ReplicationTaskAssessmentRun {
+	s.ReplicationTaskArn = &v
+	return s
+}
+
+// SetReplicationTaskAssessmentRunArn sets the ReplicationTaskAssessmentRunArn field's value.
+func (s *ReplicationTaskAssessmentRun) SetReplicationTaskAssessmentRunArn(v string) *ReplicationTaskAssessmentRun {
+	s.ReplicationTaskAssessmentRunArn = &v
+	return s
+}
+
+// SetReplicationTaskAssessmentRunCreationDate sets the ReplicationTaskAssessmentRunCreationDate field's value.
+func (s *ReplicationTaskAssessmentRun) SetReplicationTaskAssessmentRunCreationDate(v time.Time) *ReplicationTaskAssessmentRun {
+	s.ReplicationTaskAssessmentRunCreationDate = &v
+	return s
+}
+
+// SetResultEncryptionMode sets the ResultEncryptionMode field's value.
+func (s *ReplicationTaskAssessmentRun) SetResultEncryptionMode(v string) *ReplicationTaskAssessmentRun {
+	s.ResultEncryptionMode = &v
+	return s
+}
+
+// SetResultKmsKeyArn sets the ResultKmsKeyArn field's value.
+func (s *ReplicationTaskAssessmentRun) SetResultKmsKeyArn(v string) *ReplicationTaskAssessmentRun {
+	s.ResultKmsKeyArn = &v
+	return s
+}
+
+// SetResultLocationBucket sets the ResultLocationBucket field's value.
+func (s *ReplicationTaskAssessmentRun) SetResultLocationBucket(v string) *ReplicationTaskAssessmentRun {
+	s.ResultLocationBucket = &v
+	return s
+}
+
+// SetResultLocationFolder sets the ResultLocationFolder field's value.
+func (s *ReplicationTaskAssessmentRun) SetResultLocationFolder(v string) *ReplicationTaskAssessmentRun {
+	s.ResultLocationFolder = &v
+	return s
+}
+
+// SetServiceAccessRoleArn sets the ServiceAccessRoleArn field's value.
+func (s *ReplicationTaskAssessmentRun) SetServiceAccessRoleArn(v string) *ReplicationTaskAssessmentRun {
+	s.ServiceAccessRoleArn = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *ReplicationTaskAssessmentRun) SetStatus(v string) *ReplicationTaskAssessmentRun {
+	s.Status = &v
+	return s
+}
+
+// The progress values reported by the AssessmentProgress response element.
+type ReplicationTaskAssessmentRunProgress struct {
+	_ struct{} `type:"structure"`
+
+	// The number of individual assessments that have completed, successfully or
+	// not.
+	IndividualAssessmentCompletedCount *int64 `type:"integer"`
+
+	// The number of individual assessments that are specified to run.
+	IndividualAssessmentCount *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s ReplicationTaskAssessmentRunProgress) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicationTaskAssessmentRunProgress) GoString() string {
+	return s.String()
+}
+
+// SetIndividualAssessmentCompletedCount sets the IndividualAssessmentCompletedCount field's value.
+func (s *ReplicationTaskAssessmentRunProgress) SetIndividualAssessmentCompletedCount(v int64) *ReplicationTaskAssessmentRunProgress {
+	s.IndividualAssessmentCompletedCount = &v
+	return s
+}
+
+// SetIndividualAssessmentCount sets the IndividualAssessmentCount field's value.
+func (s *ReplicationTaskAssessmentRunProgress) SetIndividualAssessmentCount(v int64) *ReplicationTaskAssessmentRunProgress {
+	s.IndividualAssessmentCount = &v
+	return s
+}
+
+// Provides information that describes an individual assessment from a premigration
+// assessment run.
+type ReplicationTaskIndividualAssessment struct {
+	_ struct{} `type:"structure"`
+
+	// Name of this individual assessment.
+	IndividualAssessmentName *string `type:"string"`
+
+	// ARN of the premigration assessment run that is created to run this individual
+	// assessment.
+	ReplicationTaskAssessmentRunArn *string `type:"string"`
+
+	// Amazon Resource Name (ARN) of this individual assessment.
+	ReplicationTaskIndividualAssessmentArn *string `type:"string"`
+
+	// Date when this individual assessment was started as part of running the StartReplicationTaskAssessmentRun
+	// operation.
+	ReplicationTaskIndividualAssessmentStartDate *time.Time `type:"timestamp"`
+
+	// Individual assessment status.
+	//
+	// This status can have one of the following values:
+	//
+	//    * "cancelled"
+	//
+	//    * "error"
+	//
+	//    * "failed"
+	//
+	//    * "passed"
+	//
+	//    * "pending"
+	//
+	//    * "running"
+	Status *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ReplicationTaskIndividualAssessment) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplicationTaskIndividualAssessment) GoString() string {
+	return s.String()
+}
+
+// SetIndividualAssessmentName sets the IndividualAssessmentName field's value.
+func (s *ReplicationTaskIndividualAssessment) SetIndividualAssessmentName(v string) *ReplicationTaskIndividualAssessment {
+	s.IndividualAssessmentName = &v
+	return s
+}
+
+// SetReplicationTaskAssessmentRunArn sets the ReplicationTaskAssessmentRunArn field's value.
+func (s *ReplicationTaskIndividualAssessment) SetReplicationTaskAssessmentRunArn(v string) *ReplicationTaskIndividualAssessment {
+	s.ReplicationTaskAssessmentRunArn = &v
+	return s
+}
+
+// SetReplicationTaskIndividualAssessmentArn sets the ReplicationTaskIndividualAssessmentArn field's value.
+func (s *ReplicationTaskIndividualAssessment) SetReplicationTaskIndividualAssessmentArn(v string) *ReplicationTaskIndividualAssessment {
+	s.ReplicationTaskIndividualAssessmentArn = &v
+	return s
+}
+
+// SetReplicationTaskIndividualAssessmentStartDate sets the ReplicationTaskIndividualAssessmentStartDate field's value.
+func (s *ReplicationTaskIndividualAssessment) SetReplicationTaskIndividualAssessmentStartDate(v time.Time) *ReplicationTaskIndividualAssessment {
+	s.ReplicationTaskIndividualAssessmentStartDate = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *ReplicationTaskIndividualAssessment) SetStatus(v string) *ReplicationTaskIndividualAssessment {
+	s.Status = &v
 	return s
 }
 
@@ -13409,6 +15688,118 @@ func (s *ResourceQuotaExceededFault) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+// Insufficient privileges are preventing access to an Amazon S3 object.
+type S3AccessDeniedFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s S3AccessDeniedFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3AccessDeniedFault) GoString() string {
+	return s.String()
+}
+
+func newErrorS3AccessDeniedFault(v protocol.ResponseMetadata) error {
+	return &S3AccessDeniedFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *S3AccessDeniedFault) Code() string {
+	return "S3AccessDeniedFault"
+}
+
+// Message returns the exception's message.
+func (s *S3AccessDeniedFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *S3AccessDeniedFault) OrigErr() error {
+	return nil
+}
+
+func (s *S3AccessDeniedFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *S3AccessDeniedFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *S3AccessDeniedFault) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// A specified Amazon S3 bucket, bucket folder, or other object can't be found.
+type S3ResourceNotFoundFault struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s S3ResourceNotFoundFault) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3ResourceNotFoundFault) GoString() string {
+	return s.String()
+}
+
+func newErrorS3ResourceNotFoundFault(v protocol.ResponseMetadata) error {
+	return &S3ResourceNotFoundFault{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *S3ResourceNotFoundFault) Code() string {
+	return "S3ResourceNotFoundFault"
+}
+
+// Message returns the exception's message.
+func (s *S3ResourceNotFoundFault) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *S3ResourceNotFoundFault) OrigErr() error {
+	return nil
+}
+
+func (s *S3ResourceNotFoundFault) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *S3ResourceNotFoundFault) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *S3ResourceNotFoundFault) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // Settings for exporting data to Amazon S3.
 type S3Settings struct {
 	_ struct{} `type:"structure"`
@@ -13423,9 +15814,9 @@ type S3Settings struct {
 
 	// A value that enables a change data capture (CDC) load to write INSERT and
 	// UPDATE operations to .csv or .parquet (columnar storage) output files. The
-	// default setting is false, but when CdcInsertsAndUpdates is set to trueor
-	// y, INSERTs and UPDATEs from the source database are migrated to the .csv
-	// or .parquet file.
+	// default setting is false, but when CdcInsertsAndUpdates is set to true or
+	// y, only INSERTs and UPDATEs from the source database are migrated to the
+	// .csv or .parquet file.
 	//
 	// For .csv file format only, how these INSERTs and UPDATEs are recorded depends
 	// on the value of the IncludeOpForFullLoad parameter. If IncludeOpForFullLoad
@@ -13476,12 +15867,12 @@ type S3Settings struct {
 	// both .csv and .parquet file formats.
 	CompressionType *string `type:"string" enum:"CompressionTypeValue"`
 
-	// The delimiter used to separate columns in the source files. The default is
-	// a comma.
+	// The delimiter used to separate columns in the .csv file for both source and
+	// target. The default is a comma.
 	CsvDelimiter *string `type:"string"`
 
-	// The delimiter used to separate rows in the source files. The default is a
-	// carriage return (\n).
+	// The delimiter used to separate rows in the .csv file for both source and
+	// target. The default is a carriage return (\n).
 	CsvRowDelimiter *string `type:"string"`
 
 	// The format of the data that you want to use for output. You can choose one
@@ -13525,6 +15916,11 @@ type S3Settings struct {
 	// The type of server-side encryption that you want to use for your data. This
 	// encryption type is part of the endpoint settings or the extra connections
 	// attributes for Amazon S3. You can choose either SSE_S3 (the default) or SSE_KMS.
+	//
+	// For the ModifyEndpoint operation, you can change the existing value of the
+	// EncryptionMode parameter from SSE_KMS to SSE_S3. But you can’t change the
+	// existing value from SSE_S3 to SSE_KMS.
+	//
 	// To use SSE_S3, you need an AWS Identity and Access Management (IAM) role
 	// with permission to allow "arn:aws:s3:::dms-*" to use the following actions:
 	//
@@ -13551,7 +15947,7 @@ type S3Settings struct {
 	//    * s3:DeleteBucketPolicy
 	EncryptionMode *string `type:"string" enum:"EncryptionModeValue"`
 
-	// The external table definition.
+	// Specifies how tables are defined in the S3 source files only.
 	ExternalTableDefinition *string `type:"string"`
 
 	// A value that enables a full load to write INSERT operations to the comma-separated
@@ -13619,7 +16015,9 @@ type S3Settings struct {
 	// --endpoint-type target --engine-name s3 --s3-settings ServiceAccessRoleArn=value,BucketFolder=value,BucketName=value,EncryptionMode=SSE_KMS,ServerSideEncryptionKmsKeyId=value
 	ServerSideEncryptionKmsKeyId *string `type:"string"`
 
-	// The Amazon Resource Name (ARN) used by the service access IAM role.
+	// The Amazon Resource Name (ARN) used by the service access IAM role. It is
+	// a required parameter that enables DMS to write and read objects from an 3S
+	// bucket.
 	ServiceAccessRoleArn *string `type:"string"`
 
 	// A value that when nonblank causes AWS DMS to add a column with timestamp
@@ -13956,6 +16354,187 @@ func (s *StartReplicationTaskAssessmentOutput) SetReplicationTask(v *Replication
 	return s
 }
 
+type StartReplicationTaskAssessmentRunInput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique name to identify the assessment run.
+	//
+	// AssessmentRunName is a required field
+	AssessmentRunName *string `type:"string" required:"true"`
+
+	// Space-separated list of names for specific individual assessments that you
+	// want to exclude. These names come from the default list of individual assessments
+	// that AWS DMS supports for the associated migration task. This task is specified
+	// by ReplicationTaskArn.
+	//
+	// You can't set a value for Exclude if you also set a value for IncludeOnly
+	// in the API operation.
+	//
+	// To identify the names of the default individual assessments that AWS DMS
+	// supports for the associated migration task, run the DescribeApplicableIndividualAssessments
+	// operation using its own ReplicationTaskArn request parameter.
+	Exclude []*string `type:"list"`
+
+	// Space-separated list of names for specific individual assessments that you
+	// want to include. These names come from the default list of individual assessments
+	// that AWS DMS supports for the associated migration task. This task is specified
+	// by ReplicationTaskArn.
+	//
+	// You can't set a value for IncludeOnly if you also set a value for Exclude
+	// in the API operation.
+	//
+	// To identify the names of the default individual assessments that AWS DMS
+	// supports for the associated migration task, run the DescribeApplicableIndividualAssessments
+	// operation using its own ReplicationTaskArn request parameter.
+	IncludeOnly []*string `type:"list"`
+
+	// Amazon Resource Name (ARN) of the migration task associated with the premigration
+	// assessment run that you want to start.
+	//
+	// ReplicationTaskArn is a required field
+	ReplicationTaskArn *string `type:"string" required:"true"`
+
+	// Encryption mode that you can specify to encrypt the results of this assessment
+	// run. If you don't specify this request parameter, AWS DMS stores the assessment
+	// run results without encryption. You can specify one of the options following:
+	//
+	//    * "SSE_S3" – The server-side encryption provided as a default by Amazon
+	//    S3.
+	//
+	//    * "SSE_KMS" – AWS Key Management Service (AWS KMS) encryption. This
+	//    encryption can use either a custom KMS encryption key that you specify
+	//    or the default KMS encryption key that DMS provides.
+	ResultEncryptionMode *string `type:"string"`
+
+	// ARN of a custom KMS encryption key that you specify when you set ResultEncryptionMode
+	// to "SSE_KMS".
+	ResultKmsKeyArn *string `type:"string"`
+
+	// Amazon S3 bucket where you want AWS DMS to store the results of this assessment
+	// run.
+	//
+	// ResultLocationBucket is a required field
+	ResultLocationBucket *string `type:"string" required:"true"`
+
+	// Folder within an Amazon S3 bucket where you want AWS DMS to store the results
+	// of this assessment run.
+	ResultLocationFolder *string `type:"string"`
+
+	// ARN of a service role needed to start the assessment run.
+	//
+	// ServiceAccessRoleArn is a required field
+	ServiceAccessRoleArn *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StartReplicationTaskAssessmentRunInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartReplicationTaskAssessmentRunInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartReplicationTaskAssessmentRunInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartReplicationTaskAssessmentRunInput"}
+	if s.AssessmentRunName == nil {
+		invalidParams.Add(request.NewErrParamRequired("AssessmentRunName"))
+	}
+	if s.ReplicationTaskArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReplicationTaskArn"))
+	}
+	if s.ResultLocationBucket == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResultLocationBucket"))
+	}
+	if s.ServiceAccessRoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServiceAccessRoleArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAssessmentRunName sets the AssessmentRunName field's value.
+func (s *StartReplicationTaskAssessmentRunInput) SetAssessmentRunName(v string) *StartReplicationTaskAssessmentRunInput {
+	s.AssessmentRunName = &v
+	return s
+}
+
+// SetExclude sets the Exclude field's value.
+func (s *StartReplicationTaskAssessmentRunInput) SetExclude(v []*string) *StartReplicationTaskAssessmentRunInput {
+	s.Exclude = v
+	return s
+}
+
+// SetIncludeOnly sets the IncludeOnly field's value.
+func (s *StartReplicationTaskAssessmentRunInput) SetIncludeOnly(v []*string) *StartReplicationTaskAssessmentRunInput {
+	s.IncludeOnly = v
+	return s
+}
+
+// SetReplicationTaskArn sets the ReplicationTaskArn field's value.
+func (s *StartReplicationTaskAssessmentRunInput) SetReplicationTaskArn(v string) *StartReplicationTaskAssessmentRunInput {
+	s.ReplicationTaskArn = &v
+	return s
+}
+
+// SetResultEncryptionMode sets the ResultEncryptionMode field's value.
+func (s *StartReplicationTaskAssessmentRunInput) SetResultEncryptionMode(v string) *StartReplicationTaskAssessmentRunInput {
+	s.ResultEncryptionMode = &v
+	return s
+}
+
+// SetResultKmsKeyArn sets the ResultKmsKeyArn field's value.
+func (s *StartReplicationTaskAssessmentRunInput) SetResultKmsKeyArn(v string) *StartReplicationTaskAssessmentRunInput {
+	s.ResultKmsKeyArn = &v
+	return s
+}
+
+// SetResultLocationBucket sets the ResultLocationBucket field's value.
+func (s *StartReplicationTaskAssessmentRunInput) SetResultLocationBucket(v string) *StartReplicationTaskAssessmentRunInput {
+	s.ResultLocationBucket = &v
+	return s
+}
+
+// SetResultLocationFolder sets the ResultLocationFolder field's value.
+func (s *StartReplicationTaskAssessmentRunInput) SetResultLocationFolder(v string) *StartReplicationTaskAssessmentRunInput {
+	s.ResultLocationFolder = &v
+	return s
+}
+
+// SetServiceAccessRoleArn sets the ServiceAccessRoleArn field's value.
+func (s *StartReplicationTaskAssessmentRunInput) SetServiceAccessRoleArn(v string) *StartReplicationTaskAssessmentRunInput {
+	s.ServiceAccessRoleArn = &v
+	return s
+}
+
+type StartReplicationTaskAssessmentRunOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The premigration assessment run that was started.
+	ReplicationTaskAssessmentRun *ReplicationTaskAssessmentRun `type:"structure"`
+}
+
+// String returns the string representation
+func (s StartReplicationTaskAssessmentRunOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartReplicationTaskAssessmentRunOutput) GoString() string {
+	return s.String()
+}
+
+// SetReplicationTaskAssessmentRun sets the ReplicationTaskAssessmentRun field's value.
+func (s *StartReplicationTaskAssessmentRunOutput) SetReplicationTaskAssessmentRun(v *ReplicationTaskAssessmentRun) *StartReplicationTaskAssessmentRunOutput {
+	s.ReplicationTaskAssessmentRun = v
+	return s
+}
+
 type StartReplicationTaskInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13988,9 +16567,9 @@ type StartReplicationTaskInput struct {
 	// Indicates when you want a change data capture (CDC) operation to stop. The
 	// value can be either server time or commit time.
 	//
-	// Server time example: --cdc-stop-position “server_time:3018-02-09T12:12:12”
+	// Server time example: --cdc-stop-position “server_time:2018-02-09T12:12:12”
 	//
-	// Commit time example: --cdc-stop-position “commit_time: 3018-02-09T12:12:12
+	// Commit time example: --cdc-stop-position “commit_time: 2018-02-09T12:12:12
 	// “
 	CdcStopPosition *string `type:"string"`
 
@@ -14370,6 +16949,66 @@ func (s *SupportedEndpointType) SetSupportsCDC(v bool) *SupportedEndpointType {
 	return s
 }
 
+// Provides information that defines a SAP ASE endpoint.
+type SybaseSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Database name for the endpoint.
+	DatabaseName *string `type:"string"`
+
+	// Endpoint connection password.
+	Password *string `type:"string" sensitive:"true"`
+
+	// Endpoint TCP port.
+	Port *int64 `type:"integer"`
+
+	// Fully qualified domain name of the endpoint.
+	ServerName *string `type:"string"`
+
+	// Endpoint connection user name.
+	Username *string `type:"string"`
+}
+
+// String returns the string representation
+func (s SybaseSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SybaseSettings) GoString() string {
+	return s.String()
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *SybaseSettings) SetDatabaseName(v string) *SybaseSettings {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetPassword sets the Password field's value.
+func (s *SybaseSettings) SetPassword(v string) *SybaseSettings {
+	s.Password = &v
+	return s
+}
+
+// SetPort sets the Port field's value.
+func (s *SybaseSettings) SetPort(v int64) *SybaseSettings {
+	s.Port = &v
+	return s
+}
+
+// SetServerName sets the ServerName field's value.
+func (s *SybaseSettings) SetServerName(v string) *SybaseSettings {
+	s.ServerName = &v
+	return s
+}
+
+// SetUsername sets the Username field's value.
+func (s *SybaseSettings) SetUsername(v string) *SybaseSettings {
+	s.Username = &v
+	return s
+}
+
 // Provides a collection of table statistics in response to a request by the
 // DescribeTableStatistics operation.
 type TableStatistics struct {
@@ -14435,26 +17074,34 @@ type TableStatistics struct {
 	//
 	// This parameter can have the following values:
 	//
-	//    * Not enabled - Validation isn't enabled for the table in the migration
+	//    * Not enabled – Validation isn't enabled for the table in the migration
 	//    task.
 	//
-	//    * Pending records - Some records in the table are waiting for validation.
+	//    * Pending records – Some records in the table are waiting for validation.
 	//
-	//    * Mismatched records - Some records in the table don't match between the
-	//    source and target.
+	//    * Mismatched records – Some records in the table don't match between
+	//    the source and target.
 	//
-	//    * Suspended records - Some records in the table couldn't be validated.
+	//    * Suspended records – Some records in the table couldn't be validated.
 	//
-	//    * No primary key - The table couldn't be validated because it has no primary
-	//    key.
+	//    * No primary key –The table couldn't be validated because it has no
+	//    primary key.
 	//
-	//    * Table error - The table wasn't validated because it's in an error state
-	//    and some data wasn't migrated.
+	//    * Table error – The table wasn't validated because it's in an error
+	//    state and some data wasn't migrated.
 	//
-	//    * Validated - All rows in the table are validated. If the table is updated,
+	//    * Validated – All rows in the table are validated. If the table is updated,
 	//    the status can change from Validated.
 	//
-	//    * Error - The table couldn't be validated because of an unexpected error.
+	//    * Error – The table couldn't be validated because of an unexpected error.
+	//
+	//    * Pending validation – The table is waiting validation.
+	//
+	//    * Preparing table – Preparing the table enabled in the migration task
+	//    for validation.
+	//
+	//    * Pending revalidation – All rows in the table are pending validation
+	//    after the table was updated.
 	ValidationState *string `type:"string"`
 
 	// Additional details about the state of validation.
@@ -14593,10 +17240,14 @@ type TableToReload struct {
 	_ struct{} `type:"structure"`
 
 	// The schema name of the table to be reloaded.
-	SchemaName *string `type:"string"`
+	//
+	// SchemaName is a required field
+	SchemaName *string `type:"string" required:"true"`
 
 	// The table name of the table to be reloaded.
-	TableName *string `type:"string"`
+	//
+	// TableName is a required field
+	TableName *string `type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -14607,6 +17258,22 @@ func (s TableToReload) String() string {
 // GoString returns the string representation
 func (s TableToReload) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TableToReload) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TableToReload"}
+	if s.SchemaName == nil {
+		invalidParams.Add(request.NewErrParamRequired("SchemaName"))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetSchemaName sets the SchemaName field's value.
@@ -14843,6 +17510,15 @@ const (
 	AuthMechanismValueScramSha1 = "scram_sha_1"
 )
 
+// AuthMechanismValue_Values returns all elements of the AuthMechanismValue enum
+func AuthMechanismValue_Values() []string {
+	return []string{
+		AuthMechanismValueDefault,
+		AuthMechanismValueMongodbCr,
+		AuthMechanismValueScramSha1,
+	}
+}
+
 const (
 	// AuthTypeValueNo is a AuthTypeValue enum value
 	AuthTypeValueNo = "no"
@@ -14850,6 +17526,14 @@ const (
 	// AuthTypeValuePassword is a AuthTypeValue enum value
 	AuthTypeValuePassword = "password"
 )
+
+// AuthTypeValue_Values returns all elements of the AuthTypeValue enum
+func AuthTypeValue_Values() []string {
+	return []string{
+		AuthTypeValueNo,
+		AuthTypeValuePassword,
+	}
+}
 
 const (
 	// CompressionTypeValueNone is a CompressionTypeValue enum value
@@ -14859,6 +17543,14 @@ const (
 	CompressionTypeValueGzip = "gzip"
 )
 
+// CompressionTypeValue_Values returns all elements of the CompressionTypeValue enum
+func CompressionTypeValue_Values() []string {
+	return []string{
+		CompressionTypeValueNone,
+		CompressionTypeValueGzip,
+	}
+}
+
 const (
 	// DataFormatValueCsv is a DataFormatValue enum value
 	DataFormatValueCsv = "csv"
@@ -14866,6 +17558,14 @@ const (
 	// DataFormatValueParquet is a DataFormatValue enum value
 	DataFormatValueParquet = "parquet"
 )
+
+// DataFormatValue_Values returns all elements of the DataFormatValue enum
+func DataFormatValue_Values() []string {
+	return []string{
+		DataFormatValueCsv,
+		DataFormatValueParquet,
+	}
+}
 
 const (
 	// DmsSslModeValueNone is a DmsSslModeValue enum value
@@ -14881,6 +17581,16 @@ const (
 	DmsSslModeValueVerifyFull = "verify-full"
 )
 
+// DmsSslModeValue_Values returns all elements of the DmsSslModeValue enum
+func DmsSslModeValue_Values() []string {
+	return []string{
+		DmsSslModeValueNone,
+		DmsSslModeValueRequire,
+		DmsSslModeValueVerifyCa,
+		DmsSslModeValueVerifyFull,
+	}
+}
+
 const (
 	// EncodingTypeValuePlain is a EncodingTypeValue enum value
 	EncodingTypeValuePlain = "plain"
@@ -14892,6 +17602,15 @@ const (
 	EncodingTypeValueRleDictionary = "rle-dictionary"
 )
 
+// EncodingTypeValue_Values returns all elements of the EncodingTypeValue enum
+func EncodingTypeValue_Values() []string {
+	return []string{
+		EncodingTypeValuePlain,
+		EncodingTypeValuePlainDictionary,
+		EncodingTypeValueRleDictionary,
+	}
+}
+
 const (
 	// EncryptionModeValueSseS3 is a EncryptionModeValue enum value
 	EncryptionModeValueSseS3 = "sse-s3"
@@ -14900,6 +17619,14 @@ const (
 	EncryptionModeValueSseKms = "sse-kms"
 )
 
+// EncryptionModeValue_Values returns all elements of the EncryptionModeValue enum
+func EncryptionModeValue_Values() []string {
+	return []string{
+		EncryptionModeValueSseS3,
+		EncryptionModeValueSseKms,
+	}
+}
+
 const (
 	// MessageFormatValueJson is a MessageFormatValue enum value
 	MessageFormatValueJson = "json"
@@ -14907,6 +17634,14 @@ const (
 	// MessageFormatValueJsonUnformatted is a MessageFormatValue enum value
 	MessageFormatValueJsonUnformatted = "json-unformatted"
 )
+
+// MessageFormatValue_Values returns all elements of the MessageFormatValue enum
+func MessageFormatValue_Values() []string {
+	return []string{
+		MessageFormatValueJson,
+		MessageFormatValueJsonUnformatted,
+	}
+}
 
 const (
 	// MigrationTypeValueFullLoad is a MigrationTypeValue enum value
@@ -14919,6 +17654,15 @@ const (
 	MigrationTypeValueFullLoadAndCdc = "full-load-and-cdc"
 )
 
+// MigrationTypeValue_Values returns all elements of the MigrationTypeValue enum
+func MigrationTypeValue_Values() []string {
+	return []string{
+		MigrationTypeValueFullLoad,
+		MigrationTypeValueCdc,
+		MigrationTypeValueFullLoadAndCdc,
+	}
+}
+
 const (
 	// NestingLevelValueNone is a NestingLevelValue enum value
 	NestingLevelValueNone = "none"
@@ -14927,6 +17671,14 @@ const (
 	NestingLevelValueOne = "one"
 )
 
+// NestingLevelValue_Values returns all elements of the NestingLevelValue enum
+func NestingLevelValue_Values() []string {
+	return []string{
+		NestingLevelValueNone,
+		NestingLevelValueOne,
+	}
+}
+
 const (
 	// ParquetVersionValueParquet10 is a ParquetVersionValue enum value
 	ParquetVersionValueParquet10 = "parquet-1-0"
@@ -14934,6 +17686,14 @@ const (
 	// ParquetVersionValueParquet20 is a ParquetVersionValue enum value
 	ParquetVersionValueParquet20 = "parquet-2-0"
 )
+
+// ParquetVersionValue_Values returns all elements of the ParquetVersionValue enum
+func ParquetVersionValue_Values() []string {
+	return []string{
+		ParquetVersionValueParquet10,
+		ParquetVersionValueParquet20,
+	}
+}
 
 const (
 	// RefreshSchemasStatusTypeValueSuccessful is a RefreshSchemasStatusTypeValue enum value
@@ -14946,10 +17706,26 @@ const (
 	RefreshSchemasStatusTypeValueRefreshing = "refreshing"
 )
 
+// RefreshSchemasStatusTypeValue_Values returns all elements of the RefreshSchemasStatusTypeValue enum
+func RefreshSchemasStatusTypeValue_Values() []string {
+	return []string{
+		RefreshSchemasStatusTypeValueSuccessful,
+		RefreshSchemasStatusTypeValueFailed,
+		RefreshSchemasStatusTypeValueRefreshing,
+	}
+}
+
 const (
 	// ReleaseStatusValuesBeta is a ReleaseStatusValues enum value
 	ReleaseStatusValuesBeta = "beta"
 )
+
+// ReleaseStatusValues_Values returns all elements of the ReleaseStatusValues enum
+func ReleaseStatusValues_Values() []string {
+	return []string{
+		ReleaseStatusValuesBeta,
+	}
+}
 
 const (
 	// ReloadOptionValueDataReload is a ReloadOptionValue enum value
@@ -14959,6 +17735,14 @@ const (
 	ReloadOptionValueValidateOnly = "validate-only"
 )
 
+// ReloadOptionValue_Values returns all elements of the ReloadOptionValue enum
+func ReloadOptionValue_Values() []string {
+	return []string{
+		ReloadOptionValueDataReload,
+		ReloadOptionValueValidateOnly,
+	}
+}
+
 const (
 	// ReplicationEndpointTypeValueSource is a ReplicationEndpointTypeValue enum value
 	ReplicationEndpointTypeValueSource = "source"
@@ -14967,10 +17751,25 @@ const (
 	ReplicationEndpointTypeValueTarget = "target"
 )
 
+// ReplicationEndpointTypeValue_Values returns all elements of the ReplicationEndpointTypeValue enum
+func ReplicationEndpointTypeValue_Values() []string {
+	return []string{
+		ReplicationEndpointTypeValueSource,
+		ReplicationEndpointTypeValueTarget,
+	}
+}
+
 const (
 	// SourceTypeReplicationInstance is a SourceType enum value
 	SourceTypeReplicationInstance = "replication-instance"
 )
+
+// SourceType_Values returns all elements of the SourceType enum
+func SourceType_Values() []string {
+	return []string{
+		SourceTypeReplicationInstance,
+	}
+}
 
 const (
 	// StartReplicationTaskTypeValueStartReplication is a StartReplicationTaskTypeValue enum value
@@ -14982,3 +17781,12 @@ const (
 	// StartReplicationTaskTypeValueReloadTarget is a StartReplicationTaskTypeValue enum value
 	StartReplicationTaskTypeValueReloadTarget = "reload-target"
 )
+
+// StartReplicationTaskTypeValue_Values returns all elements of the StartReplicationTaskTypeValue enum
+func StartReplicationTaskTypeValue_Values() []string {
+	return []string{
+		StartReplicationTaskTypeValueStartReplication,
+		StartReplicationTaskTypeValueResumeProcessing,
+		StartReplicationTaskTypeValueReloadTarget,
+	}
+}

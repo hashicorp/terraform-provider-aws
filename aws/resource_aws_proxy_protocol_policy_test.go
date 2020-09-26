@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -71,10 +71,10 @@ func testAccCheckProxyProtocolPolicyDestroy(s *terraform.State) error {
 }
 
 func testAccProxyProtocolPolicyConfig(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"
-  availability_zones = ["us-west-2a"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port     = 25
@@ -92,17 +92,17 @@ resource "aws_elb" "lb" {
 }
 
 resource "aws_proxy_protocol_policy" "smtp" {
-  load_balancer  = "${aws_elb.lb.name}"
+  load_balancer  = aws_elb.lb.name
   instance_ports = ["25"]
 }
-`, rName)
+`, rName))
 }
 
 func testAccProxyProtocolPolicyConfigUpdate(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"
-  availability_zones = ["us-west-2a"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port     = 25
@@ -120,8 +120,8 @@ resource "aws_elb" "lb" {
 }
 
 resource "aws_proxy_protocol_policy" "smtp" {
-  load_balancer  = "${aws_elb.lb.name}"
+  load_balancer  = aws_elb.lb.name
   instance_ports = ["25", "587"]
 }
-`, rName)
+`, rName))
 }

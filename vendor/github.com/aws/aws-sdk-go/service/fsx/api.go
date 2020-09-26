@@ -167,10 +167,13 @@ func (c *FSx) CreateBackupRequest(input *CreateBackupInput) (req *request.Reques
 //
 //    * a Persistent deployment type
 //
-//    * is not linked to an Amazon S3 data respository.
+//    * is not linked to a data respository.
 //
-// For more information, see https://docs.aws.amazon.com/fsx/latest/LustreGuide/lustre-backups.html
-// (https://docs.aws.amazon.com/fsx/latest/LustreGuide/lustre-backups.html).
+// For more information about backing up Amazon FSx for Lustre file systems,
+// see Working with FSx for Lustre backups (https://docs.aws.amazon.com/fsx/latest/LustreGuide/using-backups-fsx.html).
+//
+// For more information about backing up Amazon FSx for Lustre file systems,
+// see Working with FSx for Windows backups (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/using-backups.html).
 //
 // If a backup with the specified client request token exists, and the parameters
 // match, this operation returns the description of the existing backup. If
@@ -1694,9 +1697,10 @@ func (c *FSx) UpdateFileSystemRequest(input *UpdateFileSystemInput) (req *reques
 // UpdateFileSystem API operation for Amazon FSx.
 //
 // Use this operation to update the configuration of an existing Amazon FSx
-// file system. For an Amazon FSx for Lustre file system, you can update only
-// the WeeklyMaintenanceStartTime. For an Amazon for Windows File Server file
-// system, you can update the following properties:
+// file system. You can update multiple properties in a single request.
+//
+// For Amazon FSx for Windows File Server file systems, you can update the following
+// properties:
 //
 //    * AutomaticBackupRetentionDays
 //
@@ -1710,7 +1714,15 @@ func (c *FSx) UpdateFileSystemRequest(input *UpdateFileSystemInput) (req *reques
 //
 //    * WeeklyMaintenanceStartTime
 //
-// You can update multiple properties in a single request.
+// For Amazon FSx for Lustre file systems, you can update the following properties:
+//
+//    * AutoImportPolicy
+//
+//    * AutomaticBackupRetentionDays
+//
+//    * DailyAutomaticBackupStartTime
+//
+//    * WeeklyMaintenanceStartTime
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2014,12 +2026,22 @@ type Backup struct {
 	// FileSystem is a required field
 	FileSystem *FileSystem `type:"structure" required:"true"`
 
-	// The ID of the AWS Key Management Service (AWS KMS) key used to encrypt this
-	// backup of the Amazon FSx for Windows file system's data at rest. Amazon FSx
-	// for Lustre does not support KMS encryption.
+	// The ID of the AWS Key Management Service (AWS KMS) key used to encrypt the
+	// backup of the Amazon FSx file system's data at rest.
 	KmsKeyId *string `min:"1" type:"string"`
 
 	// The lifecycle status of the backup.
+	//
+	//    * AVAILABLE - The backup is fully available.
+	//
+	//    * CREATING - FSx is creating the backup.
+	//
+	//    * TRANSFERRING - For Lustre file systems only; FSx is transferring the
+	//    backup to S3.
+	//
+	//    * DELETED - The backup was deleted is no longer available.
+	//
+	//    * FAILED - Amazon FSx could not complete the backup.
 	//
 	// Lifecycle is a required field
 	Lifecycle *string `type:"string" required:"true" enum:"BackupLifecycle"`
@@ -2033,7 +2055,7 @@ type Backup struct {
 	// Tags associated with a particular file system.
 	Tags []*Tag `min:"1" type:"list"`
 
-	// The type of the backup.
+	// The type of the file system backup.
 	//
 	// Type is a required field
 	Type *string `type:"string" required:"true" enum:"BackupType"`
@@ -2552,9 +2574,9 @@ func (s *CompletionReport) SetScope(v string) *CompletionReport {
 type CreateBackupInput struct {
 	_ struct{} `type:"structure"`
 
-	// A string of up to 64 ASCII characters that Amazon FSx uses to ensure idempotent
-	// creation. This string is automatically filled on your behalf when you use
-	// the AWS Command Line Interface (AWS CLI) or an AWS SDK.
+	// (Optional) A string of up to 64 ASCII characters that Amazon FSx uses to
+	// ensure idempotent creation. This string is automatically filled on your behalf
+	// when you use the AWS Command Line Interface (AWS CLI) or an AWS SDK.
 	ClientRequestToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
 	// The ID of the file system to back up.
@@ -2562,10 +2584,10 @@ type CreateBackupInput struct {
 	// FileSystemId is a required field
 	FileSystemId *string `min:"11" type:"string" required:"true"`
 
-	// The tags to apply to the backup at backup creation. The key value of the
-	// Name tag appears in the console as the backup name. If you have set CopyTagsToBackups
-	// to true, and you specify one or more tags using the CreateBackup action,
-	// no existing tags on the file system are copied from the file system to the
+	// (Optional) The tags to apply to the backup at backup creation. The key value
+	// of the Name tag appears in the console as the backup name. If you have set
+	// CopyTagsToBackups to true, and you specify one or more tags using the CreateBackup
+	// action, no existing file system tags are copied from the file system to the
 	// backup.
 	Tags []*Tag `min:"1" type:"list"`
 }
@@ -3029,11 +3051,15 @@ type CreateFileSystemInput struct {
 	//
 	// For Lustre file systems:
 	//
-	//    * For SCRATCH_2 and PERSISTENT_1 deployment types, valid values are 1.2,
-	//    2.4, and increments of 2.4 TiB.
+	//    * For SCRATCH_2 and PERSISTENT_1 SSD deployment types, valid values are
+	//    1200 GiB, 2400 GiB, and increments of 2400 GiB.
 	//
-	//    * For SCRATCH_1 deployment type, valid values are 1.2, 2.4, and increments
-	//    of 3.6 TiB.
+	//    * For PERSISTENT HDD file systems, valid values are increments of 6000
+	//    GiB for 12 MB/s/TiB file systems and increments of 1800 GiB for 40 MB/s/TiB
+	//    file systems.
+	//
+	//    * For SCRATCH_1 deployment type, valid values are 1200 GiB, 2400 GiB,
+	//    and increments of 3600 GiB.
 	//
 	// For Windows file systems:
 	//
@@ -3044,17 +3070,19 @@ type CreateFileSystemInput struct {
 	// StorageCapacity is a required field
 	StorageCapacity *int64 `type:"integer" required:"true"`
 
-	// Sets the storage type for the Amazon FSx for Windows file system you're creating.
-	// Valid values are SSD and HDD.
+	// Sets the storage type for the file system you're creating. Valid values are
+	// SSD and HDD.
 	//
 	//    * Set to SSD to use solid state drive storage. SSD is supported on all
-	//    Windows deployment types.
+	//    Windows and Lustre deployment types.
 	//
 	//    * Set to HDD to use hard disk drive storage. HDD is supported on SINGLE_AZ_2
-	//    and MULTI_AZ_1 Windows file system deployment types.
+	//    and MULTI_AZ_1 Windows file system deployment types, and on PERSISTENT
+	//    Lustre file system deployment types.
 	//
 	// Default value is SSD. For more information, see Storage Type Options (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/optimize-fsx-costs.html#storage-type-options)
-	// in the Amazon FSx for Windows User Guide.
+	// in the Amazon FSx for Windows User Guide and Multiple Storage Options (https://docs.aws.amazon.com/fsx/latest/LustreGuide/what-is.html#storage-options)
+	// in the Amazon FSx for Lustre User Guide.
 	StorageType *string `type:"string" enum:"StorageType"`
 
 	// Specifies the IDs of the subnets that the file system will be accessible
@@ -3200,18 +3228,44 @@ func (s *CreateFileSystemInput) SetWindowsConfiguration(v *CreateFileSystemWindo
 type CreateFileSystemLustreConfiguration struct {
 	_ struct{} `type:"structure"`
 
+	// (Optional) When you create your file system, your existing S3 objects appear
+	// as file and directory listings. Use this property to choose how Amazon FSx
+	// keeps your file and directory listings up to date as you add or modify objects
+	// in your linked S3 bucket. AutoImportPolicy can have the following values:
+	//
+	//    * NONE - (Default) AutoImport is off. Amazon FSx only updates file and
+	//    directory listings from the linked S3 bucket when the file system is created.
+	//    FSx does not update file and directory listings for any new or changed
+	//    objects after choosing this option.
+	//
+	//    * NEW - AutoImport is on. Amazon FSx automatically imports directory listings
+	//    of any new objects added to the linked S3 bucket that do not currently
+	//    exist in the FSx file system.
+	//
+	//    * NEW_CHANGED - AutoImport is on. Amazon FSx automatically imports file
+	//    and directory listings of any new objects added to the S3 bucket and any
+	//    existing objects that are changed in the S3 bucket after you choose this
+	//    option.
+	//
+	// For more information, see Automatically import updates from your S3 bucket
+	// (https://docs.aws.amazon.com/fsx/latest/LustreGuide/autoimport-data-repo.html).
+	AutoImportPolicy *string `type:"string" enum:"AutoImportPolicyType"`
+
 	// The number of days to retain automatic backups. Setting this to 0 disables
-	// automatic backups. You can retain automatic backups for a maximum of 35 days.
+	// automatic backups. You can retain automatic backups for a maximum of 90 days.
 	// The default is 0.
 	AutomaticBackupRetentionDays *int64 `type:"integer"`
 
-	// A boolean flag indicating whether tags for the file system should be copied
-	// to backups. This value defaults to false. If it's set to true, all tags for
-	// the file system are copied to all automatic and user-initiated backups where
-	// the user doesn't specify tags. If this value is true, and you specify one
-	// or more tags, only the specified tags are copied to backups. If you specify
-	// one or more tags when creating a user-initiated backup, no tags are copied
-	// from the file system, regardless of this value.
+	// (Optional) Not available to use with file systems that are linked to a data
+	// repository. A boolean flag indicating whether tags for the file system should
+	// be copied to backups. The default value is false. If it's set to true, all
+	// file system tags are copied to all automatic and user-initiated backups when
+	// the user doesn't specify any backup-specific tags. If this value is true,
+	// and you specify one or more backup tags, only the specified tags are copied
+	// to backups. If you specify one or more tags when creating a user-initiated
+	// backup, no tags are copied from the file system, regardless of this value.
+	//
+	// For more information, see Working with backups (https://docs.aws.amazon.com/fsx/latest/LustreGuide/using-backups-fsx.html).
 	CopyTagsToBackups *bool `type:"boolean"`
 
 	// A recurring daily time, in the format HH:MM. HH is the zero-padded hour of
@@ -3222,8 +3276,6 @@ type CreateFileSystemLustreConfiguration struct {
 	// Choose SCRATCH_1 and SCRATCH_2 deployment types when you need temporary storage
 	// and shorter-term processing of data. The SCRATCH_2 deployment type provides
 	// in-transit encryption of data and higher burst throughput capacity than SCRATCH_1.
-	//
-	// This option can only be set for for PERSISTENT_1 deployments types.
 	//
 	// Choose PERSISTENT_1 deployment type for longer-term storage and workloads
 	// and encryption of data in transit. To learn more about deployment types,
@@ -3238,6 +3290,14 @@ type CreateFileSystemLustreConfiguration struct {
 	// is supported when accessed from supported instance types in supported AWS
 	// Regions. To learn more, Encrypting Data in Transit (https://docs.aws.amazon.com/fsx/latest/LustreGuide/encryption-in-transit-fsxl.html).
 	DeploymentType *string `type:"string" enum:"LustreDeploymentType"`
+
+	// The type of drive cache used by PERSISTENT_1 file systems that are provisioned
+	// with HDD storage devices. This parameter is required when storage type is
+	// HDD. Set to READ, improve the performance for frequently accessed files and
+	// allows 20% of the total storage capacity of the file system to be cached.
+	//
+	// This parameter is required when StorageType is set to HDD.
+	DriveCacheType *string `type:"string" enum:"DriveCacheType"`
 
 	// (Optional) The path in Amazon S3 where the root of your Amazon FSx file system
 	// is exported. The path must use the same Amazon S3 bucket as specified in
@@ -3277,15 +3337,16 @@ type CreateFileSystemLustreConfiguration struct {
 	// and write throughput for each 1 tebibyte of storage, in MB/s/TiB. File system
 	// throughput capacity is calculated by multiplying ﬁle system storage capacity
 	// (TiB) by the PerUnitStorageThroughput (MB/s/TiB). For a 2.4 TiB ﬁle system,
-	// provisioning 50 MB/s/TiB of PerUnitStorageThroughput yields 117 MB/s of ﬁle
+	// provisioning 50 MB/s/TiB of PerUnitStorageThroughput yields 120 MB/s of ﬁle
 	// system throughput. You pay for the amount of throughput that you provision.
 	//
-	// Valid values are 50, 100, 200.
-	PerUnitStorageThroughput *int64 `min:"50" type:"integer"`
+	// Valid values for SSD storage: 50, 100, 200. Valid values for HDD storage:
+	// 12, 40.
+	PerUnitStorageThroughput *int64 `min:"12" type:"integer"`
 
-	// The preferred start time to perform weekly maintenance, formatted d:HH:MM
-	// in the UTC time zone, where d is the weekday number, from 1 through 7, beginning
-	// with Monday and ending with Sunday.
+	// (Optional) The preferred start time to perform weekly maintenance, formatted
+	// d:HH:MM in the UTC time zone, where d is the weekday number, from 1 through
+	// 7, beginning with Monday and ending with Sunday.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
 }
 
@@ -3314,8 +3375,8 @@ func (s *CreateFileSystemLustreConfiguration) Validate() error {
 	if s.ImportedFileChunkSize != nil && *s.ImportedFileChunkSize < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("ImportedFileChunkSize", 1))
 	}
-	if s.PerUnitStorageThroughput != nil && *s.PerUnitStorageThroughput < 50 {
-		invalidParams.Add(request.NewErrParamMinValue("PerUnitStorageThroughput", 50))
+	if s.PerUnitStorageThroughput != nil && *s.PerUnitStorageThroughput < 12 {
+		invalidParams.Add(request.NewErrParamMinValue("PerUnitStorageThroughput", 12))
 	}
 	if s.WeeklyMaintenanceStartTime != nil && len(*s.WeeklyMaintenanceStartTime) < 7 {
 		invalidParams.Add(request.NewErrParamMinLen("WeeklyMaintenanceStartTime", 7))
@@ -3325,6 +3386,12 @@ func (s *CreateFileSystemLustreConfiguration) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAutoImportPolicy sets the AutoImportPolicy field's value.
+func (s *CreateFileSystemLustreConfiguration) SetAutoImportPolicy(v string) *CreateFileSystemLustreConfiguration {
+	s.AutoImportPolicy = &v
+	return s
 }
 
 // SetAutomaticBackupRetentionDays sets the AutomaticBackupRetentionDays field's value.
@@ -3348,6 +3415,12 @@ func (s *CreateFileSystemLustreConfiguration) SetDailyAutomaticBackupStartTime(v
 // SetDeploymentType sets the DeploymentType field's value.
 func (s *CreateFileSystemLustreConfiguration) SetDeploymentType(v string) *CreateFileSystemLustreConfiguration {
 	s.DeploymentType = &v
+	return s
+}
+
+// SetDriveCacheType sets the DriveCacheType field's value.
+func (s *CreateFileSystemLustreConfiguration) SetDriveCacheType(v string) *CreateFileSystemLustreConfiguration {
+	s.DriveCacheType = &v
 	return s
 }
 
@@ -3416,7 +3489,7 @@ type CreateFileSystemWindowsConfiguration struct {
 
 	// The number of days to retain automatic backups. The default is to retain
 	// backups for 7 days. Setting this value to 0 disables the creation of automatic
-	// backups. The maximum retention period for backups is 35 days.
+	// backups. The maximum retention period for backups is 90 days.
 	AutomaticBackupRetentionDays *int64 `type:"integer"`
 
 	// A boolean flag indicating whether tags for the file system should be copied
@@ -3576,9 +3649,36 @@ func (s *CreateFileSystemWindowsConfiguration) SetWeeklyMaintenanceStartTime(v s
 type DataRepositoryConfiguration struct {
 	_ struct{} `type:"structure"`
 
+	// Describes the file system's linked S3 data repository's AutoImportPolicy.
+	// The AutoImportPolicy configures how Amazon FSx keeps your file and directory
+	// listings up to date as you add or modify objects in your linked S3 bucket.
+	// AutoImportPolicy can have the following values:
+	//
+	//    * NONE - (Default) AutoImport is off. Amazon FSx only updates file and
+	//    directory listings from the linked S3 bucket when the file system is created.
+	//    FSx does not update file and directory listings for any new or changed
+	//    objects after choosing this option.
+	//
+	//    * NEW - AutoImport is on. Amazon FSx automatically imports directory listings
+	//    of any new objects added to the linked S3 bucket that do not currently
+	//    exist in the FSx file system.
+	//
+	//    * NEW_CHANGED - AutoImport is on. Amazon FSx automatically imports file
+	//    and directory listings of any new objects added to the S3 bucket and any
+	//    existing objects that are changed in the S3 bucket after you choose this
+	//    option.
+	//
+	// For more information, see Automatically import updates from your S3 bucket
+	// (https://docs.aws.amazon.com/fsx/latest/LustreGuide/autoimport-data-repo.html).
+	AutoImportPolicy *string `type:"string" enum:"AutoImportPolicyType"`
+
 	// The export path to the Amazon S3 bucket (and prefix) that you are using to
 	// store new and changed Lustre file system files in S3.
 	ExportPath *string `min:"3" type:"string"`
+
+	// Provides detailed information about the data respository if its Lifecycle
+	// is set to MISCONFIGURED.
+	FailureDetails *DataRepositoryFailureDetails `type:"structure"`
 
 	// The import path to the Amazon S3 bucket (and optional prefix) that you're
 	// using as the data repository for your FSx for Lustre file system, for example
@@ -3595,6 +3695,25 @@ type DataRepositoryConfiguration struct {
 	// The default chunk size is 1,024 MiB (1 GiB) and can go as high as 512,000
 	// MiB (500 GiB). Amazon S3 objects have a maximum size of 5 TB.
 	ImportedFileChunkSize *int64 `min:"1" type:"integer"`
+
+	// Describes the state of the file system's S3 durable data repository, if it
+	// is configured with an S3 repository. The lifecycle can have the following
+	// values:
+	//
+	//    * CREATING - The data repository configuration between the FSx file system
+	//    and the linked S3 data repository is being created. The data repository
+	//    is unavailable.
+	//
+	//    * AVAILABLE - The data repository is available for use.
+	//
+	//    * MISCONFIGURED - Amazon FSx cannot automatically import updates from
+	//    the S3 bucket until the data repository configuration is corrected. For
+	//    more information, see Troubleshooting a Misconfigured linked S3 bucket
+	//    (https://docs.aws.amazon.com/fsx/latest/LustreGuide/troubleshooting.html#troubleshooting-misconfigured-data-repository).
+	//
+	//    * UPDATING - The data repository is undergoing a customer initiated update
+	//    and availability may be impacted.
+	Lifecycle *string `type:"string" enum:"DataRepositoryLifecycle"`
 }
 
 // String returns the string representation
@@ -3607,9 +3726,21 @@ func (s DataRepositoryConfiguration) GoString() string {
 	return s.String()
 }
 
+// SetAutoImportPolicy sets the AutoImportPolicy field's value.
+func (s *DataRepositoryConfiguration) SetAutoImportPolicy(v string) *DataRepositoryConfiguration {
+	s.AutoImportPolicy = &v
+	return s
+}
+
 // SetExportPath sets the ExportPath field's value.
 func (s *DataRepositoryConfiguration) SetExportPath(v string) *DataRepositoryConfiguration {
 	s.ExportPath = &v
+	return s
+}
+
+// SetFailureDetails sets the FailureDetails field's value.
+func (s *DataRepositoryConfiguration) SetFailureDetails(v *DataRepositoryFailureDetails) *DataRepositoryConfiguration {
+	s.FailureDetails = v
 	return s
 }
 
@@ -3622,6 +3753,37 @@ func (s *DataRepositoryConfiguration) SetImportPath(v string) *DataRepositoryCon
 // SetImportedFileChunkSize sets the ImportedFileChunkSize field's value.
 func (s *DataRepositoryConfiguration) SetImportedFileChunkSize(v int64) *DataRepositoryConfiguration {
 	s.ImportedFileChunkSize = &v
+	return s
+}
+
+// SetLifecycle sets the Lifecycle field's value.
+func (s *DataRepositoryConfiguration) SetLifecycle(v string) *DataRepositoryConfiguration {
+	s.Lifecycle = &v
+	return s
+}
+
+// Provides detailed information about the data respository if its Lifecycle
+// is set to MISCONFIGURED.
+type DataRepositoryFailureDetails struct {
+	_ struct{} `type:"structure"`
+
+	// A detailed error message.
+	Message *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DataRepositoryFailureDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DataRepositoryFailureDetails) GoString() string {
+	return s.String()
+}
+
+// SetMessage sets the Message field's value.
+func (s *DataRepositoryFailureDetails) SetMessage(v string) *DataRepositoryFailureDetails {
+	s.Message = &v
 	return s
 }
 
@@ -5656,7 +5818,7 @@ type LustreFileSystemConfiguration struct {
 	_ struct{} `type:"structure"`
 
 	// The number of days to retain automatic backups. Setting this to 0 disables
-	// automatic backups. You can retain automatic backups for a maximum of 35 days.
+	// automatic backups. You can retain automatic backups for a maximum of 90 days.
 	// The default is 0.
 	AutomaticBackupRetentionDays *int64 `type:"integer"`
 
@@ -5692,6 +5854,14 @@ type LustreFileSystemConfiguration struct {
 	// (Default = SCRATCH_1)
 	DeploymentType *string `type:"string" enum:"LustreDeploymentType"`
 
+	// The type of drive cache used by PERSISTENT_1 file systems that are provisioned
+	// with HDD storage devices. This parameter is required when storage type is
+	// HDD. Set to READ, improve the performance for frequently accessed files and
+	// allows 20% of the total storage capacity of the file system to be cached.
+	//
+	// This parameter is required when StorageType is set to HDD.
+	DriveCacheType *string `type:"string" enum:"DriveCacheType"`
+
 	// You use the MountName value when mounting the file system.
 	//
 	// For the SCRATCH_1 deployment type, this value is always "fsx". For SCRATCH_2
@@ -5702,9 +5872,11 @@ type LustreFileSystemConfiguration struct {
 	// Per unit storage throughput represents the megabytes per second of read or
 	// write throughput per 1 tebibyte of storage provisioned. File system throughput
 	// capacity is equal to Storage capacity (TiB) * PerUnitStorageThroughput (MB/s/TiB).
-	// This option is only valid for PERSISTENT_1 deployment types. Valid values
-	// are 50, 100, 200.
-	PerUnitStorageThroughput *int64 `min:"50" type:"integer"`
+	// This option is only valid for PERSISTENT_1 deployment types.
+	//
+	// Valid values for SSD storage: 50, 100, 200. Valid values for HDD storage:
+	// 12, 40.
+	PerUnitStorageThroughput *int64 `min:"12" type:"integer"`
 
 	// The preferred start time to perform weekly maintenance, formatted d:HH:MM
 	// in the UTC time zone. d is the weekday number, from 1 through 7, beginning
@@ -5749,6 +5921,12 @@ func (s *LustreFileSystemConfiguration) SetDataRepositoryConfiguration(v *DataRe
 // SetDeploymentType sets the DeploymentType field's value.
 func (s *LustreFileSystemConfiguration) SetDeploymentType(v string) *LustreFileSystemConfiguration {
 	s.DeploymentType = &v
+	return s
+}
+
+// SetDriveCacheType sets the DriveCacheType field's value.
+func (s *LustreFileSystemConfiguration) SetDriveCacheType(v string) *LustreFileSystemConfiguration {
+	s.DriveCacheType = &v
 	return s
 }
 
@@ -6365,13 +6543,17 @@ type Tag struct {
 
 	// A value that specifies the TagKey, the name of the tag. Tag keys must be
 	// unique for the resource to which they are attached.
-	Key *string `min:"1" type:"string"`
+	//
+	// Key is a required field
+	Key *string `min:"1" type:"string" required:"true"`
 
 	// A value that specifies the TagValue, the value assigned to the corresponding
 	// tag key. Tag values can be null and don't have to be unique in a tag set.
 	// For example, you can have a key-value pair in a tag set of finances : April
 	// and also of payroll : April.
-	Value *string `type:"string"`
+	//
+	// Value is a required field
+	Value *string `type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -6387,8 +6569,14 @@ func (s Tag) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *Tag) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "Tag"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
 	if s.Key != nil && len(*s.Key) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+	if s.Value == nil {
+		invalidParams.Add(request.NewErrParamRequired("Value"))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6734,8 +6922,31 @@ func (s *UpdateFileSystemInput) SetWindowsConfiguration(v *UpdateFileSystemWindo
 type UpdateFileSystemLustreConfiguration struct {
 	_ struct{} `type:"structure"`
 
+	// (Optional) When you create your file system, your existing S3 objects appear
+	// as file and directory listings. Use this property to choose how Amazon FSx
+	// keeps your file and directory listing up to date as you add or modify objects
+	// in your linked S3 bucket. AutoImportPolicy can have the following values:
+	//
+	//    * NONE - (Default) AutoImport is off. Amazon FSx only updates file and
+	//    directory listings from the linked S3 bucket when the file system is created.
+	//    FSx does not update the file and directory listing for any new or changed
+	//    objects after choosing this option.
+	//
+	//    * NEW - AutoImport is on. Amazon FSx automatically imports directory listings
+	//    of any new objects added to the linked S3 bucket that do not currently
+	//    exist in the FSx file system.
+	//
+	//    * NEW_CHANGED - AutoImport is on. Amazon FSx automatically imports file
+	//    and directory listings of any new objects added to the S3 bucket and any
+	//    existing objects that are changed in the S3 bucket after you choose this
+	//    option.
+	//
+	// For more information, see Automatically import updates from your S3 bucket
+	// (https://docs.aws.amazon.com/fsx/latest/LustreGuide/autoimport-data-repo.html).
+	AutoImportPolicy *string `type:"string" enum:"AutoImportPolicyType"`
+
 	// The number of days to retain automatic backups. Setting this to 0 disables
-	// automatic backups. You can retain automatic backups for a maximum of 35 days.
+	// automatic backups. You can retain automatic backups for a maximum of 90 days.
 	// The default is 0.
 	AutomaticBackupRetentionDays *int64 `type:"integer"`
 
@@ -6744,9 +6955,9 @@ type UpdateFileSystemLustreConfiguration struct {
 	// 05:00 specifies 5 AM daily.
 	DailyAutomaticBackupStartTime *string `min:"5" type:"string"`
 
-	// The preferred start time to perform weekly maintenance, formatted d:HH:MM
-	// in the UTC time zone. d is the weekday number, from 1 through 7, beginning
-	// with Monday and ending with Sunday.
+	// (Optional) The preferred start time to perform weekly maintenance, formatted
+	// d:HH:MM in the UTC time zone. d is the weekday number, from 1 through 7,
+	// beginning with Monday and ending with Sunday.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
 }
 
@@ -6774,6 +6985,12 @@ func (s *UpdateFileSystemLustreConfiguration) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAutoImportPolicy sets the AutoImportPolicy field's value.
+func (s *UpdateFileSystemLustreConfiguration) SetAutoImportPolicy(v string) *UpdateFileSystemLustreConfiguration {
+	s.AutoImportPolicy = &v
+	return s
 }
 
 // SetAutomaticBackupRetentionDays sets the AutomaticBackupRetentionDays field's value.
@@ -6826,7 +7043,7 @@ type UpdateFileSystemWindowsConfiguration struct {
 
 	// The number of days to retain automatic daily backups. Setting this to zero
 	// (0) disables automatic daily backups. You can retain automatic daily backups
-	// for a maximum of 35 days. For more information, see Working with Automatic
+	// for a maximum of 90 days. For more information, see Working with Automatic
 	// Daily Backups (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/using-backups.html#automatic-backups).
 	AutomaticBackupRetentionDays *int64 `type:"integer"`
 
@@ -6926,7 +7143,7 @@ type WindowsFileSystemConfiguration struct {
 	ActiveDirectoryId *string `min:"12" type:"string"`
 
 	// The number of days to retain automatic backups. Setting this to 0 disables
-	// automatic backups. You can retain automatic backups for a maximum of 35 days.
+	// automatic backups. You can retain automatic backups for a maximum of 90 days.
 	AutomaticBackupRetentionDays *int64 `type:"integer"`
 
 	// A boolean flag indicating whether tags on the file system should be copied
@@ -7107,6 +7324,16 @@ const (
 	ActiveDirectoryErrorTypeInvalidDomainStage = "INVALID_DOMAIN_STAGE"
 )
 
+// ActiveDirectoryErrorType_Values returns all elements of the ActiveDirectoryErrorType enum
+func ActiveDirectoryErrorType_Values() []string {
+	return []string{
+		ActiveDirectoryErrorTypeDomainNotFound,
+		ActiveDirectoryErrorTypeIncompatibleDomainMode,
+		ActiveDirectoryErrorTypeWrongVpc,
+		ActiveDirectoryErrorTypeInvalidDomainStage,
+	}
+}
+
 // Describes the type of administrative action, as follows:
 //
 //    * FILE_SYSTEM_UPDATE - A file system update administrative action initiated
@@ -7128,7 +7355,46 @@ const (
 	AdministrativeActionTypeStorageOptimization = "STORAGE_OPTIMIZATION"
 )
 
+// AdministrativeActionType_Values returns all elements of the AdministrativeActionType enum
+func AdministrativeActionType_Values() []string {
+	return []string{
+		AdministrativeActionTypeFileSystemUpdate,
+		AdministrativeActionTypeStorageOptimization,
+	}
+}
+
+const (
+	// AutoImportPolicyTypeNone is a AutoImportPolicyType enum value
+	AutoImportPolicyTypeNone = "NONE"
+
+	// AutoImportPolicyTypeNew is a AutoImportPolicyType enum value
+	AutoImportPolicyTypeNew = "NEW"
+
+	// AutoImportPolicyTypeNewChanged is a AutoImportPolicyType enum value
+	AutoImportPolicyTypeNewChanged = "NEW_CHANGED"
+)
+
+// AutoImportPolicyType_Values returns all elements of the AutoImportPolicyType enum
+func AutoImportPolicyType_Values() []string {
+	return []string{
+		AutoImportPolicyTypeNone,
+		AutoImportPolicyTypeNew,
+		AutoImportPolicyTypeNewChanged,
+	}
+}
+
 // The lifecycle status of the backup.
+//
+//    * AVAILABLE - The backup is fully available.
+//
+//    * CREATING - FSx is creating the new user-intiated backup
+//
+//    * TRANSFERRING - For user-initiated backups on Lustre file systems only;
+//    FSx is backing up the file system.
+//
+//    * DELETED - The backup was deleted is no longer available.
+//
+//    * FAILED - Amazon FSx could not complete the backup.
 const (
 	// BackupLifecycleAvailable is a BackupLifecycle enum value
 	BackupLifecycleAvailable = "AVAILABLE"
@@ -7136,12 +7402,26 @@ const (
 	// BackupLifecycleCreating is a BackupLifecycle enum value
 	BackupLifecycleCreating = "CREATING"
 
+	// BackupLifecycleTransferring is a BackupLifecycle enum value
+	BackupLifecycleTransferring = "TRANSFERRING"
+
 	// BackupLifecycleDeleted is a BackupLifecycle enum value
 	BackupLifecycleDeleted = "DELETED"
 
 	// BackupLifecycleFailed is a BackupLifecycle enum value
 	BackupLifecycleFailed = "FAILED"
 )
+
+// BackupLifecycle_Values returns all elements of the BackupLifecycle enum
+func BackupLifecycle_Values() []string {
+	return []string{
+		BackupLifecycleAvailable,
+		BackupLifecycleCreating,
+		BackupLifecycleTransferring,
+		BackupLifecycleDeleted,
+		BackupLifecycleFailed,
+	}
+}
 
 // The type of the backup.
 const (
@@ -7152,6 +7432,42 @@ const (
 	BackupTypeUserInitiated = "USER_INITIATED"
 )
 
+// BackupType_Values returns all elements of the BackupType enum
+func BackupType_Values() []string {
+	return []string{
+		BackupTypeAutomatic,
+		BackupTypeUserInitiated,
+	}
+}
+
+const (
+	// DataRepositoryLifecycleCreating is a DataRepositoryLifecycle enum value
+	DataRepositoryLifecycleCreating = "CREATING"
+
+	// DataRepositoryLifecycleAvailable is a DataRepositoryLifecycle enum value
+	DataRepositoryLifecycleAvailable = "AVAILABLE"
+
+	// DataRepositoryLifecycleMisconfigured is a DataRepositoryLifecycle enum value
+	DataRepositoryLifecycleMisconfigured = "MISCONFIGURED"
+
+	// DataRepositoryLifecycleUpdating is a DataRepositoryLifecycle enum value
+	DataRepositoryLifecycleUpdating = "UPDATING"
+
+	// DataRepositoryLifecycleDeleting is a DataRepositoryLifecycle enum value
+	DataRepositoryLifecycleDeleting = "DELETING"
+)
+
+// DataRepositoryLifecycle_Values returns all elements of the DataRepositoryLifecycle enum
+func DataRepositoryLifecycle_Values() []string {
+	return []string{
+		DataRepositoryLifecycleCreating,
+		DataRepositoryLifecycleAvailable,
+		DataRepositoryLifecycleMisconfigured,
+		DataRepositoryLifecycleUpdating,
+		DataRepositoryLifecycleDeleting,
+	}
+}
+
 const (
 	// DataRepositoryTaskFilterNameFileSystemId is a DataRepositoryTaskFilterName enum value
 	DataRepositoryTaskFilterNameFileSystemId = "file-system-id"
@@ -7159,6 +7475,14 @@ const (
 	// DataRepositoryTaskFilterNameTaskLifecycle is a DataRepositoryTaskFilterName enum value
 	DataRepositoryTaskFilterNameTaskLifecycle = "task-lifecycle"
 )
+
+// DataRepositoryTaskFilterName_Values returns all elements of the DataRepositoryTaskFilterName enum
+func DataRepositoryTaskFilterName_Values() []string {
+	return []string{
+		DataRepositoryTaskFilterNameFileSystemId,
+		DataRepositoryTaskFilterNameTaskLifecycle,
+	}
+}
 
 const (
 	// DataRepositoryTaskLifecyclePending is a DataRepositoryTaskLifecycle enum value
@@ -7180,10 +7504,45 @@ const (
 	DataRepositoryTaskLifecycleCanceling = "CANCELING"
 )
 
+// DataRepositoryTaskLifecycle_Values returns all elements of the DataRepositoryTaskLifecycle enum
+func DataRepositoryTaskLifecycle_Values() []string {
+	return []string{
+		DataRepositoryTaskLifecyclePending,
+		DataRepositoryTaskLifecycleExecuting,
+		DataRepositoryTaskLifecycleFailed,
+		DataRepositoryTaskLifecycleSucceeded,
+		DataRepositoryTaskLifecycleCanceled,
+		DataRepositoryTaskLifecycleCanceling,
+	}
+}
+
 const (
 	// DataRepositoryTaskTypeExportToRepository is a DataRepositoryTaskType enum value
 	DataRepositoryTaskTypeExportToRepository = "EXPORT_TO_REPOSITORY"
 )
+
+// DataRepositoryTaskType_Values returns all elements of the DataRepositoryTaskType enum
+func DataRepositoryTaskType_Values() []string {
+	return []string{
+		DataRepositoryTaskTypeExportToRepository,
+	}
+}
+
+const (
+	// DriveCacheTypeNone is a DriveCacheType enum value
+	DriveCacheTypeNone = "NONE"
+
+	// DriveCacheTypeRead is a DriveCacheType enum value
+	DriveCacheTypeRead = "READ"
+)
+
+// DriveCacheType_Values returns all elements of the DriveCacheType enum
+func DriveCacheType_Values() []string {
+	return []string{
+		DriveCacheTypeNone,
+		DriveCacheTypeRead,
+	}
+}
 
 // The lifecycle status of the file system.
 const (
@@ -7206,6 +7565,18 @@ const (
 	FileSystemLifecycleUpdating = "UPDATING"
 )
 
+// FileSystemLifecycle_Values returns all elements of the FileSystemLifecycle enum
+func FileSystemLifecycle_Values() []string {
+	return []string{
+		FileSystemLifecycleAvailable,
+		FileSystemLifecycleCreating,
+		FileSystemLifecycleFailed,
+		FileSystemLifecycleDeleting,
+		FileSystemLifecycleMisconfigured,
+		FileSystemLifecycleUpdating,
+	}
+}
+
 // An enumeration specifying the currently ongoing maintenance operation.
 const (
 	// FileSystemMaintenanceOperationPatching is a FileSystemMaintenanceOperation enum value
@@ -7215,6 +7586,14 @@ const (
 	FileSystemMaintenanceOperationBackingUp = "BACKING_UP"
 )
 
+// FileSystemMaintenanceOperation_Values returns all elements of the FileSystemMaintenanceOperation enum
+func FileSystemMaintenanceOperation_Values() []string {
+	return []string{
+		FileSystemMaintenanceOperationPatching,
+		FileSystemMaintenanceOperationBackingUp,
+	}
+}
+
 // The type of file system.
 const (
 	// FileSystemTypeWindows is a FileSystemType enum value
@@ -7223,6 +7602,14 @@ const (
 	// FileSystemTypeLustre is a FileSystemType enum value
 	FileSystemTypeLustre = "LUSTRE"
 )
+
+// FileSystemType_Values returns all elements of the FileSystemType enum
+func FileSystemType_Values() []string {
+	return []string{
+		FileSystemTypeWindows,
+		FileSystemTypeLustre,
+	}
+}
 
 // The name for a filter.
 const (
@@ -7236,6 +7623,15 @@ const (
 	FilterNameFileSystemType = "file-system-type"
 )
 
+// FilterName_Values returns all elements of the FilterName enum
+func FilterName_Values() []string {
+	return []string{
+		FilterNameFileSystemId,
+		FilterNameBackupType,
+		FilterNameFileSystemType,
+	}
+}
+
 const (
 	// LustreDeploymentTypeScratch1 is a LustreDeploymentType enum value
 	LustreDeploymentTypeScratch1 = "SCRATCH_1"
@@ -7247,15 +7643,38 @@ const (
 	LustreDeploymentTypePersistent1 = "PERSISTENT_1"
 )
 
+// LustreDeploymentType_Values returns all elements of the LustreDeploymentType enum
+func LustreDeploymentType_Values() []string {
+	return []string{
+		LustreDeploymentTypeScratch1,
+		LustreDeploymentTypeScratch2,
+		LustreDeploymentTypePersistent1,
+	}
+}
+
 const (
 	// ReportFormatReportCsv20191124 is a ReportFormat enum value
 	ReportFormatReportCsv20191124 = "REPORT_CSV_20191124"
 )
 
+// ReportFormat_Values returns all elements of the ReportFormat enum
+func ReportFormat_Values() []string {
+	return []string{
+		ReportFormatReportCsv20191124,
+	}
+}
+
 const (
 	// ReportScopeFailedFilesOnly is a ReportScope enum value
 	ReportScopeFailedFilesOnly = "FAILED_FILES_ONLY"
 )
+
+// ReportScope_Values returns all elements of the ReportScope enum
+func ReportScope_Values() []string {
+	return []string{
+		ReportScopeFailedFilesOnly,
+	}
+}
 
 // The types of limits on your service utilization. Limits include file system
 // count, total throughput capacity, total storage, and total user-initiated
@@ -7275,6 +7694,16 @@ const (
 	ServiceLimitTotalUserInitiatedBackups = "TOTAL_USER_INITIATED_BACKUPS"
 )
 
+// ServiceLimit_Values returns all elements of the ServiceLimit enum
+func ServiceLimit_Values() []string {
+	return []string{
+		ServiceLimitFileSystemCount,
+		ServiceLimitTotalThroughputCapacity,
+		ServiceLimitTotalStorage,
+		ServiceLimitTotalUserInitiatedBackups,
+	}
+}
+
 const (
 	// StatusFailed is a Status enum value
 	StatusFailed = "FAILED"
@@ -7292,6 +7721,17 @@ const (
 	StatusUpdatedOptimizing = "UPDATED_OPTIMIZING"
 )
 
+// Status_Values returns all elements of the Status enum
+func Status_Values() []string {
+	return []string{
+		StatusFailed,
+		StatusInProgress,
+		StatusPending,
+		StatusCompleted,
+		StatusUpdatedOptimizing,
+	}
+}
+
 // The storage type for your Amazon FSx file system.
 const (
 	// StorageTypeSsd is a StorageType enum value
@@ -7300,6 +7740,14 @@ const (
 	// StorageTypeHdd is a StorageType enum value
 	StorageTypeHdd = "HDD"
 )
+
+// StorageType_Values returns all elements of the StorageType enum
+func StorageType_Values() []string {
+	return []string{
+		StorageTypeSsd,
+		StorageTypeHdd,
+	}
+}
 
 const (
 	// WindowsDeploymentTypeMultiAz1 is a WindowsDeploymentType enum value
@@ -7311,3 +7759,12 @@ const (
 	// WindowsDeploymentTypeSingleAz2 is a WindowsDeploymentType enum value
 	WindowsDeploymentTypeSingleAz2 = "SINGLE_AZ_2"
 )
+
+// WindowsDeploymentType_Values returns all elements of the WindowsDeploymentType enum
+func WindowsDeploymentType_Values() []string {
+	return []string{
+		WindowsDeploymentTypeMultiAz1,
+		WindowsDeploymentTypeSingleAz1,
+		WindowsDeploymentTypeSingleAz2,
+	}
+}
