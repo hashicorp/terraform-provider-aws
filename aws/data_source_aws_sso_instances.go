@@ -13,7 +13,7 @@ import (
 
 func dataSourceAwsSsoInstances() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsSsoInstanceRead,
+		Read: dataSourceAwsSsoInstancesRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

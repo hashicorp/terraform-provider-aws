@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func dataSourceAwsidentityStoreUser() *schema.Resource {
+func dataSourceAwsIdentityStoreUser() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsidentityStoreUserRead,
+		Read: dataSourceAwsIdentityStoreUserRead,
 
 		Schema: map[string]*schema.Schema{
 			"identity_store_id": {
@@ -52,7 +52,7 @@ func dataSourceAwsidentityStoreUser() *schema.Resource {
 	}
 }
 
-func dataSourceAwsidentityStoreUserRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsIdentityStoreUserRead(d *schema.ResourceData, meta interface{}) error {
 	// conn := meta.(*AWSClient).identitystoreconn
 	// TODO
 	return nil
