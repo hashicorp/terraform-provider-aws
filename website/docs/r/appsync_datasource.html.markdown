@@ -105,6 +105,14 @@ The following arguments are supported:
 * `region` - (Optional) AWS region of the DynamoDB table. Defaults to current region.
 * `use_caller_credentials` - (Optional) Set to `true` to use Amazon Cognito credentials with this data source.
 
+#### delta_sync_config
+
+Enable data source versioning, the following arguments are supported:
+
+* `base_table_ttl` - (Required) The amount of time (in minutes) items should be kept in the main table when deleted. Set to `0` to delete items in the main table immediately.
+* `delta_sync_table_name` - (Required) Delta sync table name
+* `delta_sync_table_ttl` - (Required) The amount of time (in minutes) the delta sync table will keep track of changes.
+
 ### elasticsearch_config
 
 The following arguments are supported:

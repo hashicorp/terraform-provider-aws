@@ -75,6 +75,27 @@ func resourceAwsAppsyncDatasource() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+						"delta_sync_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"base_table_ttl": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"delta_sync_table_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"delta_sync_table_ttl": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
 					},
 				},
 				ConflictsWith: []string{"elasticsearch_config", "http_config", "lambda_config"},
@@ -325,6 +346,10 @@ func expandAppsyncDynamodbDataSourceConfig(l []interface{}, currentRegion string
 		TableName: aws.String(configured["table_name"].(string)),
 	}
 
+	if v, ok := configured["delta_sync_config"]; ok {
+		result.DeltaSyncConfig = expandAppsyncDynamodbDataSourceDeltaSyncConfig(v.(map[string]interface{}))
+	}
+
 	if v, ok := configured["region"]; ok && v.(string) != "" {
 		result.AwsRegion = aws.String(v.(string))
 	}
@@ -334,6 +359,16 @@ func expandAppsyncDynamodbDataSourceConfig(l []interface{}, currentRegion string
 	}
 
 	return result
+}
+
+func expandAppsyncDynamodbDataSourceDeltaSyncConfig(l map[string]interface{}) *appsync.DeltaSyncConfig {
+	dsc := &appsync.DeltaSyncConfig{
+		BaseTableTTL:       aws.Int64(int64(l["base_table_ttl"].(int))),
+		DeltaSyncTableName: aws.String(l["delta_sync_table_name"].(string)),
+		DeltaSyncTableTTL:  aws.Int64(int64(l["delta_sync_table_ttl"].(int))),
+	}
+
+	return dsc
 }
 
 func flattenAppsyncDynamodbDataSourceConfig(config *appsync.DynamodbDataSourceConfig) []map[string]interface{} {
@@ -348,6 +383,24 @@ func flattenAppsyncDynamodbDataSourceConfig(config *appsync.DynamodbDataSourceCo
 
 	if config.UseCallerCredentials != nil {
 		result["use_caller_credentials"] = aws.BoolValue(config.UseCallerCredentials)
+	}
+
+	if config.DeltaSyncConfig != nil {
+		result["delta_sync_config"] = flattenAppsyncDynamodbDataSourceDeltaSyncConfig(config.DeltaSyncConfig)
+	}
+
+	return []map[string]interface{}{result}
+}
+
+func flattenAppsyncDynamodbDataSourceDeltaSyncConfig(config *appsync.DeltaSyncConfig) []map[string]interface{} {
+	if config == nil {
+		return nil
+	}
+
+	result := map[string]interface{}{
+		"base_table_ttl":        aws.Int64Value(config.BaseTableTTL),
+		"delta_sync_table_name": aws.StringValue(config.DeltaSyncTableName),
+		"delta_sync_table_ttl":  aws.Int64Value(config.DeltaSyncTableTTL),
 	}
 
 	return []map[string]interface{}{result}

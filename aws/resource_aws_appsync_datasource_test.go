@@ -144,6 +144,33 @@ func TestAccAwsAppsyncDatasource_DynamoDBConfig_UseCallerCredentials(t *testing.
 	})
 }
 
+func TestAccAwsAppsyncDatasource_DynamoDBConfig_DeltaSync(t *testing.T) {
+	rName := fmt.Sprintf("tfacctest%d", acctest.RandInt())
+	syncTableName := fmt.Sprintf("%s-sync", rName)
+	resourceName := "aws_appsync_datasource.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppsyncDatasourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncDatasourceConfig_DynamoDBConfig_DeltaSync(rName, syncTableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncDatasourceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.0.delta_sync_config.delta_sync_table_name", syncTableName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsAppsyncDatasource_ElasticsearchConfig_Region(t *testing.T) {
 	rName := fmt.Sprintf("tfacctest%d", acctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
@@ -682,6 +709,63 @@ resource "aws_appsync_datasource" "test" {
   }
 }
 `, rName, rName, useCallerCredentials)
+}
+
+func testAccAppsyncDatasourceConfig_DynamoDBConfig_DeltaSync(rName string, syncTableName string) string {
+	return testAccAppsyncDatasourceConfig_base_DynamoDB(rName) + fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "AWS_IAM"
+  name                = %q
+}
+resource "aws_dynamodb_table" "sync_test" {
+  hash_key       = "ds_pk"
+  name           = %q
+  read_capacity  = 1
+  write_capacity = 1
+
+  attribute {
+    name = "ds_pk"
+    type = "S"
+  }
+}
+
+resource "aws_iam_role_policy" "sync_test" {
+  role = aws_iam_role.test.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "dynamodb:*"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "${aws_dynamodb_table.sync_test.arn}"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_appsync_datasource" "test" {
+  api_id           = aws_appsync_graphql_api.test.id
+  name             = %q
+  service_role_arn = aws_iam_role.test.arn
+  type             = "AMAZON_DYNAMODB"
+
+  dynamodb_config {
+    table_name             = aws_dynamodb_table.test.name
+    delta_sync_config {
+      base_table_ttl        = 43200
+      delta_sync_table_name = aws_dynamodb_table.sync_test.name
+      delta_sync_table_ttl  = 1440
+    }
+  }
+}
+`, rName, syncTableName, rName)
 }
 
 func testAccAppsyncDatasourceConfig_ElasticsearchConfig_Region(rName, region string) string {
