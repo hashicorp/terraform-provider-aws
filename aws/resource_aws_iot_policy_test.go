@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSIoTPolicy_basic(t *testing.T) {
@@ -147,13 +147,20 @@ resource "aws_iot_policy" "test" {
   policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Action": ["iot:*"],
-    "Resource": ["*"]
-  }]
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iot:*"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
 }
 EOF
+
 }
 `, rName)
 }
@@ -164,15 +171,22 @@ resource "aws_iot_policy" "test" {
   name = "%s"
 
   policy = <<EOF
-	{
-	  "Version": "2012-10-17",
-	  "Statement": [{
-		"Effect": "Allow",
-		"Action": ["iot:*"],
-		"Resource": ["*"]
-	  }]
-	}
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iot:*"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
 EOF
+
 }
 `, rName)
 }

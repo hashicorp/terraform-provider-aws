@@ -7,9 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsOrganizationsPolicy() *schema.Resource {
@@ -47,11 +48,13 @@ func resourceAwsOrganizationsPolicy() *schema.Resource {
 				ForceNew: true,
 				Default:  organizations.PolicyTypeServiceControlPolicy,
 				ValidateFunc: validation.StringInSlice([]string{
+					organizations.PolicyTypeAiservicesOptOutPolicy,
 					organizations.PolicyTypeBackupPolicy,
 					organizations.PolicyTypeServiceControlPolicy,
 					organizations.PolicyTypeTagPolicy,
 				}, false),
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -67,6 +70,7 @@ func resourceAwsOrganizationsPolicyCreate(d *schema.ResourceData, meta interface
 		Description: aws.String(d.Get("description").(string)),
 		Name:        aws.String(d.Get("name").(string)),
 		Type:        aws.String(d.Get("type").(string)),
+		Tags:        keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().OrganizationsTags(),
 	}
 
 	log.Printf("[DEBUG] Creating Organizations Policy: %s", input)
@@ -102,6 +106,7 @@ func resourceAwsOrganizationsPolicyCreate(d *schema.ResourceData, meta interface
 
 func resourceAwsOrganizationsPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).organizationsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &organizations.DescribePolicyInput{
 		PolicyId: aws.String(d.Id()),
@@ -129,6 +134,16 @@ func resourceAwsOrganizationsPolicyRead(d *schema.ResourceData, meta interface{}
 	d.Set("description", resp.Policy.PolicySummary.Description)
 	d.Set("name", resp.Policy.PolicySummary.Name)
 	d.Set("type", resp.Policy.PolicySummary.Type)
+
+	tags, err := keyvaluetags.OrganizationsListTags(conn, d.Id())
+	if err != nil {
+		return fmt.Errorf("error listing tags: %s", err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
 }
 
@@ -155,6 +170,13 @@ func resourceAwsOrganizationsPolicyUpdate(d *schema.ResourceData, meta interface
 	_, err := conn.UpdatePolicy(input)
 	if err != nil {
 		return fmt.Errorf("error updating Organizations Policy: %s", err)
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.OrganizationsUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceAwsOrganizationsPolicyRead(d, meta)

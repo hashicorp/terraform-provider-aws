@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -428,7 +428,7 @@ resource "aws_wafregional_rule_group" "test" {
     }
 
     priority = 50
-    rule_id  = "${aws_wafregional_rule.test.id}"
+    rule_id  = aws_wafregional_rule.test.id
   }
 }
 `, ruleName, groupName)
@@ -451,7 +451,7 @@ resource "aws_wafregional_rule_group" "test" {
     }
 
     priority = 50
-    rule_id  = "${aws_wafregional_rule.test.id}"
+    rule_id  = aws_wafregional_rule.test.id
   }
 
   tags = {
@@ -478,7 +478,7 @@ resource "aws_wafregional_rule_group" "test" {
     }
 
     priority = 50
-    rule_id  = "${aws_wafregional_rule.test.id}"
+    rule_id  = aws_wafregional_rule.test.id
   }
 
   tags = {
@@ -516,7 +516,7 @@ resource "aws_wafregional_rule_group" "test" {
     }
 
     priority = 10
-    rule_id  = "${aws_wafregional_rule.test.id}"
+    rule_id  = aws_wafregional_rule.test.id
   }
 
   activated_rule {
@@ -525,7 +525,7 @@ resource "aws_wafregional_rule_group" "test" {
     }
 
     priority = 1
-    rule_id  = "${aws_wafregional_rule.test2.id}"
+    rule_id  = aws_wafregional_rule.test2.id
   }
 
   activated_rule {
@@ -534,7 +534,7 @@ resource "aws_wafregional_rule_group" "test" {
     }
 
     priority = 15
-    rule_id  = "${aws_wafregional_rule.test3.id}"
+    rule_id  = aws_wafregional_rule.test3.id
   }
 }
 `, ruleName1, ruleName2, ruleName3, groupName)

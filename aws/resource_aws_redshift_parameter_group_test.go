@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -270,9 +270,9 @@ resource "aws_redshift_parameter_group" "test" {
   description = "Test parameter group for terraform"
 
   tags = {
-		environment = "Production"
-		name     		= "test-terraform-%[1]d"
-		description = "Test parameter group for terraform %[2]s"
+    environment = "Production"
+    name        = "test-terraform-%[1]d"
+    description = "Test parameter group for terraform %[2]s"
   }
 }
 `, rInt, rString)
@@ -286,7 +286,7 @@ resource "aws_redshift_parameter_group" "test" {
   description = "Test parameter group for terraform"
 
   tags = {
-		name     	= "test-terraform-%[1]d"
+    name = "test-terraform-%[1]d"
   }
 }
 `, rInt)

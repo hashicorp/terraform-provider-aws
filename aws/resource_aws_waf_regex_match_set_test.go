@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -365,7 +365,7 @@ resource "aws_waf_regex_match_set" "test" {
       type = "HEADER"
     }
 
-    regex_pattern_set_id = "${aws_waf_regex_pattern_set.test.id}"
+    regex_pattern_set_id = aws_waf_regex_pattern_set.test.id
     text_transformation  = "NONE"
   }
 }
@@ -388,7 +388,7 @@ resource "aws_waf_regex_match_set" "test" {
       type = "HEADER"
     }
 
-    regex_pattern_set_id = "${aws_waf_regex_pattern_set.test.id}"
+    regex_pattern_set_id = aws_waf_regex_pattern_set.test.id
     text_transformation  = "COMPRESS_WHITE_SPACE"
   }
 }

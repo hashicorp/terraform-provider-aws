@@ -17,10 +17,19 @@ func ErrCodeEquals(err error, code string) bool {
 	return false
 }
 
-const ErrCodeClientVpnEndpointIdNotFound = "InvalidClientVpnEndpointId.NotFound"
+const (
+	ErrCodeClientVpnEndpointIdNotFound        = "InvalidClientVpnEndpointId.NotFound"
+	ErrCodeClientVpnAuthorizationRuleNotFound = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
+	ErrCodeClientVpnAssociationIdNotFound     = "InvalidClientVpnAssociationId.NotFound"
+	ErrCodeClientVpnRouteNotFound             = "InvalidClientVpnRouteNotFound"
+)
 
-const ErrCodeClientVpnAuthorizationRuleNotFound = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
+const (
+	InvalidSecurityGroupIDNotFound = "InvalidSecurityGroupID.NotFound"
+	InvalidGroupNotFound           = "InvalidGroup.NotFound"
+)
 
-const ErrCodeClientVpnAssociationIdNotFound = "InvalidClientVpnAssociationId.NotFound"
-
-const ErrCodeClientVpnRouteNotFound = "InvalidClientVpnRouteNotFound"
+const (
+	InvalidVpnGatewayAttachmentNotFound = "InvalidVpnGatewayAttachment.NotFound"
+	InvalidVpnGatewayIDNotFound         = "InvalidVpnGatewayID.NotFound"
+)
