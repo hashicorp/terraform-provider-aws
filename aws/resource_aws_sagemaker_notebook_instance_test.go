@@ -8,8 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -325,6 +325,38 @@ func testAccCheckAWSSagemakerNotebookInstanceName(notebook *sagemaker.DescribeNo
 	}
 }
 
+func TestAccAWSSagemakerNotebookInstance_root_access(t *testing.T) {
+	var notebook sagemaker.DescribeNotebookInstanceOutput
+	notebookName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerNotebookInstanceResourceNamePrefix)
+	var resourceName = "aws_sagemaker_notebook_instance.foo"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigRootAccess(notebookName, "Disabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerNotebookRootAccess(&notebook, "Disabled"),
+				),
+			},
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigRootAccess(notebookName, "Enabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerNotebookRootAccess(&notebook, "Enabled"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSagemakerNotebookInstance_direct_internet_access(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	notebookName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerNotebookInstanceResourceNamePrefix)
@@ -355,6 +387,17 @@ func TestAccAWSSagemakerNotebookInstance_direct_internet_access(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckAWSSagemakerNotebookRootAccess(notebook *sagemaker.DescribeNotebookInstanceOutput, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rootAccess := notebook.RootAccess
+		if *rootAccess != expected {
+			return fmt.Errorf("root_access setting is incorrect: %s", *notebook.RootAccess)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckAWSSagemakerNotebookDirectInternetAccess(notebook *sagemaker.DescribeNotebookInstanceOutput, expected string) resource.TestCheckFunc {
@@ -400,14 +443,14 @@ func testAccAWSSagemakerNotebookInstanceConfig(notebookName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "foo" {
   name          = "%s"
-  role_arn      = "${aws_iam_role.foo.arn}"
+  role_arn      = aws_iam_role.foo.arn
   instance_type = "ml.t2.medium"
 }
 
 resource "aws_iam_role" "foo" {
   name               = "%s"
   path               = "/"
-  assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 data "aws_iam_policy_document" "assume_role" {
@@ -427,14 +470,14 @@ func testAccAWSSagemakerNotebookInstanceUpdateConfig(notebookName string) string
 	return fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "foo" {
   name          = "%s"
-  role_arn      = "${aws_iam_role.foo.arn}"
+  role_arn      = aws_iam_role.foo.arn
   instance_type = "ml.m4.xlarge"
 }
 
 resource "aws_iam_role" "foo" {
   name               = "%s"
   path               = "/"
-  assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 data "aws_iam_policy_document" "assume_role" {
@@ -464,7 +507,7 @@ data "aws_iam_policy_document" "assume_role" {
 }
 
 resource "aws_iam_role" "test" {
-  assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
   name               = %[1]q
   path               = "/"
 }
@@ -475,9 +518,9 @@ resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "test" {
 
 resource "aws_sagemaker_notebook_instance" "test" {
   instance_type         = "ml.t2.medium"
-  lifecycle_config_name = "${aws_sagemaker_notebook_instance_lifecycle_configuration.test.name}"
+  lifecycle_config_name = aws_sagemaker_notebook_instance_lifecycle_configuration.test.name
   name                  = %[1]q
-  role_arn              = "${aws_iam_role.test.arn}"
+  role_arn              = aws_iam_role.test.arn
 }
 `, rName)
 }
@@ -486,7 +529,7 @@ func testAccAWSSagemakerNotebookInstanceTagsConfig(notebookName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "foo" {
   name          = "%s"
-  role_arn      = "${aws_iam_role.foo.arn}"
+  role_arn      = aws_iam_role.foo.arn
   instance_type = "ml.t2.medium"
 
   tags = {
@@ -497,7 +540,7 @@ resource "aws_sagemaker_notebook_instance" "foo" {
 resource "aws_iam_role" "foo" {
   name               = "%s"
   path               = "/"
-  assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 data "aws_iam_policy_document" "assume_role" {
@@ -517,7 +560,7 @@ func testAccAWSSagemakerNotebookInstanceTagsUpdateConfig(notebookName string) st
 	return fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "foo" {
   name          = "%s"
-  role_arn      = "${aws_iam_role.foo.arn}"
+  role_arn      = aws_iam_role.foo.arn
   instance_type = "ml.t2.medium"
 
   tags = {
@@ -528,7 +571,7 @@ resource "aws_sagemaker_notebook_instance" "foo" {
 resource "aws_iam_role" "foo" {
   name               = "%s"
   path               = "/"
-  assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 data "aws_iam_policy_document" "assume_role" {
@@ -544,21 +587,19 @@ data "aws_iam_policy_document" "assume_role" {
 `, notebookName, notebookName)
 }
 
-func testAccAWSSagemakerNotebookInstanceConfigDirectInternetAccess(notebookName string, directInternetAccess string) string {
+func testAccAWSSagemakerNotebookInstanceConfigRootAccess(notebookName string, rootAccess string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "foo" {
 	name = %[1]q
-	role_arn = "${aws_iam_role.foo.arn}"
+	role_arn = aws_iam_role.foo.arn
 	instance_type = "ml.t2.medium"
-	security_groups = ["${aws_security_group.test.id}"]
-	subnet_id = "${aws_subnet.sagemaker.id}"
-	direct_internet_access = %[2]q
+	root_access = %[2]q
 }
 
 resource "aws_iam_role" "foo" {
 	name = %[1]q
 	path = "/"
-	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+	assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 data "aws_iam_policy_document" "assume_role" {
@@ -570,6 +611,36 @@ data "aws_iam_policy_document" "assume_role" {
 		}
 	}
 }
+`, notebookName, rootAccess)
+}
+
+func testAccAWSSagemakerNotebookInstanceConfigDirectInternetAccess(notebookName string, directInternetAccess string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_notebook_instance" "foo" {
+  name                   = %[1]q
+  role_arn               = aws_iam_role.foo.arn
+  instance_type          = "ml.t2.medium"
+  security_groups        = [aws_security_group.test.id]
+  subnet_id              = aws_subnet.sagemaker.id
+  direct_internet_access = %[2]q
+}
+
+resource "aws_iam_role" "foo" {
+  name               = %[1]q
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -580,11 +651,11 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_security_group" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_subnet" "sagemaker" {
-  vpc_id     = "${aws_vpc.test.id}"
+  vpc_id     = aws_vpc.test.id
   cidr_block = "10.0.0.0/24"
 
   tags = {

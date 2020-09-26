@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -238,30 +238,33 @@ func testAccVpcPeeringConnectionOptionsConfig_sameRegion_sameAccount(rName strin
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = %[1]q
   }
 }
 
 resource "aws_vpc" "peer" {
-  cidr_block = "10.1.0.0/16"
+  cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = %[1]q
   }
 }
 
 resource "aws_vpc_peering_connection" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
+  vpc_id      = aws_vpc.test.id
+  peer_vpc_id = aws_vpc.peer.id
   auto_accept = true
+
   tags = {
     Name = %[1]q
   }
 }
 
 resource "aws_vpc_peering_connection_options" "test" {
-  vpc_peering_connection_id = "${aws_vpc_peering_connection.test.id}"
+  vpc_peering_connection_id = aws_vpc_peering_connection.test.id
 
   accepter {
     allow_remote_vpc_dns_resolution = true
@@ -278,18 +281,20 @@ resource "aws_vpc_peering_connection_options" "test" {
 func testAccVpcPeeringConnectionOptionsConfig_differentRegion_sameAccount(rName string) string {
 	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = %[1]q
   }
 }
 
 resource "aws_vpc" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
-  cidr_block = "10.1.0.0/16"
+  cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = %[1]q
   }
@@ -297,10 +302,11 @@ resource "aws_vpc" "peer" {
 
 // Requester's side of the connection.
 resource "aws_vpc_peering_connection" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
+  vpc_id      = aws_vpc.test.id
+  peer_vpc_id = aws_vpc.peer.id
   auto_accept = false
   peer_region = %[2]q
+
   tags = {
     Name = %[1]q
   }
@@ -308,10 +314,11 @@ resource "aws_vpc_peering_connection" "test" {
 
 // Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
-  vpc_peering_connection_id = "${aws_vpc_peering_connection.test.id}"
-  auto_accept = true
+  vpc_peering_connection_id = aws_vpc_peering_connection.test.id
+  auto_accept               = true
+
   tags = {
     Name = %[1]q
   }
@@ -321,7 +328,7 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 resource "aws_vpc_peering_connection_options" "test" {
   # As options can't be set until the connection has been accepted
   # create an explicit dependency on the accepter.
-  vpc_peering_connection_id = "${aws_vpc_peering_connection_accepter.peer.id}"
+  vpc_peering_connection_id = aws_vpc_peering_connection_accepter.peer.id
 
   requester {
     allow_remote_vpc_dns_resolution = true
@@ -330,9 +337,9 @@ resource "aws_vpc_peering_connection_options" "test" {
 
 // Accepter's side of the connection.
 resource "aws_vpc_peering_connection_options" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
-  vpc_peering_connection_id = "${aws_vpc_peering_connection_accepter.peer.id}"
+  vpc_peering_connection_id = aws_vpc_peering_connection_accepter.peer.id
 
   accepter {
     allow_remote_vpc_dns_resolution = true
@@ -344,44 +351,48 @@ resource "aws_vpc_peering_connection_options" "peer" {
 func testAccVpcPeeringConnectionOptionsConfig_sameRegion_differentAccount(rName string) string {
 	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = %[1]q
   }
 }
 
 resource "aws_vpc" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
-  cidr_block = "10.1.0.0/16"
+  cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = %[1]q
   }
 }
 
 data "aws_caller_identity" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 
 // Requester's side of the connection.
 resource "aws_vpc_peering_connection" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
-  peer_owner_id = "${data.aws_caller_identity.peer.account_id}"
-  auto_accept = false
+  vpc_id        = aws_vpc.test.id
+  peer_vpc_id   = aws_vpc.peer.id
+  peer_owner_id = data.aws_caller_identity.peer.account_id
+  auto_accept   = false
+
   tags = {
     Name = %[1]q
   }
 }
 
- // Accepter's side of the connection.
+// Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
-  vpc_peering_connection_id = "${aws_vpc_peering_connection.test.id}"
-  auto_accept = true
+  vpc_peering_connection_id = aws_vpc_peering_connection.test.id
+  auto_accept               = true
+
   tags = {
     Name = %[1]q
   }
@@ -391,7 +402,7 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 resource "aws_vpc_peering_connection_options" "test" {
   # As options can't be set until the connection has been accepted
   # create an explicit dependency on the accepter.
-  vpc_peering_connection_id = "${aws_vpc_peering_connection_accepter.peer.id}"
+  vpc_peering_connection_id = aws_vpc_peering_connection_accepter.peer.id
 
   requester {
     allow_remote_vpc_dns_resolution = true
@@ -400,9 +411,9 @@ resource "aws_vpc_peering_connection_options" "test" {
 
 // Accepter's side of the connection.
 resource "aws_vpc_peering_connection_options" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
-  vpc_peering_connection_id = "${aws_vpc_peering_connection_accepter.peer.id}"
+  vpc_peering_connection_id = aws_vpc_peering_connection_accepter.peer.id
 
   accepter {
     allow_remote_vpc_dns_resolution = true

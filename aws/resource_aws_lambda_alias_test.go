@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSLambdaAlias_basic(t *testing.T) {
@@ -322,13 +322,13 @@ resource "aws_iam_policy" "policy_for_role" {
 {
   "Version": "2012-10-17",
   "Statement": [
-      {
-          "Effect": "Allow",
-          "Action": [
-            "lambda:*"
-          ],
-          "Resource": "*"
-      }
+    {
+      "Effect": "Allow",
+      "Action": [
+        "lambda:*"
+      ],
+      "Resource": "*"
+    }
   ]
 }
 EOF
@@ -336,8 +336,8 @@ EOF
 
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
   name       = "%s"
-  roles      = ["${aws_iam_role.iam_for_lambda.name}"]
-  policy_arn = "${aws_iam_policy.policy_for_role.arn}"
+  roles      = [aws_iam_role.iam_for_lambda.name]
+  policy_arn = aws_iam_policy.policy_for_role.arn
 }
 `, roleName, policyName, attachmentName)
 }
@@ -349,17 +349,17 @@ func testAccAwsLambdaAliasConfig(roleName, policyName, attachmentName, funcName,
 resource "aws_lambda_function" "test" {
   filename         = "test-fixtures/lambdatest.zip"
   function_name    = "%s"
-  role             = "${aws_iam_role.iam_for_lambda.arn}"
+  role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
   runtime          = "nodejs12.x"
-  source_code_hash = "${filebase64sha256("test-fixtures/lambdatest.zip")}"
+  source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   publish          = "true"
 }
 
 resource "aws_lambda_alias" "test" {
   name             = "%s"
   description      = "a sample description"
-  function_name    = "${aws_lambda_function.test.arn}"
+  function_name    = aws_lambda_function.test.arn
   function_version = "1"
 }
 `, funcName, aliasName))
@@ -372,17 +372,17 @@ func testAccAwsLambdaAliasConfigUsingFunctionName(roleName, policyName, attachme
 resource "aws_lambda_function" "test" {
   filename         = "test-fixtures/lambdatest.zip"
   function_name    = "%s"
-  role             = "${aws_iam_role.iam_for_lambda.arn}"
+  role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
   runtime          = "nodejs12.x"
-  source_code_hash = "${filebase64sha256("test-fixtures/lambdatest.zip")}"
+  source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   publish          = "true"
 }
 
 resource "aws_lambda_alias" "test" {
   name             = "%s"
   description      = "a sample description"
-  function_name    = "${aws_lambda_function.test.function_name}"
+  function_name    = aws_lambda_function.test.function_name
   function_version = "1"
 }
 `, funcName, aliasName))
@@ -395,17 +395,17 @@ func testAccAwsLambdaAliasConfigWithRoutingConfig(roleName, policyName, attachme
 resource "aws_lambda_function" "test" {
   filename         = "test-fixtures/lambdatest_modified.zip"
   function_name    = "%s"
-  role             = "${aws_iam_role.iam_for_lambda.arn}"
+  role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
   runtime          = "nodejs12.x"
-  source_code_hash = "${filebase64sha256("test-fixtures/lambdatest_modified.zip")}"
+  source_code_hash = filebase64sha256("test-fixtures/lambdatest_modified.zip")
   publish          = "true"
 }
 
 resource "aws_lambda_alias" "test" {
   name             = "%s"
   description      = "a sample description"
-  function_name    = "${aws_lambda_function.test.arn}"
+  function_name    = aws_lambda_function.test.arn
   function_version = "1"
 
   routing_config {

@@ -54,7 +54,7 @@ resource "tls_private_key" "example" {
 
 resource "tls_self_signed_cert" "example" {
   key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.example.private_key_pem}"
+  private_key_pem = tls_private_key.example.private_key_pem
 
   subject {
     common_name  = "example.com"
@@ -71,8 +71,31 @@ resource "tls_self_signed_cert" "example" {
 }
 
 resource "aws_acm_certificate" "cert" {
-  private_key      = "${tls_private_key.example.private_key_pem}"
-  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
+  private_key      = tls_private_key.example.private_key_pem
+  certificate_body = tls_self_signed_cert.example.cert_pem
+}
+```
+
+### Referencing domain_validation_options With for_each Based Resources
+
+See the [`aws_acm_certificate_validation` resource](acm_certificate_validation.html) for a full example of performing DNS validation.
+
+```hcl
+resource "aws_route53_record" "example" {
+  for_each = {
+    for dvo in aws_acm_certificate.example.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = aws_route53_zone.example.zone_id
 }
 ```
 
@@ -108,7 +131,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ARN of the certificate
 * `arn` - The ARN of the certificate
 * `domain_name` - The domain name for which the certificate is issued
-* `domain_validation_options` - A list of attributes to feed into other resources to complete certificate validation. Can have more than one element, e.g. if SANs are defined. Only set if `DNS`-validation was used.
+* `domain_validation_options` - Set of domain validation objects which can be used to complete certificate validation. Can have more than one element, e.g. if SANs are defined. Only set if `DNS`-validation was used.
 * `status` - Status of the certificate.
 * `validation_emails` - A list of addresses that received a validation E-Mail. Only set if `EMAIL`-validation was used.
 

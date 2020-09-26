@@ -28,7 +28,7 @@ resource "aws_waf_rule_group" "example" {
     }
 
     priority = 50
-    rule_id  = "${aws_waf_rule.example.id}"
+    rule_id  = aws_waf_rule.example.id
   }
 }
 ```

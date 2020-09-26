@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSSnapshotCreateVolumePermission_basic(t *testing.T) {
@@ -117,7 +117,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
 
   tags = {
@@ -126,7 +126,7 @@ resource "aws_ebs_volume" "test" {
 }
 
 resource "aws_ebs_snapshot" "test" {
-  volume_id = "${aws_ebs_volume.test.id}"
+  volume_id = aws_ebs_volume.test.id
 }
 `
 
@@ -136,7 +136,7 @@ resource "aws_ebs_snapshot" "test" {
 
 	return base + fmt.Sprintf(`
 resource "aws_snapshot_create_volume_permission" "test" {
-  snapshot_id = "${aws_ebs_snapshot.test.id}"
+  snapshot_id = aws_ebs_snapshot.test.id
   account_id  = %q
 }
 `, accountID)

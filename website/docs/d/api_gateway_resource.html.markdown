@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_api_gateway_resource
 
-Use this data source to get the id of a Resource in API Gateway. 
+Use this data source to get the id of a Resource in API Gateway.
 To fetch the Resource, you must provide the REST API id as well as the full path.  
 
 ## Example Usage
@@ -19,7 +19,7 @@ data "aws_api_gateway_rest_api" "my_rest_api" {
 }
 
 data "aws_api_gateway_resource" "my_resource" {
-  rest_api_id = "${data.aws_api_gateway_rest_api.my_rest_api.id}"
+  rest_api_id = data.aws_api_gateway_rest_api.my_rest_api.id
   path        = "/endpoint/path"
 }
 ```
