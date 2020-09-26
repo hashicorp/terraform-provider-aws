@@ -100,9 +100,7 @@ func resourceAwsSsoPermissionSet() *schema.Resource {
 
 func resourceAwsSsoPermissionSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ssoadminconn
-
-
-
+	// TODO
 	// d.SetId(*resp.PermissionSetArn)
 	return resourceAwsSsoPermissionSetRead(d, meta)
 }
