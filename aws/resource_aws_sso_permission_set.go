@@ -33,6 +33,26 @@ func resourceAwsSsoPermissionSet() *schema.Resource {
 				Computed: true,
 			},
 
+			"provisioning_created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"provisioning_failure_reason": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"provisioning_request_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"provisioning_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"instance_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
