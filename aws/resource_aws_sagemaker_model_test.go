@@ -198,6 +198,31 @@ func TestAccAWSSagemakerModel_primaryContainerEnvironment(t *testing.T) {
 	})
 }
 
+func TestAccAWSSagemakerModel_primaryContainerModeSingle(t *testing.T) {
+	rName := acctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSagemakerModelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSagemakerPrimaryContainerModeSingle(rName, image),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSagemakerModelExists("aws_sagemaker_model.foo"),
+					resource.TestCheckResourceAttr("aws_sagemaker_model.foo",
+						"primary_container.0.mode", "SingleModel"),
+				),
+			},
+			{
+				ResourceName:      "aws_sagemaker_model.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSagemakerModel_containers(t *testing.T) {
 	rName := acctest.RandString(10)
 
@@ -562,6 +587,38 @@ resource "aws_sagemaker_model" "foo" {
     environment = {
       foo = "bar"
     }
+  }
+}
+
+resource "aws_iam_role" "foo" {
+  name               = "terraform-testacc-sagemaker-model-%s"
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+`, rName, image, rName)
+}
+
+func testAccSagemakerPrimaryContainerModeSingle(rName string, image string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_model" "foo" {
+  name               = "terraform-testacc-sagemaker-model-%s"
+  execution_role_arn = aws_iam_role.foo.arn
+
+  primary_container {
+    image = "%s"
+
+    mode = "SingleModel"
   }
 }
 
