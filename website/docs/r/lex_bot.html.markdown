@@ -1,7 +1,7 @@
 ---
+subcategory: "Lex"
 layout: "aws"
 page_title: "AWS: aws_lex_bot"
-sidebar_current: "docs-aws-resource-lex-bot"
 description: |-
   Provides an Amazon Lex bot resource.
 ---

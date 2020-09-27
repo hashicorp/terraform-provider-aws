@@ -84,7 +84,7 @@ func TestAccDataSourceAwsLexBot_withVersion(t *testing.T) {
 func testAccDataSourceAwsLexBotConfig_basic() string {
 	return `
 data "aws_lex_bot" "test" {
-  name    = aws_lex_bot.test.name
+  name = aws_lex_bot.test.name
 }
 `
 }

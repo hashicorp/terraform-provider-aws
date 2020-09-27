@@ -1,9 +1,9 @@
 ---
+subcategory: "Lex"
 layout: "aws"
 page_title: "AWS: aws_lex_bot"
-sidebar_current: "docs-aws-lex-bot"
 description: |-
-    Provides details about a specific Lex Bot
+  Provides details about a specific Lex Bot
 ---
 
 # Data Source: aws_lex_bot
