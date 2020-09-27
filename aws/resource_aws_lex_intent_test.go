@@ -511,7 +511,7 @@ func TestAccAwsLexIntent_updateWithExternalChange(t *testing.T) {
 	rName := "aws_lex_intent.test"
 	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
-	testAccCheckAwsLexIntentUpdateDescription := func(provider *schema.Provider, r *schema.Resource, resourceName string) resource.TestCheckFunc {
+	testAccCheckAwsLexIntentUpdateDescription := func(provider *schema.Provider, _ *schema.Resource, resourceName string) resource.TestCheckFunc {
 		return func(s *terraform.State) error {
 			conn := provider.Meta().(*AWSClient).lexmodelconn
 
@@ -735,13 +735,13 @@ resource "aws_lex_intent" "test" {
   conclusion_statement {
     message {
       content      = "Your order for {FlowerType} has been placed and will be ready by {PickupTime} on {PickupDate}"
-	  content_type = "PlainText"
-	  group_number = 1
+      content_type = "PlainText"
+      group_number = 1
     }
     message {
       content      = "Your order for {FlowerType} has been placed"
       content_type = "PlainText"
-	  group_number = 1
+      group_number = 1
     }
     response_card = "Your order for {FlowerType} has been placed"
   }
@@ -768,8 +768,8 @@ resource "aws_lex_intent" "test" {
     message {
       content      = "Okay, I will not place your order."
       content_type = "PlainText"
-	}
-	response_card = "Okay, I will not place your order."
+    }
+    response_card = "Okay, I will not place your order."
   }
 }
 `, rName)
@@ -798,12 +798,12 @@ resource "aws_lex_intent" "test" {
     message {
       content      = "Okay, I will not place your order."
       content_type = "PlainText"
-	}
+    }
     message {
       content      = "Okay, your order has been cancelled."
       content_type = "PlainText"
-	}
-	response_card = "Okay, your order has been cancelled."
+    }
+    response_card = "Okay, your order has been cancelled."
   }
 }
 `, rName)
@@ -906,7 +906,7 @@ resource "aws_lex_intent" "test" {
 func testAccAwsLexIntentConfig_sampleUtterances(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_intent" "test" {
-  name              = "%s"
+  name = "%s"
   fulfillment_activity {
     type = "ReturnIntent"
   }
@@ -940,9 +940,9 @@ resource "aws_lex_intent" "test" {
     type = "ReturnIntent"
   }
   slot {
-    description       = "The date to pick up the flowers"
-    name              = "PickupDate"
-    priority          = 1
+    description = "The date to pick up the flowers"
+    name        = "PickupDate"
+    priority    = 1
     sample_utterances = [
       "I would like to order {FlowerType}",
     ]
@@ -968,9 +968,9 @@ resource "aws_lex_intent" "test" {
     type = "ReturnIntent"
   }
   slot {
-    description       = "The date to pick up the flowers"
-    name              = "PickupDate"
-    priority          = 2
+    description = "The date to pick up the flowers"
+    name        = "PickupDate"
+    priority    = 2
     sample_utterances = [
       "I would like to order {FlowerType}",
     ]
@@ -985,9 +985,9 @@ resource "aws_lex_intent" "test" {
     }
   }
   slot {
-    description       = "The time to pick up the flowers"
-    name              = "PickupTime"
-    priority          = 1
+    description = "The time to pick up the flowers"
+    name        = "PickupTime"
+    priority    = 1
     sample_utterances = [
       "I would like to order {FlowerType}",
     ]
@@ -1013,23 +1013,22 @@ resource "aws_lex_intent" "test" {
     type = "ReturnIntent"
   }
   slot {
-    description       = "Types of flowers to pick up"
-    name              = "FlowerType"
-    priority          = 1
+    description = "Types of flowers to pick up"
+    name        = "FlowerType"
+    priority    = 1
     sample_utterances = [
-      "I would like to order ​{FlowerType}​",
+      "I would like to order {FlowerType}",
     ]
     slot_constraint   = "Required"
-	slot_type         = aws_lex_slot_type.test.name
-	// slot_type         = "%[1]s"
-	slot_type_version = "$LATEST"
+    slot_type         = aws_lex_slot_type.test.name
+    slot_type_version = "$LATEST"
     value_elicitation_prompt {
       max_attempts = 2
       message {
         content      = "What type of flowers would you like to order?"
         content_type = "PlainText"
-	  }
-	  response_card = "{\"version\":1,\"contentType\":\"application/vnd.amazonaws.card.generic\",\"genericAttachments\":[{\"title\":\"What type of flowers?\",\"buttons\":[{\"text\":\"Tulips\",\"value\":\"tulips\"},{\"text\":\"Lilies\",\"value\":\"lilies\"},{\"text\":\"Roses\",\"value\":\"roses\"}]}]}"
+      }
+      response_card = "{\"version\":1,\"contentType\":\"application/vnd.amazonaws.card.generic\",\"genericAttachments\":[{\"title\":\"What type of flowers?\",\"buttons\":[{\"text\":\"Tulips\",\"value\":\"tulips\"},{\"text\":\"Lilies\",\"value\":\"lilies\"},{\"text\":\"Roses\",\"value\":\"roses\"}]}]}"
     }
   }
 }
