@@ -41,6 +41,7 @@ func resourceAwsStorageGatewayTapePool() *schema.Resource {
 			"retention_look_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Default:      storagegateway.RetentionLockTypeNone,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(storagegateway.RetentionLockType_Values(), false),
 			},
@@ -48,6 +49,7 @@ func resourceAwsStorageGatewayTapePool() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ForceNew:     true,
+				Default:      0,
 				ValidateFunc: validation.IntBetween(0, 36500),
 			},
 			"tags": tagsSchema(),
@@ -59,17 +61,11 @@ func resourceAwsStorageGatewayTapePoolCreate(d *schema.ResourceData, meta interf
 	conn := meta.(*AWSClient).storagegatewayconn
 
 	input := &storagegateway.CreateTapePoolInput{
-		PoolName:     aws.String(d.Get("pool_name").(string)),
-		StorageClass: aws.String(d.Get("storage_class").(string)),
-		Tags:         keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().StoragegatewayTags(),
-	}
-
-	if v, ok := d.GetOk("retention_look_type"); ok {
-		input.RetentionLockType = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOkExists("retention_lock_time_in_days"); ok {
-		input.RetentionLockTimeInDays = aws.Int64(int64(v.(int)))
+		PoolName:                aws.String(d.Get("pool_name").(string)),
+		StorageClass:            aws.String(d.Get("storage_class").(string)),
+		RetentionLockType:       aws.String(d.Get("retention_look_type").(string)),
+		RetentionLockTimeInDays: aws.Int64(int64(d.Get("retention_lock_time_in_days").(int))),
+		Tags:                    keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().StoragegatewayTags(),
 	}
 
 	log.Printf("[DEBUG] Creating Storage Gateway Tape Pool: %s", input)
@@ -107,15 +103,6 @@ func resourceAwsStorageGatewayTapePoolRead(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Reading Storage Gateway Tape Pool: %s", input)
 	output, err := conn.ListTapePools(input)
 
-	if err != nil {
-		if isAWSErr(err, storagegateway.ErrorCodeVolumeNotFound, "") || isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified pool was not found") {
-			log.Printf("[WARN] Storage Gateway Tape Pool %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading Storage Gateway Tape Pool %q: %w", d.Id(), err)
-	}
-
 	if output == nil || len(output.PoolInfos) == 0 || output.PoolInfos[0] == nil || aws.StringValue(output.PoolInfos[0].PoolARN) != d.Id() {
 		log.Printf("[WARN] Storage Gateway Tape Pool %q not found, removing from state", d.Id())
 		d.SetId("")
@@ -151,9 +138,6 @@ func resourceAwsStorageGatewayTapePoolDelete(d *schema.ResourceData, meta interf
 
 	log.Printf("[DEBUG] Deleting Storage Gateway Tape Pool: %s", input)
 	_, err := conn.DeleteTapePool(input)
-	if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
-		return nil
-	}
 	if err != nil {
 		return fmt.Errorf("error deleting Storage Gateway Tape Pool %q: %w", d.Id(), err)
 	}
