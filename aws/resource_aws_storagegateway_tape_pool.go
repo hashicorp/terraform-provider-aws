@@ -103,6 +103,10 @@ func resourceAwsStorageGatewayTapePoolRead(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Reading Storage Gateway Tape Pool: %s", input)
 	output, err := conn.ListTapePools(input)
 
+	if err != nil {
+		return fmt.Errorf("[ERROR] Listing Storage Gateway Tape Pools %w", err)
+	}
+
 	if output == nil || len(output.PoolInfos) == 0 || output.PoolInfos[0] == nil || aws.StringValue(output.PoolInfos[0].PoolARN) != d.Id() {
 		log.Printf("[WARN] Storage Gateway Tape Pool %q not found, removing from state", d.Id())
 		d.SetId("")
