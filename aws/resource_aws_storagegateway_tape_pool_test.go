@@ -42,6 +42,36 @@ func TestAccAWSStorageGatewayTapePool_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSStorageGatewayTapePool_retention(t *testing.T) {
+	var TapePool storagegateway.PoolInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_tape_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayTapePoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayTapePoolRetentionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayTapePoolExists(resourceName, &TapePool),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`tapepool/pool-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "storage_class", "GLACIER"),
+					resource.TestCheckResourceAttr(resourceName, "retention_look_type", "GOVERNANCE"),
+					resource.TestCheckResourceAttr(resourceName, "retention_lock_time_in_days", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSStorageGatewayTapePool_tags(t *testing.T) {
 	var TapePool storagegateway.PoolInfo
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -168,6 +198,17 @@ func testAccAWSStorageGatewayTapePoolBasicConfig(rName string) string {
 resource "aws_storagegateway_tape_pool" "test" {
   pool_name     = %[1]q
   storage_class = "GLACIER"
+}
+`, rName)
+}
+
+func testAccAWSStorageGatewayTapePoolRetentionConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_storagegateway_tape_pool" "test" {
+  pool_name                   = %[1]q
+  storage_class               = "GLACIER"
+  retention_look_type         = "GOVERNANCE"
+  retention_lock_time_in_days = 1
 }
 `, rName)
 }
