@@ -484,7 +484,7 @@ func resourceAwsLexIntentDelete(d *schema.ResourceData, meta interface{}) error 
 
 	_, err = waiter.LexIntentDeleted(conn, d.Id())
 
-	return nil
+	return err
 }
 
 var lexCodeHookResource = &schema.Resource{
