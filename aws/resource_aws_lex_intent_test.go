@@ -1034,14 +1034,3 @@ resource "aws_lex_intent" "test" {
 }
 `, rName)
 }
-
-func testAccAwsLexIntentConfig_slotsCustomRemove(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_lex_intent" "test" {
-  name = "%[1]s"
-  fulfillment_activity {
-    type = "ReturnIntent"
-  }
-}
-`, rName)
-}
