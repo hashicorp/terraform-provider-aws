@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,12 +24,6 @@ import (
 )
 
 var (
-	validateKinesisAnalyticsV2Runtime = validation.StringInSlice([]string{
-		kinesisanalyticsv2.RuntimeEnvironmentSql10,
-		kinesisanalyticsv2.RuntimeEnvironmentFlink16,
-		kinesisanalyticsv2.RuntimeEnvironmentFlink18,
-	}, false)
-
 	validateKinesisAnalyticsV2MetricsLevel = validation.StringInSlice([]string{
 		kinesisanalyticsv2.MetricsLevelApplication,
 		kinesisanalyticsv2.MetricsLevelOperator,
@@ -61,59 +57,12 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 		Delete: resourceAwsKinesisAnalyticsV2ApplicationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				arns := strings.Split(d.Id(), ":")
-				name := strings.Replace(arns[len(arns)-1], "application/", "", 1)
-				d.Set("name", name)
-				return []*schema.ResourceData{d}, nil
-			},
+			State: resourceAwsKinesisAnalyticsV2ApplicationImport,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
 			"arn": {
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"service_execution_role": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			"runtime": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateKinesisAnalyticsV2Runtime,
-			},
-
-			"create_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"last_update_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"version": {
-				Type:     schema.TypeInt,
 				Computed: true,
 			},
 
@@ -123,7 +72,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						"cloudwatch_logging_option_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -136,6 +85,59 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 					},
 				},
 			},
+
+			"create_timestamp": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 1024),
+			},
+
+			"last_update_timestamp": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 128),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_.-]+$`), ""),
+				),
+			},
+
+			"runtime_environment": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(kinesisanalyticsv2.RuntimeEnvironment_Values(), false),
+			},
+
+			"service_execution_role": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
+			},
+
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"tags": tagsSchema(),
+
+			"version_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+
+			// TODO Document:
 
 			"application_configuration": {
 				Type:     schema.TypeList,
@@ -193,6 +195,23 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 							},
 						},
 
+						"application_snapshot_configuration": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"snapshots_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+											snapshotsEnabled := strconv.FormatBool(d.Get(k).(bool))
+											return snapshotsEnabled == old
+										},
+									},
+								},
+							},
+						},
+
 						"environment_properties": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -221,22 +240,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 								},
 							},
 						},
-						"application_snapshot_configuration": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"snapshots_enabled": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-											snapshotsEnabled := strconv.FormatBool(d.Get(k).(bool))
-											return snapshotsEnabled == old
-										},
-									},
-								},
-							},
-						},
+
 						"flink_application_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -751,7 +755,6 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchema(),
 		},
 	}
 }
@@ -760,7 +763,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
 	name := d.Get("name").(string)
 	serviceExecutionRole := d.Get("service_execution_role").(string)
-	runtime := d.Get("runtime").(string)
+	runtime := d.Get("runtime_environment").(string)
 
 	appConfig := expandKinesisAnalyticsV2ApplicationConfiguration(runtime, d.Get("application_configuration").([]interface{}))
 
@@ -840,10 +843,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta i
 	d.Set("last_update_timestamp", aws.TimeValue(application.LastUpdateTimestamp).Format(time.RFC3339))
 	d.Set("name", application.ApplicationName)
 	runtime := aws.StringValue(application.RuntimeEnvironment)
-	d.Set("runtime", runtime)
+	d.Set("runtime_environment", runtime)
 	d.Set("service_execution_role", aws.StringValue(application.ServiceExecutionRole))
 	d.Set("status", aws.StringValue(application.ApplicationStatus))
-	d.Set("version", int(aws.Int64Value(application.ApplicationVersionId)))
+	d.Set("version_id", int(aws.Int64Value(application.ApplicationVersionId)))
 
 	if err := d.Set("application_configuration", flattenKinesisAnalyticsV2ApplicationConfiguration(runtime, application.ApplicationConfigurationDescription)); err != nil {
 		return fmt.Errorf("error setting application_configuration: %s", err)
@@ -871,7 +874,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
 	name := d.Get("name").(string)
 
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk("version_id"); ok {
 		version = v.(int)
 	} else {
 		version = 1
@@ -1035,6 +1038,23 @@ func resourceAwsKinesisAnalyticsV2ApplicationDelete(d *schema.ResourceData, meta
 	}
 
 	return nil
+}
+
+func resourceAwsKinesisAnalyticsV2ApplicationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	arn, err := arn.Parse(d.Id())
+	if err != nil {
+		return []*schema.ResourceData{}, fmt.Errorf("Error parsing ARN %q: %w", d.Id(), err)
+	}
+
+	// application/<name>
+	parts := strings.Split(arn.Resource, "/")
+	if len(parts) != 2 {
+		return []*schema.ResourceData{}, fmt.Errorf("Unexpected ARN format: %q", d.Id())
+	}
+
+	d.Set("name", parts[1])
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func expandKinesisAnalyticsV2ApplicationConfiguration(runtime string, conf []interface{}) *kinesisanalyticsv2.ApplicationConfiguration {
@@ -1312,7 +1332,7 @@ func createApplicationV2UpdateOpts(d *schema.ResourceData) *kinesisanalyticsv2.U
 		}
 	}
 
-	runtime := d.Get("runtime").(string)
+	runtime := d.Get("runtime_environment").(string)
 
 	return &kinesisanalyticsv2.UpdateApplicationInput{
 		ApplicationConfigurationUpdate: createKinesisAnalyticsV2ApplicationUpdateOpts(
@@ -1739,7 +1759,7 @@ func expandKinesisAnalyticsV2OutputUpdate(oldOutput map[string]interface{}, newO
 
 func expandKinesisAnalyticsV2CloudwatchLoggingOptionUpdate(clo map[string]interface{}) *kinesisanalyticsv2.CloudWatchLoggingOptionUpdate {
 	cloudwatchLoggingOption := &kinesisanalyticsv2.CloudWatchLoggingOptionUpdate{
-		CloudWatchLoggingOptionId: aws.String(clo["id"].(string)),
+		CloudWatchLoggingOptionId: aws.String(clo["cloudwatch_logging_option_id"].(string)),
 		LogStreamARNUpdate:        aws.String(clo["log_stream_arn"].(string)),
 	}
 	return cloudwatchLoggingOption
@@ -1982,8 +2002,8 @@ func flattenKinesisAnalyticsV2CloudwatchLoggingOptions(options []*kinesisanalyti
 	s := []interface{}{}
 	for _, v := range options {
 		option := map[string]interface{}{
-			"id":             aws.StringValue(v.CloudWatchLoggingOptionId),
-			"log_stream_arn": aws.StringValue(v.LogStreamARN),
+			"cloudwatch_logging_option_id": aws.StringValue(v.CloudWatchLoggingOptionId),
+			"log_stream_arn":               aws.StringValue(v.LogStreamARN),
 		}
 		s = append(s, option)
 	}

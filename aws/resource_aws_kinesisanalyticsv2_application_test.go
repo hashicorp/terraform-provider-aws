@@ -93,7 +93,7 @@ func TestAccAWSKinesisAnalyticsV2Application_basic(t *testing.T) {
 				Config: testAccKinesisAnalyticsV2ApplicationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.text_content", "testCode\n"),
 				),
 			},
@@ -147,7 +147,7 @@ func TestAccAWSKinesisAnalyticsV2Application_UpdateApplicationCodeConfiguration(
 			{
 				Config: testAccKinesisAnalyticsV2ApplicationConfigApplicationCodeConfigurationUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.text_content", "testCode2\n"),
 				),
 			},
@@ -174,16 +174,16 @@ func TestAccAWSKinesisAnalyticsV2Application_AddCloudWatchLoggingOptions(t *test
 				Config: testAccKinesisAnalyticsV2ApplicationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 				),
 			},
 			{
 				Config: testAccKinesisAnalyticsV2ApplicationConfigCloudWatchLoggingOptions(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test.0", "arn"),
 				),
 			},
 			{
@@ -209,18 +209,18 @@ func TestAccAWSKinesisAnalyticsV2Application_UpdateCloudWatchLoggingOptions(t *t
 				Config: testAccKinesisAnalyticsV2ApplicationConfigCloudWatchLoggingOptions(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test.0", "arn"),
 				),
 			},
 			{
 				Config: testAccKinesisAnalyticsV2ApplicationConfigCloudWatchLoggingOptions(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test.1", "arn"),
 				),
 			},
 			{
@@ -274,7 +274,7 @@ func TestAccAWSKinesisAnalyticsV2Application_FlinkApplication(t *testing.T) {
 				Config: testAccKinesisAnalyticsV2ApplicationConfigFlinkApplication(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.environment_properties.0.property_group.#", "1"),
@@ -333,7 +333,7 @@ func TestAccAWSKinesisAnalyticsV2Application_UpdateFlinkApplication(t *testing.T
 				Config: testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.flink_application_configuration.0.parallelism_configuration.*", map[string]string{
 						"autoscaling_enabled": "false",
 					}),
@@ -362,7 +362,7 @@ func TestAccAWSKinesisAnalyticsV2Application_KinesisStreamInput(t *testing.T) {
 				Config: testAccKinesisAnalyticsV2ApplicationConfigKinesisStreamInput(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.name_prefix", "test_prefix"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.kinesis_stream.#", "1"),
@@ -396,7 +396,7 @@ func TestAccAWSKineissAnalyticsV2Application_UpdateKinesisStreamInput(t *testing
 				Config: testAccKinesisAnalyticsV2ApplicationConfigKinesisStreamInput(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.name_prefix", "test_prefix"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.kinesis_stream.#", "1"),
@@ -407,7 +407,7 @@ func TestAccAWSKineissAnalyticsV2Application_UpdateKinesisStreamInput(t *testing
 				Config: testAccKinesisAnalyticsV2ApplicationConfigKinesisStreamInputUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.name_prefix", "test_prefix2"),
 					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.kinesis_stream.0.resource_arn", "aws_kinesis_stream.test", "arn"),
@@ -439,7 +439,7 @@ func TestAccAWSKinesisAnalyticsV2Application_AddKinesisStreamInput(t *testing.T)
 				Config: testAccKinesisAnalyticsV2ApplicationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.#", "0"),
 				),
 			},
@@ -447,7 +447,7 @@ func TestAccAWSKinesisAnalyticsV2Application_AddKinesisStreamInput(t *testing.T)
 				Config: testAccKinesisAnalyticsV2ApplicationConfigKinesisStreamInput(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.name_prefix", "test_prefix"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.kinesis_stream.#", "1"),
@@ -481,7 +481,7 @@ func TestAccAWSKinesisAnalyticsV2Application_KinesisStreamOutput(t *testing.T) {
 				Config: testAccKinesisAnalyticsV2ApplicationConfigKinesisStreamOutput(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.sql_application_configuration.0.output.*", map[string]string{
 						"name":                        "test_name",
@@ -514,7 +514,7 @@ func TestAccAWSKinesisAnalyticsV2Application_UpdateKinesisStreamOutput(t *testin
 				Config: testAccKinesisAnalyticsV2ApplicationConfigKinesisStreamOutput(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.sql_application_configuration.0.output.*", map[string]string{
 						"name":                        "test_name",
@@ -528,7 +528,7 @@ func TestAccAWSKinesisAnalyticsV2Application_UpdateKinesisStreamOutput(t *testin
 				Config: testAccKinesisAnalyticsV2ApplicationConfigKinesisStreamOutputUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.sql_application_configuration.0.output.*", map[string]string{
 						"name":                        "test_name2",
@@ -587,7 +587,7 @@ func TestAccAWSKinesisAnalyticsV2Application_AddKinesisStreamOutput(t *testing.T
 				Config: testAccKinesisAnalyticsV2ApplicationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.output.#", "0"),
 				),
 			},
@@ -595,7 +595,7 @@ func TestAccAWSKinesisAnalyticsV2Application_AddKinesisStreamOutput(t *testing.T
 				Config: testAccKinesisAnalyticsV2ApplicationConfigKinesisStreamOutput(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.sql_application_configuration.0.output.*", map[string]string{
 						"name":             "test_name",
@@ -627,7 +627,7 @@ func TestAccAWSKinesisAnalyticsV2Application_LambdaOutput(t *testing.T) {
 				Config: testAccKinesisAnalyticsV2ApplicationConfigLambdaOutput(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.sql_application_configuration.0.output.*", map[string]string{
 						"lambda.#": "1",
@@ -657,7 +657,7 @@ func TestAccAWSKinesisAnalyticsV2Application_AddLambdaOutput(t *testing.T) {
 				Config: testAccKinesisAnalyticsV2ApplicationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.output.#", "0"),
 				),
 			},
@@ -665,7 +665,7 @@ func TestAccAWSKinesisAnalyticsV2Application_AddLambdaOutput(t *testing.T) {
 				Config: testAccKinesisAnalyticsV2ApplicationConfigLambdaOutput(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.sql_application_configuration.0.output.*", map[string]string{
 						"lambda.#": "1",
@@ -695,7 +695,7 @@ func TestAccAWSKinesisAnalyticsV2Application_ReferenceDataSource(t *testing.T) {
 				Config: testAccKinesisAnalyticsV2ApplicationConfigReferenceDataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.reference_data_sources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.reference_data_sources.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.reference_data_sources.0.schema.0.record_column.#", "1"),
@@ -726,7 +726,7 @@ func TestAccAWSKinesisAnalyticsV2Application_UpdateReferenceDataSource(t *testin
 				Config: testAccKinesisAnalyticsV2ApplicationConfigReferenceDataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.reference_data_sources.#", "1"),
 				),
 			},
@@ -734,7 +734,7 @@ func TestAccAWSKinesisAnalyticsV2Application_UpdateReferenceDataSource(t *testin
 				Config: testAccKinesisAnalyticsV2ApplicationConfigReferenceDataSourceUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.reference_data_sources.#", "1"),
 				),
 			},
@@ -875,6 +875,11 @@ resource "aws_iam_role" "test" {
     {
       "Effect": "Allow",
       "Action": ["sts:AssumeRole"],
+      "Principal": {"Service": "firehose.amazonaws.com"}
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["sts:AssumeRole"],
       "Principal": {"Service": "kinesisanalytics.amazonaws.com"}
     },
     {
@@ -943,13 +948,15 @@ resource "aws_cloudwatch_log_stream" "test" {
 `, rName)
 }
 
+// TODO A configuration with no 'application_configuration'.
+
 func testAccKinesisAnalyticsV2ApplicationConfigBasic(rName string) string {
 	return composeConfig(
 		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime                = "SQL-1_0"
+  runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.test.arn
 
   application_configuration {
@@ -975,7 +982,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigApplicationCodeConfigurationUpdat
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime                = "SQL-1_0"
+  runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.test.arn
 
   application_configuration {
@@ -1012,7 +1019,7 @@ resource "aws_cloudwatch_log_stream" "test" {
 
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime                = "SQL-1_0"
+  runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.test.arn
 
   application_configuration {
@@ -1064,7 +1071,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime                = "SQL-1_0"
+  runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.test.arn
 
   application_configuration {
@@ -1122,7 +1129,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigFlinkApplication(rName string) st
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime                = "FLINK-1_8"
+  runtime_environment    = "FLINK-1_8"
   service_execution_role = aws_iam_role.test.arn
 
   application_configuration {
@@ -1191,7 +1198,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationUpdated(rName str
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime                = "FLINK-1_8"
+  runtime_environment    = "FLINK-1_8"
   service_execution_role = aws_iam_role.test.arn
 
   application_configuration {
@@ -1203,11 +1210,11 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.object.key
+          file_key   = aws_s3_bucket_object.test.key
         }
-
-        code_content_type = "ZIPFILE"
       }
+
+      code_content_type = "ZIPFILE"
     }
 
     flink_application_configuration {
@@ -1266,7 +1273,7 @@ resource "aws_kinesis_stream" "test" {
 
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime                = "SQL-1_0"
+  runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.test.arn
 
   application_configuration {
@@ -1329,7 +1336,7 @@ resource "aws_kinesis_stream" "test" {
 
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime                = "SQL-1_0"
+  runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.test.arn
 
   application_configuration {
@@ -1393,7 +1400,7 @@ resource "aws_kinesis_stream" "test" {
 
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime                = "SQL-1_0"
+  runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.test.arn
 
   application_configuration {
@@ -1438,7 +1445,7 @@ resource "aws_kinesis_stream" "test" {
 
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime                = "SQL-1_0"
+  runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.test.arn
 
   application_configuration {
@@ -1483,7 +1490,7 @@ resource "aws_kinesis_stream" "test" {
 
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime                = "SQL-1_0"
+  runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.test.arn
 
   application_configuration {
@@ -1499,7 +1506,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       output {
         name = "test_name1"
 
-        kinesis_stream {aws_kinesisanalyticsv2_application
+        kinesis_stream {
           resource_arn = aws_kinesis_stream.test.0.arn
         }
 
@@ -1541,7 +1548,7 @@ resource "aws_lambda_function" "test" {
 
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime                = "SQL-1_0"
+  runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.test.arn
 
   application_configuration {
@@ -1585,7 +1592,7 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime                = "SQL-1_0"
+  runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.test.arn
 
   application_configuration {
@@ -1644,7 +1651,7 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime                = "SQL-1_0"
+  runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.test.arn
 
   application_configuration {
@@ -1698,7 +1705,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigWithTags(rName, tag1, tag2 string
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime                = "SQL-1_0"
+  runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.test.arn
 
   application_configuration {
@@ -1729,7 +1736,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigWithAddTags(rName, tag1, tag2, ta
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
-  runtime                = "SQL-1_0"
+  runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.test.arn
 
   application_configuration {

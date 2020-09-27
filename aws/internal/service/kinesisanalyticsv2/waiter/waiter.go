@@ -10,7 +10,7 @@ import (
 // ApplicationDeleted waits for an Application to return Deleted
 func ApplicationDeleted(conn *kinesisanalyticsv2.KinesisAnalyticsV2, name string, timeout time.Duration) (*kinesisanalyticsv2.ApplicationDetail, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{kinesisanalyticsv2.ApplicationStatusRunning, kinesisanalyticsv2.ApplicationStatusDeleting},
+		Pending: []string{kinesisanalyticsv2.ApplicationStatusDeleting},
 		Target:  []string{},
 		Refresh: ApplicationStatus(conn, name),
 		Timeout: timeout,
