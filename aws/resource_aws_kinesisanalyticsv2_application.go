@@ -761,33 +761,27 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 
 func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
-	name := d.Get("name").(string)
-	serviceExecutionRole := d.Get("service_execution_role").(string)
-	runtime := d.Get("runtime_environment").(string)
 
-	appConfig := expandKinesisAnalyticsV2ApplicationConfiguration(runtime, d.Get("application_configuration").([]interface{}))
-
-	var cloudwatchLoggingOptions []*kinesisanalyticsv2.CloudWatchLoggingOption
-	if v, ok := d.GetOk("cloudwatch_logging_options"); ok {
-		clo := v.([]interface{})[0].(map[string]interface{})
-		cloudwatchLoggingOptions = []*kinesisanalyticsv2.CloudWatchLoggingOption{expandKinesisAnalyticsV2CloudwatchLoggingOption(clo)}
-	}
-
-	createOpts := &kinesisanalyticsv2.CreateApplicationInput{
-		RuntimeEnvironment:       aws.String(runtime),
-		ApplicationName:          aws.String(name),
-		ServiceExecutionRole:     aws.String(serviceExecutionRole),
-		ApplicationConfiguration: appConfig,
-		CloudWatchLoggingOptions: cloudwatchLoggingOptions,
+	input := &kinesisanalyticsv2.CreateApplicationInput{
+		ApplicationConfiguration: expandKinesisAnalyticsV2ApplicationConfiguration(d.Get("application_configuration").([]interface{})),
+		ApplicationName:          aws.String(d.Get("name").(string)),
+		CloudWatchLoggingOptions: expandKinesisAnalyticsV2CloudWatchLoggingOptions(d.Get("cloudwatch_logging_options").([]interface{})),
+		RuntimeEnvironment:       aws.String(d.Get("runtime_environment").(string)),
+		ServiceExecutionRole:     aws.String(d.Get("service_execution_role").(string)),
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		createOpts.Tags = keyvaluetags.New(v).IgnoreAws().Kinesisanalyticsv2Tags()
+		input.Tags = keyvaluetags.New(v).IgnoreAws().Kinesisanalyticsv2Tags()
 	}
 
+	log.Printf("[DEBUG] Creating Kinesis Analytics v2 Application: %s", input)
+
+	var err error
+	var output *kinesisanalyticsv2.CreateApplicationOutput
+
 	// Retry for IAM eventual consistency
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		output, err := conn.CreateApplication(createOpts)
+	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+		output, err = conn.CreateApplication(input)
 		if err != nil {
 			// Kinesis Stream: https://github.com/terraform-providers/terraform-provider-aws/issues/7032
 			if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
@@ -803,19 +797,18 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 			}
 			return resource.NonRetryableError(err)
 		}
-		d.SetId(aws.StringValue(output.ApplicationDetail.ApplicationARN))
 		return nil
 	})
 
 	if isResourceTimeoutError(err) {
-		var output *kinesisanalyticsv2.CreateApplicationOutput
-		output, err = conn.CreateApplication(createOpts)
-		d.SetId(aws.StringValue(output.ApplicationDetail.ApplicationARN))
+		output, err = conn.CreateApplication(input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("Unable to create Kinesis Analytics application: %s", err)
+		return fmt.Errorf("error creating Kinesis Analytics v2 Application: %w", err)
 	}
+
+	d.SetId(aws.StringValue(output.ApplicationDetail.ApplicationARN))
 
 	return resourceAwsKinesisAnalyticsV2ApplicationRead(d, meta)
 }
@@ -842,24 +835,23 @@ func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta i
 	d.Set("description", aws.StringValue(application.ApplicationDescription))
 	d.Set("last_update_timestamp", aws.TimeValue(application.LastUpdateTimestamp).Format(time.RFC3339))
 	d.Set("name", application.ApplicationName)
-	runtime := aws.StringValue(application.RuntimeEnvironment)
-	d.Set("runtime_environment", runtime)
+	d.Set("runtime_environment", application.RuntimeEnvironment)
 	d.Set("service_execution_role", aws.StringValue(application.ServiceExecutionRole))
 	d.Set("status", aws.StringValue(application.ApplicationStatus))
 	d.Set("version_id", int(aws.Int64Value(application.ApplicationVersionId)))
 
-	if err := d.Set("application_configuration", flattenKinesisAnalyticsV2ApplicationConfiguration(runtime, application.ApplicationConfigurationDescription)); err != nil {
+	if err := d.Set("application_configuration", flattenKinesisAnalyticsV2ApplicationConfigurationDescription(application.ApplicationConfigurationDescription)); err != nil {
 		return fmt.Errorf("error setting application_configuration: %s", err)
 	}
 
-	if err := d.Set("cloudwatch_logging_options", flattenKinesisAnalyticsV2CloudwatchLoggingOptions(application.CloudWatchLoggingOptionDescriptions)); err != nil {
+	if err := d.Set("cloudwatch_logging_options", flattenKinesisAnalyticsV2CloudWatchLoggingOptionDescriptions(application.CloudWatchLoggingOptionDescriptions)); err != nil {
 		return fmt.Errorf("error setting cloudwatch_logging_options: %s", err)
 	}
 
 	tags, err := keyvaluetags.Kinesisanalyticsv2ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags forKinesis Analytics v2 Application (%s): %s", arn, err)
+		return fmt.Errorf("error listing tags for Kinesis Analytics v2 Application (%s): %s", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
@@ -1055,7 +1047,60 @@ func resourceAwsKinesisAnalyticsV2ApplicationImport(d *schema.ResourceData, meta
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandKinesisAnalyticsV2ApplicationConfiguration(runtime string, conf []interface{}) *kinesisanalyticsv2.ApplicationConfiguration {
+func expandKinesisAnalyticsV2ApplicationConfiguration(vApplicationConfiguration []interface{}) *kinesisanalyticsv2.ApplicationConfiguration {
+	if len(vApplicationConfiguration) == 0 || vApplicationConfiguration[0] == nil {
+		return nil
+	}
+
+	applicationConfiguration := &kinesisanalyticsv2.ApplicationConfiguration{}
+
+	//mApplicationConfiguration := vApplicationConfiguration[0].(map[string]interface{})
+
+	return applicationConfiguration
+}
+
+func flattenKinesisAnalyticsV2ApplicationConfigurationDescription(applicationConfigurationDescription *kinesisanalyticsv2.ApplicationConfigurationDescription) []interface{} {
+	if applicationConfigurationDescription == nil {
+		return []interface{}{}
+	}
+
+	mApplicationConfiguration := map[string]interface{}{}
+
+	return []interface{}{mApplicationConfiguration}
+}
+
+func expandKinesisAnalyticsV2CloudWatchLoggingOptions(vCloudWatchLoggingOptions []interface{}) []*kinesisanalyticsv2.CloudWatchLoggingOption {
+	if len(vCloudWatchLoggingOptions) == 0 || vCloudWatchLoggingOptions[0] == nil {
+		return nil
+	}
+
+	cloudWatchLoggingOption := &kinesisanalyticsv2.CloudWatchLoggingOption{}
+
+	mCloudWatchLoggingOption := vCloudWatchLoggingOptions[0].(map[string]interface{})
+
+	if vLogStreamArn, ok := mCloudWatchLoggingOption["log_stream_arn"].(string); ok && vLogStreamArn != "" {
+		cloudWatchLoggingOption.LogStreamARN = aws.String(vLogStreamArn)
+	}
+
+	return []*kinesisanalyticsv2.CloudWatchLoggingOption{cloudWatchLoggingOption}
+}
+
+func flattenKinesisAnalyticsV2CloudWatchLoggingOptionDescriptions(cloudWatchLoggingOptionDescriptions []*kinesisanalyticsv2.CloudWatchLoggingOptionDescription) []interface{} {
+	if len(cloudWatchLoggingOptionDescriptions) == 0 || cloudWatchLoggingOptionDescriptions[0] == nil {
+		return []interface{}{}
+	}
+
+	cloudWatchLoggingOptionDescription := cloudWatchLoggingOptionDescriptions[0]
+
+	mCloudWatchLoggingOption := map[string]interface{}{
+		"cloudwatch_logging_option_id": aws.StringValue(cloudWatchLoggingOptionDescription.CloudWatchLoggingOptionId),
+		"log_stream_arn":               aws.StringValue(cloudWatchLoggingOptionDescription.LogStreamARN),
+	}
+
+	return []interface{}{mCloudWatchLoggingOption}
+}
+
+func expandKinesisAnalyticsV2ApplicationConfigurationOld(runtime string, conf []interface{}) *kinesisanalyticsv2.ApplicationConfiguration {
 	if len(conf) == 0 {
 		return nil
 	}
