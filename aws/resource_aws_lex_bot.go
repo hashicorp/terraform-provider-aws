@@ -68,7 +68,7 @@ func resourceAwsLexBot() *schema.Resource {
 			},
 			"clarification_prompt": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				MinItems: 1,
 				MaxItems: 1,
 				Elem:     lexPromptResource,
@@ -190,14 +190,24 @@ func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &lexmodelbuildingservice.PutBotInput{
 		AbortStatement:          expandLexStatement(d.Get("abort_statement")),
 		ChildDirected:           aws.Bool(d.Get("child_directed").(bool)),
-		ClarificationPrompt:     expandLexPrompt(d.Get("clarification_prompt")),
 		CreateVersion:           aws.Bool(d.Get("create_version").(bool)),
 		Description:             aws.String(d.Get("description").(string)),
+		EnableModelImprovements: aws.Bool(d.Get("enable_model_improvements").(bool)),
 		IdleSessionTTLInSeconds: aws.Int64(int64(d.Get("idle_session_ttl_in_seconds").(int))),
 		Intents:                 expandLexIntents(d.Get("intent").(*schema.Set).List()),
-		Locale:                  aws.String(d.Get("locale").(string)),
 		Name:                    aws.String(name),
-		ProcessBehavior:         aws.String(d.Get("process_behavior").(string)),
+	}
+
+	if v, ok := d.GetOk("clarification_prompt"); ok {
+		input.ClarificationPrompt = expandLexPrompt(v)
+	}
+
+	if v, ok := d.GetOk("locale"); ok {
+		input.Locale = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("process_behavior"); ok {
+		input.ProcessBehavior = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("voice_id"); ok {
@@ -258,10 +268,8 @@ func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 		processBehavior = v.(string)
 	}
 
-	d.Set("abort_statement", flattenLexStatement(resp.AbortStatement))
 	d.Set("checksum", resp.Checksum)
 	d.Set("child_directed", resp.ChildDirected)
-	d.Set("clarification_prompt", flattenLexPrompt(resp.ClarificationPrompt))
 	d.Set("created_date", resp.CreatedDate.Format(time.RFC3339))
 	d.Set("description", resp.Description)
 	d.Set("detect_sentiment", resp.DetectSentiment)
@@ -275,6 +283,14 @@ func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("nlu_intent_confidence_threshold", resp.NluIntentConfidenceThreshold)
 	d.Set("process_behavior", processBehavior)
 	d.Set("status", resp.Status)
+
+	if resp.AbortStatement != nil {
+		d.Set("abort_statement", flattenLexStatement(resp.AbortStatement))
+	}
+
+	if resp.ClarificationPrompt != nil {
+		d.Set("clarification_prompt", flattenLexPrompt(resp.ClarificationPrompt))
+	}
 
 	version, err := getLatestLexBotVersion(conn, &lexmodelbuildingservice.GetBotVersionsInput{
 		Name: aws.String(d.Id()),
@@ -295,10 +311,8 @@ func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lexmodelconn
 
 	input := &lexmodelbuildingservice.PutBotInput{
-		AbortStatement:               expandLexStatement(d.Get("abort_statement")),
 		Checksum:                     aws.String(d.Get("checksum").(string)),
 		ChildDirected:                aws.Bool(d.Get("child_directed").(bool)),
-		ClarificationPrompt:          expandLexPrompt(d.Get("clarification_prompt")),
 		CreateVersion:                aws.Bool(d.Get("create_version").(bool)),
 		Description:                  aws.String(d.Get("description").(string)),
 		DetectSentiment:              aws.Bool(d.Get("detect_sentiment").(bool)),
@@ -309,6 +323,14 @@ func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
 		Name:                         aws.String(d.Id()),
 		NluIntentConfidenceThreshold: aws.Float64(d.Get("nlu_intent_confidence_threshold").(float64)),
 		ProcessBehavior:              aws.String(d.Get("process_behavior").(string)),
+	}
+
+	if v, ok := d.GetOk("abort_statement"); ok {
+		input.AbortStatement = expandLexStatement(v)
+	}
+
+	if v, ok := d.GetOk("clarification_prompt"); ok {
+		input.ClarificationPrompt = expandLexPrompt(v)
 	}
 
 	if v, ok := d.GetOk("voice_id"); ok {

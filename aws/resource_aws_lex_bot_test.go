@@ -55,10 +55,507 @@ func TestAccAwsLexBot_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            rName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"create_version"},
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsLexBot_createVersion(t *testing.T) {
+	var v lexmodelbuildingservice.GetBotOutput
+	rName := "aws_lex_bot.test"
+	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLexBotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_basic(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+					testAccCheckAwsLexBotNotExists(testBotID, "1"),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_createVersion(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+					testAccCheckAwsLexBotExistsWithVersion(rName, "1", &v),
+					resource.TestCheckResourceAttr(rName, "version", "1"),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsLexBot_abortStatement(t *testing.T) {
+	var v lexmodelbuildingservice.GetBotOutput
+	rName := "aws_lex_bot.test"
+	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLexBotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_abortStatement(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+					resource.TestCheckResourceAttr(rName, "abort_statement.#", "1"),
+					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.#", "1"),
+					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.0.content", "Sorry, I'm not able to assist at this time"),
+					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.0.content_type", "PlainText"),
+					resource.TestCheckNoResourceAttr(rName, "abort_statement.0.message.0.group_number"),
+					resource.TestCheckResourceAttr(rName, "abort_statement.0.response_card", ""),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_abortStatementUpdate(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.#", "2"),
+					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.0.content", "Sorry, I'm not able to assist at this time"),
+					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.0.content_type", "PlainText"),
+					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.0.group_number", "1"),
+					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.1.content", "Sorry, I'm not able to assist at this time. Good bye."),
+					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.1.content_type", "PlainText"),
+					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.1.group_number", "1"),
+					resource.TestCheckResourceAttr(rName, "abort_statement.0.response_card", "Sorry, I'm not able to assist at this time"),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsLexBot_clarificationPrompt(t *testing.T) {
+	var v lexmodelbuildingservice.GetBotOutput
+	rName := "aws_lex_bot.test"
+	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLexBotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_clarificationPrompt(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+					resource.TestCheckResourceAttr(rName, "clarification_prompt.#", "1"),
+					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.max_attempts", "2"),
+					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.message.#", "1"),
+					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.message.#", "1"),
+					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.message.0.content", "I didn't understand you, what would you like to do?"),
+					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.message.0.content_type", "PlainText"),
+					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.response_card", ""),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_clarificationPromptUpdate(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.max_attempts", "3"),
+					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.message.#", "2"),
+					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.response_card", "I didn't understand you, what would you like to do?"),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsLexBot_childDirected(t *testing.T) {
+	var v lexmodelbuildingservice.GetBotOutput
+	rName := "aws_lex_bot.test"
+	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLexBotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_basic(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_childDirectedUpdate(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+					resource.TestCheckResourceAttr(rName, "child_directed", "true"),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsLexBot_description(t *testing.T) {
+	var v lexmodelbuildingservice.GetBotOutput
+	rName := "aws_lex_bot.test"
+	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLexBotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_basic(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_descriptionUpdate(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+					resource.TestCheckResourceAttr(rName, "description", "Bot to order flowers"),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsLexBot_detectSentiment(t *testing.T) {
+	var v lexmodelbuildingservice.GetBotOutput
+	rName := "aws_lex_bot.test"
+	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLexBotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_basic(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_detectSentimentUpdate(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+					resource.TestCheckResourceAttr(rName, "detect_sentiment", "true"),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsLexBot_enableModelImprovements(t *testing.T) {
+	var v lexmodelbuildingservice.GetBotOutput
+	rName := "aws_lex_bot.test"
+	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLexBotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_basic(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_enableModelImprovementsUpdate(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+					resource.TestCheckResourceAttr(rName, "enable_model_improvements", "true"),
+					resource.TestCheckResourceAttr(rName, "nlu_intent_confidence_threshold", "0.5"),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsLexBot_idleSessionTtlInSeconds(t *testing.T) {
+	var v lexmodelbuildingservice.GetBotOutput
+	rName := "aws_lex_bot.test"
+	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLexBotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_basic(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_idleSessionTtlInSecondsUpdate(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+					resource.TestCheckResourceAttr(rName, "idle_session_ttl_in_seconds", "600"),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsLexBot_intents(t *testing.T) {
+	var v lexmodelbuildingservice.GetBotOutput
+	rName := "aws_lex_bot.test"
+	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLexBotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intentMultiple(testBotID),
+					testAccAwsLexBotConfig_basic(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intentMultiple(testBotID),
+					testAccAwsLexBotConfig_intentsUpdate(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+					resource.TestCheckResourceAttr(rName, "intent.#", "2"),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsLexBot_locale(t *testing.T) {
+	var v lexmodelbuildingservice.GetBotOutput
+	rName := "aws_lex_bot.test"
+	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLexBotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_basic(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_localeUpdate(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+					resource.TestCheckResourceAttr(rName, "locale", "en-GB"),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsLexBot_voiceId(t *testing.T) {
+	var v lexmodelbuildingservice.GetBotOutput
+	rName := "aws_lex_bot.test"
+	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLexBotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_basic(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_voiceIdUpdate(testBotID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotExists(rName, &v),
+					resource.TestCheckResourceAttr(rName, "voice_id", "Justin"),
+				),
+			},
+			{
+				ResourceName:      rName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -184,7 +681,122 @@ resource "aws_lex_intent" "test" {
 `, rName)
 }
 
+func testAccAwsLexBotConfig_intentMultiple(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_intent" "test" {
+  name           = "%[1]s"
+  create_version = true
+  fulfillment_activity {
+    type = "ReturnIntent"
+  }
+  sample_utterances = [
+    "I would like to pick up flowers",
+  ]
+}
+
+resource "aws_lex_intent" "test_2" {
+  name           = "%[1]stwo"
+  create_version = true
+  fulfillment_activity {
+    type = "ReturnIntent"
+  }
+  sample_utterances = [
+    "I would like to pick up flowers",
+  ]
+}
+`, rName)
+}
+
 func testAccAwsLexBotConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_bot" "test" {
+  name           = "%s"
+  description    = "Bot to order flowers on the behalf of a user"
+  child_directed = false
+  abort_statement {
+    message {
+      content      = "Sorry, I'm not able to assist at this time"
+      content_type = "PlainText"
+    }
+  }
+  intent {
+    intent_name    = aws_lex_intent.test.name
+    intent_version = aws_lex_intent.test.version
+  }
+}
+`, rName)
+}
+
+func testAccAwsLexBotConfig_createVersion(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_bot" "test" {
+  name             = "%s"
+  description      = "Bot to order flowers on the behalf of a user"
+  child_directed   = false
+  create_version   = true
+  process_behavior = "BUILD"
+  abort_statement {
+    message {
+      content      = "Sorry, I'm not able to assist at this time"
+      content_type = "PlainText"
+    }
+  }
+  intent {
+    intent_name    = aws_lex_intent.test.name
+    intent_version = aws_lex_intent.test.version
+  }
+}
+`, rName)
+}
+
+func testAccAwsLexBotConfig_abortStatement(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_bot" "test" {
+  name           = "%s"
+  description    = "Bot to order flowers on the behalf of a user"
+  child_directed = false
+  abort_statement {
+    message {
+      content      = "Sorry, I'm not able to assist at this time"
+      content_type = "PlainText"
+    }
+  }
+  intent {
+    intent_name    = aws_lex_intent.test.name
+    intent_version = aws_lex_intent.test.version
+  }
+}
+`, rName)
+}
+
+func testAccAwsLexBotConfig_abortStatementUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_bot" "test" {
+  name           = "%s"
+  description    = "Bot to order flowers on the behalf of a user"
+  child_directed = false
+  abort_statement {
+    message {
+      content      = "Sorry, I'm not able to assist at this time"
+      content_type = "PlainText"
+      group_number = 1
+    }
+    message {
+      content      = "Sorry, I'm not able to assist at this time. Good bye."
+      content_type = "PlainText"
+      group_number = 1
+    }
+    response_card = "Sorry, I'm not able to assist at this time"
+  }
+  intent {
+    intent_name    = aws_lex_intent.test.name
+    intent_version = aws_lex_intent.test.version
+  }
+}
+`, rName)
+}
+
+func testAccAwsLexBotConfig_clarificationPrompt(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
   name           = "%s"
@@ -211,14 +823,12 @@ resource "aws_lex_bot" "test" {
 `, rName)
 }
 
-func testAccAwsLexBotConfig_createVersion(rName string) string {
+func testAccAwsLexBotConfig_clarificationPromptUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot" "test" {
-  name             = "%s"
-  description      = "Bot to order flowers on the behalf of a user"
-  child_directed   = false
-  create_version   = true
-  process_behavior = "BUILD"
+  name           = "%s"
+  description    = "Bot to order flowers on the behalf of a user"
+  child_directed = false
   abort_statement {
     message {
       content      = "Sorry, I'm not able to assist at this time"
@@ -226,9 +836,187 @@ resource "aws_lex_bot" "test" {
     }
   }
   clarification_prompt {
-    max_attempts = 2
+    max_attempts = 3
     message {
       content      = "I didn't understand you, what would you like to do?"
+      content_type = "PlainText"
+      group_number = 1
+    }
+    message {
+      content      = "I didn't understand you, can you re-phrase your request, please?"
+      content_type = "PlainText"
+      group_number = 1
+    }
+    response_card = "I didn't understand you, what would you like to do?"
+  }
+  intent {
+    intent_name    = aws_lex_intent.test.name
+    intent_version = aws_lex_intent.test.version
+  }
+}
+`, rName)
+}
+
+func testAccAwsLexBotConfig_childDirectedUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_bot" "test" {
+  name           = "%s"
+  description    = "Bot to order flowers on the behalf of a user"
+  child_directed = true
+  abort_statement {
+    message {
+      content      = "Sorry, I'm not able to assist at this time"
+      content_type = "PlainText"
+    }
+  }
+  intent {
+    intent_name    = aws_lex_intent.test.name
+    intent_version = aws_lex_intent.test.version
+  }
+}
+`, rName)
+}
+
+func testAccAwsLexBotConfig_descriptionUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_bot" "test" {
+  name           = "%s"
+  description    = "Bot to order flowers"
+  child_directed = false
+  abort_statement {
+    message {
+      content      = "Sorry, I'm not able to assist at this time"
+      content_type = "PlainText"
+    }
+  }
+  intent {
+    intent_name    = aws_lex_intent.test.name
+    intent_version = aws_lex_intent.test.version
+  }
+}
+`, rName)
+}
+
+func testAccAwsLexBotConfig_detectSentimentUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_bot" "test" {
+  name             = "%s"
+  description      = "Bot to order flowers on the behalf of a user"
+  child_directed   = false
+  detect_sentiment = true
+  abort_statement {
+    message {
+      content      = "Sorry, I'm not able to assist at this time"
+      content_type = "PlainText"
+    }
+  }
+  intent {
+    intent_name    = aws_lex_intent.test.name
+    intent_version = aws_lex_intent.test.version
+  }
+}
+`, rName)
+}
+
+func testAccAwsLexBotConfig_enableModelImprovementsUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_bot" "test" {
+  name                            = "%s"
+  description                     = "Bot to order flowers on the behalf of a user"
+  child_directed                  = false
+  enable_model_improvements       = true
+  nlu_intent_confidence_threshold = 0.5
+  abort_statement {
+    message {
+      content      = "Sorry, I'm not able to assist at this time"
+      content_type = "PlainText"
+    }
+  }
+  intent {
+    intent_name    = aws_lex_intent.test.name
+    intent_version = aws_lex_intent.test.version
+  }
+}
+`, rName)
+}
+
+func testAccAwsLexBotConfig_idleSessionTtlInSecondsUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_bot" "test" {
+  name                        = "%s"
+  description                 = "Bot to order flowers on the behalf of a user"
+  child_directed              = false
+  idle_session_ttl_in_seconds = 600
+  abort_statement {
+    message {
+      content      = "Sorry, I'm not able to assist at this time"
+      content_type = "PlainText"
+    }
+  }
+  intent {
+    intent_name    = aws_lex_intent.test.name
+    intent_version = aws_lex_intent.test.version
+  }
+}
+`, rName)
+}
+
+func testAccAwsLexBotConfig_intentsUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_bot" "test" {
+  name           = "%s"
+  description    = "Bot to order flowers on the behalf of a user"
+  child_directed = false
+  abort_statement {
+    message {
+      content      = "Sorry, I'm not able to assist at this time"
+      content_type = "PlainText"
+    }
+  }
+  intent {
+    intent_name    = aws_lex_intent.test.name
+    intent_version = aws_lex_intent.test.version
+  }
+  intent {
+    intent_name    = aws_lex_intent.test_2.name
+    intent_version = aws_lex_intent.test_2.version
+  }
+}
+`, rName)
+}
+
+func testAccAwsLexBotConfig_localeUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_bot" "test" {
+  name                      = "%s"
+  description               = "Bot to order flowers on the behalf of a user"
+  child_directed            = false
+  enable_model_improvements = true
+  locale                    = "en-GB"
+  abort_statement {
+    message {
+      content      = "Sorry, I'm not able to assist at this time"
+      content_type = "PlainText"
+    }
+  }
+  intent {
+    intent_name    = aws_lex_intent.test.name
+    intent_version = aws_lex_intent.test.version
+  }
+}
+`, rName)
+}
+
+func testAccAwsLexBotConfig_voiceIdUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_bot" "test" {
+  name           = "%s"
+  description    = "Bot to order flowers on the behalf of a user"
+  child_directed = false
+  voice_id       = "Justin"
+  abort_statement {
+    message {
+      content      = "Sorry, I'm not able to assist at this time"
       content_type = "PlainText"
     }
   }
