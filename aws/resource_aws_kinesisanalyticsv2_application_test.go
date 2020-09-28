@@ -842,7 +842,7 @@ func TestAccAWSKinesisAnalyticsV2Application_UpdateReferenceDataSource(t *testin
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_tags(t *testing.T) {
+func TestAccAWSKinesisAnalyticsV2Application_Tags(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -853,46 +853,34 @@ func TestAccAWSKinesisAnalyticsV2Application_tags(t *testing.T) {
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigWithTags(rName, "test1", "test2"),
+				Config: testAccKinesisAnalyticsV2ApplicationConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.firstTag", "test1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.secondTag", "test2"),
-				),
-			},
-			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigWithAddTags(rName, "test1", "test2", "test3"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.firstTag", "test1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.secondTag", "test2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.thirdTag", "test3"),
-				),
-			},
-			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigWithTags(rName, "test1", "test2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.firstTag", "test1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.secondTag", "test2"),
-				),
-			},
-			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigWithTags(rName, "test1", "update_test2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.firstTag", "test1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.secondTag", "update_test2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccKinesisAnalyticsV2ApplicationConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsV2ApplicationConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -1806,7 +1794,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigWithTags(rName, tag1, tag2 string) string {
+func testAccKinesisAnalyticsV2ApplicationConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return composeConfig(
 		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
 		fmt.Sprintf(`
@@ -1815,27 +1803,14 @@ resource "aws_kinesisanalyticsv2_application" "test" {
   runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.test.0.arn
 
-  application_configuration {
-    application_code_configuration {
-      code_content {
-        text_content = "testCode\n"
-      }
-
-      code_content_type = "PLAINTEXT"
-    }
-
-    sql_application_configuration {}
-  }
-
   tags = {
-    firstTag  = %[2]q
-    secondTag = %[3]q
+    %[2]q = %[3]q
   }
 }
-`, rName, tag1, tag2))
+`, rName, tagKey1, tagValue1))
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigWithAddTags(rName, tag1, tag2, tag3 string) string {
+func testAccKinesisAnalyticsV2ApplicationConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return composeConfig(
 		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
 		fmt.Sprintf(`
@@ -1844,23 +1819,10 @@ resource "aws_kinesisanalyticsv2_application" "test" {
   runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.test.0.arn
 
-  application_configuration {
-    application_code_configuration {
-      code_content {
-        text_content = "testCode\n"
-      }
-
-      code_content_type = "PLAINTEXT"
-    }
-
-    sql_application_configuration {}
-  }
-
   tags = {
-    firstTag  = %[2]q
-    secondTag = %[3]q
-    thirdTag  = %[4]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, rName, tag1, tag2, tag3))
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
