@@ -94,6 +94,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 
@@ -764,6 +765,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 
 	input := &kinesisanalyticsv2.CreateApplicationInput{
 		ApplicationConfiguration: expandKinesisAnalyticsV2ApplicationConfiguration(d.Get("application_configuration").([]interface{})),
+		ApplicationDescription:   aws.String(d.Get("description").(string)),
 		ApplicationName:          aws.String(d.Get("name").(string)),
 		CloudWatchLoggingOptions: expandKinesisAnalyticsV2CloudWatchLoggingOptions(d.Get("cloudwatch_logging_options").([]interface{})),
 		RuntimeEnvironment:       aws.String(d.Get("runtime_environment").(string)),
@@ -862,6 +864,43 @@ func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).kinesisanalyticsv2conn
+
+	if d.HasChanges("application_configuration", "cloudwatch_logging_options", "service_execution_role") {
+		applicationName := d.Get("name").(string)
+		currentApplicationVersionId := int64(d.Get("version_id").(int))
+
+		input := &kinesisanalyticsv2.UpdateApplicationInput{
+			ApplicationName:             aws.String(applicationName),
+			CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+		}
+
+		if d.HasChange("service_execution_role") {
+			input.ServiceExecutionRoleUpdate = aws.String(d.Get("service_execution_role").(string))
+		}
+
+		log.Printf("[DEBUG] Updating Kinesis Analytics v2 Application (%s): %s", d.Id(), input)
+		output, err := conn.UpdateApplication(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
+		}
+
+		currentApplicationVersionId = aws.Int64Value(output.ApplicationDetail.ApplicationVersionId)
+	}
+
+	if d.HasChange("tags") {
+		arn := d.Get("arn").(string)
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.Kinesisanalyticsv2UpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating Kinesis Analytics Application (%s) tags: %s", arn, err)
+		}
+	}
+
+	return resourceAwsKinesisAnalyticsV2ApplicationRead(d, meta)
+}
+
+func resourceAwsKinesisAnalyticsV2ApplicationUpdateOld(d *schema.ResourceData, meta interface{}) error {
 	var version int
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
 	name := d.Get("name").(string)

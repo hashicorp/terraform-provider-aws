@@ -82,7 +82,7 @@ func testSweepKinesisAnalyticsV2Application(region string) error {
 func TestAccAWSKinesisAnalyticsV2Application_basic(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
-	iamRoleResourceName := "aws_iam_role.test"
+	iamRoleResourceName := "aws_iam_role.test.0"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -134,6 +134,63 @@ func TestAccAWSKinesisAnalyticsV2Application_disappears(t *testing.T) {
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsKinesisAnalyticsV2Application(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsV2Application_UpdateServiceExecutionRole(t *testing.T) {
+	var v kinesisanalyticsv2.ApplicationDetail
+	resourceName := "aws_kinesisanalyticsv2_application.test"
+	iamRoleResourceName1 := "aws_iam_role.test.0"
+	iamRoleResourceName2 := "aws_iam_role.test.1"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsV2ApplicationConfigBasicPlusDescription(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "0"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Testing"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "SQL-1_0"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName1, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsV2ApplicationConfigBasicPlusDescription(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "0"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Testing"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "SQL-1_0"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName2, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -902,10 +959,12 @@ func testAccPreCheckAWSKinesisAnalyticsV2(t *testing.T) {
 	}
 }
 
-func testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName string) string {
+func testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName string, nRoles int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name               = %[1]q
+  count = %[2]d
+
+  name               = "%[1]s.${count.index}"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -957,10 +1016,12 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
+  count = %[2]d
+
+  role       = aws_iam_role.test[count.index].name
   policy_arn = aws_iam_policy.test.arn
 }
-`, rName)
+`, rName, nRoles)
 }
 
 func testAccKinesisAnalyticsV2ApplicationConfigBaseFlinkApplication(rName string) string {
@@ -988,26 +1049,50 @@ resource "aws_cloudwatch_log_stream" "test" {
 
 func testAccKinesisAnalyticsV2ApplicationConfigBasic(rName string) string {
 	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.arn
+  service_execution_role = aws_iam_role.test.0.arn
+}
+`, rName))
+}
 
-  depends_on = [aws_iam_role_policy_attachment.test]
+func testAccKinesisAnalyticsV2ApplicationConfigBasicPlusDescription(rName string) string {
+	return composeConfig(
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 2),
+		fmt.Sprintf(`
+resource "aws_kinesisanalyticsv2_application" "test" {
+  name                   = %[1]q
+  runtime_environment    = "SQL-1_0"
+  service_execution_role = aws_iam_role.test.0.arn
+  description            = "Testing"
+}
+`, rName))
+}
+
+func testAccKinesisAnalyticsV2ApplicationConfigBasicServiceExecutionRoleUpdated(rName string) string {
+	return composeConfig(
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 2),
+		fmt.Sprintf(`
+resource "aws_kinesisanalyticsv2_application" "test" {
+  name                   = %[1]q
+  runtime_environment    = "SQL-1_0"
+  service_execution_role = aws_iam_role.test.1.arn
+  description            = "Testing"
 }
 `, rName))
 }
 
 func testAccKinesisAnalyticsV2ApplicationConfigSimpleSql(rName string) string {
 	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.arn
+  service_execution_role = aws_iam_role.test.0.arn
 
   application_configuration {
     application_code_configuration {
@@ -1020,20 +1105,18 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
     sql_application_configuration {}
   }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
 }
 
 func testAccKinesisAnalyticsV2ApplicationConfigApplicationCodeConfigurationUpdated(rName string) string {
 	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.arn
+  service_execution_role = aws_iam_role.test.0.arn
 
   application_configuration {
     application_code_configuration {
@@ -1046,15 +1129,13 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
     sql_application_configuration {}
   }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
 }
 
 func testAccKinesisAnalyticsV2ApplicationConfigCloudWatchLoggingOptions(rName string, streamIndex int) string {
 	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -1070,7 +1151,7 @@ resource "aws_cloudwatch_log_stream" "test" {
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.arn
+  service_execution_role = aws_iam_role.test.0.arn
 
   application_configuration {
     application_code_configuration {
@@ -1087,15 +1168,13 @@ resource "aws_kinesisanalyticsv2_application" "test" {
   cloudwatch_logging_options {
     log_stream_arn = aws_cloudwatch_log_stream.test.%[2]d.arn
   }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, streamIndex))
 }
 
 func testAccKinesisAnalyticsV2ApplicationConfigKinesisFirehoseInput(rName string) string {
 	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -1105,7 +1184,7 @@ resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
   handler       = "exports.example"
-  role          = aws_iam_role.test.arn
+  role          = aws_iam_role.test.0.arn
   runtime       = "nodejs12.x"
 }
 
@@ -1115,14 +1194,14 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
   extended_s3_configuration {
     bucket_arn = aws_s3_bucket.test.arn
-    role_arn   = aws_iam_role.test.arn
+    role_arn   = aws_iam_role.test.0.arn
   }
 }
 
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.arn
+  service_execution_role = aws_iam_role.test.0.arn
 
   application_configuration {
     application_code_configuration {
@@ -1166,21 +1245,19 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       }
     }
   }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
 }
 
 func testAccKinesisAnalyticsV2ApplicationConfigFlinkApplication(rName string) string {
 	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
 		testAccKinesisAnalyticsV2ApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "FLINK-1_8"
-  service_execution_role = aws_iam_role.test.arn
+  service_execution_role = aws_iam_role.test.0.arn
 
   application_configuration {
     application_snapshot_configuration {
@@ -1235,21 +1312,19 @@ resource "aws_kinesisanalyticsv2_application" "test" {
   cloudwatch_logging_options {
     log_stream_arn = aws_cloudwatch_log_stream.test.arn
   }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
 }
 
 func testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationUpdated(rName string) string {
 	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
 		testAccKinesisAnalyticsV2ApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "FLINK-1_8"
-  service_execution_role = aws_iam_role.test.arn
+  service_execution_role = aws_iam_role.test.0.arn
 
   application_configuration {
     application_snapshot_configuration {
@@ -1304,15 +1379,13 @@ resource "aws_kinesisanalyticsv2_application" "test" {
   cloudwatch_logging_options {
     log_stream_arn = aws_cloudwatch_log_stream.test.arn
   }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
 }
 
 func testAccKinesisAnalyticsV2ApplicationConfigKinesisStreamInput(rName string) string {
 	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
 		fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   count = 2
@@ -1324,7 +1397,7 @@ resource "aws_kinesis_stream" "test" {
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.arn
+  service_execution_role = aws_iam_role.test.0.arn
 
   application_configuration {
     application_code_configuration {
@@ -1367,15 +1440,13 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       }
     }
   }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
 }
 
 func testAccKinesisAnalyticsV2ApplicationConfigKinesisStreamInputUpdated(rName string) string {
 	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
 		fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   count = 2
@@ -1387,7 +1458,7 @@ resource "aws_kinesis_stream" "test" {
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.arn
+  service_execution_role = aws_iam_role.test.0.arn
 
   application_configuration {
     application_code_configuration {
@@ -1431,15 +1502,13 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       }
     }
   }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
 }
 
 func testAccKinesisAnalyticsV2ApplicationConfigKinesisStreamOutput(rName string) string {
 	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
 		fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   count = 2
@@ -1451,7 +1520,7 @@ resource "aws_kinesis_stream" "test" {
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.arn
+  service_execution_role = aws_iam_role.test.0.arn
 
   application_configuration {
     application_code_configuration {
@@ -1476,15 +1545,13 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       }
     }
   }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
 }
 
 func testAccKinesisAnalyticsV2ApplicationConfigKinesisStreamOutputUpdated(rName string) string {
 	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
 		fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   count = 2
@@ -1496,7 +1563,7 @@ resource "aws_kinesis_stream" "test" {
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.arn
+  service_execution_role = aws_iam_role.test.0.arn
 
   application_configuration {
     application_code_configuration {
@@ -1521,15 +1588,13 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       }
     }
   }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
 }
 
 func testAccKinesisAnalyticsV2ApplicationConfigMultipleOutputs(rName string) string {
 	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
 		fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   count = 2
@@ -1541,7 +1606,7 @@ resource "aws_kinesis_stream" "test" {
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.arn
+  service_execution_role = aws_iam_role.test.0.arn
 
   application_configuration {
     application_code_configuration {
@@ -1578,28 +1643,26 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       }
     }
   }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
 }
 
 func testAccKinesisAnalyticsV2ApplicationConfigLambdaOutput(rName string) string {
 	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
 		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
   handler       = "exports.example"
-  role          = aws_iam_role.test.arn
+  role          = aws_iam_role.test.0.arn
   runtime       = "nodejs12.x"
 }
 
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.arn
+  service_execution_role = aws_iam_role.test.0.arn
 
   application_configuration {
     application_code_configuration {
@@ -1624,15 +1687,13 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       }
     }
   }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
 }
 
 func testAccKinesisAnalyticsV2ApplicationConfigReferenceDataSource(rName string) string {
 	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   count = 2
@@ -1643,7 +1704,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.arn
+  service_execution_role = aws_iam_role.test.0.arn
 
   application_configuration {
     application_code_configuration {
@@ -1683,15 +1744,13 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       }
     }
   }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
 }
 
 func testAccKinesisAnalyticsV2ApplicationConfigReferenceDataSourceUpdated(rName string) string {
 	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   count = 2
@@ -1702,7 +1761,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.arn
+  service_execution_role = aws_iam_role.test.0.arn
 
   application_configuration {
     application_code_configuration {
@@ -1743,20 +1802,18 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       }
     }
   }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
 }
 
 func testAccKinesisAnalyticsV2ApplicationConfigWithTags(rName, tag1, tag2 string) string {
 	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.arn
+  service_execution_role = aws_iam_role.test.0.arn
 
   application_configuration {
     application_code_configuration {
@@ -1774,20 +1831,18 @@ resource "aws_kinesisanalyticsv2_application" "test" {
     firstTag  = %[2]q
     secondTag = %[3]q
   }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, tag1, tag2))
 }
 
 func testAccKinesisAnalyticsV2ApplicationConfigWithAddTags(rName, tag1, tag2, tag3 string) string {
 	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.arn
+  service_execution_role = aws_iam_role.test.0.arn
 
   application_configuration {
     application_code_configuration {
@@ -1806,8 +1861,6 @@ resource "aws_kinesisanalyticsv2_application" "test" {
     secondTag = %[3]q
     thirdTag  = %[4]q
   }
-
-  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, tag1, tag2, tag3))
 }
