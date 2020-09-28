@@ -72,3 +72,24 @@ func LexBotStatus(conn *lexmodelbuildingservice.LexModelBuildingService, id stri
 		return output, LexModelBuildingServiceStatusCreated, nil
 	}
 }
+
+func LexBotAliasStatus(conn *lexmodelbuildingservice.LexModelBuildingService, botAliasName, botName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
+			BotName: aws.String(botName),
+			Name:    aws.String(botAliasName),
+		})
+		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
+			return nil, LexModelBuildingServiceStatusNotFound, nil
+		}
+		if err != nil {
+			return nil, LexModelBuildingServiceStatusUnknown, err
+		}
+
+		if output == nil {
+			return nil, LexModelBuildingServiceStatusNotFound, nil
+		}
+
+		return output, LexModelBuildingServiceStatusCreated, nil
+	}
+}

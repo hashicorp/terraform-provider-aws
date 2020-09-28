@@ -29,6 +29,22 @@ func LexBotDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, botId 
 	return nil, err
 }
 
+func LexBotAliasDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, botAliasName, botName string) (*lexmodelbuildingservice.GetBotAliasOutput, error) {
+	stateChangeConf := &resource.StateChangeConf{
+		Pending: []string{LexModelBuildingServiceStatusCreated},
+		Target:  []string{}, // An empty slice indicates that the resource is gone
+		Refresh: LexBotAliasStatus(conn, botAliasName, botName),
+		Timeout: LexBotDeleteTimeout,
+	}
+	outputRaw, err := stateChangeConf.WaitForState()
+
+	if v, ok := outputRaw.(*lexmodelbuildingservice.GetBotAliasOutput); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
 func LexIntentDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, intentId string) (*lexmodelbuildingservice.GetIntentVersionsOutput, error) {
 	stateChangeConf := &resource.StateChangeConf{
 		Pending: []string{LexModelBuildingServiceStatusCreated},
