@@ -817,7 +817,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 		return fmt.Errorf("Unable to create Kinesis Analytics application: %s", err)
 	}
 
-	return resourceAwsKinesisAnalyticsV2ApplicationUpdate(d, meta)
+	return resourceAwsKinesisAnalyticsV2ApplicationRead(d, meta)
 }
 
 func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta interface{}) error {
@@ -880,133 +880,131 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 		version = 1
 	}
 
-	if !d.IsNewResource() {
-		updateApplicationOpts := &kinesisanalyticsv2.UpdateApplicationInput{
-			ApplicationName:             aws.String(name),
-			CurrentApplicationVersionId: aws.Int64(int64(version)),
+	updateApplicationOpts := &kinesisanalyticsv2.UpdateApplicationInput{
+		ApplicationName:             aws.String(name),
+		CurrentApplicationVersionId: aws.Int64(int64(version)),
+	}
+
+	applicationUpdate := createApplicationV2UpdateOpts(d)
+
+	if !reflect.DeepEqual(applicationUpdate, &kinesisanalyticsv2.UpdateApplicationInput{}) {
+		updateApplicationOpts.SetApplicationConfigurationUpdate(applicationUpdate.ApplicationConfigurationUpdate)
+		updateApplicationOpts.SetCloudWatchLoggingOptionUpdates(applicationUpdate.CloudWatchLoggingOptionUpdates)
+		_, updateErr := conn.UpdateApplication(updateApplicationOpts)
+		if updateErr != nil {
+			return updateErr
 		}
+		version = version + 1
+	}
 
-		applicationUpdate := createApplicationV2UpdateOpts(d)
+	oldLoggingOptions, newLoggingOptions := d.GetChange("cloudwatch_logging_options")
+	if len(oldLoggingOptions.([]interface{})) == 0 && len(newLoggingOptions.([]interface{})) > 0 {
+		if v, ok := d.GetOk("cloudwatch_logging_options"); ok {
+			clo := v.([]interface{})[0].(map[string]interface{})
+			cloudwatchLoggingOption := expandKinesisAnalyticsV2CloudwatchLoggingOption(clo)
+			addOpts := &kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionInput{
+				ApplicationName:             aws.String(name),
+				CurrentApplicationVersionId: aws.Int64(int64(version)),
+				CloudWatchLoggingOption:     cloudwatchLoggingOption,
+			}
+			// Retry for IAM eventual consistency
+			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+				_, err := conn.AddApplicationCloudWatchLoggingOption(addOpts)
+				if err != nil {
+					if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+						return resource.RetryableError(err)
+					}
+					return resource.NonRetryableError(err)
+				}
+				return nil
+			})
+			if isResourceTimeoutError(err) {
+				_, err = conn.AddApplicationCloudWatchLoggingOption(addOpts)
+			}
 
-		if !reflect.DeepEqual(applicationUpdate, &kinesisanalyticsv2.UpdateApplicationInput{}) {
-			updateApplicationOpts.SetApplicationConfigurationUpdate(applicationUpdate.ApplicationConfigurationUpdate)
-			updateApplicationOpts.SetCloudWatchLoggingOptionUpdates(applicationUpdate.CloudWatchLoggingOptionUpdates)
-			_, updateErr := conn.UpdateApplication(updateApplicationOpts)
-			if updateErr != nil {
-				return updateErr
+			if err != nil {
+				return fmt.Errorf("Unable to add CloudWatch logging options: %s", err)
 			}
 			version = version + 1
 		}
+	}
+	if d.HasChange("application_configuration.0.sql_application_configuration") {
+		oldConf, newConf := d.GetChange("application_configuration.0.sql_application_configuration")
+		o := oldConf.([]interface{})[0].(map[string]interface{})
+		n := newConf.([]interface{})[0].(map[string]interface{})
+		oldInputs := o["input"].([]interface{})
+		oldOutputs := o["output"].(*schema.Set).List()
+		newInputs := n["input"].([]interface{})
+		newOutputs := n["output"].(*schema.Set).List()
 
-		oldLoggingOptions, newLoggingOptions := d.GetChange("cloudwatch_logging_options")
-		if len(oldLoggingOptions.([]interface{})) == 0 && len(newLoggingOptions.([]interface{})) > 0 {
-			if v, ok := d.GetOk("cloudwatch_logging_options"); ok {
-				clo := v.([]interface{})[0].(map[string]interface{})
-				cloudwatchLoggingOption := expandKinesisAnalyticsV2CloudwatchLoggingOption(clo)
-				addOpts := &kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionInput{
-					ApplicationName:             aws.String(name),
-					CurrentApplicationVersionId: aws.Int64(int64(version)),
-					CloudWatchLoggingOption:     cloudwatchLoggingOption,
-				}
-				// Retry for IAM eventual consistency
-				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-					_, err := conn.AddApplicationCloudWatchLoggingOption(addOpts)
-					if err != nil {
-						if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
-							return resource.RetryableError(err)
-						}
-						return resource.NonRetryableError(err)
-					}
-					return nil
-				})
-				if isResourceTimeoutError(err) {
-					_, err = conn.AddApplicationCloudWatchLoggingOption(addOpts)
-				}
-
+		if len(oldInputs) == 0 && len(newInputs) > 0 {
+			i := newInputs[0].(map[string]interface{})
+			input := expandKinesisAnalyticsV2Input(i)
+			addOpts := &kinesisanalyticsv2.AddApplicationInputInput{
+				ApplicationName:             aws.String(name),
+				CurrentApplicationVersionId: aws.Int64(int64(version)),
+				Input:                       input,
+			}
+			// Retry for IAM eventual consistency
+			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+				_, err := conn.AddApplicationInput(addOpts)
 				if err != nil {
-					return fmt.Errorf("Unable to add CloudWatch logging options: %s", err)
+					if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+						return resource.RetryableError(err)
+					}
+					// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
+					if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "does not provide Invoke permissions on the Lambda resource") {
+						return resource.RetryableError(err)
+					}
+					return resource.NonRetryableError(err)
 				}
-				version = version + 1
+				return nil
+			})
+			if isResourceTimeoutError(err) {
+				_, err = conn.AddApplicationInput(addOpts)
+			}
+
+			if err != nil {
+				return fmt.Errorf("Unable to add application inputs: %s", err)
+			}
+			version = version + 1
+		}
+		if len(oldOutputs) == 0 && len(newOutputs) > 0 {
+			o := newOutputs[0].(map[string]interface{})
+			output := expandKinesisAnalyticsV2Output(o)
+			addOpts := &kinesisanalyticsv2.AddApplicationOutputInput{
+				ApplicationName:             aws.String(name),
+				CurrentApplicationVersionId: aws.Int64(int64(version)),
+				Output:                      output,
+			}
+			// Retry for IAM eventual consistency
+			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+				_, err := conn.AddApplicationOutput(addOpts)
+				if err != nil {
+					if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+						return resource.RetryableError(err)
+					}
+					// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
+					if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "does not provide Invoke permissions on the Lambda resource") {
+						return resource.RetryableError(err)
+					}
+					return resource.NonRetryableError(err)
+				}
+				return nil
+			})
+			if isResourceTimeoutError(err) {
+				_, err = conn.AddApplicationOutput(addOpts)
+			}
+			if err != nil {
+				return fmt.Errorf("Unable to add application outputs: %s", err)
 			}
 		}
-		if d.HasChange("application_configuration.0.sql_application_configuration") {
-			oldConf, newConf := d.GetChange("application_configuration.0.sql_application_configuration")
-			o := oldConf.([]interface{})[0].(map[string]interface{})
-			n := newConf.([]interface{})[0].(map[string]interface{})
-			oldInputs := o["input"].([]interface{})
-			oldOutputs := o["output"].(*schema.Set).List()
-			newInputs := n["input"].([]interface{})
-			newOutputs := n["output"].(*schema.Set).List()
-
-			if len(oldInputs) == 0 && len(newInputs) > 0 {
-				i := newInputs[0].(map[string]interface{})
-				input := expandKinesisAnalyticsV2Input(i)
-				addOpts := &kinesisanalyticsv2.AddApplicationInputInput{
-					ApplicationName:             aws.String(name),
-					CurrentApplicationVersionId: aws.Int64(int64(version)),
-					Input:                       input,
-				}
-				// Retry for IAM eventual consistency
-				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-					_, err := conn.AddApplicationInput(addOpts)
-					if err != nil {
-						if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
-							return resource.RetryableError(err)
-						}
-						// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
-						if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "does not provide Invoke permissions on the Lambda resource") {
-							return resource.RetryableError(err)
-						}
-						return resource.NonRetryableError(err)
-					}
-					return nil
-				})
-				if isResourceTimeoutError(err) {
-					_, err = conn.AddApplicationInput(addOpts)
-				}
-
-				if err != nil {
-					return fmt.Errorf("Unable to add application inputs: %s", err)
-				}
-				version = version + 1
-			}
-			if len(oldOutputs) == 0 && len(newOutputs) > 0 {
-				o := newOutputs[0].(map[string]interface{})
-				output := expandKinesisAnalyticsV2Output(o)
-				addOpts := &kinesisanalyticsv2.AddApplicationOutputInput{
-					ApplicationName:             aws.String(name),
-					CurrentApplicationVersionId: aws.Int64(int64(version)),
-					Output:                      output,
-				}
-				// Retry for IAM eventual consistency
-				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-					_, err := conn.AddApplicationOutput(addOpts)
-					if err != nil {
-						if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
-							return resource.RetryableError(err)
-						}
-						// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
-						if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "does not provide Invoke permissions on the Lambda resource") {
-							return resource.RetryableError(err)
-						}
-						return resource.NonRetryableError(err)
-					}
-					return nil
-				})
-				if isResourceTimeoutError(err) {
-					_, err = conn.AddApplicationOutput(addOpts)
-				}
-				if err != nil {
-					return fmt.Errorf("Unable to add application outputs: %s", err)
-				}
-			}
-		}
-		arn := d.Get("arn").(string)
-		if d.HasChange("tags") {
-			o, n := d.GetChange("tags")
-			if err := keyvaluetags.Kinesisanalyticsv2UpdateTags(conn, arn, o, n); err != nil {
-				return fmt.Errorf("error updating Kinesis Analytics Application (%s) tags: %s", arn, err)
-			}
+	}
+	arn := d.Get("arn").(string)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.Kinesisanalyticsv2UpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating Kinesis Analytics Application (%s) tags: %s", arn, err)
 		}
 	}
 
