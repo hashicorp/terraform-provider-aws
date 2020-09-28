@@ -170,7 +170,7 @@ func TestAccAWSKinesisAnalyticsV2Application_UpdateServiceExecutionRole(t *testi
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigBasicPlusDescription(rName),
+				Config: testAccKinesisAnalyticsV2ApplicationConfigBasicServiceExecutionRoleUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "0"),
