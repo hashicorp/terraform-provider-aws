@@ -196,6 +196,182 @@ func TestAccAWSKinesisAnalyticsV2Application_UpdateServiceExecutionRole(t *testi
 	})
 }
 
+func TestAccAWSKinesisAnalyticsV2Application_CloudWatchLoggingOptions_Add(t *testing.T) {
+	var v kinesisanalyticsv2.ApplicationDetail
+	resourceName := "aws_kinesisanalyticsv2_application.test"
+	iamRoleResourceName := "aws_iam_role.test.0"
+	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test.0"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsV2ApplicationConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "0"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "SQL-1_0"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsV2ApplicationConfigCloudWatchLoggingOptions(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "0"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "SQL-1_0"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsV2Application_CloudWatchLoggingOptions_Delete(t *testing.T) {
+	var v kinesisanalyticsv2.ApplicationDetail
+	resourceName := "aws_kinesisanalyticsv2_application.test"
+	iamRoleResourceName := "aws_iam_role.test.0"
+	cloudWatchLogStreamResourceName := "aws_cloudwatch_log_stream.test.0"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsV2ApplicationConfigCloudWatchLoggingOptions(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "0"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "SQL-1_0"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsV2ApplicationConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "0"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "SQL-1_0"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsV2Application_CloudWatchLoggingOptions_Update(t *testing.T) {
+	var v kinesisanalyticsv2.ApplicationDetail
+	resourceName := "aws_kinesisanalyticsv2_application.test"
+	iamRoleResourceName := "aws_iam_role.test.0"
+	cloudWatchLogStreamResourceName1 := "aws_cloudwatch_log_stream.test.0"
+	cloudWatchLogStreamResourceName2 := "aws_cloudwatch_log_stream.test.1"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsV2ApplicationConfigCloudWatchLoggingOptions(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "0"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName1, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "SQL-1_0"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsV2ApplicationConfigCloudWatchLoggingOptions(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "0"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", cloudWatchLogStreamResourceName2, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "SQL-1_0"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSKinesisAnalyticsV2Application_simpleSql(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
@@ -244,78 +420,6 @@ func TestAccAWSKinesisAnalyticsV2Application_UpdateApplicationCodeConfiguration(
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.text_content", "testCode2\n"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSKinesisAnalyticsV2Application_AddCloudWatchLoggingOptions(t *testing.T) {
-	var v kinesisanalyticsv2.ApplicationDetail
-	resourceName := "aws_kinesisanalyticsv2_application.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSimpleSql(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
-				),
-			},
-			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigCloudWatchLoggingOptions(rName, 0),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
-					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test.0", "arn"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSKinesisAnalyticsV2Application_UpdateCloudWatchLoggingOptions(t *testing.T) {
-	var v kinesisanalyticsv2.ApplicationDetail
-	resourceName := "aws_kinesisanalyticsv2_application.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigCloudWatchLoggingOptions(rName, 0),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test.0", "arn"),
-				),
-			},
-			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigCloudWatchLoggingOptions(rName, 1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
-					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test.1", "arn"),
 				),
 			},
 			{
@@ -1073,6 +1177,33 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName))
 }
 
+func testAccKinesisAnalyticsV2ApplicationConfigCloudWatchLoggingOptions(rName string, streamIndex int) string {
+	return composeConfig(
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
+		fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_log_stream" "test" {
+  count = 2
+
+  name           = "%[1]s.${count.index}"
+  log_group_name = aws_cloudwatch_log_group.test.name
+}
+
+resource "aws_kinesisanalyticsv2_application" "test" {
+  name                   = %[1]q
+  runtime_environment    = "SQL-1_0"
+  service_execution_role = aws_iam_role.test.0.arn
+
+  cloudwatch_logging_options {
+    log_stream_arn = aws_cloudwatch_log_stream.test.%[2]d.arn
+  }
+}
+`, rName, streamIndex))
+}
+
 func testAccKinesisAnalyticsV2ApplicationConfigSimpleSql(rName string) string {
 	return composeConfig(
 		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
@@ -1119,45 +1250,6 @@ resource "aws_kinesisanalyticsv2_application" "test" {
   }
 }
 `, rName))
-}
-
-func testAccKinesisAnalyticsV2ApplicationConfigCloudWatchLoggingOptions(rName string, streamIndex int) string {
-	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
-		fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
-resource "aws_cloudwatch_log_stream" "test" {
-  count = 2
-
-  name           = "%[1]s.${count.index}"
-  log_group_name = aws_cloudwatch_log_group.test.name
-}
-
-resource "aws_kinesisanalyticsv2_application" "test" {
-  name                   = %[1]q
-  runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.0.arn
-
-  application_configuration {
-    application_code_configuration {
-      code_content {
-        text_content = "testCode\n"
-      }
-
-      code_content_type = "PLAINTEXT"
-    }
-
-    sql_application_configuration {}
-  }
-
-  cloudwatch_logging_options {
-    log_stream_arn = aws_cloudwatch_log_stream.test.%[2]d.arn
-  }
-}
-`, rName, streamIndex))
 }
 
 func testAccKinesisAnalyticsV2ApplicationConfigKinesisFirehoseInput(rName string) string {

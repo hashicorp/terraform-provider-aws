@@ -870,24 +870,128 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 	if d.HasChanges("application_configuration", "cloudwatch_logging_options", "service_execution_role") {
 		applicationName := d.Get("name").(string)
 		currentApplicationVersionId := int64(d.Get("version_id").(int))
+		updateApplication := false
 
 		input := &kinesisanalyticsv2.UpdateApplicationInput{
-			ApplicationName:             aws.String(applicationName),
-			CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+			ApplicationName: aws.String(applicationName),
+		}
+
+		if d.HasChange("cloudwatch_logging_options") {
+			o, n := d.GetChange("cloudwatch_logging_options")
+
+			if len(o.([]interface{})) == 0 {
+				input := &kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionInput{
+					ApplicationName: aws.String(applicationName),
+					CloudWatchLoggingOption: &kinesisanalyticsv2.CloudWatchLoggingOption{
+						LogStreamARN: aws.String(n.([]interface{})[0].(map[string]interface{})["log_stream_arn"].(string)),
+					},
+					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+				}
+
+				log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), input)
+
+				var err error
+				var output *kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionOutput
+
+				// Retry for IAM eventual consistency
+				err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+					output, err = conn.AddApplicationCloudWatchLoggingOption(input)
+					if err != nil {
+						if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+							return resource.RetryableError(err)
+						}
+						return resource.NonRetryableError(err)
+					}
+					return nil
+				})
+
+				if isResourceTimeoutError(err) {
+					output, err = conn.AddApplicationCloudWatchLoggingOption(input)
+				}
+
+				if err != nil {
+					return fmt.Errorf("error adding Kinesis Analytics v2 Application (%s) CloudWatch logging option: %w", d.Id(), err)
+				}
+
+				currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
+			} else if len(n.([]interface{})) == 0 {
+				input := &kinesisanalyticsv2.DeleteApplicationCloudWatchLoggingOptionInput{
+					ApplicationName:             aws.String(applicationName),
+					CloudWatchLoggingOptionId:   aws.String(o.([]interface{})[0].(map[string]interface{})["cloudwatch_logging_option_id"].(string)),
+					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+				}
+
+				log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), input)
+
+				var err error
+				var output *kinesisanalyticsv2.DeleteApplicationCloudWatchLoggingOptionOutput
+
+				// Retry for IAM eventual consistency
+				err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+					output, err = conn.DeleteApplicationCloudWatchLoggingOption(input)
+					if err != nil {
+						if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+							return resource.RetryableError(err)
+						}
+						return resource.NonRetryableError(err)
+					}
+					return nil
+				})
+
+				if isResourceTimeoutError(err) {
+					output, err = conn.DeleteApplicationCloudWatchLoggingOption(input)
+				}
+
+				if err != nil {
+					return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s) CloudWatch logging option: %w", d.Id(), err)
+				}
+
+				currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
+			} else {
+				input.CloudWatchLoggingOptionUpdates = []*kinesisanalyticsv2.CloudWatchLoggingOptionUpdate{
+					{
+						CloudWatchLoggingOptionId: aws.String(o.([]interface{})[0].(map[string]interface{})["cloudwatch_logging_option_id"].(string)),
+						LogStreamARNUpdate:        aws.String(n.([]interface{})[0].(map[string]interface{})["log_stream_arn"].(string)),
+					},
+				}
+
+				updateApplication = true
+			}
 		}
 
 		if d.HasChange("service_execution_role") {
 			input.ServiceExecutionRoleUpdate = aws.String(d.Get("service_execution_role").(string))
+
+			updateApplication = true
 		}
 
-		log.Printf("[DEBUG] Updating Kinesis Analytics v2 Application (%s): %s", d.Id(), input)
-		output, err := conn.UpdateApplication(input)
+		if updateApplication {
+			input.CurrentApplicationVersionId = aws.Int64(currentApplicationVersionId)
 
-		if err != nil {
-			return fmt.Errorf("error updating Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
+			log.Printf("[DEBUG] Updating Kinesis Analytics v2 Application (%s): %s", d.Id(), input)
+
+			var err error
+
+			// Retry for IAM eventual consistency
+			err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+				_, err = conn.UpdateApplication(input)
+				if err != nil {
+					if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+						return resource.RetryableError(err)
+					}
+					return resource.NonRetryableError(err)
+				}
+				return nil
+			})
+
+			if isResourceTimeoutError(err) {
+				_, err = conn.UpdateApplication(input)
+			}
+
+			if err != nil {
+				return fmt.Errorf("error updating Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
+			}
 		}
-
-		currentApplicationVersionId = aws.Int64Value(output.ApplicationDetail.ApplicationVersionId)
 	}
 
 	if d.HasChange("tags") {
@@ -933,7 +1037,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdateOld(d *schema.ResourceData, m
 	if len(oldLoggingOptions.([]interface{})) == 0 && len(newLoggingOptions.([]interface{})) > 0 {
 		if v, ok := d.GetOk("cloudwatch_logging_options"); ok {
 			clo := v.([]interface{})[0].(map[string]interface{})
-			cloudwatchLoggingOption := expandKinesisAnalyticsV2CloudwatchLoggingOption(clo)
+			cloudwatchLoggingOption := expandKinesisAnalyticsV2CloudwatchLoggingOptionOld(clo)
 			addOpts := &kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionInput{
 				ApplicationName:             aws.String(name),
 				CurrentApplicationVersionId: aws.Int64(int64(version)),
@@ -1200,7 +1304,7 @@ func expandKinesisAnalyticsV2ApplicationConfigurationOld(runtime string, conf []
 	}
 }
 
-func expandKinesisAnalyticsV2CloudwatchLoggingOption(clo map[string]interface{}) *kinesisanalyticsv2.CloudWatchLoggingOption {
+func expandKinesisAnalyticsV2CloudwatchLoggingOptionOld(clo map[string]interface{}) *kinesisanalyticsv2.CloudWatchLoggingOption {
 	cloudwatchLoggingOption := &kinesisanalyticsv2.CloudWatchLoggingOption{
 		LogStreamARN: aws.String(clo["log_stream_arn"].(string)),
 	}
