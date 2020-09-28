@@ -17,6 +17,7 @@ func dataSourceAwsEc2InstanceType() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+
 			"current_generation": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -271,9 +272,7 @@ func dataSourceAwsEc2InstanceTypeRead(d *schema.ResourceData, meta interface{}) 
 	}
 	v := resp.InstanceTypes[0]
 	d.Set("instance_type", v.InstanceType)
-	if err := d.Set("current_generation", aws.BoolValue(v.CurrentGeneration)); err != nil {
-		return fmt.Errorf("error setting current_generation: %s", err)
-	}
+	d.Set("current_generation", v.CurrentGeneration)
 	if err := d.Set("free_tier_eligible", aws.BoolValue(v.FreeTierEligible)); err != nil {
 		return fmt.Errorf("error setting free_tier_eligible: %s", err)
 	}
