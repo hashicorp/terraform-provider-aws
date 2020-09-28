@@ -143,6 +143,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 			"application_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 
 				Elem: &schema.Resource{
