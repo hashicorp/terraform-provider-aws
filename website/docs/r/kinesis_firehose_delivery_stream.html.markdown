@@ -350,8 +350,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     access_key         = "my-key"
     buffering_size     = 15
     buffering_interval = 600
-    role_arn       = aws_iam_role.firehose.arn
-    s3_backup_mode = "FailedDataOnly"
+    role_arn           = aws_iam_role.firehose.arn
+    s3_backup_mode     = "FailedDataOnly"
 
     request_configuration {
       content_encoding = "GZIP"
