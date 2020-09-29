@@ -401,7 +401,7 @@ func TestAccAWSSagemakerNotebookInstance_direct_internet_access(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Disabled"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 				),
 			},
@@ -415,7 +415,7 @@ func TestAccAWSSagemakerNotebookInstance_direct_internet_access(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 				),
 			},
