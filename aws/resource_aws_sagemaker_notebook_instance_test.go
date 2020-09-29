@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func init() {
@@ -81,7 +80,7 @@ func testSweepSagemakerNotebookInstances(region string) error {
 func TestAccAWSSagemakerNotebookInstance_basic(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	var resourceName = "aws_sagemaker_notebook_instance.test"
+	resourceName := "aws_sagemaker_notebook_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -114,7 +113,8 @@ func TestAccAWSSagemakerNotebookInstance_basic(t *testing.T) {
 func TestAccAWSSagemakerNotebookInstance_update(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	var resourceName = "aws_sagemaker_notebook_instance.foo"
+	resourceName := "aws_sagemaker_notebook_instance.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -207,6 +207,7 @@ func TestAccAWSSagemakerNotebookInstance_LifecycleConfigName(t *testing.T) {
 func TestAccAWSSagemakerNotebookInstance_tags(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_notebook_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -217,20 +218,30 @@ func TestAccAWSSagemakerNotebookInstance_tags(t *testing.T) {
 				Config: testAccAWSSagemakerNotebookInstanceConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerNotebookInstanceExists("aws_sagemaker_notebook_instance.foo", &notebook),
-					resource.TestCheckResourceAttr("aws_sagemaker_notebook_instance.foo", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_sagemaker_notebook_instance.foo", "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
-
 			{
-				Config: testAccAWSSagemakerNotebookInstanceConfigTags2(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerNotebookInstanceExists("aws_sagemaker_notebook_instance.foo", &notebook),
-					testAccCheckAWSSagemakerNotebookInstanceTags(&notebook, "foo", ""),
-					testAccCheckAWSSagemakerNotebookInstanceTags(&notebook, "bar", "baz"),
-
-					resource.TestCheckResourceAttr("aws_sagemaker_notebook_instance.foo", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_sagemaker_notebook_instance.foo", "tags.bar", "baz"),
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -240,7 +251,7 @@ func TestAccAWSSagemakerNotebookInstance_tags(t *testing.T) {
 func TestAccAWSSagemakerNotebookInstance_disappears(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	var resourceName = "aws_sagemaker_notebook_instance.test"
+	resourceName := "aws_sagemaker_notebook_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -309,38 +320,28 @@ func testAccCheckAWSSagemakerNotebookInstanceExists(n string, notebook *sagemake
 	}
 }
 
-func testAccCheckAWSSagemakerNotebookInstanceName(notebook *sagemaker.DescribeNotebookInstanceOutput, expected string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		notebookName := notebook.NotebookInstanceName
-		if *notebookName != expected {
-			return fmt.Errorf("Bad Notebook Instance name: %s", *notebook.NotebookInstanceName)
-		}
-
-		return nil
-	}
-}
-
 func TestAccAWSSagemakerNotebookInstance_root_access(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
-	notebookName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerNotebookInstanceResourceNamePrefix)
-	var resourceName = "aws_sagemaker_notebook_instance.foo"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_notebook_instance.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerNotebookInstanceConfigRootAccess(notebookName, "Disabled"),
+				Config: testAccAWSSagemakerNotebookInstanceConfigRootAccess(rName, "Disabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
-					testAccCheckAWSSagemakerNotebookRootAccess(&notebook, "Disabled"),
+					resource.TestCheckResourceAttr(resourceName, "root_access", "Disabled"),
 				),
 			},
 			{
-				Config: testAccAWSSagemakerNotebookInstanceConfigRootAccess(notebookName, "Enabled"),
+				Config: testAccAWSSagemakerNotebookInstanceConfigRootAccess(rName, "Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
-					testAccCheckAWSSagemakerNotebookRootAccess(&notebook, "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, "root_access", "Enabled"),
 				),
 			},
 			{
@@ -354,25 +355,26 @@ func TestAccAWSSagemakerNotebookInstance_root_access(t *testing.T) {
 
 func TestAccAWSSagemakerNotebookInstance_direct_internet_access(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
-	notebookName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerNotebookInstanceResourceNamePrefix)
-	var resourceName = "aws_sagemaker_notebook_instance.foo"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_notebook_instance.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerNotebookInstanceConfigDirectInternetAccess(notebookName, "Disabled"),
+				Config: testAccAWSSagemakerNotebookInstanceConfigDirectInternetAccess(rName, "Disabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
-					testAccCheckAWSSagemakerNotebookDirectInternetAccess(&notebook, "Disabled"),
+					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Disabled"),
 				),
 			},
 			{
-				Config: testAccAWSSagemakerNotebookInstanceConfigDirectInternetAccess(notebookName, "Enabled"),
+				Config: testAccAWSSagemakerNotebookInstanceConfigDirectInternetAccess(rName, "Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
-					testAccCheckAWSSagemakerNotebookDirectInternetAccess(&notebook, "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
 				),
 			},
 			{
@@ -382,28 +384,6 @@ func TestAccAWSSagemakerNotebookInstance_direct_internet_access(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckAWSSagemakerNotebookRootAccess(notebook *sagemaker.DescribeNotebookInstanceOutput, expected string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rootAccess := notebook.RootAccess
-		if *rootAccess != expected {
-			return fmt.Errorf("root_access setting is incorrect: %s", *notebook.RootAccess)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckAWSSagemakerNotebookDirectInternetAccess(notebook *sagemaker.DescribeNotebookInstanceOutput, expected string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		directInternetAccess := notebook.DirectInternetAccess
-		if *directInternetAccess != expected {
-			return fmt.Errorf("direct_internet_access setting is incorrect: %s", *notebook.DirectInternetAccess)
-		}
-
-		return nil
-	}
 }
 
 func TestAccAWSSagemakerNotebookInstance_default_code_repository(t *testing.T) {
@@ -436,34 +416,6 @@ func testAccCheckAWSSagemakerNotebookDefaultCodeRepository(notebook *sagemaker.D
 		defaultCodeRepository := notebook.DefaultCodeRepository
 		if *defaultCodeRepository != expected {
 			return fmt.Errorf("default_code_repository setting is incorrect: %s", *notebook.DefaultCodeRepository)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckAWSSagemakerNotebookInstanceTags(notebook *sagemaker.DescribeNotebookInstanceOutput, key string, value string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
-
-		tags, err := keyvaluetags.SagemakerListTags(conn, aws.StringValue(notebook.NotebookInstanceArn))
-		if err != nil {
-			return err
-		}
-
-		m := tags.IgnoreAws().Map()
-		v, ok := m[key]
-		if value != "" && !ok {
-			return fmt.Errorf("Missing tag: %s", key)
-		} else if value == "" && ok {
-			return fmt.Errorf("Extra tag: %s", key)
-		}
-		if value == "" {
-			return nil
-		}
-
-		if v != value {
-			return fmt.Errorf("%s: bad value: %s", key, v)
 		}
 
 		return nil
