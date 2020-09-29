@@ -7,10 +7,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAwsLexSlotType_basic(t *testing.T) {
+func TestAccDataSourceAwsLexIntent_basic(t *testing.T) {
 	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	dataSourceName := "data.aws_lex_slot_type.test"
-	resourceName := "aws_lex_slot_type.test"
+	dataSourceName := "data.aws_lex_intent.test"
+	resourceName := "aws_lex_intent.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -18,17 +18,16 @@ func TestAccDataSourceAwsLexSlotType_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: composeConfig(
-					testAccAwsLexSlotTypeConfig_basic(rName),
-					testAccDataSourceAwsLexSlotTypeConfig_basic(),
+					testAccAwsLexIntentConfig_basic(rName),
+					testAccDataSourceAwsLexIntentConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "checksum", resourceName, "checksum"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "created_date", resourceName, "created_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "enumeration_value.#", resourceName, "enumeration_value.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "last_updated_date", resourceName, "last_updated_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "value_selection_strategy", resourceName, "value_selection_strategy"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "version", resourceName, "version"),
 				),
 			},
@@ -36,10 +35,10 @@ func TestAccDataSourceAwsLexSlotType_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsLexSlotType_withVersion(t *testing.T) {
+func TestAccDataSourceAwsLexIntent_withVersion(t *testing.T) {
 	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	dataSourceName := "data.aws_lex_slot_type.test"
-	resourceName := "aws_lex_slot_type.test"
+	dataSourceName := "data.aws_lex_intent.test"
+	resourceName := "aws_lex_intent.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -47,16 +46,16 @@ func TestAccDataSourceAwsLexSlotType_withVersion(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: composeConfig(
-					testAccAwsLexSlotTypeConfig_withVersion(rName),
-					testAccDataSourceAwsLexSlotTypeConfig_withVersion(),
+					testAccAwsLexIntentConfig_createVersion(rName),
+					testAccDataSourceAwsLexIntentConfig_withVersion(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "checksum", resourceName, "checksum"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "created_date", resourceName, "created_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "last_updated_date", resourceName, "last_updated_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "value_selection_strategy", resourceName, "value_selection_strategy"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "version", resourceName, "version"),
 				),
 			},
@@ -64,18 +63,18 @@ func TestAccDataSourceAwsLexSlotType_withVersion(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsLexSlotTypeConfig_basic() string {
+func testAccDataSourceAwsLexIntentConfig_basic() string {
 	return `
-data "aws_lex_slot_type" "test" {
-  name = aws_lex_slot_type.test.name
+data "aws_lex_intent" "test" {
+  name = aws_lex_intent.test.name
 }
 `
 }
 
-func testAccDataSourceAwsLexSlotTypeConfig_withVersion() string {
+func testAccDataSourceAwsLexIntentConfig_withVersion() string {
 	return `
-data "aws_lex_slot_type" "test" {
-  name    = aws_lex_slot_type.test.name
+data "aws_lex_intent" "test" {
+  name    = aws_lex_intent.test.name
   version = "1"
 }
 `

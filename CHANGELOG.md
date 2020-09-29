@@ -1,9 +1,17 @@
 ## 3.9.0 (Unreleased)
 
+FEATURES
+
+* **New Resource:** `aws_backup_vault_notifications` [GH-12501]
+* **New Resource:** `aws_glue_ml_transform` [GH-14909]
+* **New Resource:** `aws_lex_intent` [GH-8917]
+* **New Data Source:** `aws_lex_intent` [GH-8917]
+
 ENHANCEMENTS
 
+* resource/aws_appmesh_route: Add `retry_policy` attribute to support App Mesh retry policies [GH-11660]
+* resource/aws_glue_crawler: Add `connection_name` field to `s3_target` block [GH-15350]
 * resource/aws_sagemaker_notebook_instance: Ability to configure root access for Sagemaker notebook instances [GH-14184]
-
 
 ## 3.8.0 (September 24, 2020)
 

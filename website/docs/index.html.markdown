@@ -289,6 +289,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
     - [`aws_glue_connection` resource](/docs/providers/aws/r/glue_connection.html)
     - [`aws_glue_crawler` resource](/docs/providers/aws/r/glue_crawler.html)
     - [`aws_glue_job` resource](/docs/providers/aws/r/glue_job.html)
+    - [`aws_glue_ml_transform` resource](/docs/providers/aws/r/glue_ml_transform.html)
     - [`aws_glue_trigger` resource](/docs/providers/aws/r/glue_trigger.html)
     - [`aws_glue_user_defined_function` resource](/docs/providers/aws/r/glue_user_defined_function.html)
     - [`aws_glue_workflow` resource](/docs/providers/aws/r/glue_workflow.html)

@@ -95,13 +95,10 @@ func resourceAwsLexSlotType() *schema.Resource {
 				),
 			},
 			"value_selection_strategy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  lexmodelbuildingservice.SlotValueSelectionStrategyOriginalValue,
-				ValidateFunc: validation.StringInSlice([]string{
-					lexmodelbuildingservice.SlotValueSelectionStrategyOriginalValue,
-					lexmodelbuildingservice.SlotValueSelectionStrategyTopResolution,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      lexmodelbuildingservice.SlotValueSelectionStrategyOriginalValue,
+				ValidateFunc: validation.StringInSlice(lexmodelbuildingservice.SlotValueSelectionStrategy_Values(), false),
 			},
 			"version": {
 				Type:     schema.TypeString,
@@ -186,7 +183,7 @@ func resourceAwsLexSlotTypeRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func getLatestLexSlotTypeVersion(conn *lexmodelbuildingservice.LexModelBuildingService, input *lexmodelbuildingservice.GetSlotTypeVersionsInput) (string, error) {
-	version := "$LATEST"
+	version := LexSlotTypeVersionLatest
 
 	for {
 		page, err := conn.GetSlotTypeVersions(input)
