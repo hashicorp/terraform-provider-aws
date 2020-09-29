@@ -5,6 +5,7 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -23,12 +24,33 @@ func init() {
 	})
 }
 
+func testSweepElasticacheReplicationGroupsWorker(workerID int, conn *elasticache.ElastiCache, jobs <-chan string, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for id := range jobs {
+		log.Printf("[INFO] Deleting Elasticache Replication Group (worker %v): %s", workerID, id)
+		err := deleteElasticacheReplicationGroup(id, conn)
+		if err != nil {
+			log.Printf("[ERROR] Failed to delete Elasticache Replication Group (worker %v) (id %s): %s", workerID, id, err)
+		}
+	}
+}
+
 func testSweepElasticacheReplicationGroups(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).elasticacheconn
+
+	maxJobs := 20
+	var wg sync.WaitGroup
+	jobs := make(chan string, maxJobs)
+
+	for workerID := 0; workerID < maxJobs; workerID++ {
+		wg.Add(1)
+		go testSweepElasticacheReplicationGroupsWorker(workerID, conn, jobs, &wg)
+	}
 
 	err = conn.DescribeReplicationGroupsPages(&elasticache.DescribeReplicationGroupsInput{}, func(page *elasticache.DescribeReplicationGroupsOutput, isLast bool) bool {
 		if len(page.ReplicationGroups) == 0 {
@@ -38,15 +60,12 @@ func testSweepElasticacheReplicationGroups(region string) error {
 
 		for _, replicationGroup := range page.ReplicationGroups {
 			id := aws.StringValue(replicationGroup.ReplicationGroupId)
-
-			log.Printf("[INFO] Deleting Elasticache Replication Group: %s", id)
-			err := deleteElasticacheReplicationGroup(id, conn)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete Elasticache Replication Group (%s): %s", id, err)
-			}
+			jobs <- id
 		}
+
 		return !isLast
 	})
+
 	if err != nil {
 		if testSweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Elasticache Replication Group sweep for %s: %s", region, err)
@@ -54,6 +73,10 @@ func testSweepElasticacheReplicationGroups(region string) error {
 		}
 		return fmt.Errorf("Error retrieving Elasticache Replication Groups: %s", err)
 	}
+
+	close(jobs)
+	wg.Wait()
+
 	return nil
 }
 
