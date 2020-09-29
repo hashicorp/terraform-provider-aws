@@ -67,6 +67,10 @@ The `s3_content_location` object supports the following:
 * `file_key` - (Required) The file key for the object containing the application code.
 * `object_version` - (Optional) The version of the object containing the application code.
 
+The `application_snapshot_configuration` object supports the following:
+
+* `snapshots_enabled` - (Required) Describes whether snapshots are enabled for a Flink-based Kinesis Data Analytics application.
+
 The `cloudwatch_logging_options` object supports the following:
 
 * `log_stream_arn` - (Required) The ARN of the CloudWatch log stream to receive application messages.

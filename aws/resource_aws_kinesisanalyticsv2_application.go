@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -208,11 +207,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"snapshots_enabled": {
 										Type:     schema.TypeBool,
-										Optional: true,
-										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-											snapshotsEnabled := strconv.FormatBool(d.Get(k).(bool))
-											return snapshotsEnabled == old
-										},
+										Required: true,
 									},
 								},
 							},
@@ -979,6 +974,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 				applicationConfigurationUpdate.ApplicationCodeConfigurationUpdate = expandKinesisAnalyticsV2ApplicationCodeConfigurationUpdate(d.Get("application_configuration.0.application_code_configuration").([]interface{}))
 			}
 
+			if d.HasChange("application_configuration.0.application_snapshot_configuration") {
+				applicationConfigurationUpdate.ApplicationSnapshotConfigurationUpdate = expandKinesisAnalyticsV2ApplicationSnapshotConfigurationUpdate(d.Get("application_configuration.0.application_snapshot_configuration").([]interface{}))
+			}
+
 			input.ApplicationConfigurationUpdate = applicationConfigurationUpdate
 
 			updateApplication = true
@@ -1267,6 +1266,18 @@ func expandKinesisAnalyticsV2ApplicationConfiguration(vApplicationConfiguration 
 		applicationConfiguration.ApplicationCodeConfiguration = applicationCodeConfiguration
 	}
 
+	if vApplicationSnapshotConfiguration, ok := mApplicationConfiguration["application_snapshot_configuration"].([]interface{}); ok && len(vApplicationSnapshotConfiguration) > 0 && vApplicationSnapshotConfiguration[0] != nil {
+		applicationSnapshotConfiguration := &kinesisanalyticsv2.ApplicationSnapshotConfiguration{}
+
+		mApplicationSnapshotConfiguration := vApplicationSnapshotConfiguration[0].(map[string]interface{})
+
+		if vSnapshotsEnabled, ok := mApplicationSnapshotConfiguration["snapshots_enabled"].(bool); ok {
+			applicationSnapshotConfiguration.SnapshotsEnabled = aws.Bool(vSnapshotsEnabled)
+		}
+
+		applicationConfiguration.ApplicationSnapshotConfiguration = applicationSnapshotConfiguration
+	}
+
 	return applicationConfiguration
 }
 
@@ -1301,6 +1312,14 @@ func flattenKinesisAnalyticsV2ApplicationConfigurationDescription(applicationCon
 		}
 
 		mApplicationConfiguration["application_code_configuration"] = []interface{}{mApplicationCodeConfiguration}
+	}
+
+	if applicationSnapshotConfigurationDescription := applicationConfigurationDescription.ApplicationSnapshotConfigurationDescription; applicationSnapshotConfigurationDescription != nil {
+		mApplicationSnapshotConfiguration := map[string]interface{}{
+			"snapshots_enabled": aws.BoolValue(applicationSnapshotConfigurationDescription.SnapshotsEnabled),
+		}
+
+		mApplicationConfiguration["application_snapshot_configuration"] = []interface{}{mApplicationSnapshotConfiguration}
 	}
 
 	return []interface{}{mApplicationConfiguration}
@@ -1350,6 +1369,22 @@ func expandKinesisAnalyticsV2ApplicationCodeConfigurationUpdate(vApplicationCode
 	}
 
 	return applicationCodeConfigurationUpdate
+}
+
+func expandKinesisAnalyticsV2ApplicationSnapshotConfigurationUpdate(vApplicationSnapshotConfiguration []interface{}) *kinesisanalyticsv2.ApplicationSnapshotConfigurationUpdate {
+	if len(vApplicationSnapshotConfiguration) == 0 || vApplicationSnapshotConfiguration[0] == nil {
+		return nil
+	}
+
+	applicationSnapshotConfigurationUpdate := &kinesisanalyticsv2.ApplicationSnapshotConfigurationUpdate{}
+
+	mApplicationSnapshotConfiguration := vApplicationSnapshotConfiguration[0].(map[string]interface{})
+
+	if vSnapshotsEnabled, ok := mApplicationSnapshotConfiguration["snapshots_enabled"].(bool); ok {
+		applicationSnapshotConfigurationUpdate.SnapshotsEnabledUpdate = aws.Bool(vSnapshotsEnabled)
+	}
+
+	return applicationSnapshotConfigurationUpdate
 }
 
 func expandKinesisAnalyticsV2CloudWatchLoggingOptions(vCloudWatchLoggingOptions []interface{}) []*kinesisanalyticsv2.CloudWatchLoggingOption {
