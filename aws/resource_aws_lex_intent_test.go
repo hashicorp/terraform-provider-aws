@@ -463,7 +463,7 @@ func TestAccAwsLexIntent_slotsCustom(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "slot.0.name", "FlowerType"),
 					resource.TestCheckResourceAttr(rName, "slot.0.priority", "1"),
 					resource.TestCheckResourceAttr(rName, "slot.0.sample_utterances.#", "1"),
-					resource.TestCheckResourceAttr(rName, "slot.0.sample_utterances.0", "I would like to order ​{FlowerType}​"),
+					resource.TestCheckResourceAttr(rName, "slot.0.sample_utterances.0", "I would like to order {FlowerType}"),
 					resource.TestCheckResourceAttr(rName, "slot.0.slot_constraint", "Required"),
 					resource.TestCheckResourceAttr(rName, "slot.0.slot_type", testIntentID),
 					resource.TestCheckResourceAttr(rName, "slot.0.value_elicitation_prompt.#", "1"),
