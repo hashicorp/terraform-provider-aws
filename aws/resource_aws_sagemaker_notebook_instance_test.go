@@ -200,6 +200,13 @@ func TestAccAWSSagemakerNotebookInstance_LifecycleConfigName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccAWSSagemakerNotebookInstanceBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_config_name", ""),
+				),
+			},
 		},
 	})
 }
@@ -217,7 +224,7 @@ func TestAccAWSSagemakerNotebookInstance_tags(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerNotebookInstanceConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerNotebookInstanceExists("aws_sagemaker_notebook_instance.foo", &notebook),
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -243,6 +250,32 @@ func TestAccAWSSagemakerNotebookInstance_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerNotebookInstance_kms(t *testing.T) {
+	var notebook sagemaker.DescribeNotebookInstanceOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_notebook_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerNotebookInstanceKMSConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -338,16 +371,16 @@ func TestAccAWSSagemakerNotebookInstance_root_access(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSSagemakerNotebookInstanceConfigRootAccess(rName, "Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "root_access", "Enabled"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -368,19 +401,23 @@ func TestAccAWSSagemakerNotebookInstance_direct_internet_access(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Disabled"),
-				),
-			},
-			{
-				Config: testAccAWSSagemakerNotebookInstanceConfigDirectInternetAccess(rName, "Enabled"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet", "id"),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigDirectInternetAccess(rName, "Enabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet", "id"),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+				),
 			},
 		},
 	})
@@ -519,7 +556,8 @@ resource "aws_sagemaker_notebook_instance" "foo" {
 }
 
 func testAccAWSSagemakerNotebookInstanceConfigDirectInternetAccess(rName string, directInternetAccess string) string {
-	return testAccAWSSagemakerNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+	return testAccAWSSagemakerNotebookInstanceBaseConfig(rName) +
+		fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "foo" {
   name                   = %[1]q
   role_arn               = aws_iam_role.test.arn
@@ -537,13 +575,17 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
-}
-
 resource "aws_subnet" "test" {
   vpc_id     = aws_vpc.test.id
   cidr_block = "10.0.0.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -609,4 +651,37 @@ resource "aws_subnet" "sagemaker" {
   }
 }
 `, notebookName, defaultCodeRepository)
+}
+
+func testAccAWSSagemakerNotebookInstanceKMSConfig(rName string) string {
+	return testAccAWSSagemakerNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description = "Terraform acc test %[1]s"
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_sagemaker_notebook_instance" "test" {
+  name          = %[1]q
+  role_arn      = aws_iam_role.test.arn
+  instance_type = "ml.t2.medium"
+  kms_key_id    = aws_kms_key.test.id
+}
+`, rName)
 }
