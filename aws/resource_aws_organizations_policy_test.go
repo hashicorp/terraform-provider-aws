@@ -454,7 +454,7 @@ resource "aws_organizations_policy" "test" {
 }
 EOF
 
-  name        = "%s"
+  name = "%s"
 
   depends_on = [aws_organizations_organization.test]
 
@@ -482,7 +482,7 @@ resource "aws_organizations_policy" "test" {
 }
 EOF
 
-  name        = "%s"
+  name = "%s"
 
   depends_on = [aws_organizations_organization.test]
 
@@ -510,7 +510,7 @@ resource "aws_organizations_policy" "test" {
 }
 EOF
 
-  name        = "%s"
+  name = "%s"
 
   depends_on = [aws_organizations_organization.test]
 
@@ -537,7 +537,7 @@ resource "aws_organizations_policy" "test" {
 }
 EOF
 
-  name        = "%s"
+  name = "%s"
 
   depends_on = [aws_organizations_organization.test]
 }

@@ -764,7 +764,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -787,7 +786,6 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_s3_bucket" "test" {
@@ -817,7 +815,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -840,7 +837,6 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_s3_bucket" "test" {
@@ -951,7 +947,7 @@ resource "aws_storagegateway_smb_file_share" "test" {
   authentication = "GuestAccess"
   gateway_arn    = aws_storagegateway_gateway.test.arn
   kms_encrypted  = true
-  kms_key_arn    = aws_kms_key.test.0.arn
+  kms_key_arn    = aws_kms_key.test[0].arn
   location_arn   = aws_s3_bucket.test.arn
   role_arn       = aws_iam_role.test.arn
 }
@@ -972,7 +968,7 @@ resource "aws_storagegateway_smb_file_share" "test" {
   authentication = "GuestAccess"
   gateway_arn    = aws_storagegateway_gateway.test.arn
   kms_encrypted  = true
-  kms_key_arn    = aws_kms_key.test.1.arn
+  kms_key_arn    = aws_kms_key.test[1].arn
   location_arn   = aws_s3_bucket.test.arn
   role_arn       = aws_iam_role.test.arn
 }
@@ -1145,10 +1141,10 @@ resource "aws_cloudwatch_log_group" "test2" {
 resource "aws_storagegateway_smb_file_share" "test" {
   # Use GuestAccess to simplify testing
   authentication        = "GuestAccess"
-  gateway_arn           = "${aws_storagegateway_gateway.test.arn}"
-  location_arn          = "${aws_s3_bucket.test.arn}"
-  role_arn              = "${aws_iam_role.test.arn}"
-  audit_destination_arn = "${aws_cloudwatch_log_group.test2.arn}"
+  gateway_arn           = aws_storagegateway_gateway.test.arn
+  location_arn          = aws_s3_bucket.test.arn
+  role_arn              = aws_iam_role.test.arn
+  audit_destination_arn = aws_cloudwatch_log_group.test2.arn
 }
 `, rName)
 }
