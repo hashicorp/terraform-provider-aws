@@ -5163,6 +5163,41 @@ func expandAppmeshRouteSpec(vSpec []interface{}) *appmesh.RouteSpec {
 
 			spec.HttpRoute.Match = httpRouteMatch
 		}
+
+		if vHttpRetryPolicy, ok := mHttpRoute["retry_policy"].([]interface{}); ok && len(vHttpRetryPolicy) > 0 && vHttpRetryPolicy[0] != nil {
+			httpRetryPolicy := &appmesh.HttpRetryPolicy{}
+
+			mHttpRetryPolicy := vHttpRetryPolicy[0].(map[string]interface{})
+
+			if vMaxRetries, ok := mHttpRetryPolicy["max_retries"].(int); ok && vMaxRetries > 0 {
+				httpRetryPolicy.MaxRetries = aws.Int64(int64(vMaxRetries))
+			}
+
+			if vHttpRetryEvents, ok := mHttpRetryPolicy["http_retry_events"].(*schema.Set); ok && vHttpRetryEvents.Len() > 0 {
+				httpRetryPolicy.HttpRetryEvents = expandStringSet(vHttpRetryEvents)
+			}
+
+			if vPerRetryTimeout, ok := mHttpRetryPolicy["per_retry_timeout"].([]interface{}); ok && len(vPerRetryTimeout) > 0 && vPerRetryTimeout[0] != nil {
+				perRetryTimeout := &appmesh.Duration{}
+
+				mPerRetryTimeout := vPerRetryTimeout[0].(map[string]interface{})
+
+				if vUnit, ok := mPerRetryTimeout["unit"].(string); ok && vUnit != "" {
+					perRetryTimeout.Unit = aws.String(vUnit)
+				}
+				if vValue, ok := mPerRetryTimeout["value"].(int); ok && vValue > 0 {
+					perRetryTimeout.Value = aws.Int64(int64(vValue))
+				}
+
+				httpRetryPolicy.PerRetryTimeout = perRetryTimeout
+			}
+
+			if vTcpRetryEvents, ok := mHttpRetryPolicy["tcp_retry_events"].(*schema.Set); ok && vTcpRetryEvents.Len() > 0 {
+				httpRetryPolicy.TcpRetryEvents = expandStringSet(vTcpRetryEvents)
+			}
+
+			spec.HttpRoute.RetryPolicy = httpRetryPolicy
+		}
 	}
 
 	if vTcpRoute, ok := mSpec["tcp_route"].([]interface{}); ok && len(vTcpRoute) > 0 && vTcpRoute[0] != nil {
@@ -5228,7 +5263,7 @@ func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 
 				mHttpRoute["action"] = []interface{}{
 					map[string]interface{}{
-						"weighted_target": schema.NewSet(appmeshWeightedTargetHash, vWeightedTargets),
+						"weighted_target": vWeightedTargets,
 					},
 				}
 			}
@@ -5268,12 +5303,31 @@ func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 
 			mHttpRoute["match"] = []interface{}{
 				map[string]interface{}{
-					"header": schema.NewSet(appmeshHttpRouteHeaderHash, vHttpRouteHeaders),
+					"header": vHttpRouteHeaders,
 					"method": aws.StringValue(httpRouteMatch.Method),
 					"prefix": aws.StringValue(httpRouteMatch.Prefix),
 					"scheme": aws.StringValue(httpRouteMatch.Scheme),
 				},
 			}
+		}
+
+		if httpRetryPolicy := httpRoute.RetryPolicy; httpRetryPolicy != nil {
+			mHttpRetryPolicy := map[string]interface{}{
+				"http_retry_events": flattenStringSet(httpRetryPolicy.HttpRetryEvents),
+				"max_retries":       int(aws.Int64Value(httpRetryPolicy.MaxRetries)),
+				"tcp_retry_events":  flattenStringSet(httpRetryPolicy.TcpRetryEvents),
+			}
+
+			if perRetryTimeout := httpRetryPolicy.PerRetryTimeout; perRetryTimeout != nil {
+				mPerRetryTimeout := map[string]interface{}{
+					"unit":  aws.StringValue(perRetryTimeout.Unit),
+					"value": int(aws.Int64Value(perRetryTimeout.Value)),
+				}
+
+				mHttpRetryPolicy["per_retry_timeout"] = []interface{}{mPerRetryTimeout}
+			}
+
+			mHttpRoute["retry_policy"] = []interface{}{mHttpRetryPolicy}
 		}
 
 		mSpec["http_route"] = []interface{}{mHttpRoute}
@@ -5297,7 +5351,7 @@ func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 
 				mTcpRoute["action"] = []interface{}{
 					map[string]interface{}{
-						"weighted_target": schema.NewSet(appmeshWeightedTargetHash, vWeightedTargets),
+						"weighted_target": vWeightedTargets,
 					},
 				}
 			}
