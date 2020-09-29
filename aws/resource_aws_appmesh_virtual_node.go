@@ -44,6 +44,14 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 
+			"mesh_owner": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validateAwsAccountId,
+			},
+
 			"spec": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -277,6 +285,11 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 				Computed: true,
 			},
 
+			"resource_owner": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -290,6 +303,9 @@ func resourceAwsAppmeshVirtualNodeCreate(d *schema.ResourceData, meta interface{
 		VirtualNodeName: aws.String(d.Get("name").(string)),
 		Spec:            expandAppmeshVirtualNodeSpec(d.Get("spec").([]interface{})),
 		Tags:            keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AppmeshTags(),
+	}
+	if v, ok := d.GetOk("mesh_owner"); ok {
+		req.MeshOwner = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh virtual node: %#v", req)
@@ -307,10 +323,15 @@ func resourceAwsAppmeshVirtualNodeRead(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).appmeshconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.DescribeVirtualNode(&appmesh.DescribeVirtualNodeInput{
+	req := &appmesh.DescribeVirtualNodeInput{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
 		VirtualNodeName: aws.String(d.Get("name").(string)),
-	})
+	}
+	if v, ok := d.GetOk("mesh_owner"); ok {
+		req.MeshOwner = aws.String(v.(string))
+	}
+
+	resp, err := conn.DescribeVirtualNode(req)
 	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] App Mesh virtual node (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -328,9 +349,11 @@ func resourceAwsAppmeshVirtualNodeRead(d *schema.ResourceData, meta interface{})
 	arn := aws.StringValue(resp.VirtualNode.Metadata.Arn)
 	d.Set("name", resp.VirtualNode.VirtualNodeName)
 	d.Set("mesh_name", resp.VirtualNode.MeshName)
+	d.Set("mesh_owner", resp.VirtualNode.Metadata.MeshOwner)
 	d.Set("arn", arn)
 	d.Set("created_date", resp.VirtualNode.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", resp.VirtualNode.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set("resource_owner", resp.VirtualNode.Metadata.ResourceOwner)
 	err = d.Set("spec", flattenAppmeshVirtualNodeSpec(resp.VirtualNode.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
@@ -358,6 +381,9 @@ func resourceAwsAppmeshVirtualNodeUpdate(d *schema.ResourceData, meta interface{
 			MeshName:        aws.String(d.Get("mesh_name").(string)),
 			VirtualNodeName: aws.String(d.Get("name").(string)),
 			Spec:            expandAppmeshVirtualNodeSpec(v.([]interface{})),
+		}
+		if v, ok := d.GetOk("mesh_owner"); ok {
+			req.MeshOwner = aws.String(v.(string))
 		}
 
 		log.Printf("[DEBUG] Updating App Mesh virtual node: %#v", req)

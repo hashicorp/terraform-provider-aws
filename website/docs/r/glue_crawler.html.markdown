@@ -108,6 +108,8 @@ The following arguments are supported:
 ### dynamodb_target Argument Reference
 
 * `path` - (Required) The name of the DynamoDB table to crawl.
+* `scan_all` - (Optional) Indicates whether to scan all the records, or to sample rows from the table. Scanning all the records can take a long time when the table is not a high throughput table.  defaults to `true`.
+* `scan_rate` - (Optional) The percentage of the configured read capacity units to use by the AWS Glue crawler. The valid values are null or a value between 0.1 to 1.5.
 
 ### jdbc_target Argument Reference
 
@@ -118,6 +120,7 @@ The following arguments are supported:
 ### s3_target Argument Reference
 
 * `path` - (Required) The path to the Amazon S3 target.
+* `connection_name` - (Optional) The name of a connection which allows crawler to access data in S3 within a VPC.
 * `exclusions` - (Optional) A list of glob patterns used to exclude from the crawl.
 
 ### catalog_target Argument Reference

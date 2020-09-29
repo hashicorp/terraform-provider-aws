@@ -70,11 +70,6 @@ behavior "deprecated_import_commenter" "sdkv1_deprecated" {
   EOF
 }
 
-behavior "opened_pull_request_labeler" "triage" {
-  labels             = ["needs-triage"]
-  skip_collaborators = true
-}
-
 queued_behavior "release_commenter" "releases" {
   repo_prefix = "terraform-provider-"
 

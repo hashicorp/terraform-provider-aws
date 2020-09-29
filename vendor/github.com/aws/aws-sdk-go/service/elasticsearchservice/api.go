@@ -11300,6 +11300,9 @@ func InboundCrossClusterSearchConnectionStatusCode_Values() []string {
 //    * ES_APPLICATION_LOGS: Elasticsearch application logs contain information
 //    about errors and warnings raised during the operation of the service and
 //    can be useful for troubleshooting.
+//
+//    * AUDIT_LOGS: Audit logs contain records of user requests for access from
+//    the domain.
 const (
 	// LogTypeIndexSlowLogs is a LogType enum value
 	LogTypeIndexSlowLogs = "INDEX_SLOW_LOGS"
@@ -11309,6 +11312,9 @@ const (
 
 	// LogTypeEsApplicationLogs is a LogType enum value
 	LogTypeEsApplicationLogs = "ES_APPLICATION_LOGS"
+
+	// LogTypeAuditLogs is a LogType enum value
+	LogTypeAuditLogs = "AUDIT_LOGS"
 )
 
 // LogType_Values returns all elements of the LogType enum
@@ -11317,6 +11323,7 @@ func LogType_Values() []string {
 		LogTypeIndexSlowLogs,
 		LogTypeSearchSlowLogs,
 		LogTypeEsApplicationLogs,
+		LogTypeAuditLogs,
 	}
 }
 

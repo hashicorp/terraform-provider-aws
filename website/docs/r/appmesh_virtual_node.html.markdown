@@ -175,6 +175,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name to use for the virtual node.
 * `mesh_name` - (Required) The name of the service mesh in which to create the virtual node.
+* `mesh_owner` - (Optional) The AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `spec` - (Required) The virtual node specification to apply.
 * `tags` - (Optional) A map of tags to assign to the resource.
 
@@ -249,6 +250,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the virtual node.
 * `created_date` - The creation date of the virtual node.
 * `last_updated_date` - The last update date of the virtual node.
+* `resource_owner` - The resource owner's AWS account ID.
 
 ## Import
 
@@ -258,3 +260,5 @@ e.g.
 ```
 $ terraform import aws_appmesh_virtual_node.serviceb1 simpleapp/serviceBv1
 ```
+
+[1]: /docs/providers/aws/index.html

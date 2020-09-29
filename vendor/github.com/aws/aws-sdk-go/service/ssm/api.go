@@ -15852,10 +15852,10 @@ type AttachmentsSource struct {
 	// to a document. The format for Value depends on the type of key you specify.
 	//
 	//    * For the key SourceUrl, the value is an S3 bucket location. For example:
-	//    "Values": [ "s3://my-bucket/my-folder" ]
+	//    "Values": [ "s3://doc-example-bucket/my-folder" ]
 	//
 	//    * For the key S3FileUrl, the value is a file in an S3 bucket. For example:
-	//    "Values": [ "s3://my-bucket/my-folder/my-file.py" ]
+	//    "Values": [ "s3://doc-example-bucket/my-folder/my-file.py" ]
 	//
 	//    * For the key AttachmentReference, the value is constructed from the name
 	//    of another SSM document in your account, a version number of that document,
@@ -17497,13 +17497,13 @@ type CommandPlugin struct {
 	// This was requested when issuing the command. For example, in the following
 	// response:
 	//
-	// test_folder/ab19cb99-a030-46dd-9dfc-8eSAMPLEPre-Fix/i-1234567876543/awsrunShellScript
+	// doc-example-bucket/ab19cb99-a030-46dd-9dfc-8eSAMPLEPre-Fix/i-02573cafcfEXAMPLE/awsrunShellScript
 	//
-	// test_folder is the name of the S3 bucket;
+	// doc-example-bucket is the name of the S3 bucket;
 	//
 	// ab19cb99-a030-46dd-9dfc-8eSAMPLEPre-Fix is the name of the S3 prefix;
 	//
-	// i-1234567876543 is the instance ID;
+	// i-02573cafcfEXAMPLE is the instance ID;
 	//
 	// awsrunShellScript is the name of the plugin.
 	OutputS3BucketName *string `min:"3" type:"string"`
@@ -17512,13 +17512,13 @@ type CommandPlugin struct {
 	// executions should be stored. This was requested when issuing the command.
 	// For example, in the following response:
 	//
-	// test_folder/ab19cb99-a030-46dd-9dfc-8eSAMPLEPre-Fix/i-1234567876543/awsrunShellScript
+	// doc-example-bucket/ab19cb99-a030-46dd-9dfc-8eSAMPLEPre-Fix/i-02573cafcfEXAMPLE/awsrunShellScript
 	//
-	// test_folder is the name of the S3 bucket;
+	// doc-example-bucket is the name of the S3 bucket;
 	//
 	// ab19cb99-a030-46dd-9dfc-8eSAMPLEPre-Fix is the name of the S3 prefix;
 	//
-	// i-1234567876543 is the instance ID;
+	// i-02573cafcfEXAMPLE is the instance ID;
 	//
 	// awsrunShellScript is the name of the plugin.
 	OutputS3KeyPrefix *string `type:"string"`
@@ -17859,7 +17859,8 @@ type ComplianceItemEntry struct {
 	// Severity is a required field
 	Severity *string `type:"string" required:"true" enum:"ComplianceSeverity"`
 
-	// The status of the compliance item. An item is either COMPLIANT or NON_COMPLIANT.
+	// The status of the compliance item. An item is either COMPLIANT, NON_COMPLIANT,
+	// or an empty string (for Windows patches that aren't applicable).
 	//
 	// Status is a required field
 	Status *string `type:"string" required:"true" enum:"ComplianceStatus"`
@@ -35089,7 +35090,7 @@ type ListResourceDataSyncInput struct {
 	NextToken *string `type:"string"`
 
 	// View a list of resource data syncs according to the sync type. Specify SyncToDestination
-	// to view resource data syncs that synchronize data to an Amazon S3 buckets.
+	// to view resource data syncs that synchronize data to an Amazon S3 bucket.
 	// Specify SyncFromSource to view resource data syncs from AWS Organizations
 	// or from multiple AWS Regions.
 	SyncType *string `min:"1" type:"string"`

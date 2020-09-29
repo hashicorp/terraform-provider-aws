@@ -13,6 +13,105 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
 )
 
+const opAssociateConnectionAlias = "AssociateConnectionAlias"
+
+// AssociateConnectionAliasRequest generates a "aws/request.Request" representing the
+// client's request for the AssociateConnectionAlias operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AssociateConnectionAlias for more information on using the AssociateConnectionAlias
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AssociateConnectionAliasRequest method.
+//    req, resp := client.AssociateConnectionAliasRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/AssociateConnectionAlias
+func (c *WorkSpaces) AssociateConnectionAliasRequest(input *AssociateConnectionAliasInput) (req *request.Request, output *AssociateConnectionAliasOutput) {
+	op := &request.Operation{
+		Name:       opAssociateConnectionAlias,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AssociateConnectionAliasInput{}
+	}
+
+	output = &AssociateConnectionAliasOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// AssociateConnectionAlias API operation for Amazon WorkSpaces.
+//
+// Associates the specified connection alias with the specified directory to
+// enable cross-Region redirection. For more information, see Cross-Region Redirection
+// for Amazon WorkSpaces (https://docs.aws.amazon.com/workspaces/latest/adminguide/cross-region-redirection.html).
+//
+// Before performing this operation, call DescribeConnectionAliases (https://docs.aws.amazon.com/workspaces/latest/api/API_DescribeConnectionAliases.html)
+// to make sure that the current state of the connection alias is CREATED.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation AssociateConnectionAlias for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceAssociatedException
+//   The resource is associated with a directory.
+//
+//   * AccessDeniedException
+//   The user is not authorized to access a resource.
+//
+//   * ResourceNotFoundException
+//   The resource could not be found.
+//
+//   * InvalidParameterValuesException
+//   One or more parameter values are not valid.
+//
+//   * InvalidResourceStateException
+//   The state of the resource is not valid for this operation.
+//
+//   * OperationNotSupportedException
+//   This operation is not supported.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/AssociateConnectionAlias
+func (c *WorkSpaces) AssociateConnectionAlias(input *AssociateConnectionAliasInput) (*AssociateConnectionAliasOutput, error) {
+	req, out := c.AssociateConnectionAliasRequest(input)
+	return out, req.Send()
+}
+
+// AssociateConnectionAliasWithContext is the same as AssociateConnectionAlias with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AssociateConnectionAlias for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) AssociateConnectionAliasWithContext(ctx aws.Context, input *AssociateConnectionAliasInput, opts ...request.Option) (*AssociateConnectionAliasOutput, error) {
+	req, out := c.AssociateConnectionAliasRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opAssociateIpGroups = "AssociateIpGroups"
 
 // AssociateIpGroupsRequest generates a "aws/request.Request" representing the
@@ -300,6 +399,102 @@ func (c *WorkSpaces) CopyWorkspaceImageWithContext(ctx aws.Context, input *CopyW
 	return out, req.Send()
 }
 
+const opCreateConnectionAlias = "CreateConnectionAlias"
+
+// CreateConnectionAliasRequest generates a "aws/request.Request" representing the
+// client's request for the CreateConnectionAlias operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateConnectionAlias for more information on using the CreateConnectionAlias
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateConnectionAliasRequest method.
+//    req, resp := client.CreateConnectionAliasRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateConnectionAlias
+func (c *WorkSpaces) CreateConnectionAliasRequest(input *CreateConnectionAliasInput) (req *request.Request, output *CreateConnectionAliasOutput) {
+	op := &request.Operation{
+		Name:       opCreateConnectionAlias,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateConnectionAliasInput{}
+	}
+
+	output = &CreateConnectionAliasOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateConnectionAlias API operation for Amazon WorkSpaces.
+//
+// Creates the specified connection alias for use with cross-Region redirection.
+// For more information, see Cross-Region Redirection for Amazon WorkSpaces
+// (https://docs.aws.amazon.com/workspaces/latest/adminguide/cross-region-redirection.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation CreateConnectionAlias for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceAlreadyExistsException
+//   The specified resource already exists.
+//
+//   * AccessDeniedException
+//   The user is not authorized to access a resource.
+//
+//   * InvalidParameterValuesException
+//   One or more parameter values are not valid.
+//
+//   * ResourceLimitExceededException
+//   Your resource limits have been exceeded.
+//
+//   * InvalidResourceStateException
+//   The state of the resource is not valid for this operation.
+//
+//   * OperationNotSupportedException
+//   This operation is not supported.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/CreateConnectionAlias
+func (c *WorkSpaces) CreateConnectionAlias(input *CreateConnectionAliasInput) (*CreateConnectionAliasOutput, error) {
+	req, out := c.CreateConnectionAliasRequest(input)
+	return out, req.Send()
+}
+
+// CreateConnectionAliasWithContext is the same as CreateConnectionAlias with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateConnectionAlias for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) CreateConnectionAliasWithContext(ctx aws.Context, input *CreateConnectionAliasInput, opts ...request.Option) (*CreateConnectionAliasOutput, error) {
+	req, out := c.CreateConnectionAliasRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateIpGroup = "CreateIpGroup"
 
 // CreateIpGroupRequest generates a "aws/request.Request" representing the
@@ -568,6 +763,113 @@ func (c *WorkSpaces) CreateWorkspaces(input *CreateWorkspacesInput) (*CreateWork
 // for more information on using Contexts.
 func (c *WorkSpaces) CreateWorkspacesWithContext(ctx aws.Context, input *CreateWorkspacesInput, opts ...request.Option) (*CreateWorkspacesOutput, error) {
 	req, out := c.CreateWorkspacesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteConnectionAlias = "DeleteConnectionAlias"
+
+// DeleteConnectionAliasRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteConnectionAlias operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteConnectionAlias for more information on using the DeleteConnectionAlias
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteConnectionAliasRequest method.
+//    req, resp := client.DeleteConnectionAliasRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DeleteConnectionAlias
+func (c *WorkSpaces) DeleteConnectionAliasRequest(input *DeleteConnectionAliasInput) (req *request.Request, output *DeleteConnectionAliasOutput) {
+	op := &request.Operation{
+		Name:       opDeleteConnectionAlias,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteConnectionAliasInput{}
+	}
+
+	output = &DeleteConnectionAliasOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteConnectionAlias API operation for Amazon WorkSpaces.
+//
+// Deletes the specified connection alias. For more information, see Cross-Region
+// Redirection for Amazon WorkSpaces (https://docs.aws.amazon.com/workspaces/latest/adminguide/cross-region-redirection.html).
+//
+// If you will no longer be using a fully qualified domain name (FQDN) as the
+// registration code for your WorkSpaces users, you must take certain precautions
+// to prevent potential security issues. For more information, see Security
+// Considerations if You Stop Using Cross-Region Redirection (https://docs.aws.amazon.com/workspaces/latest/adminguide/cross-region-redirection.html#cross-region-redirection-security-considerations).
+//
+// To delete a connection alias that has been shared, the shared account must
+// first disassociate the connection alias from any directories it has been
+// associated with. Then you must unshare the connection alias from the account
+// it has been shared with. You can delete a connection alias only after it
+// is no longer shared with any accounts or associated with any directories.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation DeleteConnectionAlias for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   The resource could not be found.
+//
+//   * ResourceAssociatedException
+//   The resource is associated with a directory.
+//
+//   * AccessDeniedException
+//   The user is not authorized to access a resource.
+//
+//   * InvalidParameterValuesException
+//   One or more parameter values are not valid.
+//
+//   * InvalidResourceStateException
+//   The state of the resource is not valid for this operation.
+//
+//   * OperationNotSupportedException
+//   This operation is not supported.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DeleteConnectionAlias
+func (c *WorkSpaces) DeleteConnectionAlias(input *DeleteConnectionAliasInput) (*DeleteConnectionAliasOutput, error) {
+	req, out := c.DeleteConnectionAliasRequest(input)
+	return out, req.Send()
+}
+
+// DeleteConnectionAliasWithContext is the same as DeleteConnectionAlias with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteConnectionAlias for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) DeleteConnectionAliasWithContext(ctx aws.Context, input *DeleteConnectionAliasInput, opts ...request.Option) (*DeleteConnectionAliasOutput, error) {
+	req, out := c.DeleteConnectionAliasRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1169,6 +1471,183 @@ func (c *WorkSpaces) DescribeClientProperties(input *DescribeClientPropertiesInp
 // for more information on using Contexts.
 func (c *WorkSpaces) DescribeClientPropertiesWithContext(ctx aws.Context, input *DescribeClientPropertiesInput, opts ...request.Option) (*DescribeClientPropertiesOutput, error) {
 	req, out := c.DescribeClientPropertiesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeConnectionAliasPermissions = "DescribeConnectionAliasPermissions"
+
+// DescribeConnectionAliasPermissionsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeConnectionAliasPermissions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeConnectionAliasPermissions for more information on using the DescribeConnectionAliasPermissions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeConnectionAliasPermissionsRequest method.
+//    req, resp := client.DescribeConnectionAliasPermissionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeConnectionAliasPermissions
+func (c *WorkSpaces) DescribeConnectionAliasPermissionsRequest(input *DescribeConnectionAliasPermissionsInput) (req *request.Request, output *DescribeConnectionAliasPermissionsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeConnectionAliasPermissions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeConnectionAliasPermissionsInput{}
+	}
+
+	output = &DescribeConnectionAliasPermissionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeConnectionAliasPermissions API operation for Amazon WorkSpaces.
+//
+// Describes the permissions that the owner of a connection alias has granted
+// to another AWS account for the specified connection alias. For more information,
+// see Cross-Region Redirection for Amazon WorkSpaces (https://docs.aws.amazon.com/workspaces/latest/adminguide/cross-region-redirection.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation DescribeConnectionAliasPermissions for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   The user is not authorized to access a resource.
+//
+//   * InvalidParameterValuesException
+//   One or more parameter values are not valid.
+//
+//   * ResourceNotFoundException
+//   The resource could not be found.
+//
+//   * OperationNotSupportedException
+//   This operation is not supported.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeConnectionAliasPermissions
+func (c *WorkSpaces) DescribeConnectionAliasPermissions(input *DescribeConnectionAliasPermissionsInput) (*DescribeConnectionAliasPermissionsOutput, error) {
+	req, out := c.DescribeConnectionAliasPermissionsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeConnectionAliasPermissionsWithContext is the same as DescribeConnectionAliasPermissions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeConnectionAliasPermissions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) DescribeConnectionAliasPermissionsWithContext(ctx aws.Context, input *DescribeConnectionAliasPermissionsInput, opts ...request.Option) (*DescribeConnectionAliasPermissionsOutput, error) {
+	req, out := c.DescribeConnectionAliasPermissionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeConnectionAliases = "DescribeConnectionAliases"
+
+// DescribeConnectionAliasesRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeConnectionAliases operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeConnectionAliases for more information on using the DescribeConnectionAliases
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeConnectionAliasesRequest method.
+//    req, resp := client.DescribeConnectionAliasesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeConnectionAliases
+func (c *WorkSpaces) DescribeConnectionAliasesRequest(input *DescribeConnectionAliasesInput) (req *request.Request, output *DescribeConnectionAliasesOutput) {
+	op := &request.Operation{
+		Name:       opDescribeConnectionAliases,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeConnectionAliasesInput{}
+	}
+
+	output = &DescribeConnectionAliasesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeConnectionAliases API operation for Amazon WorkSpaces.
+//
+// Retrieves a list that describes the connection aliases used for cross-Region
+// redirection. For more information, see Cross-Region Redirection for Amazon
+// WorkSpaces (https://docs.aws.amazon.com/workspaces/latest/adminguide/cross-region-redirection.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation DescribeConnectionAliases for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   The user is not authorized to access a resource.
+//
+//   * InvalidParameterValuesException
+//   One or more parameter values are not valid.
+//
+//   * OperationNotSupportedException
+//   This operation is not supported.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeConnectionAliases
+func (c *WorkSpaces) DescribeConnectionAliases(input *DescribeConnectionAliasesInput) (*DescribeConnectionAliasesOutput, error) {
+	req, out := c.DescribeConnectionAliasesRequest(input)
+	return out, req.Send()
+}
+
+// DescribeConnectionAliasesWithContext is the same as DescribeConnectionAliases with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeConnectionAliases for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) DescribeConnectionAliasesWithContext(ctx aws.Context, input *DescribeConnectionAliasesInput, opts ...request.Option) (*DescribeConnectionAliasesOutput, error) {
+	req, out := c.DescribeConnectionAliasesRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2084,6 +2563,104 @@ func (c *WorkSpaces) DescribeWorkspacesConnectionStatusWithContext(ctx aws.Conte
 	return out, req.Send()
 }
 
+const opDisassociateConnectionAlias = "DisassociateConnectionAlias"
+
+// DisassociateConnectionAliasRequest generates a "aws/request.Request" representing the
+// client's request for the DisassociateConnectionAlias operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DisassociateConnectionAlias for more information on using the DisassociateConnectionAlias
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DisassociateConnectionAliasRequest method.
+//    req, resp := client.DisassociateConnectionAliasRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DisassociateConnectionAlias
+func (c *WorkSpaces) DisassociateConnectionAliasRequest(input *DisassociateConnectionAliasInput) (req *request.Request, output *DisassociateConnectionAliasOutput) {
+	op := &request.Operation{
+		Name:       opDisassociateConnectionAlias,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DisassociateConnectionAliasInput{}
+	}
+
+	output = &DisassociateConnectionAliasOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DisassociateConnectionAlias API operation for Amazon WorkSpaces.
+//
+// Disassociates a connection alias from a directory. Disassociating a connection
+// alias disables cross-Region redirection between two directories in different
+// AWS Regions. For more information, see Cross-Region Redirection for Amazon
+// WorkSpaces (https://docs.aws.amazon.com/workspaces/latest/adminguide/cross-region-redirection.html).
+//
+// Before performing this operation, call DescribeConnectionAliases (https://docs.aws.amazon.com/workspaces/latest/api/API_DescribeConnectionAliases.html)
+// to make sure that the current state of the connection alias is CREATED.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation DisassociateConnectionAlias for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   The user is not authorized to access a resource.
+//
+//   * ResourceNotFoundException
+//   The resource could not be found.
+//
+//   * InvalidParameterValuesException
+//   One or more parameter values are not valid.
+//
+//   * InvalidResourceStateException
+//   The state of the resource is not valid for this operation.
+//
+//   * OperationNotSupportedException
+//   This operation is not supported.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DisassociateConnectionAlias
+func (c *WorkSpaces) DisassociateConnectionAlias(input *DisassociateConnectionAliasInput) (*DisassociateConnectionAliasOutput, error) {
+	req, out := c.DisassociateConnectionAliasRequest(input)
+	return out, req.Send()
+}
+
+// DisassociateConnectionAliasWithContext is the same as DisassociateConnectionAlias with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DisassociateConnectionAlias for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) DisassociateConnectionAliasWithContext(ctx aws.Context, input *DisassociateConnectionAliasInput, opts ...request.Option) (*DisassociateConnectionAliasOutput, error) {
+	req, out := c.DisassociateConnectionAliasRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDisassociateIpGroups = "DisassociateIpGroups"
 
 // DisassociateIpGroupsRequest generates a "aws/request.Request" representing the
@@ -2218,9 +2795,9 @@ func (c *WorkSpaces) ImportWorkspaceImageRequest(input *ImportWorkspaceImageInpu
 // ImportWorkspaceImage API operation for Amazon WorkSpaces.
 //
 // Imports the specified Windows 10 Bring Your Own License (BYOL) image into
-// Amazon WorkSpaces. The image must be an already licensed EC2 image that is
-// in your AWS account, and you must own the image. For more information about
-// creating BYOL images, see Bring Your Own Windows Desktop Licenses (https://docs.aws.amazon.com/workspaces/latest/adminguide/byol-windows-images.html).
+// Amazon WorkSpaces. The image must be an already licensed Amazon EC2 image
+// that is in your AWS account, and you must own the image. For more information
+// about creating BYOL images, see Bring Your Own Windows Desktop Licenses (https://docs.aws.amazon.com/workspaces/latest/adminguide/byol-windows-images.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3793,6 +4370,119 @@ func (c *WorkSpaces) TerminateWorkspacesWithContext(ctx aws.Context, input *Term
 	return out, req.Send()
 }
 
+const opUpdateConnectionAliasPermission = "UpdateConnectionAliasPermission"
+
+// UpdateConnectionAliasPermissionRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateConnectionAliasPermission operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateConnectionAliasPermission for more information on using the UpdateConnectionAliasPermission
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateConnectionAliasPermissionRequest method.
+//    req, resp := client.UpdateConnectionAliasPermissionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/UpdateConnectionAliasPermission
+func (c *WorkSpaces) UpdateConnectionAliasPermissionRequest(input *UpdateConnectionAliasPermissionInput) (req *request.Request, output *UpdateConnectionAliasPermissionOutput) {
+	op := &request.Operation{
+		Name:       opUpdateConnectionAliasPermission,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateConnectionAliasPermissionInput{}
+	}
+
+	output = &UpdateConnectionAliasPermissionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateConnectionAliasPermission API operation for Amazon WorkSpaces.
+//
+// Shares or unshares a connection alias with one account by specifying whether
+// that account has permission to associate the connection alias with a directory.
+// If the association permission is granted, the connection alias is shared
+// with that account. If the association permission is revoked, the connection
+// alias is unshared with the account. For more information, see Cross-Region
+// Redirection for Amazon WorkSpaces (https://docs.aws.amazon.com/workspaces/latest/adminguide/cross-region-redirection.html).
+//
+//    * Before performing this operation, call DescribeConnectionAliases (https://docs.aws.amazon.com/workspaces/latest/api/API_DescribeConnectionAliases.html)
+//    to make sure that the current state of the connection alias is CREATED.
+//
+//    * To delete a connection alias that has been shared, the shared account
+//    must first disassociate the connection alias from any directories it has
+//    been associated with. Then you must unshare the connection alias from
+//    the account it has been shared with. You can delete a connection alias
+//    only after it is no longer shared with any accounts or associated with
+//    any directories.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation UpdateConnectionAliasPermission for usage and error information.
+//
+// Returned Error Types:
+//   * AccessDeniedException
+//   The user is not authorized to access a resource.
+//
+//   * InvalidParameterValuesException
+//   One or more parameter values are not valid.
+//
+//   * ResourceLimitExceededException
+//   Your resource limits have been exceeded.
+//
+//   * ResourceNotFoundException
+//   The resource could not be found.
+//
+//   * ResourceAssociatedException
+//   The resource is associated with a directory.
+//
+//   * InvalidResourceStateException
+//   The state of the resource is not valid for this operation.
+//
+//   * OperationNotSupportedException
+//   This operation is not supported.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/UpdateConnectionAliasPermission
+func (c *WorkSpaces) UpdateConnectionAliasPermission(input *UpdateConnectionAliasPermissionInput) (*UpdateConnectionAliasPermissionOutput, error) {
+	req, out := c.UpdateConnectionAliasPermissionRequest(input)
+	return out, req.Send()
+}
+
+// UpdateConnectionAliasPermissionWithContext is the same as UpdateConnectionAliasPermission with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateConnectionAliasPermission for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) UpdateConnectionAliasPermissionWithContext(ctx aws.Context, input *UpdateConnectionAliasPermissionInput, opts ...request.Option) (*UpdateConnectionAliasPermissionOutput, error) {
+	req, out := c.UpdateConnectionAliasPermissionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateRulesOfIpGroup = "UpdateRulesOfIpGroup"
 
 // UpdateRulesOfIpGroupRequest generates a "aws/request.Request" representing the
@@ -4117,6 +4807,89 @@ func (s *AccountModification) SetStartTime(v time.Time) *AccountModification {
 	return s
 }
 
+type AssociateConnectionAliasInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the connection alias.
+	//
+	// AliasId is a required field
+	AliasId *string `min:"13" type:"string" required:"true"`
+
+	// The identifier of the directory to associate the connection alias with.
+	//
+	// ResourceId is a required field
+	ResourceId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AssociateConnectionAliasInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateConnectionAliasInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssociateConnectionAliasInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssociateConnectionAliasInput"}
+	if s.AliasId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AliasId"))
+	}
+	if s.AliasId != nil && len(*s.AliasId) < 13 {
+		invalidParams.Add(request.NewErrParamMinLen("AliasId", 13))
+	}
+	if s.ResourceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
+	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAliasId sets the AliasId field's value.
+func (s *AssociateConnectionAliasInput) SetAliasId(v string) *AssociateConnectionAliasInput {
+	s.AliasId = &v
+	return s
+}
+
+// SetResourceId sets the ResourceId field's value.
+func (s *AssociateConnectionAliasInput) SetResourceId(v string) *AssociateConnectionAliasInput {
+	s.ResourceId = &v
+	return s
+}
+
+type AssociateConnectionAliasOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the connection alias association. You use the connection
+	// identifier in the DNS TXT record when you're configuring your DNS routing
+	// policies.
+	ConnectionIdentifier *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s AssociateConnectionAliasOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateConnectionAliasOutput) GoString() string {
+	return s.String()
+}
+
+// SetConnectionIdentifier sets the ConnectionIdentifier field's value.
+func (s *AssociateConnectionAliasOutput) SetConnectionIdentifier(v string) *AssociateConnectionAliasOutput {
+	s.ConnectionIdentifier = &v
+	return s
+}
+
 type AssociateIpGroupsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4335,6 +5108,182 @@ func (s *ComputeType) SetName(v string) *ComputeType {
 	return s
 }
 
+// Describes a connection alias. Connection aliases are used for cross-Region
+// redirection. For more information, see Cross-Region Redirection for Amazon
+// WorkSpaces (https://docs.aws.amazon.com/workspaces/latest/adminguide/cross-region-redirection.html).
+type ConnectionAlias struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the connection alias.
+	AliasId *string `min:"13" type:"string"`
+
+	// The association status of the connection alias.
+	Associations []*ConnectionAliasAssociation `min:"1" type:"list"`
+
+	// The connection string specified for the connection alias. The connection
+	// string must be in the form of a fully qualified domain name (FQDN), such
+	// as www.example.com.
+	ConnectionString *string `min:"1" type:"string"`
+
+	// The identifier of the AWS account that owns the connection alias.
+	OwnerAccountId *string `type:"string"`
+
+	// The current state of the connection alias.
+	State *string `type:"string" enum:"ConnectionAliasState"`
+}
+
+// String returns the string representation
+func (s ConnectionAlias) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConnectionAlias) GoString() string {
+	return s.String()
+}
+
+// SetAliasId sets the AliasId field's value.
+func (s *ConnectionAlias) SetAliasId(v string) *ConnectionAlias {
+	s.AliasId = &v
+	return s
+}
+
+// SetAssociations sets the Associations field's value.
+func (s *ConnectionAlias) SetAssociations(v []*ConnectionAliasAssociation) *ConnectionAlias {
+	s.Associations = v
+	return s
+}
+
+// SetConnectionString sets the ConnectionString field's value.
+func (s *ConnectionAlias) SetConnectionString(v string) *ConnectionAlias {
+	s.ConnectionString = &v
+	return s
+}
+
+// SetOwnerAccountId sets the OwnerAccountId field's value.
+func (s *ConnectionAlias) SetOwnerAccountId(v string) *ConnectionAlias {
+	s.OwnerAccountId = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *ConnectionAlias) SetState(v string) *ConnectionAlias {
+	s.State = &v
+	return s
+}
+
+// Describes a connection alias association that is used for cross-Region redirection.
+// For more information, see Cross-Region Redirection for Amazon WorkSpaces
+// (https://docs.aws.amazon.com/workspaces/latest/adminguide/cross-region-redirection.html).
+type ConnectionAliasAssociation struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the AWS account that associated the connection alias with
+	// a directory.
+	AssociatedAccountId *string `type:"string"`
+
+	// The association status of the connection alias.
+	AssociationStatus *string `type:"string" enum:"AssociationStatus"`
+
+	// The identifier of the connection alias association. You use the connection
+	// identifier in the DNS TXT record when you're configuring your DNS routing
+	// policies.
+	ConnectionIdentifier *string `min:"1" type:"string"`
+
+	// The identifier of the directory associated with a connection alias.
+	ResourceId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ConnectionAliasAssociation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConnectionAliasAssociation) GoString() string {
+	return s.String()
+}
+
+// SetAssociatedAccountId sets the AssociatedAccountId field's value.
+func (s *ConnectionAliasAssociation) SetAssociatedAccountId(v string) *ConnectionAliasAssociation {
+	s.AssociatedAccountId = &v
+	return s
+}
+
+// SetAssociationStatus sets the AssociationStatus field's value.
+func (s *ConnectionAliasAssociation) SetAssociationStatus(v string) *ConnectionAliasAssociation {
+	s.AssociationStatus = &v
+	return s
+}
+
+// SetConnectionIdentifier sets the ConnectionIdentifier field's value.
+func (s *ConnectionAliasAssociation) SetConnectionIdentifier(v string) *ConnectionAliasAssociation {
+	s.ConnectionIdentifier = &v
+	return s
+}
+
+// SetResourceId sets the ResourceId field's value.
+func (s *ConnectionAliasAssociation) SetResourceId(v string) *ConnectionAliasAssociation {
+	s.ResourceId = &v
+	return s
+}
+
+// Describes the permissions for a connection alias. Connection aliases are
+// used for cross-Region redirection. For more information, see Cross-Region
+// Redirection for Amazon WorkSpaces (https://docs.aws.amazon.com/workspaces/latest/adminguide/cross-region-redirection.html).
+type ConnectionAliasPermission struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether the specified AWS account is allowed to associate the connection
+	// alias with a directory.
+	//
+	// AllowAssociation is a required field
+	AllowAssociation *bool `type:"boolean" required:"true"`
+
+	// The identifier of the AWS account that the connection alias is shared with.
+	//
+	// SharedAccountId is a required field
+	SharedAccountId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ConnectionAliasPermission) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConnectionAliasPermission) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ConnectionAliasPermission) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ConnectionAliasPermission"}
+	if s.AllowAssociation == nil {
+		invalidParams.Add(request.NewErrParamRequired("AllowAssociation"))
+	}
+	if s.SharedAccountId == nil {
+		invalidParams.Add(request.NewErrParamRequired("SharedAccountId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAllowAssociation sets the AllowAssociation field's value.
+func (s *ConnectionAliasPermission) SetAllowAssociation(v bool) *ConnectionAliasPermission {
+	s.AllowAssociation = &v
+	return s
+}
+
+// SetSharedAccountId sets the SharedAccountId field's value.
+func (s *ConnectionAliasPermission) SetSharedAccountId(v string) *ConnectionAliasPermission {
+	s.SharedAccountId = &v
+	return s
+}
+
 type CopyWorkspaceImageInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4461,6 +5410,95 @@ func (s *CopyWorkspaceImageOutput) SetImageId(v string) *CopyWorkspaceImageOutpu
 	return s
 }
 
+type CreateConnectionAliasInput struct {
+	_ struct{} `type:"structure"`
+
+	// A connection string in the form of a fully qualified domain name (FQDN),
+	// such as www.example.com.
+	//
+	// After you create a connection string, it is always associated to your AWS
+	// account. You cannot recreate the same connection string with a different
+	// account, even if you delete all instances of it from the original account.
+	// The connection string is globally reserved for your account.
+	//
+	// ConnectionString is a required field
+	ConnectionString *string `min:"1" type:"string" required:"true"`
+
+	// The tags to associate with the connection alias.
+	Tags []*Tag `type:"list"`
+}
+
+// String returns the string representation
+func (s CreateConnectionAliasInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateConnectionAliasInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateConnectionAliasInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateConnectionAliasInput"}
+	if s.ConnectionString == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConnectionString"))
+	}
+	if s.ConnectionString != nil && len(*s.ConnectionString) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ConnectionString", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConnectionString sets the ConnectionString field's value.
+func (s *CreateConnectionAliasInput) SetConnectionString(v string) *CreateConnectionAliasInput {
+	s.ConnectionString = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateConnectionAliasInput) SetTags(v []*Tag) *CreateConnectionAliasInput {
+	s.Tags = v
+	return s
+}
+
+type CreateConnectionAliasOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the connection alias.
+	AliasId *string `min:"13" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateConnectionAliasOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateConnectionAliasOutput) GoString() string {
+	return s.String()
+}
+
+// SetAliasId sets the AliasId field's value.
+func (s *CreateConnectionAliasOutput) SetAliasId(v string) *CreateConnectionAliasOutput {
+	s.AliasId = &v
+	return s
+}
+
 type CreateIpGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4563,8 +5601,8 @@ type CreateTagsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The identifier of the WorkSpaces resource. The supported resource types are
-	// WorkSpaces, registered directories, images, custom bundles, and IP access
-	// control groups.
+	// WorkSpaces, registered directories, images, custom bundles, IP access control
+	// groups, and connection aliases.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -4811,6 +5849,61 @@ func (s *DefaultWorkspaceCreationProperties) SetUserEnabledAsLocalAdministrator(
 	return s
 }
 
+type DeleteConnectionAliasInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the connection alias to delete.
+	//
+	// AliasId is a required field
+	AliasId *string `min:"13" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteConnectionAliasInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteConnectionAliasInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteConnectionAliasInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteConnectionAliasInput"}
+	if s.AliasId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AliasId"))
+	}
+	if s.AliasId != nil && len(*s.AliasId) < 13 {
+		invalidParams.Add(request.NewErrParamMinLen("AliasId", 13))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAliasId sets the AliasId field's value.
+func (s *DeleteConnectionAliasInput) SetAliasId(v string) *DeleteConnectionAliasInput {
+	s.AliasId = &v
+	return s
+}
+
+type DeleteConnectionAliasOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteConnectionAliasOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteConnectionAliasOutput) GoString() string {
+	return s.String()
+}
+
 type DeleteIpGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4867,8 +5960,8 @@ type DeleteTagsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The identifier of the WorkSpaces resource. The supported resource types are
-	// WorkSpaces, registered directories, images, custom bundles, and IP access
-	// control groups.
+	// WorkSpaces, registered directories, images, custom bundles, IP access control
+	// groups, and connection aliases.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -5229,6 +6322,220 @@ func (s *DescribeClientPropertiesOutput) SetClientPropertiesList(v []*ClientProp
 	return s
 }
 
+type DescribeConnectionAliasPermissionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the connection alias.
+	//
+	// AliasId is a required field
+	AliasId *string `min:"13" type:"string" required:"true"`
+
+	// The maximum number of results to return.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// If you received a NextToken from a previous call that was paginated, provide
+	// this token to receive the next set of results.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeConnectionAliasPermissionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeConnectionAliasPermissionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeConnectionAliasPermissionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeConnectionAliasPermissionsInput"}
+	if s.AliasId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AliasId"))
+	}
+	if s.AliasId != nil && len(*s.AliasId) < 13 {
+		invalidParams.Add(request.NewErrParamMinLen("AliasId", 13))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAliasId sets the AliasId field's value.
+func (s *DescribeConnectionAliasPermissionsInput) SetAliasId(v string) *DescribeConnectionAliasPermissionsInput {
+	s.AliasId = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeConnectionAliasPermissionsInput) SetMaxResults(v int64) *DescribeConnectionAliasPermissionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeConnectionAliasPermissionsInput) SetNextToken(v string) *DescribeConnectionAliasPermissionsInput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeConnectionAliasPermissionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the connection alias.
+	AliasId *string `min:"13" type:"string"`
+
+	// The permissions associated with a connection alias.
+	ConnectionAliasPermissions []*ConnectionAliasPermission `min:"1" type:"list"`
+
+	// The token to use to retrieve the next set of results, or null if no more
+	// results are available.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeConnectionAliasPermissionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeConnectionAliasPermissionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetAliasId sets the AliasId field's value.
+func (s *DescribeConnectionAliasPermissionsOutput) SetAliasId(v string) *DescribeConnectionAliasPermissionsOutput {
+	s.AliasId = &v
+	return s
+}
+
+// SetConnectionAliasPermissions sets the ConnectionAliasPermissions field's value.
+func (s *DescribeConnectionAliasPermissionsOutput) SetConnectionAliasPermissions(v []*ConnectionAliasPermission) *DescribeConnectionAliasPermissionsOutput {
+	s.ConnectionAliasPermissions = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeConnectionAliasPermissionsOutput) SetNextToken(v string) *DescribeConnectionAliasPermissionsOutput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeConnectionAliasesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifiers of the connection aliases to describe.
+	AliasIds []*string `min:"1" type:"list"`
+
+	// The maximum number of connection aliases to return.
+	Limit *int64 `min:"1" type:"integer"`
+
+	// If you received a NextToken from a previous call that was paginated, provide
+	// this token to receive the next set of results.
+	NextToken *string `min:"1" type:"string"`
+
+	// The identifier of the directory associated with the connection alias.
+	ResourceId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeConnectionAliasesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeConnectionAliasesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeConnectionAliasesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeConnectionAliasesInput"}
+	if s.AliasIds != nil && len(s.AliasIds) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AliasIds", 1))
+	}
+	if s.Limit != nil && *s.Limit < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Limit", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAliasIds sets the AliasIds field's value.
+func (s *DescribeConnectionAliasesInput) SetAliasIds(v []*string) *DescribeConnectionAliasesInput {
+	s.AliasIds = v
+	return s
+}
+
+// SetLimit sets the Limit field's value.
+func (s *DescribeConnectionAliasesInput) SetLimit(v int64) *DescribeConnectionAliasesInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeConnectionAliasesInput) SetNextToken(v string) *DescribeConnectionAliasesInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetResourceId sets the ResourceId field's value.
+func (s *DescribeConnectionAliasesInput) SetResourceId(v string) *DescribeConnectionAliasesInput {
+	s.ResourceId = &v
+	return s
+}
+
+type DescribeConnectionAliasesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the specified connection aliases.
+	ConnectionAliases []*ConnectionAlias `min:"1" type:"list"`
+
+	// The token to use to retrieve the next set of results, or null if no more
+	// results are available.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeConnectionAliasesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeConnectionAliasesOutput) GoString() string {
+	return s.String()
+}
+
+// SetConnectionAliases sets the ConnectionAliases field's value.
+func (s *DescribeConnectionAliasesOutput) SetConnectionAliases(v []*ConnectionAlias) *DescribeConnectionAliasesOutput {
+	s.ConnectionAliases = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeConnectionAliasesOutput) SetNextToken(v string) *DescribeConnectionAliasesOutput {
+	s.NextToken = &v
+	return s
+}
+
 type DescribeIpGroupsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5324,8 +6631,8 @@ type DescribeTagsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The identifier of the WorkSpaces resource. The supported resource types are
-	// WorkSpaces, registered directories, images, custom bundles, and IP access
-	// control groups.
+	// WorkSpaces, registered directories, images, custom bundles, IP access control
+	// groups, and connection aliases.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -6076,6 +7383,61 @@ func (s *DescribeWorkspacesOutput) SetNextToken(v string) *DescribeWorkspacesOut
 func (s *DescribeWorkspacesOutput) SetWorkspaces(v []*Workspace) *DescribeWorkspacesOutput {
 	s.Workspaces = v
 	return s
+}
+
+type DisassociateConnectionAliasInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the connection alias to disassociate.
+	//
+	// AliasId is a required field
+	AliasId *string `min:"13" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DisassociateConnectionAliasInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateConnectionAliasInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DisassociateConnectionAliasInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DisassociateConnectionAliasInput"}
+	if s.AliasId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AliasId"))
+	}
+	if s.AliasId != nil && len(*s.AliasId) < 13 {
+		invalidParams.Add(request.NewErrParamMinLen("AliasId", 13))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAliasId sets the AliasId field's value.
+func (s *DisassociateConnectionAliasInput) SetAliasId(v string) *DisassociateConnectionAliasInput {
+	s.AliasId = &v
+	return s
+}
+
+type DisassociateConnectionAliasOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DisassociateConnectionAliasOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateConnectionAliasOutput) GoString() string {
+	return s.String()
 }
 
 type DisassociateIpGroupsInput struct {
@@ -8809,6 +10171,82 @@ func (s *UnsupportedWorkspaceConfigurationException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+type UpdateConnectionAliasPermissionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the connection alias that you want to update permissions
+	// for.
+	//
+	// AliasId is a required field
+	AliasId *string `min:"13" type:"string" required:"true"`
+
+	// Indicates whether to share or unshare the connection alias with the specified
+	// AWS account.
+	//
+	// ConnectionAliasPermission is a required field
+	ConnectionAliasPermission *ConnectionAliasPermission `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateConnectionAliasPermissionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateConnectionAliasPermissionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateConnectionAliasPermissionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateConnectionAliasPermissionInput"}
+	if s.AliasId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AliasId"))
+	}
+	if s.AliasId != nil && len(*s.AliasId) < 13 {
+		invalidParams.Add(request.NewErrParamMinLen("AliasId", 13))
+	}
+	if s.ConnectionAliasPermission == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConnectionAliasPermission"))
+	}
+	if s.ConnectionAliasPermission != nil {
+		if err := s.ConnectionAliasPermission.Validate(); err != nil {
+			invalidParams.AddNested("ConnectionAliasPermission", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAliasId sets the AliasId field's value.
+func (s *UpdateConnectionAliasPermissionInput) SetAliasId(v string) *UpdateConnectionAliasPermissionInput {
+	s.AliasId = &v
+	return s
+}
+
+// SetConnectionAliasPermission sets the ConnectionAliasPermission field's value.
+func (s *UpdateConnectionAliasPermissionInput) SetConnectionAliasPermission(v *ConnectionAliasPermission) *UpdateConnectionAliasPermissionInput {
+	s.ConnectionAliasPermission = v
+	return s
+}
+
+type UpdateConnectionAliasPermissionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateConnectionAliasPermissionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateConnectionAliasPermissionOutput) GoString() string {
+	return s.String()
+}
+
 type UpdateRulesOfIpGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9375,7 +10813,17 @@ type WorkspaceCreationProperties struct {
 	// The identifier of your custom security group.
 	CustomSecurityGroupId *string `min:"11" type:"string"`
 
-	// The default organizational unit (OU) for your WorkSpace directories.
+	// The default organizational unit (OU) for your WorkSpaces directories. This
+	// string must be the full Lightweight Directory Access Protocol (LDAP) distinguished
+	// name for the target domain and OU. It must be in the form "OU=value,DC=value,DC=value",
+	// where value is any string of characters, and the number of domain components
+	// (DCs) is two or more. For example, OU=WorkSpaces_machines,DC=machines,DC=example,DC=com.
+	//
+	//    * To avoid errors, certain characters in the distinguished name must be
+	//    escaped. For more information, see Distinguished Names (https://docs.microsoft.com/previous-versions/windows/desktop/ldap/distinguished-names)
+	//    in the Microsoft documentation.
+	//
+	//    * The API doesn't validate whether the OU exists.
 	DefaultOu *string `type:"string"`
 
 	// Indicates whether internet access is enabled for your WorkSpaces.
@@ -10024,6 +11472,34 @@ func Application_Values() []string {
 }
 
 const (
+	// AssociationStatusNotAssociated is a AssociationStatus enum value
+	AssociationStatusNotAssociated = "NOT_ASSOCIATED"
+
+	// AssociationStatusAssociatedWithOwnerAccount is a AssociationStatus enum value
+	AssociationStatusAssociatedWithOwnerAccount = "ASSOCIATED_WITH_OWNER_ACCOUNT"
+
+	// AssociationStatusAssociatedWithSharedAccount is a AssociationStatus enum value
+	AssociationStatusAssociatedWithSharedAccount = "ASSOCIATED_WITH_SHARED_ACCOUNT"
+
+	// AssociationStatusPendingAssociation is a AssociationStatus enum value
+	AssociationStatusPendingAssociation = "PENDING_ASSOCIATION"
+
+	// AssociationStatusPendingDisassociation is a AssociationStatus enum value
+	AssociationStatusPendingDisassociation = "PENDING_DISASSOCIATION"
+)
+
+// AssociationStatus_Values returns all elements of the AssociationStatus enum
+func AssociationStatus_Values() []string {
+	return []string{
+		AssociationStatusNotAssociated,
+		AssociationStatusAssociatedWithOwnerAccount,
+		AssociationStatusAssociatedWithSharedAccount,
+		AssociationStatusPendingAssociation,
+		AssociationStatusPendingDisassociation,
+	}
+}
+
+const (
 	// ComputeValue is a Compute enum value
 	ComputeValue = "VALUE"
 
@@ -10056,6 +11532,26 @@ func Compute_Values() []string {
 		ComputeGraphics,
 		ComputePowerpro,
 		ComputeGraphicspro,
+	}
+}
+
+const (
+	// ConnectionAliasStateCreating is a ConnectionAliasState enum value
+	ConnectionAliasStateCreating = "CREATING"
+
+	// ConnectionAliasStateCreated is a ConnectionAliasState enum value
+	ConnectionAliasStateCreated = "CREATED"
+
+	// ConnectionAliasStateDeleting is a ConnectionAliasState enum value
+	ConnectionAliasStateDeleting = "DELETING"
+)
+
+// ConnectionAliasState_Values returns all elements of the ConnectionAliasState enum
+func ConnectionAliasState_Values() []string {
+	return []string{
+		ConnectionAliasStateCreating,
+		ConnectionAliasStateCreated,
+		ConnectionAliasStateDeleting,
 	}
 }
 

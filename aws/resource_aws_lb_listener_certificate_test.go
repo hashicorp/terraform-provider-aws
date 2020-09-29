@@ -200,7 +200,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_lb" "test" {
   internal = true
   name     = "%[1]s"
-  subnets  = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnets  = aws_subnet.test[*].id
 }
 
 resource "aws_iam_server_certificate" "test" {
