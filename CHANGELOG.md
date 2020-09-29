@@ -4,7 +4,6 @@ ENHANCEMENTS
 
 * resource/aws_glue_crawler: Add `connection_name` field to `s3_target` block [GH-15350]
 * resource/aws_sagemaker_notebook_instance: Ability to configure root access for Sagemaker notebook instances [GH-14184]
-* resource/aws_lb: Adds an option to not wait for the loadbalancer to get provisioned.
 
 ## 3.8.0 (September 24, 2020)
 
