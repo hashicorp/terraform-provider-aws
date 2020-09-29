@@ -365,12 +365,17 @@ const (
 	// Some of the reasons in the following list might not be applicable to this
 	// specific API or operation.
 	//
+	//    * DUPLICATE_TAG_KEY: Tag keys must be unique among the tags attached to
+	//    the same entity.
+	//
 	//    * IMMUTABLE_POLICY: You specified a policy that is managed by AWS and
 	//    can't be modified.
 	//
 	//    * INPUT_REQUIRED: You must include a value for all required parameters.
 	//
 	//    * INVALID_ENUM: You specified an invalid value.
+	//
+	//    * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type string.
 	//
 	//    * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 	//    characters.
@@ -420,6 +425,12 @@ const (
 	//
 	//    * MOVING_ACCOUNT_BETWEEN_DIFFERENT_ROOTS: You can move an account only
 	//    between entities in the same root.
+	//
+	//    * TARGET_NOT_SUPPORTED: You can't perform the specified operation on that
+	//    target entity.
+	//
+	//    * UNRECOGNIZED_SERVICE_PRINCIPAL: You specified a service principal that
+	//    isn't recognized.
 	ErrCodeInvalidInputException = "InvalidInputException"
 
 	// ErrCodeMalformedPolicyDocumentException for service response error code
@@ -539,7 +550,7 @@ const (
 	// ErrCodeTargetNotFoundException for service response error code
 	// "TargetNotFoundException".
 	//
-	// We can't find a root, OU, or account with the TargetId that you specified.
+	// We can't find a root, OU, account, or policy with the TargetId that you specified.
 	ErrCodeTargetNotFoundException = "TargetNotFoundException"
 
 	// ErrCodeTooManyRequestsException for service response error code

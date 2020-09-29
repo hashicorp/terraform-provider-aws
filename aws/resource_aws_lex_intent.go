@@ -352,7 +352,7 @@ func resourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(d.Id()),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading version of intent %s: %w", d.Id(), err)
 	}
 	d.Set("version", version)
 

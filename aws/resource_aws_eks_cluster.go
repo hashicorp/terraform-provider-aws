@@ -218,7 +218,7 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 		input.Tags = keyvaluetags.New(v).IgnoreAws().EksTags()
 	}
 
-	if v, ok := d.GetOk("version"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("version"); ok {
 		input.Version = aws.String(v.(string))
 	}
 

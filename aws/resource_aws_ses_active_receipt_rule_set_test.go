@@ -2,20 +2,37 @@ package aws
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSSESActiveReceiptRuleSet_basic(t *testing.T) {
+// Only one SES Receipt RuleSet can be active at a time, so run serially
+// locally and in TeamCity.
+func TestAccAWSSESActiveReceiptRuleSet_serial(t *testing.T) {
+	testFuncs := map[string]func(t *testing.T){
+		"basic":      testAccAWSSESActiveReceiptRuleSet_basic,
+		"disappears": testAccAWSSESActiveReceiptRuleSet_disappears,
+	}
+
+	for name, testFunc := range testFuncs {
+		testFunc := testFunc
+
+		t.Run(name, func(t *testing.T) {
+			testFunc(t)
+		})
+	}
+}
+
+func testAccAWSSESActiveReceiptRuleSet_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ses_active_receipt_rule_set.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSSES(t)
@@ -33,11 +50,11 @@ func TestAccAWSSESActiveReceiptRuleSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESActiveReceiptRuleSet_disappears(t *testing.T) {
+func testAccAWSSESActiveReceiptRuleSet_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ses_active_receipt_rule_set.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSSES(t)

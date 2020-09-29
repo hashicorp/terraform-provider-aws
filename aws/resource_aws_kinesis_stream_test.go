@@ -553,15 +553,17 @@ func TestAccAWSKinesisStream_UpdateKmsKeyId(t *testing.T) {
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisStreamUpdateKmsKeyId(rInt, 1),
+				Config: testAccKinesisStreamUpdateKmsKeyId(rInt, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.key.0", "id"),
 				),
 			},
 			{
-				Config: testAccKinesisStreamUpdateKmsKeyId(rInt, 2),
+				Config: testAccKinesisStreamUpdateKmsKeyId(rInt, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.key.1", "id"),
 				),
 			},
 		},
@@ -765,22 +767,18 @@ resource "aws_kinesis_stream" "test" {
 
 func testAccKinesisStreamUpdateKmsKeyId(rInt int, key int) string {
 	return fmt.Sprintf(`
+resource "aws_kms_key" "key" {
+  count = 2
 
-resource "aws_kms_key" "key1" {
-  description             = "KMS key 1"
-  deletion_window_in_days = 10
-}
-
-resource "aws_kms_key" "key2" {
-  description             = "KMS key 2"
+  description             = "KMS key ${count.index+1}"
   deletion_window_in_days = 10
 }
 
 resource "aws_kinesis_stream" "test" {
-  name            = "test_stream-%d"
+  name            = "test_stream-%[1]d"
   shard_count     = 1
   encryption_type = "KMS"
-  kms_key_id      = aws_kms_key.key%d.id
+  kms_key_id      = aws_kms_key.key[%[2]d].id
 }
 `, rInt, key)
 }

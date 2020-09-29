@@ -204,3 +204,27 @@ func SecurityGroupStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 		return group, SecurityGroupStatusCreated, nil
 	}
 }
+
+const (
+	attachmentStateNotFound = "NotFound"
+	attachmentStateUnknown  = "Unknown"
+)
+
+// VpnGatewayVpcAttachmentState fetches the attachment between the specified VPN gateway and VPC and its state
+func VpnGatewayVpcAttachmentState(conn *ec2.EC2, vpnGatewayID, vpcID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		vpcAttachment, err := finder.VpnGatewayVpcAttachment(conn, vpnGatewayID, vpcID)
+		if tfec2.ErrCodeEquals(err, tfec2.InvalidVpnGatewayIDNotFound) {
+			return nil, attachmentStateNotFound, nil
+		}
+		if err != nil {
+			return nil, attachmentStateUnknown, err
+		}
+
+		if vpcAttachment == nil {
+			return nil, attachmentStateNotFound, nil
+		}
+
+		return vpcAttachment, aws.StringValue(vpcAttachment.State), nil
+	}
+}

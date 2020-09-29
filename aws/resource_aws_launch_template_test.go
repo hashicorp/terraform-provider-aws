@@ -1327,7 +1327,7 @@ resource "aws_launch_template" "test" {
 func testAccAWSLaunchTemplateConfig_EbsOptimized(rName, ebsOptimized string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  ebs_optimized = %s # allows "", false, true, "false", "true" values
+  ebs_optimized = %s
   name          = %q
 }
 `, ebsOptimized, rName)
@@ -1883,7 +1883,7 @@ func testAccAWSLaunchTemplateconfig_descriptionUpdateDefaultVersion(rName, descr
 resource "aws_launch_template" "test" {
   name                   = %q
   description            = %q
-  update_default_version = %v
+  update_default_version = %t
 
   tags = {
     test = "baz"

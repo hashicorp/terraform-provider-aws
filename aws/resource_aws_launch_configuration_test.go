@@ -632,30 +632,11 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
 `
 }
 
-func testAccAWSLaunchConfigurationConfig_instanceStoreAMI() string {
-	return `
-data "aws_ami" "amzn-ami-minimal-pv" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-pv-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["instance-store"]
-  }
-}
-`
-}
-
 func testAccAWSLaunchConfigurationConfigWithInstanceStoreAMI(rName string) string {
-	return testAccAWSLaunchConfigurationConfig_instanceStoreAMI() + fmt.Sprintf(`
+	return testAccLatestAmazonLinuxPvInstanceStoreAmiConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name     = %[1]q
-  image_id = data.aws_ami.amzn-ami-minimal-pv.id
+  image_id = data.aws_ami.amzn-ami-minimal-pv-instance-store.id
 
   # When the instance type is updated, the new type must support ephemeral storage.
   instance_type = "m1.small"
