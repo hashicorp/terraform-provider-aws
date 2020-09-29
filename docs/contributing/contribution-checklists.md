@@ -61,8 +61,8 @@ guidelines.
    see in the codebase, and ensure your code is formatted with `go fmt`.
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
-- [ ] __Vendor additions__: Create a separate PR if you are updating the vendor
-   folder. This is to avoid conflicts as the vendor versions tend to be fast-
+- [ ] __Dependency updates__: Create a separate PR if you are updating dependencies.
+   This is to avoid conflicts as version updates tend to be fast-
    moving targets. We will plan to merge the PR with this change first.
 
 ## Adding Resource Import Support
@@ -481,8 +481,8 @@ guidelines.
    see in the codebase, and ensure your code is formatted with `go fmt`.
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
-- [ ] __Vendor updates__: Create a separate PR if you are adding to the vendor
-   folder. This is to avoid conflicts as the vendor versions tend to be fast-
+- [ ] __Dependency updates__: Create a separate PR if you are updating dependencies.
+   This is to avoid conflicts as version updates tend to be fast-
    moving targets. We will plan to merge the PR with this change first.
 
 ## New Service
@@ -549,7 +549,6 @@ into Terraform.
   ```sh
   go test ./aws
   go mod tidy
-  go mod vendor
   ```
 
 - [ ] __Initial Resource__: Some services can be big and it can be

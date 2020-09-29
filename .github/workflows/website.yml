@@ -61,7 +61,7 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: go install github.com/client9/misspell/cmd/misspell
+      - run: cd tools && go install github.com/client9/misspell/cmd/misspell
       - run: misspell -error -source text website/
   terrafmt:
     runs-on: ubuntu-latest
@@ -76,7 +76,7 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: go install github.com/katbyte/terrafmt
+      - run: cd tools && go install github.com/katbyte/terrafmt
       - run: terrafmt diff ./website --check --pattern '*.markdown' --quiet
   validate-terraform:
     runs-on: ubuntu-latest

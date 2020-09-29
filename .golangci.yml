@@ -38,5 +38,4 @@ linters-settings:
     ignore: github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set,fmt:.*,io:Close
 
 run:
-  modules-download-mode: vendor
   timeout: 10m
