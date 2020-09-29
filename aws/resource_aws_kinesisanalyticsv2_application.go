@@ -196,24 +196,28 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 						"environment_properties": {
 							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									// Flink only
 									"property_group": {
 										Type:     schema.TypeSet,
-										Optional: true,
+										Required: true,
+										MaxItems: 50,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"property_group_id": {
 													Type:     schema.TypeString,
 													Required: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(1, 50),
+														validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
+													),
 												},
+
 												"property_map": {
 													Type:     schema.TypeMap,
 													Required: true,
-													Elem: &schema.Schema{
-														Type: schema.TypeString,
-													},
+													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
 											},
 										},
@@ -984,6 +988,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 				applicationConfigurationUpdate.ApplicationSnapshotConfigurationUpdate = expandKinesisAnalyticsV2ApplicationSnapshotConfigurationUpdate(d.Get("application_configuration.0.application_snapshot_configuration").([]interface{}))
 			}
 
+			if d.HasChange("application_configuration.0.environment_properties") {
+				applicationConfigurationUpdate.EnvironmentPropertyUpdates = expandKinesisAnalyticsV2EnvironmentPropertyUpdates(d.Get("application_configuration.0.environment_properties").([]interface{}))
+			}
+
 			if d.HasChange("application_configuration.0.flink_application_configuration") {
 				applicationConfigurationUpdate.FlinkApplicationConfigurationUpdate = expandKinesisAnalyticsV2ApplicationFlinkApplicationConfigurationUpdate(d.Get("application_configuration.0.flink_application_configuration").([]interface{}))
 			}
@@ -1288,6 +1296,18 @@ func expandKinesisAnalyticsV2ApplicationConfiguration(vApplicationConfiguration 
 		applicationConfiguration.ApplicationSnapshotConfiguration = applicationSnapshotConfiguration
 	}
 
+	if vEnvironmentProperties, ok := mApplicationConfiguration["environment_properties"].([]interface{}); ok && len(vEnvironmentProperties) > 0 && vEnvironmentProperties[0] != nil {
+		environmentProperties := &kinesisanalyticsv2.EnvironmentProperties{}
+
+		mEnvironmentProperties := vEnvironmentProperties[0].(map[string]interface{})
+
+		if vPropertyGroups, ok := mEnvironmentProperties["property_group"].(*schema.Set); ok && vPropertyGroups.Len() > 0 {
+			environmentProperties.PropertyGroups = expandKinesisAnalyticsV2PropertyGroups(vPropertyGroups.List())
+		}
+
+		applicationConfiguration.EnvironmentProperties = environmentProperties
+	}
+
 	if vFlinkApplicationConfiguration, ok := mApplicationConfiguration["flink_application_configuration"].([]interface{}); ok && len(vFlinkApplicationConfiguration) > 0 && vFlinkApplicationConfiguration[0] != nil {
 		flinkApplicationConfiguration := &kinesisanalyticsv2.FlinkApplicationConfiguration{}
 
@@ -1409,6 +1429,27 @@ func flattenKinesisAnalyticsV2ApplicationConfigurationDescription(applicationCon
 		mApplicationConfiguration["application_snapshot_configuration"] = []interface{}{mApplicationSnapshotConfiguration}
 	}
 
+	if environmentPropertyDescriptions := applicationConfigurationDescription.EnvironmentPropertyDescriptions; environmentPropertyDescriptions != nil && len(environmentPropertyDescriptions.PropertyGroupDescriptions) > 0 {
+		mEnvironmentProperties := map[string]interface{}{}
+
+		vPropertyGroups := []interface{}{}
+
+		for _, propertyGroup := range environmentPropertyDescriptions.PropertyGroupDescriptions {
+			if propertyGroup != nil {
+				mPropertyGroup := map[string]interface{}{
+					"property_group_id": aws.StringValue(propertyGroup.PropertyGroupId),
+					"property_map":      pointersMapToStringList(propertyGroup.PropertyMap),
+				}
+
+				vPropertyGroups = append(vPropertyGroups, mPropertyGroup)
+			}
+		}
+
+		mEnvironmentProperties["property_group"] = vPropertyGroups
+
+		mApplicationConfiguration["environment_properties"] = []interface{}{mEnvironmentProperties}
+	}
+
 	if flinkApplicationConfigurationDescription := applicationConfigurationDescription.FlinkApplicationConfigurationDescription; flinkApplicationConfigurationDescription != nil {
 		mFlinkApplicationConfiguration := map[string]interface{}{}
 
@@ -1510,6 +1551,48 @@ func expandKinesisAnalyticsV2ApplicationSnapshotConfigurationUpdate(vApplication
 	}
 
 	return applicationSnapshotConfigurationUpdate
+}
+
+func expandKinesisAnalyticsV2EnvironmentPropertyUpdates(vEnvironmentProperties []interface{}) *kinesisanalyticsv2.EnvironmentPropertyUpdates {
+	if len(vEnvironmentProperties) == 0 || vEnvironmentProperties[0] == nil {
+		// Return empty updates to remove all existing property groups.
+		return &kinesisanalyticsv2.EnvironmentPropertyUpdates{PropertyGroups: []*kinesisanalyticsv2.PropertyGroup{}}
+	}
+
+	environmentPropertyUpdates := &kinesisanalyticsv2.EnvironmentPropertyUpdates{}
+
+	mEnvironmentProperties := vEnvironmentProperties[0].(map[string]interface{})
+
+	if vPropertyGroups, ok := mEnvironmentProperties["property_group"].(*schema.Set); ok && vPropertyGroups.Len() > 0 {
+		environmentPropertyUpdates.PropertyGroups = expandKinesisAnalyticsV2PropertyGroups(vPropertyGroups.List())
+	}
+
+	return environmentPropertyUpdates
+}
+
+func expandKinesisAnalyticsV2PropertyGroups(vPropertyGroups []interface{}) []*kinesisanalyticsv2.PropertyGroup {
+	propertyGroups := []*kinesisanalyticsv2.PropertyGroup{}
+
+	for _, vPropertyGroup := range vPropertyGroups {
+		propertyGroup := &kinesisanalyticsv2.PropertyGroup{}
+
+		mPropertyGroup := vPropertyGroup.(map[string]interface{})
+
+		if vPropertyGroupID, ok := mPropertyGroup["property_group_id"].(string); ok && vPropertyGroupID != "" {
+			propertyGroup.PropertyGroupId = aws.String(vPropertyGroupID)
+		} else {
+			// https://github.com/hashicorp/terraform-plugin-sdk/issues/588
+			continue
+		}
+
+		if vPropertyMap, ok := mPropertyGroup["property_map"].(map[string]interface{}); ok && len(vPropertyMap) > 0 {
+			propertyGroup.PropertyMap = stringMapToPointers(vPropertyMap)
+		}
+
+		propertyGroups = append(propertyGroups, propertyGroup)
+	}
+
+	return propertyGroups
 }
 
 func expandKinesisAnalyticsV2ApplicationFlinkApplicationConfigurationUpdate(vFlinkApplicationConfiguration []interface{}) *kinesisanalyticsv2.FlinkApplicationConfigurationUpdate {

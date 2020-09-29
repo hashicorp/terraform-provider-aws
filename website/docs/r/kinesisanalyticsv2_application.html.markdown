@@ -47,7 +47,7 @@ The `application_configuration` object supports the following:
 
 * `application_code_configuration` - (Required) The code location and type parameters for the application.
 * `application_snapshot_configuration` - (Optional) Describes whether snapshots are enabled for a Flink-based application.
-* `environment_property` - (Optional) Describes execution properties for a Flink-based application.
+* `environment_properties` - (Optional) Describes execution properties for a Flink-based application.
 * `flink_application_configuration` - (Optional) The configuration of a Flink-based application.
 * `sql_application_configuration` - (Optional) The configuration of a SQL-based application.
 
@@ -70,6 +70,15 @@ The `s3_content_location` object supports the following:
 The `application_snapshot_configuration` object supports the following:
 
 * `snapshots_enabled` - (Required) Describes whether snapshots are enabled for a Flink-based Kinesis Data Analytics application.
+
+The `environment_properties` object supports the following:
+
+* `property_group` - (Required) Describes the execution property groups.
+
+The `property_group` object supports the following:
+
+* `property_group_id` - (Required) The key of the application execution property key-value map.
+* `property_map` - (Required) Application execution property key-value map.
 
 The `flink_application_configuration` object supports the following:
 
