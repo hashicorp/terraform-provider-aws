@@ -71,6 +71,39 @@ The `application_snapshot_configuration` object supports the following:
 
 * `snapshots_enabled` - (Required) Describes whether snapshots are enabled for a Flink-based Kinesis Data Analytics application.
 
+The `flink_application_configuration` object supports the following:
+
+* `checkpoint_configuration` - (Optional) Describes an application's checkpointing configuration.
+* `monitoring_configuration` - (Optional) Describes configuration parameters for Amazon CloudWatch logging for an application.
+* `parallelism_configuration` - (Optional) Describes parameters for how an application executes multiple tasks simultaneously.
+
+The `checkpoint_configuration` object supports the following:
+
+* `configuration_type` - (Required) Describes whether the application uses Kinesis Data Analytics' default checkpointing behavior. Valid values: `CUSTOM`, `DEFAULT`.
+<br/>Set this attribute to `CUSTOM` in order for any specified `checkpointing_enabled`, `checkpoint_interval`, or `min_pause_between_checkpoints` attribute values to be effective.
+<br/>If this attribute is set to `DEFAULT`, the application will always use the following values:
+  * `checkpointing_enabled = true`
+  * `checkpoint_interval = 60000`
+  * `min_pause_between_checkpoints = 5000`
+* `checkpointing_enabled` - (Optional) Describes whether checkpointing is enabled for a Flink-based Kinesis Data Analytics application.
+* `checkpoint_interval` - (Optional) Describes the interval in milliseconds between checkpoint operations.
+* `min_pause_between_checkpoints` - (Optional) Describes the minimum time in milliseconds after a checkpoint operation completes that a new checkpoint operation can start.
+
+The `monitoring_configuration` object supports the following:
+
+* `configuration_type` - (Required) Describes whether to use the default CloudWatch logging configuration for an application. Valid values: `CUSTOM`, `DEFAULT`.
+<br/>Set this attribute to `CUSTOM` in order for any specified `log_level` or `metrics_level` attribute values to be effective.
+* `log_level` - (Optional) Describes the verbosity of the CloudWatch Logs for an application. Valid values: `DEBUG`, `ERROR`, `INFO`, `WARN`.
+* `metrics_level` - (Optional) Describes the granularity of the CloudWatch Logs for an application. Valid values: `APPLICATION`, `OPERATOR`, `PARALLELISM`, `TASK`.
+
+The `parallelism_configuration` object supports the following:
+
+* `configuration_type` - (Required) Describes whether the application uses the default parallelism for the Kinesis Data Analytics service. Valid values: `CUSTOM`, `DEFAULT`.
+<br/>Set this attribute to `CUSTOM` in order for any specified `auto_scaling_enabled`, `parallelism`, or `parallelism_per_kpu` attribute values to be effective.
+* `auto_scaling_enabled` - (Optional) Describes whether the Kinesis Data Analytics service can increase the parallelism of the application in response to increased throughput.
+* `parallelism` - (Optional) Describes the initial number of parallel tasks that a Flink-based Kinesis Data Analytics application can perform.
+* `parallelism_per_kpu` - (Optional) Describes the number of parallel tasks that a Flink-based Kinesis Data Analytics application can perform per Kinesis Processing Unit (KPU) used by the application.
+
 The `cloudwatch_logging_options` object supports the following:
 
 * `log_stream_arn` - (Required) The ARN of the CloudWatch log stream to receive application messages.

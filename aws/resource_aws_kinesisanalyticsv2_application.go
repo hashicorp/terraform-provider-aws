@@ -22,27 +22,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/waiter"
 )
 
-var (
-	validateKinesisAnalyticsV2MetricsLevel = validation.StringInSlice([]string{
-		kinesisanalyticsv2.MetricsLevelApplication,
-		kinesisanalyticsv2.MetricsLevelOperator,
-		kinesisanalyticsv2.MetricsLevelParallelism,
-		kinesisanalyticsv2.MetricsLevelTask,
-	}, false)
-
-	validateKinesisAnalyticsV2LogLevel = validation.StringInSlice([]string{
-		kinesisanalyticsv2.LogLevelInfo,
-		kinesisanalyticsv2.LogLevelWarn,
-		kinesisanalyticsv2.LogLevelError,
-		kinesisanalyticsv2.LogLevelDebug,
-	}, false)
-
-	validateKinesisAnalyticsV2ConfigurationType = validation.StringInSlice([]string{
-		kinesisanalyticsv2.ConfigurationTypeCustom,
-		kinesisanalyticsv2.ConfigurationTypeDefault,
-	}, false)
-)
-
 func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsKinesisAnalyticsV2ApplicationCreate,
@@ -103,7 +82,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_.-]+$`), ""),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
 				),
 			},
 
@@ -139,7 +118,6 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				MaxItems: 1,
-
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"application_code_configuration": {
@@ -201,8 +179,10 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 						},
 
 						"application_snapshot_configuration": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"snapshots_enabled": {
@@ -245,81 +225,107 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 						"flink_application_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"checkpoint_configuration": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"checkpoint_interval": {
-													Type:     schema.TypeInt,
-													Optional: true,
-												},
 												"checkpointing_enabled": {
 													Type:     schema.TypeBool,
 													Optional: true,
+													Computed: true,
 												},
+
+												"checkpoint_interval": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.IntAtLeast(1),
+												},
+
 												"configuration_type": {
 													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validateKinesisAnalyticsV2ConfigurationType,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(kinesisanalyticsv2.ConfigurationType_Values(), false),
 												},
+
 												"min_pause_between_checkpoints": {
-													Type:     schema.TypeInt,
-													Optional: true,
+													Type:         schema.TypeInt,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.IntAtLeast(0),
 												},
 											},
 										},
 									},
+
 									"monitoring_configuration": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"configuration_type": {
 													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validateKinesisAnalyticsV2ConfigurationType,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(kinesisanalyticsv2.ConfigurationType_Values(), false),
 												},
+
 												"log_level": {
 													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validateKinesisAnalyticsV2LogLevel,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.StringInSlice(kinesisanalyticsv2.LogLevel_Values(), false),
 												},
+
 												"metrics_level": {
 													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validateKinesisAnalyticsV2MetricsLevel,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.StringInSlice(kinesisanalyticsv2.MetricsLevel_Values(), false),
 												},
 											},
 										},
 									},
+
 									"parallelism_configuration": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"autoscaling_enabled": {
+												"auto_scaling_enabled": {
 													Type:     schema.TypeBool,
 													Optional: true,
+													Computed: true,
 												},
+
 												"configuration_type": {
 													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validateKinesisAnalyticsV2ConfigurationType,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(kinesisanalyticsv2.ConfigurationType_Values(), false),
 												},
+
 												"parallelism": {
-													Type:     schema.TypeInt,
-													Required: true,
+													Type:         schema.TypeInt,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.IntAtLeast(1),
 												},
+
 												"parallelism_per_kpu": {
-													Type:     schema.TypeInt,
-													Required: true,
+													Type:         schema.TypeInt,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.IntAtLeast(1),
 												},
 											},
 										},
@@ -978,6 +984,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 				applicationConfigurationUpdate.ApplicationSnapshotConfigurationUpdate = expandKinesisAnalyticsV2ApplicationSnapshotConfigurationUpdate(d.Get("application_configuration.0.application_snapshot_configuration").([]interface{}))
 			}
 
+			if d.HasChange("application_configuration.0.flink_application_configuration") {
+				applicationConfigurationUpdate.FlinkApplicationConfigurationUpdate = expandKinesisAnalyticsV2ApplicationFlinkApplicationConfigurationUpdate(d.Get("application_configuration.0.flink_application_configuration").([]interface{}))
+			}
+
 			input.ApplicationConfigurationUpdate = applicationConfigurationUpdate
 
 			updateApplication = true
@@ -1278,6 +1288,83 @@ func expandKinesisAnalyticsV2ApplicationConfiguration(vApplicationConfiguration 
 		applicationConfiguration.ApplicationSnapshotConfiguration = applicationSnapshotConfiguration
 	}
 
+	if vFlinkApplicationConfiguration, ok := mApplicationConfiguration["flink_application_configuration"].([]interface{}); ok && len(vFlinkApplicationConfiguration) > 0 && vFlinkApplicationConfiguration[0] != nil {
+		flinkApplicationConfiguration := &kinesisanalyticsv2.FlinkApplicationConfiguration{}
+
+		mFlinkApplicationConfiguration := vFlinkApplicationConfiguration[0].(map[string]interface{})
+
+		if vCheckpointConfiguration, ok := mFlinkApplicationConfiguration["checkpoint_configuration"].([]interface{}); ok && len(vCheckpointConfiguration) > 0 && vCheckpointConfiguration[0] != nil {
+			checkpointConfiguration := &kinesisanalyticsv2.CheckpointConfiguration{}
+
+			mCheckpointConfiguration := vCheckpointConfiguration[0].(map[string]interface{})
+
+			if vConfigurationType, ok := mCheckpointConfiguration["configuration_type"].(string); ok && vConfigurationType != "" {
+				checkpointConfiguration.ConfigurationType = aws.String(vConfigurationType)
+
+				if vConfigurationType == kinesisanalyticsv2.ConfigurationTypeCustom {
+					if vCheckpointingEnabled, ok := mCheckpointConfiguration["checkpointing_enabled"].(bool); ok {
+						checkpointConfiguration.CheckpointingEnabled = aws.Bool(vCheckpointingEnabled)
+					}
+					if vCheckpointInterval, ok := mCheckpointConfiguration["checkpoint_interval"].(int); ok {
+						checkpointConfiguration.CheckpointInterval = aws.Int64(int64(vCheckpointInterval))
+					}
+					if vMinPauseBetweenCheckpoints, ok := mCheckpointConfiguration["min_pause_between_checkpoints"].(int); ok {
+						checkpointConfiguration.MinPauseBetweenCheckpoints = aws.Int64(int64(vMinPauseBetweenCheckpoints))
+					}
+				}
+			}
+
+			flinkApplicationConfiguration.CheckpointConfiguration = checkpointConfiguration
+		}
+
+		if vMonitoringConfiguration, ok := mFlinkApplicationConfiguration["monitoring_configuration"].([]interface{}); ok && len(vMonitoringConfiguration) > 0 && vMonitoringConfiguration[0] != nil {
+			monitoringConfiguration := &kinesisanalyticsv2.MonitoringConfiguration{}
+
+			mMonitoringConfiguration := vMonitoringConfiguration[0].(map[string]interface{})
+
+			if vConfigurationType, ok := mMonitoringConfiguration["configuration_type"].(string); ok && vConfigurationType != "" {
+				monitoringConfiguration.ConfigurationType = aws.String(vConfigurationType)
+
+				if vConfigurationType == kinesisanalyticsv2.ConfigurationTypeCustom {
+					if vLogLevel, ok := mMonitoringConfiguration["log_level"].(string); ok && vLogLevel != "" {
+						monitoringConfiguration.LogLevel = aws.String(vLogLevel)
+					}
+					if vMetricsLevel, ok := mMonitoringConfiguration["metrics_level"].(string); ok && vMetricsLevel != "" {
+						monitoringConfiguration.MetricsLevel = aws.String(vMetricsLevel)
+					}
+				}
+			}
+
+			flinkApplicationConfiguration.MonitoringConfiguration = monitoringConfiguration
+		}
+
+		if vParallelismConfiguration, ok := mFlinkApplicationConfiguration["parallelism_configuration"].([]interface{}); ok && len(vParallelismConfiguration) > 0 && vParallelismConfiguration[0] != nil {
+			parallelismConfiguration := &kinesisanalyticsv2.ParallelismConfiguration{}
+
+			mParallelismConfiguration := vParallelismConfiguration[0].(map[string]interface{})
+
+			if vConfigurationType, ok := mParallelismConfiguration["configuration_type"].(string); ok && vConfigurationType != "" {
+				parallelismConfiguration.ConfigurationType = aws.String(vConfigurationType)
+
+				if vConfigurationType == kinesisanalyticsv2.ConfigurationTypeCustom {
+					if vAutoScalingEnabled, ok := mParallelismConfiguration["auto_scaling_enabled"].(bool); ok {
+						parallelismConfiguration.AutoScalingEnabled = aws.Bool(vAutoScalingEnabled)
+					}
+					if vParallelism, ok := mParallelismConfiguration["parallelism"].(int); ok {
+						parallelismConfiguration.Parallelism = aws.Int64(int64(vParallelism))
+					}
+					if vParallelismPerKPU, ok := mParallelismConfiguration["parallelism_per_kpu"].(int); ok {
+						parallelismConfiguration.ParallelismPerKPU = aws.Int64(int64(vParallelismPerKPU))
+					}
+				}
+			}
+
+			flinkApplicationConfiguration.ParallelismConfiguration = parallelismConfiguration
+		}
+
+		applicationConfiguration.FlinkApplicationConfiguration = flinkApplicationConfiguration
+	}
+
 	return applicationConfiguration
 }
 
@@ -1320,6 +1407,44 @@ func flattenKinesisAnalyticsV2ApplicationConfigurationDescription(applicationCon
 		}
 
 		mApplicationConfiguration["application_snapshot_configuration"] = []interface{}{mApplicationSnapshotConfiguration}
+	}
+
+	if flinkApplicationConfigurationDescription := applicationConfigurationDescription.FlinkApplicationConfigurationDescription; flinkApplicationConfigurationDescription != nil {
+		mFlinkApplicationConfiguration := map[string]interface{}{}
+
+		if checkpointConfigurationDescription := flinkApplicationConfigurationDescription.CheckpointConfigurationDescription; checkpointConfigurationDescription != nil {
+			mCheckpointConfiguration := map[string]interface{}{
+				"checkpointing_enabled":         aws.BoolValue(checkpointConfigurationDescription.CheckpointingEnabled),
+				"checkpoint_interval":           int(aws.Int64Value(checkpointConfigurationDescription.CheckpointInterval)),
+				"configuration_type":            aws.StringValue(checkpointConfigurationDescription.ConfigurationType),
+				"min_pause_between_checkpoints": int(aws.Int64Value(checkpointConfigurationDescription.MinPauseBetweenCheckpoints)),
+			}
+
+			mFlinkApplicationConfiguration["checkpoint_configuration"] = []interface{}{mCheckpointConfiguration}
+		}
+
+		if monitoringConfigurationDescription := flinkApplicationConfigurationDescription.MonitoringConfigurationDescription; monitoringConfigurationDescription != nil {
+			mMonitoringConfiguration := map[string]interface{}{
+				"configuration_type": aws.StringValue(monitoringConfigurationDescription.ConfigurationType),
+				"log_level":          aws.StringValue(monitoringConfigurationDescription.LogLevel),
+				"metrics_level":      aws.StringValue(monitoringConfigurationDescription.MetricsLevel),
+			}
+
+			mFlinkApplicationConfiguration["monitoring_configuration"] = []interface{}{mMonitoringConfiguration}
+		}
+
+		if parallelismConfigurationDescription := flinkApplicationConfigurationDescription.ParallelismConfigurationDescription; parallelismConfigurationDescription != nil {
+			mParallelismConfiguration := map[string]interface{}{
+				"auto_scaling_enabled": aws.BoolValue(parallelismConfigurationDescription.AutoScalingEnabled),
+				"configuration_type":   aws.StringValue(parallelismConfigurationDescription.ConfigurationType),
+				"parallelism":          int(aws.Int64Value(parallelismConfigurationDescription.Parallelism)),
+				"parallelism_per_kpu":  int(aws.Int64Value(parallelismConfigurationDescription.ParallelismPerKPU)),
+			}
+
+			mFlinkApplicationConfiguration["parallelism_configuration"] = []interface{}{mParallelismConfiguration}
+		}
+
+		mApplicationConfiguration["flink_application_configuration"] = []interface{}{mFlinkApplicationConfiguration}
 	}
 
 	return []interface{}{mApplicationConfiguration}
@@ -1385,6 +1510,87 @@ func expandKinesisAnalyticsV2ApplicationSnapshotConfigurationUpdate(vApplication
 	}
 
 	return applicationSnapshotConfigurationUpdate
+}
+
+func expandKinesisAnalyticsV2ApplicationFlinkApplicationConfigurationUpdate(vFlinkApplicationConfiguration []interface{}) *kinesisanalyticsv2.FlinkApplicationConfigurationUpdate {
+	if len(vFlinkApplicationConfiguration) == 0 || vFlinkApplicationConfiguration[0] == nil {
+		return nil
+	}
+
+	flinkApplicationConfigurationUpdate := &kinesisanalyticsv2.FlinkApplicationConfigurationUpdate{}
+
+	mFlinkApplicationConfiguration := vFlinkApplicationConfiguration[0].(map[string]interface{})
+
+	if vCheckpointConfiguration, ok := mFlinkApplicationConfiguration["checkpoint_configuration"].([]interface{}); ok && len(vCheckpointConfiguration) > 0 && vCheckpointConfiguration[0] != nil {
+		checkpointConfigurationUpdate := &kinesisanalyticsv2.CheckpointConfigurationUpdate{}
+
+		mCheckpointConfiguration := vCheckpointConfiguration[0].(map[string]interface{})
+
+		if vConfigurationType, ok := mCheckpointConfiguration["configuration_type"].(string); ok && vConfigurationType != "" {
+			checkpointConfigurationUpdate.ConfigurationTypeUpdate = aws.String(vConfigurationType)
+
+			if vConfigurationType == kinesisanalyticsv2.ConfigurationTypeCustom {
+				if vCheckpointingEnabled, ok := mCheckpointConfiguration["checkpointing_enabled"].(bool); ok {
+					checkpointConfigurationUpdate.CheckpointingEnabledUpdate = aws.Bool(vCheckpointingEnabled)
+				}
+				if vCheckpointInterval, ok := mCheckpointConfiguration["checkpoint_interval"].(int); ok {
+					checkpointConfigurationUpdate.CheckpointIntervalUpdate = aws.Int64(int64(vCheckpointInterval))
+				}
+				if vMinPauseBetweenCheckpoints, ok := mCheckpointConfiguration["min_pause_between_checkpoints"].(int); ok {
+					checkpointConfigurationUpdate.MinPauseBetweenCheckpointsUpdate = aws.Int64(int64(vMinPauseBetweenCheckpoints))
+				}
+			}
+		}
+
+		flinkApplicationConfigurationUpdate.CheckpointConfigurationUpdate = checkpointConfigurationUpdate
+	}
+
+	if vMonitoringConfiguration, ok := mFlinkApplicationConfiguration["monitoring_configuration"].([]interface{}); ok && len(vMonitoringConfiguration) > 0 && vMonitoringConfiguration[0] != nil {
+		monitoringConfigurationUpdate := &kinesisanalyticsv2.MonitoringConfigurationUpdate{}
+
+		mMonitoringConfiguration := vMonitoringConfiguration[0].(map[string]interface{})
+
+		if vConfigurationType, ok := mMonitoringConfiguration["configuration_type"].(string); ok && vConfigurationType != "" {
+			monitoringConfigurationUpdate.ConfigurationTypeUpdate = aws.String(vConfigurationType)
+
+			if vConfigurationType == kinesisanalyticsv2.ConfigurationTypeCustom {
+				if vLogLevel, ok := mMonitoringConfiguration["log_level"].(string); ok && vLogLevel != "" {
+					monitoringConfigurationUpdate.LogLevelUpdate = aws.String(vLogLevel)
+				}
+				if vMetricsLevel, ok := mMonitoringConfiguration["metrics_level"].(string); ok && vMetricsLevel != "" {
+					monitoringConfigurationUpdate.MetricsLevelUpdate = aws.String(vMetricsLevel)
+				}
+			}
+		}
+
+		flinkApplicationConfigurationUpdate.MonitoringConfigurationUpdate = monitoringConfigurationUpdate
+	}
+
+	if vParallelismConfiguration, ok := mFlinkApplicationConfiguration["parallelism_configuration"].([]interface{}); ok && len(vParallelismConfiguration) > 0 && vParallelismConfiguration[0] != nil {
+		parallelismConfigurationUpdate := &kinesisanalyticsv2.ParallelismConfigurationUpdate{}
+
+		mParallelismConfiguration := vParallelismConfiguration[0].(map[string]interface{})
+
+		if vConfigurationType, ok := mParallelismConfiguration["configuration_type"].(string); ok && vConfigurationType != "" {
+			parallelismConfigurationUpdate.ConfigurationTypeUpdate = aws.String(vConfigurationType)
+
+			if vConfigurationType == kinesisanalyticsv2.ConfigurationTypeCustom {
+				if vAutoScalingEnabled, ok := mParallelismConfiguration["auto_scaling_enabled"].(bool); ok {
+					parallelismConfigurationUpdate.AutoScalingEnabledUpdate = aws.Bool(vAutoScalingEnabled)
+				}
+				if vParallelism, ok := mParallelismConfiguration["parallelism"].(int); ok {
+					parallelismConfigurationUpdate.ParallelismUpdate = aws.Int64(int64(vParallelism))
+				}
+				if vParallelismPerKPU, ok := mParallelismConfiguration["parallelism_per_kpu"].(int); ok {
+					parallelismConfigurationUpdate.ParallelismPerKPUUpdate = aws.Int64(int64(vParallelismPerKPU))
+				}
+			}
+		}
+
+		flinkApplicationConfigurationUpdate.ParallelismConfigurationUpdate = parallelismConfigurationUpdate
+	}
+
+	return flinkApplicationConfigurationUpdate
 }
 
 func expandKinesisAnalyticsV2CloudWatchLoggingOptions(vCloudWatchLoggingOptions []interface{}) []*kinesisanalyticsv2.CloudWatchLoggingOption {
