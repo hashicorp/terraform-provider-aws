@@ -5,10 +5,12 @@ import (
 	// "log"
 	// "sort"
 	// "time"
+	"regexp"
 
 	// "github.com/aws/aws-sdk-go/aws"
 	// "github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func dataSourceAwsSsoPermissionSet() *schema.Resource {
@@ -68,7 +70,7 @@ func dataSourceAwsSsoPermissionSet() *schema.Resource {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
+					Type: schema.TypeString,
 				},
 			},
 
