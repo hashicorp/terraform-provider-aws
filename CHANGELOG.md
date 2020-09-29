@@ -1,5 +1,10 @@
 ## 3.9.0 (Unreleased)
 
+FEATURES
+
+* **New Resource:** `aws_lex_intent` [GH-8917]
+* **New Data Source:** `aws_lex_intent` [GH-8917]
+
 ENHANCEMENTS
 
 * resource/aws_glue_crawler: Add `connection_name` field to `s3_target` block [GH-15350]
