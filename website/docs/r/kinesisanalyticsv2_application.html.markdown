@@ -36,7 +36,7 @@ resource "aws_kinesisanalyticsv2_application" "example" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the application.
-* `runtime_environment` - (Required) The runtime environment for the application. Valid values: `SQL-1.0`, `FLINK-1_6`, `FLINK-1_8`.
+* `runtime_environment` - (Required) The runtime environment for the application. Valid values: `SQL-1_0`, `FLINK-1_6`, `FLINK-1_8`.
 * `service_execution_role` - (Required) The ARN of the [IAM role](/docs/providers/aws/r/iam_role.html) used by the application to access Kinesis data streams, Kinesis Data Firehose delivery streams, Amazon S3 objects, and other external resources.
 * `application_configuration` - (Optional) The application's configuration
 * `cloudwatch_logging_options` - (Optional) An Amazon CloudWatch [log stream](/docs/providers/aws/r/cloudwatch_log_stream.html) to monitor application configuration errors.
@@ -45,11 +45,27 @@ The following arguments are supported:
 
 The `application_configuration` object supports the following:
 
-* `application_code_configuration` - (Optional) The code location and type parameters for a Flink-based application.
+* `application_code_configuration` - (Required) The code location and type parameters for the application.
 * `application_snapshot_configuration` - (Optional) Describes whether snapshots are enabled for a Flink-based application.
 * `environment_property` - (Optional) Describes execution properties for a Flink-based application.
 * `flink_application_configuration` - (Optional) The configuration of a Flink-based application.
 * `sql_application_configuration` - (Optional) The configuration of a SQL-based application.
+
+The `application_code_configuration` object supports the following:
+
+* `code_content_type` - (Required) Specifies whether the code content is in text or zip format. Valid values: `PLAINTEXT`, `ZIPFILE`.
+* `code_content` - (Optional) The location and type of the application code.
+
+The `code_content` object supports the following:
+
+* `s3_content_location` - (Optional) Information about the Amazon S3 bucket containing the application code.
+* `text_content` - (Optional) The text-format code for the application.
+
+The `s3_content_location` object supports the following:
+
+* `bucket_arn` - (Required) The ARN for the S3 bucket containing the application code.
+* `file_key` - (Required) The file key for the object containing the application code.
+* `object_version` - (Optional) The version of the object containing the application code.
 
 The `cloudwatch_logging_options` object supports the following:
 

@@ -139,7 +139,7 @@ func TestAccAWSKinesisAnalyticsV2Application_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_UpdateServiceExecutionRole(t *testing.T) {
+func TestAccAWSKinesisAnalyticsV2Application_ServiceExecutionRole_Update(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
 	iamRoleResourceName1 := "aws_iam_role.test.0"
@@ -372,6 +372,78 @@ func TestAccAWSKinesisAnalyticsV2Application_CloudWatchLoggingOptions_Update(t *
 	})
 }
 
+func TestAccAWSKinesisAnalyticsV2Application_ApplicationCodeConfiguration_Update(t *testing.T) {
+	var v kinesisanalyticsv2.ApplicationDetail
+	resourceName := "aws_kinesisanalyticsv2_application.test"
+	iamRoleResourceName := "aws_iam_role.test.0"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsV2ApplicationConfigApplicationCodeConfiguration(rName, "SELECT 1;\n"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.text_content", "SELECT 1;\n"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "PLAINTEXT"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.environment_property.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.#", "0"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "SQL-1_0"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsV2ApplicationConfigApplicationCodeConfiguration(rName, "SELECT 2;\n"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.text_content", "SELECT 2;\n"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "PLAINTEXT"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.environment_property.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.#", "0"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "SQL-1_0"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSKinesisAnalyticsV2Application_simpleSql(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
@@ -388,38 +460,6 @@ func TestAccAWSKinesisAnalyticsV2Application_simpleSql(t *testing.T) {
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.text_content", "testCode\n"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSKinesisAnalyticsV2Application_UpdateApplicationCodeConfiguration(t *testing.T) {
-	var v kinesisanalyticsv2.ApplicationDetail
-	resourceName := "aws_kinesisanalyticsv2_application.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigSimpleSql(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
-				),
-			},
-			{
-				Config: testAccKinesisAnalyticsV2ApplicationConfigApplicationCodeConfigurationUpdated(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.text_content", "testCode2\n"),
 				),
 			},
 			{
@@ -1204,6 +1244,28 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 `, rName, streamIndex))
 }
 
+func testAccKinesisAnalyticsV2ApplicationConfigApplicationCodeConfiguration(rName, textContent string) string {
+	return composeConfig(
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
+		fmt.Sprintf(`
+resource "aws_kinesisanalyticsv2_application" "test" {
+  name                   = %[1]q
+  runtime_environment    = "SQL-1_0"
+  service_execution_role = aws_iam_role.test.0.arn
+
+  application_configuration {
+    application_code_configuration {
+      code_content {
+        text_content = %[2]q
+      }
+
+      code_content_type = "PLAINTEXT"
+    }
+  }
+}
+`, rName, textContent))
+}
+
 func testAccKinesisAnalyticsV2ApplicationConfigSimpleSql(rName string) string {
 	return composeConfig(
 		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
@@ -1217,30 +1279,6 @@ resource "aws_kinesisanalyticsv2_application" "test" {
     application_code_configuration {
       code_content {
         text_content = "testCode\n"
-      }
-
-      code_content_type = "PLAINTEXT"
-    }
-
-    sql_application_configuration {}
-  }
-}
-`, rName))
-}
-
-func testAccKinesisAnalyticsV2ApplicationConfigApplicationCodeConfigurationUpdated(rName string) string {
-	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName, 1),
-		fmt.Sprintf(`
-resource "aws_kinesisanalyticsv2_application" "test" {
-  name                   = %[1]q
-  runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.0.arn
-
-  application_configuration {
-    application_code_configuration {
-      code_content {
-        text_content = "testCode2\n"
       }
 
       code_content_type = "PLAINTEXT"

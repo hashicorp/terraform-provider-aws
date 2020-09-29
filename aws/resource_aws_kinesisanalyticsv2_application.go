@@ -42,11 +42,6 @@ var (
 		kinesisanalyticsv2.ConfigurationTypeCustom,
 		kinesisanalyticsv2.ConfigurationTypeDefault,
 	}, false)
-
-	validateKinesisAnalyticsV2CodeContentType = validation.StringInSlice([]string{
-		kinesisanalyticsv2.CodeContentTypePlaintext,
-		kinesisanalyticsv2.CodeContentTypeZipfile,
-	}, false)
 )
 
 func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
@@ -154,44 +149,53 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"code_content_type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validateKinesisAnalyticsV2CodeContentType,
-									},
 									"code_content": {
 										Type:     schema.TypeList,
-										MaxItems: 1,
 										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"text_content": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Type:          schema.TypeString,
+													Optional:      true,
+													ValidateFunc:  validation.StringLenBetween(0, 102400),
+													ConflictsWith: []string{"application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location"},
 												},
+
 												"s3_content_location": {
 													Type:     schema.TypeList,
-													MaxItems: 1,
 													Optional: true,
+													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"bucket_arn": {
-																Type:     schema.TypeString,
-																Required: true,
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validateArn,
 															},
+
 															"file_key": {
-																Type:     schema.TypeString,
-																Required: true,
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringLenBetween(1, 1024),
 															},
+
 															"object_version": {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
 														},
 													},
+													ConflictsWith: []string{"application_configuration.0.application_code_configuration.0.code_content.0.text_content"},
 												},
 											},
 										},
+									},
+
+									"code_content_type": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(kinesisanalyticsv2.CodeContentType_Values(), false),
 									},
 								},
 							},
@@ -844,21 +848,21 @@ func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta i
 	d.Set("version_id", int(aws.Int64Value(application.ApplicationVersionId)))
 
 	if err := d.Set("application_configuration", flattenKinesisAnalyticsV2ApplicationConfigurationDescription(application.ApplicationConfigurationDescription)); err != nil {
-		return fmt.Errorf("error setting application_configuration: %s", err)
+		return fmt.Errorf("error setting application_configuration: %w", err)
 	}
 
 	if err := d.Set("cloudwatch_logging_options", flattenKinesisAnalyticsV2CloudWatchLoggingOptionDescriptions(application.CloudWatchLoggingOptionDescriptions)); err != nil {
-		return fmt.Errorf("error setting cloudwatch_logging_options: %s", err)
+		return fmt.Errorf("error setting cloudwatch_logging_options: %w", err)
 	}
 
 	tags, err := keyvaluetags.Kinesisanalyticsv2ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Kinesis Analytics v2 Application (%s): %s", arn, err)
+		return fmt.Errorf("error listing tags for Kinesis Analytics v2 Application (%s): %w", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -880,6 +884,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 			o, n := d.GetChange("cloudwatch_logging_options")
 
 			if len(o.([]interface{})) == 0 {
+				// Add new CloudWatch logging options.
 				input := &kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionInput{
 					ApplicationName: aws.String(applicationName),
 					CloudWatchLoggingOption: &kinesisanalyticsv2.CloudWatchLoggingOption{
@@ -915,6 +920,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 				currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 			} else if len(n.([]interface{})) == 0 {
+				// Delete existing CloudWatch logging options.
 				input := &kinesisanalyticsv2.DeleteApplicationCloudWatchLoggingOptionInput{
 					ApplicationName:             aws.String(applicationName),
 					CloudWatchLoggingOptionId:   aws.String(o.([]interface{})[0].(map[string]interface{})["cloudwatch_logging_option_id"].(string)),
@@ -948,6 +954,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 				currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 			} else {
+				// Update existing CloudWatch logging options.
 				input.CloudWatchLoggingOptionUpdates = []*kinesisanalyticsv2.CloudWatchLoggingOptionUpdate{
 					{
 						CloudWatchLoggingOptionId: aws.String(o.([]interface{})[0].(map[string]interface{})["cloudwatch_logging_option_id"].(string)),
@@ -961,6 +968,18 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 		if d.HasChange("service_execution_role") {
 			input.ServiceExecutionRoleUpdate = aws.String(d.Get("service_execution_role").(string))
+
+			updateApplication = true
+		}
+
+		if d.HasChange("application_configuration") {
+			applicationConfigurationUpdate := &kinesisanalyticsv2.ApplicationConfigurationUpdate{}
+
+			if d.HasChange("application_configuration.0.application_code_configuration") {
+				applicationConfigurationUpdate.ApplicationCodeConfigurationUpdate = expandKinesisAnalyticsV2ApplicationCodeConfigurationUpdate(d.Get("application_configuration.0.application_code_configuration").([]interface{}))
+			}
+
+			input.ApplicationConfigurationUpdate = applicationConfigurationUpdate
 
 			updateApplication = true
 		}
@@ -1149,23 +1168,29 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdateOld(d *schema.ResourceData, m
 
 func resourceAwsKinesisAnalyticsV2ApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
-	name := d.Get("name").(string)
-	createTimestamp, parseErr := time.Parse(time.RFC3339, d.Get("create_timestamp").(string))
-	if parseErr != nil {
-		return parseErr
+
+	createTimestamp, err := time.Parse(time.RFC3339, d.Get("create_timestamp").(string))
+	if err != nil {
+		return fmt.Errorf("error parsing create_timestamp: %w", err)
 	}
 
-	log.Printf("[DEBUG] Kinesis Analytics Application destroy: %v", d.Id())
-	deleteOpts := &kinesisanalyticsv2.DeleteApplicationInput{
-		ApplicationName: aws.String(name),
+	applicationName := d.Get("name").(string)
+
+	log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s)", d.Id())
+	_, err = conn.DeleteApplication(&kinesisanalyticsv2.DeleteApplicationInput{
+		ApplicationName: aws.String(applicationName),
 		CreateTimestamp: aws.Time(createTimestamp),
-	}
-	_, deleteErr := conn.DeleteApplication(deleteOpts)
-	if isAWSErr(deleteErr, kinesisanalyticsv2.ErrCodeResourceNotFoundException, "") {
+	})
+
+	if isAWSErr(err, kinesisanalyticsv2.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
-	_, err := waiter.ApplicationDeleted(conn, name, d.Timeout(schema.TimeoutDelete))
+	if err != nil {
+		return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
+	}
+
+	_, err = waiter.ApplicationDeleted(conn, applicationName, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) deletion: %w", d.Id(), err)
@@ -1198,7 +1223,49 @@ func expandKinesisAnalyticsV2ApplicationConfiguration(vApplicationConfiguration 
 
 	applicationConfiguration := &kinesisanalyticsv2.ApplicationConfiguration{}
 
-	//mApplicationConfiguration := vApplicationConfiguration[0].(map[string]interface{})
+	mApplicationConfiguration := vApplicationConfiguration[0].(map[string]interface{})
+
+	if vApplicationCodeConfiguration, ok := mApplicationConfiguration["application_code_configuration"].([]interface{}); ok && len(vApplicationCodeConfiguration) > 0 && vApplicationCodeConfiguration[0] != nil {
+		applicationCodeConfiguration := &kinesisanalyticsv2.ApplicationCodeConfiguration{}
+
+		mApplicationCodeConfiguration := vApplicationCodeConfiguration[0].(map[string]interface{})
+
+		if vCodeContent, ok := mApplicationCodeConfiguration["code_content"].([]interface{}); ok && len(vCodeContent) > 0 && vCodeContent[0] != nil {
+			codeContent := &kinesisanalyticsv2.CodeContent{}
+
+			mCodeContent := vCodeContent[0].(map[string]interface{})
+
+			if vS3ContentLocation, ok := mCodeContent["s3_content_location"].([]interface{}); ok && len(vS3ContentLocation) > 0 && vS3ContentLocation[0] != nil {
+				s3ContentLocation := &kinesisanalyticsv2.S3ContentLocation{}
+
+				mS3ContentLocation := vS3ContentLocation[0].(map[string]interface{})
+
+				if vBucketArn, ok := mS3ContentLocation["bucket_arn"].(string); ok && vBucketArn != "" {
+					s3ContentLocation.BucketARN = aws.String(vBucketArn)
+				}
+				if vFileKey, ok := mS3ContentLocation["file_key"].(string); ok && vFileKey != "" {
+					s3ContentLocation.FileKey = aws.String(vFileKey)
+				}
+				if vObjectVersion, ok := mS3ContentLocation["object_version"].(string); ok && vObjectVersion != "" {
+					s3ContentLocation.ObjectVersion = aws.String(vObjectVersion)
+				}
+
+				codeContent.S3ContentLocation = s3ContentLocation
+			}
+
+			if vTextContent, ok := mCodeContent["text_content"].(string); ok && vTextContent != "" {
+				codeContent.TextContent = aws.String(vTextContent)
+			}
+
+			applicationCodeConfiguration.CodeContent = codeContent
+		}
+
+		if vCodeContentType, ok := mApplicationCodeConfiguration["code_content_type"].(string); ok && vCodeContentType != "" {
+			applicationCodeConfiguration.CodeContentType = aws.String(vCodeContentType)
+		}
+
+		applicationConfiguration.ApplicationCodeConfiguration = applicationCodeConfiguration
+	}
 
 	return applicationConfiguration
 }
@@ -1210,7 +1277,79 @@ func flattenKinesisAnalyticsV2ApplicationConfigurationDescription(applicationCon
 
 	mApplicationConfiguration := map[string]interface{}{}
 
+	if applicationCodeConfigurationDescription := applicationConfigurationDescription.ApplicationCodeConfigurationDescription; applicationCodeConfigurationDescription != nil {
+		mApplicationCodeConfiguration := map[string]interface{}{
+			"code_content_type": aws.StringValue(applicationCodeConfigurationDescription.CodeContentType),
+		}
+
+		if codeContentDescription := applicationCodeConfigurationDescription.CodeContentDescription; codeContentDescription != nil {
+			mCodeContent := map[string]interface{}{
+				"text_content": aws.StringValue(codeContentDescription.TextContent),
+			}
+
+			if s3ApplicationCodeLocationDescription := codeContentDescription.S3ApplicationCodeLocationDescription; s3ApplicationCodeLocationDescription != nil {
+				mS3ContentLocation := map[string]interface{}{
+					"bucket_arn":     aws.StringValue(s3ApplicationCodeLocationDescription.BucketARN),
+					"file_key":       aws.StringValue(s3ApplicationCodeLocationDescription.FileKey),
+					"object_version": aws.StringValue(s3ApplicationCodeLocationDescription.ObjectVersion),
+				}
+
+				mCodeContent["s3_content_location"] = []interface{}{mS3ContentLocation}
+			}
+
+			mApplicationCodeConfiguration["code_content"] = []interface{}{mCodeContent}
+		}
+
+		mApplicationConfiguration["application_code_configuration"] = []interface{}{mApplicationCodeConfiguration}
+	}
+
 	return []interface{}{mApplicationConfiguration}
+}
+
+func expandKinesisAnalyticsV2ApplicationCodeConfigurationUpdate(vApplicationCodeConfiguration []interface{}) *kinesisanalyticsv2.ApplicationCodeConfigurationUpdate {
+	if len(vApplicationCodeConfiguration) == 0 || vApplicationCodeConfiguration[0] == nil {
+		return nil
+	}
+
+	applicationCodeConfigurationUpdate := &kinesisanalyticsv2.ApplicationCodeConfigurationUpdate{}
+
+	mApplicationCodeConfiguration := vApplicationCodeConfiguration[0].(map[string]interface{})
+
+	if vCodeContent, ok := mApplicationCodeConfiguration["code_content"].([]interface{}); ok && len(vCodeContent) > 0 && vCodeContent[0] != nil {
+		codeContentUpdate := &kinesisanalyticsv2.CodeContentUpdate{}
+
+		mCodeContent := vCodeContent[0].(map[string]interface{})
+
+		if vS3ContentLocation, ok := mCodeContent["s3_content_location"].([]interface{}); ok && len(vS3ContentLocation) > 0 && vS3ContentLocation[0] != nil {
+			s3ContentLocationUpdate := &kinesisanalyticsv2.S3ContentLocationUpdate{}
+
+			mS3ContentLocation := vS3ContentLocation[0].(map[string]interface{})
+
+			if vBucketArn, ok := mS3ContentLocation["bucket_arn"].(string); ok && vBucketArn != "" {
+				s3ContentLocationUpdate.BucketARNUpdate = aws.String(vBucketArn)
+			}
+			if vFileKey, ok := mS3ContentLocation["file_key"].(string); ok && vFileKey != "" {
+				s3ContentLocationUpdate.FileKeyUpdate = aws.String(vFileKey)
+			}
+			if vObjectVersion, ok := mS3ContentLocation["object_version"].(string); ok && vObjectVersion != "" {
+				s3ContentLocationUpdate.ObjectVersionUpdate = aws.String(vObjectVersion)
+			}
+
+			codeContentUpdate.S3ContentLocationUpdate = s3ContentLocationUpdate
+		}
+
+		if vTextContent, ok := mCodeContent["text_content"].(string); ok && vTextContent != "" {
+			codeContentUpdate.TextContentUpdate = aws.String(vTextContent)
+		}
+
+		applicationCodeConfigurationUpdate.CodeContentUpdate = codeContentUpdate
+	}
+
+	if vCodeContentType, ok := mApplicationCodeConfiguration["code_content_type"].(string); ok && vCodeContentType != "" {
+		applicationCodeConfigurationUpdate.CodeContentTypeUpdate = aws.String(vCodeContentType)
+	}
+
+	return applicationCodeConfigurationUpdate
 }
 
 func expandKinesisAnalyticsV2CloudWatchLoggingOptions(vCloudWatchLoggingOptions []interface{}) []*kinesisanalyticsv2.CloudWatchLoggingOption {
