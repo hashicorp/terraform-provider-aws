@@ -546,7 +546,7 @@ resource "aws_sagemaker_notebook_instance" "test" {
 
 func testAccAWSSagemakerNotebookInstanceConfigRootAccess(rName string, rootAccess string) string {
 	return testAccAWSSagemakerNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
-resource "aws_sagemaker_notebook_instance" "foo" {
+resource "aws_sagemaker_notebook_instance" "test" {
   name          = %[1]q
   role_arn      = aws_iam_role.test.arn
   instance_type = "ml.t2.medium"
@@ -558,7 +558,7 @@ resource "aws_sagemaker_notebook_instance" "foo" {
 func testAccAWSSagemakerNotebookInstanceConfigDirectInternetAccess(rName string, directInternetAccess string) string {
 	return testAccAWSSagemakerNotebookInstanceBaseConfig(rName) +
 		fmt.Sprintf(`
-resource "aws_sagemaker_notebook_instance" "foo" {
+resource "aws_sagemaker_notebook_instance" "test" {
   name                   = %[1]q
   role_arn               = aws_iam_role.test.arn
   instance_type          = "ml.t2.medium"
