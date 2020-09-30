@@ -329,6 +329,10 @@ resource "aws_glue_partition" "test" {
 
 func testAccGluePartitionMultiplePartValueConfig(rName, parValue, parValue2 string) string {
 	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
 resource "aws_glue_catalog_table" "test" {
   name          = %[1]q
   database_name = aws_glue_catalog_database.test.name
