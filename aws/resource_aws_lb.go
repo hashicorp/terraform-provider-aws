@@ -182,7 +182,7 @@ func resourceAwsLb() *schema.Resource {
 			"wait_for_provisioning": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Default:  true,
 			},
 
 			"idle_timeout": {
