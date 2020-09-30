@@ -8,13 +8,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -2289,9 +2289,9 @@ func TestAccAWSDBInstance_cloudwatchLogsExportConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBInstance_cloudwatchLogsExportConfigurationUpdate(t *testing.T) {
+func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_MySQL(t *testing.T) {
 	var v rds.DBInstance
-
+	resourceName := "aws_db_instance.bar"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2302,43 +2302,37 @@ func TestAccAWSDBInstance_cloudwatchLogsExportConfigurationUpdate(t *testing.T) 
 			{
 				Config: testAccAWSDBInstanceConfig_CloudwatchLogsExportConfiguration(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "enabled_cloudwatch_logs_exports.0", "audit"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "enabled_cloudwatch_logs_exports.1", "error"),
+					testAccCheckAWSDBInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
 				),
 			},
 			{
 				Config: testAccAWSDBInstanceConfig_CloudwatchLogsExportConfigurationAdd(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "enabled_cloudwatch_logs_exports.0", "audit"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "enabled_cloudwatch_logs_exports.1", "error"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "enabled_cloudwatch_logs_exports.2", "general"),
+					testAccCheckAWSDBInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "3"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "general"),
 				),
 			},
 			{
 				Config: testAccAWSDBInstanceConfig_CloudwatchLogsExportConfigurationModify(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "enabled_cloudwatch_logs_exports.0", "audit"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "enabled_cloudwatch_logs_exports.1", "general"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "enabled_cloudwatch_logs_exports.2", "slowquery"),
+					testAccCheckAWSDBInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "3"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "general"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "slowquery"),
 				),
 			},
 			{
 				Config: testAccAWSDBInstanceConfig_CloudwatchLogsExportConfigurationDelete(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.bar", "enabled_cloudwatch_logs_exports.#", "0"),
+					testAccCheckAWSDBInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
 				),
 			},
 		},
