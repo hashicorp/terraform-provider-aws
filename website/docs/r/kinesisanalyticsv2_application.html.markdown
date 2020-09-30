@@ -39,7 +39,7 @@ The following arguments are supported:
 * `runtime_environment` - (Required) The runtime environment for the application. Valid values: `SQL-1_0`, `FLINK-1_6`, `FLINK-1_8`.
 * `service_execution_role` - (Required) The ARN of the [IAM role](/docs/providers/aws/r/iam_role.html) used by the application to access Kinesis data streams, Kinesis Data Firehose delivery streams, Amazon S3 objects, and other external resources.
 * `application_configuration` - (Optional) The application's configuration
-* `cloudwatch_logging_options` - (Optional) An Amazon CloudWatch [log stream](/docs/providers/aws/r/cloudwatch_log_stream.html) to monitor application configuration errors.
+* `cloudwatch_logging_options` - (Optional) A [CloudWatch log stream](/docs/providers/aws/r/cloudwatch_log_stream.html) to monitor application configuration errors.
 * `description` - (Optional) A summary description of the application.
 * `tags` - (Optional) A map of tags to assign to the application.
 
@@ -83,7 +83,7 @@ The `property_group` object supports the following:
 The `flink_application_configuration` object supports the following:
 
 * `checkpoint_configuration` - (Optional) Describes an application's checkpointing configuration.
-* `monitoring_configuration` - (Optional) Describes configuration parameters for Amazon CloudWatch logging for an application.
+* `monitoring_configuration` - (Optional) Describes configuration parameters for CloudWatch logging for an application.
 * `parallelism_configuration` - (Optional) Describes parameters for how an application executes multiple tasks simultaneously.
 
 The `checkpoint_configuration` object supports the following:
@@ -112,6 +112,114 @@ The `parallelism_configuration` object supports the following:
 * `auto_scaling_enabled` - (Optional) Describes whether the Kinesis Data Analytics service can increase the parallelism of the application in response to increased throughput.
 * `parallelism` - (Optional) Describes the initial number of parallel tasks that a Flink-based Kinesis Data Analytics application can perform.
 * `parallelism_per_kpu` - (Optional) Describes the number of parallel tasks that a Flink-based Kinesis Data Analytics application can perform per Kinesis Processing Unit (KPU) used by the application.
+
+The `sql_application_configuration` object supports the following:
+
+* `input` - (Optional) The input stream used by the application.
+* `output` - (Optional) The destination streams used by the application.
+* `reference_data_source` - (Optional) The reference data source used by the application.
+
+The `input` object supports the following:
+
+* `input_schema` - (Required) Describes the format of the data in the streaming source, and how each data element maps to corresponding columns in the in-application stream that is being created.
+* `name_prefix` - (Required) The name prefix to use when creating an in-application stream.
+* `input_parallelism` - (Optional) Describes the number of in-application streams to create.
+* `input_processing_configuration` - (Optional) The input processing configuration for the input.
+An input processor transforms records as they are received from the stream, before the application's SQL code executes.
+* `kinesis_firehose_input` - (Optional) If the streaming source is a [Kinesis Data Firehose delivery stream](/docs/providers/aws/r/kinesis_firehose_delivery_stream.html), identifies the delivery stream's ARN.
+* `kinesis_streams_input` - (Optional) If the streaming source is a [Kinesis data stream](/docs/providers/aws/r/kinesis_stream.html), identifies the stream's Amazon Resource Name (ARN).
+
+The `input_parallelism` object supports the following:
+
+* `count` - (Optional) The number of in-application streams to create.
+
+The `input_processing_configuration` object supports the following:
+
+* `input_lambda_processor` - (Required) Describes the [Lambda function](/docs/providers/aws/r/lambda_function.html) that is used to preprocess the records in the stream before being processed by your application code.
+
+The `input_lambda_processor` object supports the following:
+
+* `resource_arn` - (Required) The ARN of the Lambda function that operates on records in the stream.
+
+The `input_schema` object supports the following:
+
+* `record_column` - (Required) Describes the mapping of each data element in the streaming source to the corresponding column in the in-application stream.
+* `record_format` - (Required) Specifies the format of the records on the streaming source.
+* `record_encoding` - (Optional) Specifies the encoding of the records in the streaming source. For example, `UTF-8`.
+
+The `record_column` object supports the following:
+
+* `name` - (Required) The name of the column that is created in the in-application input stream or reference table.
+* `sql_type` - (Required) The type of column created in the in-application input stream or reference table.
+* `mapping` - (Optional) A reference to the data element in the streaming input or the reference data source.
+
+The `record_format` object supports the following:
+
+* `mapping_parameters` - (Required) Provides additional mapping information specific to the record format (such as JSON, CSV, or record fields delimited by some delimiter) on the streaming source.
+* `record_format_type` - (Required) The type of record format. Valid values: `CSV`, `JSON`.
+
+The `mapping_parameters` object supports the following:
+
+* `csv_mapping_parameters` - (Optional) Provides additional mapping information when the record format uses delimiters (for example, CSV).
+* `json_mapping_parameters` - (Optional) Provides additional mapping information when JSON is the record format on the streaming source.
+
+The `csv_mapping_parameters` object supports the following:
+
+* `record_column_delimiter` - (Required) The column delimiter. For example, in a CSV format, a comma (`,`) is the typical column delimiter.
+* `record_row_delimiter` - (Required) The row delimiter. For example, in a CSV format, `\n` is the typical row delimiter.
+
+The `json_mapping_parameters` object supports the following:
+
+* `record_row_path` - (Required) The path to the top-level parent that contains the records.
+
+The `kinesis_firehose_input` object supports the following:
+
+* `resource_arn` - (Required) The ARN of the delivery stream.
+
+The `kinesis_streams_input` object supports the following:
+
+* `resource_arn` - (Required) The ARN of the input Kinesis data stream to read.
+
+The `output` object supports the following:
+
+* `destination_schema` - (Required) Describes the data format when records are written to the destination.
+* `name` - (Required) The name of the in-application stream.
+* `kinesis_firehose_output` - (Optional) Identifies a [Kinesis Data Firehose delivery stream](/docs/providers/aws/r/kinesis_firehose_delivery_stream.html) as the destination.
+* `kinesis_streams_output` - (Optional) Identifies a [Kinesis data stream](/docs/providers/aws/r/kinesis_stream.html) as the destination.
+* `lambda_output` - (Optional) Identifies a [Lambda function](/docs/providers/aws/r/lambda_function.html) as the destination.
+
+The `destination_schema` object supports the following:
+
+* `record_format_type` - (Required) Specifies the format of the records on the output stream. Valid values: `CSV`, `JSON`.
+
+The `kinesis_firehose_output` object supports the following:
+
+* `resource_arn` - (Required) The ARN of the destination delivery stream to write to.
+
+The `kinesis_streams_output` object supports the following:
+
+* `resource_arn` - (Required) The ARN of the destination Kinesis data stream to write to.
+
+The `lambda_output` object supports the following:
+
+* `resource_arn` - (Required) The ARN of the destination Lambda function to write to.
+
+The `reference_data_source` object supports the following:
+
+* `reference_schema` - (Required) Describes the format of the data in the streaming source, and how each data element maps to corresponding columns created in the in-application stream.
+* `s3_reference_data_source` - (Required) Identifies the S3 bucket and object that contains the reference data.
+* `table_name` - (Required) The name of the in-application table to create.
+
+The `reference_schema` object supports the following:
+
+* `record_column` - (Required) Describes the mapping of each data element in the streaming source to the corresponding column in the in-application stream.
+* `record_format` - (Required) Specifies the format of the records on the streaming source.
+* `record_encoding` - (Optional) Specifies the encoding of the records in the streaming source. For example, `UTF-8`.
+
+The `s3_reference_data_source` object supports the following:
+
+* `bucket_arn` - (Required) The ARN of the S3 bucket.
+* `file_key` - (Required) The object key name containing the reference data.
 
 The `cloudwatch_logging_options` object supports the following:
 

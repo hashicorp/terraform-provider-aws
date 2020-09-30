@@ -798,6 +798,141 @@ func TestAccAWSKinesisAnalyticsV2Application_FlinkApplicationConfiguration_Updat
 	})
 }
 
+func TestAccAWSKinesisAnalyticsV2Application_SQLApplicationConfiguration_Input_Update(t *testing.T) {
+	var v kinesisanalyticsv2.ApplicationDetail
+	resourceName := "aws_kinesisanalyticsv2_application.test"
+	iamRoleResourceName := "aws_iam_role.test.0"
+	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	streamsResourceName := "aws_kinesis_stream.test.0"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationInput(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.text_content", "SELECT 1;\n"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "PLAINTEXT"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.environment_properties.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.in_app_stream_names.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_id"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_column.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_column.*", map[string]string{
+						"name":     "COLUMN_1",
+						"sql_type": "INTEGER",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_format.0.mapping_parameters.0.csv_mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_format.0.mapping_parameters.0.csv_mapping_parameters.0.record_column_delimiter", ","),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_format.0.mapping_parameters.0.csv_mapping_parameters.0.record_row_delimiter", "|"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_format.0.mapping_parameters.0.json_mapping_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_format.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.name_prefix", "NAME_PREFIX_1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_parallelism.0.count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_processing_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.kinesis_firehose_input.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.kinesis_firehose_input.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.kinesis_streams_input.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.output.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.reference_data_source.#", "0"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "SQL-1_0"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationInputUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.s3_content_location.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content.0.text_content", "SELECT 1;\n"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_code_configuration.0.code_content_type", "PLAINTEXT"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.environment_properties.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.in_app_stream_names.#", "42"),
+					resource.TestCheckResourceAttrSet(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_id"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_column.#", "2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_column.*", map[string]string{
+						"name":     "COLUMN_2",
+						"sql_type": "VARCHAR(8)",
+						"mapping":  "MAPPING-2",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_column.*", map[string]string{
+						"name":     "COLUMN_3",
+						"sql_type": "DOUBLE",
+						"mapping":  "MAPPING-3",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_encoding", "UTF-8"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_format.0.mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_format.0.mapping_parameters.0.csv_mapping_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_format.0.mapping_parameters.0.json_mapping_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_format.0.mapping_parameters.0.json_mapping_parameters.0.record_row_path", "$path.to.record"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_schema.0.record_format.0.record_format_type", "JSON"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.name_prefix", "NAME_PREFIX_2"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_parallelism.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_parallelism.0.count", "42"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.input_processing_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.kinesis_firehose_input.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.kinesis_streams_input.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.sql_application_configuration.0.input.0.kinesis_streams_input.0.resource_arn", streamsResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.output.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.reference_data_source.#", "0"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "runtime_environment", "SQL-1_0"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_execution_role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TODO Delete acceptance tests below...
+
 func TestAccAWSKinesisAnalyticsV2Application_simpleSql(t *testing.T) {
 	var v kinesisanalyticsv2.ApplicationDetail
 	resourceName := "aws_kinesisanalyticsv2_application.test"
@@ -1526,6 +1661,39 @@ resource "aws_s3_bucket_object" "test" {
 `, rName)
 }
 
+func testAccKinesisAnalyticsV2ApplicationConfigBaseSQLApplication(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  role          = aws_iam_role.test.0.arn
+  runtime       = "nodejs12.x"
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  name        = %[1]q
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    bucket_arn = aws_s3_bucket.test.arn
+    role_arn   = aws_iam_role.test.0.arn
+  }
+}
+
+resource "aws_kinesis_stream" "test" {
+  count = 2
+
+  name        = "%[1]s.${count.index}"
+  shard_count = 1
+}
+`, rName)
+}
+
 func testAccKinesisAnalyticsV2ApplicationConfigBasicSQLApplication(rName string) string {
 	return composeConfig(
 		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
@@ -1655,7 +1823,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
           Key9 = "Value1"
           Key8 = "Value2"
         }
-	  }
+      }
 
       property_group {
         property_group_id = "PROPERTY-GROUP-ID2"
@@ -1701,7 +1869,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
         property_map = {
           Key = "Value"
         }
-	  }
+      }
 
       property_group {
         property_group_id = "PROPERTY-GROUP-ID2"
@@ -1754,23 +1922,8 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 func testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfiguration(rName string) string {
 	return composeConfig(
 		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-
-  versioning {
-    enabled = true
-  }
-}
-
-resource "aws_s3_bucket_object" "test" {
-  count = 2
-
-  bucket = aws_s3_bucket.test.bucket
-  key    = "%[1]s.${count.index}"
-  source = "test-fixtures/flink-app.jar"
-}
-
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "FLINK-1_8"
@@ -1819,23 +1972,8 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 func testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfigurationUpdated(rName string) string {
 	return composeConfig(
 		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-
-  versioning {
-    enabled = true
-  }
-}
-
-resource "aws_s3_bucket_object" "test" {
-  count = 2
-
-  bucket = aws_s3_bucket.test.bucket
-  key    = "%[1]s.${count.index}"
-  source = "test-fixtures/flink-app.jar"
-}
-
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "FLINK-1_8"
@@ -1880,6 +2018,122 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 }
 `, rName))
 }
+
+func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationInput(rName string) string {
+	return composeConfig(
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseSQLApplication(rName),
+		fmt.Sprintf(`
+resource "aws_kinesisanalyticsv2_application" "test" {
+  name                   = %[1]q
+  runtime_environment    = "SQL-1_0"
+  service_execution_role = aws_iam_role.test.0.arn
+
+  application_configuration {
+    application_code_configuration {
+      code_content {
+        text_content = "SELECT 1;\n"
+      }
+
+      code_content_type = "PLAINTEXT"
+    }
+
+    sql_application_configuration {
+      input {
+        name_prefix = "NAME_PREFIX_1"
+
+        input_schema {
+          record_column {
+            name     = "COLUMN_1"
+            sql_type = "INTEGER"
+          }
+
+          record_format {
+            record_format_type = "CSV"
+
+            mapping_parameters {
+              csv_mapping_parameters {
+                record_column_delimiter = ","
+                record_row_delimiter    = "|"
+              }
+            }
+          }
+        }
+
+        kinesis_firehose_input {
+          resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationInputUpdated(rName string) string {
+	return composeConfig(
+		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseSQLApplication(rName),
+		fmt.Sprintf(`
+resource "aws_kinesisanalyticsv2_application" "test" {
+  name                   = %[1]q
+  runtime_environment    = "SQL-1_0"
+  service_execution_role = aws_iam_role.test.0.arn
+
+  application_configuration {
+    application_code_configuration {
+      code_content {
+        text_content = "SELECT 1;\n"
+      }
+
+      code_content_type = "PLAINTEXT"
+    }
+
+    sql_application_configuration {
+      input {
+        name_prefix = "NAME_PREFIX_2"
+
+        input_parallelism {
+          count = 42
+        }
+
+        input_schema {
+          record_column {
+            name     = "COLUMN_2"
+            sql_type = "VARCHAR(8)"
+            mapping  = "MAPPING-2"
+          }
+
+          record_column {
+            name     = "COLUMN_3"
+            sql_type = "DOUBLE"
+            mapping  = "MAPPING-3"
+          }
+
+          record_encoding = "UTF-8"
+
+          record_format {
+            record_format_type = "JSON"
+
+            mapping_parameters {
+              json_mapping_parameters {
+                record_row_path = "$path.to.record"
+              }
+            }
+          }
+        }
+
+        kinesis_streams_input {
+          resource_arn = aws_kinesis_stream.test.0.arn
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+// TODO Delete configurations below...
 
 func testAccKinesisAnalyticsV2ApplicationConfigSimpleSql(rName string) string {
 	return composeConfig(
@@ -2538,6 +2792,8 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 }
 `, rName))
 }
+
+// TODO To here
 
 func testAccKinesisAnalyticsV2ApplicationConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return composeConfig(
