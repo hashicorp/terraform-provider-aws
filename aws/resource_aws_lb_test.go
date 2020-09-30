@@ -1142,7 +1142,7 @@ func TestAccAWSLB_ALB_WaitForProvision(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBConfigWaitForProvisioning(lbName, true, true),
+				Config: testAccAWSLBConfigWaitForProvisioning(lbName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
@@ -1161,11 +1161,11 @@ func TestAccAWSLB_ALB_WaitForProvision(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "TestAccAWSALB_WaitForProvision"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_provisioning", "true"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_provisioning", "false"),
 				),
 			},
 			{
-				Config: testAccAWSLBConfigWaitForProvisioning(lbName, false, true),
+				Config: testAccAWSLBConfigWaitForProvisioning(lbName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
@@ -1184,7 +1184,7 @@ func TestAccAWSLB_ALB_WaitForProvision(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "TestAccAWSALB_WaitForProvision"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_provisioning", "true"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_provisioning", "false"),
 				),
 			},
 		},
