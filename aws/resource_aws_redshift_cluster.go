@@ -28,7 +28,7 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(75 * time.Minute),
-			Update: schema.DefaultTimeout(40 * time.Minute),
+			Update: schema.DefaultTimeout(75 * time.Minute),
 			Delete: schema.DefaultTimeout(40 * time.Minute),
 		},
 
@@ -512,7 +512,7 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	if logging, ok := d.GetOk("logging.0.enable"); ok && logging.(bool) {
+	if _, ok := d.GetOk("logging.0.enable"); ok {
 		if err := enableRedshiftClusterLogging(d, conn); err != nil {
 			return fmt.Errorf("error enabling Redshift Cluster (%s) logging: %s", d.Id(), err)
 		}

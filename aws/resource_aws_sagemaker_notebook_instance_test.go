@@ -325,6 +325,38 @@ func testAccCheckAWSSagemakerNotebookInstanceName(notebook *sagemaker.DescribeNo
 	}
 }
 
+func TestAccAWSSagemakerNotebookInstance_root_access(t *testing.T) {
+	var notebook sagemaker.DescribeNotebookInstanceOutput
+	notebookName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerNotebookInstanceResourceNamePrefix)
+	var resourceName = "aws_sagemaker_notebook_instance.foo"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigRootAccess(notebookName, "Disabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerNotebookRootAccess(&notebook, "Disabled"),
+				),
+			},
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigRootAccess(notebookName, "Enabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerNotebookRootAccess(&notebook, "Enabled"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSagemakerNotebookInstance_direct_internet_access(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
 	notebookName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerNotebookInstanceResourceNamePrefix)
@@ -355,6 +387,17 @@ func TestAccAWSSagemakerNotebookInstance_direct_internet_access(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckAWSSagemakerNotebookRootAccess(notebook *sagemaker.DescribeNotebookInstanceOutput, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rootAccess := notebook.RootAccess
+		if *rootAccess != expected {
+			return fmt.Errorf("root_access setting is incorrect: %s", *notebook.RootAccess)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckAWSSagemakerNotebookDirectInternetAccess(notebook *sagemaker.DescribeNotebookInstanceOutput, expected string) resource.TestCheckFunc {
@@ -542,6 +585,33 @@ data "aws_iam_policy_document" "assume_role" {
   }
 }
 `, notebookName, notebookName)
+}
+
+func testAccAWSSagemakerNotebookInstanceConfigRootAccess(notebookName string, rootAccess string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_notebook_instance" "foo" {
+  name          = %[1]q
+  role_arn      = aws_iam_role.foo.arn
+  instance_type = "ml.t2.medium"
+  root_access   = %[2]q
+}
+
+resource "aws_iam_role" "foo" {
+  name               = %[1]q
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+`, notebookName, rootAccess)
 }
 
 func testAccAWSSagemakerNotebookInstanceConfigDirectInternetAccess(notebookName string, directInternetAccess string) string {

@@ -208,8 +208,8 @@ resource "aws_vpc" "peer" {
 
 // Requester's side of the connection.
 resource "aws_vpc_peering_connection" "main" {
-  vpc_id      = "${aws_vpc.main.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
+  vpc_id      = aws_vpc.main.id
+  peer_vpc_id = aws_vpc.peer.id
   auto_accept = false
 
   tags = {
@@ -219,7 +219,7 @@ resource "aws_vpc_peering_connection" "main" {
 
 // Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
-  vpc_peering_connection_id = "${aws_vpc_peering_connection.main.id}"
+  vpc_peering_connection_id = aws_vpc_peering_connection.main.id
   auto_accept               = true
 
   tags = {
@@ -251,8 +251,8 @@ resource "aws_vpc" "peer" {
 
 // Requester's side of the connection.
 resource "aws_vpc_peering_connection" "main" {
-  vpc_id      = "${aws_vpc.main.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
+  vpc_id      = aws_vpc.main.id
+  peer_vpc_id = aws_vpc.peer.id
   peer_region = %[2]q
   auto_accept = false
 
@@ -265,7 +265,7 @@ resource "aws_vpc_peering_connection" "main" {
 resource "aws_vpc_peering_connection_accepter" "peer" {
   provider = "awsalternate"
 
-  vpc_peering_connection_id = "${aws_vpc_peering_connection.main.id}"
+  vpc_peering_connection_id = aws_vpc_peering_connection.main.id
   auto_accept               = true
 
   tags = {
@@ -301,9 +301,9 @@ data "aws_caller_identity" "peer" {
 
 // Requester's side of the connection.
 resource "aws_vpc_peering_connection" "main" {
-  vpc_id        = "${aws_vpc.main.id}"
-  peer_vpc_id   = "${aws_vpc.peer.id}"
-  peer_owner_id = "${data.aws_caller_identity.peer.account_id}"
+  vpc_id        = aws_vpc.main.id
+  peer_vpc_id   = aws_vpc.peer.id
+  peer_owner_id = data.aws_caller_identity.peer.account_id
   peer_region   = %[2]q
   auto_accept   = false
 
@@ -312,11 +312,11 @@ resource "aws_vpc_peering_connection" "main" {
   }
 }
 
- // Accepter's side of the connection.
+// Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
   provider = "awsalternate"
 
-  vpc_peering_connection_id = "${aws_vpc_peering_connection.main.id}"
+  vpc_peering_connection_id = aws_vpc_peering_connection.main.id
   auto_accept               = true
 
   tags = {
@@ -352,9 +352,9 @@ data "aws_caller_identity" "peer" {
 
 // Requester's side of the connection.
 resource "aws_vpc_peering_connection" "main" {
-  vpc_id        = "${aws_vpc.main.id}"
-  peer_vpc_id   = "${aws_vpc.peer.id}"
-  peer_owner_id = "${data.aws_caller_identity.peer.account_id}"
+  vpc_id        = aws_vpc.main.id
+  peer_vpc_id   = aws_vpc.peer.id
+  peer_owner_id = data.aws_caller_identity.peer.account_id
   peer_region   = %[2]q
   auto_accept   = false
 
@@ -363,11 +363,11 @@ resource "aws_vpc_peering_connection" "main" {
   }
 }
 
- // Accepter's side of the connection.
+// Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
   provider = "awsalternate"
 
-  vpc_peering_connection_id = "${aws_vpc_peering_connection.main.id}"
+  vpc_peering_connection_id = aws_vpc_peering_connection.main.id
   auto_accept               = true
 
   tags = {

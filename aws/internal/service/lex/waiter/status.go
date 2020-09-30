@@ -32,3 +32,23 @@ func LexSlotTypeStatus(conn *lexmodelbuildingservice.LexModelBuildingService, id
 		return output, LexModelBuildingServiceStatusCreated, nil
 	}
 }
+
+func LexIntentStatus(conn *lexmodelbuildingservice.LexModelBuildingService, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := conn.GetIntentVersions(&lexmodelbuildingservice.GetIntentVersionsInput{
+			Name: aws.String(id),
+		})
+		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
+			return nil, LexModelBuildingServiceStatusNotFound, nil
+		}
+		if err != nil {
+			return nil, LexModelBuildingServiceStatusUnknown, err
+		}
+
+		if output == nil || len(output.Intents) == 0 {
+			return nil, LexModelBuildingServiceStatusNotFound, nil
+		}
+
+		return output, LexModelBuildingServiceStatusCreated, nil
+	}
+}

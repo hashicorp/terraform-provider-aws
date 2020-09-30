@@ -73,9 +73,9 @@ func ClientVpnEndpointDeleted(conn *ec2.EC2, id string) (*ec2.ClientVpnEndpoint,
 }
 
 const (
-	ClientVpnAuthorizationRuleActiveTimeout = 1 * time.Minute
+	ClientVpnAuthorizationRuleActiveTimeout = 5 * time.Minute
 
-	ClientVpnAuthorizationRuleRevokedTimeout = 1 * time.Minute
+	ClientVpnAuthorizationRuleRevokedTimeout = 5 * time.Minute
 )
 
 func ClientVpnAuthorizationRuleAuthorized(conn *ec2.EC2, authorizationRuleID string) (*ec2.AuthorizationRule, error) {
@@ -194,6 +194,46 @@ func SecurityGroupCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.SecurityGroup); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	VpnGatewayVpcAttachmentAttachedTimeout = 15 * time.Minute
+
+	VpnGatewayVpcAttachmentDetachedTimeout = 30 * time.Minute
+)
+
+func VpnGatewayVpcAttachmentAttached(conn *ec2.EC2, vpnGatewayID, vpcID string) (*ec2.VpcAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AttachmentStatusDetached, ec2.AttachmentStatusAttaching},
+		Target:  []string{ec2.AttachmentStatusAttached},
+		Refresh: VpnGatewayVpcAttachmentState(conn, vpnGatewayID, vpcID),
+		Timeout: VpnGatewayVpcAttachmentAttachedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func VpnGatewayVpcAttachmentDetached(conn *ec2.EC2, vpnGatewayID, vpcID string) (*ec2.VpcAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AttachmentStatusAttached, ec2.AttachmentStatusDetaching},
+		Target:  []string{ec2.AttachmentStatusDetached},
+		Refresh: VpnGatewayVpcAttachmentState(conn, vpnGatewayID, vpcID),
+		Timeout: VpnGatewayVpcAttachmentDetachedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcAttachment); ok {
 		return output, err
 	}
 

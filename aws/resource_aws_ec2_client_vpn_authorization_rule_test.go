@@ -324,12 +324,12 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
-	type                       = "certificate-authentication"
-	root_certificate_chain_arn = aws_acm_certificate.test.arn
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
   }
 
   connection_log_options {
-	enabled = false
+    enabled = false
   }
 }`, rName))
 }

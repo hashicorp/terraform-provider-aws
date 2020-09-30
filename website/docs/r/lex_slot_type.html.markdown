@@ -3,7 +3,7 @@ subcategory: "Lex"
 layout: "aws"
 page_title: "AWS: aws_lex_slot_type"
 description: |-
-    Provides details about a specific Amazon Lex Slot Type
+  Provides details about a specific Amazon Lex Slot Type
 ---
 
 # Resource: aws_lex_slot_type

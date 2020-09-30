@@ -21,6 +21,7 @@ func init() {
 		F:    testSweepSnsTopics,
 		Dependencies: []string{
 			"aws_autoscaling_group",
+			"aws_backup_vault_notifications",
 			"aws_budgets_budget",
 			"aws_config_delivery_channel",
 			"aws_dax_cluster",

@@ -552,7 +552,7 @@ resource "aws_instance" "test" {
   }
 
   tags = {
-    Name    = "test-terraform"
+    Name = "test-terraform"
   }
 }
 

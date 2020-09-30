@@ -361,10 +361,10 @@ resource "aws_security_group" "allow_all" {
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self        = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -432,7 +432,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   }
 
   core_instance_group {
-    instance_type = "c4.large"
+    instance_type  = "c4.large"
     instance_count = 2
   }
 
@@ -559,7 +559,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%[1]d"
+  name = "emr_profile_%[1]d"
   role = aws_iam_role.iam_emr_profile_role.name
 }
 
@@ -618,7 +618,7 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
     actions = ["sts:AssumeRole"]
     principals {
       type        = "Service"
-      identifiers = ["elasticmapreduce.${data.aws_partition.current.dns_suffix}","application-autoscaling.${data.aws_partition.current.dns_suffix}"]
+      identifiers = ["elasticmapreduce.${data.aws_partition.current.dns_suffix}", "application-autoscaling.${data.aws_partition.current.dns_suffix}"]
     }
   }
 }
@@ -656,7 +656,7 @@ resource "aws_emr_instance_group" "task" {
   cluster_id          = aws_emr_cluster.tf-test-cluster.id
   instance_count      = 1
   instance_type       = "c4.large"
-  configurations_json =  <<EOF
+  configurations_json = <<EOF
     [
       {
         "Classification": "yarn-site",

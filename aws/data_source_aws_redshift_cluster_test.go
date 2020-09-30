@@ -98,35 +98,35 @@ data "aws_redshift_cluster" "test" {
 }
 
 func testAccAWSDataSourceRedshiftClusterConfigWithVpc(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 }
 
 resource "aws_subnet" "foo" {
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   vpc_id            = aws_vpc.test.id
 }
 
 resource "aws_subnet" "bar" {
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   vpc_id            = aws_vpc.test.id
 }
 
 resource "aws_redshift_subnet_group" "test" {
-  name       = "tf-redshift-subnet-group-%d"
+  name       = "tf-redshift-subnet-group-%[1]d"
   subnet_ids = [aws_subnet.foo.id, aws_subnet.bar.id]
 }
 
 resource "aws_security_group" "test" {
-  name   = "tf-redshift-sg-%d"
+  name   = "tf-redshift-sg-%[1]d"
   vpc_id = aws_vpc.test.id
 }
 
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier = "tf-redshift-cluster-%d"
+  cluster_identifier = "tf-redshift-cluster-%[1]d"
 
   database_name             = "testdb"
   master_username           = "foo"
@@ -143,7 +143,7 @@ resource "aws_redshift_cluster" "test" {
 data "aws_redshift_cluster" "test" {
   cluster_identifier = aws_redshift_cluster.test.cluster_identifier
 }
-`, rInt, rInt, rInt)
+`, rInt))
 }
 
 func testAccAWSDataSourceRedshiftClusterConfigWithLogging(rInt int) string {

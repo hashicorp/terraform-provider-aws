@@ -927,9 +927,9 @@ resource "aws_dms_endpoint" "test" {
   engine_name   = "elasticsearch"
 
   elasticsearch_settings {
-    endpoint_uri               = "search-estest.${data.aws_region.current.name}.es.${data.aws_partition.current.dns_suffix}"
-    error_retry_duration       = %[2]d
-    service_access_role_arn    = aws_iam_role.test.arn
+    endpoint_uri            = "search-estest.${data.aws_region.current.name}.es.${data.aws_partition.current.dns_suffix}"
+    error_retry_duration    = %[2]d
+    service_access_role_arn = aws_iam_role.test.arn
   }
 
   depends_on = [aws_iam_role_policy.test]
@@ -967,7 +967,7 @@ resource "aws_dms_endpoint" "test" {
   engine_name   = "kafka"
 
   kafka_settings {
-	// example kafka broker: "ec2-12-345-678-901.compute-1.amazonaws.com:2345"
+    # example kafka broker: "ec2-12-345-678-901.compute-1.amazonaws.com:2345"
     broker = "%[2]s.%[3]s.${data.aws_partition.current.dns_suffix}:%[4]d"
   }
 }

@@ -109,7 +109,7 @@ func dataSourceAwsGlueScriptRead(d *schema.ResourceData, meta interface{}) error
 		DagNodes: expandGlueCodeGenNodes(dagNode),
 	}
 
-	if v, ok := d.GetOk("language"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("language"); ok {
 		input.Language = aws.String(v.(string))
 	}
 

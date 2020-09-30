@@ -401,7 +401,8 @@ resource "aws_globalaccelerator_accelerator" "example" {
   enabled         = %t
 
   tags = {
-    Name  = "%[1]s"
+    Name = "%[1]s"
+
     %[3]s = "%[4]s"
   }
 }

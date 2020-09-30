@@ -3422,7 +3422,8 @@ resource "aws_codebuild_project" "test" {
 
   tags = {
     tag1 = "tag1value"
-    %s   = "%s"
+
+    %s = "%s"
   }
 }
 `, rName, tagKey, tagValue)

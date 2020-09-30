@@ -570,23 +570,16 @@ func testAccCheckAWSNeptuneClusterSnapshot(rName string) resource.TestCheckFunc 
 	}
 }
 
-var testAccAWSNeptuneClusterConfigBase = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccAWSNeptuneClusterConfigBase() string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 locals {
   availability_zone_names = slice(data.aws_availability_zones.available.names, 0, min(3, length(data.aws_availability_zones.available.names)))
 }
-`
+`))
+}
 
 func testAccAWSNeptuneClusterConfig(rName string) string {
-	return testAccAWSNeptuneClusterConfigBase + fmt.Sprintf(`
+	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %q
   availability_zones                   = local.availability_zone_names
@@ -594,11 +587,11 @@ resource "aws_neptune_cluster" "test" {
   neptune_cluster_parameter_group_name = "default.neptune1"
   skip_final_snapshot                  = true
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSNeptuneClusterConfigDeleteProtection(rName string, isProtected bool) string {
-	return testAccAWSNeptuneClusterConfigBase + fmt.Sprintf(`
+	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %q
   availability_zones                   = local.availability_zone_names
@@ -607,7 +600,7 @@ resource "aws_neptune_cluster" "test" {
   skip_final_snapshot                  = true
   deletion_protection                  = %t
 }
-`, rName, isProtected)
+`, rName, isProtected))
 }
 
 func testAccAWSNeptuneClusterConfig_namePrefix(rName string) string {
@@ -622,18 +615,18 @@ resource "aws_neptune_cluster" "test" {
 }
 
 func testAccAWSNeptuneClusterConfigWithFinalSnapshot(rName string) string {
-	return testAccAWSNeptuneClusterConfigBase + fmt.Sprintf(`
+	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
   neptune_cluster_parameter_group_name = "default.neptune1"
   final_snapshot_identifier            = %[1]q
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSNeptuneClusterConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return testAccAWSNeptuneClusterConfigBase + fmt.Sprintf(`
+	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
@@ -645,11 +638,11 @@ resource "aws_neptune_cluster" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccAWSNeptuneClusterConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAWSNeptuneClusterConfigBase + fmt.Sprintf(`
+	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
@@ -662,11 +655,11 @@ resource "aws_neptune_cluster" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccAWSNeptuneClusterConfigIncludingIamRoles(rName string) string {
-	return testAccAWSNeptuneClusterConfigBase + fmt.Sprintf(`
+	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
   path = "/"
@@ -749,11 +742,11 @@ resource "aws_neptune_cluster" "test" {
 
   depends_on = [aws_iam_role.test, aws_iam_role.test-2]
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSNeptuneClusterConfigAddIamRoles(rName string) string {
-	return testAccAWSNeptuneClusterConfigBase + fmt.Sprintf(`
+	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
   path = "/"
@@ -836,11 +829,11 @@ resource "aws_neptune_cluster" "test" {
 
   depends_on = [aws_iam_role.test, aws_iam_role.test-2]
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSNeptuneClusterConfigRemoveIamRoles(rName string) string {
-	return testAccAWSNeptuneClusterConfigBase + fmt.Sprintf(`
+	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
   path = "/"
@@ -886,11 +879,11 @@ resource "aws_neptune_cluster" "test" {
 
   depends_on = [aws_iam_role.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSNeptuneClusterConfig_kmsKey(rName string) string {
-	return testAccAWSNeptuneClusterConfigBase + fmt.Sprintf(`
+	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 
 resource "aws_kms_key" "test" {
   description = "Terraform acc test"
@@ -923,22 +916,22 @@ resource "aws_neptune_cluster" "test" {
   kms_key_arn                          = aws_kms_key.test.arn
   skip_final_snapshot                  = true
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSNeptuneClusterConfig_encrypted(rName string) string {
-	return testAccAWSNeptuneClusterConfigBase + fmt.Sprintf(`
+	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier  = %q
   availability_zones  = local.availability_zone_names
   storage_encrypted   = true
   skip_final_snapshot = true
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSNeptuneClusterConfig_backups(rName string) string {
-	return testAccAWSNeptuneClusterConfigBase + fmt.Sprintf(`
+	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier           = %q
   availability_zones           = local.availability_zone_names
@@ -947,11 +940,11 @@ resource "aws_neptune_cluster" "test" {
   preferred_maintenance_window = "tue:04:00-tue:04:30"
   skip_final_snapshot          = true
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSNeptuneClusterConfig_backupsUpdate(rName string) string {
-	return testAccAWSNeptuneClusterConfigBase + fmt.Sprintf(`
+	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier           = %q
   availability_zones           = local.availability_zone_names
@@ -961,27 +954,27 @@ resource "aws_neptune_cluster" "test" {
   apply_immediately            = true
   skip_final_snapshot          = true
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSNeptuneClusterConfig_iamAuth(rName string) string {
-	return testAccAWSNeptuneClusterConfigBase + fmt.Sprintf(`
+	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                  = %q
   availability_zones                  = local.availability_zone_names
   iam_database_authentication_enabled = true
   skip_final_snapshot                 = true
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSNeptuneClusterConfig_cloudwatchLogsExports(rName string) string {
-	return testAccAWSNeptuneClusterConfigBase + fmt.Sprintf(`
+	return composeConfig(testAccAWSNeptuneClusterConfigBase(), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier             = %q
   availability_zones             = local.availability_zone_names
   skip_final_snapshot            = true
   enable_cloudwatch_logs_exports = ["audit"]
 }
-`, rName)
+`, rName))
 }

@@ -57,6 +57,7 @@ Global Accelerator
 Glue
 GuardDuty
 IAM
+Identity Store
 Inspector
 IoT
 KMS
@@ -95,6 +96,7 @@ SES
 SNS
 SQS
 SSM
+SSO Admin
 SWF
 Sagemaker
 Secrets Manager

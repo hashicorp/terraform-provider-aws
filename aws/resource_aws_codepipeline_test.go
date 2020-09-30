@@ -1365,7 +1365,7 @@ func TestResourceAWSCodePipelineExpandArtifactStoresValidation(t *testing.T) {
 					"location":       "",
 					"type":           "",
 					"encryption_key": []interface{}{},
-					"region":         "us-west-2",
+					"region":         "us-west-2", //lintignore:AWSAT003
 				},
 			},
 			ExpectedError: "region cannot be set for a single-region CodePipeline",
@@ -1377,13 +1377,13 @@ func TestResourceAWSCodePipelineExpandArtifactStoresValidation(t *testing.T) {
 					"location":       "",
 					"type":           "",
 					"encryption_key": []interface{}{},
-					"region":         "us-west-2",
+					"region":         "us-west-2", //lintignore:AWSAT003
 				},
 				map[string]interface{}{
 					"location":       "",
 					"type":           "",
 					"encryption_key": []interface{}{},
-					"region":         "us-east-1",
+					"region":         "us-east-1", //lintignore:AWSAT003
 				},
 			},
 		},
@@ -1412,7 +1412,7 @@ func TestResourceAWSCodePipelineExpandArtifactStoresValidation(t *testing.T) {
 					"location":       "",
 					"type":           "",
 					"encryption_key": []interface{}{},
-					"region":         "us-west-2",
+					"region":         "us-west-2", //lintignore:AWSAT003
 				},
 				map[string]interface{}{
 					"location":       "",
@@ -1430,13 +1430,13 @@ func TestResourceAWSCodePipelineExpandArtifactStoresValidation(t *testing.T) {
 					"location":       "",
 					"type":           "",
 					"encryption_key": []interface{}{},
-					"region":         "us-west-2",
+					"region":         "us-west-2", //lintignore:AWSAT003
 				},
 				map[string]interface{}{
 					"location":       "",
 					"type":           "",
 					"encryption_key": []interface{}{},
-					"region":         "us-west-2",
+					"region":         "us-west-2", //lintignore:AWSAT003
 				},
 			},
 			ExpectedError: "only one Artifact Store can be defined per region for a cross-region CodePipeline",
@@ -1444,6 +1444,7 @@ func TestResourceAWSCodePipelineExpandArtifactStoresValidation(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		tc := tc
 		_, err := expandAwsCodePipelineArtifactStores(tc.Input)
 		if tc.ExpectedError == "" {
 			if err != nil {

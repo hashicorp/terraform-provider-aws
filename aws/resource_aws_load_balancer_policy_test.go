@@ -238,10 +238,10 @@ func testAccCheckAWSLoadBalancerPolicyState(elbResource string, policyResource s
 }
 
 func testAccAWSLoadBalancerPolicyConfig_basic(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
-  name               = "test-lb-%d"
-  availability_zones = ["us-west-2a"]
+  name               = "test-lb-%[1]d"
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port     = 80
@@ -257,7 +257,7 @@ resource "aws_elb" "test-lb" {
 
 resource "aws_load_balancer_policy" "test-policy" {
   load_balancer_name = aws_elb.test-lb.name
-  policy_name        = "test-policy-%d"
+  policy_name        = "test-policy-%[1]d"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
   policy_attribute {
@@ -265,14 +265,14 @@ resource "aws_load_balancer_policy" "test-policy" {
     value = "magic_cookie"
   }
 }
-`, rInt, rInt)
+`, rInt))
 }
 
 func testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned0(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
-  name               = "test-lb-%d"
-  availability_zones = ["us-west-2a"]
+  name               = "test-lb-%[1]d"
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port     = 80
@@ -288,7 +288,7 @@ resource "aws_elb" "test-lb" {
 
 resource "aws_load_balancer_policy" "test-policy" {
   load_balancer_name = aws_elb.test-lb.name
-  policy_name        = "test-policy-%d"
+  policy_name        = "test-policy-%[1]d"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
   policy_attribute {
@@ -305,14 +305,14 @@ resource "aws_load_balancer_listener_policy" "test-lb-test-policy-80" {
     aws_load_balancer_policy.test-policy.policy_name,
   ]
 }
-`, rInt, rInt)
+`, rInt))
 }
 
 func testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned1(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
-  name               = "test-lb-%d"
-  availability_zones = ["us-west-2a"]
+  name               = "test-lb-%[1]d"
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port     = 80
@@ -328,7 +328,7 @@ resource "aws_elb" "test-lb" {
 
 resource "aws_load_balancer_policy" "test-policy" {
   load_balancer_name = aws_elb.test-lb.name
-  policy_name        = "test-policy-%d"
+  policy_name        = "test-policy-%[1]d"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
   policy_attribute {
@@ -345,5 +345,5 @@ resource "aws_load_balancer_listener_policy" "test-lb-test-policy-80" {
     aws_load_balancer_policy.test-policy.policy_name,
   ]
 }
-`, rInt, rInt)
+`, rInt))
 }

@@ -50,23 +50,23 @@ resource "aws_vpc" "baz" {
 }
 
 resource "aws_vpc_peering_connection" "conn1" {
-  vpc_id = aws_vpc.foo.id
+  vpc_id      = aws_vpc.foo.id
   peer_vpc_id = aws_vpc.bar.id
   auto_accept = true
 
   tags = {
-    Name = "terraform-testacc-vpc-peering-connection-data-source-foo-to-bar"
+    Name        = "terraform-testacc-vpc-peering-connection-data-source-foo-to-bar"
     Environment = "test"
   }
 }
 
 resource "aws_vpc_peering_connection" "conn2" {
-  vpc_id = aws_vpc.foo.id
+  vpc_id      = aws_vpc.foo.id
   peer_vpc_id = aws_vpc.baz.id
   auto_accept = true
 
   tags = {
-    Name = "terraform-testacc-vpc-peering-connection-data-source-foo-to-baz"
+    Name        = "terraform-testacc-vpc-peering-connection-data-source-foo-to-baz"
     Environment = "test"
   }
 }

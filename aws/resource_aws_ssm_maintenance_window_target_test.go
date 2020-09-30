@@ -171,9 +171,8 @@ func TestAccAWSSSMMaintenanceWindowTarget_resourceGroup(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "resource-groups:ResourceTypeFilters"),
-					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "AWS::EC2::INSTANCE"),
-					resource.TestCheckResourceAttr(resourceName, "targets.0.values.1", "AWS::EC2::VPC"),
+					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "AWS::EC2::Instance"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.key", "resource-groups:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.0", "resource-group-name"),
@@ -345,7 +344,7 @@ resource "aws_ssm_maintenance_window_target" "test" {
 
   targets {
     key    = "resource-groups:ResourceTypeFilters"
-    values = ["AWS::EC2::INSTANCE", "AWS::EC2::VPC"]
+    values = ["AWS::EC2::Instance"]
   }
 
   targets {
