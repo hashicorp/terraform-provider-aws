@@ -65,6 +65,29 @@ func TestAccDataSourceAwsRoute53Zone_tags(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccDataSourceAwsRoute53ZoneConfigTags(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "name_servers", dataSourceName, "name_servers"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsRoute53Zone_tagsPrivate(t *testing.T) {
+	rInt := acctest.RandInt()
+	resourceName := "aws_route53_zone.test"
+	dataSourceName := "data.aws_route53_zone.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53ZoneDestroy,
+		Steps: []resource.TestStep{
+			{
 				Config: testAccDataSourceAwsRoute53ZoneConfigTagsPrivate(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
@@ -142,6 +165,24 @@ resource "aws_route53_zone" "test" {
 
 data "aws_route53_zone" "test" {
   name = aws_route53_zone.test.name
+}
+`, rInt)
+}
+
+func testAccDataSourceAwsRoute53ZoneConfigTags(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = "terraformtestacchz-%[1]d.com."
+
+  tags = {
+    Environment = "tf-acc-test-%[1]d"
+  }
+}
+
+data "aws_route53_zone" "test" {
+  tags = {
+    Environment = "tf-acc-test-%[1]d"
+  }
 }
 `, rInt)
 }
