@@ -137,6 +137,8 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				ValidateFunc: validation.IntInSlice([]int{
+					12,
+					40,
 					50,
 					100,
 					200,
@@ -147,6 +149,19 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(0, 35),
+			},
+			"storage_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      fsx.StorageTypeSsd,
+				ValidateFunc: validation.StringInSlice(fsx.StorageType_Values(), false),
+			},
+			"drive_cache_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(fsx.DriveCacheType_Values(), false),
 			},
 		},
 	}
@@ -159,6 +174,7 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 		ClientRequestToken: aws.String(resource.UniqueId()),
 		FileSystemType:     aws.String(fsx.FileSystemTypeLustre),
 		StorageCapacity:    aws.Int64(int64(d.Get("storage_capacity").(int))),
+		StorageType:        aws.String(d.Get("storage_type").(string)),
 		SubnetIds:          expandStringList(d.Get("subnet_ids").([]interface{})),
 		LustreConfiguration: &fsx.CreateFileSystemLustreConfiguration{
 			DeploymentType: aws.String(d.Get("deployment_type").(string)),
@@ -200,6 +216,10 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 
 	if v, ok := d.GetOk("per_unit_storage_throughput"); ok {
 		input.LustreConfiguration.PerUnitStorageThroughput = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("drive_cache_type"); ok {
+		input.LustreConfiguration.DriveCacheType = aws.String(v.(string))
 	}
 
 	result, err := conn.CreateFileSystem(input)
@@ -309,6 +329,10 @@ func resourceAwsFsxLustreFileSystemRead(d *schema.ResourceData, meta interface{}
 		d.Set("per_unit_storage_throughput", lustreConfig.PerUnitStorageThroughput)
 	}
 	d.Set("mount_name", filesystem.LustreConfiguration.MountName)
+	d.Set("storage_type", filesystem.StorageType)
+	if filesystem.LustreConfiguration.DriveCacheType != nil {
+		d.Set("drive_cache_type", filesystem.LustreConfiguration.DriveCacheType)
+	}
 
 	if filesystem.KmsKeyId != nil {
 		d.Set("kms_key_id", filesystem.KmsKeyId)
