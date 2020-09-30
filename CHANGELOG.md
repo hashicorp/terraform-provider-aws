@@ -15,6 +15,8 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* resource/aws_db_instance: Prevent ordering differences with `enabled_cloudwatch_logs_exports` argument [GH-15404]
+* resource/aws_rds_cluster: Prevent ordering differences with `enabled_cloudwatch_logs_exports` argument [GH-15404]
 * resource/aws_redshift_cluster: Increase default update timeout to 75 minutes [GH-15339]
 
 ## 3.8.0 (September 24, 2020)
