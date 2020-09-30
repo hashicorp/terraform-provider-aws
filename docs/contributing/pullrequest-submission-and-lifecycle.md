@@ -54,7 +54,7 @@ We try to use a common set of branch name prefixes when submitting pull requests
 - d = documentation
 - t = tests
 - td = technical debt
-- v = "vendoring"/dependencies
+- v = dependencies ("vendoring" previously)
 
 Conventions across non-AWS providers varies so when working with other providers please check the names of previously created branches and conform to their standard practices.
 
