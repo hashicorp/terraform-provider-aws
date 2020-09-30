@@ -392,6 +392,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/macie" = [
       "aws_macie_",
     ],
+    "service/macie2" = [
+      "aws_macie2_",
+    ],
     "service/marketplacecatalog" = [
       "aws_marketplace_catalog_",
     ],
@@ -1160,6 +1163,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/macie/**/*",
       "**/*_macie_*",
       "**/macie_*"
+    ]
+    "service/macie2" = [
+      "aws/internal/service/macie2/**/*",
+      "**/*_macie2_*",
+      "**/macie2_*"
     ]
     "service/marketplacecatalog" = [
       "aws/internal/service/marketplacecatalog/**/*",
