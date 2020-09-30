@@ -63,7 +63,10 @@ func runNewTest(t testing.T, c TestCase, helper *tftest.Helper) {
 		}
 
 		if !stateIsEmpty(statePreDestroy) {
-			runPostTestDestroy(t, c, wd, c.ProviderFactories)
+			err := runPostTestDestroy(t, c, wd, c.ProviderFactories)
+			if err != nil {
+				t.Fatalf("Error running post-test destroy, there may be dangling resources: %s", err.Error())
+			}
 		}
 
 		wd.Close()
@@ -99,15 +102,24 @@ func runNewTest(t testing.T, c TestCase, helper *tftest.Helper) {
 				t.Fatal(err)
 			}
 			if skip {
-				log.Printf("[WARN] Skipping step %d", i)
+				log.Printf("[WARN] Skipping step %d/%d", i+1, len(c.Steps))
 				continue
 			}
 		}
 
 		if step.ImportState {
 			err := testStepNewImportState(t, c, helper, wd, step, appliedCfg)
-			if err != nil {
-				t.Fatal(err)
+			if step.ExpectError != nil {
+				if err == nil {
+					t.Fatalf("Step %d/%d error running import: expected an error but got none", i+1, len(c.Steps))
+				}
+				if !step.ExpectError.MatchString(err.Error()) {
+					t.Fatalf("Step %d/%d error running import, expected an error with pattern (%s), no match on: %s", i+1, len(c.Steps), step.ExpectError.String(), err)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("Step %d/%d error running import: %s", i+1, len(c.Steps), err)
+				}
 			}
 			continue
 		}
@@ -116,14 +128,14 @@ func runNewTest(t testing.T, c TestCase, helper *tftest.Helper) {
 			err := testStepNewConfig(t, c, wd, step)
 			if step.ExpectError != nil {
 				if err == nil {
-					t.Fatal("Expected an error but got none")
+					t.Fatalf("Step %d/%d, expected an error but got none", i+1, len(c.Steps))
 				}
 				if !step.ExpectError.MatchString(err.Error()) {
-					t.Fatalf("Expected an error with pattern, no match on: %s", err)
+					t.Fatalf("Step %d/%d, expected an error with pattern, no match on: %s", i+1, len(c.Steps), err)
 				}
 			} else {
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("Step %d/%d error: %s", i+1, len(c.Steps), err)
 				}
 			}
 			appliedCfg = step.Config

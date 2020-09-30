@@ -1,11 +1,15 @@
 package tftest
 
 import (
+	"bytes"
+	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
+	"github.com/hashicorp/terraform-exec/tfexec"
 	tfjson "github.com/hashicorp/terraform-json"
 )
 
@@ -24,6 +28,16 @@ type WorkingDir struct {
 
 	// configDir contains the singular config file generated for each test
 	configDir string
+
+	// tf is the instance of tfexec.Terraform used for running Terraform commands
+	tf *tfexec.Terraform
+
+	// terraformExec is a path to a terraform binary, inherited from Helper
+	terraformExec string
+
+	// reattachInfo stores the gRPC socket info required for Terraform's
+	// plugin reattach functionality
+	reattachInfo tfexec.ReattachInfo
 
 	env map[string]string
 }
@@ -46,6 +60,14 @@ func (wd *WorkingDir) Setenv(envVar, val string) {
 // Unsetenv removes an environment variable from the WorkingDir.
 func (wd *WorkingDir) Unsetenv(envVar string) {
 	delete(wd.env, envVar)
+}
+
+func (wd *WorkingDir) SetReattachInfo(reattachInfo tfexec.ReattachInfo) {
+	wd.reattachInfo = reattachInfo
+}
+
+func (wd *WorkingDir) UnsetReattachInfo() {
+	wd.reattachInfo = nil
 }
 
 // GetHelper returns the Helper set on the WorkingDir.
@@ -80,7 +102,27 @@ func (wd *WorkingDir) SetConfig(cfg string) error {
 		return err
 	}
 
+	tf, err := tfexec.NewTerraform(wd.baseDir, wd.terraformExec)
+	if err != nil {
+		return err
+	}
+
+	var mismatch *tfexec.ErrVersionMismatch
+	err = tf.SetDisablePluginTLS(true)
+	if err != nil && !errors.As(err, &mismatch) {
+		return err
+	}
+	err = tf.SetSkipProviderVerify(true)
+	if err != nil && !errors.As(err, &mismatch) {
+		return err
+	}
+
+	if p := os.Getenv("TF_ACC_LOG_PATH"); p != "" {
+		tf.SetLogPath(p)
+	}
+
 	wd.configDir = configDir
+	wd.tf = tf
 
 	// Changing configuration invalidates any saved plan.
 	err = wd.ClearPlan()
@@ -141,19 +183,14 @@ func (wd *WorkingDir) RequireClearPlan(t TestControl) {
 	}
 }
 
-func (wd *WorkingDir) init() error {
-	args := []string{"init", wd.configDir}
-	args = append(args, wd.baseArgs...)
-	return wd.runTerraform(args...)
-}
-
 // Init runs "terraform init" for the given working directory, forcing Terraform
 // to use the current version of the plugin under test.
 func (wd *WorkingDir) Init() error {
 	if wd.configDir == "" {
 		return fmt.Errorf("must call SetConfig before Init")
 	}
-	return wd.init()
+
+	return wd.tf.Init(context.Background(), tfexec.Reattach(wd.reattachInfo), tfexec.Dir(wd.configDir))
 }
 
 // RequireInit is a variant of Init that will fail the test via the given
@@ -173,10 +210,8 @@ func (wd *WorkingDir) planFilename() string {
 // CreatePlan runs "terraform plan" to create a saved plan file, which if successful
 // will then be used for the next call to Apply.
 func (wd *WorkingDir) CreatePlan() error {
-	args := []string{"plan", "-refresh=false"}
-	args = append(args, wd.baseArgs...)
-	args = append(args, "-out=tfplan", wd.configDir)
-	return wd.runTerraform(args...)
+	_, err := wd.tf.Plan(context.Background(), tfexec.Reattach(wd.reattachInfo), tfexec.Refresh(false), tfexec.Out("tfplan"), tfexec.Dir(wd.configDir))
+	return err
 }
 
 // RequireCreatePlan is a variant of CreatePlan that will fail the test via
@@ -189,16 +224,21 @@ func (wd *WorkingDir) RequireCreatePlan(t TestControl) {
 	}
 }
 
+// CreateDestroyPlan runs "terraform plan -destroy" to create a saved plan
+// file, which if successful will then be used for the next call to Apply.
+func (wd *WorkingDir) CreateDestroyPlan() error {
+	_, err := wd.tf.Plan(context.Background(), tfexec.Reattach(wd.reattachInfo), tfexec.Refresh(false), tfexec.Out("tfplan"), tfexec.Destroy(true), tfexec.Dir(wd.configDir))
+	return err
+}
+
 // Apply runs "terraform apply". If CreatePlan has previously completed
 // successfully and the saved plan has not been cleared in the meantime then
 // this will apply the saved plan. Otherwise, it will implicitly create a new
 // plan and apply it.
 func (wd *WorkingDir) Apply() error {
-	args := []string{"apply", "-refresh=false"}
-	args = append(args, wd.baseArgs...)
-
+	args := []tfexec.ApplyOption{tfexec.Reattach(wd.reattachInfo), tfexec.Refresh(false)}
 	if wd.HasSavedPlan() {
-		args = append(args, "tfplan")
+		args = append(args, tfexec.DirOrPlan("tfplan"))
 	} else {
 		// we need to use a relative config dir here or we get an
 		// error about Terraform not having any configuration. See
@@ -208,11 +248,9 @@ func (wd *WorkingDir) Apply() error {
 		if err != nil {
 			return err
 		}
-		args = append(args, "-auto-approve")
-		args = append(args, configDir)
+		args = append(args, tfexec.DirOrPlan(configDir))
 	}
-
-	return wd.runTerraform(args...)
+	return wd.tf.Apply(context.Background(), args...)
 }
 
 // RequireApply is a variant of Apply that will fail the test via
@@ -231,11 +269,7 @@ func (wd *WorkingDir) RequireApply(t TestControl) {
 // If destroy fails then remote objects might still exist, and continue to
 // exist after a particular test is concluded.
 func (wd *WorkingDir) Destroy() error {
-	args := []string{"destroy", "-refresh=false"}
-	args = append(args, wd.baseArgs...)
-
-	args = append(args, "-auto-approve", wd.configDir)
-	return wd.runTerraform(args...)
+	return wd.tf.Destroy(context.Background(), tfexec.Reattach(wd.reattachInfo), tfexec.Refresh(false), tfexec.Dir(wd.configDir))
 }
 
 // RequireDestroy is a variant of Destroy that will fail the test via
@@ -268,18 +302,7 @@ func (wd *WorkingDir) SavedPlan() (*tfjson.Plan, error) {
 		return nil, fmt.Errorf("there is no current saved plan")
 	}
 
-	var ret tfjson.Plan
-
-	args := []string{"show"}
-	args = append(args, wd.baseArgs...)
-	args = append(args, "-json", wd.planFilename())
-
-	err := wd.runTerraformJSON(&ret, args...)
-	if err != nil {
-		return nil, err
-	}
-
-	return &ret, nil
+	return wd.tf.ShowPlanFile(context.Background(), wd.planFilename(), tfexec.Reattach(wd.reattachInfo))
 }
 
 // RequireSavedPlan is a variant of SavedPlan that will fail the test via
@@ -294,22 +317,44 @@ func (wd *WorkingDir) RequireSavedPlan(t TestControl) *tfjson.Plan {
 	return ret
 }
 
+// SavedPlanStdout returns a stdout capture of the current saved plan file, if any.
+//
+// If no plan is saved or if the plan file cannot be read, SavedPlanStdout returns
+// an error.
+func (wd *WorkingDir) SavedPlanStdout() (string, error) {
+	if !wd.HasSavedPlan() {
+		return "", fmt.Errorf("there is no current saved plan")
+	}
+
+	var ret bytes.Buffer
+
+	wd.tf.SetStdout(&ret)
+	defer wd.tf.SetStdout(ioutil.Discard)
+	_, err := wd.tf.ShowPlanFileRaw(context.Background(), wd.planFilename(), tfexec.Reattach(wd.reattachInfo))
+	if err != nil {
+		return "", err
+	}
+
+	return ret.String(), nil
+}
+
+// RequireSavedPlanStdout is a variant of SavedPlanStdout that will fail the test via
+// the given TestControl if the plan cannot be read.
+func (wd *WorkingDir) RequireSavedPlanStdout(t TestControl) string {
+	t.Helper()
+	ret, err := wd.SavedPlanStdout()
+	if err != nil {
+		t := testingT{t}
+		t.Fatalf("failed to read saved plan: %s", err)
+	}
+	return ret
+}
+
 // State returns an object describing the current state.
 //
 // If the state cannot be read, State returns an error.
 func (wd *WorkingDir) State() (*tfjson.State, error) {
-	var ret tfjson.State
-
-	args := []string{"show"}
-	args = append(args, wd.baseArgs...)
-	args = append(args, "-json")
-
-	err := wd.runTerraformJSON(&ret, args...)
-	if err != nil {
-		return nil, err
-	}
-
-	return &ret, nil
+	return wd.tf.Show(context.Background(), tfexec.Reattach(wd.reattachInfo))
 }
 
 // RequireState is a variant of State that will fail the test via
@@ -326,10 +371,7 @@ func (wd *WorkingDir) RequireState(t TestControl) *tfjson.State {
 
 // Import runs terraform import
 func (wd *WorkingDir) Import(resource, id string) error {
-	args := []string{"import"}
-	args = append(args, wd.baseArgs...)
-	args = append(args, "-config="+wd.configDir, resource, id)
-	return wd.runTerraform(args...)
+	return wd.tf.Import(context.Background(), resource, id, tfexec.Config(wd.configDir), tfexec.Reattach(wd.reattachInfo))
 }
 
 // RequireImport is a variant of Import that will fail the test via
@@ -344,11 +386,7 @@ func (wd *WorkingDir) RequireImport(t TestControl, resource, id string) {
 
 // Refresh runs terraform refresh
 func (wd *WorkingDir) Refresh() error {
-	args := []string{"refresh"}
-	args = append(args, wd.baseArgs...)
-	args = append(args, "-state="+filepath.Join(wd.baseDir, "terraform.tfstate"))
-	args = append(args, wd.configDir)
-	return wd.runTerraform(args...)
+	return wd.tf.Refresh(context.Background(), tfexec.Reattach(wd.reattachInfo), tfexec.State(filepath.Join(wd.baseDir, "terraform.tfstate")), tfexec.Dir(wd.configDir))
 }
 
 // RequireRefresh is a variant of Refresh that will fail the test via
@@ -365,15 +403,7 @@ func (wd *WorkingDir) RequireRefresh(t TestControl) {
 //
 // If the schemas cannot be read, Schemas returns an error.
 func (wd *WorkingDir) Schemas() (*tfjson.ProviderSchemas, error) {
-	args := []string{"providers", wd.configDir, "schema"}
-
-	var ret tfjson.ProviderSchemas
-	err := wd.runTerraformJSON(&ret, args...)
-	if err != nil {
-		return nil, err
-	}
-
-	return &ret, nil
+	return wd.tf.ProvidersSchema(context.Background())
 }
 
 // RequireSchemas is a variant of Schemas that will fail the test via

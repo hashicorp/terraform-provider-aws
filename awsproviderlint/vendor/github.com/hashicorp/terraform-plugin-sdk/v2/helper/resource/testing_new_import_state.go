@@ -71,18 +71,17 @@ func testStepNewImportState(t testing.T, c TestCase, helper *tftest.Helper, wd *
 	}
 
 	err = runProviderCommand(t, func() error {
-		importWd.RequireImport(t, step.ResourceName, importId)
-		return nil
+		return importWd.Import(step.ResourceName, importId)
 	}, importWd, c.ProviderFactories)
 	if err != nil {
-		t.Fatalf("Error running import: %s", err)
+		return err
 	}
 
 	var importState *terraform.State
 	err = runProviderCommand(t, func() error {
-		importState = getState(t, wd)
+		importState = getState(t, importWd)
 		return nil
-	}, wd, c.ProviderFactories)
+	}, importWd, c.ProviderFactories)
 	if err != nil {
 		t.Fatalf("Error getting state: %s", err)
 	}
@@ -110,8 +109,16 @@ func testStepNewImportState(t testing.T, c TestCase, helper *tftest.Helper, wd *
 		for _, r := range new {
 			// Find the existing resource
 			var oldR *terraform.ResourceState
-			for _, r2 := range old {
-				if r2.Primary != nil && r2.Primary.ID == r.Primary.ID && r2.Type == r.Type {
+			for r2Key, r2 := range old {
+				// Ensure that we do not match against data sources as they
+				// cannot be imported and are not what we want to verify.
+				// Mode is not present in ResourceState so we use the
+				// stringified ResourceStateKey for comparison.
+				if strings.HasPrefix(r2Key, "data.") {
+					continue
+				}
+
+				if r2.Primary != nil && r2.Primary.ID == r.Primary.ID && r2.Type == r.Type && r2.Provider == r.Provider {
 					oldR = r2
 					break
 				}
@@ -161,6 +168,26 @@ func testStepNewImportState(t testing.T, c TestCase, helper *tftest.Helper, wd *
 					if strings.HasPrefix(k, v) {
 						delete(expected, k)
 					}
+				}
+			}
+
+			// timeouts are only _sometimes_ added to state. To
+			// account for this, just don't compare timeouts at
+			// all.
+			for k := range actual {
+				if strings.HasPrefix(k, "timeouts.") {
+					delete(actual, k)
+				}
+				if k == "timeouts" {
+					delete(actual, k)
+				}
+			}
+			for k := range expected {
+				if strings.HasPrefix(k, "timeouts.") {
+					delete(expected, k)
+				}
+				if k == "timeouts" {
+					delete(expected, k)
 				}
 			}
 

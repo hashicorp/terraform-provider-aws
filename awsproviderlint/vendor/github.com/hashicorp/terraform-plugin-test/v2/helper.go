@@ -194,9 +194,9 @@ func (h *Helper) NewWorkingDir() (*WorkingDir, error) {
 	}
 
 	return &WorkingDir{
-		h:        h,
-		baseArgs: []string{"-no-color"},
-		baseDir:  dir,
+		h:             h,
+		baseDir:       dir,
+		terraformExec: h.terraformExec,
 	}, nil
 }
 
