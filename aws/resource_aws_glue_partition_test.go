@@ -304,7 +304,7 @@ resource "aws_glue_partition" "test" {
   table_name       = aws_glue_catalog_table.test.name
   partition_values = ["%[1]s"]
 
-  parameters {
+  parameters = {
     %[2]q = %[3]q 
   }
 }
@@ -319,7 +319,7 @@ resource "aws_glue_partition" "test" {
   table_name       = aws_glue_catalog_table.test.name
   partition_values = ["%[1]s"]
 
-  parameters {
+  parameters = {
     %[2]q = %[3]q
     %[4]q = %[5]q     
   }
