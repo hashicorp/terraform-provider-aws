@@ -41,15 +41,10 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 			},
 
 			"task_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ssm.MaintenanceWindowTaskTypeRunCommand,
-					ssm.MaintenanceWindowTaskTypeAutomation,
-					ssm.MaintenanceWindowTaskTypeStepFunctions,
-					ssm.MaintenanceWindowTaskTypeLambda,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ssm.MaintenanceWindowTaskType_Values(), false),
 			},
 
 			"task_arn": {
@@ -82,9 +77,10 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 			},
 
 			"name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateAwsSSMMaintenanceWindowTaskName,
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`),
+					"Only alphanumeric characters, hyphens, dots & underscores allowed."),
 			},
 
 			"description": {
@@ -182,12 +178,9 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 									},
 
 									"document_hash_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											ssm.DocumentHashTypeSha256,
-											ssm.DocumentHashTypeSha1,
-										}, false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(ssm.DocumentHashType_Values(), false),
 									},
 
 									"notification_config": {
@@ -209,12 +202,9 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 												},
 
 												"notification_type": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														ssm.NotificationTypeCommand,
-														ssm.NotificationTypeInvocation,
-													}, false),
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(ssm.NotificationType_Values(), false),
 												},
 											},
 										},
