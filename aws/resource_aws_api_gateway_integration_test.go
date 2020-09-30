@@ -272,11 +272,10 @@ func TestAccAWSAPIGatewayIntegration_integrationType(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeInternet(rName),
+				Config: testAccAWSAPIGatewayIntegrationConfig_IntegrationTLSConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
-					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "tls_config/insecure_skip_verification", "true"),
 				),
 			},
 			{
@@ -427,7 +426,6 @@ resource "aws_api_gateway_integration" "test" {
   integration_http_method = "GET"
   passthrough_behavior    = "WHEN_NO_MATCH"
   content_handling        = "CONVERT_TO_TEXT"
-}
 `, rName)
 }
 
@@ -811,6 +809,26 @@ resource "aws_api_gateway_integration" "test" {
   integration_http_method = "GET"
   passthrough_behavior    = "WHEN_NO_MATCH"
   content_handling        = "CONVERT_TO_TEXT"
+}
+`
+}
+
+func testAccAWSAPIGatewayIntegrationConfig_IntegrationTLSConfig(rName string) string {
+	return testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeBase(rName) + `
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
+
+  type                    = "HTTP"
+  uri                     = "https://www.google.de"
+  integration_http_method = "GET"
+  passthrough_behavior    = "WHEN_NO_MATCH"
+  content_handling        = "CONVERT_TO_TEXT"
+
+  tls_config = {
+	insecure_skip_verification = true
+  }
 }
 `
 }
