@@ -37,7 +37,7 @@ func resourceAwsGlueDataCatalogEncryptionSettings() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"aws_kms_id": {
+									"aws_kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validateArn,
@@ -142,7 +142,7 @@ func expandGlueDataCatalogConnectionPasswordEncryption(settings []interface{}) *
 		ReturnConnectionPasswordEncrypted: aws.Bool(m["return_connection_password_encrypted"].(bool)),
 	}
 
-	if v, ok := m["aws_kms_id"].(string); ok && v != "" {
+	if v, ok := m["aws_kms_key_id"].(string); ok && v != "" {
 		target.AwsKmsKeyId = aws.String(v)
 	}
 
@@ -155,7 +155,7 @@ func flattenGlueDataCatalogConnectionPasswordEncryption(settings *glue.Connectio
 	}
 
 	if settings.AwsKmsKeyId != nil {
-		m["aws_kms_id"] = aws.StringValue(settings.AwsKmsKeyId)
+		m["aws_kms_key_id"] = aws.StringValue(settings.AwsKmsKeyId)
 	}
 
 	return []map[string]interface{}{m}
