@@ -223,6 +223,11 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 	if v, ok := d.GetOk("timeout_milliseconds"); ok {
 		timeoutInMillis = aws.Int64(int64(v.(int)))
 	}
+	
+	var tlsConfig *apigateway.TlsConfig
+	if v, ok := d.GetOk("tls_config"); ok {
+		tlsConfig = expandApiGatewayTlsConfig(v.([]interface{}))
+	}
 
 	_, err := conn.PutIntegration(&apigateway.PutIntegrationInput{
 		HttpMethod:            aws.String(d.Get("http_method").(string)),
@@ -241,6 +246,7 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 		ConnectionType:        connectionType,
 		ConnectionId:          connectionId,
 		TimeoutInMillis:       timeoutInMillis,
+		TlsConfig: tlsConfig,
 	})
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway Integration: %s", err)
@@ -500,4 +506,19 @@ func resourceAwsApiGatewayIntegrationDelete(d *schema.ResourceData, meta interfa
 	}
 
 	return nil
+}
+
+func expandApiGatewayTlsConfig(vConfig []interface{}) *apigateway.TlsConfig {
+	config := &apigateway.TlsConfig{}
+
+	if len(vConfig) == 0 || vConfig[0] == nil {
+		return config
+	}
+	mConfig := vConfig[0].(map[string]interface{})
+
+	if insecureSkipVerification, ok := mConfig["insecure_skip_verification"].(bool); ok {
+		config.InsecureSkipVerification = aws.Bool(insecureSkipVerification)
+	}
+
+	return config
 }
