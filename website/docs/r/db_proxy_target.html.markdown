@@ -19,15 +19,15 @@ resource "aws_db_proxy" "example" {
   engine_family          = "MYSQL"
   idle_client_timeout    = 1800
   require_tls            = true
-  role_arn               = "arn:aws:iam:us-east-1:123456789012:role/example"
-  vpc_security_group_ids = ["sg-12345678901234567"]
-  vpc_subnet_ids         = ["subnet-12345678901234567"]
+  role_arn               = aws_iam_role.example.arn
+  vpc_security_group_ids = [aws_security_group.example.id]
+  vpc_subnet_ids         = [aws_subnet.example.id]
 
   auth {
     auth_scheme = "SECRETS"
     description = "example"
     iam_auth    = "DISABLED"
-    secret_arn  = "arn:aws:secretsmanager:us-east-1:123456789012:secret:example"
+    secret_arn  = aws_secretsmanager_secret.example.arn
   }
 
   tags = {

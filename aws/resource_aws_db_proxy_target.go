@@ -116,18 +116,6 @@ func resourceAwsDbProxyTargetCreate(d *schema.ResourceData, meta interface{}) er
 	d.SetId(strings.Join([]string{dbProxyName, targetGroupName, *dbProxyTarget.RdsResourceId}, "/"))
 	log.Printf("[INFO] DB Proxy target ID: %s", d.Id())
 
-	// stateChangeConf := &resource.StateChangeConf{
-	// 	Pending: []string{rds.DBProxyStatusCreating},
-	// 	Target:  []string{rds.DBProxyStatusAvailable},
-	// 	Refresh: resourceAwsDbProxyTargetRefreshFunc(conn, d.Id()),
-	// 	Timeout: d.Timeout(schema.TimeoutCreate),
-	// }
-
-	// _, err = stateChangeConf.WaitForState()
-	// if err != nil {
-	// 	return fmt.Errorf("Error waiting for DB Proxy target registration: %s", err)
-	// }
-
 	return resourceAwsDbProxyTargetRead(d, meta)
 }
 
@@ -155,28 +143,30 @@ func resourceAwsDbProxyTargetRead(d *schema.ResourceData, meta interface{}) erro
 	resp, err := conn.DescribeDBProxyTargets(&params)
 	if err != nil {
 		if isAWSErr(err, rds.ErrCodeDBProxyNotFoundFault, "") {
-			log.Printf("[WARN] DB Proxy (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] DB Proxy Target (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 		if isAWSErr(err, rds.ErrCodeDBProxyTargetGroupNotFoundFault, "") {
-			log.Printf("[WARN] DB Proxy (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] DB Proxy Target (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading RDS DB Proxy Target (%s): %w", d.Id(), err)
 	}
 
 	var dbProxyTarget *rds.DBProxyTarget
 	for _, target := range resp.Targets {
-		if *target.RdsResourceId == rdsResourceId {
+		if aws.StringValue(target.RdsResourceId) == rdsResourceId {
 			dbProxyTarget = target
 			break
 		}
 	}
 
 	if dbProxyTarget == nil {
-		return fmt.Errorf("Unable to find DB Proxy target: %#v", params)
+		log.Printf("[WARN] DB Proxy Target (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	d.Set("endpoint", dbProxyTarget.Endpoint)
@@ -210,18 +200,6 @@ func resourceAwsDbProxyTargetDelete(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return fmt.Errorf("Error deregistering DB Proxy target: %s", err)
 	}
-
-	// stateChangeConf := &resource.StateChangeConf{
-	// 	Pending: []string{rds.DBProxyStatusDeleting},
-	// 	Target:  []string{""},
-	// 	Refresh: resourceAwsDbProxyTargetRefreshFunc(conn, d.Id()),
-	// 	Timeout: d.Timeout(schema.TimeoutDelete),
-	// }
-
-	// _, err = stateChangeConf.WaitForState()
-	// if err != nil {
-	// 	return fmt.Errorf("Error waiting for DB Proxy deletion: %s", err)
-	// }
 
 	return nil
 }
