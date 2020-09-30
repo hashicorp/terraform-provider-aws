@@ -271,8 +271,8 @@ func testAccCheckGlacierVaultExists(name string, vault *glacier.DescribeVaultOut
 			return fmt.Errorf("No ID is set")
 		}
 
-		glacierconn := testAccProvider.Meta().(*AWSClient).glacierconn
-		out, err := glacierconn.DescribeVault(&glacier.DescribeVaultInput{
+		conn := testAccProvider.Meta().(*AWSClient).glacierconn
+		out, err := conn.DescribeVault(&glacier.DescribeVaultInput{
 			VaultName: aws.String(rs.Primary.ID),
 		})
 
@@ -446,7 +446,7 @@ resource "aws_glacier_vault" "test" {
   name = %[1]q
 
   tags = {
-	%[2]q = %[3]q
+    %[2]q = %[3]q
   }
 }
 `, rName, tagKey1, tagValue1)
@@ -458,8 +458,8 @@ resource "aws_glacier_vault" "test" {
   name = %[1]q
 
   tags = {
-	%[2]q = %[3]q
-	%[4]q = %[5]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
