@@ -21,6 +21,7 @@ on:
       - GNUmakefile
       - main.go
       - staticcheck.conf
+      - tools/**
       - website/**
 
 env:
