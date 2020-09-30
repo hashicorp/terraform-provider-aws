@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfglue "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue"
 )
 
 func TestAccAWSGluePartition_basic(t *testing.T) {
@@ -70,7 +71,7 @@ func testAccCheckGluePartitionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		catalogID, dbName, tableName, values, err := readAwsGluePartitionID(rs.Primary.ID)
+		catalogID, dbName, tableName, values, err := tfglue.ReadAwsGluePartitionID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -104,7 +105,7 @@ func testAccCheckGluePartitionExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		catalogID, dbName, tableName, values, err := readAwsGluePartitionID(rs.Primary.ID)
+		catalogID, dbName, tableName, values, err := tfglue.ReadAwsGluePartitionID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
