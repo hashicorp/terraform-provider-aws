@@ -182,6 +182,7 @@ The following arguments are supported:
 The `spec` object supports the following:
 
 * `backend` - (Optional) The backends to which the virtual node is expected to send outbound traffic.
+* `backend_defaults` - (Optional) The defaults for backends.
 * `listener` - (Optional) The listeners from which the virtual node is expected to receive inbound traffic.
 * `logging` - (Optional) The inbound and outbound access logging information for the virtual node.
 * `service_discovery` - (Optional) The service discovery information for the virtual node.
@@ -192,12 +193,45 @@ The `backend` object supports the following:
 
 The `virtual_service` object supports the following:
 
+* `client_policy` - (Optional) The client policy for the backend.
 * `virtual_service_name` - (Required) The name of the virtual service that is acting as a virtual node backend.
+
+The `client_policy` object supports the following:
+
+* `tls` - (Optional) The Transport Layer Security (TLS) client policy.
+
+The `tls` object supports the following:
+
+* `enforced` - (Optional) Whether the policy is enforced. Default is `true`.
+* `ports` - (Optional) One or more ports that the policy is enforced for.
+* `validation` - (Required) The TLS validation context.
+
+The `validation` object supports the following:
+
+* `trust` - (Required) The TLS validation context trust.
+
+The `trust` object supports the following:
+
+* `acm` - (Optional) The TLS validation context trust for an AWS Certicate Manager (ACM) certificate.
+* `file` - (Optional) The TLS validation context trust for a local file.
+
+The `acm` object supports the following:
+
+* `certificate_authority_arns` - (Required) One or more ACM Amazon Resource Name (ARN)s.
+
+The `file` object supports the following:
+
+* `certificate_chain` - (Required) The certificate trust chain for a certificate stored on the file system of the virtual node that the proxy is running on.
+
+The `backend_defaults` object supports the following:
+
+* `client_policy` - (Optional) The default client policy for virtual service backends. See above for details.
 
 The `listener` object supports the following:
 
 * `port_mapping` - (Required) The port mapping information for the listener.
 * `health_check` - (Optional) The health check information for the listener.
+* `tls` - (Optional) The Transport Layer Security (TLS) properties for the listener
 
 The `logging` object supports the following:
 
@@ -241,6 +275,25 @@ The `health_check` object supports the following:
 * `unhealthy_threshold` - (Required) The number of consecutive failed health checks that must occur before declaring a virtual node unhealthy.
 * `path` - (Optional) The destination path for the health check request. This is only required if the specified protocol is `http`.
 * `port` - (Optional) The destination port for the health check request. This port must match the port defined in the `port_mapping` for the listener.
+
+The `tls` object supports the following:
+
+* `certificate` - (Required) The listener's TLS certificate.
+* `mode`- (Required) The listener's TLS mode. Valid values: `DISABLED`, `PERMISSIVE`, `STRICT`.
+
+The `certificate` object supports the following:
+
+* `acm` - (Optional) An AWS Certicate Manager (ACM) certificate.
+* `file` - (optional) A local file certificate.
+
+The `acm` object supports the following:
+
+* `certificate_arn` - (Required) The Amazon Resource Name (ARN) for the certificate.
+
+The `file` object supports the following:
+
+* `certificate_chain` - (Required) The certificate chain for the certificate.
+* `private_key` - (Required) The private key for a certificate stored on the file system of the virtual node that the proxy is running on.
 
 ## Attributes Reference
 
