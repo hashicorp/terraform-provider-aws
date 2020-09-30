@@ -305,7 +305,7 @@ resource "aws_glue_partition" "test" {
   partition_values = ["%[1]s"]
 
   parameters = {
-    %[2]q = %[3]q 
+    %[2]q = %[3]q
   }
 }
 `, parValue, key1, value1)
@@ -321,7 +321,7 @@ resource "aws_glue_partition" "test" {
 
   parameters = {
     %[2]q = %[3]q
-    %[4]q = %[5]q     
+    %[4]q = %[5]q
   }
 }
 `, parValue, key1, value1, key2, value2)
