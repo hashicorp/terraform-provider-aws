@@ -426,6 +426,7 @@ resource "aws_api_gateway_integration" "test" {
   integration_http_method = "GET"
   passthrough_behavior    = "WHEN_NO_MATCH"
   content_handling        = "CONVERT_TO_TEXT"
+}
 `, rName)
 }
 
