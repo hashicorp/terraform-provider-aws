@@ -822,28 +822,32 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_ssm_maintenance_window_task" "test" {
-  window_id = "${aws_ssm_maintenance_window.test.id}"
-  task_type = "RUN_COMMAND"
-  task_arn = "AWS-RunShellScript"
-  priority = 1
-  service_role_arn = "${aws_iam_role.test.arn}"
-  max_concurrency = "2"
-  max_errors = "1"
+  window_id        = aws_ssm_maintenance_window.test.id
+  task_type        = "RUN_COMMAND"
+  task_arn         = "AWS-RunShellScript"
+  priority         = 1
+  service_role_arn = aws_iam_role.test.arn
+  max_concurrency  = "2"
+  max_errors       = "1"
+
   targets {
     key    = "WindowTargetIds"
-    values = ["${aws_ssm_maintenance_window_target.test.id}"]
+    values = [aws_ssm_maintenance_window_target.test.id]
   }
+
   task_invocation_parameters {
     run_command_parameters {
-      document_hash       = "${sha256("COMMAND")}"
+      document_hash       = sha256("COMMAND")
       document_hash_type  = "Sha256"
-      service_role_arn    = "${aws_iam_role.test.arn}"
+      service_role_arn    = aws_iam_role.test.arn
+
       parameter {
-        name = "commands"
+        name   = "commands"
         values = ["date"]
       }
+
       cloudwatch_config {
-       cloudwatch_log_group_name = "${aws_cloudwatch_log_group.test.name}"
+       cloudwatch_log_group_name = aws_cloudwatch_log_group.test.name
        cloudwatch_output_enabled = %[2]t
       }
     }
