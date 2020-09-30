@@ -185,7 +185,7 @@ func testAccCheckAWSCodeArtifactDomainPermissionsDestroy(s *terraform.State) err
 func testAccAWSCodeArtifactDomainPermissionsPolicyBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
   deletion_window_in_days = 7
 }
 
@@ -216,7 +216,7 @@ EOF
 func testAccAWSCodeArtifactDomainPermissionsPolicyOwnerConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
   deletion_window_in_days = 7
 }
 
@@ -248,7 +248,7 @@ EOF
 func testAccAWSCodeArtifactDomainPermissionsPolicyUpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
   deletion_window_in_days = 7
 }
 
