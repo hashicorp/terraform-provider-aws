@@ -182,7 +182,7 @@ func testAccCheckAWSCodeArtifactDomainDestroy(s *terraform.State) error {
 func testAccAWSCodeArtifactDomainBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
   deletion_window_in_days = 7
 }
 
