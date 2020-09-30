@@ -837,9 +837,9 @@ resource "aws_ssm_maintenance_window_task" "test" {
 
   task_invocation_parameters {
     run_command_parameters {
-      document_hash       = sha256("COMMAND")
-      document_hash_type  = "Sha256"
-      service_role_arn    = aws_iam_role.test.arn
+      document_hash      = sha256("COMMAND")
+      document_hash_type = "Sha256"
+      service_role_arn   = aws_iam_role.test.arn
 
       parameter {
         name   = "commands"
@@ -847,8 +847,8 @@ resource "aws_ssm_maintenance_window_task" "test" {
       }
 
       cloudwatch_config {
-       cloudwatch_log_group_name = aws_cloudwatch_log_group.test.name
-       cloudwatch_output_enabled = %[2]t
+        cloudwatch_log_group_name = aws_cloudwatch_log_group.test.name
+        cloudwatch_output_enabled = %[2]t
       }
     }
   }
