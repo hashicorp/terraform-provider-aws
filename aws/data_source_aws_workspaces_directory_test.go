@@ -53,7 +53,7 @@ func testAccDataSourceAwsWorkspacesDirectoryConfig(rName string) string {
 	return composeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		`
-resource aws_workspaces_directory test {
+resource "aws_workspaces_directory" "test" {
   directory_id = aws_directory_service_directory.main.id
 
   self_service_permissions {
@@ -65,11 +65,11 @@ resource aws_workspaces_directory test {
   }
 }
 
-data aws_workspaces_directory test {
+data "aws_workspaces_directory" "test" {
   directory_id = aws_workspaces_directory.test.id
 }
 
-data aws_iam_role workspaces-default {
+data "aws_iam_role" "workspaces-default" {
   name = "workspaces_DefaultRole"
 }
 `)

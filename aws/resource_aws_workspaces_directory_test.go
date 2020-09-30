@@ -460,9 +460,9 @@ func testAccPreCheckWorkspacesDirectory(t *testing.T) {
 
 func testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName string) string {
 	return fmt.Sprintf(`
-data aws_region current {}
+data "aws_region" "current" {}
 
-data aws_availability_zones available {
+data "aws_availability_zones" "available" {
   state = "available"
 
   filter {
@@ -479,7 +479,7 @@ locals {
   workspaces_az_ids = lookup(local.region_workspaces_az_ids, data.aws_region.current.name, data.aws_availability_zones.available.zone_ids)
 }
 
-resource aws_vpc main {
+resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -487,7 +487,7 @@ resource aws_vpc main {
   }
 }
 
-resource aws_subnet primary {
+resource "aws_subnet" "primary" {
   vpc_id               = aws_vpc.main.id
   availability_zone_id = local.workspaces_az_ids[0]
   cidr_block           = "10.0.1.0/24"
@@ -497,7 +497,7 @@ resource aws_subnet primary {
   }
 }
 
-resource aws_subnet secondary {
+resource "aws_subnet" "secondary" {
   vpc_id               = aws_vpc.main.id
   availability_zone_id = local.workspaces_az_ids[1]
   cidr_block           = "10.0.2.0/24"
@@ -507,7 +507,7 @@ resource aws_subnet secondary {
   }
 }
 
-resource aws_directory_service_directory main {
+resource "aws_directory_service_directory" "main" {
   size     = "Small"
   name     = "tf-acctest.neverland.com"
   password = "#S1ncerely"
@@ -528,11 +528,11 @@ func testAccWorkspacesDirectoryConfig(rName string) string {
 	return composeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		`
-resource aws_workspaces_directory main {
+resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 }
 
-data aws_iam_role workspaces-default {
+data "aws_iam_role" "workspaces-default" {
   name = "workspaces_DefaultRole"
 }
 `)
@@ -542,7 +542,7 @@ func testAccWorkspacesDirectory_selfServicePermissions(rName string) string {
 	return composeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		`
-resource aws_workspaces_directory main {
+resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
   self_service_permissions {
@@ -560,7 +560,7 @@ func testAccWorkspacesDirectoryConfig_subnetIds(rName string) string {
 	return composeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		`
-resource aws_workspaces_directory main {
+resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
   subnet_ids   = [aws_subnet.primary.id, aws_subnet.secondary.id]
 }
@@ -571,7 +571,7 @@ func testAccWorkspacesDirectoryConfigTags1(rName, tagKey1, tagValue1 string) str
 	return composeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		fmt.Sprintf(`
-resource aws_workspaces_directory main {
+resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
   tags = {
@@ -585,7 +585,7 @@ func testAccWorkspacesDirectoryConfigTags2(rName, tagKey1, tagValue1, tagKey2, t
 	return composeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		fmt.Sprintf(`
-resource aws_workspaces_directory main {
+resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
   tags = {
@@ -600,12 +600,12 @@ func testAccWorkspacesDirectoryConfig_workspaceCreationProperties(rName string) 
 	return composeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		fmt.Sprintf(`
-resource aws_security_group test {
+resource "aws_security_group" "test" {
   name        = "tf-acctest-%[1]s"
   vpc_id      = aws_vpc.main.id
 }
 
-resource aws_workspaces_directory main {
+resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
   workspace_creation_properties {

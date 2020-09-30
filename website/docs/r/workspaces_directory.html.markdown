@@ -13,35 +13,35 @@ Provides a WorkSpaces directory in AWS WorkSpaces Service
 ## Example Usage
 
 ```hcl
-resource aws_vpc example {
+resource "aws_vpc" "example" {
   cidr_block = "10.0.0.0/16"
 }
 
-resource aws_subnet example_a {
+resource "aws_subnet" "example_a" {
   vpc_id            = aws_vpc.example.id
   availability_zone = "us-east-1a"
   cidr_block        = "10.0.0.0/24"
 }
 
-resource aws_subnet example_b {
+resource "aws_subnet" "example_b" {
   vpc_id            = aws_vpc.example.id
   availability_zone = "us-east-1b"
   cidr_block        = "10.0.1.0/24"
 }
-resource aws_subnet example_c {
+resource "aws_subnet" "example_c" {
   vpc_id            = aws_vpc.example.id
   availability_zone = "us-east-1c"
   cidr_block        = "10.0.2.0/24"
 }
 
-resource aws_subnet example_d {
+resource "aws_subnet" "example_d" {
   vpc_id            = aws_vpc.example.id
   availability_zone = "us-east-1d"
   cidr_block        = "10.0.3.0/24"
 }
 
 
-resource aws_directory_service_directory example {
+resource "aws_directory_service_directory" "example" {
   name     = "corp.example.com"
   password = "#S1ncerely"
   size     = "Small"
@@ -55,7 +55,7 @@ resource aws_directory_service_directory example {
   }
 }
 
-resource aws_workspaces_directory example {
+resource "aws_workspaces_directory" "example" {
   directory_id = aws_directory_service_directory.example.id
   subnet_ids = [
     aws_subnet.example_c.id,
