@@ -725,6 +725,7 @@ func Provider() *schema.Provider {
 			"aws_lb_ssl_negotiation_policy":                           resourceAwsLBSSLNegotiationPolicy(),
 			"aws_macie_member_account_association":                    resourceAwsMacieMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":                         resourceAwsMacieS3BucketAssociation(),
+			"aws_macie2_custom_data_identifier":                       resourceAwsMacie2CustomDataIdentifier(),
 			"aws_main_route_table_association":                        resourceAwsMainRouteTableAssociation(),
 			"aws_mq_broker":                                           resourceAwsMqBroker(),
 			"aws_mq_configuration":                                    resourceAwsMqConfiguration(),
