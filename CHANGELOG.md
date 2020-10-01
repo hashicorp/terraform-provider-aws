@@ -5,6 +5,7 @@ FEATURES
 * **New Resource:** `aws_backup_vault_notifications` [GH-12501]
 * **New Resource:** `aws_codeartifact_domain` [GH-13743]
 * **New Resource:** `aws_codeartifact_domain_permissions` [GH-13753]
+* **New Resource:** `aws_codeartifact_repository` [GH-14429]
 * **New Resource:** `aws_db_proxy_target` [GH-12784]
 * **New Resource:** `aws_glue_ml_transform` [GH-14909]
 * **New Resource:** `aws_lex_intent` [GH-8917]
