@@ -185,9 +185,8 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 												},
 
 												"method_name": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(appmesh.HttpMethod_Values(), false),
+													Type:     schema.TypeString,
+													Optional: true,
 												},
 
 												"prefix": {

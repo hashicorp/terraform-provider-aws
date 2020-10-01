@@ -5698,12 +5698,6 @@ func expandAppmeshHttpRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 					if vSuffix, ok := mMatch["suffix"].(string); ok && vSuffix != "" {
 						httpRouteHeader.Match.Suffix = aws.String(vSuffix)
 					}
-					if vRegex, ok := mMatch["regex"].(string); ok && vRegex != "" {
-						httpRouteHeader.Match.Regex = aws.String(vRegex)
-					}
-					if vSuffix, ok := mMatch["suffix"].(string); ok && vSuffix != "" {
-						httpRouteHeader.Match.Suffix = aws.String(vSuffix)
-					}
 
 					if vRange, ok := mMatch["range"].([]interface{}); ok && len(vRange) > 0 && vRange[0] != nil {
 						httpRouteHeader.Match.Range = &appmesh.MatchRange{}
