@@ -2,14 +2,14 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/finder"
 )
 
 func TestAccAWSDBProxyTarget_Instance(t *testing.T) {
@@ -18,7 +18,7 @@ func TestAccAWSDBProxyTarget_Instance(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBProxyTargetDestroy,
 		Steps: []resource.TestStep{
@@ -26,10 +26,10 @@ func TestAccAWSDBProxyTarget_Instance(t *testing.T) {
 				Config: testAccAWSDBProxyTargetConfig_Instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyTargetExists(resourceName, &dbProxyTarget),
-					resource.TestMatchResourceAttr(resourceName, "endpoint", regexp.MustCompile(`^[\w\-\.]+\.rds\.amazonaws\.com$`)),
-					resource.TestCheckResourceAttr(resourceName, "port", "3306"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint", "aws_db_instance.test", "address"),
+					resource.TestCheckResourceAttrPair(resourceName, "port", "aws_db_instance.test", "port"),
 					resource.TestCheckResourceAttr(resourceName, "rds_resource_id", rName),
-					// resource.TestCheckResourceAttrPair(resourceName, "target_arn", "aws_db_instance.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "target_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "tracked_cluster_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "type", "RDS_INSTANCE"),
 				),
@@ -49,7 +49,7 @@ func TestAccAWSDBProxyTarget_Cluster(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBProxyTargetDestroy,
 		Steps: []resource.TestStep{
@@ -58,10 +58,10 @@ func TestAccAWSDBProxyTarget_Cluster(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyTargetExists(resourceName, &dbProxyTarget),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", ""),
-					resource.TestCheckResourceAttr(resourceName, "port", "3306"),
+					resource.TestCheckResourceAttrPair(resourceName, "port", "aws_rds_cluster.test", "port"),
 					resource.TestCheckResourceAttr(resourceName, "rds_resource_id", rName),
-					// resource.TestCheckResourceAttrPair(resourceName, "target_arn", "aws_rds_cluster.test", "arn"),
-					// resource.TestCheckResourceAttr(resourceName, "tracked_cluster_id", rName),
+					resource.TestCheckResourceAttr(resourceName, "target_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "tracked_cluster_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "type", "TRACKED_CLUSTER"),
 				),
 			},
@@ -80,7 +80,7 @@ func TestAccAWSDBProxyTarget_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBProxyTargetDestroy,
 		Steps: []resource.TestStep{
@@ -104,27 +104,32 @@ func testAccCheckAWSDBProxyTargetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		dbProxyName, _, rdsResourceId, err := resourceAwsDbProxyTargetParseID(rs.Primary.ID)
+		dbProxyName, targetGroupName, targetType, rdsResourceId, err := resourceAwsDbProxyTargetParseID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		opts := rds.DescribeDBProxyTargetsInput{
-			DBProxyName: aws.String(dbProxyName),
+		dbProxyTarget, err := finder.DBProxyTarget(conn, dbProxyName, targetGroupName, targetType, rdsResourceId)
+
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
+			continue
 		}
 
-		// Try to find the Group
-		resp, err := conn.DescribeDBProxyTargets(&opts)
-
-		if err == nil {
-			if len(resp.Targets) != 0 &&
-				*resp.Targets[0].RdsResourceId == rdsResourceId {
-				return fmt.Errorf("DB Proxy Target Group still exists")
-			}
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyTargetGroupNotFoundFault) {
+			continue
 		}
 
-		if !isAWSErr(err, rds.ErrCodeDBProxyNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyTargetNotFoundFault) {
+			continue
+		}
+
+		if err != nil {
 			return err
+		}
+
+		if dbProxyTarget != nil {
+			return fmt.Errorf("RDS DB Proxy Target (%s) still exists", rs.Primary.ID)
 		}
 	}
 
@@ -144,27 +149,23 @@ func testAccCheckAWSDBProxyTargetExists(n string, v *rds.DBProxyTarget) resource
 
 		conn := testAccProvider.Meta().(*AWSClient).rdsconn
 
-		dbProxyName, _, rdsResourceId, err := resourceAwsDbProxyTargetParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		opts := rds.DescribeDBProxyTargetsInput{
-			DBProxyName: aws.String(dbProxyName),
-		}
-
-		resp, err := conn.DescribeDBProxyTargets(&opts)
+		dbProxyName, targetGroupName, targetType, rdsResourceId, err := resourceAwsDbProxyTargetParseID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(resp.Targets) != 1 ||
-			*resp.Targets[0].RdsResourceId != rdsResourceId {
-			return fmt.Errorf("DB Proxy Target not found")
+		dbProxyTarget, err := finder.DBProxyTarget(conn, dbProxyName, targetGroupName, targetType, rdsResourceId)
+
+		if err != nil {
+			return err
 		}
 
-		*v = *resp.Targets[0]
+		if dbProxyTarget == nil {
+			return fmt.Errorf("RDS DB Proxy Target (%s) not found", rs.Primary.ID)
+		}
+
+		*v = *dbProxyTarget
 
 		return nil
 	}
@@ -279,6 +280,13 @@ resource "aws_vpc" "test" {
 resource "aws_security_group" "test" {
   name   = "%[1]s"
   vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port = 0
+    to_port   = 65535
+    protocol  = "tcp"
+    self      = true
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -296,50 +304,67 @@ resource "aws_subnet" "test" {
 
 func testAccAWSDBProxyTargetConfig_Instance(rName string) string {
 	return testAccAWSDBProxyTargetConfigBase(rName) + fmt.Sprintf(`
-resource "aws_db_proxy_target" "test" {
-  db_proxy_name          = aws_db_proxy.test.name
-  target_group_name      = "default"
-  db_instance_identifier = aws_db_instance.test.id
+data "aws_rds_engine_version" "test" {
+  engine             = "mysql"
+  preferred_versions = ["5.7.31", "5.7.30"]
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.test.engine
+  engine_version             = data.aws_rds_engine_version.test.version
+  preferred_instance_classes = ["db.t3.micro", "db.t2.micro", "db.t3.small"]
 }
 
 resource "aws_db_instance" "test" {
-  identifier           = "%[1]s"
-  db_subnet_group_name = aws_db_subnet_group.test.id
-  allocated_storage    = 20
-  engine               = "mysql"
-  engine_version       = "5.7"
-  instance_class       = "db.t2.micro"
-  password             = "testtest"
-  username             = "test"
-  skip_final_snapshot  = true
+  allocated_storage      = 20
+  db_subnet_group_name   = aws_db_subnet_group.test.id
+  engine                 = data.aws_rds_orderable_db_instance.test.engine
+  engine_version         = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier             = "%[1]s"
+  instance_class         = data.aws_rds_orderable_db_instance.test.instance_class
+  password               = "testtest"
+  skip_final_snapshot    = true
+  username               = "test"
+  vpc_security_group_ids = [aws_security_group.test.id]
 
   tags = {
     Name = "%[1]s"
   }
+}
+
+resource "aws_db_proxy_target" "test" {
+  db_instance_identifier = aws_db_instance.test.id
+  db_proxy_name          = aws_db_proxy.test.name
+  target_group_name      = "default"
 }
 `, rName)
 }
 
 func testAccAWSDBProxyTargetConfig_Cluster(rName string) string {
 	return testAccAWSDBProxyTargetConfigBase(rName) + fmt.Sprintf(`
-resource "aws_db_proxy_target" "test" {
-  db_proxy_name         = aws_db_proxy.test.name
-  target_group_name     = "default"
-  db_cluster_identifier = aws_rds_cluster.test.id
+data "aws_rds_engine_version" "test" {
+  engine = "aurora-mysql"
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier   = "%[1]s"
-  db_subnet_group_name = aws_db_subnet_group.test.id
-  engine               = "aurora-mysql"
-  engine_version       = "5.7.mysql_aurora.2.03.2"
-  master_username      = "test"
-  master_password      = "testtest"
-  skip_final_snapshot  = true
+  cluster_identifier     = "%[1]s"
+  db_subnet_group_name   = aws_db_subnet_group.test.id
+  engine                 = data.aws_rds_engine_version.test.engine
+  engine_version         = data.aws_rds_engine_version.test.version
+  master_username        = "test"
+  master_password        = "testtest"
+  skip_final_snapshot    = true
+  vpc_security_group_ids = [aws_security_group.test.id]
 
   tags = {
     Name = "%[1]s"
   }
+}
+
+resource "aws_db_proxy_target" "test" {
+  db_cluster_identifier = aws_rds_cluster.test.cluster_identifier
+  db_proxy_name         = aws_db_proxy.test.name
+  target_group_name     = "default"
 }
 `, rName)
 }

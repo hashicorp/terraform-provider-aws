@@ -49,10 +49,9 @@ resource "aws_db_proxy_default_target_group" "example" {
 }
 
 resource "aws_db_proxy_target" "example" {
+  db_instance_identifier = aws_db_instance.example.id
   db_proxy_name          = aws_db_proxy.example.db_proxy_name
   target_group_name      = aws_db_proxy_default_target_group.example.name
-  db_instance_identifier = aws_db_instance.example.id
-  # db_cluster_identifier  = ""
 }
 ```
 
@@ -71,25 +70,26 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Amazon Resource Name (ARN) for the proxy.
-* `endpoint` - The writer endpoint for the RDS DB instance or Aurora DB cluster.
-* `port` - The port that the RDS Proxy uses to connect to the target RDS DB instance or Aurora DB cluster.
-* `rds_resource_id` - The identifier representing the target. It can be the instance identifier for an RDS DB instance, or the cluster identifier for an Aurora DB cluster.
-* `target_arn` - The Amazon Resource Name (ARN) for the RDS DB instance or Aurora DB cluster.
-* `tracked_cluster_id` - The DB cluster identifier when the target represents an Aurora DB cluster. This field is blank when the target represents an RDS DB instance.
-* `type` - Specifies the kind of database, such as an RDS DB instance or an Aurora DB cluster, that the target represents.
-
-### Timeouts
-
-`aws_db_proxy_target` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
-
-- `create` - (Default `30 minutes`) Used for registering DB proxy targets.
-- `delete` - (Default `30 minutes`) Used for deregistering DB proxy targets.
+* `endpoint` - Hostname for the target RDS DB Instance. Only returned for `RDS_INSTANCE` type.
+* `id` - Identifier of  `db_proxy_name`, `target_group_name`, target type (e.g. `RDS_INSTANCE` or `TRACKED_CLUSTER`), and resource identifier separated by forward slashes (`/`).
+* `port` - Port for the target RDS DB Instance or Aurora DB Cluster.
+* `rds_resource_id` - Identifier representing the DB Instance or DB Cluster target.
+* `target_arn` - Amazon Resource Name (ARN) for the DB instance or DB cluster. Currently not returned by the RDS API.
+* `tracked_cluster_id` - DB Cluster identifier for the DB Instance target. Not returned unless manually importing an `RDS_INSTANCE` target that is part of a DB Cluster.
+* `type` - Type of target. e.g. `RDS_INSTANCE` or `TRACKED_CLUSTER`
 
 ## Import
 
-DB proxy targets can be imported using the `db_proxy_name`/`target_group_name`/`rds_resource_id`, e.g.
+RDS DB Proxy Targets can be imported using the `db_proxy_name`, `target_group_name`, target type (e.g. `RDS_INSTANCE` or `TRACKED_CLUSTER`), and resource identifier separated by forward slashes (`/`), e.g.
+
+Instances:
 
 ```
-$ terraform import aws_db_proxy_target.example example/default/example-db-identifier
+$ terraform import aws_db_proxy_target.example example-proxy/default/RDS_INSTANCE/example-instance
+```
+
+Provisioned Clusters:
+
+```
+$ terraform import aws_db_proxy_target.example example-proxy/default/TRACKED_CLUSTER/example-cluster
 ```

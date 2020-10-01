@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/finder"
 )
 
 func resourceAwsDbProxyTarget() *schema.Resource {
@@ -18,11 +19,6 @@ func resourceAwsDbProxyTarget() *schema.Resource {
 		Delete: resourceAwsDbProxyTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
-		},
-
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -105,66 +101,55 @@ func resourceAwsDbProxyTargetCreate(d *schema.ResourceData, meta interface{}) er
 		params.DBClusterIdentifiers = []*string{aws.String(v.(string))}
 	}
 
-	log.Printf("[DEBUG] Register DB Proxy target: %#v", params)
 	resp, err := conn.RegisterDBProxyTargets(&params)
+
 	if err != nil {
-		return fmt.Errorf("Error registering DB Proxy target: %s", err)
+		return fmt.Errorf("error registering RDS DB Proxy (%s/%s) Target: %w", dbProxyName, targetGroupName, err)
 	}
 
 	dbProxyTarget := resp.DBProxyTargets[0]
 
-	d.SetId(strings.Join([]string{dbProxyName, targetGroupName, *dbProxyTarget.RdsResourceId}, "/"))
-	log.Printf("[INFO] DB Proxy target ID: %s", d.Id())
+	d.SetId(strings.Join([]string{dbProxyName, targetGroupName, aws.StringValue(dbProxyTarget.Type), aws.StringValue(dbProxyTarget.RdsResourceId)}, "/"))
 
 	return resourceAwsDbProxyTargetRead(d, meta)
 }
 
-func resourceAwsDbProxyTargetParseID(id string) (string, string, string, error) {
-	idParts := strings.SplitN(id, "/", 3)
-	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
-		return "", "", "", fmt.Errorf("unexpected format of ID (%s), expected db_proxy_name/target_group_name/target_arn", id)
+func resourceAwsDbProxyTargetParseID(id string) (string, string, string, string, error) {
+	idParts := strings.SplitN(id, "/", 4)
+	if len(idParts) != 4 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" || idParts[3] == "" {
+		return "", "", "", "", fmt.Errorf("unexpected format of ID (%s), expected db_proxy_name/target_group_name/type/id", id)
 	}
-	return idParts[0], idParts[1], idParts[2], nil
+	return idParts[0], idParts[1], idParts[2], idParts[3], nil
 }
 
 func resourceAwsDbProxyTargetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	dbProxyName, targetGroupName, rdsResourceId, err := resourceAwsDbProxyTargetParseID(d.Id())
+	dbProxyName, targetGroupName, targetType, rdsResourceId, err := resourceAwsDbProxyTargetParseID(d.Id())
 	if err != nil {
 		return err
 	}
 
-	params := rds.DescribeDBProxyTargetsInput{
-		DBProxyName:     aws.String(dbProxyName),
-		TargetGroupName: aws.String(targetGroupName),
+	dbProxyTarget, err := finder.DBProxyTarget(conn, dbProxyName, targetGroupName, targetType, rdsResourceId)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
+		log.Printf("[WARN] RDS DB Proxy Target (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	resp, err := conn.DescribeDBProxyTargets(&params)
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyTargetGroupNotFoundFault) {
+		log.Printf("[WARN] RDS DB Proxy Target (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if isAWSErr(err, rds.ErrCodeDBProxyNotFoundFault, "") {
-			log.Printf("[WARN] DB Proxy Target (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		if isAWSErr(err, rds.ErrCodeDBProxyTargetGroupNotFoundFault, "") {
-			log.Printf("[WARN] DB Proxy Target (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
 		return fmt.Errorf("error reading RDS DB Proxy Target (%s): %w", d.Id(), err)
 	}
 
-	var dbProxyTarget *rds.DBProxyTarget
-	for _, target := range resp.Targets {
-		if aws.StringValue(target.RdsResourceId) == rdsResourceId {
-			dbProxyTarget = target
-			break
-		}
-	}
-
 	if dbProxyTarget == nil {
-		log.Printf("[WARN] DB Proxy Target (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] RDS DB Proxy Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -175,6 +160,12 @@ func resourceAwsDbProxyTargetRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("target_arn", dbProxyTarget.TargetArn)
 	d.Set("tracked_cluster_id", dbProxyTarget.TrackedClusterId)
 	d.Set("type", dbProxyTarget.Type)
+
+	if aws.StringValue(dbProxyTarget.Type) == rds.TargetTypeRdsInstance {
+		d.Set("db_instance_identifier", dbProxyTarget.RdsResourceId)
+	} else {
+		d.Set("db_cluster_identifier", dbProxyTarget.RdsResourceId)
+	}
 
 	return nil
 }
@@ -197,6 +188,19 @@ func resourceAwsDbProxyTargetDelete(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Deregister DB Proxy target: %#v", params)
 	_, err := conn.DeregisterDBProxyTargets(&params)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
+		return nil
+	}
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyTargetGroupNotFoundFault) {
+		return nil
+	}
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyTargetNotFoundFault) {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error deregistering DB Proxy target: %s", err)
 	}
