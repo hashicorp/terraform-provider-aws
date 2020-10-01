@@ -98,7 +98,6 @@ func TestAccAWSFsxLustreFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypeScratch1),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
-					resource.TestCheckResourceAttr(resourceName, "auto_import_policy", "NONE"),
 				),
 			},
 			{
