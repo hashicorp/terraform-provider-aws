@@ -21,9 +21,10 @@ func dataSourceAwsCodeArtifactAuthorizationToken() *schema.Resource {
 				Required: true,
 			},
 			"domain_owner": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validateAwsAccountId,
 			},
 			"duration_seconds": {
 				Type:     schema.TypeInt,
