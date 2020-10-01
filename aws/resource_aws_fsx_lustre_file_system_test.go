@@ -150,6 +150,7 @@ func TestAccAWSFsxLustreFileSystem_ExportPath(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "export_path", fmt.Sprintf("s3://%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "auto_import_policy", "NONE"),
 				),
 			},
 			{
@@ -164,6 +165,7 @@ func TestAccAWSFsxLustreFileSystem_ExportPath(t *testing.T) {
 					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem2),
 					testAccCheckFsxLustreFileSystemRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "export_path", fmt.Sprintf("s3://%s/prefix/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "auto_import_policy", "NONE"),
 				),
 			},
 		},
@@ -617,6 +619,40 @@ func TestAccAWSFsxLustreFileSystem_StorageTypeHddDriveCacheNone(t *testing.T) {
 	})
 }
 
+func TestAccAWSFsxLustreFileSystem_autoImportPolicy(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("fsx", t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxLustreFileSystemAutoImportPolicyConfig(rName, "", "NEW"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "auto_import_policy", "NEW"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccAwsFsxLustreFileSystemAutoImportPolicyConfig(rName, "", "NEW_CHANGED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "auto_import_policy", "NEW_CHANGED"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckFsxLustreFileSystemExists(resourceName string, fs *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -980,4 +1016,21 @@ resource "aws_fsx_lustre_file_system" "test" {
   drive_cache_type            = %[1]q
 }
 `, drive_cache_type)
+}
+
+func testAccAwsFsxLustreFileSystemAutoImportPolicyConfig(rName, exportPrefix, policy string) string {
+	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  acl    = "private"
+  bucket = %[1]q
+}
+
+resource "aws_fsx_lustre_file_system" "test" {
+  export_path        = "s3://${aws_s3_bucket.test.bucket}%[2]s"
+  import_path        = "s3://${aws_s3_bucket.test.bucket}"
+  auto_import_policy = %[3]q
+  storage_capacity   = 1200
+  subnet_ids         = [aws_subnet.test1.id]
+}
+`, rName, exportPrefix, policy)
 }

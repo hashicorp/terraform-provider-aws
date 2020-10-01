@@ -56,6 +56,7 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 					validation.StringLenBetween(3, 900),
 					validation.StringMatch(regexp.MustCompile(`^s3://`), "must begin with s3://"),
 				),
+				RequiredWith: []string{"auto_import_policy"},
 			},
 			"imported_file_chunk_size": {
 				Type:         schema.TypeInt,
@@ -115,15 +116,11 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 				),
 			},
 			"deployment_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  fsx.LustreDeploymentTypeScratch1,
-				ValidateFunc: validation.StringInSlice([]string{
-					fsx.LustreDeploymentTypeScratch1,
-					fsx.LustreDeploymentTypeScratch2,
-					fsx.LustreDeploymentTypePersistent1,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      fsx.LustreDeploymentTypeScratch1,
+				ValidateFunc: validation.StringInSlice(fsx.LustreDeploymentType_Values(), false),
 			},
 			"kms_key_id": {
 				Type:         schema.TypeString,
@@ -171,6 +168,12 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(fsx.DriveCacheType_Values(), false),
+			},
+			"auto_import_policy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(fsx.AutoImportPolicyType_Values(), false),
 			},
 		},
 	}
@@ -235,6 +238,10 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 		input.LustreConfiguration.DriveCacheType = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("auto_import_policy"); ok {
+		input.LustreConfiguration.AutoImportPolicy = aws.String(v.(string))
+	}
+
 	result, err := conn.CreateFileSystem(input)
 	if err != nil {
 		return fmt.Errorf("Error creating FSx Lustre filesystem: %w", err)
@@ -281,6 +288,11 @@ func resourceAwsFsxLustreFileSystemUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("daily_automatic_backup_start_time") {
 		input.LustreConfiguration.DailyAutomaticBackupStartTime = aws.String(d.Get("daily_automatic_backup_start_time").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("auto_import_policy") {
+		input.LustreConfiguration.AutoImportPolicy = aws.String(d.Get("auto_import_policy").(string))
 		requestUpdate = true
 	}
 
@@ -341,6 +353,7 @@ func resourceAwsFsxLustreFileSystemRead(d *schema.ResourceData, meta interface{}
 	d.Set("dns_name", filesystem.DNSName)
 	d.Set("export_path", lustreConfig.DataRepositoryConfiguration.ExportPath)
 	d.Set("import_path", lustreConfig.DataRepositoryConfiguration.ImportPath)
+	d.Set("auto_import_policy", lustreConfig.DataRepositoryConfiguration.AutoImportPolicy)
 	d.Set("imported_file_chunk_size", lustreConfig.DataRepositoryConfiguration.ImportedFileChunkSize)
 	d.Set("deployment_type", lustreConfig.DeploymentType)
 	if lustreConfig.PerUnitStorageThroughput != nil {
