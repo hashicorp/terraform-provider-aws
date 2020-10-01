@@ -264,16 +264,16 @@ The `dns` object supports the following:
 The `port_mapping` object supports the following:
 
 * `port` - (Required) The port used for the port mapping.
-* `protocol` - (Required) The protocol used for the port mapping. Valid values are `http` and `tcp`.
+* `protocol` - (Required) The protocol used for the port mapping. Valid values are `http`, `http2`, `tcp` and `grpc`.
 
 The `health_check` object supports the following:
 
 * `healthy_threshold` - (Required) The number of consecutive successful health checks that must occur before declaring listener healthy.
 * `interval_millis`- (Required) The time period in milliseconds between each health check execution.
-* `protocol` - (Required) The protocol for the health check request. Valid values are `http` and `tcp`.
+* `protocol` - (Required) The protocol for the health check request. Valid values are `http`, `http2`, `tcp` and `grpc`.
 * `timeout_millis` - (Required) The amount of time to wait when receiving a response from the health check, in milliseconds.
 * `unhealthy_threshold` - (Required) The number of consecutive failed health checks that must occur before declaring a virtual node unhealthy.
-* `path` - (Optional) The destination path for the health check request. This is only required if the specified protocol is `http`.
+* `path` - (Optional) The destination path for the health check request. This is only required if the specified protocol is `http` or `http2`.
 * `port` - (Optional) The destination port for the health check request. This port must match the port defined in the `port_mapping` for the listener.
 
 The `tls` object supports the following:
