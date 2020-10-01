@@ -41,7 +41,7 @@ resource "aws_codeartifact_repository" "test" {
   domain     = aws_codeartifact_domain.example.domain
 
   upstream {
-    repository_name = aws_codeartifact_repository.upstream1.repository
+    repository_name = aws_codeartifact_repository.upstream.repository
   }
 }
 ```
@@ -51,7 +51,7 @@ resource "aws_codeartifact_repository" "test" {
 The following arguments are supported:
 
 * `domain` - (Required) The domain that contains the created repository.
-* `repositoy` - (Required) The name of the repository to create.
+* `repository` - (Required) The name of the repository to create.
 * `domain_owner` - (Optional) The account number of the AWS account that owns the domain.
 * `description` - (Optional) The description of the repository.
 * `upstream` - (Optional) A list of upstream repositories to associate with the repository. The order of the upstream repositories in the list determines their priority order when AWS CodeArtifact looks for a requested package version. see [Upstream](#upstream)
@@ -64,8 +64,8 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Name of Repository.
-* `arn` - The ARN of Repository.
+* `id` - The Name of the repository.
+* `arn` - The ARN of the repository.
 * `administrator_account` - The account number of the AWS account that manages the repository.
 * `external_connections` - An array of external connections associated with the repository. see [External Connections](#external-connections)
 
