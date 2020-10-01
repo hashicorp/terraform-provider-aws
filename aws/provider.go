@@ -643,6 +643,7 @@ func Provider() *schema.Provider {
 			"aws_glue_classifier":                                     resourceAwsGlueClassifier(),
 			"aws_glue_connection":                                     resourceAwsGlueConnection(),
 			"aws_glue_crawler":                                        resourceAwsGlueCrawler(),
+			"aws_glue_data_catalog_encryption_settings":               resourceAwsGlueDataCatalogEncryptionSettings(),
 			"aws_glue_job":                                            resourceAwsGlueJob(),
 			"aws_glue_ml_transform":                                   resourceAwsGlueMLTransform(),
 			"aws_glue_security_configuration":                         resourceAwsGlueSecurityConfiguration(),
