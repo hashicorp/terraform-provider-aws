@@ -9,6 +9,7 @@ FEATURES
 * **New Resource:** `aws_db_proxy_target` [GH-12784]
 * **New Resource:** `aws_glue_data_catalog_encryption_settings` [GH-14916]
 * **New Resource:** `aws_glue_ml_transform` [GH-14909]
+* **New Resource:** `aws_glue_partition` [GH-12547]
 * **New Resource:** `aws_lex_intent` [GH-8917]
 * **New Data Source:** `aws_lex_intent` [GH-8917]
 
