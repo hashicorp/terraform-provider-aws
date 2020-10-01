@@ -17,6 +17,7 @@ ENHANCEMENTS
 * resource/aws_appmesh_virtual_node: Add `grpc` and `http2` as valid values for the `protocol` attribute [GH-11669]
 * resource/aws_appmesh_virtual_node: Add `spec.backend_defaults`, `spec.backend.virtual_service.client_policy` and `spec.listener.tls` attributes to support TLS in transit encryption [GH-12541]
 * resource/aws_appmesh_virtual_router: Add `grpc` and `http2` as valid values for the `protocol` attribute [GH-11669]
+* resource_aws_fsx_lustre_file_system - support `daily_automatic_backup_start_time` [GH-15299]
 * resource/aws_fsx_lustre_file_system: Add `storage_type` and `drive_cache_type` [GH-14727]
 * resource/aws_glue_crawler: Add `connection_name` field to `s3_target` block [GH-15350]
 * resource/aws_sagemaker_notebook_instance: Ability to configure root access for Sagemaker notebook instances [GH-14184]
