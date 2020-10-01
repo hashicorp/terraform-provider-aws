@@ -26,8 +26,8 @@ ENHANCEMENTS
 
 BUG FIXES
 
-* resource/aws_ec2_client_vpn_authorization_rule: Increased active and revoked timeouts from 5 to 10 minutes [GH-15367]
 * resource/aws_db_instance: Prevent ordering differences with `enabled_cloudwatch_logs_exports` argument [GH-15404]
+* resource/aws_ec2_client_vpn_authorization_rule: Increased active and revoked timeouts from 5 to 10 minutes [GH-15367]
 * resource/aws_rds_cluster: Prevent ordering differences with `enabled_cloudwatch_logs_exports` argument [GH-15404]
 * resource/aws_redshift_cluster: Increase default update timeout to 75 minutes [GH-15339]
 
