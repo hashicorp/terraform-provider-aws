@@ -153,7 +153,7 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 
 	input := &workspaces.RegisterWorkspaceDirectoryInput{
 		DirectoryId:       aws.String(directoryId),
-		EnableSelfService: aws.Bool(true), // this is handled separately below
+		EnableSelfService: aws.Bool(false), // this is handled separately below
 		EnableWorkDocs:    aws.Bool(true),
 		Tenancy:           aws.String(workspaces.TenancyShared),
 		Tags:              tags,
