@@ -68,9 +68,7 @@ func dataSourceAwsCodeArtifactAuthorizationTokenRead(d *schema.ResourceData, met
 	if err != nil {
 		return fmt.Errorf("error getting CodeArtifact authorization token: %w", err)
 	}
-
 	log.Printf("[DEBUG] CodeArtifact authorization token: %#v", out)
-	log.Printf(aws.StringValue(out.AuthorizationToken))
 
 	d.SetId(fmt.Sprintf("%s:%s", domainOwner, domain))
 	d.Set("authorization_token", aws.StringValue(out.AuthorizationToken))
