@@ -5366,183 +5366,357 @@ func expandAppmeshRouteSpec(vSpec []interface{}) *appmesh.RouteSpec {
 	}
 	mSpec := vSpec[0].(map[string]interface{})
 
+	if vGrpcRoute, ok := mSpec["grpc_route"].([]interface{}); ok {
+		spec.GrpcRoute = expandAppmeshGrpcRoute(vGrpcRoute)
+	}
+
+	if vHttp2Route, ok := mSpec["http2_route"].([]interface{}); ok {
+		spec.Http2Route = expandAppmeshHttpRoute(vHttp2Route)
+	}
+
+	if vHttpRoute, ok := mSpec["http_route"].([]interface{}); ok {
+		spec.HttpRoute = expandAppmeshHttpRoute(vHttpRoute)
+	}
+
 	if vPriority, ok := mSpec["priority"].(int); ok && vPriority > 0 {
 		spec.Priority = aws.Int64(int64(vPriority))
 	}
 
-	if vHttpRoute, ok := mSpec["http_route"].([]interface{}); ok && len(vHttpRoute) > 0 && vHttpRoute[0] != nil {
-		mHttpRoute := vHttpRoute[0].(map[string]interface{})
-
-		spec.HttpRoute = &appmesh.HttpRoute{}
-
-		if vHttpRouteAction, ok := mHttpRoute["action"].([]interface{}); ok && len(vHttpRouteAction) > 0 && vHttpRouteAction[0] != nil {
-			mHttpRouteAction := vHttpRouteAction[0].(map[string]interface{})
-
-			if vWeightedTargets, ok := mHttpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
-				weightedTargets := []*appmesh.WeightedTarget{}
-
-				for _, vWeightedTarget := range vWeightedTargets.List() {
-					weightedTarget := &appmesh.WeightedTarget{}
-
-					mWeightedTarget := vWeightedTarget.(map[string]interface{})
-
-					if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
-						weightedTarget.VirtualNode = aws.String(vVirtualNode)
-					}
-					if vWeight, ok := mWeightedTarget["weight"].(int); ok {
-						weightedTarget.Weight = aws.Int64(int64(vWeight))
-					}
-
-					weightedTargets = append(weightedTargets, weightedTarget)
-				}
-
-				spec.HttpRoute.Action = &appmesh.HttpRouteAction{
-					WeightedTargets: weightedTargets,
-				}
-			}
-		}
-
-		if vHttpRouteMatch, ok := mHttpRoute["match"].([]interface{}); ok && len(vHttpRouteMatch) > 0 && vHttpRouteMatch[0] != nil {
-			httpRouteMatch := &appmesh.HttpRouteMatch{}
-
-			mHttpRouteMatch := vHttpRouteMatch[0].(map[string]interface{})
-
-			if vMethod, ok := mHttpRouteMatch["method"].(string); ok && vMethod != "" {
-				httpRouteMatch.Method = aws.String(vMethod)
-			}
-			if vPrefix, ok := mHttpRouteMatch["prefix"].(string); ok && vPrefix != "" {
-				httpRouteMatch.Prefix = aws.String(vPrefix)
-			}
-			if vScheme, ok := mHttpRouteMatch["scheme"].(string); ok && vScheme != "" {
-				httpRouteMatch.Scheme = aws.String(vScheme)
-			}
-
-			if vHttpRouteHeaders, ok := mHttpRouteMatch["header"].(*schema.Set); ok && vHttpRouteHeaders.Len() > 0 {
-				httpRouteHeaders := []*appmesh.HttpRouteHeader{}
-
-				for _, vHttpRouteHeader := range vHttpRouteHeaders.List() {
-					httpRouteHeader := &appmesh.HttpRouteHeader{}
-
-					mHttpRouteHeader := vHttpRouteHeader.(map[string]interface{})
-
-					if vInvert, ok := mHttpRouteHeader["invert"].(bool); ok {
-						httpRouteHeader.Invert = aws.Bool(vInvert)
-					}
-					if vName, ok := mHttpRouteHeader["name"].(string); ok && vName != "" {
-						httpRouteHeader.Name = aws.String(vName)
-					}
-
-					if vMatch, ok := mHttpRouteHeader["match"].([]interface{}); ok && len(vMatch) > 0 && vMatch[0] != nil {
-						httpRouteHeader.Match = &appmesh.HeaderMatchMethod{}
-
-						mMatch := vMatch[0].(map[string]interface{})
-
-						if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
-							httpRouteHeader.Match.Exact = aws.String(vExact)
-						}
-						if vPrefix, ok := mMatch["prefix"].(string); ok && vPrefix != "" {
-							httpRouteHeader.Match.Prefix = aws.String(vPrefix)
-						}
-						if vRegex, ok := mMatch["regex"].(string); ok && vRegex != "" {
-							httpRouteHeader.Match.Regex = aws.String(vRegex)
-						}
-						if vSuffix, ok := mMatch["suffix"].(string); ok && vSuffix != "" {
-							httpRouteHeader.Match.Suffix = aws.String(vSuffix)
-						}
-
-						if vRange, ok := mMatch["range"].([]interface{}); ok && len(vRange) > 0 && vRange[0] != nil {
-							httpRouteHeader.Match.Range = &appmesh.MatchRange{}
-
-							mRange := vRange[0].(map[string]interface{})
-
-							if vEnd, ok := mRange["end"].(int); ok && vEnd > 0 {
-								httpRouteHeader.Match.Range.End = aws.Int64(int64(vEnd))
-							}
-							if vStart, ok := mRange["start"].(int); ok && vStart > 0 {
-								httpRouteHeader.Match.Range.Start = aws.Int64(int64(vStart))
-							}
-						}
-					}
-
-					httpRouteHeaders = append(httpRouteHeaders, httpRouteHeader)
-				}
-
-				httpRouteMatch.Headers = httpRouteHeaders
-			}
-
-			spec.HttpRoute.Match = httpRouteMatch
-		}
-
-		if vHttpRetryPolicy, ok := mHttpRoute["retry_policy"].([]interface{}); ok && len(vHttpRetryPolicy) > 0 && vHttpRetryPolicy[0] != nil {
-			httpRetryPolicy := &appmesh.HttpRetryPolicy{}
-
-			mHttpRetryPolicy := vHttpRetryPolicy[0].(map[string]interface{})
-
-			if vMaxRetries, ok := mHttpRetryPolicy["max_retries"].(int); ok && vMaxRetries > 0 {
-				httpRetryPolicy.MaxRetries = aws.Int64(int64(vMaxRetries))
-			}
-
-			if vHttpRetryEvents, ok := mHttpRetryPolicy["http_retry_events"].(*schema.Set); ok && vHttpRetryEvents.Len() > 0 {
-				httpRetryPolicy.HttpRetryEvents = expandStringSet(vHttpRetryEvents)
-			}
-
-			if vPerRetryTimeout, ok := mHttpRetryPolicy["per_retry_timeout"].([]interface{}); ok && len(vPerRetryTimeout) > 0 && vPerRetryTimeout[0] != nil {
-				perRetryTimeout := &appmesh.Duration{}
-
-				mPerRetryTimeout := vPerRetryTimeout[0].(map[string]interface{})
-
-				if vUnit, ok := mPerRetryTimeout["unit"].(string); ok && vUnit != "" {
-					perRetryTimeout.Unit = aws.String(vUnit)
-				}
-				if vValue, ok := mPerRetryTimeout["value"].(int); ok && vValue > 0 {
-					perRetryTimeout.Value = aws.Int64(int64(vValue))
-				}
-
-				httpRetryPolicy.PerRetryTimeout = perRetryTimeout
-			}
-
-			if vTcpRetryEvents, ok := mHttpRetryPolicy["tcp_retry_events"].(*schema.Set); ok && vTcpRetryEvents.Len() > 0 {
-				httpRetryPolicy.TcpRetryEvents = expandStringSet(vTcpRetryEvents)
-			}
-
-			spec.HttpRoute.RetryPolicy = httpRetryPolicy
-		}
-	}
-
-	if vTcpRoute, ok := mSpec["tcp_route"].([]interface{}); ok && len(vTcpRoute) > 0 && vTcpRoute[0] != nil {
-		mTcpRoute := vTcpRoute[0].(map[string]interface{})
-
-		spec.TcpRoute = &appmesh.TcpRoute{}
-
-		if vTcpRouteAction, ok := mTcpRoute["action"].([]interface{}); ok && len(vTcpRouteAction) > 0 && vTcpRouteAction[0] != nil {
-			mTcpRouteAction := vTcpRouteAction[0].(map[string]interface{})
-
-			if vWeightedTargets, ok := mTcpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
-				weightedTargets := []*appmesh.WeightedTarget{}
-
-				for _, vWeightedTarget := range vWeightedTargets.List() {
-					weightedTarget := &appmesh.WeightedTarget{}
-
-					mWeightedTarget := vWeightedTarget.(map[string]interface{})
-
-					if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
-						weightedTarget.VirtualNode = aws.String(vVirtualNode)
-					}
-					if vWeight, ok := mWeightedTarget["weight"].(int); ok {
-						weightedTarget.Weight = aws.Int64(int64(vWeight))
-					}
-
-					weightedTargets = append(weightedTargets, weightedTarget)
-				}
-
-				spec.TcpRoute.Action = &appmesh.TcpRouteAction{
-					WeightedTargets: weightedTargets,
-				}
-			}
-		}
+	if vTcpRoute, ok := mSpec["tcp_route"].([]interface{}); ok {
+		spec.TcpRoute = expandAppmeshTcpRoute(vTcpRoute)
 	}
 
 	return spec
+}
+
+func expandAppmeshGrpcRoute(vGrpcRoute []interface{}) *appmesh.GrpcRoute {
+	if len(vGrpcRoute) == 0 || vGrpcRoute[0] == nil {
+		return nil
+	}
+
+	mGrpcRoute := vGrpcRoute[0].(map[string]interface{})
+
+	grpcRoute := &appmesh.GrpcRoute{}
+
+	if vGrpcRouteAction, ok := mGrpcRoute["action"].([]interface{}); ok && len(vGrpcRouteAction) > 0 && vGrpcRouteAction[0] != nil {
+		mGrpcRouteAction := vGrpcRouteAction[0].(map[string]interface{})
+
+		if vWeightedTargets, ok := mGrpcRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
+			weightedTargets := []*appmesh.WeightedTarget{}
+
+			for _, vWeightedTarget := range vWeightedTargets.List() {
+				weightedTarget := &appmesh.WeightedTarget{}
+
+				mWeightedTarget := vWeightedTarget.(map[string]interface{})
+
+				if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
+					weightedTarget.VirtualNode = aws.String(vVirtualNode)
+				}
+				if vWeight, ok := mWeightedTarget["weight"].(int); ok {
+					weightedTarget.Weight = aws.Int64(int64(vWeight))
+				}
+
+				weightedTargets = append(weightedTargets, weightedTarget)
+			}
+
+			grpcRoute.Action = &appmesh.GrpcRouteAction{
+				WeightedTargets: weightedTargets,
+			}
+		}
+	}
+
+	if vGrpcRouteMatch, ok := mGrpcRoute["match"].([]interface{}); ok && len(vGrpcRouteMatch) > 0 && vGrpcRouteMatch[0] != nil {
+		grpcRouteMatch := &appmesh.GrpcRouteMatch{}
+
+		mGrpcRouteMatch := vGrpcRouteMatch[0].(map[string]interface{})
+
+		if vMethodName, ok := mGrpcRouteMatch["method_name"].(string); ok && vMethodName != "" {
+			grpcRouteMatch.MethodName = aws.String(vMethodName)
+		}
+		if vServiceName, ok := mGrpcRouteMatch["service_name"].(string); ok && vServiceName != "" {
+			grpcRouteMatch.ServiceName = aws.String(vServiceName)
+		}
+
+		if vGrpcRouteMetadatas, ok := mGrpcRouteMatch["metadata"].(*schema.Set); ok && vGrpcRouteMetadatas.Len() > 0 {
+			grpcRouteMetadatas := []*appmesh.GrpcRouteMetadata{}
+
+			for _, vGrpcRouteMetadata := range vGrpcRouteMetadatas.List() {
+				grpcRouteMetadata := &appmesh.GrpcRouteMetadata{}
+
+				mGrpcRouteMetadata := vGrpcRouteMetadata.(map[string]interface{})
+
+				if vInvert, ok := mGrpcRouteMetadata["invert"].(bool); ok {
+					grpcRouteMetadata.Invert = aws.Bool(vInvert)
+				}
+				if vName, ok := mGrpcRouteMetadata["name"].(string); ok && vName != "" {
+					grpcRouteMetadata.Name = aws.String(vName)
+				}
+
+				if vMatch, ok := mGrpcRouteMetadata["match"].([]interface{}); ok && len(vMatch) > 0 && vMatch[0] != nil {
+					grpcRouteMetadata.Match = &appmesh.GrpcRouteMetadataMatchMethod{}
+
+					mMatch := vMatch[0].(map[string]interface{})
+
+					if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
+						grpcRouteMetadata.Match.Exact = aws.String(vExact)
+					}
+					if vPrefix, ok := mMatch["prefix"].(string); ok && vPrefix != "" {
+						grpcRouteMetadata.Match.Prefix = aws.String(vPrefix)
+					}
+					if vRegex, ok := mMatch["regex"].(string); ok && vRegex != "" {
+						grpcRouteMetadata.Match.Regex = aws.String(vRegex)
+					}
+					if vSuffix, ok := mMatch["suffix"].(string); ok && vSuffix != "" {
+						grpcRouteMetadata.Match.Suffix = aws.String(vSuffix)
+					}
+
+					if vRange, ok := mMatch["range"].([]interface{}); ok && len(vRange) > 0 && vRange[0] != nil {
+						grpcRouteMetadata.Match.Range = &appmesh.MatchRange{}
+
+						mRange := vRange[0].(map[string]interface{})
+
+						if vEnd, ok := mRange["end"].(int); ok && vEnd > 0 {
+							grpcRouteMetadata.Match.Range.End = aws.Int64(int64(vEnd))
+						}
+						if vStart, ok := mRange["start"].(int); ok && vStart > 0 {
+							grpcRouteMetadata.Match.Range.Start = aws.Int64(int64(vStart))
+						}
+					}
+				}
+
+				grpcRouteMetadatas = append(grpcRouteMetadatas, grpcRouteMetadata)
+			}
+
+			grpcRouteMatch.Metadata = grpcRouteMetadatas
+		}
+
+		grpcRoute.Match = grpcRouteMatch
+	}
+
+	if vGrpcRetryPolicy, ok := mGrpcRoute["retry_policy"].([]interface{}); ok && len(vGrpcRetryPolicy) > 0 && vGrpcRetryPolicy[0] != nil {
+		grpcRetryPolicy := &appmesh.GrpcRetryPolicy{}
+
+		mGrpcRetryPolicy := vGrpcRetryPolicy[0].(map[string]interface{})
+
+		if vMaxRetries, ok := mGrpcRetryPolicy["max_retries"].(int); ok && vMaxRetries > 0 {
+			grpcRetryPolicy.MaxRetries = aws.Int64(int64(vMaxRetries))
+		}
+
+		if vGrpcRetryEvents, ok := mGrpcRetryPolicy["grpc_retry_events"].(*schema.Set); ok && vGrpcRetryEvents.Len() > 0 {
+			grpcRetryPolicy.GrpcRetryEvents = expandStringSet(vGrpcRetryEvents)
+		}
+
+		if vHttpRetryEvents, ok := mGrpcRetryPolicy["http_retry_events"].(*schema.Set); ok && vHttpRetryEvents.Len() > 0 {
+			grpcRetryPolicy.HttpRetryEvents = expandStringSet(vHttpRetryEvents)
+		}
+
+		if vPerRetryTimeout, ok := mGrpcRetryPolicy["per_retry_timeout"].([]interface{}); ok && len(vPerRetryTimeout) > 0 && vPerRetryTimeout[0] != nil {
+			perRetryTimeout := &appmesh.Duration{}
+
+			mPerRetryTimeout := vPerRetryTimeout[0].(map[string]interface{})
+
+			if vUnit, ok := mPerRetryTimeout["unit"].(string); ok && vUnit != "" {
+				perRetryTimeout.Unit = aws.String(vUnit)
+			}
+			if vValue, ok := mPerRetryTimeout["value"].(int); ok && vValue > 0 {
+				perRetryTimeout.Value = aws.Int64(int64(vValue))
+			}
+
+			grpcRetryPolicy.PerRetryTimeout = perRetryTimeout
+		}
+
+		if vTcpRetryEvents, ok := mGrpcRetryPolicy["tcp_retry_events"].(*schema.Set); ok && vTcpRetryEvents.Len() > 0 {
+			grpcRetryPolicy.TcpRetryEvents = expandStringSet(vTcpRetryEvents)
+		}
+
+		grpcRoute.RetryPolicy = grpcRetryPolicy
+	}
+
+	return grpcRoute
+}
+
+func expandAppmeshHttpRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
+	if len(vHttpRoute) == 0 || vHttpRoute[0] == nil {
+		return nil
+	}
+
+	mHttpRoute := vHttpRoute[0].(map[string]interface{})
+
+	httpRoute := &appmesh.HttpRoute{}
+
+	if vHttpRouteAction, ok := mHttpRoute["action"].([]interface{}); ok && len(vHttpRouteAction) > 0 && vHttpRouteAction[0] != nil {
+		mHttpRouteAction := vHttpRouteAction[0].(map[string]interface{})
+
+		if vWeightedTargets, ok := mHttpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
+			weightedTargets := []*appmesh.WeightedTarget{}
+
+			for _, vWeightedTarget := range vWeightedTargets.List() {
+				weightedTarget := &appmesh.WeightedTarget{}
+
+				mWeightedTarget := vWeightedTarget.(map[string]interface{})
+
+				if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
+					weightedTarget.VirtualNode = aws.String(vVirtualNode)
+				}
+				if vWeight, ok := mWeightedTarget["weight"].(int); ok {
+					weightedTarget.Weight = aws.Int64(int64(vWeight))
+				}
+
+				weightedTargets = append(weightedTargets, weightedTarget)
+			}
+
+			httpRoute.Action = &appmesh.HttpRouteAction{
+				WeightedTargets: weightedTargets,
+			}
+		}
+	}
+
+	if vHttpRouteMatch, ok := mHttpRoute["match"].([]interface{}); ok && len(vHttpRouteMatch) > 0 && vHttpRouteMatch[0] != nil {
+		httpRouteMatch := &appmesh.HttpRouteMatch{}
+
+		mHttpRouteMatch := vHttpRouteMatch[0].(map[string]interface{})
+
+		if vMethod, ok := mHttpRouteMatch["method"].(string); ok && vMethod != "" {
+			httpRouteMatch.Method = aws.String(vMethod)
+		}
+		if vPrefix, ok := mHttpRouteMatch["prefix"].(string); ok && vPrefix != "" {
+			httpRouteMatch.Prefix = aws.String(vPrefix)
+		}
+		if vScheme, ok := mHttpRouteMatch["scheme"].(string); ok && vScheme != "" {
+			httpRouteMatch.Scheme = aws.String(vScheme)
+		}
+
+		if vHttpRouteHeaders, ok := mHttpRouteMatch["header"].(*schema.Set); ok && vHttpRouteHeaders.Len() > 0 {
+			httpRouteHeaders := []*appmesh.HttpRouteHeader{}
+
+			for _, vHttpRouteHeader := range vHttpRouteHeaders.List() {
+				httpRouteHeader := &appmesh.HttpRouteHeader{}
+
+				mHttpRouteHeader := vHttpRouteHeader.(map[string]interface{})
+
+				if vInvert, ok := mHttpRouteHeader["invert"].(bool); ok {
+					httpRouteHeader.Invert = aws.Bool(vInvert)
+				}
+				if vName, ok := mHttpRouteHeader["name"].(string); ok && vName != "" {
+					httpRouteHeader.Name = aws.String(vName)
+				}
+
+				if vMatch, ok := mHttpRouteHeader["match"].([]interface{}); ok && len(vMatch) > 0 && vMatch[0] != nil {
+					httpRouteHeader.Match = &appmesh.HeaderMatchMethod{}
+
+					mMatch := vMatch[0].(map[string]interface{})
+
+					if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
+						httpRouteHeader.Match.Exact = aws.String(vExact)
+					}
+					if vPrefix, ok := mMatch["prefix"].(string); ok && vPrefix != "" {
+						httpRouteHeader.Match.Prefix = aws.String(vPrefix)
+					}
+					if vRegex, ok := mMatch["regex"].(string); ok && vRegex != "" {
+						httpRouteHeader.Match.Regex = aws.String(vRegex)
+					}
+					if vSuffix, ok := mMatch["suffix"].(string); ok && vSuffix != "" {
+						httpRouteHeader.Match.Suffix = aws.String(vSuffix)
+					}
+
+					if vRange, ok := mMatch["range"].([]interface{}); ok && len(vRange) > 0 && vRange[0] != nil {
+						httpRouteHeader.Match.Range = &appmesh.MatchRange{}
+
+						mRange := vRange[0].(map[string]interface{})
+
+						if vEnd, ok := mRange["end"].(int); ok && vEnd > 0 {
+							httpRouteHeader.Match.Range.End = aws.Int64(int64(vEnd))
+						}
+						if vStart, ok := mRange["start"].(int); ok && vStart > 0 {
+							httpRouteHeader.Match.Range.Start = aws.Int64(int64(vStart))
+						}
+					}
+				}
+
+				httpRouteHeaders = append(httpRouteHeaders, httpRouteHeader)
+			}
+
+			httpRouteMatch.Headers = httpRouteHeaders
+		}
+
+		httpRoute.Match = httpRouteMatch
+	}
+
+	if vHttpRetryPolicy, ok := mHttpRoute["retry_policy"].([]interface{}); ok && len(vHttpRetryPolicy) > 0 && vHttpRetryPolicy[0] != nil {
+		httpRetryPolicy := &appmesh.HttpRetryPolicy{}
+
+		mHttpRetryPolicy := vHttpRetryPolicy[0].(map[string]interface{})
+
+		if vMaxRetries, ok := mHttpRetryPolicy["max_retries"].(int); ok && vMaxRetries > 0 {
+			httpRetryPolicy.MaxRetries = aws.Int64(int64(vMaxRetries))
+		}
+
+		if vHttpRetryEvents, ok := mHttpRetryPolicy["http_retry_events"].(*schema.Set); ok && vHttpRetryEvents.Len() > 0 {
+			httpRetryPolicy.HttpRetryEvents = expandStringSet(vHttpRetryEvents)
+		}
+
+		if vPerRetryTimeout, ok := mHttpRetryPolicy["per_retry_timeout"].([]interface{}); ok && len(vPerRetryTimeout) > 0 && vPerRetryTimeout[0] != nil {
+			perRetryTimeout := &appmesh.Duration{}
+
+			mPerRetryTimeout := vPerRetryTimeout[0].(map[string]interface{})
+
+			if vUnit, ok := mPerRetryTimeout["unit"].(string); ok && vUnit != "" {
+				perRetryTimeout.Unit = aws.String(vUnit)
+			}
+			if vValue, ok := mPerRetryTimeout["value"].(int); ok && vValue > 0 {
+				perRetryTimeout.Value = aws.Int64(int64(vValue))
+			}
+
+			httpRetryPolicy.PerRetryTimeout = perRetryTimeout
+		}
+
+		if vTcpRetryEvents, ok := mHttpRetryPolicy["tcp_retry_events"].(*schema.Set); ok && vTcpRetryEvents.Len() > 0 {
+			httpRetryPolicy.TcpRetryEvents = expandStringSet(vTcpRetryEvents)
+		}
+
+		httpRoute.RetryPolicy = httpRetryPolicy
+	}
+
+	return httpRoute
+}
+
+func expandAppmeshTcpRoute(vTcpRoute []interface{}) *appmesh.TcpRoute {
+	if len(vTcpRoute) == 0 || vTcpRoute[0] == nil {
+		return nil
+	}
+
+	mTcpRoute := vTcpRoute[0].(map[string]interface{})
+
+	tcpRoute := &appmesh.TcpRoute{}
+
+	if vTcpRouteAction, ok := mTcpRoute["action"].([]interface{}); ok && len(vTcpRouteAction) > 0 && vTcpRouteAction[0] != nil {
+		mTcpRouteAction := vTcpRouteAction[0].(map[string]interface{})
+
+		if vWeightedTargets, ok := mTcpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
+			weightedTargets := []*appmesh.WeightedTarget{}
+
+			for _, vWeightedTarget := range vWeightedTargets.List() {
+				weightedTarget := &appmesh.WeightedTarget{}
+
+				mWeightedTarget := vWeightedTarget.(map[string]interface{})
+
+				if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
+					weightedTarget.VirtualNode = aws.String(vVirtualNode)
+				}
+				if vWeight, ok := mWeightedTarget["weight"].(int); ok {
+					weightedTarget.Weight = aws.Int64(int64(vWeight))
+				}
+
+				weightedTargets = append(weightedTargets, weightedTarget)
+			}
+
+			tcpRoute.Action = &appmesh.TcpRouteAction{
+				WeightedTargets: weightedTargets,
+			}
+		}
+	}
+
+	return tcpRoute
 }
 
 func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
@@ -5551,125 +5725,229 @@ func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 	}
 
 	mSpec := map[string]interface{}{
-		"priority": int(aws.Int64Value(spec.Priority)),
-	}
-
-	if httpRoute := spec.HttpRoute; httpRoute != nil {
-		mHttpRoute := map[string]interface{}{}
-
-		if action := httpRoute.Action; action != nil {
-			if weightedTargets := action.WeightedTargets; weightedTargets != nil {
-				vWeightedTargets := []interface{}{}
-
-				for _, weightedTarget := range weightedTargets {
-					mWeightedTarget := map[string]interface{}{
-						"virtual_node": aws.StringValue(weightedTarget.VirtualNode),
-						"weight":       int(aws.Int64Value(weightedTarget.Weight)),
-					}
-
-					vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
-				}
-
-				mHttpRoute["action"] = []interface{}{
-					map[string]interface{}{
-						"weighted_target": vWeightedTargets,
-					},
-				}
-			}
-		}
-
-		if httpRouteMatch := httpRoute.Match; httpRouteMatch != nil {
-			vHttpRouteHeaders := []interface{}{}
-
-			for _, httpRouteHeader := range httpRouteMatch.Headers {
-				mHttpRouteHeader := map[string]interface{}{
-					"invert": aws.BoolValue(httpRouteHeader.Invert),
-					"name":   aws.StringValue(httpRouteHeader.Name),
-				}
-
-				if match := httpRouteHeader.Match; match != nil {
-					mMatch := map[string]interface{}{
-						"exact":  aws.StringValue(match.Exact),
-						"prefix": aws.StringValue(match.Prefix),
-						"regex":  aws.StringValue(match.Regex),
-						"suffix": aws.StringValue(match.Suffix),
-					}
-
-					if r := match.Range; r != nil {
-						mRange := map[string]interface{}{
-							"end":   int(aws.Int64Value(r.End)),
-							"start": int(aws.Int64Value(r.Start)),
-						}
-
-						mMatch["range"] = []interface{}{mRange}
-					}
-
-					mHttpRouteHeader["match"] = []interface{}{mMatch}
-				}
-
-				vHttpRouteHeaders = append(vHttpRouteHeaders, mHttpRouteHeader)
-			}
-
-			mHttpRoute["match"] = []interface{}{
-				map[string]interface{}{
-					"header": vHttpRouteHeaders,
-					"method": aws.StringValue(httpRouteMatch.Method),
-					"prefix": aws.StringValue(httpRouteMatch.Prefix),
-					"scheme": aws.StringValue(httpRouteMatch.Scheme),
-				},
-			}
-		}
-
-		if httpRetryPolicy := httpRoute.RetryPolicy; httpRetryPolicy != nil {
-			mHttpRetryPolicy := map[string]interface{}{
-				"http_retry_events": flattenStringSet(httpRetryPolicy.HttpRetryEvents),
-				"max_retries":       int(aws.Int64Value(httpRetryPolicy.MaxRetries)),
-				"tcp_retry_events":  flattenStringSet(httpRetryPolicy.TcpRetryEvents),
-			}
-
-			if perRetryTimeout := httpRetryPolicy.PerRetryTimeout; perRetryTimeout != nil {
-				mPerRetryTimeout := map[string]interface{}{
-					"unit":  aws.StringValue(perRetryTimeout.Unit),
-					"value": int(aws.Int64Value(perRetryTimeout.Value)),
-				}
-
-				mHttpRetryPolicy["per_retry_timeout"] = []interface{}{mPerRetryTimeout}
-			}
-
-			mHttpRoute["retry_policy"] = []interface{}{mHttpRetryPolicy}
-		}
-
-		mSpec["http_route"] = []interface{}{mHttpRoute}
-	}
-
-	if tcpRoute := spec.TcpRoute; tcpRoute != nil {
-		mTcpRoute := map[string]interface{}{}
-
-		if action := tcpRoute.Action; action != nil {
-			if weightedTargets := action.WeightedTargets; weightedTargets != nil {
-				vWeightedTargets := []interface{}{}
-
-				for _, weightedTarget := range weightedTargets {
-					mWeightedTarget := map[string]interface{}{
-						"virtual_node": aws.StringValue(weightedTarget.VirtualNode),
-						"weight":       int(aws.Int64Value(weightedTarget.Weight)),
-					}
-
-					vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
-				}
-
-				mTcpRoute["action"] = []interface{}{
-					map[string]interface{}{
-						"weighted_target": vWeightedTargets,
-					},
-				}
-			}
-		}
-
-		mSpec["tcp_route"] = []interface{}{mTcpRoute}
+		"grpc_route":  flattenAppmeshGrpcRoute(spec.GrpcRoute),
+		"http2_route": flattenAppmeshHttpRoute(spec.Http2Route),
+		"http_route":  flattenAppmeshHttpRoute(spec.HttpRoute),
+		"priority":    int(aws.Int64Value(spec.Priority)),
+		"tcp_route":   flattenAppmeshTcpRoute(spec.TcpRoute),
 	}
 
 	return []interface{}{mSpec}
+}
+
+func flattenAppmeshGrpcRoute(grpcRoute *appmesh.GrpcRoute) []interface{} {
+	if grpcRoute == nil {
+		return []interface{}{}
+	}
+
+	mGrpcRoute := map[string]interface{}{}
+
+	if action := grpcRoute.Action; action != nil {
+		if weightedTargets := action.WeightedTargets; weightedTargets != nil {
+			vWeightedTargets := []interface{}{}
+
+			for _, weightedTarget := range weightedTargets {
+				mWeightedTarget := map[string]interface{}{
+					"virtual_node": aws.StringValue(weightedTarget.VirtualNode),
+					"weight":       int(aws.Int64Value(weightedTarget.Weight)),
+				}
+
+				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
+			}
+
+			mGrpcRoute["action"] = []interface{}{
+				map[string]interface{}{
+					"weighted_target": vWeightedTargets,
+				},
+			}
+		}
+	}
+
+	if grpcRouteMatch := grpcRoute.Match; grpcRouteMatch != nil {
+		vGrpcRouteMetadatas := []interface{}{}
+
+		for _, grpcRouteMetadata := range grpcRouteMatch.Metadata {
+			mGrpcRouteMetadata := map[string]interface{}{
+				"invert": aws.BoolValue(grpcRouteMetadata.Invert),
+				"name":   aws.StringValue(grpcRouteMetadata.Name),
+			}
+
+			if match := grpcRouteMetadata.Match; match != nil {
+				mMatch := map[string]interface{}{
+					"exact":  aws.StringValue(match.Exact),
+					"prefix": aws.StringValue(match.Prefix),
+					"regex":  aws.StringValue(match.Regex),
+					"suffix": aws.StringValue(match.Suffix),
+				}
+
+				if r := match.Range; r != nil {
+					mRange := map[string]interface{}{
+						"end":   int(aws.Int64Value(r.End)),
+						"start": int(aws.Int64Value(r.Start)),
+					}
+
+					mMatch["range"] = []interface{}{mRange}
+				}
+
+				mGrpcRouteMetadata["match"] = []interface{}{mMatch}
+			}
+
+			vGrpcRouteMetadatas = append(vGrpcRouteMetadatas, mGrpcRouteMetadata)
+		}
+
+		mGrpcRoute["match"] = []interface{}{
+			map[string]interface{}{
+				"metadata":     vGrpcRouteMetadatas,
+				"method_name":  aws.StringValue(grpcRouteMatch.MethodName),
+				"service_name": aws.StringValue(grpcRouteMatch.ServiceName),
+			},
+		}
+	}
+
+	if grpcRetryPolicy := grpcRoute.RetryPolicy; grpcRetryPolicy != nil {
+		mGrpcRetryPolicy := map[string]interface{}{
+			"grpc_retry_events": flattenStringSet(grpcRetryPolicy.GrpcRetryEvents),
+			"http_retry_events": flattenStringSet(grpcRetryPolicy.HttpRetryEvents),
+			"max_retries":       int(aws.Int64Value(grpcRetryPolicy.MaxRetries)),
+			"tcp_retry_events":  flattenStringSet(grpcRetryPolicy.TcpRetryEvents),
+		}
+
+		if perRetryTimeout := grpcRetryPolicy.PerRetryTimeout; perRetryTimeout != nil {
+			mPerRetryTimeout := map[string]interface{}{
+				"unit":  aws.StringValue(perRetryTimeout.Unit),
+				"value": int(aws.Int64Value(perRetryTimeout.Value)),
+			}
+
+			mGrpcRetryPolicy["per_retry_timeout"] = []interface{}{mPerRetryTimeout}
+		}
+
+		mGrpcRoute["retry_policy"] = []interface{}{mGrpcRetryPolicy}
+	}
+
+	return []interface{}{mGrpcRoute}
+}
+
+func flattenAppmeshHttpRoute(httpRoute *appmesh.HttpRoute) []interface{} {
+	if httpRoute == nil {
+		return []interface{}{}
+	}
+
+	mHttpRoute := map[string]interface{}{}
+
+	if action := httpRoute.Action; action != nil {
+		if weightedTargets := action.WeightedTargets; weightedTargets != nil {
+			vWeightedTargets := []interface{}{}
+
+			for _, weightedTarget := range weightedTargets {
+				mWeightedTarget := map[string]interface{}{
+					"virtual_node": aws.StringValue(weightedTarget.VirtualNode),
+					"weight":       int(aws.Int64Value(weightedTarget.Weight)),
+				}
+
+				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
+			}
+
+			mHttpRoute["action"] = []interface{}{
+				map[string]interface{}{
+					"weighted_target": vWeightedTargets,
+				},
+			}
+		}
+	}
+
+	if httpRouteMatch := httpRoute.Match; httpRouteMatch != nil {
+		vHttpRouteHeaders := []interface{}{}
+
+		for _, httpRouteHeader := range httpRouteMatch.Headers {
+			mHttpRouteHeader := map[string]interface{}{
+				"invert": aws.BoolValue(httpRouteHeader.Invert),
+				"name":   aws.StringValue(httpRouteHeader.Name),
+			}
+
+			if match := httpRouteHeader.Match; match != nil {
+				mMatch := map[string]interface{}{
+					"exact":  aws.StringValue(match.Exact),
+					"prefix": aws.StringValue(match.Prefix),
+					"regex":  aws.StringValue(match.Regex),
+					"suffix": aws.StringValue(match.Suffix),
+				}
+
+				if r := match.Range; r != nil {
+					mRange := map[string]interface{}{
+						"end":   int(aws.Int64Value(r.End)),
+						"start": int(aws.Int64Value(r.Start)),
+					}
+
+					mMatch["range"] = []interface{}{mRange}
+				}
+
+				mHttpRouteHeader["match"] = []interface{}{mMatch}
+			}
+
+			vHttpRouteHeaders = append(vHttpRouteHeaders, mHttpRouteHeader)
+		}
+
+		mHttpRoute["match"] = []interface{}{
+			map[string]interface{}{
+				"header": vHttpRouteHeaders,
+				"method": aws.StringValue(httpRouteMatch.Method),
+				"prefix": aws.StringValue(httpRouteMatch.Prefix),
+				"scheme": aws.StringValue(httpRouteMatch.Scheme),
+			},
+		}
+	}
+
+	if httpRetryPolicy := httpRoute.RetryPolicy; httpRetryPolicy != nil {
+		mHttpRetryPolicy := map[string]interface{}{
+			"http_retry_events": flattenStringSet(httpRetryPolicy.HttpRetryEvents),
+			"max_retries":       int(aws.Int64Value(httpRetryPolicy.MaxRetries)),
+			"tcp_retry_events":  flattenStringSet(httpRetryPolicy.TcpRetryEvents),
+		}
+
+		if perRetryTimeout := httpRetryPolicy.PerRetryTimeout; perRetryTimeout != nil {
+			mPerRetryTimeout := map[string]interface{}{
+				"unit":  aws.StringValue(perRetryTimeout.Unit),
+				"value": int(aws.Int64Value(perRetryTimeout.Value)),
+			}
+
+			mHttpRetryPolicy["per_retry_timeout"] = []interface{}{mPerRetryTimeout}
+		}
+
+		mHttpRoute["retry_policy"] = []interface{}{mHttpRetryPolicy}
+	}
+
+	return []interface{}{mHttpRoute}
+}
+
+func flattenAppmeshTcpRoute(tcpRoute *appmesh.TcpRoute) []interface{} {
+	if tcpRoute == nil {
+		return []interface{}{}
+	}
+
+	mTcpRoute := map[string]interface{}{}
+
+	if action := tcpRoute.Action; action != nil {
+		if weightedTargets := action.WeightedTargets; weightedTargets != nil {
+			vWeightedTargets := []interface{}{}
+
+			for _, weightedTarget := range weightedTargets {
+				mWeightedTarget := map[string]interface{}{
+					"virtual_node": aws.StringValue(weightedTarget.VirtualNode),
+					"weight":       int(aws.Int64Value(weightedTarget.Weight)),
+				}
+
+				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
+			}
+
+			mTcpRoute["action"] = []interface{}{
+				map[string]interface{}{
+					"weighted_target": vWeightedTargets,
+				},
+			}
+		}
+	}
+
+	return []interface{}{mTcpRoute}
 }
 
 func expandRoute53ResolverEndpointIpAddresses(vIpAddresses *schema.Set) []*route53resolver.IpAddressRequest {

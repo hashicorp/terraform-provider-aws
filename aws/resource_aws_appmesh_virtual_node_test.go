@@ -214,12 +214,12 @@ func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.interval_millis", "5000"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.path", "/ping"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.port", "8080"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.protocol", "http2"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.timeout_millis", "2000"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.unhealthy_threshold", "5"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "grpc"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "1"),
@@ -934,11 +934,11 @@ resource "aws_appmesh_virtual_node" "test" {
     listener {
       port_mapping {
         port     = 8080
-        protocol = "http"
+        protocol = "grpc"
       }
 
       health_check {
-        protocol            = "http"
+        protocol            = "http2"
         path                = "/ping"
         healthy_threshold   = 3
         unhealthy_threshold = 5
