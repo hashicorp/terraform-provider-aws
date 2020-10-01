@@ -37,7 +37,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			continue
 		}
 
-		schemaKeys := make([]string, 0 , len(schema.GetSchemaMapAttributeNames(smap)))
+		schemaKeys := make([]string, 0, len(schema.GetSchemaMapAttributeNames(smap)))
 		for _, attributeName := range schema.GetSchemaMapAttributeNames(smap) {
 			if v := astutils.ExprStringValue(attributeName); v != nil {
 				schemaKeys = append(schemaKeys, *v)

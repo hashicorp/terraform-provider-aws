@@ -294,7 +294,7 @@ func scanStringLit(data []byte, quoted bool) [][]byte {
 	// be impossible (the scanner matches all bytes _somehow_) but we'll
 	// tolerate it and let the caller deal with it.
 	if cs < hclstrtok_first_final {
-		ret = append(ret, data[p:len(data)])
+		ret = append(ret, data[p:])
 	}
 
 	return ret
