@@ -1,4 +1,9 @@
 ## 3.10.0 (Unreleased)
+
+ENHANCEMENTS
+
+* resource/aws_sns_topic_subscription: Create subscriptions with attributes (delivery policy, filter policy, etc.) instead of separate API calls [GH-10496]
+
 ## 3.9.0 (October 02, 2020)
 
 FEATURES
