@@ -85,7 +85,6 @@ func resourceAwsLexBot() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "",
 				ValidateFunc: validation.StringLenBetween(0, 200),
 			},
 			"detect_sentiment": {
@@ -241,7 +240,7 @@ func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetBot(&lexmodelbuildingservice.GetBotInput{
 		Name:           aws.String(d.Id()),
-		VersionOrAlias: aws.String("$LATEST"),
+		VersionOrAlias: aws.String(LexBotVersionLatest),
 	})
 	if isAWSErr(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Bot (%s) not found, removing from state", d.Id())
@@ -296,7 +295,7 @@ func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(d.Id()),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading Lex Bot (%s) version: %w", d.Id(), err)
 	}
 	d.Set("version", version)
 

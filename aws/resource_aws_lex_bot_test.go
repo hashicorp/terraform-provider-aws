@@ -64,7 +64,7 @@ func TestAccAwsLexBot_basic(t *testing.T) {
 }
 
 func TestAccAwsLexBot_createVersion(t *testing.T) {
-	var v lexmodelbuildingservice.GetBotOutput
+	var v1, v2 lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
@@ -79,14 +79,9 @@ func TestAccAwsLexBot_createVersion(t *testing.T) {
 					testAccAwsLexBotConfig_basic(testBotID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexBotExists(rName, &v),
+					testAccCheckAwsLexBotExists(rName, &v1),
 					testAccCheckAwsLexBotNotExists(testBotID, "1"),
 				),
-			},
-			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: composeConfig(
@@ -94,8 +89,8 @@ func TestAccAwsLexBot_createVersion(t *testing.T) {
 					testAccAwsLexBotConfig_createVersion(testBotID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexBotExists(rName, &v),
-					testAccCheckAwsLexBotExistsWithVersion(rName, "1", &v),
+					testAccCheckAwsLexBotExists(rName, &v2),
+					testAccCheckAwsLexBotExistsWithVersion(rName, "1", &v2),
 					resource.TestCheckResourceAttr(rName, "version", "1"),
 				),
 			},
