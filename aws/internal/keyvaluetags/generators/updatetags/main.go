@@ -124,6 +124,7 @@ var serviceNames = []string{
 	"storagegateway",
 	"swf",
 	"synthetics",
+	"timestreamwrite",
 	"transfer",
 	"waf",
 	"wafregional",

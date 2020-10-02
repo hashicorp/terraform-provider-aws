@@ -97,6 +97,7 @@ var sliceServiceNames = []string{
 	"ssoadmin",
 	"storagegateway",
 	"swf",
+	"timestreamwrite",
 	"transfer",
 	"waf",
 	"wafregional",
