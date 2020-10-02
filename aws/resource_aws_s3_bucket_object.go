@@ -283,7 +283,7 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("object_lock_retain_until_date"); ok {
-		putInput.ObjectLockRetainUntilDate = expandS3ObjectLockRetainUntilDate(v.(string))
+		putInput.ObjectLockRetainUntilDate = expandS3ObjectDate(v.(string))
 	}
 
 	if _, err := s3conn.PutObject(putInput); err != nil {
@@ -343,7 +343,7 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("website_redirect", resp.WebsiteRedirectLocation)
 	d.Set("object_lock_legal_hold_status", resp.ObjectLockLegalHoldStatus)
 	d.Set("object_lock_mode", resp.ObjectLockMode)
-	d.Set("object_lock_retain_until_date", flattenS3ObjectLockRetainUntilDate(resp.ObjectLockRetainUntilDate))
+	d.Set("object_lock_retain_until_date", flattenS3ObjectDate(resp.ObjectLockRetainUntilDate))
 
 	// Only set non-default KMS key ID (one that doesn't match default)
 	if resp.SSEKMSKeyId != nil {
@@ -427,15 +427,15 @@ func resourceAwsS3BucketObjectUpdate(d *schema.ResourceData, meta interface{}) e
 			Key:    aws.String(key),
 			Retention: &s3.ObjectLockRetention{
 				Mode:            aws.String(d.Get("object_lock_mode").(string)),
-				RetainUntilDate: expandS3ObjectLockRetainUntilDate(d.Get("object_lock_retain_until_date").(string)),
+				RetainUntilDate: expandS3ObjectDate(d.Get("object_lock_retain_until_date").(string)),
 			},
 		}
 
 		// Bypass required to lower or clear retain-until date.
 		if d.HasChange("object_lock_retain_until_date") {
 			oraw, nraw := d.GetChange("object_lock_retain_until_date")
-			o := expandS3ObjectLockRetainUntilDate(oraw.(string))
-			n := expandS3ObjectLockRetainUntilDate(nraw.(string))
+			o := expandS3ObjectDate(oraw.(string))
+			n := expandS3ObjectDate(nraw.(string))
 			if n == nil || (o != nil && n.Before(*o)) {
 				req.BypassGovernanceRetention = aws.Bool(true)
 			}
@@ -693,7 +693,7 @@ func deleteS3ObjectVersion(conn *s3.S3, b, k, v string, force bool) error {
 	return err
 }
 
-func expandS3ObjectLockRetainUntilDate(v string) *time.Time {
+func expandS3ObjectDate(v string) *time.Time {
 	t, err := time.Parse(time.RFC3339, v)
 	if err != nil {
 		return nil
@@ -702,7 +702,7 @@ func expandS3ObjectLockRetainUntilDate(v string) *time.Time {
 	return aws.Time(t)
 }
 
-func flattenS3ObjectLockRetainUntilDate(t *time.Time) string {
+func flattenS3ObjectDate(t *time.Time) string {
 	if t == nil {
 		return ""
 	}
