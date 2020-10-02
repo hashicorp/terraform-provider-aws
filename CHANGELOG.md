@@ -1,39 +1,39 @@
-## 3.9.0 (Unreleased)
+## 3.9.0 (October 02, 2020)
 
 FEATURES
 
-* **New Resource:** `aws_backup_vault_notifications` [GH-12501]
-* **New Resource:** `aws_codeartifact_domain` [GH-13743]
-* **New Resource:** `aws_codeartifact_domain_permissions` [GH-13753]
-* **New Resource:** `aws_codeartifact_repository` [GH-14429]
-* **New Resource:** `aws_db_proxy_target` [GH-12784]
-* **New Resource:** `aws_glue_data_catalog_encryption_settings` [GH-14916]
-* **New Resource:** `aws_glue_ml_transform` [GH-14909]
-* **New Resource:** `aws_glue_partition` [GH-12547]
-* **New Resource:** `aws_lex_bot` [GH-8918]
-* **New Resource:** `aws_lex_intent` [GH-8917]
-* **New Data Source:** `aws_lex_bot` [GH-8918]
-* **New Data Source:** `aws_lex_intent` [GH-8917]
+* **New Resource:** `aws_backup_vault_notifications` ([#12501](https://github.com/terraform-providers/terraform-provider-aws/issues/12501))
+* **New Resource:** `aws_codeartifact_domain` ([#13743](https://github.com/terraform-providers/terraform-provider-aws/issues/13743))
+* **New Resource:** `aws_codeartifact_domain_permissions` ([#13753](https://github.com/terraform-providers/terraform-provider-aws/issues/13753))
+* **New Resource:** `aws_codeartifact_repository` ([#14429](https://github.com/terraform-providers/terraform-provider-aws/issues/14429))
+* **New Resource:** `aws_db_proxy_target` ([#12784](https://github.com/terraform-providers/terraform-provider-aws/issues/12784))
+* **New Resource:** `aws_glue_data_catalog_encryption_settings` ([#14916](https://github.com/terraform-providers/terraform-provider-aws/issues/14916))
+* **New Resource:** `aws_glue_ml_transform` ([#14909](https://github.com/terraform-providers/terraform-provider-aws/issues/14909))
+* **New Resource:** `aws_glue_partition` ([#12547](https://github.com/terraform-providers/terraform-provider-aws/issues/12547))
+* **New Resource:** `aws_lex_bot` ([#8918](https://github.com/terraform-providers/terraform-provider-aws/issues/8918))
+* **New Resource:** `aws_lex_intent` ([#8917](https://github.com/terraform-providers/terraform-provider-aws/issues/8917))
+* **New Data Source:** `aws_lex_bot` ([#8918](https://github.com/terraform-providers/terraform-provider-aws/issues/8918))
+* **New Data Source:** `aws_lex_intent` ([#8917](https://github.com/terraform-providers/terraform-provider-aws/issues/8917))
 
 ENHANCEMENTS
 
-* resource/aws_appmesh_route: Add `grpc_route` and `http2_route` attributes to support gRPC and HTTP/2 services [GH-11669]
-* resource/aws_appmesh_route: Add `retry_policy` attribute to support App Mesh retry policies [GH-11660]
-* resource/aws_appmesh_virtual_node: Add `grpc` and `http2` as valid values for the `protocol` attribute [GH-11669]
-* resource/aws_appmesh_virtual_node: Add `spec.backend_defaults`, `spec.backend.virtual_service.client_policy` and `spec.listener.tls` attributes to support TLS in transit encryption [GH-12541]
-* resource/aws_appmesh_virtual_router: Add `grpc` and `http2` as valid values for the `protocol` attribute [GH-11669]
-* resource/aws_fsx_lustre_file_system: Add `auto_import_policy`  argument [GH-15231]
-* resource/aws_fsx_lustre_file_system: Support `daily_automatic_backup_start_time` [GH-15299]
-* resource/aws_fsx_lustre_file_system: Add `storage_type` and `drive_cache_type` [GH-14727]
-* resource/aws_glue_crawler: Add `connection_name` field to `s3_target` block [GH-15350]
-* resource/aws_sagemaker_notebook_instance: Ability to configure root access for Sagemaker notebook instances [GH-14184]
+* resource/aws_appmesh_route: Add `grpc_route` and `http2_route` attributes to support gRPC and HTTP/2 services ([#11669](https://github.com/terraform-providers/terraform-provider-aws/issues/11669))
+* resource/aws_appmesh_route: Add `retry_policy` attribute to support App Mesh retry policies ([#11660](https://github.com/terraform-providers/terraform-provider-aws/issues/11660))
+* resource/aws_appmesh_virtual_node: Add `grpc` and `http2` as valid values for the `protocol` attribute ([#11669](https://github.com/terraform-providers/terraform-provider-aws/issues/11669))
+* resource/aws_appmesh_virtual_node: Add `spec.backend_defaults`, `spec.backend.virtual_service.client_policy` and `spec.listener.tls` attributes to support TLS in transit encryption ([#12541](https://github.com/terraform-providers/terraform-provider-aws/issues/12541))
+* resource/aws_appmesh_virtual_router: Add `grpc` and `http2` as valid values for the `protocol` attribute ([#11669](https://github.com/terraform-providers/terraform-provider-aws/issues/11669))
+* resource/aws_fsx_lustre_file_system: Add `auto_import_policy`  argument ([#15231](https://github.com/terraform-providers/terraform-provider-aws/issues/15231))
+* resource/aws_fsx_lustre_file_system: Support `daily_automatic_backup_start_time` ([#15299](https://github.com/terraform-providers/terraform-provider-aws/issues/15299))
+* resource/aws_fsx_lustre_file_system: Add `storage_type` and `drive_cache_type` ([#14727](https://github.com/terraform-providers/terraform-provider-aws/issues/14727))
+* resource/aws_glue_crawler: Add `connection_name` field to `s3_target` block ([#15350](https://github.com/terraform-providers/terraform-provider-aws/issues/15350))
+* resource/aws_sagemaker_notebook_instance: Ability to configure root access for Sagemaker notebook instances ([#14184](https://github.com/terraform-providers/terraform-provider-aws/issues/14184))
 
 BUG FIXES
 
-* resource/aws_db_instance: Prevent ordering differences with `enabled_cloudwatch_logs_exports` argument [GH-15404]
-* resource/aws_ec2_client_vpn_authorization_rule: Increased active and revoked timeouts from 5 to 10 minutes [GH-15367]
-* resource/aws_rds_cluster: Prevent ordering differences with `enabled_cloudwatch_logs_exports` argument [GH-15404]
-* resource/aws_redshift_cluster: Increase default update timeout to 75 minutes [GH-15339]
+* resource/aws_db_instance: Prevent ordering differences with `enabled_cloudwatch_logs_exports` argument ([#15404](https://github.com/terraform-providers/terraform-provider-aws/issues/15404))
+* resource/aws_ec2_client_vpn_authorization_rule: Increased active and revoked timeouts from 5 to 10 minutes ([#15367](https://github.com/terraform-providers/terraform-provider-aws/issues/15367))
+* resource/aws_rds_cluster: Prevent ordering differences with `enabled_cloudwatch_logs_exports` argument ([#15404](https://github.com/terraform-providers/terraform-provider-aws/issues/15404))
+* resource/aws_redshift_cluster: Increase default update timeout to 75 minutes ([#15339](https://github.com/terraform-providers/terraform-provider-aws/issues/15339))
 
 ## 3.8.0 (September 24, 2020)
 
