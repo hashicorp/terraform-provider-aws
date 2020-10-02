@@ -98,6 +98,11 @@ func dataSourceAwsVpc() *schema.Resource {
 				Computed: true,
 			},
 
+			"is_default": {
+				Type: schema.TypeBool,
+				Computed: true,
+			}
+
 			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -182,6 +187,7 @@ func dataSourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
 	d.Set("default", vpc.IsDefault)
 	d.Set("state", vpc.State)
+	d.Set("is_default", vpc.IsDefault)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(vpc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
