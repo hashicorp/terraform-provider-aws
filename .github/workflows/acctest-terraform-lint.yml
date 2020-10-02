@@ -12,9 +12,8 @@ on:
       - aws/resource_aws_[a-s]*_test.go
 
 env:
-  GO_VERSION: "1.14"
+  GO_VERSION: "1.15"
   GO111MODULE: on
-  TFLINT_VERSION: "v0.20.1"
 
 jobs:
   terrafmt:
@@ -90,7 +89,7 @@ jobs:
           git clone --branch tracking-main --single-branch https://github.com/gdavison/terrafmt terrafmt
           cd terrafmt
           go install
-      - run: curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | sh
+      - run: cd tools && go install github.com/terraform-linters/tflint
       - run: |
           find ./aws -type f \( \
             -name 'core_acceptance_test.go' \
