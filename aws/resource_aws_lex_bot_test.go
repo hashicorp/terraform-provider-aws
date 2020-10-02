@@ -68,7 +68,8 @@ func TestAccAwsLexBot_createVersion(t *testing.T) {
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	// If this test runs in parallel with other Lex Bot tests, it loses its description
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotDestroy,
@@ -81,6 +82,8 @@ func TestAccAwsLexBot_createVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsLexBotExists(rName, &v1),
 					testAccCheckAwsLexBotNotExists(testBotID, "1"),
+					resource.TestCheckResourceAttr(rName, "version", LexBotVersionLatest),
+					resource.TestCheckResourceAttr(rName, "description", "Bot to order flowers on the behalf of a user"),
 				),
 			},
 			{
@@ -92,6 +95,7 @@ func TestAccAwsLexBot_createVersion(t *testing.T) {
 					testAccCheckAwsLexBotExists(rName, &v2),
 					testAccCheckAwsLexBotExistsWithVersion(rName, "1", &v2),
 					resource.TestCheckResourceAttr(rName, "version", "1"),
+					resource.TestCheckResourceAttr(rName, "description", "Bot to order flowers on the behalf of a user"),
 				),
 			},
 			{
