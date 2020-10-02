@@ -111,7 +111,8 @@ func resourceAwsVpc() *schema.Resource {
 			},
 
 			"is_default": {
-				Type: schema.TypeBool,
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 
 			"arn": {
