@@ -110,6 +110,10 @@ func resourceAwsVpc() *schema.Resource {
 				Computed: true,
 			},
 
+			"is_default": {
+				Type: schema.TypeBool,
+			},
+
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -250,6 +254,7 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cidr_block", vpc.CidrBlock)
 	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
+	d.Set("is_default", vpc.IsDefault)
 
 	// ARN
 	arn := arn.ARN{
