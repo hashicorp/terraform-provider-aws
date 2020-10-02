@@ -1195,6 +1195,7 @@ func init() {
 		"sts",
 		"swf",
 		"synthetics",
+		"timestreamwrite",
 		"transfer",
 		"waf",
 		"wafregional",

@@ -548,6 +548,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/synthetics" = [
       "aws_synthetics_",
     ],
+    "service/timestreamwrite" = [
+      "aws_timestreamwrite_",
+    ],
     "service/transfer" = [
       "aws_transfer_",
     ],
@@ -1427,6 +1430,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/synthetics/**/*",
       "**/*_synthetics_*",
       "**/synthetics_*"
+    ]
+    "service/timestreamwrite" = [
+      "aws/internal/service/timestreamwrite/**/*",
+      "**/*_timestreamwrite_*",
+      "**/timestreamwrite_*"
     ]
     "service/transfer" = [
       "aws/internal/service/transfer/**/*",
