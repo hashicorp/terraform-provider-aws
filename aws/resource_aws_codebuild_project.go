@@ -420,6 +420,23 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"build_status_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"context": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"target_url": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
 						"location": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -503,6 +520,23 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 						"buildspec": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"build_status_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"context": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"target_url": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
 						},
 						"location": {
 							Type:     schema.TypeString,
@@ -1046,6 +1080,16 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 		}
 	}
 
+	if v, ok := data["build_status_config"]; ok && len(v.([]interface{})) > 0 {
+		if buildstatusconfig := v.([]interface{}); buildstatusconfig[0] != nil {
+			buildconfig := buildstatusconfig[0].(map[string]interface{})
+			projectSource.BuildStatusConfig = &codebuild.BuildStatusConfig{
+				Context:   aws.String(buildconfig["context"].(string)),
+				TargetUrl: aws.String(buildconfig["target_url"].(string)),
+			}
+		}
+	}
+
 	// Only valid for CODECOMMIT, GITHUB, GITHUB_ENTERPRISE source types.
 	if sourceType == codebuild.SourceTypeCodecommit || sourceType == codebuild.SourceTypeGithub || sourceType == codebuild.SourceTypeGithubEnterprise {
 		if v, ok := data["git_submodules_config"]; ok && len(v.([]interface{})) > 0 {
@@ -1443,6 +1487,9 @@ func flattenAwsCodeBuildProjectSourceData(source *codebuild.ProjectSource) inter
 	if source.Auth != nil {
 		m["auth"] = []interface{}{sourceAuthToMap(source.Auth)}
 	}
+	if source.BuildStatusConfig != nil {
+		m["build_status_config"] = []interface{}{sourceBuildStatusConfigToMap(source.BuildStatusConfig)}
+	}
 	if source.SourceIdentifier != nil {
 		m["source_identifier"] = aws.StringValue(source.SourceIdentifier)
 	}
@@ -1542,6 +1589,15 @@ func sourceAuthToMap(sourceAuth *codebuild.SourceAuth) map[string]interface{} {
 	}
 
 	return auth
+}
+
+func sourceBuildStatusConfigToMap(BuildStatusConfig *codebuild.BuildStatusConfig) map[string]interface{} {
+
+	buildconfig := map[string]interface{}{}
+	buildconfig["context"] = aws.StringValue(BuildStatusConfig.Context)
+	buildconfig["target_url"] = aws.StringValue(BuildStatusConfig.TargetUrl)
+
+	return buildconfig
 }
 
 func validateAwsCodeBuildProjectName(v interface{}, k string) (ws []string, errors []error) {
