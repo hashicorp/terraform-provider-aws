@@ -20,9 +20,7 @@ func resourceAwsOrganizationsPolicy() *schema.Resource {
 		CreateContext: resourceAwsOrganizationsPolicyCreate,
 		ReadContext:   resourceAwsOrganizationsPolicyRead,
 		UpdateContext: resourceAwsOrganizationsPolicyUpdate,
-		// testAccCheckResourceDisappears() does not support DeleteContext
-		// DeleteContext: resourceAwsOrganizationsPolicyDelete,
-		Delete: resourceAwsOrganizationsPolicyDelete,
+		DeleteContext: resourceAwsOrganizationsPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAwsOrganizationsPolicyImport,
 		},
@@ -102,7 +100,7 @@ func resourceAwsOrganizationsPolicyCreate(ctx context.Context, d *schema.Resourc
 	return resourceAwsOrganizationsPolicyRead(ctx, d, meta)
 }
 
-func resourceAwsOrganizationsPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
+func resourceAwsOrganizationsPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).organizationsconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
@@ -134,11 +132,6 @@ func resourceAwsOrganizationsPolicyRead(ctx context.Context, d *schema.ResourceD
 	d.Set("type", resp.Policy.PolicySummary.Type)
 
 	if aws.BoolValue(resp.Policy.PolicySummary.AwsManaged) {
-		// diags = append(diags, diag.Diagnostic{
-		// 	Severity: diag.Warning,
-		// 	Summary:  "AWS-managed Organizations policies cannot be imported",
-		// 	Detail:   fmt.Sprintf("This resource should be removed from your Terraform state using `terraform state rm` (https://www.terraform.io/docs/commands/state/rm.html) and references should use the ID (%s) directly.", d.Id()),
-		// })
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Warning,
@@ -146,18 +139,18 @@ func resourceAwsOrganizationsPolicyRead(ctx context.Context, d *schema.ResourceD
 				Detail:   fmt.Sprintf("This resource should be removed from your Terraform state using `terraform state rm` (https://www.terraform.io/docs/commands/state/rm.html) and references should use the ID (%s) directly.", d.Id()),
 			},
 		}
-	} else {
-		tags, err := keyvaluetags.OrganizationsListTags(conn, d.Id())
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error listing tags for Organizations policy (%s): %w", d.Id(), err))
-		}
-
-		if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting tags for Organizations policy (%s): %w", d.Id(), err))
-		}
 	}
 
-	return
+	tags, err := keyvaluetags.OrganizationsListTags(conn, d.Id())
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error listing tags for Organizations policy (%s): %w", d.Id(), err))
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags for Organizations policy (%s): %w", d.Id(), err))
+	}
+
+	return nil
 }
 
 func resourceAwsOrganizationsPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -195,8 +188,7 @@ func resourceAwsOrganizationsPolicyUpdate(ctx context.Context, d *schema.Resourc
 	return resourceAwsOrganizationsPolicyRead(ctx, d, meta)
 }
 
-// func resourceAwsOrganizationsPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-func resourceAwsOrganizationsPolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsOrganizationsPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).organizationsconn
 
 	input := &organizations.DeletePolicyInput{
@@ -209,8 +201,7 @@ func resourceAwsOrganizationsPolicyDelete(d *schema.ResourceData, meta interface
 		if isAWSErr(err, organizations.ErrCodePolicyNotFoundException, "") {
 			return nil
 		}
-		// return diag.FromErr(fmt.Errorf("error deleting Organizations policy (%s): %w", d.Id(), err))
-		return fmt.Errorf("error deleting Organizations policy (%s): %w", d.Id(), err)
+		return diag.FromErr(fmt.Errorf("error deleting Organizations policy (%s): %w", d.Id(), err))
 	}
 	return nil
 }
