@@ -8,9 +8,26 @@ import (
 )
 
 const (
-	LexSlotTypeDeleteTimeout = 5 * time.Minute
+	LexBotDeleteTimeout      = 5 * time.Minute
 	LexIntentDeleteTimeout   = 5 * time.Minute
+	LexSlotTypeDeleteTimeout = 5 * time.Minute
 )
+
+func LexBotDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, botId string) (*lexmodelbuildingservice.GetBotVersionsOutput, error) {
+	stateChangeConf := &resource.StateChangeConf{
+		Pending: []string{LexModelBuildingServiceStatusCreated},
+		Target:  []string{}, // An empty slice indicates that the resource is gone
+		Refresh: LexBotStatus(conn, botId),
+		Timeout: LexBotDeleteTimeout,
+	}
+	outputRaw, err := stateChangeConf.WaitForState()
+
+	if v, ok := outputRaw.(*lexmodelbuildingservice.GetBotVersionsOutput); ok {
+		return v, err
+	}
+
+	return nil, err
+}
 
 func LexIntentDeleted(conn *lexmodelbuildingservice.LexModelBuildingService, intentId string) (*lexmodelbuildingservice.GetIntentVersionsOutput, error) {
 	stateChangeConf := &resource.StateChangeConf{

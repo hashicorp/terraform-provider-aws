@@ -52,3 +52,23 @@ func LexIntentStatus(conn *lexmodelbuildingservice.LexModelBuildingService, id s
 		return output, LexModelBuildingServiceStatusCreated, nil
 	}
 }
+
+func LexBotStatus(conn *lexmodelbuildingservice.LexModelBuildingService, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := conn.GetBotVersions(&lexmodelbuildingservice.GetBotVersionsInput{
+			Name: aws.String(id),
+		})
+		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
+			return nil, LexModelBuildingServiceStatusNotFound, nil
+		}
+		if err != nil {
+			return nil, LexModelBuildingServiceStatusUnknown, err
+		}
+
+		if output == nil || len(output.Bots) == 0 {
+			return nil, LexModelBuildingServiceStatusNotFound, nil
+		}
+
+		return output, LexModelBuildingServiceStatusCreated, nil
+	}
+}
