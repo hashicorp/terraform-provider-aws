@@ -44,12 +44,13 @@ func TestAccDataSourceAwsLexBot_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsLexBot_withVersion(t *testing.T) {
+func testAccDataSourceAwsLexBot_withVersion(t *testing.T) {
 	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_bot.test"
 	resourceName := "aws_lex_bot.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	// If this test runs in parallel with other Lex Bot tests, it loses its description
+	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

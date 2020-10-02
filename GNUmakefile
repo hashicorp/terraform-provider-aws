@@ -1,7 +1,6 @@
 SWEEP?=us-east-1,us-west-2
 TEST?=./...
 SWEEP_DIR?=./aws
-GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 PKG_NAME=aws
 TEST_COUNT?=1
 ACCTEST_TIMEOUT?=120m
@@ -38,7 +37,7 @@ testacc: fmtcheck
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME) ./awsproviderlint
+	gofmt -s -w ./$(PKG_NAME) $(filter-out ./awsproviderlint/go% ./awsproviderlint/README.md ./awsproviderlint/vendor, $(wildcard ./awsproviderlint/*))
 
 # Currently required by tf-deploy compile
 fmtcheck:
@@ -55,10 +54,6 @@ depscheck:
 	@go mod tidy
 	@git diff --exit-code -- go.mod go.sum || \
 		(echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
-	@echo "==> Checking source code with go mod vendor..."
-	@go mod vendor
-	@git diff --compact-summary --exit-code -- vendor || \
-		(echo; echo "Unexpected difference in vendor/ directory. Run 'go mod vendor' command or revert any go.mod/go.sum/vendor changes and commit."; exit 1)
 
 docs-lint:
 	@echo "==> Checking docs against linters..."
@@ -162,11 +157,12 @@ awsproviderlint:
 		./$(PKG_NAME)
 
 tools:
-	GO111MODULE=on go install ./awsproviderlint
-	GO111MODULE=on go install github.com/bflad/tfproviderdocs
-	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
-	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	GO111MODULE=on go install github.com/katbyte/terrafmt
+	cd awsproviderlint && GO111MODULE=on go install .
+	cd tools && GO111MODULE=on go install github.com/bflad/tfproviderdocs
+	cd tools && GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
+	cd tools && GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	cd tools && GO111MODULE=on go install github.com/katbyte/terrafmt
+	cd tools && GO111MODULE=on go install github.com/terraform-linters/tflint
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \

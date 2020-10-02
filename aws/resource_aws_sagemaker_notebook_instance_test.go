@@ -590,26 +590,26 @@ data "aws_iam_policy_document" "assume_role" {
 func testAccAWSSagemakerNotebookInstanceConfigRootAccess(notebookName string, rootAccess string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "foo" {
-	name = %[1]q
-	role_arn = aws_iam_role.foo.arn
-	instance_type = "ml.t2.medium"
-	root_access = %[2]q
+  name          = %[1]q
+  role_arn      = aws_iam_role.foo.arn
+  instance_type = "ml.t2.medium"
+  root_access   = %[2]q
 }
 
 resource "aws_iam_role" "foo" {
-	name = %[1]q
-	path = "/"
-	assume_role_policy = data.aws_iam_policy_document.assume_role.json
+  name               = %[1]q
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 data "aws_iam_policy_document" "assume_role" {
-	statement {
-		actions = [ "sts:AssumeRole" ]
-		principals {
-			type = "Service"
-			identifiers = [ "sagemaker.amazonaws.com" ]
-		}
-	}
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
 }
 `, notebookName, rootAccess)
 }

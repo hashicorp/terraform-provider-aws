@@ -9,12 +9,11 @@ on:
       - .github/workflows/acctest-terraform-lint.yml
       - aws/core_acceptance_test.go
       - aws/data_source_aws_*_test.go
-      - aws/resource_aws_[a-n]*_test.go
+      - aws/resource_aws_[a-s]*_test.go
 
 env:
-  GO_VERSION: "1.14"
+  GO_VERSION: "1.15"
   GO111MODULE: on
-  TFLINT_VERSION: "v0.20.1"
 
 jobs:
   terrafmt:
@@ -54,6 +53,11 @@ jobs:
             -o -name 'resource_aws_l*_test.go' \
             -o -name 'resource_aws_m*_test.go' \
             -o -name 'resource_aws_n*_test.go' \
+            -o -name 'resource_aws_o*_test.go' \
+            -o -name 'resource_aws_p*_test.go' \
+            -o -name 'resource_aws_q*_test.go' \
+            -o -name 'resource_aws_r*_test.go' \
+            -o -name 'resource_aws_s*_test.go' \
             \) \
             | sort -u \
             | grep -v resource_aws_apigatewayv2_domain_name_test.go \
@@ -62,6 +66,9 @@ jobs:
             | grep -v resource_aws_efs_file_system_test.go \
             | grep -v resource_aws_kinesis_stream_test.go \
             | grep -v resource_aws_kms_grant_test.go \
+            | grep -v resource_aws_quicksight_user_test.go \
+            | grep -v resource_aws_s3_bucket_object_test.go \
+            | grep -v resource_aws_sns_platform_application_test.go \
             | xargs -I {} terrafmt diff --check --quiet --fmtcompat {}
 
   validate-terraform:
@@ -82,7 +89,7 @@ jobs:
           git clone --branch tracking-main --single-branch https://github.com/gdavison/terrafmt terrafmt
           cd terrafmt
           go install
-      - run: curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | sh
+      - run: cd tools && go install github.com/terraform-linters/tflint
       - run: |
           find ./aws -type f \( \
             -name 'core_acceptance_test.go' \
@@ -101,6 +108,11 @@ jobs:
             -o -name 'resource_aws_l*_test.go' \
             -o -name 'resource_aws_m*_test.go' \
             -o -name 'resource_aws_n*_test.go' \
+            -o -name 'resource_aws_o*_test.go' \
+            -o -name 'resource_aws_p*_test.go' \
+            -o -name 'resource_aws_q*_test.go' \
+            -o -name 'resource_aws_r*_test.go' \
+            -o -name 'resource_aws_s*_test.go' \
             \) \
             | sort -u \
             | grep -v resource_aws_apigatewayv2_domain_name_test.go \
@@ -111,5 +123,8 @@ jobs:
             | grep -v resource_aws_kinesis_stream_test.go \
             | grep -v resource_aws_kms_grant_test.go \
             | grep -v resource_aws_lambda_permission_test.go \
+            | grep -v resource_aws_quicksight_user_test.go \
+            | grep -v resource_aws_s3_bucket_object_test.go \
+            | grep -v resource_aws_sns_platform_application_test.go \
             | ./scripts/validate-terraform.sh
           

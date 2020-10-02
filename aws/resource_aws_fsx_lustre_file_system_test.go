@@ -97,6 +97,7 @@ func TestAccAWSFsxLustreFileSystem_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexp.MustCompile(`^\d:\d\d:\d\d$`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypeScratch1),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
 				),
 			},
 			{
@@ -149,6 +150,7 @@ func TestAccAWSFsxLustreFileSystem_ExportPath(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "export_path", fmt.Sprintf("s3://%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "auto_import_policy", "NONE"),
 				),
 			},
 			{
@@ -163,6 +165,7 @@ func TestAccAWSFsxLustreFileSystem_ExportPath(t *testing.T) {
 					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem2),
 					testAccCheckFsxLustreFileSystemRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "export_path", fmt.Sprintf("s3://%s/prefix/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "auto_import_policy", "NONE"),
 				),
 			},
 		},
@@ -430,6 +433,40 @@ func TestAccAWSFsxLustreFileSystem_automaticBackupRetentionDays(t *testing.T) {
 	})
 }
 
+func TestAccAWSFsxLustreFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
+	var filesystem1, filesystem2 fsx.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("fsx", t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxLustreFileSystemConfigDailyAutomaticBackupStartTime("01:01"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", "01:01"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccAwsFsxLustreFileSystemConfigDailyAutomaticBackupStartTime("02:02"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem2),
+					testAccCheckFsxLustreFileSystemNotRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", "02:02"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSFsxLustreFileSystem_DeploymentTypePersistent1(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
@@ -523,6 +560,94 @@ func TestAccAWSFsxLustreFileSystem_DeploymentTypeScratch2(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+		},
+	})
+}
+
+func TestAccAWSFsxLustreFileSystem_StorageTypeHddDriveCacheRead(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("fsx", t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxLustreFileSystemHddStorageType(fsx.DriveCacheTypeRead),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeHdd),
+					resource.TestCheckResourceAttr(resourceName, "drive_cache_type", fsx.DriveCacheTypeRead),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+		},
+	})
+}
+
+func TestAccAWSFsxLustreFileSystem_StorageTypeHddDriveCacheNone(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("fsx", t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxLustreFileSystemHddStorageType(fsx.DriveCacheTypeNone),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeHdd),
+					resource.TestCheckResourceAttr(resourceName, "drive_cache_type", fsx.DriveCacheTypeNone),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+		},
+	})
+}
+
+func TestAccAWSFsxLustreFileSystem_autoImportPolicy(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("fsx", t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxLustreFileSystemAutoImportPolicyConfig(rName, "", "NEW"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "auto_import_policy", "NEW"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccAwsFsxLustreFileSystemAutoImportPolicyConfig(rName, "", "NEW_CHANGED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "auto_import_policy", "NEW_CHANGED"),
+				),
 			},
 		},
 	})
@@ -800,6 +925,19 @@ resource "aws_fsx_lustre_file_system" "test" {
 `, weeklyMaintenanceStartTime)
 }
 
+func testAccAwsFsxLustreFileSystemConfigDailyAutomaticBackupStartTime(dailyAutomaticBackupStartTime string) string {
+	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+resource "aws_fsx_lustre_file_system" "test" {
+  storage_capacity                  = 1200
+  subnet_ids                        = [aws_subnet.test1.id]
+  deployment_type                   = "PERSISTENT_1"
+  per_unit_storage_throughput       = 50
+  daily_automatic_backup_start_time = %[1]q
+  automatic_backup_retention_days   = 1
+}
+`, dailyAutomaticBackupStartTime)
+}
+
 func testAccAwsFsxLustreFileSystemConfigAutomaticBackupRetentionDays(retention int) string {
 	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
@@ -865,4 +1003,34 @@ resource "aws_fsx_lustre_file_system" "test" {
   kms_key_id                  = aws_kms_key.test2.arn
 }
 `
+}
+
+func testAccAwsFsxLustreFileSystemHddStorageType(drive_cache_type string) string {
+	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+resource "aws_fsx_lustre_file_system" "test" {
+  storage_capacity            = 6000
+  subnet_ids                  = [aws_subnet.test1.id]
+  deployment_type             = "PERSISTENT_1"
+  per_unit_storage_throughput = 12
+  storage_type                = "HDD"
+  drive_cache_type            = %[1]q
+}
+`, drive_cache_type)
+}
+
+func testAccAwsFsxLustreFileSystemAutoImportPolicyConfig(rName, exportPrefix, policy string) string {
+	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  acl    = "private"
+  bucket = %[1]q
+}
+
+resource "aws_fsx_lustre_file_system" "test" {
+  export_path        = "s3://${aws_s3_bucket.test.bucket}%[2]s"
+  import_path        = "s3://${aws_s3_bucket.test.bucket}"
+  auto_import_policy = %[3]q
+  storage_capacity   = 1200
+  subnet_ids         = [aws_subnet.test1.id]
+}
+`, rName, exportPrefix, policy)
 }

@@ -757,7 +757,7 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   client_list   = ["0.0.0.0/0"]
   gateway_arn   = aws_storagegateway_gateway.test.arn
   kms_encrypted = true
-  kms_key_arn   = aws_kms_key.test.0.arn
+  kms_key_arn   = aws_kms_key.test[0].arn
   location_arn  = aws_s3_bucket.test.arn
   role_arn      = aws_iam_role.test.arn
 }
@@ -777,7 +777,7 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   client_list   = ["0.0.0.0/0"]
   gateway_arn   = aws_storagegateway_gateway.test.arn
   kms_encrypted = true
-  kms_key_arn   = aws_kms_key.test.1.arn
+  kms_key_arn   = aws_kms_key.test[1].arn
   location_arn  = aws_s3_bucket.test.arn
   role_arn      = aws_iam_role.test.arn
 }

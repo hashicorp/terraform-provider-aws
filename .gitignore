@@ -27,7 +27,6 @@ website/node_modules
 *.iml
 log.txt
 markdown-link-check*.txt
-website/vendor
 
 # Test exclusions
 !command/test-fixtures/**/*.tfstate

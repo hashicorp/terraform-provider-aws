@@ -63,12 +63,27 @@ func TestAccAwsLexBot_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBot_createVersion(t *testing.T) {
-	var v lexmodelbuildingservice.GetBotOutput
+func TestAccAwsLexBot_createVersion_serial(t *testing.T) {
+	testCases := map[string]func(t *testing.T){
+		"resource":    testAccAwsLexBot_createVersion,
+		"data_source": testAccDataSourceAwsLexBot_withVersion,
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			tc(t)
+		})
+	}
+}
+
+func testAccAwsLexBot_createVersion(t *testing.T) {
+	var v1, v2 lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	// If this test runs in parallel with other Lex Bot tests, it loses its description
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotDestroy,
@@ -79,14 +94,11 @@ func TestAccAwsLexBot_createVersion(t *testing.T) {
 					testAccAwsLexBotConfig_basic(testBotID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexBotExists(rName, &v),
+					testAccCheckAwsLexBotExists(rName, &v1),
 					testAccCheckAwsLexBotNotExists(testBotID, "1"),
+					resource.TestCheckResourceAttr(rName, "version", LexBotVersionLatest),
+					resource.TestCheckResourceAttr(rName, "description", "Bot to order flowers on the behalf of a user"),
 				),
-			},
-			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: composeConfig(
@@ -94,9 +106,10 @@ func TestAccAwsLexBot_createVersion(t *testing.T) {
 					testAccAwsLexBotConfig_createVersion(testBotID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexBotExists(rName, &v),
-					testAccCheckAwsLexBotExistsWithVersion(rName, "1", &v),
+					testAccCheckAwsLexBotExists(rName, &v2),
+					testAccCheckAwsLexBotExistsWithVersion(rName, "1", &v2),
 					resource.TestCheckResourceAttr(rName, "version", "1"),
+					resource.TestCheckResourceAttr(rName, "description", "Bot to order flowers on the behalf of a user"),
 				),
 			},
 			{

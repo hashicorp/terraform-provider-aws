@@ -103,7 +103,7 @@ func dataSourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 		VersionOrAlias: aws.String(d.Get("version").(string)),
 	})
 	if err != nil {
-		return fmt.Errorf("error getting bot %s: %s", botName, err)
+		return fmt.Errorf("error reading bot %s: %w", botName, err)
 	}
 
 	arn := arn.ARN{
