@@ -185,6 +185,7 @@ variable "service_labels" {
     "synthetics",
     "textract",
     "transcribeservice",
+    "timestreamwrite",
     "transfer",
     "translate",
     "waf",

@@ -146,6 +146,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/synthetics"
+	"github.com/aws/aws-sdk-go/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
@@ -341,6 +342,7 @@ type AWSClient struct {
 	swfconn                             *swf.SWF
 	syntheticsconn                      *synthetics.Synthetics
 	terraformVersion                    string
+	timestreamwriteconn                 *timestreamwrite.TimestreamWrite
 	transferconn                        *transfer.Transfer
 	wafconn                             *waf.WAF
 	wafregionalconn                     *wafregional.WAFRegional
@@ -566,6 +568,7 @@ func (c *Config) Client() (interface{}, error) {
 		swfconn:                             swf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["swf"])})),
 		syntheticsconn:                      synthetics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["synthetics"])})),
 		terraformVersion:                    c.terraformVersion,
+		timestreamwriteconn:                 timestreamwrite.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["timestreamwrite"])})),
 		transferconn:                        transfer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["transfer"])})),
 		wafconn:                             waf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["waf"])})),
 		wafregionalconn:                     wafregional.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["wafregional"])})),

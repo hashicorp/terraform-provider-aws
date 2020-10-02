@@ -110,6 +110,7 @@ SimpleDB
 Step Function (SFN)
 Storage Gateway
 Synthetics
+Timestream Write
 Transfer
 Transit Gateway Network Manager
 VPC
