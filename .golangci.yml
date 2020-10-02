@@ -25,6 +25,7 @@ linters:
     - gosimple
     - ineffassign
     - misspell
+    - nakedret
     - staticcheck
     - structcheck
     - unconvert

@@ -616,8 +616,7 @@ func diffAwsMqBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 		// Create a mutable copy
 		newUser, err := copystructure.Copy(nu)
 		if err != nil {
-			e = err
-			return
+			return cr, di, ur, err
 		}
 
 		newUserMap := newUser.(map[string]interface{})
@@ -667,7 +666,7 @@ func diffAwsMqBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 		})
 	}
 
-	return
+	return cr, di, ur, nil
 }
 
 func expandMqEncryptionOptions(l []interface{}) *mq.EncryptionOptions {

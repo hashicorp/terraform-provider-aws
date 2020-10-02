@@ -756,7 +756,7 @@ func flattenLexSlots(slots []*lexmodelbuildingservice.Slot) (flattenedSlots []ma
 		flattenedSlots = append(flattenedSlots, flattenedSlot)
 	}
 
-	return
+	return flattenedSlots
 }
 
 // Expects a slice of maps representing the Lex objects.

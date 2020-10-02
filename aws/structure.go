@@ -3900,23 +3900,19 @@ func diffDynamoDbGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*d
 
 			oldAttributes, err := stripCapacityAttributes(oldMap)
 			if err != nil {
-				e = err
-				return
+				return ops, err
 			}
 			oldAttributes, err = stripNonKeyAttributes(oldAttributes)
 			if err != nil {
-				e = err
-				return
+				return ops, err
 			}
 			newAttributes, err := stripCapacityAttributes(newMap)
 			if err != nil {
-				e = err
-				return
+				return ops, err
 			}
 			newAttributes, err = stripNonKeyAttributes(newAttributes)
 			if err != nil {
-				e = err
-				return
+				return ops, err
 			}
 			otherAttributesChanged := nonKeyAttributesChanged || !reflect.DeepEqual(oldAttributes, newAttributes)
 
@@ -3954,7 +3950,7 @@ func diffDynamoDbGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*d
 			})
 		}
 	}
-	return
+	return ops, nil
 }
 
 func stripNonKeyAttributes(in map[string]interface{}) (map[string]interface{}, error) {
