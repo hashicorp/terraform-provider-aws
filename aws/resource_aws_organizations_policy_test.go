@@ -711,16 +711,16 @@ resource "aws_organizations_policy" "test" {
 
 const testAccAwsOrganizationsPolicyConfig_AwsManagedPolicySetup = `
 resource "aws_organizations_organization" "test" {
-	enabled_policy_types = ["SERVICE_CONTROL_POLICY"]
+  enabled_policy_types = ["SERVICE_CONTROL_POLICY"]
 }
 `
 
 const testAccAwsOrganizationsPolicyConfig_AwsManagedPolicy = `
 resource "aws_organizations_organization" "test" {
-	enabled_policy_types = ["SERVICE_CONTROL_POLICY"]
+  enabled_policy_types = ["SERVICE_CONTROL_POLICY"]
 }
 
 resource "aws_organizations_policy" "test" {
-	name = "FullAWSAccess"
+  name = "FullAWSAccess"
 }
 `
