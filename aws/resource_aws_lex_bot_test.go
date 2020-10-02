@@ -63,7 +63,21 @@ func TestAccAwsLexBot_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBot_createVersion(t *testing.T) {
+func TestAccAwsLexBot_createVersion_serial(t *testing.T) {
+	testCases := map[string]func(t *testing.T){
+		"resource":    testAccAwsLexBot_createVersion,
+		"data_source": testAccDataSourceAwsLexBot_withVersion,
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			tc(t)
+		})
+	}
+}
+
+func testAccAwsLexBot_createVersion(t *testing.T) {
 	var v1, v2 lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
 	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)

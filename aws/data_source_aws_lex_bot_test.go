@@ -44,7 +44,7 @@ func TestAccDataSourceAwsLexBot_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsLexBot_withVersion(t *testing.T) {
+func testAccDataSourceAwsLexBot_withVersion(t *testing.T) {
 	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_bot.test"
 	resourceName := "aws_lex_bot.test"
