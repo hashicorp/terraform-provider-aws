@@ -150,6 +150,21 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 				ValidateFunc: validation.IntBetween(50, 29000),
 				Default:      29000,
 			},
+
+			"tls_config": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MinItems: 0,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"insecure_skip_verification": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -223,7 +238,7 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 	if v, ok := d.GetOk("timeout_milliseconds"); ok {
 		timeoutInMillis = aws.Int64(int64(v.(int)))
 	}
-	
+
 	var tlsConfig *apigateway.TlsConfig
 	if v, ok := d.GetOk("tls_config"); ok {
 		tlsConfig = expandApiGatewayTlsConfig(v.([]interface{}))
@@ -246,7 +261,7 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 		ConnectionType:        connectionType,
 		ConnectionId:          connectionId,
 		TimeoutInMillis:       timeoutInMillis,
-		TlsConfig: tlsConfig,
+		TlsConfig:             tlsConfig,
 	})
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway Integration: %s", err)
@@ -306,6 +321,9 @@ func resourceAwsApiGatewayIntegrationRead(d *schema.ResourceData, meta interface
 	d.Set("timeout_milliseconds", integration.TimeoutInMillis)
 	d.Set("type", integration.Type)
 	d.Set("uri", integration.Uri)
+	if err := d.Set("tls_config", flattenApiGatewayTlsConfig(integration.TlsConfig)); err != nil {
+		return fmt.Errorf("error setting tls_config: %s", err)
+	}
 
 	return nil
 }
@@ -521,4 +539,14 @@ func expandApiGatewayTlsConfig(vConfig []interface{}) *apigateway.TlsConfig {
 	}
 
 	return config
+}
+
+func flattenApiGatewayTlsConfig(config *apigateway.TlsConfig) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{map[string]interface{}{
+		"insecure_skip_verification": aws.BoolValue(config.InsecureSkipVerification),
+	}}
 }
