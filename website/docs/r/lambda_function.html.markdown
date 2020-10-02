@@ -208,6 +208,10 @@ package via S3 it may be useful to use [the `aws_s3_bucket_object` resource](s3_
 For larger deployment packages it is recommended by Amazon to upload via S3, since the S3 API has better support for uploading
 large files efficiently.
 
+## Invoking Functions
+
+To give an external source (like a CloudWatch Event Rule, SNS, or S3) permission to access the Lambda function, use the [`aws_lambda_permission`](lambda_permission.html) resource. See [Lambda Permission Model][4] for more details.
+
 ## Argument Reference
 
 * `filename` - (Optional) The path to the function's deployment package within the local filesystem. If defined, The `s3_`-prefixed options and `image_uri` cannot be used.
@@ -219,7 +223,7 @@ large files efficiently.
 * `function_name` - (Required) A unique name for your Lambda Function.
 * `dead_letter_config` - (Optional) Nested block to configure the function's *dead letter queue*. See details below.
 * `handler` - (Required) The function [entrypoint][3] in your code.
-* `role` - (Required) IAM role attached to the Lambda Function. This governs both who / what can invoke your Lambda Function, as well as what resources our Lambda Function has access to. See [Lambda Permission Model][4] for more details.
+* `role` - (Required) The ARN of the function's execution role that grants it permission to access AWS services and resources.
 * `description` - (Optional) Description of what your Lambda Function does.
 * `layers` - (Optional) List of Lambda Layer Version ARNs (maximum of 5) to attach to your Lambda Function. See [Lambda Layers][10]
 * `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Defaults to `128`. See [Limits][5]
