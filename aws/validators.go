@@ -658,14 +658,14 @@ func validateArn(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if value == "" {
-		return
+		return ws, errors
 	}
 
 	parsedARN, err := arn.Parse(value)
 
 	if err != nil {
 		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %s", k, value, err))
-		return
+		return ws, errors
 	}
 
 	if parsedARN.Partition == "" {
@@ -686,7 +686,7 @@ func validateArn(v interface{}, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: missing resource value", k, value))
 	}
 
-	return
+	return ws, errors
 }
 
 func validateEC2AutomateARN(v interface{}, k string) (ws []string, errors []error) {
