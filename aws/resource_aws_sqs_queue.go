@@ -107,6 +107,10 @@ func resourceAwsSqsQueue() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"fifo_queue": {
 				Type:     schema.TypeBool,
 				Default:  false,
@@ -314,6 +318,7 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("policy", "")
 	d.Set("receive_wait_time_seconds", 0)
 	d.Set("redrive_policy", "")
+	d.Set("url", d.Id())
 	d.Set("visibility_timeout_seconds", 30)
 
 	if attributeOutput != nil {

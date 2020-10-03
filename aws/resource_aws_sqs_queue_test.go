@@ -87,6 +87,7 @@ func TestAccAWSSQSQueue_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
 					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
+					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "url"),
 				),
 			},
 			{
