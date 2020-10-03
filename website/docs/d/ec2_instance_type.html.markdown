@@ -44,8 +44,16 @@ In addition to the argument above, the following attributes are exported:
 * `default_threads_per_core` - The  default  number of threads per core for the instance type.
 * `default_vcpus` - The default number of vCPUs for the instance type.
 * `dedicated_hosts_supported` - `true` if Dedicated Hosts are supported on the instance type.
+* `ebs_performance_baseline_bandwidth` - The baseline bandwidth performance for an EBS-optimized instance type, in Mbps.
+* `ebs_performance_baseline_iops` - The baseline input/output storage operations per seconds for an EBS-optimized instance type.
+* `ebs_performance_baseline_throughput` - The baseline throughput performance for an EBS-optimized instance type, in MBps.
+* `ebs_performance_maximum_bandwidth` - The maximum bandwidth performance for an EBS-optimized instance type, in Mbps.
+* `ebs_performance_maximum_iops` - The maximum input/output storage operations per second for an EBS-optimized instance type.
+* `ebs_performance_maximum_throughput` - The maximum throughput performance for an EBS-optimized instance type, in MBps.
 * `ebs_encryption_support` - Indicates whether Amazon EBS encryption is supported.
+* `ebs_nvme_support` - Indicates whether non-volatile memory express (NVMe) is supported.
 * `ebs_optimized_support` - Indicates that the instance type is Amazon EBS-optimized.
+* `efa_supported` - Indicates whether Elastic Fabric Adapter (EFA) is supported.
 * `ena_support` - Indicates whether Elastic Network Adapter (ENA) is supported.
 * `fpgas` - Describes the FPGA accelerator settings for the instance type.
     * `fpgas.#.count` - The count of FPGA accelerators for the instance type.
@@ -75,6 +83,7 @@ In addition to the argument above, the following attributes are exported:
 * `supported_placement_strategies` - A list of supported placement groups types.
 * `supported_root_device_types` - Indicates the supported root device types.
 * `supported_usages_classes` - Indicates whether the instance type is offered for spot or On-Demand.
+* `supported_virtualization_types` - The supported virtualization types.
 * `sustained_clock_speed` - The speed of the processor, in GHz.
 * `total_fpga_memory` - The total memory of all FPGA accelerators for the instance type (in MiB).
 * `total_gpu_memory` - The total size of the memory for the GPU accelerators for the instance type (in MiB).

@@ -40,6 +40,12 @@ func dataSourceAwsEc2InstanceType() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
+			"supported_virtualization_types": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
 			"bare_metal": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -136,7 +142,42 @@ func dataSourceAwsEc2InstanceType() *schema.Resource {
 				Computed: true,
 			},
 
+			"ebs_performance_baseline_bandwidth": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+
+			"ebs_performance_baseline_throughput": {
+				Type:     schema.TypeFloat,
+				Computed: true,
+			},
+
+			"ebs_performance_baseline_iops": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+
+			"ebs_performance_maximum_bandwidth": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+
+			"ebs_performance_maximum_throughput": {
+				Type:     schema.TypeFloat,
+				Computed: true,
+			},
+
+			"ebs_performance_maximum_iops": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+
 			"ebs_encryption_support": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"ebs_nvme_support": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -169,6 +210,11 @@ func dataSourceAwsEc2InstanceType() *schema.Resource {
 
 			"ena_support": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"efa_supported": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 
@@ -320,6 +366,7 @@ func dataSourceAwsEc2InstanceTypeRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("free_tier_eligible", v.FreeTierEligible)
 	d.Set("supported_usages_classes", v.SupportedUsageClasses)
 	d.Set("supported_root_device_types", v.SupportedRootDeviceTypes)
+	d.Set("supported_virtualization_types", v.SupportedVirtualizationTypes)
 	d.Set("bare_metal", v.BareMetal)
 	d.Set("hypervisor", v.Hypervisor)
 	d.Set("supported_architectures", v.ProcessorInfo.SupportedArchitectures)
@@ -347,13 +394,23 @@ func dataSourceAwsEc2InstanceTypeRead(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 	d.Set("ebs_optimized_support", v.EbsInfo.EbsOptimizedSupport)
+	if v.EbsInfo.EbsOptimizedInfo != nil {
+		d.Set("ebs_performance_baseline_bandwidth", v.EbsInfo.EbsOptimizedInfo.BaselineBandwidthInMbps)
+		d.Set("ebs_performance_baseline_throughput", v.EbsInfo.EbsOptimizedInfo.BaselineThroughputInMBps)
+		d.Set("ebs_performance_baseline_iops", v.EbsInfo.EbsOptimizedInfo.BaselineIops)
+		d.Set("ebs_performance_maximum_bandwidth", v.EbsInfo.EbsOptimizedInfo.MaximumBandwidthInMbps)
+		d.Set("ebs_performance_maximum_throughput", v.EbsInfo.EbsOptimizedInfo.MaximumThroughputInMBps)
+		d.Set("ebs_performance_maximum_iops", v.EbsInfo.EbsOptimizedInfo.MaximumIops)
+	}
 	d.Set("ebs_encryption_support", v.EbsInfo.EncryptionSupport)
+	d.Set("ebs_nvme_support", v.EbsInfo.NvmeSupport)
 	d.Set("network_performance", v.NetworkInfo.NetworkPerformance)
 	d.Set("maximum_network_interfaces", v.NetworkInfo.MaximumNetworkInterfaces)
 	d.Set("maximum_ipv4_addresses_per_interface", v.NetworkInfo.Ipv4AddressesPerInterface)
 	d.Set("maximum_ipv6_addresses_per_interface", v.NetworkInfo.Ipv6AddressesPerInterface)
 	d.Set("ipv6_supported", v.NetworkInfo.Ipv6Supported)
 	d.Set("ena_support", v.NetworkInfo.EnaSupport)
+	d.Set("efa_supported", v.NetworkInfo.EfaSupported)
 	if v.GpuInfo != nil {
 		gpuList := make([]interface{}, len(v.GpuInfo.Gpus))
 		for i, gp := range v.GpuInfo.Gpus {

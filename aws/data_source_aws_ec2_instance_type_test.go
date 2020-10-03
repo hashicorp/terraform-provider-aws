@@ -1,100 +1,175 @@
 package aws
 
 import (
-	"testing"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"testing"
 )
 
-func TestAccDataSourceAwsEc2InstanceType_attributes(t *testing.T) {
-	resourceMetal := "data.aws_ec2_instance_type.metal"
-	resourceGpu := "data.aws_ec2_instance_type.gpu"
-	resourceFpga := "data.aws_ec2_instance_type.fpga"
-	resourceAccelerator := "data.aws_ec2_instance_type.accelerator"
+func TestAccDataSourceAwsEc2InstanceType_basic(t *testing.T) {
+	resourceBasic := "data.aws_ec2_instance_type.basic"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceEc2InstanceType,
+				Config: testAccDataSourceEc2InstanceTypeBasic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceMetal, "auto_recovery_supported", "false"),
-					resource.TestCheckResourceAttr(resourceMetal, "bare_metal", "true"),
-					resource.TestCheckResourceAttr(resourceMetal, "burstable_performance_supported", "false"),
-					resource.TestCheckResourceAttr(resourceMetal, "current_generation", "true"),
-					resource.TestCheckResourceAttr(resourceMetal, "dedicated_hosts_supported", "true"),
-					resource.TestCheckResourceAttr(resourceMetal, "default_vcpus", "96"),
-					resource.TestCheckResourceAttr(resourceMetal, "ebs_encryption_support", "supported"),
-					resource.TestCheckResourceAttr(resourceMetal, "ebs_optimized_support", "default"),
-					resource.TestCheckResourceAttr(resourceMetal, "ena_support", "required"),
-					resource.TestCheckResourceAttr(resourceMetal, "free_tier_eligible", "false"),
-					resource.TestCheckResourceAttr(resourceMetal, "hibernation_supported", "false"),
-					resource.TestCheckResourceAttr(resourceMetal, "instance_storage_supported", "true"),
-					resource.TestCheckResourceAttr(resourceMetal, "instance_type", "i3en.metal"),
-					resource.TestCheckResourceAttr(resourceMetal, "ipv6_supported", "true"),
-					resource.TestCheckResourceAttr(resourceMetal, "maximum_ipv4_addresses_per_interface", "50"),
-					resource.TestCheckResourceAttr(resourceMetal, "maximum_ipv6_addresses_per_interface", "50"),
-					resource.TestCheckResourceAttr(resourceMetal, "maximum_network_interfaces", "15"),
-					resource.TestCheckResourceAttr(resourceMetal, "memory_size", "786432"),
-					resource.TestCheckResourceAttr(resourceMetal, "network_performance", "100 Gigabit"),
-					resource.TestCheckResourceAttr(resourceMetal, "supported_architectures.#", "1"),
-					resource.TestCheckResourceAttr(resourceMetal, "supported_architectures.0", "x86_64"),
-					resource.TestCheckResourceAttr(resourceMetal, "supported_placement_strategies.#", "3"),
-					resource.TestCheckResourceAttr(resourceMetal, "supported_placement_strategies.0", "cluster"),
-					resource.TestCheckResourceAttr(resourceMetal, "supported_placement_strategies.1", "partition"),
-					resource.TestCheckResourceAttr(resourceMetal, "supported_placement_strategies.2", "spread"),
-					resource.TestCheckResourceAttr(resourceMetal, "supported_root_device_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceMetal, "supported_root_device_types.0", "ebs"),
-					resource.TestCheckResourceAttr(resourceMetal, "supported_usages_classes.#", "2"),
-					resource.TestCheckResourceAttr(resourceMetal, "supported_usages_classes.0", "on-demand"),
-					resource.TestCheckResourceAttr(resourceMetal, "supported_usages_classes.1", "spot"),
-					resource.TestCheckResourceAttr(resourceMetal, "sustained_clock_speed", "3.1"),
-					resource.TestCheckResourceAttr(resourceMetal, "total_instance_storage", "60000"),
-					resource.TestCheckResourceAttr(resourceMetal, "instance_disks.#", "1"),
-					resource.TestCheckResourceAttr(resourceMetal, "instance_disks.0.count", "8"),
-					resource.TestCheckResourceAttr(resourceMetal, "instance_disks.0.size", "7500"),
-					resource.TestCheckResourceAttr(resourceMetal, "instance_disks.0.type", "ssd"),
-					resource.TestCheckResourceAttr(resourceGpu, "total_gpu_memory", "4096"),
-					resource.TestCheckResourceAttr(resourceGpu, "hypervisor", "xen"),
-					resource.TestCheckResourceAttr(resourceGpu, "gpus.#", "1"),
-					resource.TestCheckResourceAttr(resourceGpu, "gpus.0.count", "1"),
-					resource.TestCheckResourceAttr(resourceGpu, "gpus.0.memory_size", "4096"),
-					resource.TestCheckResourceAttr(resourceGpu, "gpus.0.manufacturer", "NVIDIA"),
-					resource.TestCheckResourceAttr(resourceGpu, "gpus.0.name", "K520"),
-					resource.TestCheckResourceAttr(resourceGpu, "valid_threads_per_core.#", "2"),
-					resource.TestCheckResourceAttr(resourceGpu, "valid_threads_per_core.0", "1"),
-					resource.TestCheckResourceAttr(resourceGpu, "valid_threads_per_core.1", "2"),
-					resource.TestCheckResourceAttr(resourceGpu, "default_threads_per_core", "2"),
-					resource.TestCheckResourceAttr(resourceGpu, "default_cores", "4"),
-					resource.TestCheckResourceAttr(resourceGpu, "default_vcpus", "8"),
-					resource.TestCheckResourceAttr(resourceFpga, "fpgas.#", "1"),
-					resource.TestCheckResourceAttr(resourceFpga, "fpgas.0.name", "Virtex UltraScale (VU9P)"),
-					resource.TestCheckResourceAttr(resourceFpga, "fpgas.0.manufacturer", "Xilinx"),
-					resource.TestCheckResourceAttr(resourceFpga, "fpgas.0.count", "1"),
-					resource.TestCheckResourceAttr(resourceFpga, "fpgas.0.memory_size", "65536"),
-					resource.TestCheckResourceAttr(resourceFpga, "total_fpga_memory", "65536"),
-					resource.TestCheckResourceAttr(resourceAccelerator, "accelerators.#", "1"),
-					resource.TestCheckResourceAttr(resourceAccelerator, "accelerators.0.count", "1"),
-					resource.TestCheckResourceAttr(resourceAccelerator, "accelerators.0.name", "Inferentia"),
-					resource.TestCheckResourceAttr(resourceAccelerator, "accelerators.0.manufacturer", "AWS"),
-					resource.TestCheckResourceAttr(resourceAccelerator, "valid_cores.#", "1"),
-					resource.TestCheckResourceAttr(resourceAccelerator, "valid_cores.0", "2"),
+					resource.TestCheckResourceAttr(resourceBasic, "instance_type", "t2.micro"),
+					resource.TestCheckResourceAttr(resourceBasic, "current_generation", "true"),
+					resource.TestCheckResourceAttr(resourceBasic, "free_tier_eligible", "true"),
+					resource.TestCheckResourceAttr(resourceBasic, "supported_usages_classes.#", "2"),
+					resource.TestCheckResourceAttr(resourceBasic, "supported_usages_classes.0", "on-demand"),
+					resource.TestCheckResourceAttr(resourceBasic, "supported_usages_classes.1", "spot"),
+					resource.TestCheckResourceAttr(resourceBasic, "supported_root_device_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceBasic, "supported_root_device_types.0", "ebs"),
+					resource.TestCheckResourceAttr(resourceBasic, "supported_virtualization_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceBasic, "supported_virtualization_types.0", "hvm"),
+					resource.TestCheckResourceAttr(resourceBasic, "bare_metal", "false"),
+					resource.TestCheckResourceAttr(resourceBasic, "hypervisor", "xen"),
+					resource.TestCheckResourceAttr(resourceBasic, "supported_architectures.#", "2"),
+					resource.TestCheckResourceAttr(resourceBasic, "supported_architectures.0", "i386"),
+					resource.TestCheckResourceAttr(resourceBasic, "supported_architectures.1", "x86_64"),
+					resource.TestCheckResourceAttr(resourceBasic, "sustained_clock_speed", "2.5"),
+					resource.TestCheckResourceAttr(resourceBasic, "default_vcpus", "1"),
+					resource.TestCheckResourceAttr(resourceBasic, "default_cores", "1"),
+					resource.TestCheckResourceAttr(resourceBasic, "default_threads_per_core", "1"),
+					resource.TestCheckResourceAttr(resourceBasic, "valid_cores.#", "1"),
+					resource.TestCheckResourceAttr(resourceBasic, "valid_cores.#", "1"),
+					resource.TestCheckResourceAttr(resourceBasic, "valid_threads_per_core.#", "1"),
+					resource.TestCheckResourceAttr(resourceBasic, "valid_threads_per_core.0", "1"),
+					resource.TestCheckResourceAttr(resourceBasic, "memory_size", "1024"),
+					resource.TestCheckResourceAttr(resourceBasic, "instance_storage_supported", "false"),
+					resource.TestCheckResourceAttr(resourceBasic, "ebs_optimized_support", "unsupported"),
+					resource.TestCheckResourceAttr(resourceBasic, "ebs_encryption_support", "supported"),
+					resource.TestCheckResourceAttr(resourceBasic, "ebs_nvme_support", "unsupported"),
+					resource.TestCheckResourceAttr(resourceBasic, "network_performance", "Low to Moderate"),
+					resource.TestCheckResourceAttr(resourceBasic, "maximum_network_interfaces", "2"),
+					resource.TestCheckResourceAttr(resourceBasic, "maximum_ipv4_addresses_per_interface", "2"),
+					resource.TestCheckResourceAttr(resourceBasic, "maximum_ipv6_addresses_per_interface", "2"),
+					resource.TestCheckResourceAttr(resourceBasic, "ipv6_supported", "true"),
+					resource.TestCheckResourceAttr(resourceBasic, "ena_support", "unsupported"),
+					resource.TestCheckResourceAttr(resourceBasic, "efa_supported", "false"),
+					resource.TestCheckResourceAttr(resourceBasic, "supported_placement_strategies.#", "2"),
+					resource.TestCheckResourceAttr(resourceBasic, "supported_placement_strategies.0", "partition"),
+					resource.TestCheckResourceAttr(resourceBasic, "supported_placement_strategies.1", "spread"),
 				),
 			},
 		},
 	})
 }
 
-const testAccDataSourceEc2InstanceType = `
+func TestAccDataSourceAwsEc2InstanceType_metal(t *testing.T) {
+	resourceMetal := "data.aws_ec2_instance_type.metal"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceEc2InstanceTypeMetal,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceMetal, "ebs_performance_baseline_bandwidth", "19000"),
+					resource.TestCheckResourceAttr(resourceMetal, "ebs_performance_baseline_throughput", "2375"),
+					resource.TestCheckResourceAttr(resourceMetal, "ebs_performance_baseline_iops", "80000"),
+					resource.TestCheckResourceAttr(resourceMetal, "ebs_performance_maximum_bandwidth", "19000"),
+					resource.TestCheckResourceAttr(resourceMetal, "ebs_performance_maximum_throughput", "2375"),
+					resource.TestCheckResourceAttr(resourceMetal, "ebs_performance_maximum_iops", "80000"),
+					resource.TestCheckResourceAttr(resourceMetal, "total_instance_storage", "60000"),
+					resource.TestCheckResourceAttr(resourceMetal, "instance_disks.#", "1"),
+					resource.TestCheckResourceAttr(resourceMetal, "instance_disks.0.count", "8"),
+					resource.TestCheckResourceAttr(resourceMetal, "instance_disks.0.size", "7500"),
+					resource.TestCheckResourceAttr(resourceMetal, "instance_disks.0.type", "ssd"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsEc2InstanceType_gpu(t *testing.T) {
+	resourceGpu := "data.aws_ec2_instance_type.gpu"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceEc2InstanceTypeGpu,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceGpu, "gpus.#", "1"),
+					resource.TestCheckResourceAttr(resourceGpu, "gpus.0.count", "1"),
+					resource.TestCheckResourceAttr(resourceGpu, "gpus.0.memory_size", "4096"),
+					resource.TestCheckResourceAttr(resourceGpu, "gpus.0.manufacturer", "NVIDIA"),
+					resource.TestCheckResourceAttr(resourceGpu, "gpus.0.name", "K520"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsEc2InstanceType_fpga(t *testing.T) {
+	resourceFpga := "data.aws_ec2_instance_type.fpga"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceEc2InstanceTypeFgpa,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceFpga, "fpgas.#", "1"),
+					resource.TestCheckResourceAttr(resourceFpga, "fpgas.0.name", "Virtex UltraScale (VU9P)"),
+					resource.TestCheckResourceAttr(resourceFpga, "fpgas.0.manufacturer", "Xilinx"),
+					resource.TestCheckResourceAttr(resourceFpga, "fpgas.0.count", "1"),
+					resource.TestCheckResourceAttr(resourceFpga, "fpgas.0.memory_size", "65536"),
+					resource.TestCheckResourceAttr(resourceFpga, "total_fpga_memory", "65536"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsEc2InstanceType_accelerator(t *testing.T) {
+	resourceAccelerator := "data.aws_ec2_instance_type.accelerator"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceEc2InstanceTypeAccelerator,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceAccelerator, "accelerators.#", "1"),
+					resource.TestCheckResourceAttr(resourceAccelerator, "accelerators.0.count", "1"),
+					resource.TestCheckResourceAttr(resourceAccelerator, "accelerators.0.name", "Inferentia"),
+					resource.TestCheckResourceAttr(resourceAccelerator, "accelerators.0.manufacturer", "AWS"),
+				),
+			},
+		},
+	})
+}
+
+const testAccDataSourceEc2InstanceTypeBasic = `
+data "aws_ec2_instance_type" "basic" {
+  instance_type="t2.micro"
+}
+`
+
+const testAccDataSourceEc2InstanceTypeMetal = `
 data "aws_ec2_instance_type" "metal" {
   instance_type="i3en.metal"
 }
+`
+
+const testAccDataSourceEc2InstanceTypeGpu = `
 data "aws_ec2_instance_type" "gpu" {
   instance_type="g2.2xlarge"
 }
+`
+
+const testAccDataSourceEc2InstanceTypeFgpa = `
 data "aws_ec2_instance_type" "fpga" {
   instance_type="f1.2xlarge"
 }
+`
+
+const testAccDataSourceEc2InstanceTypeAccelerator = `
+
 data "aws_ec2_instance_type" "accelerator" {
   instance_type="inf1.xlarge"
 }
