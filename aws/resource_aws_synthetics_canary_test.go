@@ -321,6 +321,49 @@ func TestAccAWSSyntheticsCanary_runConfig(t *testing.T) {
 	})
 }
 
+func TestAccAWSSyntheticsCanary_runConfigTracing(t *testing.T) {
+	var conf synthetics.Canary
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_synthetics_canary.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSyntheticsCanaryRunConfigTracingConfig(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.active_tracing", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+			},
+			{
+				Config: testAccAWSSyntheticsCanaryRunConfigTracingConfig(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.active_tracing", "false"),
+				),
+			},
+			{
+				Config: testAccAWSSyntheticsCanaryRunConfigTracingConfig(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.active_tracing", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
 	var conf synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
@@ -704,6 +747,28 @@ resource "aws_synthetics_canary" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAWSSyntheticsCanaryRunConfigTracingConfig(rName string, tracing bool) string {
+	return testAccAWSSyntheticsCanaryConfigBase(rName) + fmt.Sprintf(`
+resource "aws_synthetics_canary" "test" {
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
+  runtime_version      = "syn-nodejs-2.0"
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
+
+  run_config {
+	active_tracing     = %[2]t
+    timeout_in_seconds = 60
+  }
+}
+`, rName, tracing)
 }
 
 func testAccAWSSyntheticsCanaryBasicConfig(rName string) string {
