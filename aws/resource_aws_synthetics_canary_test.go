@@ -758,7 +758,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-2.0"
-
+  
   schedule {
     expression = "rate(0 minute)"
   }
