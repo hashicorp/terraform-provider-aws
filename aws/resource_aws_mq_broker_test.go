@@ -1407,37 +1407,7 @@ resource "aws_mq_broker" "test" {
     groups   = ["admin"]
   }
 }
-<<<<<<< HEAD
-`, sgName, brokerName)
-}
-
-func testAccMqBrokerConfig_updateTags1(sgName, brokerName string) string {
-	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = "%s"
-}
-
-resource "aws_mq_broker" "test" {
-  apply_immediately  = true
-  broker_name        = "%s"
-  engine_type        = "ActiveMQ"
-  engine_version     = "5.15.0"
-  host_instance_type = "mq.t2.micro"
-  security_groups    = [aws_security_group.test.id]
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
-  }
-
-  tags = {
-    env = "test"
-  }
-}
-`, sgName, brokerName)
-=======
 `, rName)
->>>>>>> af3ba3366... refactor more names + tags tests to std
 }
 
 func testAccMqBrokerConfigTags1(rName, tagKey1, tagValue1 string) string {
