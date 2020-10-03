@@ -251,6 +251,7 @@ func TestAccAWSSyntheticsCanary_s3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.active_tracing", "false"),
 					resource.TestCheckResourceAttr(resourceName, "failure_retention_period", "31"),
 					resource.TestCheckResourceAttr(resourceName, "success_retention_period", "31"),
 					resource.TestCheckResourceAttr(resourceName, "handler", "exports.handler"),

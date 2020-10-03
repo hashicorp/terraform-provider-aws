@@ -116,6 +116,10 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 							ValidateFunc: validation.IntBetween(60, 14*60),
 							Default:      840,
 						},
+						"active_tracing": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -535,6 +539,10 @@ func expandAwsSyntheticsCanaryRunConfig(l []interface{}) *synthetics.CanaryRunCo
 		codeConfig.MemoryInMB = aws.Int64(int64(v))
 	}
 
+	if v, ok := m["active_tracing"].(bool); ok {
+		codeConfig.ActiveTracing = aws.Bool(v)
+	}
+
 	return codeConfig
 }
 
@@ -546,6 +554,7 @@ func flattenAwsSyntheticsCanaryRunConfig(canaryCodeOut *synthetics.CanaryRunConf
 	m := map[string]interface{}{
 		"timeout_in_seconds": aws.Int64Value(canaryCodeOut.TimeoutInSeconds),
 		"memory_in_mb":       aws.Int64Value(canaryCodeOut.MemoryInMB),
+		"active_tracing":     aws.BoolValue(canaryCodeOut.ActiveTracing),
 	}
 
 	return []interface{}{m}
