@@ -758,13 +758,13 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   runtime_version      = "syn-nodejs-2.0"
-  
+
   schedule {
     expression = "rate(0 minute)"
   }
 
   run_config {
-	active_tracing     = %[2]t
+    active_tracing     = %[2]t
     timeout_in_seconds = 60
   }
 }
