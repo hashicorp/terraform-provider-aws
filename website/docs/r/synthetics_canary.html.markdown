@@ -57,6 +57,7 @@ The following arguments are supported:
 
 * `timeout_in_seconds` - (Optional) How long the canary is allowed to run before it must stop. If you omit this field, the frequency of the canary is used as this value, up to a maximum of 14 minutes.
 * `memory_in_mb` - (Optional) The maximum amount of memory available to the canary while it is running, in MB. The value you specify must be a multiple of 64.
+* `active_tracing` - (Optional) Specifies whether this canary is to use active AWS X-Ray tracing when it runs. You can enable active tracing only for canaries that use version syn-nodejs-2.0 or later for their canary runtime.
 
 ### VPC Config
 
@@ -71,7 +72,6 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name (ARN) of the Canary.
 * `source_location_arn` - The ARN of the Lambda layer where Synthetics stores the canary script code.
 * `engine_arn` - The ARN of the Lambda function that is used as your canary's engine.
-* `runtime_version` - Specifies the runtime version to use for the canary.
 * `timeline` - A structure that contains information about when the canary was created, modified, and most recently run. see [Timeline](#timeline).
 
 ### VPC Config
