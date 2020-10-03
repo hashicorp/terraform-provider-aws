@@ -7,6 +7,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"testing"
 
@@ -160,6 +161,28 @@ func testAccCheckResourceAttrRegionalHostname(resourceName, attributeName, servi
 		hostname := fmt.Sprintf("%s.%s.%s.%s", hostnamePrefix, serviceName, testAccGetRegion(), testAccGetPartitionDNSSuffix())
 
 		return resource.TestCheckResourceAttr(resourceName, attributeName, hostname)(s)
+	}
+}
+
+// testAccCheckResourceAttrRegionalHostnameService ensures the Terraform state exactly matches a service DNS hostname with region and partition DNS suffix
+//
+// For example: ec2.us-west-2.amazonaws.com
+func testAccCheckResourceAttrRegionalHostnameService(resourceName, attributeName, serviceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		hostname := fmt.Sprintf("%s.%s.%s", serviceName, testAccGetRegion(), testAccGetPartitionDNSSuffix())
+
+		return resource.TestCheckResourceAttr(resourceName, attributeName, hostname)(s)
+	}
+}
+
+// testAccCheckResourceAttrRegionalReverseDnsService ensures the Terraform state exactly matches a service reverse DNS hostname with region and partition DNS suffix
+//
+// For example: com.amazonaws.us-west-2.s3
+func testAccCheckResourceAttrRegionalReverseDnsService(resourceName, attributeName, serviceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		reverseDns := fmt.Sprintf("%s.%s.%s", testAccGetPartitionReverseDNSPrefix(), testAccGetRegion(), serviceName)
+
+		return resource.TestCheckResourceAttr(resourceName, attributeName, reverseDns)(s)
 	}
 }
 
@@ -448,6 +471,16 @@ func testAccGetPartitionDNSSuffix() string {
 		return partition.DNSSuffix()
 	}
 	return "amazonaws.com"
+}
+
+func testAccGetPartitionReverseDNSPrefix() string {
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
+		dnsParts := strings.Split(partition.DNSSuffix(), ".")
+		sort.Sort(sort.Reverse(sort.StringSlice(dnsParts)))
+		return strings.Join(dnsParts, ".")
+	}
+
+	return "com.amazonaws"
 }
 
 func testAccGetAlternateRegionPartition() string {
