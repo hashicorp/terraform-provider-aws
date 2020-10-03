@@ -212,7 +212,7 @@ The `validation` object supports the following:
 
 The `trust` object supports the following:
 
-* `acm` - (Optional) The TLS validation context trust for an AWS Certicate Manager (ACM) certificate.
+* `acm` - (Optional) The TLS validation context trust for an AWS Certificate Manager (ACM) certificate.
 * `file` - (Optional) The TLS validation context trust for a local file.
 
 The `acm` object supports the following:
@@ -283,7 +283,7 @@ The `tls` object supports the following:
 
 The `certificate` object supports the following:
 
-* `acm` - (Optional) An AWS Certicate Manager (ACM) certificate.
+* `acm` - (Optional) An AWS Certificate Manager (ACM) certificate.
 * `file` - (optional) A local file certificate.
 
 The `acm` object supports the following:
