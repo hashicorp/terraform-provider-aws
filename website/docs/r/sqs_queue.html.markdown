@@ -73,6 +73,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The URL for the created Amazon SQS queue.
 * `arn` - The ARN of the SQS queue
+* `url` - The URL of the queue.
 
 ## Import
 

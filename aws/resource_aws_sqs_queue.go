@@ -127,6 +127,10 @@ func resourceAwsSqsQueue() *schema.Resource {
 				Computed: true,
 				Optional: true,
 			},
+			"url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -315,6 +319,7 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("receive_wait_time_seconds", 0)
 	d.Set("redrive_policy", "")
 	d.Set("visibility_timeout_seconds", 30)
+	d.Set("url", d.Id())
 
 	if attributeOutput != nil {
 		queueAttributes := aws.StringValueMap(attributeOutput.Attributes)
