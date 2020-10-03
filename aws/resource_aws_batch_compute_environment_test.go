@@ -86,6 +86,7 @@ func TestAccAWSBatchComputeEnvironment_disappears(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_createEc2(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "aws_batch_compute_environment.ec2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
@@ -96,6 +97,7 @@ func TestAccAWSBatchComputeEnvironment_createEc2(t *testing.T) {
 				Config: testAccAWSBatchComputeEnvironmentConfigEC2(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -523,6 +525,49 @@ func TestAccAWSBatchComputeEnvironment_updateState(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSBatchComputeEnvironment_Tags(t *testing.T) {
+	rInt := acctest.RandInt()
+	resourceName := "aws_batch_compute_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigTags1(rInt, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigTags2(rInt, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigTags1(rInt, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -1127,4 +1172,37 @@ resource "aws_batch_compute_environment" "ec2" {
   depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 `, rInt, rInt, version)
+}
+
+func testAccAWSBatchComputeEnvironmentConfigTags1(rInt int, tagKey1, tagValue1 string) string {
+	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  depends_on = [aws_iam_role_policy_attachment.aws_batch_service_role]
+
+  compute_environment_name = "tf_acc_test_%[1]d"
+  service_role             = aws_iam_role.aws_batch_service_role.arn
+  type                     = "UNMANAGED"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rInt, tagKey1, tagValue1)
+}
+
+func testAccAWSBatchComputeEnvironmentConfigTags2(rInt int, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  depends_on = [aws_iam_role_policy_attachment.aws_batch_service_role]
+
+  compute_environment_name = "tf_acc_test_%[1]d"
+  service_role             = aws_iam_role.aws_batch_service_role.arn
+  type                     = "UNMANAGED"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rInt, tagKey1, tagValue1, tagKey2, tagValue2)
 }

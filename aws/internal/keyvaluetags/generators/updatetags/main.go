@@ -29,6 +29,7 @@ var serviceNames = []string{
 	"athena",
 	"autoscaling",
 	"backup",
+	"batch",
 	"cloud9",
 	"cloudfront",
 	"cloudhsmv2",
