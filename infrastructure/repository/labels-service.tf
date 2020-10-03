@@ -159,6 +159,7 @@ variable "service_labels" {
     "route53resolver",
     "s3",
     "s3control",
+    "s3outposts",
     "sagemaker",
     "savingsplans",
     "secretsmanager",

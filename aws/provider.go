@@ -1176,6 +1176,7 @@ func init() {
 		"route53resolver",
 		"s3",
 		"s3control",
+		"s3outposts",
 		"sagemaker",
 		"sdb",
 		"secretsmanager",
