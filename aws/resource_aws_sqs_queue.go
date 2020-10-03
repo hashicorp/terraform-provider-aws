@@ -131,6 +131,11 @@ var (
 			},
 		},
 
+		"url": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+
 		"visibility_timeout_seconds": {
 			Type:         schema.TypeInt,
 			Optional:     true,
@@ -291,6 +296,7 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("name_prefix", naming.NamePrefixFromName(name))
 	}
+	d.Set("url", d.Id())
 
 	tags, err := keyvaluetags.SqsListTags(conn, d.Id())
 

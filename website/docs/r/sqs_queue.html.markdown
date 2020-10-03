@@ -87,6 +87,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The URL for the created Amazon SQS queue.
 * `arn` - The ARN of the SQS queue
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `url` - Same as `id`: The URL for the created Amazon SQS queue.
 
 ## Import
 
