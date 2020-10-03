@@ -348,7 +348,7 @@ func resourceAwsSyntheticsCanaryUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if d.HasChange("runtime_version") {
-		input.RuntimeVersion = aws.String(d.Get("vpc_config").(string))
+		input.RuntimeVersion = aws.String(d.Get("runtime_version").(string))
 		updateFlag = true
 	}
 
