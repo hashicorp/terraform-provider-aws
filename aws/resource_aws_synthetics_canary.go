@@ -34,6 +34,10 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 21),
 			},
+			"runtime_version": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"artifact_s3_location": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -190,10 +194,6 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"runtime_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -214,7 +214,7 @@ func resourceAwsSyntheticsCanaryCreate(d *schema.ResourceData, meta interface{})
 		Name:               aws.String(d.Get("name").(string)),
 		ArtifactS3Location: aws.String(d.Get("artifact_s3_location").(string)),
 		ExecutionRoleArn:   aws.String(d.Get("execution_role_arn").(string)),
-		RuntimeVersion:     aws.String("syn-1.0"),
+		RuntimeVersion:     aws.String(d.Get("runtime_version").(string)),
 	}
 
 	code, err := expandAwsSyntheticsCanaryCode(d)
@@ -344,6 +344,11 @@ func resourceAwsSyntheticsCanaryUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("vpc_config") {
 		input.VpcConfig = expandAwsSyntheticsCanaryVpcConfig(d.Get("vpc_config").([]interface{}))
+		updateFlag = true
+	}
+
+	if d.HasChange("runtime_version") {
+		input.RuntimeVersion = aws.String(d.Get("vpc_config").(string))
 		updateFlag = true
 	}
 
