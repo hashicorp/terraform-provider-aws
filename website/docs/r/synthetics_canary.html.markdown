@@ -19,6 +19,7 @@ resource "aws_synthetics_canary" "some" {
   execution_role_arn   = "some-role"
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
+  runtime_version      = "syn-1.0"
 
   schedule {
     expression = "rate(0 minute)"
@@ -31,6 +32,7 @@ resource "aws_synthetics_canary" "some" {
 The following arguments are supported:
 
 * `name` - (Required) The name for this canary.
+* `runtime_version` - (Required) Specifies the runtime version to use for the canary. Currently, the only valid values are `syn-nodejs-2.0`, `syn-nodejs-2.0-beta`, and `syn-1.0`. For more information about runtime versions, see [Canary Runtime Versions](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_Library.html).
 * `artifact_s3_location` - (Required) The location on Amazon S3 where Synthetics stores artifacts from the test runs of this canary.
 * `schedule` -  (Required) Information about how often the canary is to run and when these test runs are to stop. See [Schedule](#schedule) below.
 * `handler` - (Required) The domain description.
