@@ -1,13 +1,11 @@
 package aws
 
 import (
-	// "fmt"
-	// "log"
-	// "sort"
-	// "time"
+	"fmt"
+	"log"
+	"time"
 
-	// "github.com/aws/aws-sdk-go/aws"
-	// "github.com/aws/aws-sdk-go/service/ssoadmin"
+	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -30,7 +28,25 @@ func dataSourceAwsSsoInstance() *schema.Resource {
 }
 
 func dataSourceAwsSsoInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	// conn := meta.(*AWSClient).ssoadminconn
-	// TODO
+	conn := meta.(*AWSClient).ssoadminconn
+
+	log.Printf("[DEBUG] Reading AWS SSO Instances")
+	resp, err := conn.ListInstances(&ssoadmin.ListInstancesInput{})
+	if err != nil {
+		return err
+	}
+
+	// 'AccountAliases': [] if there is no alias.
+	if resp == nil || len(resp.Instances) == 0 {
+		return fmt.Errorf("No AWS SSO Instance found")
+	}
+
+	instance := resp.Instances[0]
+	log.Printf("[DEBUG] Received AWS SSO Instance: %s", instance)
+
+	d.SetId(time.Now().UTC().String())
+	d.Set("arn", instance.InstanceArn)
+	d.Set("identity_store_id", instance.IdentityStoreId)
+
 	return nil
 }
