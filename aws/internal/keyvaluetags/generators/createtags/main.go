@@ -97,16 +97,10 @@ import (
 {{- end }}
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const EventualConsistencyTimeout = 5 * time.Minute
-
-// Copied from aws/utils.go
-// TODO: Export in shared package or add to Terraform Plugin SDK
-func isResourceTimeoutError(err error) bool {
-	timeoutErr, ok := err.(*resource.TimeoutError)
-	return ok && timeoutErr.LastError == nil
-}
 
 {{- range .ServiceNames }}
 
@@ -161,7 +155,7 @@ func {{ . | Title }}CreateTags(conn {{ . | ClientType }}, identifier string{{ if
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.{{ . | TagFunction }}(input)
 	}
 	{{- else }}
