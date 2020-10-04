@@ -354,3 +354,87 @@ func testFlattenOrganizationsRootPolicyTypes(t *testing.T, index int, result []m
 		}
 	}
 }
+
+func testAccAwsOrganizationsOrganizationRecreated(t *testing.T, before, after *organizations.Organization) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *before.Id == *after.Id {
+			t.Fatalf("Expected change to Org ID value, but both were %v", *before.Id)
+		}
+		return nil
+	}
+}
+
+func TestAccAwsOrganizationsOrganization_FeatureSetForcesNew(t *testing.T) {
+	var beforeValue, afterValue organizations.Organization
+	resourceName := "aws_organizations_organization.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOrganizationsOrganizationConfigFeatureSet(organizations.OrganizationFeatureSetAll),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &beforeValue),
+					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetAll),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAwsOrganizationsOrganizationConfigFeatureSet(organizations.OrganizationFeatureSetConsolidatedBilling),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &afterValue),
+					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetConsolidatedBilling),
+					testAccAwsOrganizationsOrganizationRecreated(t, &beforeValue, &afterValue),
+				),
+			},
+		},
+	})
+}
+
+func testAccAwsOrganizationsOrganizationNotRecreated(t *testing.T, before, after *organizations.Organization) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *before.Id != *after.Id {
+			t.Fatal("Did not expect change to Org ID value")
+		}
+		return nil
+	}
+}
+
+func TestAccAwsOrganizationsOrganization_FeatureSetUpdate(t *testing.T) {
+	var beforeValue, afterValue organizations.Organization
+	resourceName := "aws_organizations_organization.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOrganizationsOrganizationConfigFeatureSet(organizations.OrganizationFeatureSetConsolidatedBilling),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &beforeValue),
+					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetConsolidatedBilling),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAwsOrganizationsOrganizationConfigFeatureSet(organizations.OrganizationFeatureSetAll),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &afterValue),
+					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetAll),
+					testAccAwsOrganizationsOrganizationNotRecreated(t, &beforeValue, &afterValue),
+				),
+			},
+		},
+	})
+}

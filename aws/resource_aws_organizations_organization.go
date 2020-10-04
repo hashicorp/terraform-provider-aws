@@ -1,12 +1,14 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -23,6 +25,13 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ForceNewIfChange("feature_set", func(_ context.Context, old, new, meta interface{}) bool {
+				// Only changes from ALL to CONSOLIDATED_BILLING for feature_set should force a new resource
+				return old.(string) == organizations.OrganizationFeatureSetAll && new.(string) == organizations.OrganizationFeatureSetConsolidatedBilling
+			}),
+		),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -154,7 +163,6 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 			"feature_set": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Default:  organizations.OrganizationFeatureSetAll,
 				ValidateFunc: validation.StringInSlice([]string{
 					organizations.OrganizationFeatureSetAll,
