@@ -151,23 +151,15 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						organizations.PolicyTypeAiservicesOptOutPolicy,
-						organizations.PolicyTypeBackupPolicy,
-						organizations.PolicyTypeServiceControlPolicy,
-						organizations.PolicyTypeTagPolicy,
-					}, false),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(organizations.PolicyType_Values(), false),
 				},
 			},
 			"feature_set": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  organizations.OrganizationFeatureSetAll,
-				ValidateFunc: validation.StringInSlice([]string{
-					organizations.OrganizationFeatureSetAll,
-					organizations.OrganizationFeatureSetConsolidatedBilling,
-				}, true),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      organizations.OrganizationFeatureSetAll,
+				ValidateFunc: validation.StringInSlice(organizations.OrganizationFeatureSet_Values(), true),
 			},
 		},
 	}
@@ -405,6 +397,12 @@ func resourceAwsOrganizationsOrganizationUpdate(d *schema.ResourceData, meta int
 			if err := waitForOrganizationDefaultRootPolicyTypeEnable(conn, policyType); err != nil {
 				return fmt.Errorf("error waiting for policy type (%s) enabling in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
 			}
+		}
+	}
+
+	if d.HasChange("feature_set") {
+		if _, err := conn.EnableAllFeatures(&organizations.EnableAllFeaturesInput{}); err != nil {
+			return fmt.Errorf("error changing feature_set to ALL")
 		}
 	}
 

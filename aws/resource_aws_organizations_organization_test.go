@@ -232,7 +232,7 @@ func testAccCheckAwsOrganizationsOrganizationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsOrganizationsOrganizationExists(n string, a *organizations.Organization) resource.TestCheckFunc {
+func testAccCheckAwsOrganizationsOrganizationExists(n string, org *organizations.Organization) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -256,7 +256,7 @@ func testAccCheckAwsOrganizationsOrganizationExists(n string, a *organizations.O
 			return fmt.Errorf("Organization %q does not exist", rs.Primary.ID)
 		}
 
-		a = resp.Organization
+		*org = *resp.Organization
 
 		return nil
 	}
@@ -364,7 +364,7 @@ func testAccAwsOrganizationsOrganizationRecreated(t *testing.T, before, after *o
 	}
 }
 
-func TestAccAwsOrganizationsOrganization_FeatureSetForcesNew(t *testing.T) {
+func testAccAwsOrganizationsOrganization_FeatureSetForcesNew(t *testing.T) {
 	var beforeValue, afterValue organizations.Organization
 	resourceName := "aws_organizations_organization.test"
 
@@ -406,7 +406,7 @@ func testAccAwsOrganizationsOrganizationNotRecreated(t *testing.T, before, after
 	}
 }
 
-func TestAccAwsOrganizationsOrganization_FeatureSetUpdate(t *testing.T) {
+func testAccAwsOrganizationsOrganization_FeatureSetUpdate(t *testing.T) {
 	var beforeValue, afterValue organizations.Organization
 	resourceName := "aws_organizations_organization.test"
 
@@ -428,10 +428,14 @@ func TestAccAwsOrganizationsOrganization_FeatureSetUpdate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsOrganizationsOrganizationConfigFeatureSet(organizations.OrganizationFeatureSetAll),
+				Config:             testAccAwsOrganizationsOrganizationConfigFeatureSet(organizations.OrganizationFeatureSetAll),
+				ExpectNonEmptyPlan: true, // See note below on this perpetual difference
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &afterValue),
-					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetAll),
+					// The below check cannot be performed here because the user must confirm the change
+					// via Console. Until then, the FeatureSet will not actually be toggled to ALL
+					// and will continue to show as CONSOLIDATED_BILLING when calling DescribeOrganization
+					// resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetAll),
 					testAccAwsOrganizationsOrganizationNotRecreated(t, &beforeValue, &afterValue),
 				),
 			},
