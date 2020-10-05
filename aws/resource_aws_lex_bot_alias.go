@@ -45,21 +45,15 @@ func resourceAwsLexBotAlias() *schema.Resource {
 				Computed: true,
 			},
 			"bot_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 50),
-					validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateLexBotName,
 			},
 			"bot_version": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateLexBotVersion,
 			},
 			"checksum": {
 				Type:     schema.TypeString,
@@ -105,17 +99,19 @@ func resourceAwsLexBotAlias() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateLexBotAliasName,
 			},
 		},
 	}
 }
+
+var validateLexBotAliasName = validation.All(
+	validation.StringLenBetween(1, 100),
+	validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
+)
 
 func resourceAwsLexBotAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lexmodelconn

@@ -2,14 +2,12 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func dataSourceAwsLexBotAlias() *schema.Resource {
@@ -22,12 +20,9 @@ func dataSourceAwsLexBotAlias() *schema.Resource {
 				Computed: true,
 			},
 			"bot_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 50),
-					validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateLexBotName,
 			},
 			"bot_version": {
 				Type:     schema.TypeString,
@@ -50,12 +45,9 @@ func dataSourceAwsLexBotAlias() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateLexBotAliasName,
 			},
 		},
 	}

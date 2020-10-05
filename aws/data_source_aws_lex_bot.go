@@ -2,14 +2,12 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func dataSourceAwsLexBot() *schema.Resource {
@@ -62,12 +60,9 @@ func dataSourceAwsLexBot() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateLexBotName,
 			},
 			"nlu_intent_confidence_threshold": {
 				Type:     schema.TypeFloat,
@@ -78,13 +73,10 @@ func dataSourceAwsLexBot() *schema.Resource {
 				Computed: true,
 			},
 			"version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  LexBotVersionLatest,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),
-				),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      LexBotVersionLatest,
+				ValidateFunc: validateLexBotVersion,
 			},
 			"voice_id": {
 				Type:     schema.TypeString,
