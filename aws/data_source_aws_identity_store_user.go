@@ -73,7 +73,7 @@ func dataSourceAwsIdentityStoreUserRead(d *schema.ResourceData, meta interface{}
 		resp, err := conn.ListUsers(&identitystore.ListUsersInput{
 			IdentityStoreId: aws.String(identityStoreID),
 			Filters: []*identitystore.Filter{
-				&identitystore.Filter{
+				{
 					AttributePath:  aws.String("UserName"),
 					AttributeValue: aws.String(userName),
 				},

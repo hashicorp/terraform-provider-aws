@@ -73,7 +73,7 @@ func dataSourceAwsIdentityStoreGroupRead(d *schema.ResourceData, meta interface{
 		resp, err := conn.ListGroups(&identitystore.ListGroupsInput{
 			IdentityStoreId: aws.String(identityStoreID),
 			Filters: []*identitystore.Filter{
-				&identitystore.Filter{
+				{
 					AttributePath:  aws.String("DisplayName"),
 					AttributeValue: aws.String(displayName),
 				},
