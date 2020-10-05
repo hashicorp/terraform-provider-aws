@@ -64,6 +64,15 @@ The following arguments are supported:
 * `running_mode_auto_stop_timeout_in_minutes` – (Optional) The time after a user logs off when WorkSpaces are automatically stopped. Configured in 60-minute intervals.
 * `user_volume_size_gib` – (Optional) The size of the user storage.
 
+### Timeouts
+
+`aws_workspaces_workspace` provides the following
+[Timeouts](/docs/configuration/resources.html#operation-timeouts) configuration options:
+
+- `create` - (Default `30 minutes`) Used for WorkSpace creation.
+- `update` - (Default `10 minutes`) Used for WorkSpace updating.
+- `delete` - (Default `10 minutes`) Used for WorkSpace termination.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
