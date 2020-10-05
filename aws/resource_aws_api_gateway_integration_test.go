@@ -275,7 +275,7 @@ func TestAccAWSAPIGatewayIntegration_integrationType(t *testing.T) {
 				Config: testAccAWSAPIGatewayIntegrationConfig_IntegrationTLSConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayIntegrationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tls_config/insecure_skip_verification", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.0.insecure_skip_verification", "true"),
 				),
 			},
 			{
@@ -827,7 +827,7 @@ resource "aws_api_gateway_integration" "test" {
   passthrough_behavior    = "WHEN_NO_MATCH"
   content_handling        = "CONVERT_TO_TEXT"
 
-  tls_config = {
+  tls_config {
 	insecure_skip_verification = true
   }
 }

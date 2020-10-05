@@ -152,7 +152,7 @@ func resourceAwsApiGatewayIntegration() *schema.Resource {
 			},
 
 			"tls_config": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MinItems: 0,
 				MaxItems: 1,
@@ -486,6 +486,20 @@ func resourceAwsApiGatewayIntegrationUpdate(d *schema.ResourceData, meta interfa
 			Path:  aws.String("/timeoutInMillis"),
 			Value: aws.String(strconv.Itoa(d.Get("timeout_milliseconds").(int))),
 		})
+	}
+
+	if d.HasChange("tls_config.0.insecure_skip_verification") {
+		// The domain name must have an endpoint type.
+		// If attempting to remove the configuration, do nothing.
+		if v, ok := d.GetOk("tls_config"); ok && len(v.([]interface{})) > 0 {
+			m := v.([]interface{})[0].(map[string]interface{})
+
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String(apigateway.OpReplace),
+				Path:  aws.String("/tlsConfig/insecureSkipVerification"),
+				Value: aws.String(strconv.FormatBool(m["insecure_skip_verification"].(bool))),
+			})
+		}
 	}
 
 	params := &apigateway.UpdateIntegrationInput{
