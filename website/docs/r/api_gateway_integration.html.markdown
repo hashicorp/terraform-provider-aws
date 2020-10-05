@@ -40,6 +40,10 @@ resource "aws_api_gateway_integration" "MyDemoIntegration" {
   cache_namespace      = "foobar"
   timeout_milliseconds = 29000
 
+  tls_config {
+    insecure_skip_verification = true
+  }
+
   request_parameters = {
     "integration.request.header.X-Authorization" = "'static'"
   }
@@ -229,6 +233,7 @@ The following arguments are supported:
 * `cache_namespace` - (Optional) The integration's cache namespace.
 * `content_handling` - (Optional) Specifies how to handle request payload content type conversions. Supported values are `CONVERT_TO_BINARY` and `CONVERT_TO_TEXT`. If this property is not defined, the request payload will be passed through from the method request to integration request without modification, provided that the passthroughBehaviors is configured to support payload pass-through.
 * `timeout_milliseconds` - (Optional) Custom timeout between 50 and 29,000 milliseconds. The default value is 29,000 milliseconds.
+* `tls_config` - (Optional) Specifies the TLS configuration for an integration defined as a block. Supports `insecure_skip_verification` toggle.   
 
 ## Import
 
