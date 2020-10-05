@@ -341,7 +341,7 @@ func TestAccAWSRouteTable_RequireRouteDestination(t *testing.T) {
 		CheckDestroy:  testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccRouteTableConfigNoDestination(),
+				Config:      testAccRouteTableConfigNoDestination(rName),
 				ExpectError: regexp.MustCompile("error creating route: one of `cidr_block"),
 			},
 		},
@@ -350,6 +350,7 @@ func TestAccAWSRouteTable_RequireRouteDestination(t *testing.T) {
 
 func TestAccAWSRouteTable_RequireRouteTarget(t *testing.T) {
 	resourceName := "aws_route_table.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -358,7 +359,7 @@ func TestAccAWSRouteTable_RequireRouteTarget(t *testing.T) {
 		CheckDestroy:  testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccRouteTableConfigNoTarget,
+				Config:      testAccRouteTableConfigNoTarget(rName),
 				ExpectError: regexp.MustCompile("error creating route: one of `egress_only_gateway_id"),
 			},
 		},
@@ -1171,7 +1172,7 @@ func testAccAWSRouteTableConfigIpv4Instance(rName, destinationCidr string) strin
 	return composeConfig(
 		testAccLatestAmazonNatInstanceAmiConfig(),
 		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
-		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1339,9 +1340,24 @@ resource "aws_route_table" "test" {
 `, rName, vgwResourceName)
 }
 
-// For GH-13545
-func testAccAWSRouteTableConfigPanicEmptyRoute(rName string) string {
-	return fmt.Sprintf(`
+func testAccRouteTableConfigNoDestination(rName string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		fmt.Sprintf(`
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    instance_id = aws_instance.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -1350,19 +1366,44 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.test.id
-}
-`, rName)
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-const testAccRouteTableConfigNoTarget = `
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccRouteTableConfigNoTarget(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
 
-  route {}
+  route {
+    cidr_block = "10.1.0.0/16"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.2.0.0/16"
 
   tags = {
     Name = %[1]q
@@ -1823,7 +1864,7 @@ func testAccAWSRouteTableConfigMultipleRoutes(rName,
 	return composeConfig(
 		testAccLatestAmazonNatInstanceAmiConfig(),
 		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
-		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
@@ -1892,15 +1933,17 @@ resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
 
   route {
-	%[2]s = %[3]q
+    %[2]s = %[3]q
     %[4]s = %[5]s.id
   }
+
   route {
-	%[6]s = %[7]q
+    %[6]s = %[7]q
     %[8]s = %[9]s.id
   }
+
   route {
-	%[10]s = %[11]q
+    %[10]s = %[11]q
     %[12]s = %[13]s.id
   }
 
