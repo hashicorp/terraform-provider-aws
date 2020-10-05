@@ -461,9 +461,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			opts.AvailabilityZones = expandStringList(attr.List())
 		}
 
-		// Need to check value > 0 due to:
-		// InvalidParameterValue: Backtrack is not enabled for the aurora-postgresql engine.
-		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
+		if v, ok := d.GetOk("backtrack_window"); ok {
 			opts.BacktrackWindow = aws.Int64(int64(v.(int)))
 		}
 
@@ -655,9 +653,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			Tags:                tags,
 		}
 
-		// Need to check value > 0 due to:
-		// InvalidParameterValue: Backtrack is not enabled for the aurora-postgresql engine.
-		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
+		if v, ok := d.GetOk("backtrack_window"); ok {
 			createOpts.BacktrackWindow = aws.Int64(int64(v.(int)))
 		}
 
@@ -782,9 +778,8 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		if v, ok := d.GetOk("enable_http_endpoint"); ok {
 			createOpts.EnableHttpEndpoint = aws.Bool(v.(bool))
 		}
-		// Need to check value > 0 due to:
-		// InvalidParameterValue: Backtrack is not enabled for the aurora-postgresql engine.
-		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
+
+		if v, ok := d.GetOk("backtrack_window"); ok {
 			createOpts.BacktrackWindow = aws.Int64(int64(v.(int)))
 		}
 
