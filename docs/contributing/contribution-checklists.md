@@ -392,17 +392,17 @@ More details about this code generation, including fixes for potential error mes
     return testAccAWSEksClusterConfig_Base(rName) + fmt.Sprintf(`
   resource "aws_eks_cluster" "test" {
     name     = %[1]q
-    role_arn = "${aws_iam_role.test.arn}"
+    role_arn = aws_iam_role.test.arn
 
     tags = {
       %[2]q = %[3]q
     }
 
     vpc_config {
-      subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+      subnet_ids = aws_subnet.test[*].id
     }
 
-    depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy"]
+    depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
   }
   `, rName, tagKey1, tagValue1)
   }
@@ -411,7 +411,7 @@ More details about this code generation, including fixes for potential error mes
     return testAccAWSEksClusterConfig_Base(rName) + fmt.Sprintf(`
   resource "aws_eks_cluster" "test" {
     name     = %[1]q
-    role_arn = "${aws_iam_role.test.arn}"
+    role_arn = aws_iam_role.test.arn
 
     tags = {
       %[2]q = %[3]q
@@ -419,10 +419,10 @@ More details about this code generation, including fixes for potential error mes
     }
 
     vpc_config {
-      subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+      subnet_ids = aws_subnet.test[*].id
     }
 
-    depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy"]
+    depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
   }
   `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
   }
