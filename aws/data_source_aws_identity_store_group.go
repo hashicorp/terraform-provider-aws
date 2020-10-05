@@ -1,14 +1,12 @@
 package aws
 
 import (
-	// "fmt"
-	// "log"
-	// "sort"
-	// "time"
+	"fmt"
+	"log"
 	"regexp"
 
-	// "github.com/aws/aws-sdk-go/aws"
-	// "github.com/aws/aws-sdk-go/service/identitystore"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/identitystore"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -53,7 +51,46 @@ func dataSourceAwsIdentityStoreGroup() *schema.Resource {
 }
 
 func dataSourceAwsIdentityStoreGroupRead(d *schema.ResourceData, meta interface{}) error {
-	// conn := meta.(*AWSClient).identitystoreconn
-	// TODO
+	conn := meta.(*AWSClient).identitystoreconn
+
+	identityStoreID := d.Get("identity_store_id").(string)
+	groupID := d.Get("group_id").(string)
+	displayName := d.Get("display_name").(string)
+
+	if groupID != "" {
+		log.Printf("[DEBUG] Reading AWS Identity Store Group")
+		resp, err := conn.DescribeGroup(&identitystore.DescribeGroupInput{
+			IdentityStoreId: aws.String(identityStoreID),
+			GroupId:         aws.String(groupID),
+		})
+		if err != nil {
+			return fmt.Errorf("Error getting AWS Identity Store Group: %s", err)
+		}
+		d.SetId(groupID)
+		d.Set("display_name", resp.DisplayName)
+	} else if displayName != "" {
+		log.Printf("[DEBUG] Reading AWS Identity Store Group")
+		resp, err := conn.ListGroups(&identitystore.ListGroupsInput{
+			IdentityStoreId: aws.String(identityStoreID),
+			Filters: []*identitystore.Filter{
+				&identitystore.Filter{
+					AttributePath:  aws.String("DisplayName"),
+					AttributeValue: aws.String(displayName),
+				},
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("Error getting AWS Identity Store Group: %s", err)
+		}
+		if resp == nil || len(resp.Groups) == 0 {
+			return fmt.Errorf("No AWS Identity Store Group found")
+		}
+		group := resp.Groups[0]
+		d.SetId(aws.StringValue(group.GroupId))
+		d.Set("group_id", group.GroupId)
+	} else {
+		return fmt.Errorf("One of group_id or display_name is required")
+	}
+
 	return nil
 }

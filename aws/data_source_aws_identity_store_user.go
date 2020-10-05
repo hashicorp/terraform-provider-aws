@@ -1,14 +1,12 @@
 package aws
 
 import (
-	// "fmt"
-	// "log"
-	// "sort"
-	// "time"
+	"fmt"
+	"log"
 	"regexp"
 
-	// "github.com/aws/aws-sdk-go/aws"
-	// "github.com/aws/aws-sdk-go/service/identitystore"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/identitystore"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -53,7 +51,46 @@ func dataSourceAwsIdentityStoreUser() *schema.Resource {
 }
 
 func dataSourceAwsIdentityStoreUserRead(d *schema.ResourceData, meta interface{}) error {
-	// conn := meta.(*AWSClient).identitystoreconn
-	// TODO
+	conn := meta.(*AWSClient).identitystoreconn
+
+	identityStoreID := d.Get("identity_store_id").(string)
+	userID := d.Get("user_id").(string)
+	userName := d.Get("user_name").(string)
+
+	if userID != "" {
+		log.Printf("[DEBUG] Reading AWS Identity Store User")
+		resp, err := conn.DescribeUser(&identitystore.DescribeUserInput{
+			IdentityStoreId: aws.String(identityStoreID),
+			UserId:          aws.String(userID),
+		})
+		if err != nil {
+			return fmt.Errorf("Error getting AWS Identity Store User: %s", err)
+		}
+		d.SetId(userID)
+		d.Set("user_name", resp.UserName)
+	} else if userName != "" {
+		log.Printf("[DEBUG] Reading AWS Identity Store User")
+		resp, err := conn.ListUsers(&identitystore.ListUsersInput{
+			IdentityStoreId: aws.String(identityStoreID),
+			Filters: []*identitystore.Filter{
+				&identitystore.Filter{
+					AttributePath:  aws.String("UserName"),
+					AttributeValue: aws.String(userName),
+				},
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("Error getting AWS Identity Store User: %s", err)
+		}
+		if resp == nil || len(resp.Users) == 0 {
+			return fmt.Errorf("No AWS Identity Store User found")
+		}
+		user := resp.Users[0]
+		d.SetId(aws.StringValue(user.UserId))
+		d.Set("user_id", user.UserId)
+	} else {
+		return fmt.Errorf("One of user_id or user_name is required")
+	}
+
 	return nil
 }
