@@ -38,7 +38,10 @@ func IsModulePackageFunc(e ast.Expr, info *types.Info, module string, packageSuf
 
 		switch x := e.X.(type) {
 		case *ast.Ident:
-			return isModulePackagePath(module, packageSuffix, info.ObjectOf(x).(*types.PkgName).Imported().Path())
+			switch xObj := info.ObjectOf(x).(type) {
+			case *types.PkgName:
+				return isModulePackagePath(module, packageSuffix, xObj.Imported().Path())
+			}
 		}
 	case *ast.StarExpr:
 		return IsModulePackageFunc(e.X, info, module, packageSuffix, funcName)
@@ -60,7 +63,10 @@ func IsModulePackageFunctionFieldListType(e ast.Expr, info *types.Info, module s
 
 		switch x := e.X.(type) {
 		case *ast.Ident:
-			return isModulePackagePath(module, packageSuffix, info.ObjectOf(x).(*types.PkgName).Imported().Path())
+			switch xObj := info.ObjectOf(x).(type) {
+			case *types.PkgName:
+				return isModulePackagePath(module, packageSuffix, xObj.Imported().Path())
+			}
 		}
 	case *ast.StarExpr:
 		return IsModulePackageFunctionFieldListType(e.X, info, module, packageSuffix, typeName)
@@ -126,7 +132,10 @@ func IsPackageFunc(e ast.Expr, info *types.Info, packageSuffix string, funcName 
 
 		switch x := e.X.(type) {
 		case *ast.Ident:
-			return strings.HasSuffix(info.ObjectOf(x).(*types.PkgName).Imported().Path(), packageSuffix)
+			switch xObj := info.ObjectOf(x).(type) {
+			case *types.PkgName:
+				return strings.HasSuffix(xObj.Imported().Path(), packageSuffix)
+			}
 		}
 	case *ast.StarExpr:
 		return IsPackageFunc(e.X, info, packageSuffix, funcName)
@@ -148,7 +157,10 @@ func IsPackageFunctionFieldListType(e ast.Expr, info *types.Info, packageSuffix 
 
 		switch x := e.X.(type) {
 		case *ast.Ident:
-			return strings.HasSuffix(info.ObjectOf(x).(*types.PkgName).Imported().Path(), packageSuffix)
+			switch xObj := info.ObjectOf(x).(type) {
+			case *types.PkgName:
+				return strings.HasSuffix(xObj.Imported().Path(), packageSuffix)
+			}
 		}
 	case *ast.StarExpr:
 		return IsPackageFunctionFieldListType(e.X, info, packageSuffix, typeName)
@@ -215,7 +227,10 @@ func IsStdlibPackageFunc(e ast.Expr, info *types.Info, packagePath string, funcN
 
 		switch x := e.X.(type) {
 		case *ast.Ident:
-			return info.ObjectOf(x).(*types.PkgName).Imported().Path() == packagePath
+			switch xObj := info.ObjectOf(x).(type) {
+			case *types.PkgName:
+				return xObj.Imported().Path() == packagePath
+			}
 		}
 	case *ast.StarExpr:
 		return IsStdlibPackageFunc(e.X, info, packagePath, funcName)
@@ -237,7 +252,10 @@ func IsStdlibPackageFunctionFieldListType(e ast.Expr, info *types.Info, packageP
 
 		switch x := e.X.(type) {
 		case *ast.Ident:
-			return info.ObjectOf(x).(*types.PkgName).Imported().Path() == packagePath
+			switch xObj := info.ObjectOf(x).(type) {
+			case *types.PkgName:
+				return xObj.Imported().Path() == packagePath
+			}
 		}
 	case *ast.StarExpr:
 		return IsStdlibPackageFunctionFieldListType(e.X, info, packagePath, typeName)
