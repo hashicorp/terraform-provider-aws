@@ -33,10 +33,9 @@ func dataSourceAwsSsoInstanceRead(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Reading AWS SSO Instances")
 	resp, err := conn.ListInstances(&ssoadmin.ListInstancesInput{})
 	if err != nil {
-		return err
+		return fmt.Errorf("Error getting AWS SSO Instances: %s", err)
 	}
 
-	// 'AccountAliases': [] if there is no alias.
 	if resp == nil || len(resp.Instances) == 0 {
 		return fmt.Errorf("No AWS SSO Instance found")
 	}
