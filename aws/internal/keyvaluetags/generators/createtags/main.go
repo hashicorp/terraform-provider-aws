@@ -88,39 +88,18 @@ var templateBody = `
 package keyvaluetags
 
 import (
-	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 {{- range .ServiceNames }}
 	"github.com/aws/aws-sdk-go/service/{{ . }}"
 {{- end }}
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const EventualConsistencyTimeout = 5 * time.Minute
-
-// Similar to isAWSErr from aws/awserr.go
-// TODO: Add and export in shared package
-func isAWSErrCode(err error, code string) bool {
-	var awsErr awserr.Error
-	if errors.As(err, &awsErr) {
-		return awsErr.Code() == code
-	}
-	return false
-}
-
-// TODO: Add and export in shared package
-func isAWSErrCodeContains(err error, code string) bool {
-	var awsErr awserr.Error
-	if errors.As(err, &awsErr) {
-		return strings.Contains(awsErr.Code(), code)
-	}
-	return false
-}
 
 // Copied from aws/utils.go
 // TODO: Export in shared package or add to Terraform Plugin SDK
@@ -165,11 +144,11 @@ func {{ . | Title }}CreateTags(conn {{ . | ClientType }}, identifier string{{ if
 
 		{{- if . | ResourceNotFoundErrorCodeContains }}
 
-		if isAWSErrCodeContains(err, "{{ . | ResourceNotFoundErrorCodeContains }}") {
+		if tfawserr.ErrCodeContains(err, "{{ . | ResourceNotFoundErrorCodeContains }}") {
 
 		{{- else }}
 
-		if isAWSErrCode(err, {{ . | ResourceNotFoundErrorCode }}) {
+		if tfawserr.ErrCodeEquals(err, {{ . | ResourceNotFoundErrorCode }}) {
 
 		{{- end }}
 			return resource.RetryableError(err)

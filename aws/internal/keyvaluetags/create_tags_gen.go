@@ -3,37 +3,16 @@
 package keyvaluetags
 
 import (
-	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const EventualConsistencyTimeout = 5 * time.Minute
-
-// Similar to isAWSErr from aws/awserr.go
-// TODO: Add and export in shared package
-func isAWSErrCode(err error, code string) bool {
-	var awsErr awserr.Error
-	if errors.As(err, &awsErr) {
-		return awsErr.Code() == code
-	}
-	return false
-}
-
-// TODO: Add and export in shared package
-func isAWSErrCodeContains(err error, code string) bool {
-	var awsErr awserr.Error
-	if errors.As(err, &awsErr) {
-		return strings.Contains(awsErr.Code(), code)
-	}
-	return false
-}
 
 // Copied from aws/utils.go
 // TODO: Export in shared package or add to Terraform Plugin SDK
@@ -55,7 +34,7 @@ func Ec2CreateTags(conn *ec2.EC2, identifier string, tagsMap interface{}) error 
 	err := resource.Retry(EventualConsistencyTimeout, func() *resource.RetryError {
 		_, err := conn.CreateTags(input)
 
-		if isAWSErrCodeContains(err, ".NotFound") {
+		if tfawserr.ErrCodeContains(err, ".NotFound") {
 			return resource.RetryableError(err)
 		}
 
