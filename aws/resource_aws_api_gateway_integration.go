@@ -551,7 +551,6 @@ func expandApiGatewayTlsConfig(vConfig []interface{}) *apigateway.TlsConfig {
 	if insecureSkipVerification, ok := mConfig["insecure_skip_verification"].(bool); ok {
 		config.InsecureSkipVerification = aws.Bool(insecureSkipVerification)
 	}
-
 	return config
 }
 
@@ -559,7 +558,6 @@ func flattenApiGatewayTlsConfig(config *apigateway.TlsConfig) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
-
 	return []interface{}{map[string]interface{}{
 		"insecure_skip_verification": aws.BoolValue(config.InsecureSkipVerification),
 	}}
