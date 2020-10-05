@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,11 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAwsLexBotAlias_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
-	rName := "aws_lex_bot_alias.test"
+	resourceName := "aws_lex_bot_alias.test"
 	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -29,20 +31,21 @@ func TestAccAwsLexBotAlias_basic(t *testing.T) {
 					testAccAwsLexBotAliasConfig_basic(testBotAliasID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexBotAliasExists(rName, &v),
+					testAccCheckAwsLexBotAliasExists(resourceName, &v),
 
-					resource.TestCheckResourceAttrSet(rName, "arn"),
-					resource.TestCheckResourceAttrSet(rName, "checksum"),
-					testAccCheckResourceAttrRfc3339(rName, "created_date"),
-					resource.TestCheckResourceAttr(rName, "description", "Testing lex bot alias create."),
-					testAccCheckResourceAttrRfc3339(rName, "last_updated_date"),
-					resource.TestCheckResourceAttr(rName, "bot_name", testBotAliasID),
-					resource.TestCheckResourceAttr(rName, "bot_version", "$LATEST"),
-					resource.TestCheckResourceAttr(rName, "name", testBotAliasID),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "checksum"),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_date"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Testing lex bot alias create."),
+					testAccCheckResourceAttrRfc3339(resourceName, "last_updated_date"),
+					resource.TestCheckResourceAttr(resourceName, "bot_name", testBotAliasID),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", LexBotVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, "name", testBotAliasID),
+					resource.TestCheckResourceAttr(resourceName, "conversation_logs.#", "0"),
 				),
 			},
 			{
-				ResourceName:      rName,
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -52,7 +55,7 @@ func TestAccAwsLexBotAlias_basic(t *testing.T) {
 
 func TestAccAwsLexBotAlias_botVersion(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
-	rName := "aws_lex_bot_alias.test"
+	resourceName := "aws_lex_bot_alias.test"
 	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
@@ -68,11 +71,12 @@ func TestAccAwsLexBotAlias_botVersion(t *testing.T) {
 					testAccAwsLexBotAliasConfig_basic(testBotAliasID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexBotAliasExists(rName, &v),
+					testAccCheckAwsLexBotAliasExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", LexBotVersionLatest),
 				),
 			},
 			{
-				ResourceName:      rName,
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -83,12 +87,12 @@ func TestAccAwsLexBotAlias_botVersion(t *testing.T) {
 					testAccAwsLexBotAliasConfig_botVersionUpdate(testBotAliasID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexBotAliasExists(rName, &v),
-					resource.TestCheckResourceAttr(rName, "bot_version", "1"),
+					testAccCheckAwsLexBotAliasExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", "1"),
 				),
 			},
 			{
-				ResourceName:      rName,
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -98,32 +102,42 @@ func TestAccAwsLexBotAlias_botVersion(t *testing.T) {
 
 func TestAccAwsLexBotAlias_conversationLogsText(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
-	rName := "aws_lex_bot_alias.test"
+	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+
+	resourceName := "aws_lex_bot_alias.test"
+	iamRoleResourceName := "aws_iam_role.test"
+	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsLexBotAliasDestroy(testBotAliasID, testBotAliasID),
+		CheckDestroy: testAccCheckAwsLexBotAliasDestroy(testBotID, testBotAliasID),
 		Steps: []resource.TestStep{
 			{
 				Config: composeConfig(
-					testAccAwsLexBotAliasConfig_conversationLogsTextSetup(testBotAliasID),
-				),
-			},
-			{
-				Config: composeConfig(
-					testAccAwsLexBotConfig_intent(testBotAliasID),
-					testAccAwsLexBotConfig_basic(testBotAliasID),
-					testAccAwsLexBotAliasConfig_conversationLogsTextSetup(testBotAliasID),
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_basic(testBotID),
 					testAccAwsLexBotAliasConfig_conversationLogsText(testBotAliasID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexBotAliasExists(rName, &v),
+					testAccCheckAwsLexBotAliasExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", LexBotVersionLatest),
+					resource.TestCheckResourceAttrPair(resourceName, "conversation_logs.0.iam_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
+						"destination": "CLOUDWATCH_LOGS",
+						"log_type":    "TEXT",
+						"kms_key_arn": "",
+					}),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", cloudwatchLogGroupResourceName, "arn"),
+					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]*regexp.Regexp{
+						"resource_prefix": regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`aws/lex/%s/%s/%s/`, testBotID, testBotAliasID, LexBotVersionLatest))),
+					}),
 				),
 			},
 			{
-				ResourceName:      rName,
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -133,32 +147,95 @@ func TestAccAwsLexBotAlias_conversationLogsText(t *testing.T) {
 
 func TestAccAwsLexBotAlias_conversationLogsAudio(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
-	rName := "aws_lex_bot_alias.test"
+	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 	testBotAliasID := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+
+	resourceName := "aws_lex_bot_alias.test"
+	iamRoleResourceName := "aws_iam_role.test"
+	s3BucketResourceName := "aws_s3_bucket.test"
+	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsLexBotAliasDestroy(testBotAliasID, testBotAliasID),
+		CheckDestroy: testAccCheckAwsLexBotAliasDestroy(testBotID, testBotAliasID),
 		Steps: []resource.TestStep{
 			{
 				Config: composeConfig(
-					testAccAwsLexBotAliasConfig_conversationLogsAudioSetup(testBotAliasID),
-				),
-			},
-			{
-				Config: composeConfig(
-					testAccAwsLexBotConfig_intent(testBotAliasID),
-					testAccAwsLexBotConfig_basic(testBotAliasID),
-					testAccAwsLexBotAliasConfig_conversationLogsAudioSetup(testBotAliasID),
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_basic(testBotID),
 					testAccAwsLexBotAliasConfig_conversationLogsAudio(testBotAliasID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexBotAliasExists(rName, &v),
+					testAccCheckAwsLexBotAliasExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", LexBotVersionLatest),
+					resource.TestCheckResourceAttrPair(resourceName, "conversation_logs.0.iam_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
+						"destination": "S3",
+						"log_type":    "AUDIO",
+					}),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", s3BucketResourceName, "arn"),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.kms_key_arn", kmsKeyResourceName, "arn"),
+					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]*regexp.Regexp{
+						"resource_prefix": regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`aws/lex/%s/%s/%s/`, testBotID, testBotAliasID, LexBotVersionLatest))),
+					}),
 				),
 			},
 			{
-				ResourceName:      rName,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsLexBotAlias_conversationLogsBoth(t *testing.T) {
+	var v lexmodelbuildingservice.GetBotAliasOutput
+	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotAliasID := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+
+	resourceName := "aws_lex_bot_alias.test"
+	iamRoleResourceName := "aws_iam_role.test"
+	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
+	s3BucketResourceName := "aws_s3_bucket.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLexBotAliasDestroy(testBotID, testBotAliasID),
+		Steps: []resource.TestStep{
+			{
+				Config: composeConfig(
+					testAccAwsLexBotConfig_intent(testBotID),
+					testAccAwsLexBotConfig_basic(testBotID),
+					testAccAwsLexBotAliasConfig_conversationLogsBoth(testBotAliasID),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotAliasExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", LexBotVersionLatest),
+					resource.TestCheckResourceAttrPair(resourceName, "conversation_logs.0.iam_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", "2"),
+
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
+						"destination": "CLOUDWATCH_LOGS",
+						"log_type":    "TEXT",
+						"kms_key_arn": "",
+					}),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", cloudwatchLogGroupResourceName, "arn"),
+
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
+						"destination": "S3",
+						"log_type":    "AUDIO",
+					}),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", s3BucketResourceName, "arn"),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.kms_key_arn", kmsKeyResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -168,7 +245,7 @@ func TestAccAwsLexBotAlias_conversationLogsAudio(t *testing.T) {
 
 func TestAccAwsLexBotAlias_description(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
-	rName := "aws_lex_bot_alias.test"
+	resourceName := "aws_lex_bot_alias.test"
 	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -183,11 +260,11 @@ func TestAccAwsLexBotAlias_description(t *testing.T) {
 					testAccAwsLexBotAliasConfig_basic(testBotAliasID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexBotAliasExists(rName, &v),
+					testAccCheckAwsLexBotAliasExists(resourceName, &v),
 				),
 			},
 			{
-				ResourceName:      rName,
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -198,12 +275,12 @@ func TestAccAwsLexBotAlias_description(t *testing.T) {
 					testAccAwsLexBotAliasConfig_descriptionUpdate(testBotAliasID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexBotAliasExists(rName, &v),
-					resource.TestCheckResourceAttr(rName, "description", "Testing lex bot alias update."),
+					testAccCheckAwsLexBotAliasExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "description", "Testing lex bot alias update."),
 				),
 			},
 			{
-				ResourceName:      rName,
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -213,7 +290,7 @@ func TestAccAwsLexBotAlias_description(t *testing.T) {
 
 func TestAccAwsLexBotAlias_disappears(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
-	rName := "aws_lex_bot_alias.test"
+	resourceName := "aws_lex_bot_alias.test"
 	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -228,8 +305,8 @@ func TestAccAwsLexBotAlias_disappears(t *testing.T) {
 					testAccAwsLexBotAliasConfig_basic(testBotAliasID),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLexBotAliasExists(rName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsLexBotAlias(), rName),
+					testAccCheckAwsLexBotAliasExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsLexBotAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -312,8 +389,32 @@ resource "aws_lex_bot_alias" "test" {
 `, rName)
 }
 
-func testAccAwsLexBotAliasConfig_conversationLogsTextSetup(rName string) string {
+func testAccAwsLexBotAliasConfig_conversationLogsText(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_lex_bot_alias" "test" {
+  bot_name    = aws_lex_bot.test.name
+  bot_version = aws_lex_bot.test.version
+  description = "Testing lex bot alias create."
+  name        = "%[1]s"
+  conversation_logs {
+    iam_role_arn = aws_iam_role.test.arn
+    log_settings {
+      destination  = "CLOUDWATCH_LOGS"
+      log_type     = "TEXT"
+      resource_arn = aws_cloudwatch_log_group.test.arn
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = "%[1]s"
+}
+
+resource "aws_iam_role" "test" {
+  name               = "%[1]s"
+  assume_role_policy = data.aws_iam_policy_document.lex_assume_role_policy.json
+}
+
 data "aws_iam_policy_document" "lex_assume_role_policy" {
   statement {
     effect  = "Allow"
@@ -323,11 +424,6 @@ data "aws_iam_policy_document" "lex_assume_role_policy" {
       identifiers = ["lex.amazonaws.com"]
     }
   }
-}
-
-resource "aws_iam_role" "test" {
-  name               = "%[1]s"
-  assume_role_policy = data.aws_iam_policy_document.lex_assume_role_policy.json
 }
 
 data "aws_iam_policy_document" "lex_cloud_watch_logs_policy" {
@@ -348,14 +444,10 @@ resource "aws_iam_role_policy" "test" {
   role   = aws_iam_role.test.id
   policy = data.aws_iam_policy_document.lex_cloud_watch_logs_policy.json
 }
-
-resource "aws_cloudwatch_log_group" "test" {
-  name = "%[1]s"
-}
 `, rName)
 }
 
-func testAccAwsLexBotAliasConfig_conversationLogsText(rName string) string {
+func testAccAwsLexBotAliasConfig_conversationLogsAudio(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot_alias" "test" {
   bot_name    = aws_lex_bot.test.name
@@ -365,17 +457,25 @@ resource "aws_lex_bot_alias" "test" {
   conversation_logs {
     iam_role_arn = aws_iam_role.test.arn
     log_settings {
-      destination  = "CLOUDWATCH_LOGS"
-      log_type     = "TEXT"
-      resource_arn = aws_cloudwatch_log_group.test.arn
+      destination  = "S3"
+      log_type     = "AUDIO"
+      resource_arn = aws_s3_bucket.test.arn
+      kms_key_arn  = aws_kms_key.test.arn
     }
   }
 }
-`, rName)
+
+resource "aws_s3_bucket" "test" {
+  bucket = "%[1]s"
 }
 
-func testAccAwsLexBotAliasConfig_conversationLogsAudioSetup(rName string) string {
-	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {}
+
+resource "aws_iam_role" "test" {
+  name               = "%[1]s"
+  assume_role_policy = data.aws_iam_policy_document.lex_assume_role_policy.json
+}
+
 data "aws_iam_policy_document" "lex_assume_role_policy" {
   statement {
     effect  = "Allow"
@@ -385,11 +485,6 @@ data "aws_iam_policy_document" "lex_assume_role_policy" {
       identifiers = ["lex.amazonaws.com"]
     }
   }
-}
-
-resource "aws_iam_role" "test" {
-  name               = "%[1]s"
-  assume_role_policy = data.aws_iam_policy_document.lex_assume_role_policy.json
 }
 
 data "aws_iam_policy_document" "lex_s3_policy" {
@@ -409,14 +504,10 @@ resource "aws_iam_role_policy" "test" {
   role   = aws_iam_role.test.id
   policy = data.aws_iam_policy_document.lex_s3_policy.json
 }
-
-resource "aws_s3_bucket" "test" {
-  bucket = "%[1]s"
-}
 `, rName)
 }
 
-func testAccAwsLexBotAliasConfig_conversationLogsAudio(rName string) string {
+func testAccAwsLexBotAliasConfig_conversationLogsBoth(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lex_bot_alias" "test" {
   bot_name    = aws_lex_bot.test.name
@@ -426,11 +517,80 @@ resource "aws_lex_bot_alias" "test" {
   conversation_logs {
     iam_role_arn = aws_iam_role.test.arn
     log_settings {
+      destination  = "CLOUDWATCH_LOGS"
+      log_type     = "TEXT"
+      resource_arn = aws_cloudwatch_log_group.test.arn
+    }
+    log_settings {
       destination  = "S3"
       log_type     = "AUDIO"
       resource_arn = aws_s3_bucket.test.arn
+      kms_key_arn  = aws_kms_key.test.arn
     }
   }
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = "%[1]s"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = "%[1]s"
+}
+
+resource "aws_kms_key" "test" {}
+
+resource "aws_iam_role" "test" {
+  name               = "%[1]s"
+  assume_role_policy = data.aws_iam_policy_document.lex_assume_role_policy.json
+}
+
+data "aws_iam_policy_document" "lex_assume_role_policy" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["lex.amazonaws.com"]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "lex_cloud_watch_logs_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
+    resources = [
+      aws_cloudwatch_log_group.test.arn,
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "lex_cloud_watch_logs_policy" {
+  name   = "%[1]s-text"
+  role   = aws_iam_role.test.id
+  policy = data.aws_iam_policy_document.lex_cloud_watch_logs_policy.json
+}
+
+data "aws_iam_policy_document" "lex_s3_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:PutObject",
+    ]
+    resources = [
+      aws_s3_bucket.test.arn,
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "lex_s3_policy" {
+  name   = "%[1]s-audio"
+  role   = aws_iam_role.test.id
+  policy = data.aws_iam_policy_document.lex_s3_policy.json
 }
 `, rName)
 }

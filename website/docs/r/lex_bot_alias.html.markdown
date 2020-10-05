@@ -47,6 +47,7 @@ The settings for conversation logs.
 * `kms_key_arn` - (Optional) The Amazon Resource Name (ARN) of the key used to encrypt audio logs in an S3 bucket. This can only be specified when `destination` is set to `S3`.
 * `log_type` - (Required) The type of logging that is enabled. Options are `AUDIO` or `TEXT`.
 * `resource_arn` - (Required) The Amazon Resource Name (ARN) of the CloudWatch Logs log group or S3 bucket where the logs are delivered.
+* `resource_prefix` - (Computed) The prefix of the S3 object key for `AUDIO` logs or the log stream name for `TEXT` logs.
 
 ### Timeouts
 

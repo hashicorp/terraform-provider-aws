@@ -65,7 +65,7 @@ func dataSourceAwsLexBotAliasRead(d *schema.ResourceData, meta interface{}) erro
 		Name:    aws.String(botAliasName),
 	})
 	if err != nil {
-		return fmt.Errorf("error getting bot alias '%s': %w", d.Id(), err)
+		return fmt.Errorf("error reading Lex bot alias (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{

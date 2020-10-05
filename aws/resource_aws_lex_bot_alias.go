@@ -77,7 +77,7 @@ func resourceAwsLexBotAlias() *schema.Resource {
 						// Currently the API docs do not list a min and max for this list.
 						// https://docs.aws.amazon.com/lex/latest/dg/API_PutBotAlias.html#lex-PutBotAlias-request-conversationLogs
 						"log_settings": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     lexLogSettings,
 						},
@@ -128,14 +128,22 @@ func resourceAwsLexBotAliasCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("conversation_logs"); ok {
-		input.ConversationLogs = expandLexConversationLogs(v)
+		conversationLogs, err := expandLexConversationLogs(v)
+		if err != nil {
+			return err
+		}
+		input.ConversationLogs = conversationLogs
 	}
 
 	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		output, err := conn.PutBotAlias(input)
 
+		input.Checksum = output.Checksum
+		// IAM eventual consistency
+		if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeBadRequestException, "Lex can't access your IAM role") {
+			return resource.RetryableError(err)
+		}
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
-			input.Checksum = output.Checksum
 			return resource.RetryableError(fmt.Errorf("%q bot alias still creating, another operation is pending: %w", id, err))
 		}
 		if err != nil {
@@ -208,14 +216,22 @@ func resourceAwsLexBotAliasUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("conversation_logs"); ok {
-		input.ConversationLogs = expandLexConversationLogs(v)
+		conversationLogs, err := expandLexConversationLogs(v)
+		if err != nil {
+			return err
+		}
+		input.ConversationLogs = conversationLogs
 	}
 
 	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 		_, err := conn.PutBotAlias(input)
 
-		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
-			return resource.RetryableError(fmt.Errorf("'%q': bot alias still updating", d.Id()))
+		// IAM eventual consistency
+		if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeBadRequestException, "Lex can't access your IAM role") {
+			return resource.RetryableError(err)
+		}
+		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
+			return resource.RetryableError(fmt.Errorf("%q bot alias still updating", d.Id()))
 		}
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -300,6 +316,10 @@ var lexLogSettings = &schema.Resource{
 				validateArn,
 			),
 		},
+		"resource_prefix": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 	},
 }
 
@@ -312,27 +332,33 @@ func flattenLexConversationLogs(response *lexmodelbuildingservice.ConversationLo
 	}
 }
 
-func expandLexConversationLogs(rawObject interface{}) *lexmodelbuildingservice.ConversationLogsRequest {
+func expandLexConversationLogs(rawObject interface{}) (*lexmodelbuildingservice.ConversationLogsRequest, error) {
 	request := rawObject.([]interface{})[0].(map[string]interface{})
+
+	logSettings, err := expandLexLogSettings(request["log_settings"].(*schema.Set).List())
+	if err != nil {
+		return nil, err
+	}
 	return &lexmodelbuildingservice.ConversationLogsRequest{
 		IamRoleArn:  aws.String(request["iam_role_arn"].(string)),
-		LogSettings: expandLexLogSettings(request["log_settings"].([]interface{})),
-	}
+		LogSettings: logSettings,
+	}, nil
 }
 
 func flattenLexLogSettings(responses []*lexmodelbuildingservice.LogSettingsResponse) (flattened []map[string]interface{}) {
 	for _, response := range responses {
 		flattened = append(flattened, map[string]interface{}{
-			"destination":  response.Destination,
-			"kms_key_arn":  response.KmsKeyArn,
-			"log_type":     response.LogType,
-			"resource_arn": response.ResourceArn,
+			"destination":     response.Destination,
+			"kms_key_arn":     response.KmsKeyArn,
+			"log_type":        response.LogType,
+			"resource_arn":    response.ResourceArn,
+			"resource_prefix": response.ResourcePrefix,
 		})
 	}
 	return
 }
 
-func expandLexLogSettings(rawValues []interface{}) []*lexmodelbuildingservice.LogSettingsRequest {
+func expandLexLogSettings(rawValues []interface{}) ([]*lexmodelbuildingservice.LogSettingsRequest, error) {
 	requests := make([]*lexmodelbuildingservice.LogSettingsRequest, 0, len(rawValues))
 
 	for _, rawValue := range rawValues {
@@ -340,18 +366,22 @@ func expandLexLogSettings(rawValues []interface{}) []*lexmodelbuildingservice.Lo
 		if !ok {
 			continue
 		}
+		destination := value["destination"].(string)
 		request := &lexmodelbuildingservice.LogSettingsRequest{
-			Destination: aws.String(value["destination"].(string)),
+			Destination: aws.String(destination),
 			LogType:     aws.String(value["log_type"].(string)),
 			ResourceArn: aws.String(value["resource_arn"].(string)),
 		}
 
 		if v, ok := value["kms_key_arn"]; ok && v != "" {
+			if destination != lexmodelbuildingservice.DestinationS3 {
+				return nil, fmt.Errorf("`kms_key_arn` cannot be specified when `destination` is %q", destination)
+			}
 			request.KmsKeyArn = aws.String(value["kms_key_arn"].(string))
 		}
 
 		requests = append(requests, request)
 	}
 
-	return requests
+	return requests, nil
 }
