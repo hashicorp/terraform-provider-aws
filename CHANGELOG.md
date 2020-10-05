@@ -1,8 +1,44 @@
 ## 3.10.0 (Unreleased)
 
+NOTES
+
+* data-source/aws_acm_certificate: The `id` attribute has changed to the ARN of the ACM Certificate. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_autoscaling_group: The `id` attribute has changed to the name of the Auto Scaling Group. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_availability_zones: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_db_event_categories: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_ebs_default_kms_key: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_ebs_encryption_by_default: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_ec2_instance_type_offering: The `id` attribute has changed to the EC2 Instance Type. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_ecr_authorization_token: The `id` attribute has changed to the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_ecr_image: The `id` attribute has changed to the SHA256 digest of the ECR Image. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_eks_cluster_auth: The `id` attribute has changed to the name of the EKS Cluster. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_iam_account_alias: The `id` attribute has changed to the AWS Account Alias. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_kms_alias: The `id` attribute has changed to the ARN of the KMS Alias. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_partition: The `id` attribute has changed to the identifier of the AWS Partition. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_regions: The `id` attribute has changed to the identifier of the AWS Partition. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_sns_topic: The `id` attribute has changed to the ARN of the SNS Topic. The first apply of this updated data source may show this difference. [GH-15399]
+
 ENHANCEMENTS
 
 * resource/aws_sns_topic_subscription: Create subscriptions with attributes (delivery policy, filter policy, etc.) instead of separate API calls [GH-10496]
+
+BUG FIXES
+
+* data-source/aws_acm_certificate: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_autoscaling_group: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_availability_zones: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_db_event_categories: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_ebs_default_kms_key: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_ebs_encryption_by_default: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_ec2_instance_type_offering: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_ecr_authorization_token: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_ecr_image: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_eks_cluster_auth: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_iam_account_alias: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_kms_alias: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_partition: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_regions: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_sns_topic: Prevent plan differences with the `id` attribute [GH-15399]
 
 ## 3.9.0 (October 02, 2020)
 
