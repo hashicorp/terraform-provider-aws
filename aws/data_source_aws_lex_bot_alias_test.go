@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAwsLexBotAlias_basic(t *testing.T) {
+func testAccDataSourceAwsLexBotAlias_basic(t *testing.T) {
 	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_bot_alias.test"
 	resourceName := "aws_lex_bot_alias.test"

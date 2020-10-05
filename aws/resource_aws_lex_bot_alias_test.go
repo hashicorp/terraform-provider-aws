@@ -53,7 +53,7 @@ func TestAccAwsLexBotAlias_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBotAlias_botVersion(t *testing.T) {
+func testAccAwsLexBotAlias_botVersion(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	resourceName := "aws_lex_bot_alias.test"
 	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
