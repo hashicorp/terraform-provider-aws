@@ -1061,7 +1061,77 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 						return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s) input", d.Id())
 					} else {
 						// Update existing input.
-						sqlApplicationConfigurationUpdate.InputUpdates = []*kinesisanalyticsv2.InputUpdate{expandKinesisAnalyticsV2InputUpdate(n.([]interface{}))}
+						inputUpdate := expandKinesisAnalyticsV2InputUpdate(n.([]interface{}))
+
+						if d.HasChange("application_configuration.0.sql_application_configuration.0.input.0.input_processing_configuration") {
+							o, n := d.GetChange("application_configuration.0.sql_application_configuration.0.input.0.input_processing_configuration")
+
+							if len(o.([]interface{})) == 0 {
+								// Add new input processing configuration.
+								input := &kinesisanalyticsv2.AddApplicationInputProcessingConfigurationInput{
+									ApplicationName:              aws.String(applicationName),
+									CurrentApplicationVersionId:  aws.Int64(currentApplicationVersionId),
+									InputId:                      inputUpdate.InputId,
+									InputProcessingConfiguration: expandKinesisAnalyticsV2InputProcessingConfiguration(n.([]interface{})),
+								}
+
+								log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) input processing configuration: %s", d.Id(), input)
+
+								var output *kinesisanalyticsv2.AddApplicationInputProcessingConfigurationOutput
+
+								outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+									return conn.AddApplicationInputProcessingConfiguration(input)
+								})
+
+								if err == nil {
+									output = outputRaw.(*kinesisanalyticsv2.AddApplicationInputProcessingConfigurationOutput)
+								}
+
+								if isResourceTimeoutError(err) {
+									output, err = conn.AddApplicationInputProcessingConfiguration(input)
+								}
+
+								if err != nil {
+									return fmt.Errorf("error adding Kinesis Analytics v2 Application (%s) input processing configuration: %w", d.Id(), err)
+								}
+
+								currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
+							} else if len(n.([]interface{})) == 0 {
+								// Delete existing input processing configuration.
+								input := &kinesisanalyticsv2.DeleteApplicationInputProcessingConfigurationInput{
+									ApplicationName:             aws.String(applicationName),
+									CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+									InputId:                     inputUpdate.InputId,
+								}
+
+								log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) input processing configuration: %s", d.Id(), input)
+
+								var output *kinesisanalyticsv2.DeleteApplicationInputProcessingConfigurationOutput
+
+								outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+									return conn.DeleteApplicationInputProcessingConfiguration(input)
+								})
+
+								if err == nil {
+									output = outputRaw.(*kinesisanalyticsv2.DeleteApplicationInputProcessingConfigurationOutput)
+								}
+
+								if isResourceTimeoutError(err) {
+									output, err = conn.DeleteApplicationInputProcessingConfiguration(input)
+								}
+
+								if err != nil {
+									return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s) input processing configuration: %w", d.Id(), err)
+								}
+
+								currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
+							} else {
+								// Update existing input processing configuration.
+								// This is handled via the updating of the existing input.
+							}
+						}
+
+						sqlApplicationConfigurationUpdate.InputUpdates = []*kinesisanalyticsv2.InputUpdate{inputUpdate}
 
 						updateApplication = true
 					}
@@ -1674,24 +1744,8 @@ func expandKinesisAnalyticsV2Input(vInput []interface{}) *kinesisanalyticsv2.Inp
 		input.InputParallelism = inputParallelism
 	}
 
-	if vInputProcessingConfiguration, ok := mInput["input_processing_configuration"].([]interface{}); ok && len(vInputProcessingConfiguration) > 0 && vInputProcessingConfiguration[0] != nil {
-		inputProcessingConfiguration := &kinesisanalyticsv2.InputProcessingConfiguration{}
-
-		mInputProcessingConfiguration := vInputProcessingConfiguration[0].(map[string]interface{})
-
-		if vInputLambdaProcessor, ok := mInputProcessingConfiguration["input_lambda_processor"].([]interface{}); ok && len(vInputLambdaProcessor) > 0 && vInputLambdaProcessor[0] != nil {
-			inputLambdaProcessor := &kinesisanalyticsv2.InputLambdaProcessor{}
-
-			mInputLambdaProcessor := vInputLambdaProcessor[0].(map[string]interface{})
-
-			if vResourceArn, ok := mInputLambdaProcessor["resource_arn"].(string); ok && vResourceArn != "" {
-				inputLambdaProcessor.ResourceARN = aws.String(vResourceArn)
-			}
-
-			inputProcessingConfiguration.InputLambdaProcessor = inputLambdaProcessor
-		}
-
-		input.InputProcessingConfiguration = inputProcessingConfiguration
+	if vInputProcessingConfiguration, ok := mInput["input_processing_configuration"].([]interface{}); ok {
+		input.InputProcessingConfiguration = expandKinesisAnalyticsV2InputProcessingConfiguration(vInputProcessingConfiguration)
 	}
 
 	if vInputSchema, ok := mInput["input_schema"].([]interface{}); ok {
@@ -1727,6 +1781,30 @@ func expandKinesisAnalyticsV2Input(vInput []interface{}) *kinesisanalyticsv2.Inp
 	}
 
 	return input
+}
+
+func expandKinesisAnalyticsV2InputProcessingConfiguration(vInputProcessingConfiguration []interface{}) *kinesisanalyticsv2.InputProcessingConfiguration {
+	if len(vInputProcessingConfiguration) == 0 || vInputProcessingConfiguration[0] == nil {
+		return nil
+	}
+
+	inputProcessingConfiguration := &kinesisanalyticsv2.InputProcessingConfiguration{}
+
+	mInputProcessingConfiguration := vInputProcessingConfiguration[0].(map[string]interface{})
+
+	if vInputLambdaProcessor, ok := mInputProcessingConfiguration["input_lambda_processor"].([]interface{}); ok && len(vInputLambdaProcessor) > 0 && vInputLambdaProcessor[0] != nil {
+		inputLambdaProcessor := &kinesisanalyticsv2.InputLambdaProcessor{}
+
+		mInputLambdaProcessor := vInputLambdaProcessor[0].(map[string]interface{})
+
+		if vResourceArn, ok := mInputLambdaProcessor["resource_arn"].(string); ok && vResourceArn != "" {
+			inputLambdaProcessor.ResourceARN = aws.String(vResourceArn)
+		}
+
+		inputProcessingConfiguration.InputLambdaProcessor = inputLambdaProcessor
+	}
+
+	return inputProcessingConfiguration
 }
 
 func expandKinesisAnalyticsV2Outputs(vOutputs []interface{}) []*kinesisanalyticsv2.Output {
