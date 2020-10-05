@@ -145,13 +145,10 @@ func resourceAwsLexBot() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(lexmodelbuildingservice.Locale_Values(), false),
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 50),
-					validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateLexBotName,
 			},
 			"nlu_intent_confidence_threshold": {
 				Type:         schema.TypeFloat,
@@ -181,6 +178,16 @@ func resourceAwsLexBot() *schema.Resource {
 		},
 	}
 }
+
+var validateLexBotName = validation.All(
+	validation.StringLenBetween(2, 50),
+	validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
+)
+
+var validateLexBotVersion = validation.All(
+	validation.StringLenBetween(1, 64),
+	validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),
+)
 
 func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lexmodelconn

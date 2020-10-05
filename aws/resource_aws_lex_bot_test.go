@@ -63,10 +63,12 @@ func TestAccAwsLexBot_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsLexBot_createVersion_serial(t *testing.T) {
+func TestAccAwsLexBot_version_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"resource":    testAccAwsLexBot_createVersion,
-		"data_source": testAccDataSourceAwsLexBot_withVersion,
+		"LexBot_createVersion":         testAccAwsLexBot_createVersion,
+		"LexBotAlias_botVersion":       testAccAwsLexBotAlias_botVersion,
+		"DataSourceLexBot_withVersion": testAccDataSourceAwsLexBot_withVersion,
+		"DataSourceLexBotAlias_basic":  testAccDataSourceAwsLexBotAlias_basic,
 	}
 
 	for name, tc := range testCases {

@@ -119,38 +119,25 @@ resource "aws_lex_intent" "order_flowers_intent" {
 The following arguments are supported:
 
 * `conclusion_statement` - (Optional) The statement that you want Amazon Lex to convey to the user
-after the intent is successfully fulfilled by the Lambda function.
-
-This element is relevant only if you provide a Lambda function in the `fulfillment_activity`. If you
-return the intent to the client application, you can't specify this element.
-
-The `follow_up_prompt` and `conclusion_statement` are mutually exclusive. You can specify only one.
-
-Attributes are documented under [statement](#statement).
-
+after the intent is successfully fulfilled by the Lambda function. This element is relevant only if
+you provide a Lambda function in the `fulfillment_activity`. If you return the intent to the client
+application, you can't specify this element. The `follow_up_prompt` and `conclusion_statement` are
+mutually exclusive. You can specify only one. Attributes are documented under [statement](#statement).
 * `confirmation_prompt` - (Optional) Prompts the user to confirm the intent. This question should
 have a yes or no answer. You you must provide both the `rejection_statement` and `confirmation_prompt`,
-or neither. Attributes are documented under [prompt](#prompt-1).
+or neither. Attributes are documented under [prompt](#prompt).
 * `create_version` - (Optional) Determines if a new slot type version is created when the initial
-resource is created and on each update. Defaults to true.
+resource is created and on each update. Defaults to `false`.
 * `description` - (Optional) A description of the intent.
 * `dialog_code_hook` - (Optional) Specifies a Lambda function to invoke for each user input. You can
-invoke this Lambda function to personalize user interaction. Attributes are documented under [code_hook](#code_hook-1).
+invoke this Lambda function to personalize user interaction. Attributes are documented under [code_hook](#code_hook).
 * `follow_up_prompt` - (Optional) Amazon Lex uses this prompt to solicit additional activity after
 fulfilling an intent. For example, after the OrderPizza intent is fulfilled, you might prompt the
-user to order a drink.
-
-The `follow_up_prompt` field and the `conclusion_statement` field are mutually exclusive. You can
-specify only one.
-
-Attributes are documented under [follow_up_prompt](#follow_up_prompt-1).
-
-* `fulfillment_activity` - (Optional) Describes how the intent is fulfilled. For example, after a
+user to order a drink. The `follow_up_prompt` field and the `conclusion_statement` field are mutually
+exclusive. You can specify only one. Attributes are documented under [follow_up_prompt](#follow_up_prompt).
+* `fulfillment_activity` - (Required) Describes how the intent is fulfilled. For example, after a
 user provides all of the information for a pizza order, `fulfillment_activity` defines how the bot
-places an order with a local pizza store.
-
-Attributes are documented under [fulfillment_activity](#fulfillment_activity-1).
-
+places an order with a local pizza store. Attributes are documented under [fulfillment_activity](#fulfillment_activity).
 * `name` - (Required) The name of the intent, not case sensitive.
 * `parent_intent_signature` - (Optional) A unique identifier for the built-in intent to base this
 intent on. To find the signature for an intent, see
@@ -158,19 +145,13 @@ intent on. To find the signature for an intent, see
 in the Alexa Skills Kit.
 * `rejection_statement` - (Optional) When the user answers "no" to the question defined in
 `confirmation_prompt`, Amazon Lex responds with this statement to acknowledge that the intent was
-canceled.
-
-You must provide both the `rejection_statement` and the `confirmation_prompt`, or neither.
-
+canceled. You must provide both the `rejection_statement` and the `confirmation_prompt`, or neither.
 Attributes are documented under [statement](#statement).
-
 * `sample_utterances` - (Optional) An array of utterances (strings) that a user might say to signal
 the intent. For example, "I want {PizzaSize} pizza", "Order {Quantity} {PizzaSize} pizzas".
-
 In each utterance, a slot name is enclosed in curly braces.
-
 * `slot` - (Optional) An list of intent slots. At runtime, Amazon Lex elicits required slot values
-from the user using prompts defined in the slots. Attributes are documented under [slot](#slot-1).
+from the user using prompts defined in the slots. Attributes are documented under [slot](#slot).
 
 ### code_hook
 
@@ -186,7 +167,7 @@ to invoke your Lambda function. For more information, see
 A prompt for additional activity after an intent is fulfilled. For example, after the OrderPizza
 intent is fulfilled, you might prompt the user to find out whether the user wants to order drinks.
 
-* `prompt` - (Required) Prompts for information from the user. Attributes are documented under [prompt](#prompt-1).
+* `prompt` - (Required) Prompts for information from the user. Attributes are documented under [prompt](#prompt).
 * `rejection_statement` - (Optional) If the user answers "no" to the question defined in the prompt field,
 Amazon Lex responds with this statement to acknowledge that the intent was canceled. Attributes are
 documented below under [statement](#statement).
@@ -198,7 +179,7 @@ Describes how the intent is fulfilled after the user provides all of the informa
 * `type` - (Required) How the intent should be fulfilled, either by running a Lambda function or by
 returning the slot data to the client application.
 * `code_hook` - (Optional) A description of the Lambda function that is run to fulfill the intent.
-Required if type is CodeHook. Attributes are documented under [code_hook](#code_hook-1).
+Required if type is CodeHook. Attributes are documented under [code_hook](#code_hook).
 
 ### message
 
@@ -218,7 +199,7 @@ Lex chooses one of the messages to use to prompt the user.
 * `max_attempts` - (Required) The number of times to prompt the user for information.
 * `message` - (Required) A set of messages, each of which provides a message string and its type.
 You can specify the message string in plain text or in Speech Synthesis Markup Language (SSML).
-Attributes are documented under [message](#message-1).
+Attributes are documented under [message](#message).
 * `response_card` - (Optional) The response card. Amazon Lex will substitute session attributes and
 slot values into the response card. For more information, see
 [Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html).
@@ -232,10 +213,8 @@ Identifies the version of a specific slot.
 * `description` - (Optional) A description of the bot.
 * `priority` - (Optional) Directs Lex the order in which to elicit this slot value from the user.
 For example, if the intent has two slots with priorities 1 and 2, AWS Lex first elicits a value for
-the slot with priority 1.
-
-If multiple slots share the same priority, the order in which Lex elicits values is arbitrary.
-
+the slot with priority 1. If multiple slots share the same priority, the order in which Lex elicits
+values is arbitrary.
 * `response_card` - (Optional) The response card. Amazon Lex will substitute session attributes and
 slot values into the response card. For more information, see
 [Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html).
@@ -246,7 +225,7 @@ is optional. In most cases, Amazon Lex is capable of understanding user utteranc
 the built-in slot types.
 * `slot_type_version` - (Optional) The version of the slot type.
 * `value_elicitation_prompt` - (Optional) The prompt that Amazon Lex uses to elicit the slot value
-from the user. Attributes are documented under [prompt](#prompt-1).
+from the user. Attributes are documented under [prompt](#prompt).
 
 ### statement
 
@@ -255,7 +234,7 @@ convey information to the user. At runtime, Amazon Lex selects the message to co
 
 * `message` - (Required) A set of messages, each of which provides a message string and its type.
 You can specify the message string in plain text or in Speech Synthesis Markup Language (SSML).
-Attributes are documented under [message](#message-1).
+Attributes are documented under [message](#message).
 * `response_card` - (Optional) The response card. Amazon Lex will substitute session attributes and
 slot values into the response card. For more information, see
 [Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html).

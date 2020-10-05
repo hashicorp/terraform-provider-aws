@@ -62,7 +62,7 @@ The following arguments are supported:
 * `enable_model_improvements` - (Optional) Set to `true` to enable access to natural language understanding improvements. When you set the `enable_model_improvements` parameter to true you can use the `nlu_intent_confidence_threshold` parameter to configure confidence scores. For more information, see [Confidence Scores](https://docs.aws.amazon.com/lex/latest/dg/confidence-scores.html). You can only set the `enable_model_improvements` parameter in certain Regions. If you set the parameter to true, your bot has access to accuracy improvements. For more information see the [Amazon Lex Bot PutBot API Docs](https://docs.aws.amazon.com/lex/latest/dg/API_PutBot.html#lex-PutBot-request-enableModelImprovements).
 * `idle_session_ttl_in_seconds` - (Optional) The maximum time in seconds that Amazon Lex retains the data gathered in a conversation. Default is `300`.
 * `locale` - (Optional) Specifies the target locale for the bot. Any intent used in the bot must be compatible with the locale of the bot. For available locales, see [Amazon Lex Bot PutBot API Docs](https://docs.aws.amazon.com/lex/latest/dg/API_PutBot.html#lex-PutBot-request-locale). Default is `en-US`.
-* `intent` - (Required) A set of Intent objects. Each intent represents a command that a user can express. Attributes are documented under [intent](#intent-1).
+* `intent` - (Required) A set of Intent objects. Each intent represents a command that a user can express. Attributes are documented under [intent](#intent).
 * `name` - (Required) The name of the bot that you want to create, case sensitive.
 * `nlu_intent_confidence_threshold` - (Optional) Determines the threshold where Amazon Lex will insert the AMAZON.FallbackIntent, AMAZON.KendraSearchIntent, or both when returning alternative intents in a PostContent or PostText response. AMAZON.FallbackIntent and AMAZON.KendraSearchIntent are only inserted if they are configured for the bot. For more information see [Amazon Lex Bot PutBot API Docs](https://docs.aws.amazon.com/lex/latest/dg/API_PutBot.html#lex-PutBot-request-nluIntentConfidenceThreshold) This value requires `enable_model_improvements` to be set to `true` and the default is `0`.
 * `process_behavior` - (Optional) If you set the `process_behavior` element to `BUILD`, Amazon Lex builds the bot so that it can be run. If you set the element to `SAVE` Amazon Lex saves the bot, but doesn't build it. Default is `SAVE`.
@@ -93,7 +93,7 @@ Lex chooses one of the messages to use to prompt the user.
 * `max_attempts` - (Required) The number of times to prompt the user for information.
 * `message` - (Required) A set of messages, each of which provides a message string and its type.
 You can specify the message string in plain text or in Speech Synthesis Markup Language (SSML).
-Attributes are documented under [message](#message-2).
+Attributes are documented under [message](#message).
 * `response_card` - (Optional) The response card. Amazon Lex will substitute session attributes and
 slot values into the response card. For more information, see
 [Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html).
@@ -105,7 +105,7 @@ convey information to the user. At runtime, Amazon Lex selects the message to co
 
 * `message` - (Required) A set of messages, each of which provides a message string and its type. You
 can specify the message string in plain text or in Speech Synthesis Markup Language (SSML). Attributes
-are documented under [message](#message-2).
+are documented under [message](#message).
 * `response_card` - (Optional) The response card. Amazon Lex will substitute session attributes and
 slot values into the response card. For more information, see
 [Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html).
