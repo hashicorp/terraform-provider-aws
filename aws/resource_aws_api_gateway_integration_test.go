@@ -828,7 +828,7 @@ resource "aws_api_gateway_integration" "test" {
   content_handling        = "CONVERT_TO_TEXT"
 
   tls_config {
-	insecure_skip_verification = true
+    insecure_skip_verification = true
   }
 }
 `
