@@ -1,5 +1,10 @@
 ## 3.10.0 (Unreleased)
 
+FEATURES
+
+* **New Data Source:** `aws_lex_bot_alias` [GH-8919]
+* **New Resource:** `aws_lex_bot_alias` [GH-8919]
+
 NOTES
 
 * data-source/aws_acm_certificate: The `id` attribute has changed to the ARN of the ACM Certificate. The first apply of this updated data source may show this difference. [GH-15399]
