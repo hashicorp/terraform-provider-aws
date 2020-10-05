@@ -55,7 +55,8 @@ func TestAccAwsLexBotAlias_botVersion(t *testing.T) {
 	rName := "aws_lex_bot_alias.test"
 	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
+	// If this test runs in parallel with other Lex Bot tests, it loses its description
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotAliasDestroy(testBotAliasID, testBotAliasID),
