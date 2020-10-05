@@ -256,7 +256,7 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 			VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 		}
 
-		if v, ok := d.GetOk("description"); ok && len(v.(string)) > 0 {
+		if v, ok := d.GetOk("description"); ok {
 			u.Description = aws.String(v.(string))
 		}
 
