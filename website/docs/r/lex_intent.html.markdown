@@ -187,7 +187,7 @@ A prompt for additional activity after an intent is fulfilled. For example, afte
 intent is fulfilled, you might prompt the user to find out whether the user wants to order drinks.
 
 * `prompt` - (Required) Prompts for information from the user. Attributes are documented under [prompt](#prompt-1).
-* `rejectionStatement` - (Optional) If the user answers "no" to the question defined in the prompt field,
+* `rejection_statement` - (Optional) If the user answers "no" to the question defined in the prompt field,
 Amazon Lex responds with this statement to acknowledge that the intent was canceled. Attributes are
 documented below under [statement](#statement).
 
