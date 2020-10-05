@@ -149,8 +149,8 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"lb_cookie",
-								"source_ip",
+								"lb_cookie", // Only for ALBs
+								"source_ip", // Only for NLBs
 							}, false),
 						},
 						"cookie_duration": {
@@ -282,9 +282,24 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 		if _, ok := d.GetOk("vpc_id"); !ok {
 			return fmt.Errorf("vpc_id should be set when target type is %s", d.Get("target_type").(string))
 		}
+
 		params.Port = aws.Int64(int64(d.Get("port").(int)))
 		params.Protocol = aws.String(d.Get("protocol").(string))
 		params.VpcId = aws.String(d.Get("vpc_id").(string))
+
+		stickiness := d.Get("stickiness").([]interface{})[0].(map[string]interface{})
+		if d.Get("protocol").(string) == elbv2.ProtocolEnumHttp ||
+			d.Get("protocol").(string) == elbv2.ProtocolEnumHttps {
+			if stickiness["type"].(string) != "lb_cookie" {
+				return fmt.Errorf("stickiness type can only be \"lb_cookie\" when protocol is %s", d.Get("protocol").(string))
+			}
+		} else if d.Get("protocol").(string) == elbv2.ProtocolEnumTcp ||
+			d.Get("protocol").(string) == elbv2.ProtocolEnumUdp ||
+			d.Get("protocol").(string) == elbv2.ProtocolEnumTcpUdp {
+			if stickiness["type"].(string) != "source_ip" {
+				return fmt.Errorf("stickiness type can only be \"source_ip\" when protocol is %s", d.Get("protocol").(string))
+			}
+		}
 	}
 
 	if healthChecks := d.Get("health_check").([]interface{}); len(healthChecks) == 1 {
