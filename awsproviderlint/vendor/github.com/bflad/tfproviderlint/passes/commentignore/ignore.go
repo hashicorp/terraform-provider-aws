@@ -44,11 +44,16 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		for n, cgs := range cmap {
 			for _, cg := range cgs {
 				if strings.HasPrefix(cg.Text(), commentIgnorePrefix) {
-					key := strings.TrimPrefix(cg.Text(), commentIgnorePrefix)
-					key = strings.TrimSpace(key)
+					commentIgnore := strings.TrimPrefix(cg.Text(), commentIgnorePrefix)
+					// Allow extra // comment after keys
+					commentIgnoreParts := strings.Split(commentIgnore, "//")
+					keys := strings.TrimSpace(commentIgnoreParts[0])
 
-					// is it possible for nested pos/end to be outside the largest nodes?
-					ignores[key] = append(ignores[key], ignore{n.Pos(), n.End()})
+					// Allow multiple comma separated ignores
+					for _, key := range strings.Split(keys, ",") {
+						// is it possible for nested pos/end to be outside the largest nodes?
+						ignores[key] = append(ignores[key], ignore{n.Pos(), n.End()})
+					}
 				}
 			}
 		}
