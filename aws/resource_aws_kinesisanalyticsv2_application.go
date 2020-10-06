@@ -1093,8 +1093,6 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 				if d.HasChange("application_configuration.0.sql_application_configuration.0.reference_data_source") {
 					o, n := d.GetChange("application_configuration.0.sql_application_configuration.0.reference_data_source")
 
-					referenceDataSourceUpdate := expandKinesisAnalyticsV2ReferenceDataSourceUpdate(n.([]interface{}))
-
 					if len(o.([]interface{})) == 0 {
 						// Add new reference data source.
 						input := &kinesisanalyticsv2.AddApplicationReferenceDataSourceInput{
@@ -1121,7 +1119,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 						input := &kinesisanalyticsv2.DeleteApplicationReferenceDataSourceInput{
 							ApplicationName:             aws.String(applicationName),
 							CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
-							ReferenceId:                 referenceDataSourceUpdate.ReferenceId,
+							ReferenceId:                 aws.String(o.([]interface{})[0].(map[string]interface{})["reference_id"].(string)),
 						}
 
 						log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) reference data source: %s", d.Id(), input)
@@ -1139,6 +1137,8 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 					} else {
 						// Update existing reference data source.
+						referenceDataSourceUpdate := expandKinesisAnalyticsV2ReferenceDataSourceUpdate(n.([]interface{}))
+
 						sqlApplicationConfigurationUpdate.ReferenceDataSourceUpdates = []*kinesisanalyticsv2.ReferenceDataSourceUpdate{referenceDataSourceUpdate}
 
 						updateApplication = true
