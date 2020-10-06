@@ -150,9 +150,36 @@ The below are style-based items that _may_ be noted during review and are recomm
   When the `arn` attribute is synthesized this way, add the resource to the [list](https://www.terraform.io/docs/providers/aws/index.html#argument-reference) of those affected by the provider's `skip_requesting_account_id` attribute.
 
 - [ ] __Implements Warning Logging With Resource State Removal__: If a resource is removed outside of Terraform (e.g. via different tool, API, or web UI), `d.SetId("")` and `return nil` can be used in the resource `Read` function to trigger resource recreation. When this occurs, a warning log message should be printed beforehand: `log.Printf("[WARN] {SERVICE} {THING} (%s) not found, removing from state", d.Id())`
-- [ ] __Uses functions from aws-sdk-go-base/tfawserr with AWS Go SDK Error Objects__: Use the [`ErrCodeEquals(err error, code string)`](https://godoc.org/github.com/hashicorp/aws-sdk-go-base/tfawserr#ErrCodeEquals) and [`ErrMessageContains(err error, code string, message string)`](https://godoc.org/github.com/hashicorp/aws-sdk-go-base/tfawserr#ErrMessageContains) helper functions instead of the `awserr` package to compare error code and message contents.
+- [ ] __Uses Functions from aws-sdk-go-base/tfawserr with AWS Go SDK Error Objects__: Use the [`ErrCodeEquals(err error, code string)`](https://godoc.org/github.com/hashicorp/aws-sdk-go-base/tfawserr#ErrCodeEquals) and [`ErrMessageContains(err error, code string, message string)`](https://godoc.org/github.com/hashicorp/aws-sdk-go-base/tfawserr#ErrMessageContains) helper functions instead of the `awserr` package to compare error code and message contents.
 - [ ] __Uses %s fmt Verb with AWS Go SDK Objects__: AWS Go SDK objects implement `String()` so using the `%v`, `%#v`, or `%+v` fmt verbs with the object are extraneous or provide unhelpful detail.
 - [ ] __Uses Elem with TypeMap__: While provider schema validation does not error when the `Elem` configuration is not present with `Type: schema.TypeMap` attributes, including the explicit `Elem: &schema.Schema{Type: schema.TypeString}` is recommended.
 - [ ] __Uses American English for Attribute Naming__: For any ambiguity with attribute naming, prefer American English over British English. e.g. `color` instead of `colour`.
 - [ ] __Skips Timestamp Attributes__: Generally, creation and modification dates from the API should be omitted from the schema.
 - [ ] __Skips Error() Call with AWS Go SDK Error Objects__: Error objects do not need to have `Error()` called.
+- [ ] __Adds Error Codes Missing from the AWS Go SDK to Internal Service Package__: If an AWS API error code is checked and the AWS Go SDK has no constant string value defined for that error code, a new constant should be added to a file named `errors.go` in a per-service internal package. For example:
+
+```go
+// In `aws/internal/service/s3/errors.go`.
+
+package s3
+
+const (
+	ErrCodeNoSuchTagSet = "NoSuchTagSet"
+)
+```
+
+```go
+// Example usage.
+
+import (
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	tfs3 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3"
+)
+
+output, err := conn.GetBucketTagging(input)
+
+if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchTagSet) {
+	return nil
+}
+```
