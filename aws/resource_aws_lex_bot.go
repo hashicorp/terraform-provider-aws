@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -233,6 +234,11 @@ func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.PutBot(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error creating bot %s: %w", name, err)
 	}
