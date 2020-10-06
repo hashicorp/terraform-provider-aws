@@ -165,6 +165,28 @@ func testAccAwsOrganizationsPolicy_tags(t *testing.T) {
 	})
 }
 
+func testAccAwsOrganizationsPolicy_disappears(t *testing.T) {
+	var p organizations.Policy
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_organizations_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOrganizationsPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOrganizationsPolicyConfig_Description(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsPolicyExists(resourceName, &p),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsOrganizationsPolicy(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccAwsOrganizationsPolicy_type_AI_OPT_OUT(t *testing.T) {
 	var policy organizations.Policy
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -346,6 +368,31 @@ func testAccAwsOrganizationsPolicy_type_Tag(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAwsOrganizationsPolicy_ImportAwsManagedPolicy(t *testing.T) {
+	resourceName := "aws_organizations_policy.test"
+
+	resourceID := "p-FullAWSAccess"
+
+	t.Skip("This test requires SDK 2.0.4 or higher for `ExpectError` with `ImportState`")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOrganizationsPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOrganizationsPolicyConfig_AwsManagedPolicySetup,
+			},
+			{
+				Config:        testAccAwsOrganizationsPolicyConfig_AwsManagedPolicy,
+				ResourceName:  resourceName,
+				ImportStateId: resourceID,
+				ImportState:   true,
+				ExpectError:   regexp.MustCompile(fmt.Sprintf("AWS-managed Organizations policy (%s) cannot be imported.", resourceID)),
 			},
 		},
 	})
@@ -661,3 +708,19 @@ resource "aws_organizations_policy" "test" {
 }
 `, strconv.Quote(content), rName, policyType)
 }
+
+const testAccAwsOrganizationsPolicyConfig_AwsManagedPolicySetup = `
+resource "aws_organizations_organization" "test" {
+  enabled_policy_types = ["SERVICE_CONTROL_POLICY"]
+}
+`
+
+const testAccAwsOrganizationsPolicyConfig_AwsManagedPolicy = `
+resource "aws_organizations_organization" "test" {
+  enabled_policy_types = ["SERVICE_CONTROL_POLICY"]
+}
+
+resource "aws_organizations_policy" "test" {
+  name = "FullAWSAccess"
+}
+`

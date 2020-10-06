@@ -96,7 +96,7 @@ func testAccAwsOrganizationsPolicyAttachment_Root(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsPolicyAttachmentExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "roots[0].id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "roots.0.id"),
 				),
 			},
 			{
