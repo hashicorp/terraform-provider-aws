@@ -11,12 +11,12 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-multierror"
-	tftest "github.com/hashicorp/terraform-plugin-test/v2"
 	testing "github.com/mitchellh/go-testing-interface"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/addrs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/plugintest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -534,8 +534,8 @@ func Test(t testing.T, c TestCase) {
 	if err != nil {
 		t.Fatalf("Error getting working dir: %s", err)
 	}
-	helper := tftest.AutoInitProviderHelper(sourceDir)
-	defer func(helper *tftest.Helper) {
+	helper := plugintest.AutoInitProviderHelper(sourceDir)
+	defer func(helper *plugintest.Helper) {
 		err := helper.Close()
 		if err != nil {
 			log.Printf("Error cleaning up temporary test files: %s", err)
