@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -748,6 +749,18 @@ func testAccCheckResourceDisappears(provider *schema.Provider, resource *schema.
 
 		if resourceState.Primary.ID == "" {
 			return fmt.Errorf("resource ID missing: %s", resourceName)
+		}
+
+		if resource.DeleteContext != nil {
+			diags := resource.DeleteContext(context.Background(), resource.Data(resourceState.Primary), provider.Meta())
+
+			for i := range diags {
+				if diags[i].Severity == diag.Error {
+					return fmt.Errorf("error deleting resource: %s", diags[i].Summary)
+				}
+			}
+
+			return nil
 		}
 
 		return resource.Delete(resource.Data(resourceState.Primary), provider.Meta())

@@ -157,7 +157,7 @@ resource "aws_opsworks_rds_db_instance" "tf-acc-opsworks-db" {
 }
 %s
 %s
-`, userName, password, testAccAwsOpsworksStackConfigVpcCreate(name), testAccAWSDBInstanceConfig)
+`, userName, password, testAccAwsOpsworksStackConfigVpcCreate(name), testAccAWSDBInstanceConfig_basic())
 }
 
 func testAccAwsOpsworksRdsDbInstanceForceNew(name string) string {

@@ -1077,33 +1077,33 @@ func TestAccAWSSecurityGroupRule_MultiDescription(t *testing.T) {
 					testAccCheckAWSSecurityGroupRuleExists("aws_security_group.nat", &nat),
 					testAccCheckVpcEndpointExists("aws_vpc_endpoint.s3-us-west-2", &endpoint),
 
-					testAccCheckAWSSecurityGroupRuleAttributes("aws_security_group_rule.ingress_rule_1", &group, &rule1, "ingress"),
-					resource.TestCheckResourceAttr("aws_security_group_rule.ingress_rule_1", "description", "CIDR Description"),
+					testAccCheckAWSSecurityGroupRuleAttributes("aws_security_group_rule.rule_1", &group, &rule1, "ingress"),
+					resource.TestCheckResourceAttr("aws_security_group_rule.rule_1", "description", "CIDR Description"),
 
-					testAccCheckAWSSecurityGroupRuleAttributes("aws_security_group_rule.ingress_rule_2", &group, &rule2, "ingress"),
-					resource.TestCheckResourceAttr("aws_security_group_rule.ingress_rule_2", "description", "IPv6 CIDR Description"),
+					testAccCheckAWSSecurityGroupRuleAttributes("aws_security_group_rule.rule_2", &group, &rule2, "ingress"),
+					resource.TestCheckResourceAttr("aws_security_group_rule.rule_2", "description", "IPv6 CIDR Description"),
 
 					setupSG,
-					testAccCheckAWSSecurityGroupRuleAttributes("aws_security_group_rule.ingress_rule_3", &group, &rule3, "ingress"),
-					resource.TestCheckResourceAttr("aws_security_group_rule.ingress_rule_3", "description", "NAT SG Description"),
+					testAccCheckAWSSecurityGroupRuleAttributes("aws_security_group_rule.rule_3", &group, &rule3, "ingress"),
+					resource.TestCheckResourceAttr("aws_security_group_rule.rule_3", "description", "NAT SG Description"),
 				),
 			},
 			{
-				ResourceName:      "aws_security_group_rule.ingress_rule_1",
+				ResourceName:      "aws_security_group_rule.rule_1",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.ingress_rule_1"),
+				ImportStateIdFunc: testAccAWSSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.rule_1"),
 				ImportStateVerify: true,
 			},
 			{
-				ResourceName:      "aws_security_group_rule.ingress_rule_2",
+				ResourceName:      "aws_security_group_rule.rule_2",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.ingress_rule_2"),
+				ImportStateIdFunc: testAccAWSSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.rule_2"),
 				ImportStateVerify: true,
 			},
 			{
-				ResourceName:      "aws_security_group_rule.ingress_rule_3",
+				ResourceName:      "aws_security_group_rule.rule_3",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.ingress_rule_3"),
+				ImportStateIdFunc: testAccAWSSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.rule_3"),
 				ImportStateVerify: true,
 			},
 			{
@@ -1113,43 +1113,43 @@ func TestAccAWSSecurityGroupRule_MultiDescription(t *testing.T) {
 					testAccCheckAWSSecurityGroupRuleExists("aws_security_group.nat", &nat),
 					testAccCheckVpcEndpointExists("aws_vpc_endpoint.s3-us-west-2", &endpoint),
 
-					testAccCheckAWSSecurityGroupRuleAttributes("aws_security_group_rule.egress_rule_1", &group, &rule1, "egress"),
-					resource.TestCheckResourceAttr("aws_security_group_rule.egress_rule_1", "description", "CIDR Description"),
+					testAccCheckAWSSecurityGroupRuleAttributes("aws_security_group_rule.rule_1", &group, &rule1, "egress"),
+					resource.TestCheckResourceAttr("aws_security_group_rule.rule_1", "description", "CIDR Description"),
 
-					testAccCheckAWSSecurityGroupRuleAttributes("aws_security_group_rule.egress_rule_2", &group, &rule2, "egress"),
-					resource.TestCheckResourceAttr("aws_security_group_rule.egress_rule_2", "description", "IPv6 CIDR Description"),
+					testAccCheckAWSSecurityGroupRuleAttributes("aws_security_group_rule.rule_2", &group, &rule2, "egress"),
+					resource.TestCheckResourceAttr("aws_security_group_rule.rule_2", "description", "IPv6 CIDR Description"),
 
 					setupSG,
-					testAccCheckAWSSecurityGroupRuleAttributes("aws_security_group_rule.egress_rule_3", &group, &rule3, "egress"),
-					resource.TestCheckResourceAttr("aws_security_group_rule.egress_rule_3", "description", "NAT SG Description"),
+					testAccCheckAWSSecurityGroupRuleAttributes("aws_security_group_rule.rule_3", &group, &rule3, "egress"),
+					resource.TestCheckResourceAttr("aws_security_group_rule.rule_3", "description", "NAT SG Description"),
 
 					setupPL,
-					testAccCheckAWSSecurityGroupRuleAttributes("aws_security_group_rule.egress_rule_4", &group, &rule4, "egress"),
-					resource.TestCheckResourceAttr("aws_security_group_rule.egress_rule_4", "description", "Prefix List Description"),
+					testAccCheckAWSSecurityGroupRuleAttributes("aws_security_group_rule.rule_4", &group, &rule4, "egress"),
+					resource.TestCheckResourceAttr("aws_security_group_rule.rule_4", "description", "Prefix List Description"),
 				),
 			},
 			{
-				ResourceName:      "aws_security_group_rule.egress_rule_1",
+				ResourceName:      "aws_security_group_rule.rule_1",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.egress_rule_1"),
+				ImportStateIdFunc: testAccAWSSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.rule_1"),
 				ImportStateVerify: true,
 			},
 			{
-				ResourceName:      "aws_security_group_rule.egress_rule_2",
+				ResourceName:      "aws_security_group_rule.rule_2",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.egress_rule_2"),
+				ImportStateIdFunc: testAccAWSSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.rule_2"),
 				ImportStateVerify: true,
 			},
 			{
-				ResourceName:      "aws_security_group_rule.egress_rule_3",
+				ResourceName:      "aws_security_group_rule.rule_3",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.egress_rule_3"),
+				ImportStateIdFunc: testAccAWSSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.rule_3"),
 				ImportStateVerify: true,
 			},
 			{
-				ResourceName:      "aws_security_group_rule.egress_rule_4",
+				ResourceName:      "aws_security_group_rule.rule_4",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.egress_rule_4"),
+				ImportStateIdFunc: testAccAWSSecurityGroupRuleImportStateIdFunc("aws_security_group_rule.rule_4"),
 				ImportStateVerify: true,
 			},
 		},
@@ -1609,7 +1609,7 @@ resource "aws_security_group" "nat" {
   tags = { Name = "tf-sg-rule-description" }
 }
 
-resource "aws_security_group_rule" "%[2]s_rule_1" {
+resource "aws_security_group_rule" "rule_1" {
   security_group_id = aws_security_group.worker.id
   description       = "CIDR Description"
   type              = "%[2]s"
@@ -1619,7 +1619,7 @@ resource "aws_security_group_rule" "%[2]s_rule_1" {
   cidr_blocks       = ["0.0.0.0/0"]
 }
 
-resource "aws_security_group_rule" "%[2]s_rule_2" {
+resource "aws_security_group_rule" "rule_2" {
   security_group_id = aws_security_group.worker.id
   description       = "IPv6 CIDR Description"
   type              = "%[2]s"
@@ -1629,7 +1629,7 @@ resource "aws_security_group_rule" "%[2]s_rule_2" {
   ipv6_cidr_blocks  = ["::/0"]
 }
 
-resource "aws_security_group_rule" "%[2]s_rule_3" {
+resource "aws_security_group_rule" "rule_3" {
   security_group_id        = aws_security_group.worker.id
   description              = "NAT SG Description"
   type                     = "%[2]s"
@@ -1642,7 +1642,7 @@ resource "aws_security_group_rule" "%[2]s_rule_3" {
 
 	if rType == "egress" {
 		b.WriteString(`
-resource "aws_security_group_rule" "egress_rule_4" {
+resource "aws_security_group_rule" "rule_4" {
   security_group_id = aws_security_group.worker.id
   description       = "Prefix List Description"
   type              = "egress"
@@ -1734,7 +1734,7 @@ resource "aws_security_group_rule" "other" {
   security_group_id = aws_security_group.web.id
 }
 
-// same a above, but different group, to guard against bad hashing
+# same a above, but different group, to guard against bad hashing
 resource "aws_security_group_rule" "nat_ingress" {
   type        = "ingress"
   from_port   = 80

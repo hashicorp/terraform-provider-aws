@@ -74,6 +74,15 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"root_access": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  sagemaker.RootAccessEnabled,
+				ValidateFunc: validation.StringInSlice(
+					sagemaker.RootAccess_Values(), false),
+			},
+
 			"direct_internet_access": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -100,6 +109,10 @@ func resourceAwsSagemakerNotebookInstanceCreate(d *schema.ResourceData, meta int
 		NotebookInstanceName: aws.String(name),
 		RoleArn:              aws.String(d.Get("role_arn").(string)),
 		InstanceType:         aws.String(d.Get("instance_type").(string)),
+	}
+
+	if v, ok := d.GetOk("root_access"); ok {
+		createOpts.RootAccess = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("direct_internet_access"); ok {
@@ -193,6 +206,10 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 
 	if err := d.Set("arn", notebookInstance.NotebookInstanceArn); err != nil {
 		return fmt.Errorf("error setting arn for sagemaker notebook instance (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("root_access", notebookInstance.RootAccess); err != nil {
+		return fmt.Errorf("error setting root_access for sagemaker notebook instance (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("direct_internet_access", notebookInstance.DirectInternetAccess); err != nil {

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elbv2/waiter"
 )
 
 func resourceAwsLb() *schema.Resource {
@@ -32,9 +33,9 @@ func resourceAwsLb() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(waiter.LoadBalancerCreateTimeout),
+			Update: schema.DefaultTimeout(waiter.LoadBalancerUpdateTimeout),
+			Delete: schema.DefaultTimeout(waiter.LoadBalancerDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -249,7 +250,7 @@ func suppressIfLBType(t string) schema.SchemaDiffSuppressFunc {
 }
 
 func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*AWSClient).elbv2conn
 	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().Elbv2Tags()
 
 	var name string
@@ -313,60 +314,36 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] ALB create configuration: %#v", elbOpts)
 
-	resp, err := elbconn.CreateLoadBalancer(elbOpts)
+	resp, err := conn.CreateLoadBalancer(elbOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating %s Load Balancer: %s", d.Get("load_balancer_type").(string), err)
+		return fmt.Errorf("error creating %s Load Balancer: %w", d.Get("load_balancer_type").(string), err)
 	}
 
 	if len(resp.LoadBalancers) != 1 {
-		return fmt.Errorf("No load balancers returned following creation of %s", d.Get("name").(string))
+		return fmt.Errorf("no load balancers returned following creation of %s", d.Get("name").(string))
 	}
 
 	lb := resp.LoadBalancers[0]
 	d.SetId(aws.StringValue(lb.LoadBalancerArn))
 	log.Printf("[INFO] LB ID: %s", d.Id())
 
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"provisioning", "failed"},
-		Target:  []string{"active"},
-		Refresh: func() (interface{}, string, error) {
-			describeResp, err := elbconn.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
-				LoadBalancerArns: []*string{lb.LoadBalancerArn},
-			})
-			if err != nil {
-				return nil, "", err
-			}
-
-			if len(describeResp.LoadBalancers) != 1 {
-				return nil, "", fmt.Errorf("No load balancers returned for %s", aws.StringValue(lb.LoadBalancerArn))
-			}
-			dLb := describeResp.LoadBalancers[0]
-
-			log.Printf("[INFO] LB state: %s", aws.StringValue(dLb.State.Code))
-
-			return describeResp, aws.StringValue(dLb.State.Code), nil
-		},
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
-	}
-	_, err = stateConf.WaitForState()
+	_, err = waiter.LoadBalancerActive(conn, aws.StringValue(lb.LoadBalancerArn), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return err
+		return fmt.Errorf("error waiting for Load Balancer (%s) to be active: %w", d.Get("name").(string), err)
 	}
 
 	return resourceAwsLbUpdate(d, meta)
 }
 
 func resourceAwsLbRead(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*AWSClient).elbv2conn
 	lbArn := d.Id()
 
 	describeLbOpts := &elbv2.DescribeLoadBalancersInput{
 		LoadBalancerArns: []*string{aws.String(lbArn)},
 	}
 
-	describeResp, err := elbconn.DescribeLoadBalancers(describeLbOpts)
+	describeResp, err := conn.DescribeLoadBalancers(describeLbOpts)
 	if err != nil {
 		if isLoadBalancerNotFound(err) {
 			// The ALB is gone now, so just remove it from the state
@@ -385,12 +362,12 @@ func resourceAwsLbRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*AWSClient).elbv2conn
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := keyvaluetags.Elbv2UpdateTags(elbconn, d.Id(), o, n); err != nil {
+		if err := keyvaluetags.Elbv2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating ALB (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -474,7 +451,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] ALB Modify Load Balancer Attributes Request: %#v", input)
-		_, err := elbconn.ModifyLoadBalancerAttributes(input)
+		_, err := conn.ModifyLoadBalancerAttributes(input)
 		if err != nil {
 			return fmt.Errorf("Failure configuring LB attributes: %s", err)
 		}
@@ -487,7 +464,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 			LoadBalancerArn: aws.String(d.Id()),
 			SecurityGroups:  sgs,
 		}
-		_, err := elbconn.SetSecurityGroups(params)
+		_, err := conn.SetSecurityGroups(params)
 		if err != nil {
 			return fmt.Errorf("Failure Setting LB Security Groups: %s", err)
 		}
@@ -506,7 +483,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 			Subnets:         subnets,
 		}
 
-		_, err := elbconn.SetSubnets(params)
+		_, err := conn.SetSubnets(params)
 		if err != nil {
 			return fmt.Errorf("Failure Setting LB Subnets: %s", err)
 		}
@@ -519,47 +496,22 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 			IpAddressType:   aws.String(d.Get("ip_address_type").(string)),
 		}
 
-		_, err := elbconn.SetIpAddressType(params)
+		_, err := conn.SetIpAddressType(params)
 		if err != nil {
 			return fmt.Errorf("Failure Setting LB IP Address Type: %s", err)
 		}
-
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"active", "provisioning", "failed"},
-		Target:  []string{"active"},
-		Refresh: func() (interface{}, string, error) {
-			describeResp, err := elbconn.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
-				LoadBalancerArns: []*string{aws.String(d.Id())},
-			})
-			if err != nil {
-				return nil, "", err
-			}
-
-			if len(describeResp.LoadBalancers) != 1 {
-				return nil, "", fmt.Errorf("No load balancers returned for %s", d.Id())
-			}
-			dLb := describeResp.LoadBalancers[0]
-
-			log.Printf("[INFO] LB state: %s", aws.StringValue(dLb.State.Code))
-
-			return describeResp, aws.StringValue(dLb.State.Code), nil
-		},
-		Timeout:    d.Timeout(schema.TimeoutUpdate),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
-	}
-	_, err := stateConf.WaitForState()
+	_, err := waiter.LoadBalancerActive(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
-		return err
+		return fmt.Errorf("error waiting for Load Balancer (%s) to be active: %w", d.Get("name").(string), err)
 	}
 
 	return resourceAwsLbRead(d, meta)
 }
 
 func resourceAwsLbDelete(d *schema.ResourceData, meta interface{}) error {
-	lbconn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*AWSClient).elbv2conn
 
 	log.Printf("[INFO] Deleting LB: %s", d.Id())
 
@@ -567,18 +519,18 @@ func resourceAwsLbDelete(d *schema.ResourceData, meta interface{}) error {
 	deleteElbOpts := elbv2.DeleteLoadBalancerInput{
 		LoadBalancerArn: aws.String(d.Id()),
 	}
-	if _, err := lbconn.DeleteLoadBalancer(&deleteElbOpts); err != nil {
+	if _, err := conn.DeleteLoadBalancer(&deleteElbOpts); err != nil {
 		return fmt.Errorf("Error deleting LB: %s", err)
 	}
 
-	conn := meta.(*AWSClient).ec2conn
+	ec2conn := meta.(*AWSClient).ec2conn
 
-	err := cleanupLBNetworkInterfaces(conn, d.Id())
+	err := cleanupLBNetworkInterfaces(ec2conn, d.Id())
 	if err != nil {
 		log.Printf("[WARN] Failed to cleanup ENIs for ALB %q: %#v", d.Id(), err)
 	}
 
-	err = waitForNLBNetworkInterfacesToDetach(conn, d.Id())
+	err = waitForNLBNetworkInterfacesToDetach(ec2conn, d.Id())
 	if err != nil {
 		log.Printf("[WARN] Failed to wait for ENIs to disappear for NLB %q: %#v", d.Id(), err)
 	}
@@ -742,7 +694,7 @@ func lbSuffixFromARN(arn *string) string {
 
 // flattenAwsLbResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
 func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBalancer) error {
-	elbconn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*AWSClient).elbv2conn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	d.Set("arn", lb.LoadBalancerArn)
@@ -765,7 +717,7 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 		return fmt.Errorf("error setting subnet_mapping: %s", err)
 	}
 
-	tags, err := keyvaluetags.Elbv2ListTags(elbconn, d.Id())
+	tags, err := keyvaluetags.Elbv2ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for (%s): %s", d.Id(), err)
@@ -775,7 +727,7 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
-	attributesResp, err := elbconn.DescribeLoadBalancerAttributes(&elbv2.DescribeLoadBalancerAttributesInput{
+	attributesResp, err := conn.DescribeLoadBalancerAttributes(&elbv2.DescribeLoadBalancerAttributesInput{
 		LoadBalancerArn: aws.String(d.Id()),
 	})
 	if err != nil {

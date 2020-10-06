@@ -658,14 +658,14 @@ func validateArn(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if value == "" {
-		return
+		return ws, errors
 	}
 
 	parsedARN, err := arn.Parse(value)
 
 	if err != nil {
 		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %s", k, value, err))
-		return
+		return ws, errors
 	}
 
 	if parsedARN.Partition == "" {
@@ -686,7 +686,7 @@ func validateArn(v interface{}, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: missing resource value", k, value))
 	}
 
-	return
+	return ws, errors
 }
 
 func validateEC2AutomateARN(v interface{}, k string) (ws []string, errors []error) {
@@ -2447,3 +2447,22 @@ var validateServiceDiscoveryNamespaceName = validation.All(
 	validation.StringLenBetween(1, 1024),
 	validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z._-]+$`), ""),
 )
+
+// validateNestedExactlyOneOf is called on the map representing a nested schema element
+// Once ExactlyOneOf is supported for nested elements, this should be deprecated.
+func validateNestedExactlyOneOf(m map[string]interface{}, valid []string) error {
+	specified := make([]string, 0)
+	for _, k := range valid {
+		if v, ok := m[k].(string); ok && v != "" {
+			specified = append(specified, k)
+		}
+	}
+
+	if len(specified) == 0 {
+		return fmt.Errorf("one of `%s` must be specified", strings.Join(valid, ", "))
+	}
+	if len(specified) > 1 {
+		return fmt.Errorf("only one of `%s` can be specified, but `%s` were specified.", strings.Join(valid, ", "), strings.Join(specified, ", "))
+	}
+	return nil
+}

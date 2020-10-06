@@ -189,7 +189,6 @@ ENHANCEMENTS:
 ```shell
 go get github.com/aws/aws-sdk-go@v#.#.#
 go mod tidy
-go mod vendor
 ```
 
 - Create a S3 Bucket in the new region and verify AWS Go SDK update works with new region by building the Terraform S3 Backend and testing a configuration like the following:
@@ -434,7 +433,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | [![breaking-change][breaking-change-badge]][breaking-change]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Introduces a breaking change in current functionality; breaking changes are usually deferred to the next major release. | None |
 | [![bug][bug-badge]][bug] | Addresses a defect in current functionality. | None |
 | [![crash][crash-badge]][crash] | Results from or addresses a Terraform crash or kernel panic. | None |
-| [![dependencies][dependencies-badge]][dependencies] | Used to indicate dependency or vendoring changes. | Added by Hashibot. |
+| [![dependencies][dependencies-badge]][dependencies] | Used to indicate dependency changes. | Added by Hashibot. |
 | [![documentation][documentation-badge]][documentation] | Introduces or discusses updates to documentation. | None |
 | [![enhancement][enhancement-badge]][enhancement] | Requests to existing resources that expand the functionality or scope. | None |
 | [![examples][examples-badge]][examples] | Introduces or discusses updates to examples. | None |

@@ -1,4 +1,91 @@
-## 3.8.0 (Unreleased)
+## 3.10.0 (Unreleased)
+
+FEATURES
+
+* **New Data Source:** `aws_lex_bot_alias` [GH-8919]
+* **New Resource:** `aws_lex_bot_alias` [GH-8919]
+
+NOTES
+
+* data-source/aws_acm_certificate: The `id` attribute has changed to the ARN of the ACM Certificate. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_autoscaling_group: The `id` attribute has changed to the name of the Auto Scaling Group. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_availability_zones: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_db_event_categories: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_ebs_default_kms_key: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_ebs_encryption_by_default: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_ec2_instance_type_offering: The `id` attribute has changed to the EC2 Instance Type. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_ecr_authorization_token: The `id` attribute has changed to the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_ecr_image: The `id` attribute has changed to the SHA256 digest of the ECR Image. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_eks_cluster_auth: The `id` attribute has changed to the name of the EKS Cluster. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_iam_account_alias: The `id` attribute has changed to the AWS Account Alias. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_kms_alias: The `id` attribute has changed to the ARN of the KMS Alias. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_partition: The `id` attribute has changed to the identifier of the AWS Partition. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_regions: The `id` attribute has changed to the identifier of the AWS Partition. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_sns_topic: The `id` attribute has changed to the ARN of the SNS Topic. The first apply of this updated data source may show this difference. [GH-15399]
+
+ENHANCEMENTS
+
+* resource/aws_sns_topic_subscription: Create subscriptions with attributes (delivery policy, filter policy, etc.) instead of separate API calls [GH-10496]
+
+BUG FIXES
+
+* data-source/aws_acm_certificate: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_autoscaling_group: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_availability_zones: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_db_event_categories: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_ebs_default_kms_key: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_ebs_encryption_by_default: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_ec2_instance_type_offering: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_ecr_authorization_token: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_ecr_image: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_eks_cluster_auth: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_iam_account_alias: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_kms_alias: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_partition: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_regions: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_sns_topic: Prevent plan differences with the `id` attribute [GH-15399]
+* resource/aws_s3_bucket: Correctly handle provider-level ignored tag configuration [GH-12013]
+* resource/aws_s3_bucket_object: Correctly handle provider-level ignored tag configuration [GH-12013]
+
+## 3.9.0 (October 02, 2020)
+
+FEATURES
+
+* **New Resource:** `aws_backup_vault_notifications` ([#12501](https://github.com/terraform-providers/terraform-provider-aws/issues/12501))
+* **New Resource:** `aws_codeartifact_domain` ([#13743](https://github.com/terraform-providers/terraform-provider-aws/issues/13743))
+* **New Resource:** `aws_codeartifact_domain_permissions` ([#13753](https://github.com/terraform-providers/terraform-provider-aws/issues/13753))
+* **New Resource:** `aws_codeartifact_repository` ([#14429](https://github.com/terraform-providers/terraform-provider-aws/issues/14429))
+* **New Resource:** `aws_db_proxy_target` ([#12784](https://github.com/terraform-providers/terraform-provider-aws/issues/12784))
+* **New Resource:** `aws_glue_data_catalog_encryption_settings` ([#14916](https://github.com/terraform-providers/terraform-provider-aws/issues/14916))
+* **New Resource:** `aws_glue_ml_transform` ([#14909](https://github.com/terraform-providers/terraform-provider-aws/issues/14909))
+* **New Resource:** `aws_glue_partition` ([#12547](https://github.com/terraform-providers/terraform-provider-aws/issues/12547))
+* **New Resource:** `aws_lex_bot` ([#8918](https://github.com/terraform-providers/terraform-provider-aws/issues/8918))
+* **New Resource:** `aws_lex_intent` ([#8917](https://github.com/terraform-providers/terraform-provider-aws/issues/8917))
+* **New Data Source:** `aws_lex_bot` ([#8918](https://github.com/terraform-providers/terraform-provider-aws/issues/8918))
+* **New Data Source:** `aws_lex_intent` ([#8917](https://github.com/terraform-providers/terraform-provider-aws/issues/8917))
+
+ENHANCEMENTS
+
+* resource/aws_appmesh_route: Add `grpc_route` and `http2_route` attributes to support gRPC and HTTP/2 services ([#11669](https://github.com/terraform-providers/terraform-provider-aws/issues/11669))
+* resource/aws_appmesh_route: Add `retry_policy` attribute to support App Mesh retry policies ([#11660](https://github.com/terraform-providers/terraform-provider-aws/issues/11660))
+* resource/aws_appmesh_virtual_node: Add `grpc` and `http2` as valid values for the `protocol` attribute ([#11669](https://github.com/terraform-providers/terraform-provider-aws/issues/11669))
+* resource/aws_appmesh_virtual_node: Add `spec.backend_defaults`, `spec.backend.virtual_service.client_policy` and `spec.listener.tls` attributes to support TLS in transit encryption ([#12541](https://github.com/terraform-providers/terraform-provider-aws/issues/12541))
+* resource/aws_appmesh_virtual_router: Add `grpc` and `http2` as valid values for the `protocol` attribute ([#11669](https://github.com/terraform-providers/terraform-provider-aws/issues/11669))
+* resource/aws_fsx_lustre_file_system: Add `auto_import_policy`  argument ([#15231](https://github.com/terraform-providers/terraform-provider-aws/issues/15231))
+* resource/aws_fsx_lustre_file_system: Support `daily_automatic_backup_start_time` ([#15299](https://github.com/terraform-providers/terraform-provider-aws/issues/15299))
+* resource/aws_fsx_lustre_file_system: Add `storage_type` and `drive_cache_type` ([#14727](https://github.com/terraform-providers/terraform-provider-aws/issues/14727))
+* resource/aws_glue_crawler: Add `connection_name` field to `s3_target` block ([#15350](https://github.com/terraform-providers/terraform-provider-aws/issues/15350))
+* resource/aws_sagemaker_notebook_instance: Ability to configure root access for Sagemaker notebook instances ([#14184](https://github.com/terraform-providers/terraform-provider-aws/issues/14184))
+
+BUG FIXES
+
+* data-source/aws_s3_bucket_object: Prevent crash when S3 HeadObject returns empty response [GH-14154]
+* resource/aws_db_instance: Prevent ordering differences with `enabled_cloudwatch_logs_exports` argument ([#15404](https://github.com/terraform-providers/terraform-provider-aws/issues/15404))
+* resource/aws_ec2_client_vpn_authorization_rule: Increased active and revoked timeouts from 5 to 10 minutes ([#15367](https://github.com/terraform-providers/terraform-provider-aws/issues/15367))
+* resource/aws_rds_cluster: Prevent ordering differences with `enabled_cloudwatch_logs_exports` argument ([#15404](https://github.com/terraform-providers/terraform-provider-aws/issues/15404))
+* resource/aws_redshift_cluster: Increase default update timeout to 75 minutes ([#15339](https://github.com/terraform-providers/terraform-provider-aws/issues/15339))
+
+## 3.8.0 (September 24, 2020)
 
 FEATURES
 
@@ -8,38 +95,47 @@ FEATURES
 * **New Data Source:** `aws_rds_engine_version` ([#15228](https://github.com/terraform-providers/terraform-provider-aws/pull/15228))
 * **New Data Source:** `aws_docdb_engine_version` ([#15253](https://github.com/terraform-providers/terraform-provider-aws/pull/15253))
 * **New Data Source:** `aws_neptune_engine_version` ([#15259](https://github.com/terraform-providers/terraform-provider-aws/pull/15259))
+* **New Data Source:** `aws_workspaces_image` ([#11428](https://github.com/terraform-providers/terraform-provider-aws/issues/11428))
 
 ENHANCEMENTS
 
-* resource/aws_apigatewayv2_api: Add `disable_execute_api_endpoint` attribute [GH-15250]
-* resource/aws_apigatewayv2_authorizer: Add `authorizer_payload_format_version`, `authorizer_result_ttl_in_seconds` and `enable_simple_responses` attribute to support Lambda authorizers for HTTP APIs [GH-15232]
-* resource/aws_apigatewayv2_authorizer: Change `identity_sources` to an optional attribute [GH-15232]
-* resource/aws_appmesh_mesh: Add `mesh_owner` and `resource_owner` attributes [GH-14349]
-* resource/aws_appmesh_route: Add `mesh_owner` argument and `resource_owner` attribute [GH-14349]
-* resource/aws_appmesh_virtual_node: Add `mesh_owner` argument and `resource_owner` attribute [GH-14349]
-* resource/aws_appmesh_virtual_router: Add `mesh_owner` argument and `resource_owner` attribute [GH-14349]
-* resource/aws_appmesh_virtual_service: Add `mesh_owner` argument and `resource_owner` attribute [GH-14349]
-* resource/aws_glue_job - add `non_overridable_arguments` argument [GH-14793]
-* resource_aws_glue_workflow - add `tags` argument [GH-14910]
-* resource_aws_glue_workflow - add `arn` attribute [GH-14910]
-* resource_aws_glue_workflow - add `max_concurrent_runs` argument [GH-14910]
-* resource_aws_glue_workflow - plan time validation for `name` [GH-14910]
-* data-source/aws_lb: Add `customer_owned_ipv4_pool` and `subnet_mapping` `outpost_id` attributes [GH-15170]
-* resource/aws_fsx_lustre_file_system - add support for backup retention [GH-14446]
-* resource/aws_fsx_lustre_file_system: Add `kms_key_id` argument [GH-15057]
-* resource/aws_fsx_lustre_file_system: Add `mount_name` argument [GH-14313]
-* resource/aws_lb: Add `customer_owned_ipv4_pool` argument and `subnet_mapping` `outpost_id` attribute [GH-15170]
-* resource/aws_rds_cluster: Add `allow_major_version_upgrade` argument [GH-14709]
-* resource/aws_storagegateway_smb_file_share: Add `admin_user_list` argument [GH-12196]
-* resource/aws_transfer_user: Add `home_directory_mappings` configuration blocks and `home_directory_type` argument [GH-13591]
+* data-source/aws_lb: Add `customer_owned_ipv4_pool` and `subnet_mapping` `outpost_id` attributes ([#15170](https://github.com/terraform-providers/terraform-provider-aws/issues/15170))
+* resource/aws_apigatewayv2_api: Add `disable_execute_api_endpoint` attribute ([#15250](https://github.com/terraform-providers/terraform-provider-aws/issues/15250))
+* resource/aws_apigatewayv2_authorizer: Add `authorizer_payload_format_version`, `authorizer_result_ttl_in_seconds` and `enable_simple_responses` attribute to support Lambda authorizers for HTTP APIs ([#15232](https://github.com/terraform-providers/terraform-provider-aws/issues/15232))
+* resource/aws_apigatewayv2_authorizer: Change `identity_sources` to an optional attribute ([#15232](https://github.com/terraform-providers/terraform-provider-aws/issues/15232))
+* resource/aws_appmesh_mesh: Add `mesh_owner` and `resource_owner` attributes ([#14349](https://github.com/terraform-providers/terraform-provider-aws/issues/14349))
+* resource/aws_appmesh_route: Add `mesh_owner` argument and `resource_owner` attribute ([#14349](https://github.com/terraform-providers/terraform-provider-aws/issues/14349))
+* resource/aws_appmesh_virtual_node: Add `mesh_owner` argument and `resource_owner` attribute ([#14349](https://github.com/terraform-providers/terraform-provider-aws/issues/14349))
+* resource/aws_appmesh_virtual_router: Add `mesh_owner` argument and `resource_owner` attribute ([#14349](https://github.com/terraform-providers/terraform-provider-aws/issues/14349))
+* resource/aws_appmesh_virtual_service: Add `mesh_owner` argument and `resource_owner` attribute ([#14349](https://github.com/terraform-providers/terraform-provider-aws/issues/14349))
+* resource/aws_elasticsearch_domain: Support `AUDIT_LOGS` log type ([#15218](https://github.com/terraform-providers/terraform-provider-aws/issues/15218))
+* resource/aws_glue_connection: Support `NETWORK` connection type ([#14818](https://github.com/terraform-providers/terraform-provider-aws/issues/14818))
+* resource/aws_glue_crawler: Add support for `scan_all` and `scan_rate` arguments for ddb targets ([#14819](https://github.com/terraform-providers/terraform-provider-aws/issues/14819))
+* resource/aws_glue_crawler: Allow removing `table_prefix` ([#15268](https://github.com/terraform-providers/terraform-provider-aws/issues/15268))
+* resource/aws_glue_job: Add `non_overridable_arguments` argument ([#14793](https://github.com/terraform-providers/terraform-provider-aws/issues/14793))
+* resource/aws_glue_workflow: Add `tags` argument ([#14910](https://github.com/terraform-providers/terraform-provider-aws/issues/14910))
+* resource/aws_glue_workflow: Add `arn` attribute ([#14910](https://github.com/terraform-providers/terraform-provider-aws/issues/14910))
+* resource/aws_glue_workflow: Add `max_concurrent_runs` argument ([#14910](https://github.com/terraform-providers/terraform-provider-aws/issues/14910))
+* resource/aws_glue_workflow: Plan time validation for `name` ([#14910](https://github.com/terraform-providers/terraform-provider-aws/issues/14910))
+* resource/aws_fsx_lustre_file_system: Add support for backup retention ([#14446](https://github.com/terraform-providers/terraform-provider-aws/issues/14446))
+* resource/aws_fsx_lustre_file_system: Add `kms_key_id` argument ([#15057](https://github.com/terraform-providers/terraform-provider-aws/issues/15057))
+* resource/aws_fsx_lustre_file_system: Add `mount_name` argument ([#14313](https://github.com/terraform-providers/terraform-provider-aws/issues/14313))
+* resource/aws_lb: Add `customer_owned_ipv4_pool` argument and `subnet_mapping` `outpost_id` attribute ([#15170](https://github.com/terraform-providers/terraform-provider-aws/issues/15170))
+* resource/aws_organizations_policy: Add `tags` argument ([#15316](https://github.com/terraform-providers/terraform-provider-aws/issues/15316))
+* resource/aws_rds_cluster: Add `allow_major_version_upgrade` argument ([#14709](https://github.com/terraform-providers/terraform-provider-aws/issues/14709))
+* resource/aws_storagegateway_smb_file_share: Add `admin_user_list` argument ([#12196](https://github.com/terraform-providers/terraform-provider-aws/issues/12196))
+* resource/aws_transfer_server: Support `VPC` value for `endpoint_type` argument and add `endpoint_details` configuration block `address_allocation_ids`, `subnet_ids`, and `vpc_id` arguments ([#12599](https://github.com/terraform-providers/terraform-provider-aws/issues/12599))
+* resource/aws_transfer_user: Add `home_directory_mappings` configuration blocks and `home_directory_type` argument ([#13591](https://github.com/terraform-providers/terraform-provider-aws/issues/13591))
 
 BUG FIXES
 
-* resource/aws_dynamodb_table: Ensure changes in `name`, `range_key`, `projection_type`, or `non_key_attributes` of a `local_secondary_index` configuration block force resource recreation [GH-12335]
-* resource/aws_dynamodb_table: Ensure `local_secondary_index` `non_key_attributes` are sent through API requests on resource creation [GH-15115]
-* resource/aws_fsx_lustre_file_system: Change `aws_fsx_lustre_file_system's`'s `network_interface_ids` to `TypeList` to preserve ordering. [GH-14314]
-* resource/aws_vpn_gateway: Increase VPC detachment timeout to 30 minutes [GH-15201]
-* resource/aws_vpn_gateway_attachment: Increase VPC detachment timeout to 30 minutes [GH-15201]
+* resource/aws_dynamodb_table: Ensure changes in `name`, `range_key`, `projection_type`, or `non_key_attributes` of a `local_secondary_index` configuration block force resource recreation ([#12335](https://github.com/terraform-providers/terraform-provider-aws/issues/12335))
+* resource/aws_dynamodb_table: Ensure `local_secondary_index` `non_key_attributes` are sent through API requests on resource creation ([#15115](https://github.com/terraform-providers/terraform-provider-aws/issues/15115))
+* resource/aws_efs_mount_target: Increase create timeout to 30 minutes ([#15293](https://github.com/terraform-providers/terraform-provider-aws/issues/15293))
+* resource/aws_fsx_lustre_file_system: Change `aws_fsx_lustre_file_system's`'s `network_interface_ids` to `TypeList` to preserve ordering. ([#14314](https://github.com/terraform-providers/terraform-provider-aws/issues/14314))
+* resource/aws_neptune_cluster_instance: Add `configuring-enhanced-monitoring` to expected states when creating and updating ([#15284](https://github.com/terraform-providers/terraform-provider-aws/issues/15284))
+* resource/aws_vpn_gateway: Increase VPC detachment timeout to 30 minutes ([#15201](https://github.com/terraform-providers/terraform-provider-aws/issues/15201))
+* resource/aws_vpn_gateway_attachment: Increase VPC detachment timeout to 30 minutes ([#15201](https://github.com/terraform-providers/terraform-provider-aws/issues/15201))
 
 ## 3.7.0 (September 17, 2020)
 

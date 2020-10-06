@@ -37,6 +37,7 @@ The following arguments are supported:
 * `security_groups` - (Optional) The associated security groups.
 * `kms_key_id` - (Optional) The AWS Key Management Service (AWS KMS) key that Amazon SageMaker uses to encrypt the model artifacts at rest using Amazon S3 server-side encryption.
 * `lifecycle_config_name` - (Optional) The name of a lifecycle configuration to associate with the notebook instance.
+* `root_access` - (Optional) Whether root access is `Enabled` or `Disabled` for users of the notebook instance. The default value is `Enabled`.
 * `direct_internet_access` - (Optional) Set to `Disabled` to disable internet access to notebook. Requires `security_groups` and `subnet_id` to be set. Supported values: `Enabled` (Default) or `Disabled`. If set to `Disabled`, the notebook instance will be able to access resources only in your VPC, and will not be able to connect to Amazon SageMaker training and endpoint services unless your configure a NAT Gateway in your VPC.
 * `tags` - (Optional) A map of tags to assign to the resource.
 

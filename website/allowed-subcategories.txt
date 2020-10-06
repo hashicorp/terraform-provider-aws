@@ -70,6 +70,7 @@ Lex
 License Manager
 Lightsail
 MQ
+Macie
 Macie Classic
 Managed Streaming for Kafka (MSK)
 MediaConvert
@@ -109,6 +110,7 @@ SimpleDB
 Step Function (SFN)
 Storage Gateway
 Synthetics
+Timestream Write
 Transfer
 Transit Gateway Network Manager
 VPC
