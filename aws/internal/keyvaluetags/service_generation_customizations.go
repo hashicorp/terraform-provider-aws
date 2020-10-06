@@ -834,6 +834,8 @@ func ServiceTagType(serviceName string) string {
 		return "TagListEntry"
 	case "fms":
 		return "ResourceTag"
+	case "s3control":
+		return "S3Tag"
 	case "swf":
 		return "ResourceTag"
 	default:

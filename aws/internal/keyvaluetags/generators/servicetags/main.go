@@ -81,6 +81,7 @@ var sliceServiceNames = []string{
 	"route53",
 	"route53resolver",
 	"s3",
+	"s3control",
 	"sagemaker",
 	"secretsmanager",
 	"serverlessapplicationrepository",
