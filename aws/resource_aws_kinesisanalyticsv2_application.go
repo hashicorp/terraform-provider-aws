@@ -1090,6 +1090,61 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 					}
 				}
 
+				if d.HasChange("application_configuration.0.sql_application_configuration.0.reference_data_source") {
+					o, n := d.GetChange("application_configuration.0.sql_application_configuration.0.reference_data_source")
+
+					referenceDataSourceUpdate := expandKinesisAnalyticsV2ReferenceDataSourceUpdate(n.([]interface{}))
+
+					if len(o.([]interface{})) == 0 {
+						// Add new reference data source.
+						input := &kinesisanalyticsv2.AddApplicationReferenceDataSourceInput{
+							ApplicationName:             aws.String(applicationName),
+							CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+							ReferenceDataSource:         expandKinesisAnalyticsV2ReferenceDataSource(n.([]interface{})),
+						}
+
+						log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) reference data source: %s", d.Id(), input)
+
+						outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+							return conn.AddApplicationReferenceDataSource(input)
+						})
+
+						if err != nil {
+							return fmt.Errorf("error adding Kinesis Analytics v2 Application (%s) reference data source: %w", d.Id(), err)
+						}
+
+						output := outputRaw.(*kinesisanalyticsv2.AddApplicationReferenceDataSourceOutput)
+
+						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
+					} else if len(n.([]interface{})) == 0 {
+						// Delete existing reference data source.
+						input := &kinesisanalyticsv2.DeleteApplicationReferenceDataSourceInput{
+							ApplicationName:             aws.String(applicationName),
+							CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+							ReferenceId:                 referenceDataSourceUpdate.ReferenceId,
+						}
+
+						log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) reference data source: %s", d.Id(), input)
+
+						outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+							return conn.DeleteApplicationReferenceDataSource(input)
+						})
+
+						if err != nil {
+							return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s) reference data source: %w", d.Id(), err)
+						}
+
+						output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationReferenceDataSourceOutput)
+
+						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
+					} else {
+						// Update existing reference data source.
+						sqlApplicationConfigurationUpdate.ReferenceDataSourceUpdates = []*kinesisanalyticsv2.ReferenceDataSourceUpdate{referenceDataSourceUpdate}
+
+						updateApplication = true
+					}
+				}
+
 				if updateApplication {
 					applicationConfigurationUpdate.SqlApplicationConfigurationUpdate = sqlApplicationConfigurationUpdate
 				}
@@ -2239,6 +2294,35 @@ func expandKinesisAnalyticsV2ReferenceDataSourceUpdate(vReferenceDataSource []in
 	}
 
 	referenceDataSourceUpdate := &kinesisanalyticsv2.ReferenceDataSourceUpdate{}
+
+	mReferenceDataSource := vReferenceDataSource[0].(map[string]interface{})
+
+	if vReferenceId, ok := mReferenceDataSource["reference_id"].(string); ok && vReferenceId != "" {
+		referenceDataSourceUpdate.ReferenceId = aws.String(vReferenceId)
+	}
+
+	if vReferenceSchema, ok := mReferenceDataSource["reference_schema"].([]interface{}); ok {
+		referenceDataSourceUpdate.ReferenceSchemaUpdate = expandKinesisAnalyticsV2SourceSchema(vReferenceSchema)
+	}
+
+	if vS3ReferenceDataSource, ok := mReferenceDataSource["s3_reference_data_source"].([]interface{}); ok && len(vS3ReferenceDataSource) > 0 && vS3ReferenceDataSource[0] != nil {
+		s3ReferenceDataSourceUpdate := &kinesisanalyticsv2.S3ReferenceDataSourceUpdate{}
+
+		mS3ReferenceDataSource := vS3ReferenceDataSource[0].(map[string]interface{})
+
+		if vBucketArn, ok := mS3ReferenceDataSource["bucket_arn"].(string); ok && vBucketArn != "" {
+			s3ReferenceDataSourceUpdate.BucketARNUpdate = aws.String(vBucketArn)
+		}
+		if vFileKey, ok := mS3ReferenceDataSource["file_key"].(string); ok && vFileKey != "" {
+			s3ReferenceDataSourceUpdate.FileKeyUpdate = aws.String(vFileKey)
+		}
+
+		referenceDataSourceUpdate.S3ReferenceDataSourceUpdate = s3ReferenceDataSourceUpdate
+	}
+
+	if vTableName, ok := mReferenceDataSource["table_name"].(string); ok && vTableName != "" {
+		referenceDataSourceUpdate.TableNameUpdate = aws.String(vTableName)
+	}
 
 	return referenceDataSourceUpdate
 }
