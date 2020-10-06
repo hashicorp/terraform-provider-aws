@@ -36,5 +36,3 @@ markdown-link-check*.txt
 *.winfile eol=crlf
 /.vs
 node_modules
-
-tests/resource_aws_organizations_policy/plugins
