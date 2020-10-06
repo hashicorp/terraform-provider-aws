@@ -18,6 +18,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
@@ -828,23 +829,15 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Creating Kinesis Analytics v2 Application: %s", input)
 
-	var output *kinesisanalyticsv2.CreateApplicationOutput
-
 	outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
 		return conn.CreateApplication(input)
 	})
 
-	if err == nil {
-		output = outputRaw.(*kinesisanalyticsv2.CreateApplicationOutput)
-	}
-
-	if isResourceTimeoutError(err) {
-		output, err = conn.CreateApplication(input)
-	}
-
 	if err != nil {
 		return fmt.Errorf("error creating Kinesis Analytics v2 Application: %w", err)
 	}
+
+	output := outputRaw.(*kinesisanalyticsv2.CreateApplicationOutput)
 
 	d.SetId(aws.StringValue(output.ApplicationDetail.ApplicationARN))
 
@@ -926,23 +919,15 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 				log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), input)
 
-				var output *kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionOutput
-
 				outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
 					return conn.AddApplicationCloudWatchLoggingOption(input)
 				})
 
-				if err == nil {
-					output = outputRaw.(*kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionOutput)
-				}
-
-				if isResourceTimeoutError(err) {
-					output, err = conn.AddApplicationCloudWatchLoggingOption(input)
-				}
-
 				if err != nil {
 					return fmt.Errorf("error adding Kinesis Analytics v2 Application (%s) CloudWatch logging option: %w", d.Id(), err)
 				}
+
+				output := outputRaw.(*kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionOutput)
 
 				currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 			} else if len(n.([]interface{})) == 0 {
@@ -955,23 +940,15 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 				log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), input)
 
-				var output *kinesisanalyticsv2.DeleteApplicationCloudWatchLoggingOptionOutput
-
 				outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
 					return conn.DeleteApplicationCloudWatchLoggingOption(input)
 				})
 
-				if err == nil {
-					output = outputRaw.(*kinesisanalyticsv2.DeleteApplicationCloudWatchLoggingOptionOutput)
-				}
-
-				if isResourceTimeoutError(err) {
-					output, err = conn.DeleteApplicationCloudWatchLoggingOption(input)
-				}
-
 				if err != nil {
 					return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s) CloudWatch logging option: %w", d.Id(), err)
 				}
+
+				output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationCloudWatchLoggingOptionOutput)
 
 				currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 			} else {
@@ -1036,23 +1013,15 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 						log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) input: %s", d.Id(), input)
 
-						var output *kinesisanalyticsv2.AddApplicationInputOutput
-
 						outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
 							return conn.AddApplicationInput(input)
 						})
 
-						if err == nil {
-							output = outputRaw.(*kinesisanalyticsv2.AddApplicationInputOutput)
-						}
-
-						if isResourceTimeoutError(err) {
-							output, err = conn.AddApplicationInput(input)
-						}
-
 						if err != nil {
 							return fmt.Errorf("error adding Kinesis Analytics v2 Application (%s) input: %w", d.Id(), err)
 						}
+
+						output := outputRaw.(*kinesisanalyticsv2.AddApplicationInputOutput)
 
 						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 					} else if len(n.([]interface{})) == 0 {
@@ -1077,23 +1046,15 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 								log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) input processing configuration: %s", d.Id(), input)
 
-								var output *kinesisanalyticsv2.AddApplicationInputProcessingConfigurationOutput
-
 								outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
 									return conn.AddApplicationInputProcessingConfiguration(input)
 								})
 
-								if err == nil {
-									output = outputRaw.(*kinesisanalyticsv2.AddApplicationInputProcessingConfigurationOutput)
-								}
-
-								if isResourceTimeoutError(err) {
-									output, err = conn.AddApplicationInputProcessingConfiguration(input)
-								}
-
 								if err != nil {
 									return fmt.Errorf("error adding Kinesis Analytics v2 Application (%s) input processing configuration: %w", d.Id(), err)
 								}
+
+								output := outputRaw.(*kinesisanalyticsv2.AddApplicationInputProcessingConfigurationOutput)
 
 								currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 							} else if len(n.([]interface{})) == 0 {
@@ -1106,23 +1067,15 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 								log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) input processing configuration: %s", d.Id(), input)
 
-								var output *kinesisanalyticsv2.DeleteApplicationInputProcessingConfigurationOutput
-
 								outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
 									return conn.DeleteApplicationInputProcessingConfiguration(input)
 								})
 
-								if err == nil {
-									output = outputRaw.(*kinesisanalyticsv2.DeleteApplicationInputProcessingConfigurationOutput)
-								}
-
-								if isResourceTimeoutError(err) {
-									output, err = conn.DeleteApplicationInputProcessingConfiguration(input)
-								}
-
 								if err != nil {
 									return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s) input processing configuration: %w", d.Id(), err)
 								}
+
+								output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationInputProcessingConfigurationOutput)
 
 								currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 							} else {
@@ -1150,23 +1103,15 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 			log.Printf("[DEBUG] Updating Kinesis Analytics v2 Application (%s): %s", d.Id(), input)
 
-			var output *kinesisanalyticsv2.UpdateApplicationOutput
-
 			outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
 				return conn.UpdateApplication(input)
 			})
 
-			if err == nil {
-				output = outputRaw.(*kinesisanalyticsv2.UpdateApplicationOutput)
-			}
-
-			if isResourceTimeoutError(err) {
-				output, err = conn.UpdateApplication(input)
-			}
-
 			if err != nil {
 				return fmt.Errorf("error updating Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
 			}
+
+			output := outputRaw.(*kinesisanalyticsv2.UpdateApplicationOutput)
 
 			currentApplicationVersionId = aws.Int64Value(output.ApplicationDetail.ApplicationVersionId)
 		}
@@ -2330,7 +2275,8 @@ func flattenKinesisAnalyticsV2CloudWatchLoggingOptionDescriptions(cloudWatchLogg
 }
 
 // kinesisAnalyticsV2RetryIAMEventualConsistency retries the specified function for 1 minute
-// if the returned error indicates an IAM eventual consistency issue.
+// if the returned error indicates an IAM eventual consistency issue. If the retries time out
+// the specified function is called one more time.
 func kinesisAnalyticsV2RetryIAMEventualConsistency(f func() (interface{}, error)) (interface{}, error) {
 	var output interface{}
 
@@ -2360,6 +2306,10 @@ func kinesisAnalyticsV2RetryIAMEventualConsistency(f func() (interface{}, error)
 
 		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		output, err = f()
+	}
 
 	if err != nil {
 		return nil, err
