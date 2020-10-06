@@ -11,3 +11,79 @@ rules:
         - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(int) != 0 { $BODY }
         - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(string) != "" { $BODY }
     severity: WARNING
+
+  - id: helper-schema-resource-Retry-without-TimeoutError-check
+    languages: [go]
+    message: Check resource.Retry() errors with tfresource.TimedOut()
+    paths:
+      exclude:
+        - "*_test.go"
+      include:
+        - aws/
+    patterns:
+      - pattern-either:
+        - pattern: |
+            $ERR := resource.Retry(...)
+            ...
+            return nil
+        - pattern: |
+            $ERR = resource.Retry(...)
+            ...
+            return nil
+        - pattern: |
+            $ERR := resource.Retry(...)
+            ...
+            return $ERR
+        - pattern: |
+            $ERR = resource.Retry(...)
+            ...
+            return $ERR
+      - pattern-not: |
+          $ERR := resource.Retry(...)
+          ...
+          if isResourceTimeoutError($ERR) { ... }
+          ...
+          return nil
+      - pattern-not: |
+          $ERR = resource.Retry(...)
+          ...
+          if isResourceTimeoutError($ERR) { ... }
+          ...
+          return nil
+      - pattern-not: |
+          $ERR := resource.Retry(...)
+          ...
+          if isResourceTimeoutError($ERR) { ... }
+          ...
+          return $ERR
+      - pattern-not: |
+          $ERR = resource.Retry(...)
+          ...
+          if isResourceTimeoutError($ERR) { ... }
+          ...
+          return $ERR
+      - pattern-not: |
+          $ERR := resource.Retry(...)
+          ...
+          if tfresource.TimedOut($ERR) { ... }
+          ...
+          return nil
+      - pattern-not: |
+          $ERR = resource.Retry(...)
+          ...
+          if tfresource.TimedOut($ERR) { ... }
+          ...
+          return nil
+      - pattern-not: |
+          $ERR := resource.Retry(...)
+          ...
+          if tfresource.TimedOut($ERR) { ... }
+          ...
+          return $ERR
+      - pattern-not: |
+          $ERR = resource.Retry(...)
+          ...
+          if tfresource.TimedOut($ERR) { ... }
+          ...
+          return $ERR
+    severity: WARNING
