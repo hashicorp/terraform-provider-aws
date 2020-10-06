@@ -179,7 +179,7 @@ import (
 
 output, err := conn.GetBucketTagging(input)
 
-if tfawserr.ErrCodeEquals(err, tfs3.NoSuchTagSet) {
+if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchTagSet) {
 	return nil
 }
 ```
