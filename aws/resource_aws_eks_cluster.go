@@ -358,8 +358,10 @@ func resourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting vpc_config: %s", err)
 	}
 
-	if err := d.Set("kubernetes_network_config", flattenEksNetworkConfig(cluster.KubernetesNetworkConfig)); err != nil {
-		return fmt.Errorf("error setting network config: %s", err)
+	if _, ok := d.GetOk("kubernetes_network_config"); ok {
+		if err := d.Set("kubernetes_network_config", flattenEksNetworkConfig(cluster.KubernetesNetworkConfig)); err != nil {
+			return fmt.Errorf("error setting network config: %s", err)
+		}
 	}
 
 	return nil
