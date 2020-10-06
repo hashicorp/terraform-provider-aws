@@ -607,6 +607,7 @@ func Provider() *schema.Provider {
 			"aws_eks_fargate_profile":                                 resourceAwsEksFargateProfile(),
 			"aws_eks_node_group":                                      resourceAwsEksNodeGroup(),
 			"aws_elasticache_cluster":                                 resourceAwsElasticacheCluster(),
+			"aws_elasticache_global_replication_group":                resourceAwsElasticacheGlobalReplicationGroup(),
 			"aws_elasticache_parameter_group":                         resourceAwsElasticacheParameterGroup(),
 			"aws_elasticache_replication_group":                       resourceAwsElasticacheReplicationGroup(),
 			"aws_elasticache_security_group":                          resourceAwsElasticacheSecurityGroup(),
