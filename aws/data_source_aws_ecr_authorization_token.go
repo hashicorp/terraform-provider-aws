@@ -74,7 +74,7 @@ func dataSourceAwsEcrAuthorizationTokenRead(d *schema.ResourceData, meta interfa
 	}
 	userName := basicAuthorization[0]
 	password := basicAuthorization[1]
-	d.SetId(time.Now().UTC().String())
+	d.SetId(meta.(*AWSClient).region)
 	d.Set("authorization_token", authorizationToken)
 	d.Set("proxy_endpoint", proxyEndpoint)
 	d.Set("expires_at", expiresAt)

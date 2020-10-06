@@ -446,6 +446,35 @@ func TestAccAWSGlueCrawler_S3Target(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueCrawler_S3Target_ConnectionName(t *testing.T) {
+	var crawler glue.Crawler
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_crawler.test"
+	connectionName := "aws_glue_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCrawlerConfig_S3Target_ConnectionName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_target.0.connection_name", connectionName, "name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSGlueCrawler_S3Target_Exclusions(t *testing.T) {
 	var crawler glue.Crawler
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1677,6 +1706,84 @@ resource "aws_glue_crawler" "test" {
   }
 }
 `, rName, rName, exclusion1)
+}
+
+func testAccGlueCrawlerConfig_S3Target_ConnectionName(rName string) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-glue-connection-base"
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = "%[1]s"
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port = 1
+    protocol  = "tcp"
+    self      = true
+    to_port   = 65535
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "terraform-testacc-glue-connection-base"
+  }
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = "%[1]s"
+}
+
+resource "aws_glue_connection" "test" {
+  connection_properties = {
+    JDBC_ENFORCE_SSL = false
+  }
+
+  connection_type = "NETWORK"
+
+  name = "%[1]s"
+
+  physical_connection_requirements {
+    availability_zone      = aws_subnet.test[0].availability_zone
+    security_group_id_list = [aws_security_group.test.id]
+    subnet_id              = aws_subnet.test[0].id
+  }
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = "%[1]s"
+  role          = aws_iam_role.test.name
+
+  s3_target {
+    connection_name = aws_glue_connection.test.name
+    path            = "s3://bucket1"
+  }
+}
+`, rName)
 }
 
 func testAccGlueCrawlerConfig_S3Target_Exclusions2(rName, exclusion1, exclusion2 string) string {

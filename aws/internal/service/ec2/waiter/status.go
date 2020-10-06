@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
@@ -56,7 +57,7 @@ func ClientVpnEndpointStatus(conn *ec2.EC2, endpointID string) resource.StateRef
 		result, err := conn.DescribeClientVpnEndpoints(&ec2.DescribeClientVpnEndpointsInput{
 			ClientVpnEndpointIds: aws.StringSlice([]string{endpointID}),
 		})
-		if tfec2.ErrCodeEquals(err, tfec2.ErrCodeClientVpnEndpointIdNotFound) {
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeClientVpnEndpointIdNotFound) {
 			return nil, ClientVpnEndpointStatusNotFound, nil
 		}
 		if err != nil {
@@ -86,7 +87,7 @@ const (
 func ClientVpnAuthorizationRuleStatus(conn *ec2.EC2, authorizationRuleID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		result, err := finder.ClientVpnAuthorizationRuleByID(conn, authorizationRuleID)
-		if tfec2.ErrCodeEquals(err, tfec2.ErrCodeClientVpnAuthorizationRuleNotFound) {
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeClientVpnAuthorizationRuleNotFound) {
 			return nil, ClientVpnAuthorizationRuleStatusNotFound, nil
 		}
 		if err != nil {
@@ -123,7 +124,7 @@ func ClientVpnNetworkAssociationStatus(conn *ec2.EC2, cvnaID string, cvepID stri
 			AssociationIds:      []*string{aws.String(cvnaID)},
 		})
 
-		if tfec2.ErrCodeEquals(err, tfec2.ErrCodeClientVpnAssociationIdNotFound) || tfec2.ErrCodeEquals(err, tfec2.ErrCodeClientVpnEndpointIdNotFound) {
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeClientVpnAssociationIdNotFound) || tfawserr.ErrCodeEquals(err, tfec2.ErrCodeClientVpnEndpointIdNotFound) {
 			return nil, ClientVpnNetworkAssociationStatusNotFound, nil
 		}
 		if err != nil {
@@ -153,7 +154,7 @@ const (
 func ClientVpnRouteStatus(conn *ec2.EC2, routeID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		result, err := finder.ClientVpnRouteByID(conn, routeID)
-		if tfec2.ErrCodeEquals(err, tfec2.ErrCodeClientVpnRouteNotFound) {
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeClientVpnRouteNotFound) {
 			return nil, ClientVpnRouteStatusNotFound, nil
 		}
 		if err != nil {
@@ -189,8 +190,8 @@ const (
 func SecurityGroupStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		group, err := finder.SecurityGroupByID(conn, id)
-		if tfec2.ErrCodeEquals(err, tfec2.InvalidSecurityGroupIDNotFound) ||
-			tfec2.ErrCodeEquals(err, tfec2.InvalidGroupNotFound) {
+		if tfawserr.ErrCodeEquals(err, tfec2.InvalidSecurityGroupIDNotFound) ||
+			tfawserr.ErrCodeEquals(err, tfec2.InvalidGroupNotFound) {
 			return nil, SecurityGroupStatusNotFound, nil
 		}
 		if err != nil {
@@ -214,7 +215,7 @@ const (
 func VpnGatewayVpcAttachmentState(conn *ec2.EC2, vpnGatewayID, vpcID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		vpcAttachment, err := finder.VpnGatewayVpcAttachment(conn, vpnGatewayID, vpcID)
-		if tfec2.ErrCodeEquals(err, tfec2.InvalidVpnGatewayIDNotFound) {
+		if tfawserr.ErrCodeEquals(err, tfec2.InvalidVpnGatewayIDNotFound) {
 			return nil, attachmentStateNotFound, nil
 		}
 		if err != nil {

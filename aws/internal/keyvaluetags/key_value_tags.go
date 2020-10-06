@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
@@ -378,6 +379,25 @@ func (tags KeyValueTags) Hash() int {
 	}
 
 	return hash
+}
+
+// String returns the default string representation of the KeyValueTags.
+func (tags KeyValueTags) String() string {
+	var builder strings.Builder
+
+	keys := tags.Keys()
+	sort.Strings(keys)
+
+	builder.WriteString("map[")
+	for i, k := range keys {
+		if i > 0 {
+			builder.WriteString(" ")
+		}
+		fmt.Fprintf(&builder, "%s:%s", k, tags[k].String())
+	}
+	builder.WriteString("]")
+
+	return builder.String()
 }
 
 // UrlEncode returns the KeyValueTags encoded as URL Query parameters.

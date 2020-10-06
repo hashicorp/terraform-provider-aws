@@ -1076,7 +1076,7 @@ resource "aws_mq_broker" "test" {
 
   publicly_accessible = true
   security_groups     = [aws_security_group.mq1.id, aws_security_group.mq2.id]
-  subnet_ids          = [aws_subnet.private[0].id, aws_subnet.private[1].id]
+  subnet_ids          = aws_subnet.private[*].id
 
   user {
     username = "Test"

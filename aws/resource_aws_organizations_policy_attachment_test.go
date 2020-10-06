@@ -96,7 +96,7 @@ func testAccAwsOrganizationsPolicyAttachment_Root(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsPolicyAttachmentExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "roots.0.id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "roots[0].id"),
 				),
 			},
 			{
@@ -232,7 +232,7 @@ resource "aws_organizations_organization" "test" {
 
 resource "aws_organizations_organizational_unit" "test" {
   name      = %[1]q
-  parent_id = aws_organizations_organization.test.roots.0.id
+  parent_id = aws_organizations_organization.test.roots[0].id
 }
 
 resource "aws_organizations_policy" "test" {
@@ -284,7 +284,7 @@ EOF
 
 resource "aws_organizations_policy_attachment" "test" {
   policy_id = aws_organizations_policy.test.id
-  target_id = aws_organizations_organization.test.roots.0.id
+  target_id = aws_organizations_organization.test.roots[0].id
 }
 `, rName)
 }

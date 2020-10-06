@@ -395,7 +395,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 			},
 
 			"enabled_cloudwatch_logs_exports": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -490,8 +490,8 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			opts.DBSubnetGroupName = aws.String(attr.(string))
 		}
 
-		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
-			opts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
+			opts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOk("engine_version"); ok {
@@ -623,8 +623,8 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			createOpts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
 		}
 
-		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
-			createOpts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
+			createOpts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOkExists("storage_encrypted"); ok {
@@ -752,8 +752,8 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			createOpts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
 		}
 
-		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
-			createOpts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
+			createOpts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOk("replication_source_identifier"); ok && createOpts.GlobalClusterIdentifier == nil {
@@ -1051,7 +1051,17 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("enabled_cloudwatch_logs_exports") {
-		req.CloudwatchLogsExportConfiguration = buildCloudwatchLogsExportConfiguration(d)
+		oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
+		o := oraw.(*schema.Set)
+		n := nraw.(*schema.Set)
+
+		enable := n.Difference(o)
+		disable := o.Difference(n)
+
+		req.CloudwatchLogsExportConfiguration = &rds.CloudwatchLogsExportConfiguration{
+			EnableLogTypes:  expandStringSet(enable),
+			DisableLogTypes: expandStringSet(disable),
+		}
 		requestUpdate = true
 	}
 

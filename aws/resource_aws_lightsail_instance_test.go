@@ -330,7 +330,7 @@ resource "aws_lightsail_instance" "lightsail_instance_test" {
   bundle_id         = "nano_1_0"
 
   tags = {
-    Name = "tf-test"
+    Name       = "tf-test"
     KeyOnlyTag = ""
   }
 }

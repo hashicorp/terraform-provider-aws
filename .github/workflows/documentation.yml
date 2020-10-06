@@ -47,5 +47,5 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: go install github.com/client9/misspell/cmd/misspell
+      - run: cd tools && go install github.com/client9/misspell/cmd/misspell
       - run: misspell -error -source text docs/

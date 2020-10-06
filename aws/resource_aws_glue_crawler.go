@@ -105,6 +105,10 @@ func resourceAwsGlueCrawler() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"connection_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"path": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -411,6 +415,10 @@ func expandGlueS3Target(cfg map[string]interface{}) *glue.S3Target {
 		Path: aws.String(cfg["path"].(string)),
 	}
 
+	if connection, ok := cfg["connection_name"]; ok {
+		target.ConnectionName = aws.String(connection.(string))
+	}
+
 	if exclusions, ok := cfg["exclusions"]; ok {
 		target.Exclusions = expandStringList(exclusions.([]interface{}))
 	}
@@ -604,6 +612,7 @@ func flattenGlueS3Targets(s3Targets []*glue.S3Target) []map[string]interface{} {
 		attrs := make(map[string]interface{})
 		attrs["exclusions"] = flattenStringList(s3Target.Exclusions)
 		attrs["path"] = aws.StringValue(s3Target.Path)
+		attrs["connection_name"] = aws.StringValue(s3Target.ConnectionName)
 
 		result = append(result, attrs)
 	}

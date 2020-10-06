@@ -199,71 +199,74 @@ func testAccAwsOrganizationsPolicy_type_Backup(t *testing.T) {
 	resourceName := "aws_organizations_policy.test"
 	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup_syntax.html
 	backupPolicyContent := `{
-  "plans": {
-    "PII_Backup_Plan": {
-      "regions": {
-        "@@assign": [
-          "ap-northeast-2",
-          "us-east-1",
-          "eu-north-1"
-        ]
-      },
-      "rules": {
-        "Hourly": {
-          "schedule_expression": {
-            "@@assign": "cron(0 5/1 ? * * *)"
-          },
-          "start_backup_window_minutes": {
-            "@@assign": "480"
-          },
-          "complete_backup_window_minutes": {
-            "@@assign": "10080"
-          },
-          "lifecycle": {
-            "move_to_cold_storage_after_days": {
-              "@@assign": "180"
-            },
-            "delete_after_days": {
-              "@@assign": "270"
+   "plans":{
+      "PII_Backup_Plan":{
+         "regions":{
+            "@@assign":[
+               "ap-northeast-2",
+               "us-east-1",
+               "eu-north-1"
+            ]
+         },
+         "rules":{
+            "Hourly":{
+               "schedule_expression":{
+                  "@@assign":"cron(0 5/1 ? * * *)"
+               },
+               "start_backup_window_minutes":{
+                  "@@assign":"480"
+               },
+               "complete_backup_window_minutes":{
+                  "@@assign":"10080"
+               },
+               "lifecycle":{
+                  "move_to_cold_storage_after_days":{
+                     "@@assign":"180"
+                  },
+                  "delete_after_days":{
+                     "@@assign":"270"
+                  }
+               },
+               "target_backup_vault_name":{
+                  "@@assign":"FortKnox"
+               },
+               "copy_actions":{
+                  "arn:aws:backup:us-east-1:$account:backup-vault:secondary_vault":{
+                     "target_backup_vault_arn":{
+                        "@@assign":"arn:aws:backup:us-east-1:$account:backup-vault:secondary_vault"
+                     },
+                     "lifecycle":{
+                        "delete_after_days":{
+                           "@@assign":"100"
+                        },
+                        "move_to_cold_storage_after_days":{
+                           "@@assign":"10"
+                        }
+                     }
+                  }
+               }
             }
-          },
-          "target_backup_vault_name": {
-            "@@assign": "FortKnox"
-          },
-          "copy_actions": {
-            "arn:aws:backup:us-east-1:$account:backup-vault:secondary_vault": {
-              "lifecycle": {
-                "delete_after_days": {
-                  "@@assign": "100"
-                },
-                "move_to_cold_storage_after_days": {
-                  "@@assign": "10"
-                }
-              }
+         },
+         "selections":{
+            "tags":{
+               "datatype":{
+                  "iam_role_arn":{
+                     "@@assign":"arn:aws:iam::$account:role/MyIamRole"
+                  },
+                  "tag_key":{
+                     "@@assign":"dataType"
+                  },
+                  "tag_value":{
+                     "@@assign":[
+                        "PII",
+                        "RED"
+                     ]
+                  }
+               }
             }
-          }
-        }
-      },
-      "selections": {
-        "tags": {
-          "datatype": {
-            "iam_role_arn": {
-              "@@assign": "arn:aws:iam::$account:role/MyIamRole"
-            },
-            "tag_key": {
-              "@@assign": "dataType"
-            },
-            "tag_value": {
-              "@@assign": [
-                "PII",
-                "RED"
-              ]
-            }
-          }
-        }
+         }
       }
-    }
-  }
+   }
 }`
 
 	resource.Test(t, resource.TestCase{
@@ -451,7 +454,7 @@ resource "aws_organizations_policy" "test" {
 }
 EOF
 
-  name        = "%s"
+  name = "%s"
 
   depends_on = [aws_organizations_organization.test]
 
@@ -479,7 +482,7 @@ resource "aws_organizations_policy" "test" {
 }
 EOF
 
-  name        = "%s"
+  name = "%s"
 
   depends_on = [aws_organizations_organization.test]
 
@@ -507,7 +510,7 @@ resource "aws_organizations_policy" "test" {
 }
 EOF
 
-  name        = "%s"
+  name = "%s"
 
   depends_on = [aws_organizations_organization.test]
 
@@ -534,7 +537,7 @@ resource "aws_organizations_policy" "test" {
 }
 EOF
 
-  name        = "%s"
+  name = "%s"
 
   depends_on = [aws_organizations_organization.test]
 }

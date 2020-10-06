@@ -399,6 +399,7 @@ resource "aws_security_group" "tf-ops-acc-layer3" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
 resource "aws_opsworks_custom_layer" "tf-acc" {
   stack_id               = aws_opsworks_stack.tf-acc.id
   name                   = "%[1]s"

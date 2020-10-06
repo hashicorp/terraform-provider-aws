@@ -1,9 +1,89 @@
-## 3.9.0 (Unreleased)
+## 3.10.0 (Unreleased)
+
+FEATURES
+
+* **New Data Source:** `aws_lex_bot_alias` [GH-8919]
+* **New Resource:** `aws_lex_bot_alias` [GH-8919]
+
+NOTES
+
+* data-source/aws_acm_certificate: The `id` attribute has changed to the ARN of the ACM Certificate. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_autoscaling_group: The `id` attribute has changed to the name of the Auto Scaling Group. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_availability_zones: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_db_event_categories: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_ebs_default_kms_key: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_ebs_encryption_by_default: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_ec2_instance_type_offering: The `id` attribute has changed to the EC2 Instance Type. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_ecr_authorization_token: The `id` attribute has changed to the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_ecr_image: The `id` attribute has changed to the SHA256 digest of the ECR Image. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_eks_cluster_auth: The `id` attribute has changed to the name of the EKS Cluster. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_iam_account_alias: The `id` attribute has changed to the AWS Account Alias. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_kms_alias: The `id` attribute has changed to the ARN of the KMS Alias. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_partition: The `id` attribute has changed to the identifier of the AWS Partition. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_regions: The `id` attribute has changed to the identifier of the AWS Partition. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_sns_topic: The `id` attribute has changed to the ARN of the SNS Topic. The first apply of this updated data source may show this difference. [GH-15399]
 
 ENHANCEMENTS
 
-* resource/aws_sagemaker_notebook_instance: Ability to configure root access for Sagemaker notebook instances [GH-14184]
+* resource/aws_sns_topic_subscription: Create subscriptions with attributes (delivery policy, filter policy, etc.) instead of separate API calls [GH-10496]
 
+BUG FIXES
+
+* data-source/aws_acm_certificate: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_autoscaling_group: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_availability_zones: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_db_event_categories: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_ebs_default_kms_key: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_ebs_encryption_by_default: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_ec2_instance_type_offering: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_ecr_authorization_token: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_ecr_image: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_eks_cluster_auth: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_iam_account_alias: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_kms_alias: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_partition: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_regions: Prevent plan differences with the `id` attribute [GH-15399]
+* data-source/aws_sns_topic: Prevent plan differences with the `id` attribute [GH-15399]
+* resource/aws_s3_bucket: Correctly handle provider-level ignored tag configuration [GH-12013]
+* resource/aws_s3_bucket_object: Correctly handle provider-level ignored tag configuration [GH-12013]
+
+## 3.9.0 (October 02, 2020)
+
+FEATURES
+
+* **New Resource:** `aws_backup_vault_notifications` ([#12501](https://github.com/terraform-providers/terraform-provider-aws/issues/12501))
+* **New Resource:** `aws_codeartifact_domain` ([#13743](https://github.com/terraform-providers/terraform-provider-aws/issues/13743))
+* **New Resource:** `aws_codeartifact_domain_permissions` ([#13753](https://github.com/terraform-providers/terraform-provider-aws/issues/13753))
+* **New Resource:** `aws_codeartifact_repository` ([#14429](https://github.com/terraform-providers/terraform-provider-aws/issues/14429))
+* **New Resource:** `aws_db_proxy_target` ([#12784](https://github.com/terraform-providers/terraform-provider-aws/issues/12784))
+* **New Resource:** `aws_glue_data_catalog_encryption_settings` ([#14916](https://github.com/terraform-providers/terraform-provider-aws/issues/14916))
+* **New Resource:** `aws_glue_ml_transform` ([#14909](https://github.com/terraform-providers/terraform-provider-aws/issues/14909))
+* **New Resource:** `aws_glue_partition` ([#12547](https://github.com/terraform-providers/terraform-provider-aws/issues/12547))
+* **New Resource:** `aws_lex_bot` ([#8918](https://github.com/terraform-providers/terraform-provider-aws/issues/8918))
+* **New Resource:** `aws_lex_intent` ([#8917](https://github.com/terraform-providers/terraform-provider-aws/issues/8917))
+* **New Data Source:** `aws_lex_bot` ([#8918](https://github.com/terraform-providers/terraform-provider-aws/issues/8918))
+* **New Data Source:** `aws_lex_intent` ([#8917](https://github.com/terraform-providers/terraform-provider-aws/issues/8917))
+
+ENHANCEMENTS
+
+* resource/aws_appmesh_route: Add `grpc_route` and `http2_route` attributes to support gRPC and HTTP/2 services ([#11669](https://github.com/terraform-providers/terraform-provider-aws/issues/11669))
+* resource/aws_appmesh_route: Add `retry_policy` attribute to support App Mesh retry policies ([#11660](https://github.com/terraform-providers/terraform-provider-aws/issues/11660))
+* resource/aws_appmesh_virtual_node: Add `grpc` and `http2` as valid values for the `protocol` attribute ([#11669](https://github.com/terraform-providers/terraform-provider-aws/issues/11669))
+* resource/aws_appmesh_virtual_node: Add `spec.backend_defaults`, `spec.backend.virtual_service.client_policy` and `spec.listener.tls` attributes to support TLS in transit encryption ([#12541](https://github.com/terraform-providers/terraform-provider-aws/issues/12541))
+* resource/aws_appmesh_virtual_router: Add `grpc` and `http2` as valid values for the `protocol` attribute ([#11669](https://github.com/terraform-providers/terraform-provider-aws/issues/11669))
+* resource/aws_fsx_lustre_file_system: Add `auto_import_policy`  argument ([#15231](https://github.com/terraform-providers/terraform-provider-aws/issues/15231))
+* resource/aws_fsx_lustre_file_system: Support `daily_automatic_backup_start_time` ([#15299](https://github.com/terraform-providers/terraform-provider-aws/issues/15299))
+* resource/aws_fsx_lustre_file_system: Add `storage_type` and `drive_cache_type` ([#14727](https://github.com/terraform-providers/terraform-provider-aws/issues/14727))
+* resource/aws_glue_crawler: Add `connection_name` field to `s3_target` block ([#15350](https://github.com/terraform-providers/terraform-provider-aws/issues/15350))
+* resource/aws_sagemaker_notebook_instance: Ability to configure root access for Sagemaker notebook instances ([#14184](https://github.com/terraform-providers/terraform-provider-aws/issues/14184))
+
+BUG FIXES
+
+* data-source/aws_s3_bucket_object: Prevent crash when S3 HeadObject returns empty response [GH-14154]
+* resource/aws_db_instance: Prevent ordering differences with `enabled_cloudwatch_logs_exports` argument ([#15404](https://github.com/terraform-providers/terraform-provider-aws/issues/15404))
+* resource/aws_ec2_client_vpn_authorization_rule: Increased active and revoked timeouts from 5 to 10 minutes ([#15367](https://github.com/terraform-providers/terraform-provider-aws/issues/15367))
+* resource/aws_rds_cluster: Prevent ordering differences with `enabled_cloudwatch_logs_exports` argument ([#15404](https://github.com/terraform-providers/terraform-provider-aws/issues/15404))
+* resource/aws_redshift_cluster: Increase default update timeout to 75 minutes ([#15339](https://github.com/terraform-providers/terraform-provider-aws/issues/15339))
 
 ## 3.8.0 (September 24, 2020)
 

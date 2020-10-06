@@ -577,6 +577,19 @@ func testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(certificateAuthority *a
 	}
 }
 
+func testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).acmpcaconn
+
+		_, err := conn.UpdateCertificateAuthority(&acmpca.UpdateCertificateAuthorityInput{
+			CertificateAuthorityArn: certificateAuthority.Arn,
+			Status:                  aws.String(acmpca.CertificateAuthorityStatusDisabled),
+		})
+
+		return err
+	}
+}
+
 func listAcmpcaCertificateAuthorities(conn *acmpca.ACMPCA) ([]*acmpca.CertificateAuthority, error) {
 	certificateAuthorities := []*acmpca.CertificateAuthority{}
 	input := &acmpca.ListCertificateAuthoritiesInput{}

@@ -8,14 +8,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -498,8 +498,8 @@ func TestAccAWSRDSCluster_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports(t *testing.T) {
-	var dbCluster1, dbCluster2, dbCluster3, dbCluster4 rds.DBCluster
+func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports_MySQL(t *testing.T) {
+	var dbCluster1, dbCluster2, dbCluster3 rds.DBCluster
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_rds_cluster.test"
 
@@ -513,7 +513,7 @@ func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.0", "audit"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
 				),
 			},
 			{
@@ -529,12 +529,12 @@ func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAWSClusterConfigEnabledCloudwatchLogsExports2(rName, "error", "slowquery"),
+				Config: testAccAWSClusterConfigEnabledCloudwatchLogsExports2(rName, "slowquery", "error"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.0", "error"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.1", "slowquery"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "slowquery"),
 				),
 			},
 			{
@@ -542,16 +542,42 @@ func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster3),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.0", "error"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports_Postgresql(t *testing.T) {
+	var dbCluster1 rds.DBCluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterConfigEnabledCloudwatchLogsExportsPostgres1(rName, "postgresql"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSClusterExists(resourceName, &dbCluster4),
+					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.0", "postgresql"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "postgresql"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"master_password",
+					"skip_final_snapshot",
+					"snapshot_identifier",
+				},
 			},
 		},
 	})
