@@ -88,6 +88,10 @@ func S3ObjectListTags(conn *s3.S3, bucket, key string) (KeyValueTags, error) {
 
 	output, err := conn.GetObjectTagging(input)
 
+	if tfawserr.ErrCodeEquals(err, tfs3.NoSuchTagSet) {
+		return New(nil), nil
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
