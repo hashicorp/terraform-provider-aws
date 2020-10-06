@@ -44,6 +44,8 @@ BUG FIXES
 * data-source/aws_partition: Prevent plan differences with the `id` attribute [GH-15399]
 * data-source/aws_regions: Prevent plan differences with the `id` attribute [GH-15399]
 * data-source/aws_sns_topic: Prevent plan differences with the `id` attribute [GH-15399]
+* resource/aws_s3_bucket: Correctly handle provider-level ignored tag configuration [GH-12013]
+* resource/aws_s3_bucket_object: Correctly handle provider-level ignored tag configuration [GH-12013]
 
 ## 3.9.0 (October 02, 2020)
 
