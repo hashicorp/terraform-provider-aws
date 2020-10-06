@@ -328,6 +328,8 @@ func TestAccAWSElasticacheReplicationGroup_multiAzInVpc(t *testing.T) {
 						resourceName, "snapshot_retention_limit", "7"),
 					resource.TestCheckResourceAttrSet(
 						resourceName, "primary_endpoint_address"),
+					resource.TestCheckResourceAttrSet(
+						resourceName, "reader_endpoint_address"),
 				),
 			},
 			{
@@ -363,6 +365,8 @@ func TestAccAWSElasticacheReplicationGroup_redisClusterInVpc2(t *testing.T) {
 						resourceName, "snapshot_retention_limit", "7"),
 					resource.TestCheckResourceAttrSet(
 						resourceName, "primary_endpoint_address"),
+					resource.TestCheckResourceAttrSet(
+						resourceName, "reader_endpoint_address"),
 				),
 			},
 			{
