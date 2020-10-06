@@ -79,6 +79,7 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* data-source/aws_s3_bucket_object: Prevent crash when S3 HeadObject returns empty response [GH-14154]
 * resource/aws_db_instance: Prevent ordering differences with `enabled_cloudwatch_logs_exports` argument ([#15404](https://github.com/terraform-providers/terraform-provider-aws/issues/15404))
 * resource/aws_ec2_client_vpn_authorization_rule: Increased active and revoked timeouts from 5 to 10 minutes ([#15367](https://github.com/terraform-providers/terraform-provider-aws/issues/15367))
 * resource/aws_rds_cluster: Prevent ordering differences with `enabled_cloudwatch_logs_exports` argument ([#15404](https://github.com/terraform-providers/terraform-provider-aws/issues/15404))
