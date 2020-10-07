@@ -150,30 +150,30 @@ func TestAccDataSourceAwsEc2InstanceType_accelerator(t *testing.T) {
 
 const testAccDataSourceEc2InstanceTypeBasic = `
 data "aws_ec2_instance_type" "basic" {
-  instance_type="t2.micro"
+  instance_type = "t2.micro"
 }
 `
 
 const testAccDataSourceEc2InstanceTypeMetal = `
 data "aws_ec2_instance_type" "metal" {
-  instance_type="i3en.metal"
+  instance_type = "i3en.metal"
 }
 `
 
 const testAccDataSourceEc2InstanceTypeGpu = `
 data "aws_ec2_instance_type" "gpu" {
-  instance_type="g2.2xlarge"
+  instance_type = "g2.2xlarge"
 }
 `
 
 const testAccDataSourceEc2InstanceTypeFgpa = `
 data "aws_ec2_instance_type" "fpga" {
-  instance_type="f1.2xlarge"
+  instance_type = "f1.2xlarge"
 }
 `
 
 const testAccDataSourceEc2InstanceTypeAccelerator = `
 data "aws_ec2_instance_type" "accelerator" {
-  instance_type="inf1.xlarge"
+  instance_type = "inf1.xlarge"
 }
 `
