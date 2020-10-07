@@ -378,7 +378,6 @@ func testAccAwsOrganizationsPolicy_ImportAwsManagedPolicy(t *testing.T) {
 
 	resourceID := "p-FullAWSAccess"
 
-	t.Skip("This test requires SDK 2.0.4 or higher for `ExpectError` with `ImportState`")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
@@ -392,7 +391,7 @@ func testAccAwsOrganizationsPolicy_ImportAwsManagedPolicy(t *testing.T) {
 				ResourceName:  resourceName,
 				ImportStateId: resourceID,
 				ImportState:   true,
-				ExpectError:   regexp.MustCompile(fmt.Sprintf("AWS-managed Organizations policy (%s) cannot be imported.", resourceID)),
+				ExpectError:   regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf("AWS-managed Organizations policy (%s) cannot be imported.", resourceID))),
 			},
 		},
 	})
