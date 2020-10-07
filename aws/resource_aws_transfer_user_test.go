@@ -713,7 +713,7 @@ resource "aws_transfer_user" "foo" {
 
   home_directory_mappings {
     entry  = "/your-personal-report.pdf"
-    target = "/bucket3/customized-reports/tftestuser.pdf" 
+    target = "/bucket3/customized-reports/tftestuser.pdf"
   }
 }
 `, rName))
@@ -771,12 +771,12 @@ resource "aws_transfer_user" "foo" {
 
   home_directory_mappings {
     entry  = "/your-personal-report.pdf"
-    target = "/bucket3/customized-reports/tftestuser.pdf" 
+    target = "/bucket3/customized-reports/tftestuser.pdf"
   }
 
   home_directory_mappings {
     entry  = "/your-personal-report2.pdf"
-    target = "/bucket3/customized-reports2/tftestuser.pdf" 
+    target = "/bucket3/customized-reports2/tftestuser.pdf"
   }
 }
 `, rName))

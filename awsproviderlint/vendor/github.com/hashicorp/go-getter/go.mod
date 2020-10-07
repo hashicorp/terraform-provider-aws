@@ -17,7 +17,9 @@ require (
 	github.com/mitchellh/go-testing-interface v1.0.0
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/testify v1.2.2 // indirect
-	github.com/ulikunitz/xz v0.5.5
+	github.com/ulikunitz/xz v0.5.8
 	google.golang.org/api v0.9.0
 	gopkg.in/cheggaaa/pb.v1 v1.0.27 // indirect
 )
+
+go 1.13

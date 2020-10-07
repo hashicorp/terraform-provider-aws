@@ -8,9 +8,18 @@ description: |-
 
 # Resource: aws_autoscaling_group
 
-Provides an AutoScaling Group resource.
+Provides an Auto Scaling Group resource.
 
 -> **Note:** You must specify either `launch_configuration`, `launch_template`, or `mixed_instances_policy`.
+
+~> **NOTE on Auto Scaling Groups and ASG Attachments:** Terraform currently provides
+both a standalone [`aws_autoscaling_attachment`](autoscaling_attachment.html) resource
+(describing an ASG attached to an ELB or ALB), and an [`aws_autoscaling_group`](autoscaling_group.html)
+with `load_balancers` and `target_group_arns` defined in-line. These two methods are not
+mutually-exclusive. If `aws_autoscaling_attachment` resources are used, either alone or with inline
+`load_balancers` or `target_group_arns`, the `aws_autoscaling_group` resource must be configured
+to ignore changes to the `load_balancers` and `target_group_arns` arguments within a
+[`lifecycle` configuration block](/docs/configuration/resources.html#lifecycle-lifecycle-customizations).
 
 ## Example Usage
 
