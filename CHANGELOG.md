@@ -46,6 +46,7 @@ BUG FIXES
 * data-source/aws_regions: Prevent plan differences with the `id` attribute [GH-15399]
 * data-source/aws_sns_topic: Prevent plan differences with the `id` attribute [GH-15399]
 * resource/aws_acm_certificate: Prevent unexpected timeout error on deletion due to API retries [GH-15522]
+* resource/aws_codestarnotifications_notification_rule: Prevent unexpected timeout error during target deletion due to API retries [GH-15523]
 * resource/aws_organizations_policy: Prevent errors with imported AWS-managed Organizations policies [GH-15446]
 * resource/aws_s3_bucket: Correctly handle provider-level ignored tag configuration [GH-12013]
 * resource/aws_s3_bucket_object: Correctly handle provider-level ignored tag configuration [GH-12013]
