@@ -106,7 +106,7 @@ func resourceAwsS3BucketOwnershipControlsRead(d *schema.ResourceData, meta inter
 		d.Set("rule", nil)
 	} else {
 		if err := d.Set("rule", flattenS3OwnershipControlsRules(output.OwnershipControls.Rules)); err != nil {
-			return fmt.Errorf("error setting rule: %s", err)
+			return fmt.Errorf("error setting rule: %w", err)
 		}
 	}
 
