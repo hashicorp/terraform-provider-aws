@@ -964,7 +964,7 @@ protocol = "TCP"
 	})
 }
 
-func TestAccAWSLBTargetGroup_stickinessWithTCPDisabled(t *testing.T) {
+func TestAccAWSLBTargetGroup_defaultStickinessForNLB(t *testing.T) {
 	var conf elbv2.TargetGroup
 	resourceName := "aws_lb_target_group.test"
 
@@ -975,29 +975,139 @@ func TestAccAWSLBTargetGroup_stickinessWithTCPDisabled(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBTargetGroupConfig_stickinessWithTCP(false),
+				Config: testAccAWSLBTargetGroupConfig_NLBdefaultStickiness("TCP"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "86400"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_NLBdefaultStickiness("UDP"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_NLBdefaultStickiness("TCP_UDP"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSLBTargetGroup_stickinessWithTCPEnabledShouldError(t *testing.T) {
+func TestAccAWSLBTargetGroup_validStickinessForNLB(t *testing.T) {
+	var conf elbv2.TargetGroup
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_NLBvalidStickiness("TCP", false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_NLBvalidStickiness("TCP", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_NLBvalidStickiness("UDP", false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_NLBvalidStickiness("UDP", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_NLBvalidStickiness("TCP_UDP", false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_NLBvalidStickiness("TCP_UDP", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLBTargetGroup_invalidStickinessForNLBShouldError(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSLBTargetGroupConfig_stickinessWithTCP(true),
+				Config:      testAccAWSLBTargetGroupConfig_NLBinvalidStickiness("TCP", true),
 				PlanOnly:    true,
-				ExpectError: regexp.MustCompile("Network Load Balancers do not support Stickiness"),
+				ExpectError: regexp.MustCompile("Network Load Balancers can only use \"source_ip\" stickiness."),
+			},
+			{
+				Config:      testAccAWSLBTargetGroupConfig_NLBinvalidStickiness("TCP", false),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("Network Load Balancers can only use \"source_ip\" stickiness."),
+			},
+			{
+				Config:      testAccAWSLBTargetGroupConfig_NLBinvalidStickiness("UDP", true),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("Network Load Balancers can only use \"source_ip\" stickiness."),
+			},
+			{
+				Config:      testAccAWSLBTargetGroupConfig_NLBinvalidStickiness("UDP", false),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("Network Load Balancers can only use \"source_ip\" stickiness."),
+			},
+			{
+				Config:      testAccAWSLBTargetGroupConfig_NLBinvalidStickiness("TCP_UDP", true),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("Network Load Balancers can only use \"source_ip\" stickiness."),
+			},
+			{
+				Config:      testAccAWSLBTargetGroupConfig_NLBinvalidStickiness("TCP_UDP", false),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("Network Load Balancers can only use \"source_ip\" stickiness."),
 			},
 		},
 	})
@@ -1206,6 +1316,10 @@ resource "aws_lb_target_group" "test" {
   deregistration_delay = 200
   slow_start           = 0
 
+  stickiness {
+    type = "source_ip"
+  }
+
   health_check {
     %s
   }
@@ -1359,6 +1473,10 @@ resource "aws_lb_target_group" "test" {
   port     = 514
   protocol = "UDP"
   vpc_id   = aws_vpc.test.id
+
+  stickiness {
+    type = "source_ip"
+  }
 
   health_check {
     protocol = "TCP"
@@ -1654,6 +1772,10 @@ resource "aws_lb_target_group" "test" {
 
   deregistration_delay = 200
 
+  stickiness {
+    type = "source_ip"
+  }
+
   health_check {
     interval            = 10
     port                = "traffic-port"
@@ -1688,6 +1810,10 @@ resource "aws_lb_target_group" "test" {
   proxy_protocol_v2    = "true"
   deregistration_delay = 200
 
+  stickiness {
+    type = "source_ip"
+  }
+
   health_check {
     interval            = 10
     port                = "traffic-port"
@@ -1720,6 +1846,10 @@ resource "aws_lb_target_group" "test" {
   vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
+
+  stickiness {
+    type = "source_ip"
+  }
 
   health_check {
     interval            = 10
@@ -1754,6 +1884,10 @@ resource "aws_lb_target_group" "test" {
 
   deregistration_delay = 200
 
+  stickiness {
+    type = "source_ip"
+  }
+
   health_check {
     interval            = 10
     port                = "traffic-port"
@@ -1787,6 +1921,10 @@ resource "aws_lb_target_group" "test" {
 
   deregistration_delay = 200
 
+  stickiness {
+    type = "source_ip"
+  }
+
   health_check {
     interval            = 30
     port                = "traffic-port"
@@ -1817,6 +1955,10 @@ resource "aws_lb_target_group" "test" {
   port     = 8082
   protocol = "TCP"
   vpc_id   = aws_vpc.test.id
+
+  stickiness {
+    type = "source_ip"
+  }
 
   health_check {
     healthy_threshold   = %[2]d
@@ -1923,12 +2065,55 @@ resource "aws_vpc" "test" {
 }
 `
 
-func testAccAWSLBTargetGroupConfig_stickinessWithTCP(enabled bool) string {
+func testAccAWSLBTargetGroupConfig_NLBdefaultStickiness(protocol string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name_prefix = "tf-"
   port        = 25
-  protocol    = "TCP"
+  protocol    = "%s"
+  vpc_id      = aws_vpc.test.id
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "testAccAWSLBTargetGroupConfig_namePrefix"
+  }
+}
+`, protocol)
+}
+
+func testAccAWSLBTargetGroupConfig_NLBvalidStickiness(protocol string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name_prefix = "tf-"
+  port        = 25
+  protocol    = "%s"
+  vpc_id      = aws_vpc.test.id
+
+  stickiness {
+    type    = "source_ip"
+    enabled = %t
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "testAccAWSLBTargetGroupConfig_namePrefix"
+  }
+}
+`, protocol, enabled)
+}
+
+func testAccAWSLBTargetGroupConfig_NLBinvalidStickiness(protocol string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name_prefix = "tf-"
+  port        = 25
+  protocol    = "%s"
   vpc_id      = aws_vpc.test.id
 
   stickiness {
@@ -1944,5 +2129,5 @@ resource "aws_vpc" "test" {
     Name = "testAccAWSLBTargetGroupConfig_namePrefix"
   }
 }
-`, enabled)
+`, protocol, enabled)
 }
