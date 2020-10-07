@@ -214,6 +214,7 @@ func Provider() *schema.Provider {
 			"aws_ebs_volumes":                                dataSourceAwsEbsVolumes(),
 			"aws_ec2_coip_pool":                              dataSourceAwsEc2CoipPool(),
 			"aws_ec2_coip_pools":                             dataSourceAwsEc2CoipPools(),
+			"aws_ec2_instance_type":                          dataSourceAwsEc2InstanceType(),
 			"aws_ec2_instance_type_offering":                 dataSourceAwsEc2InstanceTypeOffering(),
 			"aws_ec2_instance_type_offerings":                dataSourceAwsEc2InstanceTypeOfferings(),
 			"aws_ec2_local_gateway":                          dataSourceAwsEc2LocalGateway(),
