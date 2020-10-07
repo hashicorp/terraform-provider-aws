@@ -55,6 +55,7 @@ BUG FIXES
 * resource/aws_lex_slot_type: Prevent unexpected timeout error on creation due to API retries [GH-15527]
 * resource/aws_organizations_policy: Prevent errors with imported AWS-managed Organizations policies [GH-15446]
 * resource/aws_s3_bucket: Correctly handle provider-level ignored tag configuration [GH-12013]
+* resource/aws_s3_bucket_analytics_configuration: Prevent unexpected timeout error on deletion due to API retries [GH-15529]
 * resource/aws_s3_bucket_object: Correctly handle provider-level ignored tag configuration [GH-12013]
 
 ## 3.9.0 (October 02, 2020)
