@@ -144,6 +144,10 @@ resource "aws_efs_access_point" "access_point_for_lambda" {
 For more information about CloudWatch Logs for Lambda, see the [Lambda User Guide](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-functions-logs.html).
 
 ```hcl
+variable "lambda_function_name" {
+  default = "lambda_function_name"
+}
+
 resource "aws_lambda_function" "test_lambda" {
   function_name = "${var.lambda_function_name}"
 
