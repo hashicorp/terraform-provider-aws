@@ -3,6 +3,7 @@
 FEATURES
 
 * **New Data Source:** `aws_lex_bot_alias` [GH-8919]
+* **New Data Source:** `aws_redshift_orderable_cluster` [GH-15438]
 * **New Resource:** `aws_lex_bot_alias` [GH-8919]
 
 NOTES
