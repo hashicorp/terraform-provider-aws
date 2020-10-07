@@ -312,6 +312,7 @@ func Provider() *schema.Provider {
 			"aws_rds_engine_version":                         dataSourceAwsRdsEngineVersion(),
 			"aws_rds_orderable_db_instance":                  dataSourceAwsRdsOrderableDbInstance(),
 			"aws_redshift_cluster":                           dataSourceAwsRedshiftCluster(),
+			"aws_redshift_orderable_cluster":                 dataSourceAwsRedshiftOrderableCluster(),
 			"aws_redshift_service_account":                   dataSourceAwsRedshiftServiceAccount(),
 			"aws_region":                                     dataSourceAwsRegion(),
 			"aws_regions":                                    dataSourceAwsRegions(),
