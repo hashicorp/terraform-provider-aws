@@ -94,7 +94,7 @@ func dataSourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta inter
 	d.Set("state", computeEnvironment.State)
 
 	if err := d.Set("tags", keyvaluetags.BatchKeyValueTags(computeEnvironment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
