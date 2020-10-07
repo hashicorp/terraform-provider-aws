@@ -27,6 +27,13 @@ NOTES
 
 ENHANCEMENTS
 
+ENHANCEMENTS
+
+* data-source/aws_batch_compute_environment: Add `tags` attribute [GH-15470]
+* data-source/aws_batch_job_queue: Add `tags` attribute [GH-15470]
+* resource/aws_batch_compute_environment: Add `tags` argument [GH-15470]
+* resource/aws_batch_job_definition: Add `tags` argument [GH-15470]
+* resource/aws_batch_job_queue: Add `tags` argument [GH-15470]
 * resource/aws_sns_topic_subscription: Create subscriptions with attributes (delivery policy, filter policy, etc.) instead of separate API calls [GH-10496]
 
 BUG FIXES
@@ -47,6 +54,7 @@ BUG FIXES
 * data-source/aws_regions: Prevent plan differences with the `id` attribute [GH-15399]
 * data-source/aws_sns_topic: Prevent plan differences with the `id` attribute [GH-15399]
 * resource/aws_acm_certificate: Prevent unexpected timeout error on deletion due to API retries [GH-15522]
+* resource/aws_batch_job_definition: Prevent unexpected plan difference for `container_properties` argument value with new secrets support [GH-15470]
 * resource/aws_codestarnotifications_notification_rule: Prevent unexpected timeout error during target deletion due to API retries [GH-15523]
 * resource/aws_config_remediation_configuration: Prevent unexpected timeout error on deletion due to API retries [GH-15524]
 * resource/aws_ecs_cluster: Prevent IAM Service Linked Role error on first ECS provision [GH-15457]
