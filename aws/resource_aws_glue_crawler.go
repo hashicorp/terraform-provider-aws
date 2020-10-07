@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsGlueCrawler() *schema.Resource {
@@ -499,6 +500,10 @@ func resourceAwsGlueCrawlerUpdate(d *schema.ResourceData, meta interface{}) erro
 			}
 			return nil
 		})
+
+		if tfresource.TimedOut(err) {
+			_, err = glueConn.UpdateCrawler(updateCrawlerInput)
+		}
 
 		if err != nil {
 			return fmt.Errorf("error updating Glue crawler: %s", err)
