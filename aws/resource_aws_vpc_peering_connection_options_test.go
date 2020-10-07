@@ -300,7 +300,7 @@ resource "aws_vpc" "peer" {
   }
 }
 
-// Requester's side of the connection.
+# Requester's side of the connection.
 resource "aws_vpc_peering_connection" "test" {
   vpc_id      = aws_vpc.test.id
   peer_vpc_id = aws_vpc.peer.id
@@ -312,7 +312,7 @@ resource "aws_vpc_peering_connection" "test" {
   }
 }
 
-// Accepter's side of the connection.
+# Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
   provider = "awsalternate"
 
@@ -324,7 +324,7 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
   }
 }
 
-// Requester's side of the connection.
+# Requester's side of the connection.
 resource "aws_vpc_peering_connection_options" "test" {
   # As options can't be set until the connection has been accepted
   # create an explicit dependency on the accepter.
@@ -335,7 +335,7 @@ resource "aws_vpc_peering_connection_options" "test" {
   }
 }
 
-// Accepter's side of the connection.
+# Accepter's side of the connection.
 resource "aws_vpc_peering_connection_options" "peer" {
   provider = "awsalternate"
 
@@ -374,7 +374,7 @@ data "aws_caller_identity" "peer" {
   provider = "awsalternate"
 }
 
-// Requester's side of the connection.
+# Requester's side of the connection.
 resource "aws_vpc_peering_connection" "test" {
   vpc_id        = aws_vpc.test.id
   peer_vpc_id   = aws_vpc.peer.id
@@ -386,7 +386,7 @@ resource "aws_vpc_peering_connection" "test" {
   }
 }
 
-// Accepter's side of the connection.
+# Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
   provider = "awsalternate"
 
@@ -398,7 +398,7 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
   }
 }
 
-// Requester's side of the connection.
+# Requester's side of the connection.
 resource "aws_vpc_peering_connection_options" "test" {
   # As options can't be set until the connection has been accepted
   # create an explicit dependency on the accepter.
@@ -409,7 +409,7 @@ resource "aws_vpc_peering_connection_options" "test" {
   }
 }
 
-// Accepter's side of the connection.
+# Accepter's side of the connection.
 resource "aws_vpc_peering_connection_options" "peer" {
   provider = "awsalternate"
 

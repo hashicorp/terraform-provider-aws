@@ -1786,12 +1786,12 @@ resource "aws_wafv2_web_acl" "test" {
 
     statement {
       rate_based_statement {
-	    aggregate_key_type = "FORWARDED_IP"
-	    forwarded_ip_config {
-	      fallback_behavior = "%s"
-	      header_name = "%s"
-	    }
-	    limit = 50000
+        aggregate_key_type = "FORWARDED_IP"
+        forwarded_ip_config {
+          fallback_behavior = "%s"
+          header_name       = "%s"
+        }
+        limit = 50000
       }
     }
 
