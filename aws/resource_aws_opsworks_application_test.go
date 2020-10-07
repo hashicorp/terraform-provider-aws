@@ -47,9 +47,8 @@ func TestAccAWSOpsworksApplication_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// TODO: TypeSet check ImportStateVerifyIgnore with hash keys
-				ImportStateVerifyIgnore: []string{"environment.3077298702.key", "environment.#",
-					"environment.3077298702.secure", "environment.3077298702.value"},
+				// Environment variable import is not supported currently.
+				ImportStateVerifyIgnore: []string{"environment"},
 			},
 			{
 				Config: testAccAwsOpsworksApplicationUpdate(rName),
