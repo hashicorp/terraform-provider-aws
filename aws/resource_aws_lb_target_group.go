@@ -287,17 +287,32 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 		params.Protocol = aws.String(d.Get("protocol").(string))
 		params.VpcId = aws.String(d.Get("vpc_id").(string))
 
-		stickiness := d.Get("stickiness").([]interface{})[0].(map[string]interface{})
-		if d.Get("protocol").(string) == elbv2.ProtocolEnumHttp ||
-			d.Get("protocol").(string) == elbv2.ProtocolEnumHttps {
-			if stickiness["type"].(string) != "lb_cookie" {
-				return fmt.Errorf("stickiness type can only be \"lb_cookie\" when protocol is %s", d.Get("protocol").(string))
+		stickinessBlocks := d.Get("stickiness").([]interface{})
+		if len(stickinessBlocks) > 0 {
+			stickiness := stickinessBlocks[0].(map[string]interface{})
+
+			if d.Get("protocol").(string) == elbv2.ProtocolEnumHttp ||
+				d.Get("protocol").(string) == elbv2.ProtocolEnumHttps {
+				if stickiness["type"].(string) != "lb_cookie" {
+					return fmt.Errorf("stickiness type can only be \"lb_cookie\" when protocol is %s", d.Get("protocol").(string))
+				}
+			} else if d.Get("protocol").(string) == elbv2.ProtocolEnumTcp ||
+				d.Get("protocol").(string) == elbv2.ProtocolEnumUdp ||
+				d.Get("protocol").(string) == elbv2.ProtocolEnumTcpUdp {
+				if stickiness["type"].(string) != "source_ip" {
+					return fmt.Errorf("stickiness type can only be \"source_ip\" when protocol is %s", d.Get("protocol").(string))
+				}
 			}
-		} else if d.Get("protocol").(string) == elbv2.ProtocolEnumTcp ||
-			d.Get("protocol").(string) == elbv2.ProtocolEnumUdp ||
-			d.Get("protocol").(string) == elbv2.ProtocolEnumTcpUdp {
-			if stickiness["type"].(string) != "source_ip" {
-				return fmt.Errorf("stickiness type can only be \"source_ip\" when protocol is %s", d.Get("protocol").(string))
+		} else {
+			if d.Get("protocol").(string) == elbv2.ProtocolEnumTcp ||
+				d.Get("protocol").(string) == elbv2.ProtocolEnumUdp ||
+				d.Get("protocol").(string) == elbv2.ProtocolEnumTcpUdp {
+				stickiness := make(map[string]interface{})
+				stickiness["type"] = "source_ip"
+
+				if err := d.Set("stickiness", []interface{}{stickiness}); err != nil {
+					return fmt.Errorf("error setting default NLB stickiness: %s", err)
+				}
 			}
 		}
 	}
