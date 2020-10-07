@@ -100,8 +100,8 @@ func TestAccDataSourceAwsEc2InstanceType_gpu(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceGpu, "gpus.#", "1"),
 					resource.TestCheckResourceAttr(resourceGpu, "gpus.0.count", "1"),
 					resource.TestCheckResourceAttr(resourceGpu, "gpus.0.manufacturer", "NVIDIA"),
-					resource.TestCheckResourceAttr(resourceGpu, "gpus.0.memory_size", "4096"),
-					resource.TestCheckResourceAttr(resourceGpu, "gpus.0.name", "K520"),
+					resource.TestCheckResourceAttr(resourceGpu, "gpus.0.memory_size", "8192"),
+					resource.TestCheckResourceAttr(resourceGpu, "gpus.0.name", "M60"),
 				),
 			},
 		},
@@ -129,25 +129,6 @@ func TestAccDataSourceAwsEc2InstanceType_fpga(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsEc2InstanceType_accelerator(t *testing.T) {
-	resourceAccelerator := "data.aws_ec2_instance_type.accelerator"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataSourceEc2InstanceTypeAccelerator,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceAccelerator, "inference_accelerators.#", "1"),
-					resource.TestCheckResourceAttr(resourceAccelerator, "inference_accelerators.0.count", "1"),
-					resource.TestCheckResourceAttr(resourceAccelerator, "inference_accelerators.0.manufacturer", "AWS"),
-					resource.TestCheckResourceAttr(resourceAccelerator, "inference_accelerators.0.name", "Inferentia"),
-				),
-			},
-		},
-	})
-}
-
 const testAccDataSourceEc2InstanceTypeBasic = `
 data "aws_ec2_instance_type" "basic" {
   instance_type = "t2.micro"
@@ -162,18 +143,12 @@ data "aws_ec2_instance_type" "metal" {
 
 const testAccDataSourceEc2InstanceTypeGpu = `
 data "aws_ec2_instance_type" "gpu" {
-  instance_type = "g2.2xlarge"
+  instance_type = "g3.4xlarge"
 }
 `
 
 const testAccDataSourceEc2InstanceTypeFgpa = `
 data "aws_ec2_instance_type" "fpga" {
   instance_type = "f1.2xlarge"
-}
-`
-
-const testAccDataSourceEc2InstanceTypeAccelerator = `
-data "aws_ec2_instance_type" "accelerator" {
-  instance_type = "inf1.xlarge"
 }
 `
