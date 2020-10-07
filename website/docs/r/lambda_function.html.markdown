@@ -149,7 +149,7 @@ variable "lambda_function_name" {
 }
 
 resource "aws_lambda_function" "test_lambda" {
-  function_name = "${var.lambda_function_name}"
+  function_name = var.lambda_function_name
 
   # ... other configuration ...
   depends_on = [
