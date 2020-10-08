@@ -29,6 +29,10 @@ func resourceAwsConfigRemediationConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"automatic": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"config_rule_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -141,6 +145,9 @@ func resourceAwsConfigRemediationConfigurationPut(d *schema.ResourceData, meta i
 		}
 		remediationConfigurationInput.Parameters = params
 	}
+	if v, ok := d.GetOk("automatic"); ok {
+		remediationConfigurationInput.Automatic = aws.Bool(v.(bool))
+	}
 	if v, ok := d.GetOk("resource_type"); ok {
 		remediationConfigurationInput.ResourceType = aws.String(v.(string))
 	}
@@ -195,6 +202,7 @@ func resourceAwsConfigRemediationConfigurationRead(d *schema.ResourceData, meta 
 
 	remediationConfiguration := out.RemediationConfigurations[0]
 	d.Set("arn", remediationConfiguration.Arn)
+	d.Set("automatic", remediationConfiguration.Automatic)
 	d.Set("config_rule_name", remediationConfiguration.ConfigRuleName)
 	d.Set("resource_type", remediationConfiguration.ResourceType)
 	d.Set("target_id", remediationConfiguration.TargetId)
