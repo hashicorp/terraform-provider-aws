@@ -1316,10 +1316,6 @@ resource "aws_lb_target_group" "test" {
   deregistration_delay = 200
   slow_start           = 0
 
-  stickiness {
-    type = "source_ip"
-  }
-
   health_check {
     %s
   }
@@ -1473,10 +1469,6 @@ resource "aws_lb_target_group" "test" {
   port     = 514
   protocol = "UDP"
   vpc_id   = aws_vpc.test.id
-
-  stickiness {
-    type = "source_ip"
-  }
 
   health_check {
     protocol = "TCP"
@@ -1772,10 +1764,6 @@ resource "aws_lb_target_group" "test" {
 
   deregistration_delay = 200
 
-  stickiness {
-    type = "source_ip"
-  }
-
   health_check {
     interval            = 10
     port                = "traffic-port"
@@ -1810,10 +1798,6 @@ resource "aws_lb_target_group" "test" {
   proxy_protocol_v2    = "true"
   deregistration_delay = 200
 
-  stickiness {
-    type = "source_ip"
-  }
-
   health_check {
     interval            = 10
     port                = "traffic-port"
@@ -1844,12 +1828,6 @@ resource "aws_lb_target_group" "test" {
   port     = 8082
   protocol = "TCP"
   vpc_id   = aws_vpc.test.id
-
-  deregistration_delay = 200
-
-  stickiness {
-    type = "source_ip"
-  }
 
   health_check {
     interval            = 10
@@ -1884,10 +1862,6 @@ resource "aws_lb_target_group" "test" {
 
   deregistration_delay = 200
 
-  stickiness {
-    type = "source_ip"
-  }
-
   health_check {
     interval            = 10
     port                = "traffic-port"
@@ -1921,10 +1895,6 @@ resource "aws_lb_target_group" "test" {
 
   deregistration_delay = 200
 
-  stickiness {
-    type = "source_ip"
-  }
-
   health_check {
     interval            = 30
     port                = "traffic-port"
@@ -1955,10 +1925,6 @@ resource "aws_lb_target_group" "test" {
   port     = 8082
   protocol = "TCP"
   vpc_id   = aws_vpc.test.id
-
-  stickiness {
-    type = "source_ip"
-  }
 
   health_check {
     healthy_threshold   = %[2]d
