@@ -50,6 +50,7 @@ The `application_configuration` object supports the following:
 * `environment_properties` - (Optional) Describes execution properties for a Flink-based application.
 * `flink_application_configuration` - (Optional) The configuration of a Flink-based application.
 * `sql_application_configuration` - (Optional) The configuration of a SQL-based application.
+* `vpc_configuration` - (Optional) The VPC configuration of a Flink-based application.
 
 The `application_code_configuration` object supports the following:
 
@@ -220,6 +221,11 @@ The `s3_reference_data_source` object supports the following:
 
 * `bucket_arn` - (Required) The ARN of the S3 bucket.
 * `file_key` - (Required) The object key name containing the reference data.
+
+The `vpc_configuration` object supports the following:
+
+* `security_group_ids` - (Required) The [Security Group](/docs/providers/aws/r/security_group.html) IDs used by the VPC configuration.
+* `subnet_ids` - (Required) The [Subnet](/docs/providers/aws/r/subnet.html) IDs used by the VPC configuration.
 
 The `cloudwatch_logging_options` object supports the following:
 

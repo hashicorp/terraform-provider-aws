@@ -118,6 +118,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 									},
 								},
 							},
+							ConflictsWith: []string{"application_configuration.0.sql_application_configuration"},
 						},
 
 						"environment_properties": {
@@ -151,6 +152,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 									},
 								},
 							},
+							ConflictsWith: []string{"application_configuration.0.sql_application_configuration"},
 						},
 
 						"flink_application_configuration": {
@@ -725,7 +727,48 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 									},
 								},
 							},
-							ConflictsWith: []string{"application_configuration.0.flink_application_configuration"},
+							ConflictsWith: []string{
+								"application_configuration.0.application_snapshot_configuration",
+								"application_configuration.0.environment_properties",
+								"application_configuration.0.flink_application_configuration",
+								"application_configuration.0.vpc_configuration",
+							},
+						},
+
+						"vpc_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"security_group_ids": {
+										Type:     schema.TypeSet,
+										Required: true,
+										MinItems: 1,
+										MaxItems: 5,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+
+									"subnet_ids": {
+										Type:     schema.TypeSet,
+										Required: true,
+										MinItems: 1,
+										MaxItems: 16,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+
+									"vpc_configuration_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"vpc_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+							ConflictsWith: []string{"application_configuration.0.sql_application_configuration"},
 						},
 					},
 				},
@@ -1223,6 +1266,61 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 				applicationConfigurationUpdate.SqlApplicationConfigurationUpdate = sqlApplicationConfigurationUpdate
 			}
 
+			if d.HasChange("application_configuration.0.vpc_configuration") {
+				o, n := d.GetChange("application_configuration.0.vpc_configuration")
+
+				if len(o.([]interface{})) == 0 {
+					// Add new VPC configuration.
+					input := &kinesisanalyticsv2.AddApplicationVpcConfigurationInput{
+						ApplicationName:             aws.String(applicationName),
+						CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+						VpcConfiguration:            expandKinesisAnalyticsV2VpcConfiguration(n.([]interface{})),
+					}
+
+					log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) VPC configuration: %s", d.Id(), input)
+
+					outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+						return conn.AddApplicationVpcConfiguration(input)
+					})
+
+					if err != nil {
+						return fmt.Errorf("error adding Kinesis Analytics v2 Application (%s) VPC configuration: %w", d.Id(), err)
+					}
+
+					output := outputRaw.(*kinesisanalyticsv2.AddApplicationVpcConfigurationOutput)
+
+					currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
+				} else if len(n.([]interface{})) == 0 {
+					// Delete existing VPC configuration.
+					input := &kinesisanalyticsv2.DeleteApplicationVpcConfigurationInput{
+						ApplicationName:             aws.String(applicationName),
+						CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+						VpcConfigurationId:          aws.String(o.([]interface{})[0].(map[string]interface{})["vpc_configuration_id"].(string)),
+					}
+
+					log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) VPC configuration: %s", d.Id(), input)
+
+					outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+						return conn.DeleteApplicationVpcConfiguration(input)
+					})
+
+					if err != nil {
+						return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s) VPC configuration: %w", d.Id(), err)
+					}
+
+					output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationVpcConfigurationOutput)
+
+					currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
+				} else {
+					// Update existing VPC configuration.
+					vpcConfigurationUpdate := expandKinesisAnalyticsV2VpcConfigurationUpdate(n.([]interface{}))
+
+					applicationConfigurationUpdate.VpcConfigurationUpdates = []*kinesisanalyticsv2.VpcConfigurationUpdate{vpcConfigurationUpdate}
+
+					updateApplication = true
+				}
+			}
+
 			input.ApplicationConfigurationUpdate = applicationConfigurationUpdate
 		}
 
@@ -1478,6 +1576,10 @@ func expandKinesisAnalyticsV2ApplicationConfiguration(vApplicationConfiguration 
 		applicationConfiguration.SqlApplicationConfiguration = sqlApplicationConfiguration
 	}
 
+	if vVpcConfiguration, ok := mApplicationConfiguration["vpc_configuration"].([]interface{}); ok && len(vVpcConfiguration) > 0 && vVpcConfiguration[0] != nil {
+		applicationConfiguration.VpcConfigurations = []*kinesisanalyticsv2.VpcConfiguration{expandKinesisAnalyticsV2VpcConfiguration(vVpcConfiguration)}
+	}
+
 	return applicationConfiguration
 }
 
@@ -1712,6 +1814,19 @@ func flattenKinesisAnalyticsV2ApplicationConfigurationDescription(applicationCon
 		}
 
 		mApplicationConfiguration["sql_application_configuration"] = []interface{}{mSqlApplicationConfiguration}
+	}
+
+	if vpcConfigurationDescriptions := applicationConfigurationDescription.VpcConfigurationDescriptions; len(vpcConfigurationDescriptions) > 0 && vpcConfigurationDescriptions[0] != nil {
+		vpcConfigurationDescription := vpcConfigurationDescriptions[0]
+
+		mVpcConfiguration := map[string]interface{}{
+			"security_group_ids":   flattenStringSet(vpcConfigurationDescription.SecurityGroupIds),
+			"subnet_ids":           flattenStringSet(vpcConfigurationDescription.SubnetIds),
+			"vpc_configuration_id": aws.StringValue(vpcConfigurationDescription.VpcConfigurationId),
+			"vpc_id":               aws.StringValue(vpcConfigurationDescription.VpcId),
+		}
+
+		mApplicationConfiguration["vpc_configuration"] = []interface{}{mVpcConfiguration}
 	}
 
 	return []interface{}{mApplicationConfiguration}
@@ -2512,6 +2627,50 @@ func flattenKinesisAnalyticsV2SourceSchema(sourceSchema *kinesisanalyticsv2.Sour
 	}
 
 	return []interface{}{mSourceSchema}
+}
+
+func expandKinesisAnalyticsV2VpcConfiguration(vVpcConfiguration []interface{}) *kinesisanalyticsv2.VpcConfiguration {
+	if len(vVpcConfiguration) == 0 || vVpcConfiguration[0] == nil {
+		return nil
+	}
+
+	vpcConfiguration := &kinesisanalyticsv2.VpcConfiguration{}
+
+	mVpcConfiguration := vVpcConfiguration[0].(map[string]interface{})
+
+	if vSecurityGroupIds, ok := mVpcConfiguration["security_group_ids"].(*schema.Set); ok && vSecurityGroupIds.Len() > 0 {
+		vpcConfiguration.SecurityGroupIds = expandStringSet(vSecurityGroupIds)
+	}
+
+	if vSubnetIds, ok := mVpcConfiguration["subnet_ids"].(*schema.Set); ok && vSubnetIds.Len() > 0 {
+		vpcConfiguration.SubnetIds = expandStringSet(vSubnetIds)
+	}
+
+	return vpcConfiguration
+}
+
+func expandKinesisAnalyticsV2VpcConfigurationUpdate(vVpcConfiguration []interface{}) *kinesisanalyticsv2.VpcConfigurationUpdate {
+	if len(vVpcConfiguration) == 0 || vVpcConfiguration[0] == nil {
+		return nil
+	}
+
+	vpcConfigurationUpdate := &kinesisanalyticsv2.VpcConfigurationUpdate{}
+
+	mVpcConfiguration := vVpcConfiguration[0].(map[string]interface{})
+
+	if vSecurityGroupIds, ok := mVpcConfiguration["security_group_ids"].(*schema.Set); ok && vSecurityGroupIds.Len() > 0 {
+		vpcConfigurationUpdate.SecurityGroupIdUpdates = expandStringSet(vSecurityGroupIds)
+	}
+
+	if vSubnetIds, ok := mVpcConfiguration["subnet_ids"].(*schema.Set); ok && vSubnetIds.Len() > 0 {
+		vpcConfigurationUpdate.SubnetIdUpdates = expandStringSet(vSubnetIds)
+	}
+
+	if vVpcConfigurationId, ok := mVpcConfiguration["vpc_configuration_id"].(string); ok && vVpcConfigurationId != "" {
+		vpcConfigurationUpdate.VpcConfigurationId = aws.String(vVpcConfigurationId)
+	}
+
+	return vpcConfigurationUpdate
 }
 
 // kinesisAnalyticsV2RetryIAMEventualConsistency retries the specified function for 1 minute
