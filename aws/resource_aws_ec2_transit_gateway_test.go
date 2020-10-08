@@ -223,7 +223,7 @@ func TestAccAWSEc2TransitGateway_AutoAcceptSharedAttachments(t *testing.T) {
 				Config: testAccAWSEc2TransitGatewayConfigAutoAcceptSharedAttachments(ec2.AutoAcceptSharedAttachmentsValueDisable),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TransitGatewayExists(resourceName, &transitGateway2),
-					testAccCheckAWSEc2TransitGatewayRecreated(&transitGateway1, &transitGateway2),
+					testAccCheckAWSEc2TransitGatewayNotRecreated(&transitGateway1, &transitGateway2),
 					resource.TestCheckResourceAttr(resourceName, "auto_accept_shared_attachments", ec2.AutoAcceptSharedAttachmentsValueDisable),
 				),
 			},
@@ -348,7 +348,7 @@ func TestAccAWSEc2TransitGateway_DnsSupport(t *testing.T) {
 				Config: testAccAWSEc2TransitGatewayConfigDnsSupport(ec2.DnsSupportValueEnable),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TransitGatewayExists(resourceName, &transitGateway2),
-					testAccCheckAWSEc2TransitGatewayRecreated(&transitGateway1, &transitGateway2),
+					testAccCheckAWSEc2TransitGatewayNotRecreated(&transitGateway1, &transitGateway2),
 					resource.TestCheckResourceAttr(resourceName, "dns_support", ec2.DnsSupportValueEnable),
 				),
 			},
@@ -381,7 +381,7 @@ func TestAccAWSEc2TransitGateway_VpnEcmpSupport(t *testing.T) {
 				Config: testAccAWSEc2TransitGatewayConfigVpnEcmpSupport(ec2.VpnEcmpSupportValueEnable),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TransitGatewayExists(resourceName, &transitGateway2),
-					testAccCheckAWSEc2TransitGatewayRecreated(&transitGateway1, &transitGateway2),
+					testAccCheckAWSEc2TransitGatewayNotRecreated(&transitGateway1, &transitGateway2),
 					resource.TestCheckResourceAttr(resourceName, "vpn_ecmp_support", ec2.VpnEcmpSupportValueEnable),
 				),
 			},
@@ -414,7 +414,7 @@ func TestAccAWSEc2TransitGateway_Description(t *testing.T) {
 				Config: testAccAWSEc2TransitGatewayConfigDescription("description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TransitGatewayExists(resourceName, &transitGateway2),
-					testAccCheckAWSEc2TransitGatewayRecreated(&transitGateway1, &transitGateway2),
+					testAccCheckAWSEc2TransitGatewayNotRecreated(&transitGateway1, &transitGateway2),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},

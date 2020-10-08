@@ -41,7 +41,6 @@ func resourceAwsEc2TransitGateway() *schema.Resource {
 			"auto_accept_shared_attachments": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Default:  ec2.AutoAcceptSharedAttachmentsValueDisable,
 				ValidateFunc: validation.StringInSlice([]string{
 					ec2.AutoAcceptSharedAttachmentsValueDisable,
@@ -71,12 +70,10 @@ func resourceAwsEc2TransitGateway() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 			"dns_support": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Default:  ec2.DnsSupportValueEnable,
 				ValidateFunc: validation.StringInSlice([]string{
 					ec2.DnsSupportValueDisable,
@@ -95,7 +92,6 @@ func resourceAwsEc2TransitGateway() *schema.Resource {
 			"vpn_ecmp_support": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Default:  ec2.VpnEcmpSupportValueEnable,
 				ValidateFunc: validation.StringInSlice([]string{
 					ec2.VpnEcmpSupportValueDisable,
@@ -197,6 +193,38 @@ func resourceAwsEc2TransitGatewayRead(d *schema.ResourceData, meta interface{}) 
 
 func resourceAwsEc2TransitGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+
+	modifyTransitGatewayInput := &ec2.ModifyTransitGatewayInput{}
+	transitGatewayModified := false
+
+	if d.HasChange("description") {
+		transitGatewayModified = true
+		modifyTransitGatewayInput.Description = aws.String(d.Get("description").(string))
+	}
+
+	options := &ec2.ModifyTransitGatewayOptions{}
+
+	if d.HasChange("auto_accept_shared_attachments") {
+		transitGatewayModified = true
+		options.AutoAcceptSharedAttachments = aws.String(d.Get("auto_accept_shared_attachments").(string))
+	}
+
+	if d.HasChange("dns_support") {
+		transitGatewayModified = true
+		options.DnsSupport = aws.String(d.Get("dns_support").(string))
+	}
+
+	if d.HasChange("vpn_ecmp_support") {
+		transitGatewayModified = true
+		options.VpnEcmpSupport = aws.String(d.Get("vpn_ecmp_support").(string))
+	}
+	if transitGatewayModified {
+		modifyTransitGatewayInput.TransitGatewayId = aws.String(d.Id())
+		modifyTransitGatewayInput.Options = options
+		if _, err := conn.ModifyTransitGateway(modifyTransitGatewayInput); err != nil {
+			return fmt.Errorf("error updating EC2 Transit Gateway (%s) options: %s", d.Id(), err)
+		}
+	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
