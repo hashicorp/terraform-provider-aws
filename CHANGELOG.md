@@ -31,6 +31,7 @@ ENHANCEMENTS
 
 * data-source/aws_batch_compute_environment: Add `tags` attribute [GH-15470]
 * data-source/aws_batch_job_queue: Add `tags` attribute [GH-15470]
+* data-source/aws_vpc_endpoint_service: Accept `service_type` as argument [GH-15467]
 * resource/aws_batch_compute_environment: Add `tags` argument [GH-15470]
 * resource/aws_batch_job_definition: Add `tags` argument [GH-15470]
 * resource/aws_batch_job_queue: Add `tags` argument [GH-15470]
