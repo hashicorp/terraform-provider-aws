@@ -1,5 +1,5 @@
 ---
-subcategory: "Kinesis"
+subcategory: "Kinesis Data Analytics (SQL Applications)"
 layout: "aws"
 page_title: "AWS: aws_kinesis_analytics_application"
 description: |-
