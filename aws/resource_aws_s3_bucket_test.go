@@ -1386,6 +1386,32 @@ func TestAccAWSS3Bucket_LifecycleRule_Expiration_EmptyConfigurationBlock(t *test
 	})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/15138
+func TestAccAWSS3Bucket_LifecycleRule_AbortIncompleteMultipartUploadDays_NoExpiration(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_s3_bucket.bucket"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigLifecycleRuleAbortIncompleteMultipartUploadDays(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
 func TestAccAWSS3Bucket_Replication(t *testing.T) {
 	rInt := acctest.RandInt()
 	alternateRegion := testAccGetAlternateRegion()
@@ -3706,6 +3732,20 @@ resource "aws_s3_bucket" "bucket" {
     id      = "id1"
 
     expiration {}
+  }
+}
+`, rName)
+}
+
+func testAccAWSS3BucketConfigLifecycleRuleAbortIncompleteMultipartUploadDays(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = %[1]q
+
+  lifecycle_rule {
+    abort_incomplete_multipart_upload_days = 7
+    enabled                                = true
+    id                                     = "id1"
   }
 }
 `, rName)
