@@ -138,7 +138,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_snapshotId(t *testing.T) {
 		CheckDestroy: testAccCheckAWSStorageGatewayStoredIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSStorageGatewayStoredIscsiVolumeConfig_SnapshotId(rName),
+				Config: testAccAWSStorageGatewayStoredIscsiVolumeConfigSnapshotId(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayStoredIscsiVolumeExists(resourceName, &storedIscsiVolume),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
@@ -311,7 +311,7 @@ resource "aws_storagegateway_stored_iscsi_volume" "test" {
   preserve_existing_data = false
   disk_id                = data.aws_storagegateway_local_disk.test.disk_id
 
-  depends_on   = [aws_storagegateway_working_storage.buffer]
+  depends_on = [aws_storagegateway_working_storage.buffer]
 }
 `, rName)
 }
@@ -319,8 +319,8 @@ resource "aws_storagegateway_stored_iscsi_volume" "test" {
 func testAccAWSStorageGatewayStoredIscsiVolumeConfigKMSEncrypted(rName string) string {
 	return testAccAWSStorageGatewayStoredIscsiVolumeConfigBase(rName) + fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-    description = "Terraform acc test %[1]s"
-    policy = <<POLICY
+  description = "Terraform acc test %[1]s"
+  policy      = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -348,7 +348,7 @@ resource "aws_storagegateway_stored_iscsi_volume" "test" {
   kms_encrypted          = true
   kms_key                = aws_kms_key.test.arn
 
-  depends_on   = [aws_storagegateway_working_storage.buffer]
+  depends_on = [aws_storagegateway_working_storage.buffer]
 }
 `, rName)
 }
@@ -356,17 +356,17 @@ resource "aws_storagegateway_stored_iscsi_volume" "test" {
 func testAccAWSStorageGatewayStoredIscsiVolumeConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return testAccAWSStorageGatewayStoredIscsiVolumeConfigBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_stored_iscsi_volume" "test" {
- gateway_arn           = data.aws_storagegateway_local_disk.test.gateway_arn
- network_interface_id  = aws_instance.test.private_ip
- target_name           = %[1]q
+ gateway_arn            = data.aws_storagegateway_local_disk.test.gateway_arn
+ network_interface_id   = aws_instance.test.private_ip
+ target_name            = %[1]q
  preserve_existing_data = false
- disk_id               = data.aws_storagegateway_local_disk.test.id
+ disk_id                = data.aws_storagegateway_local_disk.test.id
 
   tags = {
 	%[2]q = %[3]q
   }
 
-  depends_on   = [aws_storagegateway_working_storage.buffer]
+  depends_on = [aws_storagegateway_working_storage.buffer]
 }
 `, rName, tagKey1, tagValue1)
 }
@@ -374,23 +374,23 @@ resource "aws_storagegateway_stored_iscsi_volume" "test" {
 func testAccAWSStorageGatewayStoredIscsiVolumeConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccAWSStorageGatewayStoredIscsiVolumeConfigBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_stored_iscsi_volume" "test" {
- gateway_arn           = data.aws_storagegateway_local_disk.test.gateway_arn
- network_interface_id  = aws_instance.test.private_ip
- target_name           = %[1]q
-preserve_existing_data = false
- disk_id               = data.aws_storagegateway_local_disk.test.id
+ gateway_arn            = data.aws_storagegateway_local_disk.test.gateway_arn
+ network_interface_id   = aws_instance.test.private_ip
+ target_name            = %[1]q
+ preserve_existing_data = false
+ disk_id                = data.aws_storagegateway_local_disk.test.id
 
   tags = {
 	%[2]q = %[3]q
 	%[4]q = %[5]q
   }
 
-  depends_on   = [aws_storagegateway_working_storage.buffer]  
+  depends_on = [aws_storagegateway_working_storage.buffer]  
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSStorageGatewayStoredIscsiVolumeConfig_SnapshotId(rName string) string {
+func testAccAWSStorageGatewayStoredIscsiVolumeConfigSnapshotId(rName string) string {
 	return testAccAWSStorageGatewayStoredIscsiVolumeConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ebs_volume" "snapvolume" {
   availability_zone = aws_instance.test.availability_zone
@@ -418,7 +418,7 @@ resource "aws_storagegateway_stored_iscsi_volume" "test" {
   preserve_existing_data = false
   disk_id                = data.aws_storagegateway_local_disk.test.id
 
-  depends_on   = [aws_storagegateway_working_storage.buffer]  
+  depends_on = [aws_storagegateway_working_storage.buffer]  
 }
 `, rName)
 }
