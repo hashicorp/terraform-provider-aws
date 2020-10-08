@@ -33,6 +33,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the notebook instance (must be unique).
 * `role_arn` - (Required) The ARN of the IAM role to be used by the notebook instance which allows SageMaker to call other services on your behalf.
 * `instance_type` - (Required) The name of ML compute instance type.
+* `volume_size` - (Optional) The size, in GB, of the ML storage volume to attach to the notebook instance. The default value is 5 GB.
 * `subnet_id` - (Optional) The VPC subnet ID.
 * `security_groups` - (Optional) The associated security groups.
 * `kms_key_id` - (Optional) The AWS Key Management Service (AWS KMS) key that Amazon SageMaker uses to encrypt the model artifacts at rest using Amazon S3 server-side encryption.
