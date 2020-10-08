@@ -3,12 +3,12 @@ subcategory: "CodeArtifact"
 layout: "aws"
 page_title: "AWS: aws_codeartifact_authorization_token"
 description: |-
-    Provides details about an CodeArtifact Authorization Token
+    Provides details about a CodeArtifact Authorization Token
 ---
 
 # Data Source: aws_codeartifact_authorization_token
 
-The CodeArtifact Authorization Token data source allows the authorization token a CodeArtifact domain.
+The CodeArtifact Authorization Token data source generates a temporary authentication token for accessing repositories in a CodeArtifact domain.
 
 ## Example Usage
 
