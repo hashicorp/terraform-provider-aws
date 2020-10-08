@@ -61,6 +61,7 @@ BUG FIXES
 * resource/aws_emr_managed_scaling_policy: Ensure `cluster_id` attribute is properly saved during import [GH-15541]
 * resource/aws_emr_managed_scaling_policy: Handle additional cases where resource should be removed from Terraform state [GH-15541]
 * resource/aws_gamelift_fleet: Prevent unexpected timeout error on creation due to API retries [GH-15526]
+* resource/aws_glue_workflow: Ensure `max_concurrent_runs` attribute is properly saved during import [GH-15538]
 * resource/aws_lex_bot: Prevent unexpected timeout error on creation due to API retries [GH-15527]
 * resource/aws_lex_bot_alias: Prevent unexpected timeout error on creation due to API retries [GH-15527]
 * resource/aws_lex_intent: Prevent unexpected timeout error on creation due to API retries [GH-15527]
