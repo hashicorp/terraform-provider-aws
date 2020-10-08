@@ -10,8 +10,6 @@ description: |-
 
 Provides a WorkSpaces directory in AWS WorkSpaces Service.
 
--> **Note:** WorkDocs service is enabled and respective site created by default. If you don't need WorkDocs for your workspaces, please [delete it manually within AWS Management Console](https://docs.aws.amazon.com/workdocs/latest/adminguide/manage-sites.html#awsui-expandable-section-9-trigger).
-
 ## Example Usage
 
 ```hcl
