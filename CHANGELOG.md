@@ -33,6 +33,8 @@ ENHANCEMENTS
 * data-source/aws_batch_compute_environment: Add `tags` attribute [GH-15470]
 * data-source/aws_batch_job_queue: Add `tags` attribute [GH-15470]
 * data-source/aws_vpc_endpoint_service: Accept `service_type` as argument [GH-15467]
+* resource/aws_appmesh_route: Add `timeout` configuration block to `grpc_route`, `http_route`, `http2_route` and `tcp_route` attributes. [GH-14361]
+* resource/aws_appmesh_virtual_node: Add `timeout` configuration block to `listener` attribute. [GH-14361]
 * resource/aws_batch_compute_environment: Add `tags` argument [GH-15470]
 * resource/aws_batch_job_definition: Add `tags` argument [GH-15470]
 * resource/aws_batch_job_queue: Add `tags` argument [GH-15470]
