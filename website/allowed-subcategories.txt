@@ -62,7 +62,7 @@ Inspector
 IoT
 KMS
 Kinesis
-Kinesis Data Analytics v2 (SQL and Java Applications)
+Kinesis Data Analytics v2 (SQL and Flink Applications)
 Kinesis Firehose
 Kinesis Video
 Lambda

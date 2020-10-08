@@ -1,5 +1,5 @@
 ---
-subcategory: "Kinesis Data Analytics v2 (SQL and Java Applications)"
+subcategory: "Kinesis Data Analytics v2 (SQL and Flink Applications)"
 layout: "aws"
 page_title: "AWS: aws_kinesisanalyticsv2_application"
 description: |-
