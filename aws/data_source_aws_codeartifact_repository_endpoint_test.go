@@ -59,8 +59,8 @@ resource "aws_codeartifact_domain" "test" {
 }
 
 resource "aws_codeartifact_repository" "test" {
-  repository  = %[1]q
-  domain      = aws_codeartifact_domain.test.domain
+  repository = %[1]q
+  domain     = aws_codeartifact_domain.test.domain
 }
 `, rName)
 }
