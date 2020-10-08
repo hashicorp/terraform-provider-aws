@@ -356,14 +356,14 @@ resource "aws_storagegateway_stored_iscsi_volume" "test" {
 func testAccAWSStorageGatewayStoredIscsiVolumeConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return testAccAWSStorageGatewayStoredIscsiVolumeConfigBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_stored_iscsi_volume" "test" {
- gateway_arn            = data.aws_storagegateway_local_disk.test.gateway_arn
- network_interface_id   = aws_instance.test.private_ip
- target_name            = %[1]q
- preserve_existing_data = false
- disk_id                = data.aws_storagegateway_local_disk.test.id
+  gateway_arn            = data.aws_storagegateway_local_disk.test.gateway_arn
+  network_interface_id   = aws_instance.test.private_ip
+  target_name            = %[1]q
+  preserve_existing_data = false
+  disk_id                = data.aws_storagegateway_local_disk.test.id
 
   tags = {
-	%[2]q = %[3]q
+    %[2]q = %[3]q
   }
 
   depends_on = [aws_storagegateway_working_storage.buffer]
@@ -374,11 +374,11 @@ resource "aws_storagegateway_stored_iscsi_volume" "test" {
 func testAccAWSStorageGatewayStoredIscsiVolumeConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccAWSStorageGatewayStoredIscsiVolumeConfigBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_stored_iscsi_volume" "test" {
- gateway_arn            = data.aws_storagegateway_local_disk.test.gateway_arn
- network_interface_id   = aws_instance.test.private_ip
- target_name            = %[1]q
- preserve_existing_data = false
- disk_id                = data.aws_storagegateway_local_disk.test.id
+  gateway_arn            = data.aws_storagegateway_local_disk.test.gateway_arn
+  network_interface_id   = aws_instance.test.private_ip
+  target_name            = %[1]q
+  preserve_existing_data = false
+  disk_id                = data.aws_storagegateway_local_disk.test.id
 
   tags = {
 	%[2]q = %[3]q
@@ -394,8 +394,8 @@ func testAccAWSStorageGatewayStoredIscsiVolumeConfigSnapshotId(rName string) str
 	return testAccAWSStorageGatewayStoredIscsiVolumeConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ebs_volume" "snapvolume" {
   availability_zone = aws_instance.test.availability_zone
-  size              = 5
-  type              = "gp2"
+  size = 5
+  type = "gp2"
 
   tags = {
     Name = %[1]q
