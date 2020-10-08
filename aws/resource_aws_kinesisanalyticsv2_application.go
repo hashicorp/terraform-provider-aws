@@ -947,72 +947,6 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 			ApplicationName: aws.String(applicationName),
 		}
 
-		if d.HasChange("cloudwatch_logging_options") {
-			o, n := d.GetChange("cloudwatch_logging_options")
-
-			if len(o.([]interface{})) == 0 {
-				// Add new CloudWatch logging options.
-				input := &kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionInput{
-					ApplicationName: aws.String(applicationName),
-					CloudWatchLoggingOption: &kinesisanalyticsv2.CloudWatchLoggingOption{
-						LogStreamARN: aws.String(n.([]interface{})[0].(map[string]interface{})["log_stream_arn"].(string)),
-					},
-					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
-				}
-
-				log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), input)
-
-				outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
-					return conn.AddApplicationCloudWatchLoggingOption(input)
-				})
-
-				if err != nil {
-					return fmt.Errorf("error adding Kinesis Analytics v2 Application (%s) CloudWatch logging option: %w", d.Id(), err)
-				}
-
-				output := outputRaw.(*kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionOutput)
-
-				currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
-			} else if len(n.([]interface{})) == 0 {
-				// Delete existing CloudWatch logging options.
-				input := &kinesisanalyticsv2.DeleteApplicationCloudWatchLoggingOptionInput{
-					ApplicationName:             aws.String(applicationName),
-					CloudWatchLoggingOptionId:   aws.String(o.([]interface{})[0].(map[string]interface{})["cloudwatch_logging_option_id"].(string)),
-					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
-				}
-
-				log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), input)
-
-				outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
-					return conn.DeleteApplicationCloudWatchLoggingOption(input)
-				})
-
-				if err != nil {
-					return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s) CloudWatch logging option: %w", d.Id(), err)
-				}
-
-				output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationCloudWatchLoggingOptionOutput)
-
-				currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
-			} else {
-				// Update existing CloudWatch logging options.
-				input.CloudWatchLoggingOptionUpdates = []*kinesisanalyticsv2.CloudWatchLoggingOptionUpdate{
-					{
-						CloudWatchLoggingOptionId: aws.String(o.([]interface{})[0].(map[string]interface{})["cloudwatch_logging_option_id"].(string)),
-						LogStreamARNUpdate:        aws.String(n.([]interface{})[0].(map[string]interface{})["log_stream_arn"].(string)),
-					},
-				}
-
-				updateApplication = true
-			}
-		}
-
-		if d.HasChange("service_execution_role") {
-			input.ServiceExecutionRoleUpdate = aws.String(d.Get("service_execution_role").(string))
-
-			updateApplication = true
-		}
-
 		if d.HasChange("application_configuration") {
 			applicationConfigurationUpdate := &kinesisanalyticsv2.ApplicationConfigurationUpdate{}
 
@@ -1322,6 +1256,72 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 			}
 
 			input.ApplicationConfigurationUpdate = applicationConfigurationUpdate
+		}
+
+		if d.HasChange("cloudwatch_logging_options") {
+			o, n := d.GetChange("cloudwatch_logging_options")
+
+			if len(o.([]interface{})) == 0 {
+				// Add new CloudWatch logging options.
+				input := &kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionInput{
+					ApplicationName: aws.String(applicationName),
+					CloudWatchLoggingOption: &kinesisanalyticsv2.CloudWatchLoggingOption{
+						LogStreamARN: aws.String(n.([]interface{})[0].(map[string]interface{})["log_stream_arn"].(string)),
+					},
+					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+				}
+
+				log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), input)
+
+				outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+					return conn.AddApplicationCloudWatchLoggingOption(input)
+				})
+
+				if err != nil {
+					return fmt.Errorf("error adding Kinesis Analytics v2 Application (%s) CloudWatch logging option: %w", d.Id(), err)
+				}
+
+				output := outputRaw.(*kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionOutput)
+
+				currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
+			} else if len(n.([]interface{})) == 0 {
+				// Delete existing CloudWatch logging options.
+				input := &kinesisanalyticsv2.DeleteApplicationCloudWatchLoggingOptionInput{
+					ApplicationName:             aws.String(applicationName),
+					CloudWatchLoggingOptionId:   aws.String(o.([]interface{})[0].(map[string]interface{})["cloudwatch_logging_option_id"].(string)),
+					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+				}
+
+				log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), input)
+
+				outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+					return conn.DeleteApplicationCloudWatchLoggingOption(input)
+				})
+
+				if err != nil {
+					return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s) CloudWatch logging option: %w", d.Id(), err)
+				}
+
+				output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationCloudWatchLoggingOptionOutput)
+
+				currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
+			} else {
+				// Update existing CloudWatch logging options.
+				input.CloudWatchLoggingOptionUpdates = []*kinesisanalyticsv2.CloudWatchLoggingOptionUpdate{
+					{
+						CloudWatchLoggingOptionId: aws.String(o.([]interface{})[0].(map[string]interface{})["cloudwatch_logging_option_id"].(string)),
+						LogStreamARNUpdate:        aws.String(n.([]interface{})[0].(map[string]interface{})["log_stream_arn"].(string)),
+					},
+				}
+
+				updateApplication = true
+			}
+		}
+
+		if d.HasChange("service_execution_role") {
+			input.ServiceExecutionRoleUpdate = aws.String(d.Get("service_execution_role").(string))
+
+			updateApplication = true
 		}
 
 		if updateApplication {
