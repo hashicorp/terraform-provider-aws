@@ -113,7 +113,7 @@ func TestAccAWSCodeArtifactRepositoryPermissionsPolicy_disappears_domain(t *test
 				Config: testAccAWSCodeArtifactRepositoryPermissionsPolicyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactRepositoryPermissionsExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodeArtifactDomain(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodeArtifactRepositoryPermissionsPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
