@@ -154,10 +154,12 @@ func resourceAwsDbProxyTargetRead(d *schema.ResourceData, meta interface{}) erro
 		return nil
 	}
 
+	d.Set("db_proxy_name", dbProxyName)
 	d.Set("endpoint", dbProxyTarget.Endpoint)
 	d.Set("port", dbProxyTarget.Port)
 	d.Set("rds_resource_id", dbProxyTarget.RdsResourceId)
 	d.Set("target_arn", dbProxyTarget.TargetArn)
+	d.Set("target_group_name", targetGroupName)
 	d.Set("tracked_cluster_id", dbProxyTarget.TrackedClusterId)
 	d.Set("type", dbProxyTarget.Type)
 
