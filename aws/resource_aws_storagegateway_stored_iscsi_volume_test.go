@@ -381,8 +381,8 @@ resource "aws_storagegateway_stored_iscsi_volume" "test" {
   disk_id                = data.aws_storagegateway_local_disk.test.id
 
   tags = {
-	%[2]q = %[3]q
-	%[4]q = %[5]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 
   depends_on = [aws_storagegateway_working_storage.buffer]  
@@ -394,8 +394,8 @@ func testAccAWSStorageGatewayStoredIscsiVolumeConfigSnapshotId(rName string) str
 	return testAccAWSStorageGatewayStoredIscsiVolumeConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ebs_volume" "snapvolume" {
   availability_zone = aws_instance.test.availability_zone
-  size = 5
-  type = "gp2"
+  size              = 5
+  type              = "gp2"
 
   tags = {
     Name = %[1]q
