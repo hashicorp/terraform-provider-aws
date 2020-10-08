@@ -56,6 +56,8 @@ BUG FIXES
 * resource/aws_batch_job_definition: Prevent unexpected plan difference for `container_properties` argument value with new secrets support [GH-15470]
 * resource/aws_codestarnotifications_notification_rule: Prevent unexpected timeout error during target deletion due to API retries [GH-15523]
 * resource/aws_config_remediation_configuration: Prevent unexpected timeout error on deletion due to API retries [GH-15524]
+* resource/aws_db_proxy: Increase default deletion timeout to 60 minutes [GH-15537]
+* resource/aws_db_proxy_target: Ensure `db_proxy_name` and `target_group_name` attributes are properly imported [GH-15537]
 * resource/aws_ecs_cluster: Prevent IAM Service Linked Role error on first ECS provision [GH-15457]
 * resource/aws_emr_instance_fleet: Prevent error on deletion when EMR Cluster is no longer running [GH-15548]
 * resource/aws_emr_managed_scaling_policy: Ensure `cluster_id` attribute is properly saved during import [GH-15541]
