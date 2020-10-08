@@ -1829,6 +1829,8 @@ resource "aws_lb_target_group" "test" {
   protocol = "TCP"
   vpc_id   = aws_vpc.test.id
 
+  deregistration_delay = 200
+
   health_check {
     interval            = 10
     port                = "traffic-port"
