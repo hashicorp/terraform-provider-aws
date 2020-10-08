@@ -258,7 +258,7 @@ func TestAccAWSEc2TransitGateway_DefaultRouteTableAssociationAndPropagationDisab
 }
 
 func TestAccAWSEc2TransitGateway_DefaultRouteTableAssociation(t *testing.T) {
-	var transitGateway1, transitGateway2 ec2.TransitGateway
+	var transitGateway1, transitGateway2, transitGateway3 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -286,12 +286,20 @@ func TestAccAWSEc2TransitGateway_DefaultRouteTableAssociation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_table_association", ec2.DefaultRouteTableAssociationValueEnable),
 				),
 			},
+			{
+				Config: testAccAWSEc2TransitGatewayConfigDefaultRouteTableAssociation(ec2.DefaultRouteTableAssociationValueDisable),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEc2TransitGatewayExists(resourceName, &transitGateway3),
+					testAccCheckAWSEc2TransitGatewayNotRecreated(&transitGateway2, &transitGateway3),
+					resource.TestCheckResourceAttr(resourceName, "default_route_table_association", ec2.DefaultRouteTableAssociationValueDisable),
+				),
+			},
 		},
 	})
 }
 
 func TestAccAWSEc2TransitGateway_DefaultRouteTablePropagation(t *testing.T) {
-	var transitGateway1, transitGateway2 ec2.TransitGateway
+	var transitGateway1, transitGateway2, transitGateway3 ec2.TransitGateway
 	resourceName := "aws_ec2_transit_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -317,6 +325,14 @@ func TestAccAWSEc2TransitGateway_DefaultRouteTablePropagation(t *testing.T) {
 					testAccCheckAWSEc2TransitGatewayExists(resourceName, &transitGateway2),
 					testAccCheckAWSEc2TransitGatewayRecreated(&transitGateway1, &transitGateway2),
 					resource.TestCheckResourceAttr(resourceName, "default_route_table_propagation", ec2.DefaultRouteTablePropagationValueEnable),
+				),
+			},
+			{
+				Config: testAccAWSEc2TransitGatewayConfigDefaultRouteTablePropagation(ec2.DefaultRouteTablePropagationValueDisable),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEc2TransitGatewayExists(resourceName, &transitGateway3),
+					testAccCheckAWSEc2TransitGatewayNotRecreated(&transitGateway2, &transitGateway3),
+					resource.TestCheckResourceAttr(resourceName, "default_route_table_propagation", ec2.DefaultRouteTablePropagationValueDisable),
 				),
 			},
 		},
