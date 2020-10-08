@@ -7,6 +7,7 @@ FEATURES
 * **New Data Source:** `aws_lex_bot_alias` [GH-8919]
 * **New Data Source:** `aws_redshift_orderable_cluster` [GH-15438]
 * **New Resource:** `aws_lex_bot_alias` [GH-8919]
+* **New Resource:** `aws_s3_bucket_ownership_controls` [GH-15482]
 
 NOTES
 
