@@ -48,7 +48,7 @@ resource "aws_lb" "test" {
   subnets            = [aws_subnet.public.*.id]
 
   enable_deletion_protection = true
-  wait_for_provisioning = false
+  wait_for_provisioning      = false
 
   tags = {
     Environment = "production"
