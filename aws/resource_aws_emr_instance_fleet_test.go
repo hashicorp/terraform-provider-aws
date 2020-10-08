@@ -133,6 +133,8 @@ func TestAccAWSEMRInstanceFleet_disappears(t *testing.T) {
 	var fleet emr.InstanceFleet
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_emr_instance_fleet.task"
+	emrClusterResourceName := "aws_emr_cluster.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -140,8 +142,11 @@ func TestAccAWSEMRInstanceFleet_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEmrInstanceFleetConfig(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckAWSEmrInstanceFleetExists(resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrInstanceFleetExists(resourceName, &fleet),
+					// EMR Instance Fleet can only be scaled down and are not removed until the
+					// Cluster is removed. Verify EMR Cluster disappearance handling.
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEMRCluster(), emrClusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
