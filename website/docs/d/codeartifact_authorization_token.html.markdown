@@ -31,5 +31,4 @@ The following arguments are supported:
 In addition to the argument above, the following attributes are exported:
 
 * `authorization_token` - Temporary authorization token.
-* `domain_owner` - The account number of the AWS account that owns the domain.
 * `expiration` - The time in UTC RFC3339 format when the authorization token expires.
