@@ -385,7 +385,7 @@ resource "aws_storagegateway_stored_iscsi_volume" "test" {
     %[4]q = %[5]q
   }
 
-  depends_on = [aws_storagegateway_working_storage.buffer]  
+  depends_on = [aws_storagegateway_working_storage.buffer]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
@@ -418,7 +418,7 @@ resource "aws_storagegateway_stored_iscsi_volume" "test" {
   preserve_existing_data = false
   disk_id                = data.aws_storagegateway_local_disk.test.id
 
-  depends_on = [aws_storagegateway_working_storage.buffer]  
+  depends_on = [aws_storagegateway_working_storage.buffer]
 }
 `, rName)
 }
