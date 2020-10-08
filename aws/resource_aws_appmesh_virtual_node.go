@@ -177,6 +177,203 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 										},
 									},
 
+									"timeout": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 0,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"grpc": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"idle": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"unit": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+																		},
+
+																		"value": {
+																			Type:     schema.TypeInt,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+
+															"per_request": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"unit": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+																		},
+
+																		"value": {
+																			Type:     schema.TypeInt,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+
+												"http": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"idle": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"unit": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+																		},
+
+																		"value": {
+																			Type:     schema.TypeInt,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+
+															"per_request": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"unit": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+																		},
+
+																		"value": {
+																			Type:     schema.TypeInt,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+
+												"http2": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"idle": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"unit": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+																		},
+
+																		"value": {
+																			Type:     schema.TypeInt,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+
+															"per_request": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"unit": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+																		},
+
+																		"value": {
+																			Type:     schema.TypeInt,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+
+												"tcp": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"idle": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"unit": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+																		},
+
+																		"value": {
+																			Type:     schema.TypeInt,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+
 									"tls": {
 										Type:     schema.TypeList,
 										Optional: true,

@@ -185,6 +185,11 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 												},
 
 												"method_name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+
+												"prefix": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 50),
@@ -257,6 +262,58 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 											},
 										},
 									},
+
+									"timeout": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 0,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"unit": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+															},
+
+															"value": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+														},
+													},
+												},
+
+												"per_request": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"unit": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+															},
+
+															"value": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -311,6 +368,37 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 																Type:         schema.TypeInt,
 																Required:     true,
 																ValidateFunc: validation.IntBetween(0, 100),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+
+									"timeout": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 0,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"unit": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+															},
+
+															"value": {
+																Type:     schema.TypeInt,
+																Required: true,
 															},
 														},
 													},
@@ -542,6 +630,58 @@ func appmeshRouteHttpRouteSchema() *schema.Schema {
 								MinItems: 0,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 								Set:      schema.HashString,
+							},
+						},
+					},
+				},
+
+				"timeout": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 0,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"idle": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 0,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"unit": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+										},
+
+										"value": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
+									},
+								},
+							},
+
+							"per_request": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 0,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"unit": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+										},
+
+										"value": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
+									},
+								},
 							},
 						},
 					},

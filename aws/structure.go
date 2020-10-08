@@ -4883,6 +4883,30 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 				listener.Tls = tls
 			}
 
+			if vTimeout, ok := mListener["timeout"].([]interface{}); ok && len(vTimeout) > 0 && vTimeout[0] != nil {
+				mTimeout := vTimeout[0].(map[string]interface{})
+
+				listenerTimeout := &appmesh.ListenerTimeout{}
+
+				if vGrpcTimeout, ok := mTimeout["grpc"].([]interface{}); ok {
+					listenerTimeout.Grpc = expandAppmeshGrpcTimeout(vGrpcTimeout)
+				}
+
+				if vHttpTimeout, ok := mTimeout["http"].([]interface{}); ok {
+					listenerTimeout.Http = expandAppmeshHttpTimeout(vHttpTimeout)
+				}
+
+				if vHttp2Timeout, ok := mTimeout["http2"].([]interface{}); ok {
+					listenerTimeout.Http2 = expandAppmeshHttpTimeout(vHttp2Timeout)
+				}
+
+				if vTcpTimeout, ok := mTimeout["tcp"].([]interface{}); ok {
+					listenerTimeout.Tcp = expandAppmeshTcpTimeout(vTcpTimeout)
+				}
+
+				listener.Timeout = listenerTimeout
+			}
+
 			listeners = append(listeners, listener)
 		}
 
@@ -5027,6 +5051,16 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 				"protocol": aws.StringValue(portMapping.Protocol),
 			}
 			mListener["port_mapping"] = []interface{}{mPortMapping}
+		}
+
+		if listenerTimeout := listener.Timeout; listenerTimeout != nil {
+			mListenerTimeout := map[string]interface{}{
+				"grpc":  flattenAppmeshGrpcTimeout(listenerTimeout.Grpc),
+				"http":  flattenAppmeshHttpTimeout(listenerTimeout.Http),
+				"http2": flattenAppmeshHttpTimeout(listenerTimeout.Http2),
+				"tcp":   flattenAppmeshTcpTimeout(listenerTimeout.Tcp),
+			}
+			mListener["timeout"] = []interface{}{mListenerTimeout}
 		}
 
 		if tls := listener.Tls; tls != nil {
@@ -5528,7 +5562,53 @@ func expandAppmeshGrpcRoute(vGrpcRoute []interface{}) *appmesh.GrpcRoute {
 		grpcRoute.RetryPolicy = grpcRetryPolicy
 	}
 
+	if vGrpcTimeout, ok := mGrpcRoute["timeout"].([]interface{}); ok {
+		grpcRoute.Timeout = expandAppmeshGrpcTimeout(vGrpcTimeout)
+	}
+
 	return grpcRoute
+}
+
+func expandAppmeshGrpcTimeout(vGrpcTimeout []interface{}) *appmesh.GrpcTimeout {
+	if len(vGrpcTimeout) == 0 || vGrpcTimeout[0] == nil {
+		return nil
+	}
+
+	grpcTimeout := &appmesh.GrpcTimeout{}
+
+	mGrpcTimeout := vGrpcTimeout[0].(map[string]interface{})
+
+	if vIdleTimeout, ok := mGrpcTimeout["idle"].([]interface{}); ok && len(vIdleTimeout) > 0 && vIdleTimeout[0] != nil {
+		idleTimeout := &appmesh.Duration{}
+
+		mIdleTimeout := vIdleTimeout[0].(map[string]interface{})
+
+		if vUnit, ok := mIdleTimeout["unit"].(string); ok && vUnit != "" {
+			idleTimeout.Unit = aws.String(vUnit)
+		}
+		if vValue, ok := mIdleTimeout["value"].(int); ok && vValue > 0 {
+			idleTimeout.Value = aws.Int64(int64(vValue))
+		}
+
+		grpcTimeout.Idle = idleTimeout
+	}
+
+	if vPerRequestTimeout, ok := mGrpcTimeout["per_request"].([]interface{}); ok && len(vPerRequestTimeout) > 0 && vPerRequestTimeout[0] != nil {
+		perRequestTimeout := &appmesh.Duration{}
+
+		mPerRequestTimeout := vPerRequestTimeout[0].(map[string]interface{})
+
+		if vUnit, ok := mPerRequestTimeout["unit"].(string); ok && vUnit != "" {
+			perRequestTimeout.Unit = aws.String(vUnit)
+		}
+		if vValue, ok := mPerRequestTimeout["value"].(int); ok && vValue > 0 {
+			perRequestTimeout.Value = aws.Int64(int64(vValue))
+		}
+
+		grpcTimeout.PerRequest = perRequestTimeout
+	}
+
+	return grpcTimeout
 }
 
 func expandAppmeshHttpRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
@@ -5673,7 +5753,53 @@ func expandAppmeshHttpRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 		httpRoute.RetryPolicy = httpRetryPolicy
 	}
 
+	if vHttpTimeout, ok := mHttpRoute["timeout"].([]interface{}); ok {
+		httpRoute.Timeout = expandAppmeshHttpTimeout(vHttpTimeout)
+	}
+
 	return httpRoute
+}
+
+func expandAppmeshHttpTimeout(vHttpTimeout []interface{}) *appmesh.HttpTimeout {
+	if len(vHttpTimeout) == 0 || vHttpTimeout[0] == nil {
+		return nil
+	}
+
+	httpTimeout := &appmesh.HttpTimeout{}
+
+	mHttpTimeout := vHttpTimeout[0].(map[string]interface{})
+
+	if vIdleTimeout, ok := mHttpTimeout["idle"].([]interface{}); ok && len(vIdleTimeout) > 0 && vIdleTimeout[0] != nil {
+		idleTimeout := &appmesh.Duration{}
+
+		mIdleTimeout := vIdleTimeout[0].(map[string]interface{})
+
+		if vUnit, ok := mIdleTimeout["unit"].(string); ok && vUnit != "" {
+			idleTimeout.Unit = aws.String(vUnit)
+		}
+		if vValue, ok := mIdleTimeout["value"].(int); ok && vValue > 0 {
+			idleTimeout.Value = aws.Int64(int64(vValue))
+		}
+
+		httpTimeout.Idle = idleTimeout
+	}
+
+	if vPerRequestTimeout, ok := mHttpTimeout["per_request"].([]interface{}); ok && len(vPerRequestTimeout) > 0 && vPerRequestTimeout[0] != nil {
+		perRequestTimeout := &appmesh.Duration{}
+
+		mPerRequestTimeout := vPerRequestTimeout[0].(map[string]interface{})
+
+		if vUnit, ok := mPerRequestTimeout["unit"].(string); ok && vUnit != "" {
+			perRequestTimeout.Unit = aws.String(vUnit)
+		}
+		if vValue, ok := mPerRequestTimeout["value"].(int); ok && vValue > 0 {
+			perRequestTimeout.Value = aws.Int64(int64(vValue))
+		}
+
+		httpTimeout.PerRequest = perRequestTimeout
+	}
+
+	return httpTimeout
 }
 
 func expandAppmeshTcpRoute(vTcpRoute []interface{}) *appmesh.TcpRoute {
@@ -5712,7 +5838,38 @@ func expandAppmeshTcpRoute(vTcpRoute []interface{}) *appmesh.TcpRoute {
 		}
 	}
 
+	if vTcpTimeout, ok := mTcpRoute["timeout"].([]interface{}); ok {
+		tcpRoute.Timeout = expandAppmeshTcpTimeout(vTcpTimeout)
+	}
+
 	return tcpRoute
+}
+
+func expandAppmeshTcpTimeout(vTcpTimeout []interface{}) *appmesh.TcpTimeout {
+	if len(vTcpTimeout) == 0 || vTcpTimeout[0] == nil {
+		return nil
+	}
+
+	tcpTimeout := &appmesh.TcpTimeout{}
+
+	mTcpTimeout := vTcpTimeout[0].(map[string]interface{})
+
+	if vIdleTimeout, ok := mTcpTimeout["idle"].([]interface{}); ok && len(vIdleTimeout) > 0 && vIdleTimeout[0] != nil {
+		idleTimeout := &appmesh.Duration{}
+
+		mIdleTimeout := vIdleTimeout[0].(map[string]interface{})
+
+		if vUnit, ok := mIdleTimeout["unit"].(string); ok && vUnit != "" {
+			idleTimeout.Unit = aws.String(vUnit)
+		}
+		if vValue, ok := mIdleTimeout["value"].(int); ok && vValue > 0 {
+			idleTimeout.Value = aws.Int64(int64(vValue))
+		}
+
+		tcpTimeout.Idle = idleTimeout
+	}
+
+	return tcpTimeout
 }
 
 func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
@@ -5820,7 +5977,37 @@ func flattenAppmeshGrpcRoute(grpcRoute *appmesh.GrpcRoute) []interface{} {
 		mGrpcRoute["retry_policy"] = []interface{}{mGrpcRetryPolicy}
 	}
 
+	mGrpcRoute["timeout"] = flattenAppmeshGrpcTimeout(grpcRoute.Timeout)
+
 	return []interface{}{mGrpcRoute}
+}
+
+func flattenAppmeshGrpcTimeout(grpcTimeout *appmesh.GrpcTimeout) []interface{} {
+	if grpcTimeout == nil {
+		return []interface{}{}
+	}
+
+	mGrpcTimeout := map[string]interface{}{}
+
+	if idleTimeout := grpcTimeout.Idle; idleTimeout != nil {
+		mIdleTimeout := map[string]interface{}{
+			"unit":  aws.StringValue(idleTimeout.Unit),
+			"value": int(aws.Int64Value(idleTimeout.Value)),
+		}
+
+		mGrpcTimeout["idle"] = []interface{}{mIdleTimeout}
+	}
+
+	if perRequestTimeout := grpcTimeout.PerRequest; perRequestTimeout != nil {
+		mPerRequestTimeout := map[string]interface{}{
+			"unit":  aws.StringValue(perRequestTimeout.Unit),
+			"value": int(aws.Int64Value(perRequestTimeout.Value)),
+		}
+
+		mGrpcTimeout["per_request"] = []interface{}{mPerRequestTimeout}
+	}
+
+	return []interface{}{mGrpcTimeout}
 }
 
 func flattenAppmeshHttpRoute(httpRoute *appmesh.HttpRoute) []interface{} {
@@ -5912,7 +6099,37 @@ func flattenAppmeshHttpRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 		mHttpRoute["retry_policy"] = []interface{}{mHttpRetryPolicy}
 	}
 
+	mHttpRoute["timeout"] = flattenAppmeshHttpTimeout(httpRoute.Timeout)
+
 	return []interface{}{mHttpRoute}
+}
+
+func flattenAppmeshHttpTimeout(httpTimeout *appmesh.HttpTimeout) []interface{} {
+	if httpTimeout == nil {
+		return []interface{}{}
+	}
+
+	mHttpTimeout := map[string]interface{}{}
+
+	if idleTimeout := httpTimeout.Idle; idleTimeout != nil {
+		mIdleTimeout := map[string]interface{}{
+			"unit":  aws.StringValue(idleTimeout.Unit),
+			"value": int(aws.Int64Value(idleTimeout.Value)),
+		}
+
+		mHttpTimeout["idle"] = []interface{}{mIdleTimeout}
+	}
+
+	if perRequestTimeout := httpTimeout.PerRequest; perRequestTimeout != nil {
+		mPerRequestTimeout := map[string]interface{}{
+			"unit":  aws.StringValue(perRequestTimeout.Unit),
+			"value": int(aws.Int64Value(perRequestTimeout.Value)),
+		}
+
+		mHttpTimeout["per_request"] = []interface{}{mPerRequestTimeout}
+	}
+
+	return []interface{}{mHttpTimeout}
 }
 
 func flattenAppmeshTcpRoute(tcpRoute *appmesh.TcpRoute) []interface{} {
@@ -5943,7 +6160,28 @@ func flattenAppmeshTcpRoute(tcpRoute *appmesh.TcpRoute) []interface{} {
 		}
 	}
 
+	mTcpRoute["timeout"] = flattenAppmeshTcpTimeout(tcpRoute.Timeout)
+
 	return []interface{}{mTcpRoute}
+}
+
+func flattenAppmeshTcpTimeout(tcpTimeout *appmesh.TcpTimeout) []interface{} {
+	if tcpTimeout == nil {
+		return []interface{}{}
+	}
+
+	mTcpTimeout := map[string]interface{}{}
+
+	if idleTimeout := tcpTimeout.Idle; idleTimeout != nil {
+		mIdleTimeout := map[string]interface{}{
+			"unit":  aws.StringValue(idleTimeout.Unit),
+			"value": int(aws.Int64Value(idleTimeout.Value)),
+		}
+
+		mTcpTimeout["idle"] = []interface{}{mIdleTimeout}
+	}
+
+	return []interface{}{mTcpTimeout}
 }
 
 func expandRoute53ResolverEndpointIpAddresses(vIpAddresses *schema.Set) []*route53resolver.IpAddressRequest {
