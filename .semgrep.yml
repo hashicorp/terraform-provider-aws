@@ -9,5 +9,7 @@ rules:
       - pattern-either:
         - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(bool) { $BODY }
         - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(int) != 0 { $BODY }
+        - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(int) > 0 { $BODY }
         - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(string) != "" { $BODY }
+        - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && len($VALUE.(string)) > 0 { $BODY }
     severity: WARNING
