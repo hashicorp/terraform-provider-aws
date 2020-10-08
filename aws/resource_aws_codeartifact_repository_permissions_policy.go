@@ -109,7 +109,7 @@ func resourceAwsCodeArtifactRepositoryPermissionsPolicyRead(d *schema.ResourceDa
 
 	d.Set("domain", domainName)
 	d.Set("domain_owner", domainOwner)
-	d.Set("repository", domainOwner)
+	d.Set("repository", repoName)
 	d.Set("resource_arn", dm.Policy.ResourceArn)
 	d.Set("policy_document", dm.Policy.Document)
 	d.Set("policy_revision", dm.Policy.Revision)
