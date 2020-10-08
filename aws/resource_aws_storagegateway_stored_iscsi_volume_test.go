@@ -310,6 +310,8 @@ resource "aws_storagegateway_stored_iscsi_volume" "test" {
   target_name            = %[1]q
   preserve_existing_data = false
   disk_id                = data.aws_storagegateway_local_disk.test.disk_id
+
+  depends_on   = [aws_storagegateway_working_storage.buffer]
 }
 `, rName)
 }
@@ -345,6 +347,8 @@ resource "aws_storagegateway_stored_iscsi_volume" "test" {
   disk_id                = data.aws_storagegateway_local_disk.test.id
   kms_encrypted          = true
   kms_key                = aws_kms_key.test.arn
+
+  depends_on   = [aws_storagegateway_working_storage.buffer]
 }
 `, rName)
 }
@@ -361,6 +365,8 @@ resource "aws_storagegateway_stored_iscsi_volume" "test" {
   tags = {
 	%[2]q = %[3]q
   }
+
+  depends_on   = [aws_storagegateway_working_storage.buffer]
 }
 `, rName, tagKey1, tagValue1)
 }
@@ -378,6 +384,8 @@ preserve_existing_data = false
 	%[2]q = %[3]q
 	%[4]q = %[5]q
   }
+
+  depends_on   = [aws_storagegateway_working_storage.buffer]  
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
@@ -409,6 +417,8 @@ resource "aws_storagegateway_stored_iscsi_volume" "test" {
   target_name            = %[1]q
   preserve_existing_data = false
   disk_id                = data.aws_storagegateway_local_disk.test.id
+
+  depends_on   = [aws_storagegateway_working_storage.buffer]  
 }
 `, rName)
 }
