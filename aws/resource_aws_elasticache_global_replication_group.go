@@ -236,7 +236,7 @@ func resourceAwsElasticacheGlobalReplicationGroupDelete(d *schema.ResourceData, 
 		if !ok {
 			continue
 		}
-		replicationGroupId, ok := globalReplicationGroupMember["replication_group_id"].(string)
+		replicationGroupID, ok := globalReplicationGroupMember["replication_group_id"].(string)
 		if !ok {
 			continue
 		}
@@ -246,7 +246,7 @@ func resourceAwsElasticacheGlobalReplicationGroupDelete(d *schema.ResourceData, 
 			continue
 		}
 
-		if role == "secondary" {
+		if role == "SECONDARY" {
 			replicationGroupRegion, ok := globalReplicationGroupMember["replication_group_region"].(string)
 			if !ok {
 				continue
@@ -254,7 +254,7 @@ func resourceAwsElasticacheGlobalReplicationGroupDelete(d *schema.ResourceData, 
 
 			input := &elasticache.DisassociateGlobalReplicationGroupInput{
 				GlobalReplicationGroupId: aws.String(d.Id()),
-				ReplicationGroupId:       aws.String(replicationGroupId),
+				ReplicationGroupId:       aws.String(replicationGroupID),
 				ReplicationGroupRegion:   aws.String(replicationGroupRegion),
 			}
 
@@ -264,11 +264,9 @@ func resourceAwsElasticacheGlobalReplicationGroupDelete(d *schema.ResourceData, 
 				return nil
 			}
 
-			/*
-				if err := waitForElasticacheGlobalReplicationGroupRemoval(conn, replicationGroupId); err != nil {
-					return fmt.Errorf("error waiting for Elasticache Replication Group (%s) removal from Elasticache Global Replication Group (%s): %w", replicationGroupId, d.Id(), err)
-				}
-			*/
+			if err := waitForElasticacheGlobalReplicationGroupDisassociation(conn, d.Id(), replicationGroupID); err != nil {
+				return fmt.Errorf("error waiting for Elasticache Replication Group (%s) removal from Elasticache Global Replication Group (%s): %w", replicationGroupID, d.Id(), err)
+			}
 		}
 	}
 
@@ -337,6 +335,7 @@ func elasticacheDescribeGlobalReplicationGroup(conn *elasticache.ElastiCache, gl
 
 	input := &elasticache.DescribeGlobalReplicationGroupsInput{
 		GlobalReplicationGroupId: aws.String(globalReplicationGroupID),
+		ShowMemberInfo:           aws.Bool(true),
 	}
 
 	log.Printf("[DEBUG] Reading ElastiCache Global Replication Group (%s): %s", globalReplicationGroupID, input)
@@ -414,6 +413,8 @@ func waitForElasticacheGlobalReplicationDeletion(conn *elasticache.ElastiCache, 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			"available",
+			"primary-only",
+			"modifying",
 			"deleting",
 		},
 		Target:         []string{"deleted"},
@@ -432,14 +433,14 @@ func waitForElasticacheGlobalReplicationDeletion(conn *elasticache.ElastiCache, 
 	return err
 }
 
-/*
-func waitForElasticacheReplicationGroupDisassociation(conn *elasticache.ElastiCache, replicationGroupId string) error {
+func waitForElasticacheGlobalReplicationGroupDisassociation(conn *elasticache.ElastiCache, globalReplicationGroupID string, replicationGroupID string) error {
 	stillExistsErr := fmt.Errorf("ElastiCache Replication Group still associated in ElastiCache Global Replication Group")
+	var replicationGroup *elasticache.GlobalReplicationGroupMember
 
 	err := resource.Retry(elasticacheGlobalReplicationGroupRemovalTimeout, func() *resource.RetryError {
 		var err error
 
-		replicationGroup, err = elasticacheDescribeGlobalReplicationGroupFromReplicationGroup(conn, replicationGroupId)
+		replicationGroup, err = elasticacheDescribeGlobalReplicationGroupFromReplicationGroup(conn, globalReplicationGroupID, replicationGroupID)
 
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -453,7 +454,7 @@ func waitForElasticacheReplicationGroupDisassociation(conn *elasticache.ElastiCa
 	})
 
 	if isResourceTimeoutError(err) {
-		_, err = elasticacheDescribeGlobalReplicationGroupFromReplicationGroup(conn, replicationGroupId)
+		_, err = elasticacheDescribeGlobalReplicationGroupFromReplicationGroup(conn, globalReplicationGroupID, replicationGroupID)
 	}
 
 	if err != nil {
@@ -466,4 +467,25 @@ func waitForElasticacheReplicationGroupDisassociation(conn *elasticache.ElastiCa
 
 	return nil
 }
-*/
+
+func elasticacheDescribeGlobalReplicationGroupFromReplicationGroup(conn *elasticache.ElastiCache, globalReplicationGroupID string, replicationGroupID string) (*elasticache.GlobalReplicationGroupMember, error) {
+	globalReplicationGroup, err := elasticacheDescribeGlobalReplicationGroup(conn, globalReplicationGroupID)
+
+	if isAWSErr(err, elasticache.ErrCodeGlobalReplicationGroupNotFoundFault, "") {
+		return nil, err
+	}
+
+	members := globalReplicationGroup.Members
+
+	if len(members) == 0 {
+		return nil, nil
+	}
+
+	for _, member := range members {
+		if *member.ReplicationGroupId == replicationGroupID {
+			return member, nil
+		}
+	}
+
+	return nil, nil
+}
