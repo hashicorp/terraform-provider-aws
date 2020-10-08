@@ -23,7 +23,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSStorageGatewayStoredIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSStorageGatewayStoredIscsiVolumeConfig_Basic(rName),
+				Config: testAccAWSStorageGatewayStoredIscsiVolumeConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayStoredIscsiVolumeExists(resourceName, &storedIscsiVolume),
 					resource.TestCheckResourceAttr(resourceName, "preserve_existing_data", "false"),
@@ -174,7 +174,7 @@ func TestAccAWSStorageGatewayStoredIscsiVolume_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSStorageGatewayStoredIscsiVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSStorageGatewayStoredIscsiVolumeConfig_Basic(rName),
+				Config: testAccAWSStorageGatewayStoredIscsiVolumeConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayStoredIscsiVolumeExists(resourceName, &storedIscsiVolume),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsStorageGatewayStoredIscsiVolume(), resourceName),
@@ -302,7 +302,7 @@ data "aws_storagegateway_local_disk" "test" {
 `, rName)
 }
 
-func testAccAWSStorageGatewayStoredIscsiVolumeConfig_Basic(rName string) string {
+func testAccAWSStorageGatewayStoredIscsiVolumeConfigBasic(rName string) string {
 	return testAccAWSStorageGatewayStoredIscsiVolumeConfigBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_stored_iscsi_volume" "test" {
   gateway_arn            = data.aws_storagegateway_local_disk.test.gateway_arn
