@@ -113,7 +113,7 @@ func waitForFsxFileSystemUpdate(conn *fsx.FSx, id string, timeout time.Duration)
 func waitForFsxFileSystemUpdateOptimizing(conn *fsx.FSx, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.StatusInProgress},
-		Target:  []string{fsx.StatusCompleted},
+		Target:  []string{fsx.StatusCompleted, fsx.StatusUpdatedOptimizing},
 		Refresh: refreshFsxFileSystemLifecycleOptimizing(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
