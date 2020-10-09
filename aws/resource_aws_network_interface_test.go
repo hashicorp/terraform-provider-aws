@@ -104,6 +104,7 @@ func TestAccAWSENI_basic(t *testing.T) {
 func TestAccAWSENI_ipv6(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -112,7 +113,7 @@ func TestAccAWSENI_ipv6(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSENIIPV6Config,
+				Config: testAccAWSENIIPV6Config(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists(resourceName, &conf),
 					testAccCheckAWSENIAttributes(&conf),
@@ -126,7 +127,7 @@ func TestAccAWSENI_ipv6(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSENIIPV6MultipleConfig,
+				Config: testAccAWSENIIPV6MultipleConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists(resourceName, &conf),
 					testAccCheckAWSENIAttributes(&conf),
@@ -135,7 +136,7 @@ func TestAccAWSENI_ipv6(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSENIIPV6Config,
+				Config: testAccAWSENIIPV6Config(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists(resourceName, &conf),
 					testAccCheckAWSENIAttributes(&conf),
@@ -195,6 +196,7 @@ func TestAccAWSENI_tags(t *testing.T) {
 func TestAccAWSENI_ipv6_count(t *testing.T) {
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -203,7 +205,7 @@ func TestAccAWSENI_ipv6_count(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSENIIPV6CountConfig(1),
+				Config: testAccAWSENIIPV6CountConfig(1, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
@@ -215,21 +217,21 @@ func TestAccAWSENI_ipv6_count(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSENIIPV6CountConfig(2),
+				Config: testAccAWSENIIPV6CountConfig(2, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "2"),
 				),
 			},
 			{
-				Config: testAccAWSENIIPV6CountConfig(0),
+				Config: testAccAWSENIIPV6CountConfig(0, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "0"),
 				),
 			},
 			{
-				Config: testAccAWSENIIPV6CountConfig(1),
+				Config: testAccAWSENIIPV6CountConfig(1, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
@@ -488,10 +490,10 @@ func testAccCheckAWSENIExists(n string, res *ec2.NetworkInterface) resource.Test
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
+		input := &ec2.DescribeNetworkInterfacesInput{
 			NetworkInterfaceIds: []*string{aws.String(rs.Primary.ID)},
 		}
-		describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
+		describeResp, err := conn.DescribeNetworkInterfaces(input)
 
 		if err != nil {
 			return err
@@ -624,22 +626,13 @@ func testAccCheckAWSENIMakeExternalAttachment(n string, conf *ec2.NetworkInterfa
 }
 
 func testAccAWSENIConfig() string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
 
   tags = {
     Name = "tf-acc-network-interface"
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 
@@ -678,23 +671,15 @@ resource "aws_network_interface" "test" {
 `)
 }
 
-const testAccAWSENIIPV6ConfigBase = `
-data "aws_availability_zones" "available" {
-  state = "available"
- 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccAWSENIIPV6ConfigBase(rName string) string {
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "172.16.0.0/16"
   assign_generated_ipv6_cidr_block = true
   enable_dns_hostnames             = true
 
   tags = {
-  	Name = "tf-acc-network-interface-ipv6"
+  	Name = %[1]q
   }
 }
 
@@ -705,29 +690,31 @@ resource "aws_subnet" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name = "tf-acc-network-interface-ipv6"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
   vpc_id      = aws_vpc.test.id
   description = "test"
-  name        = "tf-acc-network-interface-ipv6"
+  name        = %[1]q
 
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = "tcp"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "tcp"
     cidr_blocks = ["10.0.0.0/16"]
   }
 
   tags = {
-    Name = "tf-acc-network-interface-ipv6"
+    Name = %[1]q
   }
 }
-`
+`, rName)
+}
 
-const testAccAWSENIIPV6Config = testAccAWSENIIPV6ConfigBase + `
+func testAccAWSENIIPV6Config(rName string) string {
+	return testAccAWSENIIPV6ConfigBase(rName) + fmt.Sprintf(`
 resource "aws_network_interface" "test" {
   subnet_id       = aws_subnet.test.id
   private_ips     = ["172.16.10.100"]
@@ -735,9 +722,11 @@ resource "aws_network_interface" "test" {
   security_groups = [aws_security_group.test.id]
   description     = "Managed by Terraform"
 }
-`
+`)
+}
 
-const testAccAWSENIIPV6MultipleConfig = testAccAWSENIIPV6ConfigBase + `
+func testAccAWSENIIPV6MultipleConfig(rName string) string {
+	return testAccAWSENIIPV6ConfigBase(rName) + fmt.Sprintf(`
 resource "aws_network_interface" "test" {
   subnet_id       = aws_subnet.test.id
   private_ips     = ["172.16.10.100"]
@@ -745,10 +734,11 @@ resource "aws_network_interface" "test" {
   security_groups = [aws_security_group.test.id]
   description     = "Managed by Terraform"
 }
-`
+`)
+}
 
-func testAccAWSENIIPV6CountConfig(ipCount int) string {
-	return testAccAWSENIIPV6ConfigBase + fmt.Sprintf(`
+func testAccAWSENIIPV6CountConfig(ipCount int, rName string) string {
+	return testAccAWSENIIPV6ConfigBase(rName) + fmt.Sprintf(`
 resource "aws_network_interface" "test" {
   subnet_id           = aws_subnet.test.id
   private_ips         = ["172.16.10.100"]
@@ -760,22 +750,13 @@ resource "aws_network_interface" "test" {
 }
 
 func testAccAWSENIConfigUpdatedDescription() string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
 
   tags = {
     Name = "terraform-testacc-network-interface"
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 
@@ -811,22 +792,13 @@ resource "aws_network_interface" "test" {
 }
 
 func testAccAWSENIConfigWithSourceDestCheck(enabled bool) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
 
   tags = {
   	Name = "terraform-testacc-network-interface-w-source-dest-check"
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 
@@ -852,7 +824,7 @@ resource "aws_network_interface" "test" {
 }
 
 func testAccAWSENIConfigWithNoPrivateIPs() string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
 	cidr_block           = "172.16.0.0/16"
 	enable_dns_hostnames = true
@@ -860,15 +832,6 @@ resource "aws_vpc" "test" {
 	tags = {
 	  Name = "terraform-testacc-network-interface-w-no-private-ips"
 	}
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_subnet" "test" {
@@ -888,21 +851,13 @@ resource "aws_network_interface" "test" {
 }
 
 func testAccAWSENIConfigWithAttachment() string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() +
+		testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
   tags = {
     Name = "terraform-testacc-network-interface-w-attachment"
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 
@@ -958,21 +913,13 @@ resource "aws_network_interface" "test" {
 }
 
 func testAccAWSENIConfigExternalAttachment() string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() +
+		testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
   tags = {
     Name = "terraform-testacc-network-interface-external-attachment"
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 
