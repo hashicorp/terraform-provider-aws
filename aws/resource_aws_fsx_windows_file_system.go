@@ -338,7 +338,7 @@ func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interfac
 			return fmt.Errorf("error updating FSX File System (%s): %s", d.Id(), err)
 		}
 
-		if err := waitForFsxFileSystemUpdate(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := waitForFsxFileSystemUpdateOptimizing(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return fmt.Errorf("Error waiting for filesystem (%s) to become available: %w", d.Id(), err)
 		}
 	}

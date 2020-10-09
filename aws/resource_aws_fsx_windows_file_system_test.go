@@ -557,7 +557,7 @@ func TestAccAWSFsxWindowsFileSystem_StorageCapacity(t *testing.T) {
 				Config: testAccAwsFsxWindowsFileSystemConfigStorageCapacity(36),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem2),
-					testAccCheckFsxWindowsFileSystemRecreated(&filesystem1, &filesystem2),
+					testAccCheckFsxWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "36"),
 				),
 			},
