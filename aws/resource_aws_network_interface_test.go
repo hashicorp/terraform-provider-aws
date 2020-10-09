@@ -740,11 +740,11 @@ resource "aws_network_interface" "test" {
 func testAccAWSENIIPV6CountConfig(ipCount int, rName string) string {
 	return testAccAWSENIIPV6ConfigBase(rName) + fmt.Sprintf(`
 resource "aws_network_interface" "test" {
-  subnet_id           = aws_subnet.test.id
-  private_ips         = ["172.16.10.100"]
-  ipv6_address_count  = %[1]d
-  security_groups     = [aws_security_group.test.id]
-  description         = "Managed by Terraform"
+  subnet_id          = aws_subnet.test.id
+  private_ips        = ["172.16.10.100"]
+  ipv6_address_count = %[1]d
+  security_groups    = [aws_security_group.test.id]
+  description        = "Managed by Terraform"
 }
 `, ipCount)
 }
@@ -798,7 +798,7 @@ resource "aws_vpc" "test" {
   enable_dns_hostnames = true
 
   tags = {
-  	Name = "terraform-testacc-network-interface-w-source-dest-check"
+    Name = "terraform-testacc-network-interface-w-source-dest-check"
   }
 }
 
@@ -806,6 +806,7 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "172.16.10.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
+
   tags = {
     Name = "tf-acc-network-interface-w-source-dest-check"
   }
