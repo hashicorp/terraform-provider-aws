@@ -853,8 +853,9 @@ resource "aws_network_interface" "test" {
 }
 
 func testAccAWSENIConfigWithAttachment() string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() +
-		testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
@@ -892,7 +893,7 @@ resource "aws_security_group" "test" {
 
 resource "aws_instance" "test" {
   ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "t2.micro"
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id                   = aws_subnet.test2.id
   associate_public_ip_address = false
   private_ip                  = "172.16.11.50"
@@ -916,12 +917,13 @@ resource "aws_network_interface" "test" {
     Name = "test_interface"
   }
 }
-`)
+`))
 }
 
 func testAccAWSENIConfigExternalAttachment() string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() +
-		testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
@@ -959,7 +961,7 @@ resource "aws_security_group" "test" {
 
 resource "aws_instance" "test" {
   ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "t2.micro"
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id                   = aws_subnet.test2.id
   associate_public_ip_address = false
   private_ip                  = "172.16.11.50"
@@ -978,7 +980,7 @@ resource "aws_network_interface" "test" {
     Name = "test_interface"
   }
 }
-`)
+`))
 }
 
 func testAccAWSENIConfigPrivateIpsCount(privateIpsCount int) string {
