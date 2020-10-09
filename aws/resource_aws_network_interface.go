@@ -141,7 +141,7 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
-		request.Groups = expandStringList(v.(*schema.Set).List())
+		request.Groups = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("private_ips"); ok && v.(*schema.Set).Len() > 0 {
@@ -368,7 +368,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 		if unassignIps.Len() != 0 {
 			input := &ec2.UnassignPrivateIpAddressesInput{
 				NetworkInterfaceId: aws.String(d.Id()),
-				PrivateIpAddresses: expandStringList(unassignIps.List()),
+				PrivateIpAddresses: expandStringSet(unassignIps),
 			}
 			_, err := conn.UnassignPrivateIpAddresses(input)
 			if err != nil {
@@ -381,7 +381,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 		if assignIps.Len() != 0 {
 			input := &ec2.AssignPrivateIpAddressesInput{
 				NetworkInterfaceId: aws.String(d.Id()),
-				PrivateIpAddresses: expandStringList(assignIps.List()),
+				PrivateIpAddresses: expandStringSet(assignIps),
 			}
 			_, err := conn.AssignPrivateIpAddresses(input)
 			if err != nil {
@@ -407,7 +407,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 		if unassignIps.Len() != 0 {
 			input := &ec2.UnassignIpv6AddressesInput{
 				NetworkInterfaceId: aws.String(d.Id()),
-				Ipv6Addresses:      expandStringList(unassignIps.List()),
+				Ipv6Addresses:      expandStringSet(unassignIps),
 			}
 			_, err := conn.UnassignIpv6Addresses(input)
 			if err != nil {
@@ -420,7 +420,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 		if assignIps.Len() != 0 {
 			input := &ec2.AssignIpv6AddressesInput{
 				NetworkInterfaceId: aws.String(d.Id()),
-				Ipv6Addresses:      expandStringList(assignIps.List()),
+				Ipv6Addresses:      expandStringSet(assignIps),
 			}
 			_, err := conn.AssignIpv6Addresses(input)
 			if err != nil {
