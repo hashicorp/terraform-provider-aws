@@ -84,7 +84,7 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 	configBasicUpdate := testAccAWSBudgetsBudgetConfigUpdate(name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBudgets(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("budgets", t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
@@ -136,7 +136,7 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 	configBasicUpdate := testAccAWSBudgetsBudgetConfigUpdate(name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBudgets(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("budgets", t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
@@ -198,7 +198,7 @@ func TestAccAWSBudgetsBudget_notification(t *testing.T) {
 	oneTopic := []string{"${aws_sns_topic.budget_notifications.arn}"}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBudgets(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("budgets", t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
@@ -394,24 +394,6 @@ func testAccAWSBudgetsBudgetDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccPreCheckAWSBudgets(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).budgetconn
-
-	input := &budgets.DescribeBudgetsInput{
-		AccountId: aws.String(testAccProvider.Meta().(*AWSClient).accountid),
-	}
-
-	_, err := conn.DescribeBudgets(input)
-
-	if testAccPreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
 }
 
 func testAccAWSBudgetsBudgetConfigUpdate(name string) budgets.Budget {
