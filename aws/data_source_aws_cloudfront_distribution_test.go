@@ -13,7 +13,7 @@ func TestAccAWSDataSourceCloudFrontDistribution_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_distribution.s3_distribution"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("cloudfront", t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
