@@ -588,10 +588,10 @@ func testAccCheckAWSENIDestroy(s *terraform.State) error {
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
+		input := &ec2.DescribeNetworkInterfacesInput{
 			NetworkInterfaceIds: []*string{aws.String(rs.Primary.ID)},
 		}
-		_, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
+		_, err := conn.DescribeNetworkInterfaces(input)
 
 		if err != nil {
 			if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
@@ -973,7 +973,7 @@ resource "aws_network_interface" "test" {
   subnet_id       = aws_subnet.test1.id
   private_ips     = ["172.16.10.100"]
   security_groups = [aws_security_group.test.id]
-  
+
   tags = {
     Name = "test_interface"
   }
