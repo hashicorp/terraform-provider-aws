@@ -17,7 +17,6 @@ import (
 func TestAccAWSS3ControlBucketPolicy_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_policy.test"
-	s3ControlBucketResourceName := "aws_s3control_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
@@ -28,7 +27,7 @@ func TestAccAWSS3ControlBucketPolicy_basic(t *testing.T) {
 				Config: testAccAWSS3ControlBucketPolicyConfig_Policy(rName, "s3-outposts:*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3ControlBucketPolicyExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", s3ControlBucketResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3control_bucket.test", "arn"),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3-outposts:\*`)),
 				),
 			},
@@ -65,7 +64,6 @@ func TestAccAWSS3ControlBucketPolicy_disappears(t *testing.T) {
 func TestAccAWSS3ControlBucketPolicy_Policy(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket_policy.test"
-	s3ControlBucketResourceName := "aws_s3control_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
@@ -73,11 +71,10 @@ func TestAccAWSS3ControlBucketPolicy_Policy(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3ControlBucketPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3ControlBucketPolicyConfig_Policy(rName, "s3-outposts:CreateBucket"),
+				Config: testAccAWSS3ControlBucketPolicyConfig_Policy(rName, "s3-outposts:GetObject"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3ControlBucketPolicyExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", s3ControlBucketResourceName, "bucket"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3-outposts:CreateBucket`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3-outposts:GetObject`)),
 				),
 			},
 			{
@@ -86,11 +83,10 @@ func TestAccAWSS3ControlBucketPolicy_Policy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSS3ControlBucketPolicyConfig_Policy(rName, "s3-outposts:DeleteBucket"),
+				Config: testAccAWSS3ControlBucketPolicyConfig_Policy(rName, "s3-outposts:PutObject"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3ControlBucketPolicyExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", s3ControlBucketResourceName, "bucket"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3-outposts:DeleteBucket`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3-outposts:PutObject`)),
 				),
 			},
 		},
@@ -194,11 +190,11 @@ resource "aws_s3control_bucket_policy" "test" {
     Statement = [
       {
         Action = %[2]q
-        Effect = "Allow"
+        Effect = "Deny"
         Principal = {
           AWS = "*"
         }
-        Resource = aws_s3control_bucket.test.arn
+        Resource = "${aws_s3control_bucket.test.arn}/object/test"
         Sid      = "st1"
       }
     ]
