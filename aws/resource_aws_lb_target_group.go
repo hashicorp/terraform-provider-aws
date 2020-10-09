@@ -158,6 +158,13 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 							Optional:     true,
 							Default:      86400,
 							ValidateFunc: validation.IntBetween(0, 604800),
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								switch d.Get("protocol").(string) {
+								case elbv2.ProtocolEnumTcp, elbv2.ProtocolEnumUdp, elbv2.ProtocolEnumTcpUdp, elbv2.ProtocolEnumTls:
+									return true
+								}
+								return false
+							},
 						},
 					},
 				},
@@ -282,39 +289,9 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 		if _, ok := d.GetOk("vpc_id"); !ok {
 			return fmt.Errorf("vpc_id should be set when target type is %s", d.Get("target_type").(string))
 		}
-
 		params.Port = aws.Int64(int64(d.Get("port").(int)))
 		params.Protocol = aws.String(d.Get("protocol").(string))
 		params.VpcId = aws.String(d.Get("vpc_id").(string))
-
-		stickinessBlocks := d.Get("stickiness").([]interface{})
-		if len(stickinessBlocks) > 0 {
-			stickiness := stickinessBlocks[0].(map[string]interface{})
-
-			if d.Get("protocol").(string) == elbv2.ProtocolEnumHttp ||
-				d.Get("protocol").(string) == elbv2.ProtocolEnumHttps {
-				if stickiness["type"].(string) != "lb_cookie" {
-					return fmt.Errorf("stickiness type can only be \"lb_cookie\" when protocol is %s", d.Get("protocol").(string))
-				}
-			} else if d.Get("protocol").(string) == elbv2.ProtocolEnumTcp ||
-				d.Get("protocol").(string) == elbv2.ProtocolEnumUdp ||
-				d.Get("protocol").(string) == elbv2.ProtocolEnumTcpUdp {
-				if stickiness["type"].(string) != "source_ip" {
-					return fmt.Errorf("stickiness type can only be \"source_ip\" when protocol is %s", d.Get("protocol").(string))
-				}
-			}
-		} else {
-			if d.Get("protocol").(string) == elbv2.ProtocolEnumTcp ||
-				d.Get("protocol").(string) == elbv2.ProtocolEnumUdp ||
-				d.Get("protocol").(string) == elbv2.ProtocolEnumTcpUdp {
-				stickiness := make(map[string]interface{})
-				stickiness["type"] = "source_ip"
-
-				if err := d.Set("stickiness", []interface{}{stickiness}); err != nil {
-					return fmt.Errorf("error setting default NLB stickiness: %s", err)
-				}
-			}
-		}
 	}
 
 	if healthChecks := d.Get("health_check").([]interface{}); len(healthChecks) == 1 {
@@ -479,8 +456,9 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 						Key:   aws.String("stickiness.type"),
 						Value: aws.String(stickiness["type"].(string)),
 					})
-				if d.Get("protocol").(string) == elbv2.ProtocolEnumHttp ||
-					d.Get("protocol").(string) == elbv2.ProtocolEnumHttps {
+
+				switch d.Get("protocol").(string) {
+				case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
 					attrs = append(attrs,
 						&elbv2.TargetGroupAttribute{
 							Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
