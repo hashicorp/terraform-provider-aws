@@ -307,6 +307,16 @@ func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interfac
 		requestUpdate = true
 	}
 
+	if d.HasChange("throughput_capacity") {
+		input.WindowsConfiguration.ThroughputCapacity = aws.Int64(int64(d.Get("throughput_capacity").(int)))
+		requestUpdate = true
+	}
+
+	if d.HasChange("storage_capacity") {
+		input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
+		requestUpdate = true
+	}
+
 	if d.HasChange("daily_automatic_backup_start_time") {
 		input.WindowsConfiguration.DailyAutomaticBackupStartTime = aws.String(d.Get("daily_automatic_backup_start_time").(string))
 		requestUpdate = true
@@ -326,6 +336,10 @@ func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interfac
 		_, err := conn.UpdateFileSystem(input)
 		if err != nil {
 			return fmt.Errorf("error updating FSX File System (%s): %s", d.Id(), err)
+		}
+
+		if err := waitForFsxFileSystemUpdate(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return fmt.Errorf("Error waiting for filesystem (%s) to become available: %w", d.Id(), err)
 		}
 	}
 
