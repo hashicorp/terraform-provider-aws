@@ -6,6 +6,7 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/identitystore"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -64,12 +65,18 @@ func dataSourceAwsIdentityStoreUserRead(d *schema.ResourceData, meta interface{}
 			UserId:          aws.String(userID),
 		})
 		if err != nil {
+			aerr, ok := err.(awserr.Error)
+			if ok && aerr.Code() == identitystore.ErrCodeResourceNotFoundException {
+				log.Printf("[DEBUG] AWS Identity Store User not found with the id %v", userID)
+				d.SetId("")
+				return nil
+			}
 			return fmt.Errorf("Error getting AWS Identity Store User: %s", err)
 		}
 		d.SetId(userID)
 		d.Set("user_name", resp.UserName)
 	} else if userName != "" {
-		log.Printf("[DEBUG] Reading AWS Identity Store User")
+		log.Printf("[DEBUG] Reading AWS Identity Store Users")
 		resp, err := conn.ListUsers(&identitystore.ListUsersInput{
 			IdentityStoreId: aws.String(identityStoreID),
 			Filters: []*identitystore.Filter{
@@ -80,10 +87,15 @@ func dataSourceAwsIdentityStoreUserRead(d *schema.ResourceData, meta interface{}
 			},
 		})
 		if err != nil {
-			return fmt.Errorf("Error getting AWS Identity Store User: %s", err)
+			return fmt.Errorf("Error getting AWS Identity Store Users: %s", err)
 		}
 		if resp == nil || len(resp.Users) == 0 {
-			return fmt.Errorf("No AWS Identity Store User found")
+			log.Printf("[DEBUG] No AWS Identity Store Users found")
+			d.SetId("")
+			return nil
+		}
+		if len(resp.Users) > 1 {
+			return fmt.Errorf("Found multiple AWS Identity Store Users with the UserName %v. Not sure which one to use. %s", userName, resp.Users)
 		}
 		user := resp.Users[0]
 		d.SetId(aws.StringValue(user.UserId))

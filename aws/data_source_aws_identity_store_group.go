@@ -6,6 +6,7 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/identitystore"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -64,12 +65,18 @@ func dataSourceAwsIdentityStoreGroupRead(d *schema.ResourceData, meta interface{
 			GroupId:         aws.String(groupID),
 		})
 		if err != nil {
+			aerr, ok := err.(awserr.Error)
+			if ok && aerr.Code() == identitystore.ErrCodeResourceNotFoundException {
+				log.Printf("[DEBUG] AWS Identity Store Group not found with the id %v", groupID)
+				d.SetId("")
+				return nil
+			}
 			return fmt.Errorf("Error getting AWS Identity Store Group: %s", err)
 		}
 		d.SetId(groupID)
 		d.Set("display_name", resp.DisplayName)
 	} else if displayName != "" {
-		log.Printf("[DEBUG] Reading AWS Identity Store Group")
+		log.Printf("[DEBUG] Reading AWS Identity Store Groups")
 		resp, err := conn.ListGroups(&identitystore.ListGroupsInput{
 			IdentityStoreId: aws.String(identityStoreID),
 			Filters: []*identitystore.Filter{
@@ -80,10 +87,15 @@ func dataSourceAwsIdentityStoreGroupRead(d *schema.ResourceData, meta interface{
 			},
 		})
 		if err != nil {
-			return fmt.Errorf("Error getting AWS Identity Store Group: %s", err)
+			return fmt.Errorf("Error getting AWS Identity Store Groups: %s", err)
 		}
 		if resp == nil || len(resp.Groups) == 0 {
-			return fmt.Errorf("No AWS Identity Store Group found")
+			log.Printf("[DEBUG] No AWS Identity Store Groups found")
+			d.SetId("")
+			return nil
+		}
+		if len(resp.Groups) > 1 {
+			return fmt.Errorf("Found multiple AWS Identity Store Groups with the DisplayName %v. Not sure which one to use. %s", displayName, resp.Groups)
 		}
 		group := resp.Groups[0]
 		d.SetId(aws.StringValue(group.GroupId))

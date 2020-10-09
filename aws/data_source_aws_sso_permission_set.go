@@ -107,7 +107,9 @@ func dataSourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error getting AWS SSO Permission Sets: %s", err)
 	}
 	if resp == nil || len(resp.PermissionSets) == 0 {
-		return fmt.Errorf("No AWS SSO Permission Sets found")
+		log.Printf("[DEBUG] No AWS SSO Permission Sets found")
+		d.SetId("")
+		return nil
 	}
 
 	// TODO: paging (if resp.NextToken != nil)
@@ -130,7 +132,9 @@ func dataSourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if permissionSet == nil {
-		return fmt.Errorf("AWS SSO Permission Set %v not found", name)
+		log.Printf("[DEBUG] AWS SSO Permission Set %v not found", name)
+		d.SetId("")
+		return nil
 	}
 
 	log.Printf("[DEBUG] Found AWS SSO Permission Set: %s", permissionSet)
@@ -164,7 +168,7 @@ func dataSourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{})
 
 	tags, err := keyvaluetags.SsoListTags(conn, permissionSetArn, instanceArn)
 	if err != nil {
-		return fmt.Errorf("error listing tags for ASW SSO Permission Set (%s): %s", permissionSetArn, err)
+		return fmt.Errorf("Error listing tags for ASW SSO Permission Set (%s): %s", permissionSetArn, err)
 	}
 
 	d.SetId(permissionSetArn)

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -92,15 +93,6 @@ func resourceAwsSsoAssignmentCreate(d *schema.ResourceData, meta interface{}) er
 	targetID := d.Get("target_id").(string)
 	targetType := d.Get("target_type").(string)
 
-	vars := []string{
-		permissionSetArn,
-		targetType,
-		targetID,
-		principalType,
-		principalID,
-	}
-	d.SetId(strings.Join(vars, "_"))
-
 	req := &ssoadmin.CreateAccountAssignmentInput{
 		InstanceArn:      aws.String(instanceArn),
 		PermissionSetArn: aws.String(permissionSetArn),
@@ -132,6 +124,15 @@ func resourceAwsSsoAssignmentCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Failed to create AWS SSO Assignment: %s", aws.StringValue(waitResp.FailureReason))
 	}
 
+	vars := []string{
+		permissionSetArn,
+		targetType,
+		targetID,
+		principalType,
+		principalID,
+	}
+	d.SetId(strings.Join(vars, "_"))
+
 	if waitResp.CreatedDate != nil {
 		d.Set("created_date", waitResp.CreatedDate.Format(time.RFC3339))
 	}
@@ -149,14 +150,6 @@ func resourceAwsSsoAssignmentRead(d *schema.ResourceData, meta interface{}) erro
 	targetID := d.Get("target_id").(string)
 	targetType := d.Get("target_type").(string)
 
-	vars := []string{
-		permissionSetArn,
-		targetType,
-		targetID,
-		principalType,
-		principalID,
-	}
-
 	req := &ssoadmin.ListAccountAssignmentsInput{
 		InstanceArn:      aws.String(instanceArn),
 		PermissionSetArn: aws.String(permissionSetArn),
@@ -170,7 +163,6 @@ func resourceAwsSsoAssignmentRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if resp == nil || len(resp.AccountAssignments) == 0 {
-		// TODO: is this correct?
 		log.Printf("[DEBUG] No account assignments found")
 		d.SetId("")
 		return nil
@@ -179,14 +171,19 @@ func resourceAwsSsoAssignmentRead(d *schema.ResourceData, meta interface{}) erro
 	for _, accountAssignment := range resp.AccountAssignments {
 		if aws.StringValue(accountAssignment.PrincipalType) == principalType {
 			if aws.StringValue(accountAssignment.PrincipalId) == principalID {
-				// TODO: is this correct?
+				vars := []string{
+					permissionSetArn,
+					targetType,
+					targetID,
+					principalType,
+					principalID,
+				}
 				d.SetId(strings.Join(vars, "_"))
 				return nil
 			}
 		}
 	}
 
-	// TODO: is this correct?
 	log.Printf("[DEBUG] Account assignment not found for %s", map[string]string{
 		"PrincipalType": principalType,
 		"PrincipalId":   principalID,
@@ -217,6 +214,12 @@ func resourceAwsSsoAssignmentDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[INFO] Deleting AWS SSO Assignment")
 	resp, err := conn.DeleteAccountAssignment(req)
 	if err != nil {
+		aerr, ok := err.(awserr.Error)
+		if ok && aerr.Code() == ssoadmin.ErrCodeResourceNotFoundException {
+			log.Printf("[DEBUG] AWS SSO Assignment not found")
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("Error deleting AWS SSO Assignment: %s", err)
 	}
 
@@ -232,7 +235,6 @@ func resourceAwsSsoAssignmentDelete(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Failed to delete AWS SSO Assignment: %s", aws.StringValue(waitResp.FailureReason))
 	}
 
-	// TODO: is this correct?
 	d.SetId("")
 	return nil
 }
