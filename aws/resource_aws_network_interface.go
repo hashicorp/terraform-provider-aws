@@ -476,17 +476,17 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("private_ips_count") {
 		o, n := d.GetChange("private_ips_count")
-		private_ips := d.Get("private_ips").(*schema.Set).List()
-		private_ips_filtered := private_ips[:0]
-		primary_ip := d.Get("private_ip")
+		privateIPs := d.Get("private_ips").(*schema.Set).List()
+		privateIPsFiltered := privateIPs[:0]
+		primaryIP := d.Get("private_ip")
 
-		for _, ip := range private_ips {
-			if ip != primary_ip {
-				private_ips_filtered = append(private_ips_filtered, ip)
+		for _, ip := range privateIPs {
+			if ip != primaryIP {
+				privateIPsFiltered = append(privateIPsFiltered, ip)
 			}
 		}
 
-		if o != nil && n != nil && n != len(private_ips_filtered) {
+		if o != nil && n != nil && n != len(privateIPsFiltered) {
 
 			diff := n.(int) - o.(int)
 
@@ -505,7 +505,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 			if diff < 0 {
 				input := &ec2.UnassignPrivateIpAddressesInput{
 					NetworkInterfaceId: aws.String(d.Id()),
-					PrivateIpAddresses: expandStringList(private_ips_filtered[0:int(math.Abs(float64(diff)))]),
+					PrivateIpAddresses: expandStringList(privateIPsFiltered[0:int(math.Abs(float64(diff)))]),
 				}
 				_, err := conn.UnassignPrivateIpAddresses(input)
 				if err != nil {
@@ -555,9 +555,8 @@ func resourceAwsNetworkInterfaceDelete(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[INFO] Deleting ENI: %s", d.Id())
 
-	detach_err := resourceAwsNetworkInterfaceDetach(d.Get("attachment").(*schema.Set), meta, d.Id())
-	if detach_err != nil {
-		return detach_err
+	if err := resourceAwsNetworkInterfaceDetach(d.Get("attachment").(*schema.Set), meta, d.Id()); err != nil {
+		return err
 	}
 
 	deleteEniOpts := ec2.DeleteNetworkInterfaceInput{
