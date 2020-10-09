@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -1190,47 +1191,53 @@ func testAccPreCheckSkipError(err error) bool {
 	return false
 }
 
-// testSweepMaxJobs is the maximum number of goroutines to use in sweeping.
-// The actual number may be lower depending on the needed jobs.
-const testSweepMaxJobs = 20
-
-// testSweepUnitOfWorkFunc is a function type for a unit of sweeping work.
-type testSweepUnitOfWorkFunc func(id, region string) error
-
-// testSweepOrchestrator orchestrates goroutines to perform sweeping work.
-func testSweepOrchestrator(jobs []string, region string, f testSweepUnitOfWorkFunc) {
-	jobCount := testSweepMaxJobs
-	if len(jobs) < jobCount {
-		jobCount = len(jobs)
-	}
-
-	var wg sync.WaitGroup
-	jobChan := make(chan string, jobCount)
-
-	for workerID := 0; workerID < jobCount; workerID++ {
-		wg.Add(1)
-		go testSweepJob(f, region, jobChan, &wg)
-	}
-
-	for _, id := range jobs {
-		jobChan <- id
-	}
-
-	close(jobChan)
-	wg.Wait()
+// testSweepOrchestrator is a convenience function that calls testSweepOrchestratorWithData
+//nolint
+func testSweepOrchestrator(jobs []string, r *schema.Resource, region string) error {
+	return testSweepOrchestratorWithData(jobs, r, r.Data(nil), region)
 }
 
-// testSweepJob should only be called by testSweepOrachestrator and calls the
-// work function for the sweep
-func testSweepJob(f testSweepUnitOfWorkFunc, region string, jobChan <-chan string, wg *sync.WaitGroup) {
-	defer wg.Done()
+// testSweepOrchestratorWithData launches goroutines to perform sweeping work
+func testSweepOrchestratorWithData(jobs []string, r *schema.Resource, d *schema.ResourceData, region string) error {
+	var wg sync.WaitGroup
+	wgDone := make(chan bool)
+	errChan := make(chan error, len(jobs))
 
-	for id := range jobChan {
-		err := f(id, region)
-		if err != nil {
-			log.Printf("[ERROR] sweeping error: %s", err)
-		}
+	for _, jobID := range jobs {
+		wg.Add(1)
+
+		go func(id string) {
+			defer wg.Done()
+
+			client, err := sharedClientForRegion(region)
+			if err != nil {
+				errChan <- fmt.Errorf("error getting client: %s", err)
+				return
+			}
+
+			d.SetId(id)
+			err = r.Delete(d, client)
+			if err != nil {
+				errChan <- err
+			}
+		}(jobID)
 	}
+
+	go func() {
+		wg.Wait()
+		close(wgDone)
+		close(errChan)
+	}()
+
+	var errors error
+	var mutex = &sync.Mutex{}
+	for err := range errChan {
+		mutex.Lock()
+		errors = multierror.Append(errors, err)
+		mutex.Unlock()
+	}
+
+	return errors
 }
 
 // Check sweeper API call error for reasons to skip sweeping

@@ -5,7 +5,6 @@ import (
 	"log"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -21,31 +20,6 @@ func init() {
 		Name: "aws_db_instance",
 		F:    testSweepDbInstances,
 	})
-}
-
-func testSweepDbInstancesUnitOfWork(id, region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*AWSClient).rdsconn
-
-	log.Printf("[INFO] Deleting DB instance: %s", id)
-
-	_, err = conn.DeleteDBInstance(&rds.DeleteDBInstanceInput{
-		DBInstanceIdentifier: aws.String(id),
-		SkipFinalSnapshot:    aws.Bool(true),
-	})
-	if err != nil {
-		return fmt.Errorf("failed to delete DB instance %s: %s", id, err)
-	}
-
-	err = waitUntilAwsDbInstanceIsDeleted(id, conn, 40*time.Minute)
-	if err != nil {
-		return fmt.Errorf("failure while waiting for DB instance %s to be deleted: %s", id, err)
-	}
-
-	return nil
 }
 
 func testSweepDbInstances(region string) error {
@@ -70,9 +44,10 @@ func testSweepDbInstances(region string) error {
 		return fmt.Errorf("Error retrieving DB instances: %s", err)
 	}
 
-	testSweepOrchestrator(ids, region, testSweepDbInstancesUnitOfWork)
-
-	return nil
+	r := resourceAwsDbInstance()
+	d := r.Data(nil)
+	d.Set("skip_final_snapshot", true)
+	return testSweepOrchestratorWithData(ids, r, d, region)
 }
 
 func TestAccAWSDBInstance_basic(t *testing.T) {
