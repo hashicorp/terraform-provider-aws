@@ -194,6 +194,7 @@ func Provider() *schema.Provider {
 			"aws_cloudtrail_service_account":                 dataSourceAwsCloudTrailServiceAccount(),
 			"aws_cloudwatch_log_group":                       dataSourceAwsCloudwatchLogGroup(),
 			"aws_codeartifact_authorization_token":           dataSourceAwsCodeArtifactAuthorizationToken(),
+			"aws_codeartifact_repository_endpoint":           dataSourceAwsCodeArtifactRepositoryEndpoint(),
 			"aws_cognito_user_pools":                         dataSourceAwsCognitoUserPools(),
 			"aws_codecommit_repository":                      dataSourceAwsCodeCommitRepository(),
 			"aws_cur_report_definition":                      dataSourceAwsCurReportDefinition(),
