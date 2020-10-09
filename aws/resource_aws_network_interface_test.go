@@ -827,18 +827,19 @@ resource "aws_network_interface" "test" {
 func testAccAWSENIConfigWithNoPrivateIPs() string {
 	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "test" {
-	cidr_block           = "172.16.0.0/16"
-	enable_dns_hostnames = true
+  cidr_block           = "172.16.0.0/16"
+  enable_dns_hostnames = true
 
-	tags = {
-	  Name = "terraform-testacc-network-interface-w-no-private-ips"
-	}
+  tags = {
+    Name = "terraform-testacc-network-interface-w-no-private-ips"
+  }
 }
 
 resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "172.16.10.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
+
   tags = {
     Name = "tf-acc-network-interface-w-no-private-ips"
   }
@@ -857,6 +858,7 @@ func testAccAWSENIConfigWithAttachment() string {
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = "terraform-testacc-network-interface-w-attachment"
   }
@@ -866,6 +868,7 @@ resource "aws_subnet" "test1" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "172.16.10.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
+
   tags = {
     Name = "tf-acc-network-interface-w-attachment-test"
   }
@@ -875,6 +878,7 @@ resource "aws_subnet" "test2" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "172.16.11.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
+
   tags = {
     Name = "tf-acc-network-interface-w-attachment-test"
   }
@@ -892,6 +896,7 @@ resource "aws_instance" "test" {
   subnet_id                   = aws_subnet.test2.id
   associate_public_ip_address = false
   private_ip                  = "172.16.11.50"
+
   tags = {
     Name = "test-tf-eni-test"
   }
@@ -906,6 +911,7 @@ resource "aws_network_interface" "test" {
     instance     = aws_instance.test.id
     device_index = 1
   }
+
   tags = {
     Name = "test_interface"
   }
@@ -919,6 +925,7 @@ func testAccAWSENIConfigExternalAttachment() string {
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = "terraform-testacc-network-interface-external-attachment"
   }
@@ -928,6 +935,7 @@ resource "aws_subnet" "test1" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "172.16.10.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
+
   tags = {
     Name = "tf-acc-network-interface-external-attachment-test"
   }
@@ -937,6 +945,7 @@ resource "aws_subnet" "test2" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "172.16.11.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
+
   tags = {
     Name = "tf-acc-network-interface-external-attachment-test"
   }
@@ -954,6 +963,7 @@ resource "aws_instance" "test" {
   subnet_id                   = aws_subnet.test2.id
   associate_public_ip_address = false
   private_ip                  = "172.16.11.50"
+
   tags = {
     Name = "tf-eni-test"
   }
@@ -963,6 +973,7 @@ resource "aws_network_interface" "test" {
   subnet_id       = aws_subnet.test1.id
   private_ips     = ["172.16.10.100"]
   security_groups = [aws_security_group.test.id]
+  
   tags = {
     Name = "test_interface"
   }
