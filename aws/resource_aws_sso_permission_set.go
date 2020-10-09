@@ -1,17 +1,15 @@
 package aws
 
 import (
-	// "fmt"
-	// "log"
-	// "time"
+	"fmt"
+	"log"
 	"regexp"
 
-	// "github.com/aws/aws-sdk-go/aws"
-	// "github.com/aws/aws-sdk-go/service/ssoadmin"
-	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	// "github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsSsoPermissionSet() *schema.Resource {
@@ -120,27 +118,107 @@ func resourceAwsSsoPermissionSet() *schema.Resource {
 }
 
 func resourceAwsSsoPermissionSetCreate(d *schema.ResourceData, meta interface{}) error {
-	// conn := meta.(*AWSClient).ssoadminconn
-	// TODO
-	// d.SetId(*resp.PermissionSetArn)
+	ssoadminconn := meta.(*AWSClient).ssoadminconn
+
+	log.Printf("[INFO] Creating AWS SSO Permission Set")
+
+	instanceArn := aws.String(d.Get("instance_arn").(string))
+
+	params := &ssoadmin.CreatePermissionSetInput{
+		InstanceArn: instanceArn,
+		Name:        aws.String(d.Get("name").(string)),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		params.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("relay_state"); ok {
+		params.RelayState = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("session_duration"); ok {
+		params.SessionDuration = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		params.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SsoTags()
+	}
+
+	createPermissionSetResp, createPermissionSetErr := ssoadminconn.CreatePermissionSet(params)
+	if createPermissionSetErr != nil {
+		return fmt.Errorf("Error creating AWS SSO Permission Set: %s", createPermissionSetErr)
+	}
+
+	permissionSetArn := createPermissionSetResp.PermissionSet.PermissionSetArn
+	d.SetId(*permissionSetArn)
+
+	if attachPoliciesErr := attachPoliciesToPermissionSet(ssoadminconn, d, permissionSetArn, instanceArn); attachPoliciesErr != nil {
+		return attachPoliciesErr
+	}
+
 	return resourceAwsSsoPermissionSetRead(d, meta)
 }
 
 func resourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{}) error {
 	// conn := meta.(*AWSClient).ssoadminconn
 	// TODO
+
 	return nil
 }
 
 func resourceAwsSsoPermissionSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	// conn := meta.(*AWSClient).ssoadminconn
 	// TODO
+
 	return resourceAwsSsoPermissionSetRead(d, meta)
 }
 
 func resourceAwsSsoPermissionSetDelete(d *schema.ResourceData, meta interface{}) error {
 	// conn := meta.(*AWSClient).ssoadminconn
 	// TODO
+	return nil
+}
+
+func attachPoliciesToPermissionSet(ssoadminconn *ssoadmin.SSOAdmin, d *schema.ResourceData, instanceArn *string, permissionSetArn *string) error {
+
+	if v, ok := d.GetOk("inline_policy"); ok {
+		log.Printf("[INFO] Attaching IAM inline policy to AWS SSO Permission Set")
+
+		inlinePolicy := aws.String(v.(string))
+
+		input := &ssoadmin.PutInlinePolicyToPermissionSetInput{
+			InlinePolicy:     inlinePolicy,
+			InstanceArn:      instanceArn,
+			PermissionSetArn: permissionSetArn,
+		}
+
+		_, inlinePolicyErr := ssoadminconn.PutInlinePolicyToPermissionSet(input)
+		if inlinePolicyErr != nil {
+			return fmt.Errorf("Error attaching IAM inline policy to AWS SSO Permission Set: %s", inlinePolicyErr)
+		}
+	}
+
+	if v, ok := d.GetOk("managed_policies"); ok {
+		log.Printf("[INFO] Attaching Managed Policies to AWS SSO Permission Set")
+
+		managedPolicies := expandStringSet(v.(*schema.Set))
+
+		for _, managedPolicyArn := range managedPolicies {
+
+			input := &ssoadmin.AttachManagedPolicyToPermissionSetInput{
+				InstanceArn:      instanceArn,
+				ManagedPolicyArn: managedPolicyArn,
+				PermissionSetArn: permissionSetArn,
+			}
+
+			_, managedPoliciesErr := ssoadminconn.AttachManagedPolicyToPermissionSet(input)
+			if managedPoliciesErr != nil {
+				return fmt.Errorf("Error attaching Managed Policy to AWS SSO Permission Set: %s", managedPoliciesErr)
+			}
+		}
+	}
+
 	return nil
 }
 
