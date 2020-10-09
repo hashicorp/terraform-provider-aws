@@ -1,84 +1,84 @@
-## 3.10.0 (Unreleased)
+## 3.10.0 (October 09, 2020)
 
 FEATURES
 
-* **New Data Source:** `aws_codeartifact_authorization_token` [GH-15425]
-* **New Data Source:** `aws_ec2_instance_type` [GH-13124]
-* **New Data Source:** `aws_lex_bot_alias` [GH-8919]
-* **New Data Source:** `aws_redshift_orderable_cluster` [GH-15438]
-* **New Resource:** `aws_codeartifact_repository_permissions_policy` [GH-15562]
-* **New Resource:** `aws_lex_bot_alias` [GH-8919]
-* **New Resource:** `aws_s3_bucket_ownership_controls` [GH-15482]
+* **New Data Source:** `aws_codeartifact_authorization_token` ([#15425](https://github.com/terraform-providers/terraform-provider-aws/issues/15425))
+* **New Data Source:** `aws_ec2_instance_type` ([#13124](https://github.com/terraform-providers/terraform-provider-aws/issues/13124))
+* **New Data Source:** `aws_lex_bot_alias` ([#8919](https://github.com/terraform-providers/terraform-provider-aws/issues/8919))
+* **New Data Source:** `aws_redshift_orderable_cluster` ([#15438](https://github.com/terraform-providers/terraform-provider-aws/issues/15438))
+* **New Resource:** `aws_codeartifact_repository_permissions_policy` ([#15562](https://github.com/terraform-providers/terraform-provider-aws/issues/15562))
+* **New Resource:** `aws_lex_bot_alias` ([#8919](https://github.com/terraform-providers/terraform-provider-aws/issues/8919))
+* **New Resource:** `aws_s3_bucket_ownership_controls` ([#15482](https://github.com/terraform-providers/terraform-provider-aws/issues/15482))
 
 NOTES
 
-* data-source/aws_acm_certificate: The `id` attribute has changed to the ARN of the ACM Certificate. The first apply of this updated data source may show this difference. [GH-15399]
-* data-source/aws_autoscaling_group: The `id` attribute has changed to the name of the Auto Scaling Group. The first apply of this updated data source may show this difference. [GH-15399]
-* data-source/aws_availability_zones: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
-* data-source/aws_db_event_categories: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
-* data-source/aws_ebs_default_kms_key: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
-* data-source/aws_ebs_encryption_by_default: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
-* data-source/aws_ec2_instance_type_offering: The `id` attribute has changed to the EC2 Instance Type. The first apply of this updated data source may show this difference. [GH-15399]
-* data-source/aws_ecr_authorization_token: The `id` attribute has changed to the AWS Region. The first apply of this updated data source may show this difference. [GH-15399]
-* data-source/aws_ecr_image: The `id` attribute has changed to the SHA256 digest of the ECR Image. The first apply of this updated data source may show this difference. [GH-15399]
-* data-source/aws_eks_cluster_auth: The `id` attribute has changed to the name of the EKS Cluster. The first apply of this updated data source may show this difference. [GH-15399]
-* data-source/aws_iam_account_alias: The `id` attribute has changed to the AWS Account Alias. The first apply of this updated data source may show this difference. [GH-15399]
-* data-source/aws_kms_alias: The `id` attribute has changed to the ARN of the KMS Alias. The first apply of this updated data source may show this difference. [GH-15399]
-* data-source/aws_partition: The `id` attribute has changed to the identifier of the AWS Partition. The first apply of this updated data source may show this difference. [GH-15399]
-* data-source/aws_regions: The `id` attribute has changed to the identifier of the AWS Partition. The first apply of this updated data source may show this difference. [GH-15399]
-* data-source/aws_sns_topic: The `id` attribute has changed to the ARN of the SNS Topic. The first apply of this updated data source may show this difference. [GH-15399]
+* data-source/aws_acm_certificate: The `id` attribute has changed to the ARN of the ACM Certificate. The first apply of this updated data source may show this difference. ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_autoscaling_group: The `id` attribute has changed to the name of the Auto Scaling Group. The first apply of this updated data source may show this difference. ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_availability_zones: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_db_event_categories: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_ebs_default_kms_key: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_ebs_encryption_by_default: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_ec2_instance_type_offering: The `id` attribute has changed to the EC2 Instance Type. The first apply of this updated data source may show this difference. ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_ecr_authorization_token: The `id` attribute has changed to the AWS Region. The first apply of this updated data source may show this difference. ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_ecr_image: The `id` attribute has changed to the SHA256 digest of the ECR Image. The first apply of this updated data source may show this difference. ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_eks_cluster_auth: The `id` attribute has changed to the name of the EKS Cluster. The first apply of this updated data source may show this difference. ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_iam_account_alias: The `id` attribute has changed to the AWS Account Alias. The first apply of this updated data source may show this difference. ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_kms_alias: The `id` attribute has changed to the ARN of the KMS Alias. The first apply of this updated data source may show this difference. ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_partition: The `id` attribute has changed to the identifier of the AWS Partition. The first apply of this updated data source may show this difference. ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_regions: The `id` attribute has changed to the identifier of the AWS Partition. The first apply of this updated data source may show this difference. ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_sns_topic: The `id` attribute has changed to the ARN of the SNS Topic. The first apply of this updated data source may show this difference. ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
 
 ENHANCEMENTS
 
-* data-source/aws_batch_compute_environment: Add `tags` attribute [GH-15470]
-* data-source/aws_batch_job_queue: Add `tags` attribute [GH-15470]
-* data-source/aws_vpc_endpoint_service: Accept `service_type` as argument [GH-15467]
-* resource/aws_appmesh_route: Add `timeout` configuration block to `grpc_route`, `http_route`, `http2_route` and `tcp_route` attributes. [GH-14361]
-* resource/aws_appmesh_virtual_node: Add `timeout` configuration block to `listener` attribute. [GH-14361]
-* resource/aws_batch_compute_environment: Add `tags` argument [GH-15470]
-* resource/aws_batch_job_definition: Add `tags` argument [GH-15470]
-* resource/aws_batch_job_queue: Add `tags` argument [GH-15470]
-* resource/aws_lb_target_group: Add `source_ip` as an option for the `stickiness.type` argument. [GH-15295]
-* resource/aws_sns_topic_subscription: Create subscriptions with attributes (delivery policy, filter policy, etc.) instead of separate API calls [GH-10496]
+* data-source/aws_batch_compute_environment: Add `tags` attribute ([#15470](https://github.com/terraform-providers/terraform-provider-aws/issues/15470))
+* data-source/aws_batch_job_queue: Add `tags` attribute ([#15470](https://github.com/terraform-providers/terraform-provider-aws/issues/15470))
+* data-source/aws_vpc_endpoint_service: Accept `service_type` as argument ([#15467](https://github.com/terraform-providers/terraform-provider-aws/issues/15467))
+* resource/aws_appmesh_route: Add `timeout` configuration block to `grpc_route`, `http_route`, `http2_route` and `tcp_route` attributes. ([#14361](https://github.com/terraform-providers/terraform-provider-aws/issues/14361))
+* resource/aws_appmesh_virtual_node: Add `timeout` configuration block to `listener` attribute. ([#14361](https://github.com/terraform-providers/terraform-provider-aws/issues/14361))
+* resource/aws_batch_compute_environment: Add `tags` argument ([#15470](https://github.com/terraform-providers/terraform-provider-aws/issues/15470))
+* resource/aws_batch_job_definition: Add `tags` argument ([#15470](https://github.com/terraform-providers/terraform-provider-aws/issues/15470))
+* resource/aws_batch_job_queue: Add `tags` argument ([#15470](https://github.com/terraform-providers/terraform-provider-aws/issues/15470))
+* resource/aws_lb_target_group: Add `source_ip` as an option for the `stickiness.type` argument. ([#15295](https://github.com/terraform-providers/terraform-provider-aws/issues/15295))
+* resource/aws_sns_topic_subscription: Create subscriptions with attributes (delivery policy, filter policy, etc.) instead of separate API calls ([#10496](https://github.com/terraform-providers/terraform-provider-aws/issues/10496))
 
 BUG FIXES
 
-* data-source/aws_acm_certificate: Prevent plan differences with the `id` attribute [GH-15399]
-* data-source/aws_autoscaling_group: Prevent plan differences with the `id` attribute [GH-15399]
-* data-source/aws_availability_zones: Prevent plan differences with the `id` attribute [GH-15399]
-* data-source/aws_db_event_categories: Prevent plan differences with the `id` attribute [GH-15399]
-* data-source/aws_ebs_default_kms_key: Prevent plan differences with the `id` attribute [GH-15399]
-* data-source/aws_ebs_encryption_by_default: Prevent plan differences with the `id` attribute [GH-15399]
-* data-source/aws_ec2_instance_type_offering: Prevent plan differences with the `id` attribute [GH-15399]
-* data-source/aws_ecr_authorization_token: Prevent plan differences with the `id` attribute [GH-15399]
-* data-source/aws_ecr_image: Prevent plan differences with the `id` attribute [GH-15399]
-* data-source/aws_eks_cluster_auth: Prevent plan differences with the `id` attribute [GH-15399]
-* data-source/aws_iam_account_alias: Prevent plan differences with the `id` attribute [GH-15399]
-* data-source/aws_kms_alias: Prevent plan differences with the `id` attribute [GH-15399]
-* data-source/aws_partition: Prevent plan differences with the `id` attribute [GH-15399]
-* data-source/aws_regions: Prevent plan differences with the `id` attribute [GH-15399]
-* data-source/aws_sns_topic: Prevent plan differences with the `id` attribute [GH-15399]
-* resource/aws_acm_certificate: Prevent unexpected timeout error on deletion due to API retries [GH-15522]
-* resource/aws_batch_job_definition: Prevent unexpected plan difference for `container_properties` argument value with new secrets support [GH-15470]
-* resource/aws_codestarnotifications_notification_rule: Prevent unexpected timeout error during target deletion due to API retries [GH-15523]
-* resource/aws_config_remediation_configuration: Prevent unexpected timeout error on deletion due to API retries [GH-15524]
-* resource/aws_db_proxy: Increase default deletion timeout to 60 minutes [GH-15537]
-* resource/aws_db_proxy_target: Ensure `db_proxy_name` and `target_group_name` attributes are properly imported [GH-15537]
-* resource/aws_ecs_cluster: Prevent IAM Service Linked Role error on first ECS provision [GH-15457]
-* resource/aws_emr_instance_fleet: Prevent error on deletion when EMR Cluster is no longer running [GH-15548]
-* resource/aws_emr_managed_scaling_policy: Ensure `cluster_id` attribute is properly saved during import [GH-15541]
-* resource/aws_emr_managed_scaling_policy: Handle additional cases where resource should be removed from Terraform state [GH-15541]
-* resource/aws_gamelift_fleet: Prevent unexpected timeout error on creation due to API retries [GH-15526]
-* resource/aws_glue_workflow: Ensure `max_concurrent_runs` attribute is properly saved during import [GH-15538]
-* resource/aws_lex_bot: Prevent unexpected timeout error on creation due to API retries [GH-15527]
-* resource/aws_lex_bot_alias: Prevent unexpected timeout error on creation due to API retries [GH-15527]
-* resource/aws_lex_intent: Prevent unexpected timeout error on creation due to API retries [GH-15527]
-* resource/aws_lex_slot_type: Prevent unexpected timeout error on creation due to API retries [GH-15527]
-* resource/aws_organizations_policy: Prevent errors with imported AWS-managed Organizations policies [GH-15446]
-* resource/aws_s3_bucket: Correctly handle provider-level ignored tag configuration [GH-12013]
-* resource/aws_s3_bucket: Correctly set expiration for lifecycle_rule with abort_incomplete_multipart_upload_days set [GH-15263]
-* resource/aws_s3_bucket_analytics_configuration: Prevent unexpected timeout error on deletion due to API retries [GH-15529]
-* resource/aws_s3_bucket_object: Correctly handle provider-level ignored tag configuration [GH-12013]
+* data-source/aws_acm_certificate: Prevent plan differences with the `id` attribute ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_autoscaling_group: Prevent plan differences with the `id` attribute ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_availability_zones: Prevent plan differences with the `id` attribute ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_db_event_categories: Prevent plan differences with the `id` attribute ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_ebs_default_kms_key: Prevent plan differences with the `id` attribute ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_ebs_encryption_by_default: Prevent plan differences with the `id` attribute ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_ec2_instance_type_offering: Prevent plan differences with the `id` attribute ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_ecr_authorization_token: Prevent plan differences with the `id` attribute ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_ecr_image: Prevent plan differences with the `id` attribute ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_eks_cluster_auth: Prevent plan differences with the `id` attribute ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_iam_account_alias: Prevent plan differences with the `id` attribute ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_kms_alias: Prevent plan differences with the `id` attribute ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_partition: Prevent plan differences with the `id` attribute ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_regions: Prevent plan differences with the `id` attribute ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* data-source/aws_sns_topic: Prevent plan differences with the `id` attribute ([#15399](https://github.com/terraform-providers/terraform-provider-aws/issues/15399))
+* resource/aws_acm_certificate: Prevent unexpected timeout error on deletion due to API retries ([#15522](https://github.com/terraform-providers/terraform-provider-aws/issues/15522))
+* resource/aws_batch_job_definition: Prevent unexpected plan difference for `container_properties` argument value with new secrets support ([#15470](https://github.com/terraform-providers/terraform-provider-aws/issues/15470))
+* resource/aws_codestarnotifications_notification_rule: Prevent unexpected timeout error during target deletion due to API retries ([#15523](https://github.com/terraform-providers/terraform-provider-aws/issues/15523))
+* resource/aws_config_remediation_configuration: Prevent unexpected timeout error on deletion due to API retries ([#15524](https://github.com/terraform-providers/terraform-provider-aws/issues/15524))
+* resource/aws_db_proxy: Increase default deletion timeout to 60 minutes ([#15537](https://github.com/terraform-providers/terraform-provider-aws/issues/15537))
+* resource/aws_db_proxy_target: Ensure `db_proxy_name` and `target_group_name` attributes are properly imported ([#15537](https://github.com/terraform-providers/terraform-provider-aws/issues/15537))
+* resource/aws_ecs_cluster: Prevent IAM Service Linked Role error on first ECS provision ([#15457](https://github.com/terraform-providers/terraform-provider-aws/issues/15457))
+* resource/aws_emr_instance_fleet: Prevent error on deletion when EMR Cluster is no longer running ([#15548](https://github.com/terraform-providers/terraform-provider-aws/issues/15548))
+* resource/aws_emr_managed_scaling_policy: Ensure `cluster_id` attribute is properly saved during import ([#15541](https://github.com/terraform-providers/terraform-provider-aws/issues/15541))
+* resource/aws_emr_managed_scaling_policy: Handle additional cases where resource should be removed from Terraform state ([#15541](https://github.com/terraform-providers/terraform-provider-aws/issues/15541))
+* resource/aws_gamelift_fleet: Prevent unexpected timeout error on creation due to API retries ([#15526](https://github.com/terraform-providers/terraform-provider-aws/issues/15526))
+* resource/aws_glue_workflow: Ensure `max_concurrent_runs` attribute is properly saved during import ([#15538](https://github.com/terraform-providers/terraform-provider-aws/issues/15538))
+* resource/aws_lex_bot: Prevent unexpected timeout error on creation due to API retries ([#15527](https://github.com/terraform-providers/terraform-provider-aws/issues/15527))
+* resource/aws_lex_bot_alias: Prevent unexpected timeout error on creation due to API retries ([#15527](https://github.com/terraform-providers/terraform-provider-aws/issues/15527))
+* resource/aws_lex_intent: Prevent unexpected timeout error on creation due to API retries ([#15527](https://github.com/terraform-providers/terraform-provider-aws/issues/15527))
+* resource/aws_lex_slot_type: Prevent unexpected timeout error on creation due to API retries ([#15527](https://github.com/terraform-providers/terraform-provider-aws/issues/15527))
+* resource/aws_organizations_policy: Prevent errors with imported AWS-managed Organizations policies ([#15446](https://github.com/terraform-providers/terraform-provider-aws/issues/15446))
+* resource/aws_s3_bucket: Correctly handle provider-level ignored tag configuration ([#12013](https://github.com/terraform-providers/terraform-provider-aws/issues/12013))
+* resource/aws_s3_bucket: Correctly set expiration for lifecycle_rule with abort_incomplete_multipart_upload_days set ([#15263](https://github.com/terraform-providers/terraform-provider-aws/issues/15263))
+* resource/aws_s3_bucket_analytics_configuration: Prevent unexpected timeout error on deletion due to API retries ([#15529](https://github.com/terraform-providers/terraform-provider-aws/issues/15529))
+* resource/aws_s3_bucket_object: Correctly handle provider-level ignored tag configuration ([#12013](https://github.com/terraform-providers/terraform-provider-aws/issues/12013))
 
 ## 3.9.0 (October 02, 2020)
 
@@ -112,7 +112,7 @@ ENHANCEMENTS
 
 BUG FIXES
 
-* data-source/aws_s3_bucket_object: Prevent crash when S3 HeadObject returns empty response [GH-14154]
+* data-source/aws_s3_bucket_object: Prevent crash when S3 HeadObject returns empty response ([#14154](https://github.com/terraform-providers/terraform-provider-aws/issues/14154))
 * resource/aws_db_instance: Prevent ordering differences with `enabled_cloudwatch_logs_exports` argument ([#15404](https://github.com/terraform-providers/terraform-provider-aws/issues/15404))
 * resource/aws_ec2_client_vpn_authorization_rule: Increased active and revoked timeouts from 5 to 10 minutes ([#15367](https://github.com/terraform-providers/terraform-provider-aws/issues/15367))
 * resource/aws_rds_cluster: Prevent ordering differences with `enabled_cloudwatch_logs_exports` argument ([#15404](https://github.com/terraform-providers/terraform-provider-aws/issues/15404))
