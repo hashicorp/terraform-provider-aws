@@ -146,7 +146,6 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 			"storage_capacity": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(32, 65536),
 			},
 			"subnet_ids": {
@@ -160,7 +159,6 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 			"throughput_capacity": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(8, 2048),
 			},
 			"vpc_id": {
