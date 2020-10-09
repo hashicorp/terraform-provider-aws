@@ -127,7 +127,7 @@ func resourceAwsCodeArtifactRepositoryCreate(d *schema.ResourceData, meta interf
 
 		_, err := conn.AssociateExternalConnection(input)
 		if err != nil {
-			return fmt.Errorf("error associating associating external connection to CodeArtifact repository: %w", err)
+			return fmt.Errorf("error associating external connection to CodeArtifact repository: %w", err)
 		}
 	}
 
@@ -161,32 +161,34 @@ func resourceAwsCodeArtifactRepositoryUpdate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error updating CodeArtifact Repository: %w", err)
 	}
 
-	if v, ok := d.GetOk("external_connections"); ok {
-		externalConnection := v.([]interface{})[0].(map[string]interface{})
-		input := &codeartifact.AssociateExternalConnectionInput{
-			Repository:         aws.String(d.Get("repository").(string)),
-			Domain:             aws.String(d.Get("domain").(string)),
-			DomainOwner:        aws.String(d.Get("domain_owner").(string)),
-			ExternalConnection: aws.String(externalConnection["external_connection_name"].(string)),
-		}
+	if d.HasChange("external_connections") {
+		if v, ok := d.GetOk("external_connections"); ok {
+			externalConnection := v.([]interface{})[0].(map[string]interface{})
+			input := &codeartifact.AssociateExternalConnectionInput{
+				Repository:         aws.String(d.Get("repository").(string)),
+				Domain:             aws.String(d.Get("domain").(string)),
+				DomainOwner:        aws.String(d.Get("domain_owner").(string)),
+				ExternalConnection: aws.String(externalConnection["external_connection_name"].(string)),
+			}
 
-		_, err := conn.AssociateExternalConnection(input)
-		if err != nil {
-			return fmt.Errorf("error associating external connection to CodeArtifact repository: %w", err)
-		}
-	} else {
-		oldConn, _ := d.GetChange("external_connections")
-		externalConnection := oldConn.([]interface{})[0].(map[string]interface{})
-		input := &codeartifact.DisassociateExternalConnectionInput{
-			Repository:         aws.String(d.Get("repository").(string)),
-			Domain:             aws.String(d.Get("domain").(string)),
-			DomainOwner:        aws.String(d.Get("domain_owner").(string)),
-			ExternalConnection: aws.String(externalConnection["external_connection_name"].(string)),
-		}
+			_, err := conn.AssociateExternalConnection(input)
+			if err != nil {
+				return fmt.Errorf("error associating external connection to CodeArtifact repository: %w", err)
+			}
+		} else {
+			oldConn, _ := d.GetChange("external_connections")
+			externalConnection := oldConn.([]interface{})[0].(map[string]interface{})
+			input := &codeartifact.DisassociateExternalConnectionInput{
+				Repository:         aws.String(d.Get("repository").(string)),
+				Domain:             aws.String(d.Get("domain").(string)),
+				DomainOwner:        aws.String(d.Get("domain_owner").(string)),
+				ExternalConnection: aws.String(externalConnection["external_connection_name"].(string)),
+			}
 
-		_, err := conn.DisassociateExternalConnection(input)
-		if err != nil {
-			return fmt.Errorf("error disassociating external connection to CodeArtifact repository: %w", err)
+			_, err := conn.DisassociateExternalConnection(input)
+			if err != nil {
+				return fmt.Errorf("error disassociating external connection to CodeArtifact repository: %w", err)
+			}
 		}
 	}
 
