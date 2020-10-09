@@ -33,7 +33,7 @@ func resourceAwsCodeArtifactDomain() *schema.Resource {
 			},
 			"encryption_key": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
