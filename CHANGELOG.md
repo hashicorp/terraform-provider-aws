@@ -1,4 +1,9 @@
 ## 3.11.0 (Unreleased)
+
+BUG FIXES
+
+* resource/aws_ec2_transit_gateway_route: Prevent plan errors with compressed IPv6 addresses [GH-14846]
+
 ## 3.10.0 (October 09, 2020)
 
 FEATURES
