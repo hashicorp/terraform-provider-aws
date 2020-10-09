@@ -453,7 +453,7 @@ func TestValidateCIDRNetworkAddress(t *testing.T) {
 	}
 }
 
-func Test_validateCIDRBlock(t *testing.T) {
+func TestValidateCIDRBlock(t *testing.T) {
 	for _, ts := range []struct {
 		cidr  string
 		valid bool
@@ -477,7 +477,7 @@ func Test_validateCIDRBlock(t *testing.T) {
 	}
 }
 
-func Test_validateIpv4CIDRBlock(t *testing.T) {
+func TestValidateIpv4CIDRBlock(t *testing.T) {
 	for _, ts := range []struct {
 		cidr  string
 		valid bool
@@ -500,7 +500,7 @@ func Test_validateIpv4CIDRBlock(t *testing.T) {
 	}
 }
 
-func Test_validateIpv6CIDRBlock(t *testing.T) {
+func TestValidateIpv6CIDRBlock(t *testing.T) {
 	for _, ts := range []struct {
 		cidr  string
 		valid bool
@@ -524,7 +524,7 @@ func Test_validateIpv6CIDRBlock(t *testing.T) {
 	}
 }
 
-func Test_cidrBlocksEqual(t *testing.T) {
+func TestCidrBlocksEqual(t *testing.T) {
 	for _, ts := range []struct {
 		cidr1 string
 		cidr2 string
@@ -541,6 +541,25 @@ func Test_cidrBlocksEqual(t *testing.T) {
 		equal := cidrBlocksEqual(ts.cidr1, ts.cidr2)
 		if ts.equal != equal {
 			t.Fatalf("cidrBlocksEqual(%q, %q) should be: %t", ts.cidr1, ts.cidr2, ts.equal)
+		}
+	}
+}
+func TestCanonicalCidrBlock(t *testing.T) {
+	for _, ts := range []struct {
+		cidr     string
+		expected string
+	}{
+		{"10.2.2.0/24", "10.2.2.0/24"},
+		{"10.2.2.5/24", "10.2.2.0/24"},
+		{"::/0", "::/0"},
+		{"::0/0", "::/0"},
+		{"2001::/15", "2000::/15"},
+		{"2001:db8::1/120", "2001:db8::/120"},
+		{"", ""},
+	} {
+		got := canonicalCidrBlock(ts.cidr)
+		if ts.expected != got {
+			t.Fatalf("canonicalCidrBlock(%q) should be: %q, got: %q", ts.cidr, ts.expected, got)
 		}
 	}
 }
