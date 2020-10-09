@@ -28,21 +28,6 @@ func resourceAwsSsoAssignment() *schema.Resource {
 				Computed: true,
 			},
 
-			"failure_reason": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"request_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"instance_arn": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -101,8 +86,6 @@ func resourceAwsSsoAssignment() *schema.Resource {
 func resourceAwsSsoAssignmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ssoadminconn
 
-	log.Printf("[INFO] Creating AWS SSO Assignment")
-
 	instanceArn := d.Get("instance_arn").(string)
 	permissionSetArn := d.Get("permission_set_arn").(string)
 	principalID := d.Get("principal_id").(string)
@@ -128,6 +111,7 @@ func resourceAwsSsoAssignmentCreate(d *schema.ResourceData, meta interface{}) er
 		TargetType:       aws.String(targetType),
 	}
 
+	log.Printf("[INFO] Creating AWS SSO Assignment")
 	resp, err := conn.CreateAccountAssignment(req)
 	if err != nil {
 		return fmt.Errorf("Error creating AWS SSO Assignment: %s", err)
@@ -162,16 +146,60 @@ func resourceAwsSsoAssignmentCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsSsoAssignmentRead(d *schema.ResourceData, meta interface{}) error {
-	// conn := meta.(*AWSClient).ssoadminconn
-	// TODO
+	conn := meta.(*AWSClient).ssoadminconn
+
+	instanceArn := d.Get("instance_arn").(string)
+	permissionSetArn := d.Get("permission_set_arn").(string)
+	principalID := d.Get("principal_id").(string)
+	principalType := d.Get("principal_type").(string)
+	targetID := d.Get("target_id").(string)
+	targetType := d.Get("target_type").(string)
+
+	vars := []string{
+		permissionSetArn,
+		targetType,
+		targetID,
+		principalType,
+		principalID,
+	}
+
+	req := &ssoadmin.ListAccountAssignmentsInput{
+		InstanceArn:      aws.String(instanceArn),
+		PermissionSetArn: aws.String(permissionSetArn),
+		AccountId:        aws.String(targetID),
+	}
+
+	log.Printf("[DEBUG] Reading AWS SSO Assignments for %s", req)
+	resp, err := conn.ListAccountAssignments(req)
+	if err != nil {
+		return fmt.Errorf("Error getting AWS SSO Assignments: %s", err)
+	}
+
+	if resp == nil || len(resp.AccountAssignments) == 0 {
+		// TODO: is this correct?
+		log.Printf("[DEBUG] No account assignments found")
+		d.SetId("")
+		return nil
+	}
+
+	for _, accountAssignment := range resp.AccountAssignments {
+		if aws.StringValue(accountAssignment.PrincipalType) == principalType {
+			if aws.StringValue(accountAssignment.PrincipalId) == principalID {
+				// TODO: is this correct?
+				d.SetId(strings.Join(vars, "_"))
+				return nil
+			}
+		}
+	}
+
+	// TODO: is this correct?
+	log.Printf("[DEBUG] Account assignment not found for %s", map[string]string{
+		"PrincipalType": principalType,
+		"PrincipalId":   principalID,
+	})
+	d.SetId("")
 	return nil
 }
-
-// func resourceAwsSsoAssignmentUpdate(d *schema.ResourceData, meta interface{}) error {
-// 	// conn := meta.(*AWSClient).ssoadminconn
-// 	// TODO
-// 	return resourceAwsSsoAssignmentRead(d, meta)
-// }
 
 func resourceAwsSsoAssignmentDelete(d *schema.ResourceData, meta interface{}) error {
 	// conn := meta.(*AWSClient).ssoadminconn

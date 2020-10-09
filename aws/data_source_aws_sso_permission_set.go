@@ -101,6 +101,7 @@ func dataSourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Reading AWS SSO Permission Sets")
 	resp, err := conn.ListPermissionSets(&ssoadmin.ListPermissionSetsInput{
 		InstanceArn: aws.String(instanceArn),
+		MaxResults:  aws.Int64(100),
 	})
 	if err != nil {
 		return fmt.Errorf("Error getting AWS SSO Permission Sets: %s", err)
