@@ -53,6 +53,8 @@ resource "aws_config_remediation_configuration" "this" {
 The following arguments are supported:
 
 * `automatic` - (Optional) The remediation is triggered automatically.
+* `maximum_automatic_attempts` - (Optional) The maximum number of failed attempts for auto-remediation. The default is 5.
+* `retry_attempt_seconds` - (Optional) Maximum time in seconds that AWS Config runs auto-remediation. The default is 60 seconds.
 * `config_rule_name` - (Required) The name of the AWS Config rule
 * `resource_type` - (Optional) The type of a resource
 * `target_id` - (Required) Target ID is the name of the public document
