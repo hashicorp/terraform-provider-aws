@@ -33,6 +33,20 @@ func resourceAwsConfigRemediationConfiguration() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"maximum_automatic_attempts": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      5,
+				ValidateFunc: validation.IntBetween(1, 25),
+			},
+			"retry_attempt_seconds": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      60,
+				ValidateFunc: validation.IntBetween(1, 2678000),
+			},
 			"config_rule_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -148,6 +162,12 @@ func resourceAwsConfigRemediationConfigurationPut(d *schema.ResourceData, meta i
 	if v, ok := d.GetOk("automatic"); ok {
 		remediationConfigurationInput.Automatic = aws.Bool(v.(bool))
 	}
+	if v, ok := d.GetOk("maximum_automatic_attempts"); ok {
+		remediationConfigurationInput.MaximumAutomaticAttempts = aws.Int64(int64(v.(int)))
+	}
+	if v, ok := d.GetOk("retry_attempt_seconds"); ok {
+		remediationConfigurationInput.RetryAttemptSeconds = aws.Int64(int64(v.(int)))
+	}
 	if v, ok := d.GetOk("resource_type"); ok {
 		remediationConfigurationInput.ResourceType = aws.String(v.(string))
 	}
@@ -203,6 +223,8 @@ func resourceAwsConfigRemediationConfigurationRead(d *schema.ResourceData, meta 
 	remediationConfiguration := out.RemediationConfigurations[0]
 	d.Set("arn", remediationConfiguration.Arn)
 	d.Set("automatic", remediationConfiguration.Automatic)
+	d.Set("maximum_automatic_attempts", remediationConfiguration.MaximumAutomaticAttempts)
+	d.Set("retry_attempt_seconds", remediationConfiguration.RetryAttemptSeconds)
 	d.Set("config_rule_name", remediationConfiguration.ConfigRuleName)
 	d.Set("resource_type", remediationConfiguration.ResourceType)
 	d.Set("target_id", remediationConfiguration.TargetId)
