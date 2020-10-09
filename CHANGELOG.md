@@ -38,6 +38,7 @@ ENHANCEMENTS
 * resource/aws_batch_compute_environment: Add `tags` argument [GH-15470]
 * resource/aws_batch_job_definition: Add `tags` argument [GH-15470]
 * resource/aws_batch_job_queue: Add `tags` argument [GH-15470]
+* resource/aws_lb_target_group: Add `source_ip` as an option for the `stickiness.type` argument. [GH-15295]
 * resource/aws_sns_topic_subscription: Create subscriptions with attributes (delivery policy, filter policy, etc.) instead of separate API calls [GH-10496]
 
 BUG FIXES
