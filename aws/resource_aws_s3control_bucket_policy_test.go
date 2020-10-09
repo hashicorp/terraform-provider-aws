@@ -186,7 +186,7 @@ resource "aws_s3control_bucket" "test" {
 resource "aws_s3control_bucket_policy" "test" {
   bucket = aws_s3control_bucket.test.arn
   policy = jsonencode({
-    Id        = "testBucketPolicy"
+    Id = "testBucketPolicy"
     Statement = [
       {
         Action = %[2]q
