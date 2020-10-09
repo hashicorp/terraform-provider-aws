@@ -611,15 +611,15 @@ func testAccCheckAWSENIMakeExternalAttachment(n string, conf *ec2.NetworkInterfa
 		if !ok || rs.Primary.ID == "" {
 			return fmt.Errorf("Not found: %s", n)
 		}
-		attach_request := &ec2.AttachNetworkInterfaceInput{
+		input := &ec2.AttachNetworkInterfaceInput{
 			DeviceIndex:        aws.Int64(1),
 			InstanceId:         aws.String(rs.Primary.ID),
 			NetworkInterfaceId: conf.NetworkInterfaceId,
 		}
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		_, attach_err := conn.AttachNetworkInterface(attach_request)
-		if attach_err != nil {
-			return fmt.Errorf("Error attaching ENI: %s", attach_err)
+		_, err := conn.AttachNetworkInterface(input)
+		if err != nil {
+			return fmt.Errorf("Error attaching ENI: %s", err)
 		}
 		return nil
 	}
@@ -679,7 +679,7 @@ resource "aws_vpc" "test" {
   enable_dns_hostnames             = true
 
   tags = {
-  	Name = %[1]q
+    Name = %[1]q
   }
 }
 
