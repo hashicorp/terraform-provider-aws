@@ -18,7 +18,7 @@ func resourceAwsSsoAssignment() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSsoAssignmentCreate,
 		Read:   resourceAwsSsoAssignmentRead,
-		Update: resourceAwsSsoAssignmentUpdate,
+		// Update: resourceAwsSsoAssignmentUpdate,
 		Delete: resourceAwsSsoAssignmentDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -112,11 +112,11 @@ func resourceAwsSsoAssignmentRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsSsoAssignmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	// conn := meta.(*AWSClient).ssoadminconn
-	// TODO
-	return resourceAwsSsoAssignmentRead(d, meta)
-}
+// func resourceAwsSsoAssignmentUpdate(d *schema.ResourceData, meta interface{}) error {
+// 	// conn := meta.(*AWSClient).ssoadminconn
+// 	// TODO
+// 	return resourceAwsSsoAssignmentRead(d, meta)
+// }
 
 func resourceAwsSsoAssignmentDelete(d *schema.ResourceData, meta interface{}) error {
 	// conn := meta.(*AWSClient).ssoadminconn
