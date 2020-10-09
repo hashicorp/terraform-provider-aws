@@ -37,10 +37,11 @@ func resourceAwsCodeArtifactRepository() *schema.Resource {
 				ForceNew: true,
 			},
 			"domain_owner": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Computed:     true,
+				ValidateFunc: validateAwsAccountId,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -66,7 +67,7 @@ func resourceAwsCodeArtifactRepository() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"external_connection_name": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"package_format": {
 							Type:     schema.TypeString,
