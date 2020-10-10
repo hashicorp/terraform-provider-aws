@@ -841,7 +841,8 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 func resourceAwsElasticacheReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
 
-	err := deleteElasticacheReplicationGroup(d, conn)
+    var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
+	err := deleteElasticacheReplicationGroup(d.Id(), conn, finalSnapshotID)
 	if err != nil {
 		return fmt.Errorf("error deleting Elasticache Replication Group (%s): %w", d.Id(), err)
 	}
@@ -897,14 +898,11 @@ func cacheReplicationGroupStateRefreshFunc(conn *elasticache.ElastiCache, replic
 	}
 }
 
-func deleteElasticacheReplicationGroup(d *schema.ResourceData, conn *elasticache.ElastiCache) error {
+func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elasticache.ElastiCache, finalSnapshotID string) error {
 	input := &elasticache.DeleteReplicationGroupInput{
-		ReplicationGroupId: aws.String(d.Id()),
+		ReplicationGroupId: aws.String(replicationGroupID),
 	}
-
-	if v, ok := d.GetOk("final_snapshot_identifier"); ok {
-		input.FinalSnapshotIdentifier = aws.String(v.(string))
-	}
+    input.FinalSnapshotIdentifier = aws.String(finalSnapshotID)
 
 	// 10 minutes should give any creating/deleting cache clusters or snapshots time to complete
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {

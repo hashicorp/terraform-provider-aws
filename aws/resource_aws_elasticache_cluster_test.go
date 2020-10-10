@@ -46,7 +46,7 @@ func testSweepElasticacheClusters(region string) error {
 			id := aws.StringValue(cluster.CacheClusterId)
 
 			log.Printf("[INFO] Deleting Elasticache Cluster: %s", id)
-			err := deleteElasticacheCacheCluster(conn, id)
+			err := deleteElasticacheCacheCluster(conn, id, "")
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete Elasticache Cache Cluster (%s): %s", id, err)
 			}
