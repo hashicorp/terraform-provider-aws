@@ -239,6 +239,10 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"final_snapshot_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"tags": tagsSchema(),
 		},
 
@@ -788,6 +792,11 @@ func deleteElasticacheCacheCluster(conn *elasticache.ElastiCache, cacheClusterID
 	input := &elasticache.DeleteCacheClusterInput{
 		CacheClusterId: aws.String(cacheClusterID),
 	}
+
+	if v, ok := d.GetOk("final_snapshot_identifier"); ok {
+		input.FinalSnapshotIdentifier = aws.String(v.(string))
+	}
+
 	log.Printf("[DEBUG] Deleting Elasticache Cache Cluster: %s", input)
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteCacheCluster(input)

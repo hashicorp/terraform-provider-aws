@@ -240,6 +240,10 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
+			"final_snapshot_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 		SchemaVersion: 1,
 
@@ -894,6 +898,10 @@ func cacheReplicationGroupStateRefreshFunc(conn *elasticache.ElastiCache, replic
 func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elasticache.ElastiCache) error {
 	input := &elasticache.DeleteReplicationGroupInput{
 		ReplicationGroupId: aws.String(replicationGroupID),
+	}
+
+	if v, ok := d.GetOk("final_snapshot_identifier"); ok {
+		input.FinalSnapshotIdentifier = aws.String(v.(string))
 	}
 
 	// 10 minutes should give any creating/deleting cache clusters or snapshots time to complete
