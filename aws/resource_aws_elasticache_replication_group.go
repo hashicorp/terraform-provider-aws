@@ -932,11 +932,11 @@ func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elastica
 		return fmt.Errorf("error deleting Elasticache Replication Group: %w", err)
 	}
 
-	log.Printf("[DEBUG] Waiting for deletion: %s", d.Id())
+	log.Printf("[DEBUG] Waiting for deletion: %s", replicationGroupID)
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating", "available", "deleting"},
 		Target:     []string{},
-		Refresh:    cacheReplicationGroupStateRefreshFunc(conn, d.Id(), []string{}),
+		Refresh:    cacheReplicationGroupStateRefreshFunc(conn, replicationGroupID, []string{}),
 		Timeout:    40 * time.Minute,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
