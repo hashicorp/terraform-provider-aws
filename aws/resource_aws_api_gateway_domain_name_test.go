@@ -286,14 +286,16 @@ func TestAccAWSAPIGatewayDomainName_disappears(t *testing.T) {
 }
 
 func TestAccAWSAPIGatewayDomainName_MutualTlsAuthentication(t *testing.T) {
+	key := "AWS_API_GATEWAY_CERTIFICATE_DOMAIN_NAME"
+	domainName := os.Getenv(key)
+	if domainName == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
 	var v apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
 	s3BucketObjectResourceName := "aws_s3_bucket_object.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	domainName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
-
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, domainName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -301,21 +303,12 @@ func TestAccAWSAPIGatewayDomainName_MutualTlsAuthentication(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayDomainNameConfig_MutualTlsAuthentication(rName, domainName, key, certificate),
+				Config: testAccAWSAPIGatewayDomainNameConfig_MutualTlsAuthentication(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDomainNameExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_uri", fmt.Sprintf("s3://%s/%s.1", rName, rName)),
-					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_version", ""),
-				),
-			},
-			{
-				Config: testAccAWSAPIGatewayDomainNameConfig_MutualTlsAuthenticationUpdated(rName, domainName, key, certificate),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayDomainNameExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_uri", fmt.Sprintf("s3://%s/%s.1", rName, rName)),
+					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_uri", fmt.Sprintf("s3://%s/%s", rName, rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "mutual_tls_authentication.0.truststore_version", s3BucketObjectResourceName, "version_id"),
 				),
 			},
@@ -326,7 +319,7 @@ func TestAccAWSAPIGatewayDomainName_MutualTlsAuthentication(t *testing.T) {
 			},
 			// Test disabling mutual TLS authentication.
 			{
-				Config: testAccAWSAPIGatewayDomainNameConfig_SecurityPolicy(domainName, key, certificate, apigateway.SecurityPolicyTls12),
+				Config: testAccAWSAPIGatewayDomainNameConfig_MutualTlsAuthenticationMissing(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDomainNameExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "0"),
@@ -562,43 +555,18 @@ resource "aws_api_gateway_domain_name" "test" {
 `, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key), tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSAPIGatewayDomainNameConfig_MutualTlsAuthentication(rName, domainName, key, certificate string) string {
+func testAccAWSAPIGatewayDomainNameConfig_MutualTlsAuthentication(rName, domainName string) string {
 	return fmt.Sprintf(`
+data "aws_acm_certificate" "test" {
+  domain      = %[2]q
+  types       = ["AMAZON_ISSUED"]
+  most_recent = true
+}
+
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
 
-resource "aws_s3_bucket_object" "test" {
-  bucket = aws_s3_bucket.test.id
-  key    = "%[1]s.1"
-  source = "test-fixtures/apigateway-domain-name-truststore-1.pem"
-}
-
-resource "aws_acm_certificate" "test" {
-  certificate_body = "%[3]s"
-  private_key      = "%[4]s"
-}
-
-resource "aws_api_gateway_domain_name" "test" {
-  domain_name              = %[2]q
-  regional_certificate_arn = aws_acm_certificate.test.arn
-  security_policy          = "TLS_1_2"
-
-  endpoint_configuration {
-    types = ["REGIONAL"]
-  }
-
-  mutual_tls_authentication {
-    truststore_uri = "s3://${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
-  }
-}
-`, rName, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
-}
-
-func testAccAWSAPIGatewayDomainNameConfig_MutualTlsAuthenticationUpdated(rName, domainName, key, certificate string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  force_destroy = true
 
   versioning {
     enabled = true
@@ -607,18 +575,13 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.test.id
-  key    = "%[1]s.1"
-  source = "test-fixtures/apigateway-domain-name-truststore-2.pem"
-}
-
-resource "aws_acm_certificate" "test" {
-  certificate_body = "%[3]s"
-  private_key      = "%[4]s"
+  key    = %[1]q
+  source = "test-fixtures/apigateway-domain-name-truststore-1.pem"
 }
 
 resource "aws_api_gateway_domain_name" "test" {
   domain_name              = %[2]q
-  regional_certificate_arn = aws_acm_certificate.test.arn
+  regional_certificate_arn = data.aws_acm_certificate.test.arn
   security_policy          = "TLS_1_2"
 
   endpoint_configuration {
@@ -630,5 +593,25 @@ resource "aws_api_gateway_domain_name" "test" {
     truststore_version = aws_s3_bucket_object.test.version_id
   }
 }
-`, rName, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+`, rName, domainName)
+}
+
+func testAccAWSAPIGatewayDomainNameConfig_MutualTlsAuthenticationMissing(domainName string) string {
+	return fmt.Sprintf(`
+data "aws_acm_certificate" "test" {
+  domain      = %[1]q
+  types       = ["AMAZON_ISSUED"]
+  most_recent = true
+}
+
+resource "aws_api_gateway_domain_name" "test" {
+  domain_name              = %[1]q
+  regional_certificate_arn = data.aws_acm_certificate.test.arn
+  security_policy          = "TLS_1_2"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+}
+`, domainName)
 }
