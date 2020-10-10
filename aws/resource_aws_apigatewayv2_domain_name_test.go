@@ -405,33 +405,6 @@ resource "aws_acm_certificate" "test" {
 `, rName, certificate, key, count)
 }
 
-func testAccAWSAPIGatewayV2DomainNameConfigRootCA(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_acmpca_certificate_authority" "test" {
-  permanent_deletion_time_in_days = 7
-  type                            = "ROOT"
-
-  certificate_authority_configuration {
-    key_algorithm     = "RSA_4096"
-	signing_algorithm = "SHA512WITHRSA"
-
-    subject {
-      common_name = "%[1]s.com"
-    }
-  }
-}
-`, rName)
-}
-
-func testAccAWSAPIGatewayV2DomainNameConfigPrivateCert(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_acm_certificate" "test" {
-  domain_name               = "test.%[1]s.com"
-  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
-}
-`, rName)
-}
-
 func testAccAWSAPIGatewayV2DomainNameConfig_basic(rName, certificate, key string, count, index int) string {
 	return composeConfig(testAccAWSAPIGatewayV2DomainNameConfigImportedCerts(rName, certificate, key, count), fmt.Sprintf(`
 resource "aws_apigatewayv2_domain_name" "test" {
@@ -463,23 +436,6 @@ resource "aws_apigatewayv2_domain_name" "test" {
   }
 }
 `, rName, index))
-}
-
-func testAccAWSAPIGatewayV2DomainNameConfigBasicWithPrivateCert(rName string) string {
-	return composeConfig(
-		testAccAWSAPIGatewayV2DomainNameConfigRootCA(rName),
-		testAccAWSAPIGatewayV2DomainNameConfigPrivateCert(rName),
-		fmt.Sprintf(`
-resource "aws_apigatewayv2_domain_name" "test" {
-  domain_name = aws_acm_certificate.test.domain_name
-
-  domain_name_configuration {
-    certificate_arn = aws_acm_certificate.test.arn
-    endpoint_type   = "REGIONAL"
-    security_policy = "TLS_1_2"
-  }
-}
-`))
 }
 
 func testAccAWSAPIGatewayV2DomainNameConfigMututalTlsAuthentication(rName, domainName string) string {
