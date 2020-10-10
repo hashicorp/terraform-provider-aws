@@ -247,6 +247,29 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 	}
 
 	output, err = snsconn.Subscribe(req)
+
+	for i := 1; i < 10; i++ {
+		var subscription *sns.Subscription
+		subscription, err = findSubscriptionByNonID(d, snsconn)
+
+		if subscription != nil {
+			output.SubscriptionArn = subscription.SubscriptionArn
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		time.Sleep(10 * time.Second)
+
+		if !subscriptionHasPendingConfirmation(output.SubscriptionArn) {
+			log.Printf("[DEBUG] SubscriptionArn: %s", *output.SubscriptionArn)
+			break
+		}
+
+		log.Printf("[DEBUG] SubscriptionArn: %s trying again (%d / 10)", *output.SubscriptionArn, i)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("Error creating SNS topic subscription: %s", err)
 	}
