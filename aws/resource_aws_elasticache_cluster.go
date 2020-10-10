@@ -671,7 +671,8 @@ func (b byCacheNodeId) Less(i, j int) bool {
 func resourceAwsElasticacheClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
 
-	err := deleteElasticacheCacheCluster(conn, d.Id())
+	var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
+	err := deleteElasticacheCacheCluster(conn, d.Id(), finalSnapshotID)
 	if err != nil {
 		if isAWSErr(err, elasticache.ErrCodeCacheClusterNotFoundFault, "") {
 			return nil
@@ -788,14 +789,11 @@ func waitForCreateElasticacheCacheCluster(conn *elasticache.ElastiCache, cacheCl
 	return err
 }
 
-func deleteElasticacheCacheCluster(conn *elasticache.ElastiCache, cacheClusterID string) error {
+func deleteElasticacheCacheCluster(conn *elasticache.ElastiCache, cacheClusterID string, finalSnapshotID string) error {
 	input := &elasticache.DeleteCacheClusterInput{
 		CacheClusterId: aws.String(cacheClusterID),
 	}
-
-	if v, ok := d.GetOk("final_snapshot_identifier"); ok {
-		input.FinalSnapshotIdentifier = aws.String(v.(string))
-	}
+	input.FinalSnapshotIdentifier = aws.String(finalSnapshotID)
 
 	log.Printf("[DEBUG] Deleting Elasticache Cache Cluster: %s", input)
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {

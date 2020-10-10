@@ -610,7 +610,8 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 
 			// Kick off all the Cache Cluster deletions
 			for _, cacheClusterID := range removeClusterIDs {
-				err := deleteElasticacheCacheCluster(conn, cacheClusterID)
+				var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
+				err := deleteElasticacheCacheCluster(conn, cacheClusterID, finalSnapshotID)
 				if err != nil {
 					// Future enhancement: we could retry deletion with random existing ID on missing name
 					// if isAWSErr(err, elasticache.ErrCodeCacheClusterNotFoundFault, "") { ... }
@@ -694,7 +695,8 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 					}
 
 					// Finally retry deleting the cache cluster
-					err = deleteElasticacheCacheCluster(conn, cacheClusterID)
+					var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
+					err = deleteElasticacheCacheCluster(conn, cacheClusterID, finalSnapshotID)
 					if err != nil {
 						return fmt.Errorf("error deleting Elasticache Cache Cluster (%s) (removing replica after setting new primary): %w", cacheClusterID, err)
 					}
@@ -839,7 +841,7 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 func resourceAwsElasticacheReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
 
-	err := deleteElasticacheReplicationGroup(d.Id(), conn)
+	err := deleteElasticacheReplicationGroup(d, conn)
 	if err != nil {
 		return fmt.Errorf("error deleting Elasticache Replication Group (%s): %w", d.Id(), err)
 	}
@@ -895,9 +897,9 @@ func cacheReplicationGroupStateRefreshFunc(conn *elasticache.ElastiCache, replic
 	}
 }
 
-func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elasticache.ElastiCache) error {
+func deleteElasticacheReplicationGroup(d *schema.ResourceData, conn *elasticache.ElastiCache) error {
 	input := &elasticache.DeleteReplicationGroupInput{
-		ReplicationGroupId: aws.String(replicationGroupID),
+		ReplicationGroupId: aws.String(d.Id()),
 	}
 
 	if v, ok := d.GetOk("final_snapshot_identifier"); ok {
@@ -932,11 +934,11 @@ func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elastica
 		return fmt.Errorf("error deleting Elasticache Replication Group: %w", err)
 	}
 
-	log.Printf("[DEBUG] Waiting for deletion: %s", replicationGroupID)
+	log.Printf("[DEBUG] Waiting for deletion: %s", d.Id())
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating", "available", "deleting"},
 		Target:     []string{},
-		Refresh:    cacheReplicationGroupStateRefreshFunc(conn, replicationGroupID, []string{}),
+		Refresh:    cacheReplicationGroupStateRefreshFunc(conn, d.Id(), []string{}),
 		Timeout:    40 * time.Minute,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
