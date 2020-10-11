@@ -233,6 +233,10 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 	confirmation_timeout_in_minutes := d.Get("confirmation_timeout_in_minutes").(int)
 	attributes := getResourceAttributes(d)
 
+	var time_to_sleep int = 10
+	var count_time_to_sleep int
+	count_time_to_sleep = (confirmation_timeout_in_minutes * 60) / time_to_sleep
+
 	if strings.Contains(protocol, "http") && !endpoint_auto_confirms {
 		return nil, fmt.Errorf("Protocol http/https is only supported for endpoints which auto confirms!")
 	}
@@ -248,7 +252,7 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 
 	output, err = snsconn.Subscribe(req)
 
-	for i := 1; i < 10; i++ {
+	for i := 1; i < count_time_to_sleep; i++ {
 		var subscription *sns.Subscription
 		subscription, err = findSubscriptionByNonID(d, snsconn)
 
@@ -260,18 +264,19 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 			return nil, err
 		}
 
-		time.Sleep(10 * time.Second)
-
 		if !subscriptionHasPendingConfirmation(output.SubscriptionArn) {
 			log.Printf("[DEBUG] SubscriptionArn: %s", *output.SubscriptionArn)
 			break
 		}
 
-		log.Printf("[DEBUG] SubscriptionArn: %s trying again (%d / 10)", *output.SubscriptionArn, i)
+		log.Printf("[DEBUG] SubscriptionArn: %s trying again (%d / %d)", *output.SubscriptionArn, i, count_time_to_sleep)
+
+		time.Sleep(10 * time.Second)
 	}
 
-	if err != nil {
-		return nil, fmt.Errorf("Error creating SNS topic subscription: %s", err)
+	if subscriptionHasPendingConfirmation(output.SubscriptionArn) {
+		//return nil, fmt.Errorf("Error creating SNS topic subscription: %s (confirmation not provided)", endpoint)
+		return nil, fmt.Errorf("Endpoint (%s) did not confirm the subscription for topic %s", endpoint, topic_arn)
 	}
 
 	log.Printf("[DEBUG] Finished subscribing to topic %s with subscription arn %s", topic_arn, *output.SubscriptionArn)
