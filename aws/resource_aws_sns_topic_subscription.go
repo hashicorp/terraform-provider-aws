@@ -234,8 +234,7 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 	attributes := getResourceAttributes(d)
 
 	var time_to_sleep int = 10
-	var count_time_to_sleep int
-	count_time_to_sleep = (confirmation_timeout_in_minutes * 60) / time_to_sleep
+	var count_time_to_sleep = (confirmation_timeout_in_minutes * 60) / time_to_sleep
 
 	if strings.Contains(protocol, "http") && !endpoint_auto_confirms {
 		return nil, fmt.Errorf("Protocol http/https is only supported for endpoints which auto confirms!")
@@ -251,6 +250,9 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 	}
 
 	output, err = snsconn.Subscribe(req)
+	if err != nil {
+		return nil, fmt.Errorf("Error creating SNS topic subscription: %s", err)
+	}
 
 	for i := 1; i < count_time_to_sleep; i++ {
 		var subscription *sns.Subscription
@@ -275,7 +277,6 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 	}
 
 	if subscriptionHasPendingConfirmation(output.SubscriptionArn) {
-		//return nil, fmt.Errorf("Error creating SNS topic subscription: %s (confirmation not provided)", endpoint)
 		return nil, fmt.Errorf("Endpoint (%s) did not confirm the subscription for topic %s", endpoint, topic_arn)
 	}
 
