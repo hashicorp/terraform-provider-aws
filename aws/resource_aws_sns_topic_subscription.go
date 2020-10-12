@@ -39,24 +39,20 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					// email and email-json not supported
 					"application",
 					"http",
 					"https",
 					"lambda",
 					"sms",
 					"sqs",
+					"email",
+					"email-json",
 				}, true),
 			},
 			"endpoint": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"endpoint_auto_confirms": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 			"confirmation_timeout_in_minutes": {
 				Type:     schema.TypeInt,
@@ -229,16 +225,11 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 	protocol := d.Get("protocol").(string)
 	endpoint := d.Get("endpoint").(string)
 	topic_arn := d.Get("topic_arn").(string)
-	endpoint_auto_confirms := d.Get("endpoint_auto_confirms").(bool)
 	confirmation_timeout_in_minutes := d.Get("confirmation_timeout_in_minutes").(int)
 	attributes := getResourceAttributes(d)
 
 	var time_to_sleep int = 10
 	var count_time_to_sleep = (confirmation_timeout_in_minutes * 60) / time_to_sleep
-
-	if strings.Contains(protocol, "http") && !endpoint_auto_confirms {
-		return nil, fmt.Errorf("Protocol http/https is only supported for endpoints which auto confirms!")
-	}
 
 	log.Printf("[DEBUG] SNS create topic subscription: %s (%s) @ '%s'", endpoint, protocol, topic_arn)
 
