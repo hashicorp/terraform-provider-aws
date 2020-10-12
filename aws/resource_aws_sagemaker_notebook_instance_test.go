@@ -123,6 +123,8 @@ func TestAccAWSSagemakerNotebookInstance_update(t *testing.T) {
 
 					resource.TestCheckResourceAttr(
 						"aws_sagemaker_notebook_instance.foo", "instance_type", "ml.t2.medium"),
+					resource.TestCheckResourceAttr(
+						"aws_sagemaker_notebook_instance.foo", "volume_size", "5"),
 				),
 			},
 
@@ -133,6 +135,8 @@ func TestAccAWSSagemakerNotebookInstance_update(t *testing.T) {
 
 					resource.TestCheckResourceAttr(
 						"aws_sagemaker_notebook_instance.foo", "instance_type", "ml.m4.xlarge"),
+					resource.TestCheckResourceAttr(
+						"aws_sagemaker_notebook_instance.foo", "volume_size", "8"),
 				),
 			},
 			{
@@ -472,6 +476,7 @@ resource "aws_sagemaker_notebook_instance" "foo" {
   name          = "%s"
   role_arn      = aws_iam_role.foo.arn
   instance_type = "ml.m4.xlarge"
+  volume_size   = "8"
 }
 
 resource "aws_iam_role" "foo" {
