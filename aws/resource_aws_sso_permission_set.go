@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -20,7 +22,15 @@ func resourceAwsSsoPermissionSet() *schema.Resource {
 		Update: resourceAwsSsoPermissionSetUpdate,
 		Delete: resourceAwsSsoPermissionSetDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				instanceArn, err := resourceAwsSsoPermissionSetParseID(d.Id())
+				if err != nil {
+					return nil, fmt.Errorf("Error parsing AWS Permission Set ID %s: %s", d.Id(), err)
+				}
+
+				d.Set("instance_arn", instanceArn)
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -167,7 +177,11 @@ func resourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{}) e
 
 	var permissionSet *ssoadmin.PermissionSet
 	permissionSetArn := d.Id()
-	instanceArn := d.Get("instance_arn").(string)
+	instanceArn, err := resourceAwsSsoPermissionSetParseID(d.Id())
+	if err != nil {
+		return fmt.Errorf("Error parsing AWS Permission Set ID %s: %s", d.Id(), err)
+	}
+
 	name := d.Get("name").(string)
 
 	log.Printf("[DEBUG] Reading AWS SSO Permission Set: %s", permissionSetArn)
@@ -221,7 +235,7 @@ func resourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{}) e
 
 	tags, err := keyvaluetags.SsoListTags(ssoadminconn, permissionSetArn, instanceArn)
 	if err != nil {
-		return fmt.Errorf("error listing tags for AWS SSO Permission Set (%s): %s", permissionSetArn, err)
+		return fmt.Errorf("Error listing tags for AWS SSO Permission Set (%s): %s", permissionSetArn, err)
 	}
 
 	d.Set("arn", permissionSetArn)
@@ -234,7 +248,7 @@ func resourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("inline_policy", inlinePolicyResp.InlinePolicy)
 	d.Set("managed_policies", managedPoliciesSet)
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("Error setting tags: %s", err)
 	}
 
 	return nil
@@ -244,7 +258,10 @@ func resourceAwsSsoPermissionSetUpdate(d *schema.ResourceData, meta interface{})
 	ssoadminconn := meta.(*AWSClient).ssoadminconn
 
 	permissionSetArn := d.Id()
-	instanceArn := d.Get("instance_arn").(string)
+	instanceArn, err := resourceAwsSsoPermissionSetParseID(permissionSetArn)
+	if err != nil {
+		return fmt.Errorf("Error parsing AWS Permission Set ID %s: %s", permissionSetArn, err)
+	}
 
 	log.Printf("[DEBUG] Updating AWS SSO Permission Set: %s", permissionSetArn)
 
@@ -260,14 +277,14 @@ func resourceAwsSsoPermissionSetUpdate(d *schema.ResourceData, meta interface{})
 		log.Printf("[DEBUG] Updating AWS SSO Permission Set: %s", input)
 		_, permissionSetErr := ssoadminconn.UpdatePermissionSet(input)
 		if permissionSetErr != nil {
-			return fmt.Errorf("error updating AWS SSO Permission Set: %s", permissionSetErr)
+			return fmt.Errorf("Error updating AWS SSO Permission Set: %s", permissionSetErr)
 		}
 	}
 
 	if d.HasChange("tags") {
 		oldTags, newTags := d.GetChange("tags")
 		if updateTagsErr := keyvaluetags.SsoUpdateTags(ssoadminconn, d.Get("arn").(string), d.Get("instance_arn").(string), oldTags, newTags); updateTagsErr != nil {
-			return fmt.Errorf("error updating tags: %s", updateTagsErr)
+			return fmt.Errorf("Error updating tags: %s", updateTagsErr)
 		}
 	}
 
@@ -340,7 +357,10 @@ func resourceAwsSsoPermissionSetDelete(d *schema.ResourceData, meta interface{})
 	ssoadminconn := meta.(*AWSClient).ssoadminconn
 
 	permissionSetArn := d.Id()
-	instanceArn := d.Get("instance_arn").(string)
+	instanceArn, parseErr := resourceAwsSsoPermissionSetParseID(permissionSetArn)
+	if parseErr != nil {
+		return fmt.Errorf("Error parsing AWS Permission Set ID %s: %s", permissionSetArn, parseErr)
+	}
 
 	log.Printf("[INFO] Deleting AWS SSO Permission Set: %s", permissionSetArn)
 
@@ -351,7 +371,7 @@ func resourceAwsSsoPermissionSetDelete(d *schema.ResourceData, meta interface{})
 
 	_, err := ssoadminconn.DeletePermissionSet(params)
 	if err != nil {
-		return fmt.Errorf("error deleting AWS SSO Permission Set (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error deleting AWS SSO Permission Set (%s): %s", d.Id(), err)
 	}
 
 	d.SetId("")
@@ -398,6 +418,33 @@ func attachPoliciesToPermissionSet(ssoadminconn *ssoadmin.SSOAdmin, d *schema.Re
 	}
 
 	return nil
+}
+
+func resourceAwsSsoPermissionSetParseID(id string) (string, error) {
+	// id = arn:aws:sso:::permissionSet/${InstanceID}/${PermissionSetID}
+	idFormatErr := fmt.Errorf("Unexpected format of AWS Permission Set ID (%s), expected format arn:aws:sso:::permissionSet/ins-123456A/ps-56789B", id)
+	permissionSetARN, err := arn.Parse(id)
+	if err != nil {
+		return "", idFormatErr
+	}
+
+	// We need:
+	//  * The InstanceID portion of the permission set ARN resource (arn:aws:sso:::permissionSet/ins-123456A/ps-56789B)
+	// Split up the resource of the permission set ARN
+	resourceParts := strings.SplitN(permissionSetARN.Resource, "/", 3)
+	if len(resourceParts) != 3 {
+		return "", idFormatErr
+	}
+	// resourceParts = ["permissionSet","ins-123456A", "ps-56789B"]
+	instanceARN := &arn.ARN{
+		AccountID: permissionSetARN.AccountID,
+		Partition: permissionSetARN.Partition,
+		Region:    permissionSetARN.Region,
+		Service:   "instance",
+		Resource:  resourceParts[1],
+	}
+
+	return instanceARN.String(), nil
 }
 
 // func waitForPermissionSetProvisioning(conn *identitystore.IdentityStore, arn string) error {
