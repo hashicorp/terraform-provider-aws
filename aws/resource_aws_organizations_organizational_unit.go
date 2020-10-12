@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsOrganizationsOrganizationalUnit() *schema.Resource {
@@ -63,6 +64,7 @@ func resourceAwsOrganizationsOrganizationalUnit() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_CreateOrganizationalUnit.html#organizations-CreateOrganizationalUnit-request-ParentId"),
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -85,7 +87,7 @@ func resourceAwsOrganizationsOrganizationalUnitCreate(d *schema.ResourceData, me
 
 		if err != nil {
 			if isAWSErr(err, organizations.ErrCodeFinalizingOrganizationException, "") {
-				log.Printf("[DEBUG] Trying to create organizational unit again: %q", err.Error())
+				log.Printf("[DEBUG] Trying to create Organizational Unit again: %q", err.Error())
 				return resource.RetryableError(err)
 			}
 
@@ -99,13 +101,19 @@ func resourceAwsOrganizationsOrganizationalUnitCreate(d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error creating organizational unit: %s", err)
+		return fmt.Errorf("Error creating Organizational Unit: %s", err)
 	}
 	log.Printf("[DEBUG] Organizational Unit create response: %#v", resp)
 
 	// Store the ID
 	ouId := resp.OrganizationalUnit.Id
 	d.SetId(*ouId)
+
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.OrganizationsUpdateTags(conn, d.Id(), nil, v); err != nil {
+			return fmt.Errorf("Error adding Organizational Unit (%s) tags: %s", d.Id(), err)
+		}
+	}
 
 	return resourceAwsOrganizationsOrganizationalUnitRead(d, meta)
 }
@@ -134,7 +142,7 @@ func resourceAwsOrganizationsOrganizationalUnitRead(d *schema.ResourceData, meta
 
 	parentId, err := resourceAwsOrganizationsOrganizationalUnitGetParentId(conn, d.Id())
 	if err != nil {
-		log.Printf("[WARN] Unable to find parent organizational unit, removing from state: %s", d.Id())
+		log.Printf("[WARN] Unable to find parent Organizational Unit, removing from state: %s", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -163,6 +171,17 @@ func resourceAwsOrganizationsOrganizationalUnitRead(d *schema.ResourceData, meta
 	d.Set("arn", ou.Arn)
 	d.Set("name", ou.Name)
 	d.Set("parent_id", parentId)
+
+	tags, err := keyvaluetags.OrganizationsListTags(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for AWS Organizational Unit (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
 }
 
@@ -178,9 +197,17 @@ func resourceAwsOrganizationsOrganizationalUnitUpdate(d *schema.ResourceData, me
 		log.Printf("[DEBUG] Organizational Unit update config: %#v", updateOpts)
 		resp, err := conn.UpdateOrganizationalUnit(updateOpts)
 		if err != nil {
-			return fmt.Errorf("Error creating organizational unit: %s", err)
+			return fmt.Errorf("Error updating Organizational Unit: %s", err)
 		}
 		log.Printf("[DEBUG] Organizational Unit update response: %#v", resp)
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.OrganizationsUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating Organizational Unit (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return nil
@@ -192,7 +219,7 @@ func resourceAwsOrganizationsOrganizationalUnitDelete(d *schema.ResourceData, me
 	input := &organizations.DeleteOrganizationalUnitInput{
 		OrganizationalUnitId: aws.String(d.Id()),
 	}
-	log.Printf("[DEBUG] Removing AWS organizational unit from organization: %s", input)
+	log.Printf("[DEBUG] Removing AWS Organizational Unit from organization: %s", input)
 	_, err := conn.DeleteOrganizationalUnit(input)
 	if err != nil {
 		if isAWSErr(err, organizations.ErrCodeOrganizationalUnitNotFoundException, "") {
