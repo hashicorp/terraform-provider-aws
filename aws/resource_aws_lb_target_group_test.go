@@ -1048,6 +1048,15 @@ func TestAccAWSLBTargetGroup_stickinessValidNLB(t *testing.T) {
 				),
 			},
 			{
+				// this test should be invalid but allowed to avoid breaking changes
+				Config: testAccAWSLBTargetGroupConfig_stickinessValidity("TCP", "lb_cookie", false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+				),
+			},
+			{
 				Config: testAccAWSLBTargetGroupConfig_stickinessValidity("TCP", "source_ip", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
@@ -1129,11 +1138,6 @@ func TestAccAWSLBTargetGroup_stickinessInvalidNLB(t *testing.T) {
 			{
 				Config:      testAccAWSLBTargetGroupConfig_stickinessValidity("TCP_UDP", "lb_cookie", true),
 				ExpectError: regexp.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
-			},
-			{
-				Config:             testAccAWSLBTargetGroupConfig_stickinessValidity("TCP_UDP", "lb_cookie", false),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
