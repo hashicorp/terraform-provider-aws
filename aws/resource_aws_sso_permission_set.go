@@ -221,7 +221,7 @@ func resourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{}) e
 
 	tags, err := keyvaluetags.SsoListTags(ssoadminconn, permissionSetArn, instanceArn)
 	if err != nil {
-		return fmt.Errorf("error listing tags for ASW SSO Permission Set (%s): %s", permissionSetArn, err)
+		return fmt.Errorf("error listing tags for AWS SSO Permission Set (%s): %s", permissionSetArn, err)
 	}
 
 	d.Set("arn", permissionSetArn)
@@ -246,7 +246,7 @@ func resourceAwsSsoPermissionSetUpdate(d *schema.ResourceData, meta interface{})
 	permissionSetArn := d.Id()
 	instanceArn := d.Get("instance_arn").(string)
 
-	log.Printf("[DEBUG] Updating ASW SSO Permission Set: %s", permissionSetArn)
+	log.Printf("[DEBUG] Updating AWS SSO Permission Set: %s", permissionSetArn)
 
 	if d.HasChanges("description", "relay_state", "session_duration") {
 		input := &ssoadmin.UpdatePermissionSetInput{
@@ -257,7 +257,7 @@ func resourceAwsSsoPermissionSetUpdate(d *schema.ResourceData, meta interface{})
 			SessionDuration:  aws.String(d.Get("session_duration").(string)),
 		}
 
-		log.Printf("[DEBUG] Updating ASW SSO Permission Set: %s", input)
+		log.Printf("[DEBUG] Updating AWS SSO Permission Set: %s", input)
 		_, permissionSetErr := ssoadminconn.UpdatePermissionSet(input)
 		if permissionSetErr != nil {
 			return fmt.Errorf("error updating AWS SSO Permission Set: %s", permissionSetErr)
@@ -337,8 +337,24 @@ func resourceAwsSsoPermissionSetUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsSsoPermissionSetDelete(d *schema.ResourceData, meta interface{}) error {
-	// conn := meta.(*AWSClient).ssoadminconn
-	// TODO
+	ssoadminconn := meta.(*AWSClient).ssoadminconn
+
+	permissionSetArn := d.Id()
+	instanceArn := d.Get("instance_arn").(string)
+
+	log.Printf("[INFO] Deleting AWS SSO Permission Set: %s", permissionSetArn)
+
+	params := &ssoadmin.DeletePermissionSetInput{
+		InstanceArn:      aws.String(instanceArn),
+		PermissionSetArn: aws.String(permissionSetArn),
+	}
+
+	_, err := ssoadminconn.DeletePermissionSet(params)
+	if err != nil {
+		return fmt.Errorf("error deleting AWS SSO Permission Set (%s): %s", d.Id(), err)
+	}
+
+	d.SetId("")
 	return nil
 }
 
