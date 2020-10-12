@@ -247,6 +247,11 @@ func resourceAwsLexSlotTypeUpdate(d *schema.ResourceData, meta interface{}) erro
 
 		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.PutSlotType(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error updating slot type %s: %w", d.Id(), err)
 	}
@@ -257,10 +262,12 @@ func resourceAwsLexSlotTypeUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsLexSlotTypeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lexmodelconn
 
+	input := &lexmodelbuildingservice.DeleteSlotTypeInput{
+		Name: aws.String(d.Id()),
+	}
+
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteSlotType(&lexmodelbuildingservice.DeleteSlotTypeInput{
-			Name: aws.String(d.Id()),
-		})
+		_, err := conn.DeleteSlotType(input)
 
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
 			return resource.RetryableError(fmt.Errorf("%q: there is a pending operation, slot type still deleting", d.Id()))
@@ -271,6 +278,11 @@ func resourceAwsLexSlotTypeDelete(d *schema.ResourceData, meta interface{}) erro
 
 		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.DeleteSlotType(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error deleting slot type %s: %w", d.Id(), err)
 	}
