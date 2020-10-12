@@ -601,19 +601,19 @@ func testAccWorkspacesDirectoryConfig_workspaceCreationProperties(rName string) 
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  name        = "tf-acctest-%[1]s"
-  vpc_id      = aws_vpc.main.id
+  name   = "tf-acctest-%[1]s"
+  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
   workspace_creation_properties {
-    custom_security_group_id             = aws_security_group.test.id
-    default_ou                           = "OU=AWS,DC=Workgroup,DC=Example,DC=com"
-    enable_internet_access               = true
-    enable_maintenance_mode              = false
-    user_enabled_as_local_administrator  = false
+    custom_security_group_id            = aws_security_group.test.id
+    default_ou                          = "OU=AWS,DC=Workgroup,DC=Example,DC=com"
+    enable_internet_access              = true
+    enable_maintenance_mode             = false
+    user_enabled_as_local_administrator = false
   }
 }
 `, rName))
