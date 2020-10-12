@@ -153,7 +153,7 @@ resource "aws_ram_resource_share" "test" {
 
 resource "aws_ram_principal_association" "test" {
   principal          = "111111111111"
-  resource_share_arn = "${aws_ram_resource_share.test.id}"
+  resource_share_arn = aws_ram_resource_share.test.id
 }
 `, rName)
 }

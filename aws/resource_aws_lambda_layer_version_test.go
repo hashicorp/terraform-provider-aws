@@ -312,14 +312,14 @@ resource "aws_s3_bucket" "lambda_bucket" {
 }
 
 resource "aws_s3_bucket_object" "lambda_code" {
-  bucket = "${aws_s3_bucket.lambda_bucket.id}"
+  bucket = aws_s3_bucket.lambda_bucket.id
   key    = "lambdatest.zip"
   source = "test-fixtures/lambdatest.zip"
 }
 
 resource "aws_lambda_layer_version" "lambda_layer_test" {
-  s3_bucket  = "${aws_s3_bucket.lambda_bucket.id}"
-  s3_key     = "${aws_s3_bucket_object.lambda_code.id}"
+  s3_bucket  = aws_s3_bucket.lambda_bucket.id
+  s3_key     = aws_s3_bucket_object.lambda_code.id
   layer_name = "%s"
 }
 `, bucketName, layerName)
@@ -330,7 +330,7 @@ func testAccAWSLambdaLayerVersionCreateBeforeDestroy(layerName string, filename 
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename         = "%s"
   layer_name       = "%s"
-  source_code_hash = "${filebase64sha256("%s")}"
+  source_code_hash = filebase64sha256("%s")
 
   lifecycle {
     create_before_destroy = true

@@ -437,7 +437,7 @@ func resourceAwsDbInstance() *schema.Resource {
 			},
 
 			"enabled_cloudwatch_logs_exports": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -571,8 +571,8 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.DBSubnetGroupName = aws.String(attr.(string))
 		}
 
-		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
-			opts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
+			opts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOk("iam_database_authentication_enabled"); ok {
@@ -905,8 +905,8 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.DomainIAMRoleName = aws.String(attr.(string))
 		}
 
-		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
-			opts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
+			opts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOk("engine"); ok {
@@ -1116,8 +1116,8 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.DBSubnetGroupName = aws.String(attr.(string))
 		}
 
-		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
-			opts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
+			opts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOk("iops"); ok {
@@ -1584,7 +1584,17 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("enabled_cloudwatch_logs_exports") {
-		req.CloudwatchLogsExportConfiguration = buildCloudwatchLogsExportConfiguration(d)
+		oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
+		o := oraw.(*schema.Set)
+		n := nraw.(*schema.Set)
+
+		enable := n.Difference(o)
+		disable := o.Difference(n)
+
+		req.CloudwatchLogsExportConfiguration = &rds.CloudwatchLogsExportConfiguration{
+			EnableLogTypes:  expandStringSet(enable),
+			DisableLogTypes: expandStringSet(disable),
+		}
 		requestUpdate = true
 	}
 
@@ -1735,20 +1745,6 @@ func resourceAwsDbInstanceStateRefreshFunc(id string, conn *rds.RDS) resource.St
 		}
 
 		return v, *v.DBInstanceStatus, nil
-	}
-}
-
-func buildCloudwatchLogsExportConfiguration(d *schema.ResourceData) *rds.CloudwatchLogsExportConfiguration {
-
-	oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
-	o := oraw.([]interface{})
-	n := nraw.([]interface{})
-
-	create, disable := diffCloudwatchLogsExportConfiguration(o, n)
-
-	return &rds.CloudwatchLogsExportConfiguration{
-		EnableLogTypes:  expandStringList(create),
-		DisableLogTypes: expandStringList(disable),
 	}
 }
 

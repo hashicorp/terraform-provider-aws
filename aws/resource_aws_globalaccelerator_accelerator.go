@@ -312,7 +312,7 @@ func resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn *globalacc
 		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
 		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
 		Refresh: resourceAwsGlobalAcceleratorAcceleratorStateRefreshFunc(conn, acceleratorArn),
-		Timeout: 5 * time.Minute,
+		Timeout: 10 * time.Minute,
 	}
 
 	log.Printf("[DEBUG] Waiting for Global Accelerator accelerator (%s) availability", acceleratorArn)

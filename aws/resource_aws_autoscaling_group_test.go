@@ -937,9 +937,6 @@ func TestAccAWSAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 						"default_result": "CONTINUE",
 						"name":           "launching",
 					}),
-					// TODO: TypeSet check rewrite check to avoid hash reference
-					testAccCheckAWSAutoScalingGroupInitialLifecycleHookExists(
-						"aws_autoscaling_group.bar", "initial_lifecycle_hook.391359060.name"),
 				),
 			},
 			{
@@ -1123,26 +1120,6 @@ func testAccCheckAWSAutoScalingGroupExists(n string, group *autoscaling.Group) r
 	}
 }
 
-func testAccCheckAWSAutoScalingGroupInitialLifecycleHookExists(asg, hookAttr string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		asgResource, ok := s.RootModule().Resources[asg]
-		if !ok {
-			return fmt.Errorf("Not found: %s", asg)
-		}
-
-		if asgResource.Primary.ID == "" {
-			return fmt.Errorf("No AutoScaling Group ID is set")
-		}
-
-		hookName := asgResource.Primary.Attributes[hookAttr]
-		if hookName == "" {
-			return fmt.Errorf("ASG %s has no hook name %s", asg, hookAttr)
-		}
-
-		return checkLifecycleHookExistsByName(asgResource.Primary.ID, hookName)
-	}
-}
-
 func testLaunchConfigurationName(n string, lc *autoscaling.LaunchConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1209,6 +1186,51 @@ func testAccCheckAWSAutoScalingGroupAttributesVPCZoneIdentifier(group *autoscali
 
 		return nil
 	}
+}
+
+// testAccCheckTags can be used to check the tags on a resource.
+func testAccCheckAutoscalingTags(
+	ts *[]*autoscaling.TagDescription, key string, expected map[string]interface{}) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		m := autoscalingTagDescriptionsToMap(ts)
+		v, ok := m[key]
+		if !ok {
+			return fmt.Errorf("Missing tag: %s", key)
+		}
+
+		if v["value"] != expected["value"].(string) ||
+			v["propagate_at_launch"] != expected["propagate_at_launch"].(bool) {
+			return fmt.Errorf("%s: bad value: %s", key, v)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAutoscalingTagNotExists(ts *[]*autoscaling.TagDescription, key string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		m := autoscalingTagDescriptionsToMap(ts)
+		if _, ok := m[key]; ok {
+			return fmt.Errorf("Tag exists when it should not: %s", key)
+		}
+
+		return nil
+	}
+}
+
+// autoscalingTagDescriptionsToMap turns the list of tags into a map.
+func autoscalingTagDescriptionsToMap(ts *[]*autoscaling.TagDescription) map[string]map[string]interface{} {
+	tags := make(map[string]map[string]interface{})
+	for _, t := range *ts {
+		tag := map[string]interface{}{
+			"key":                 aws.StringValue(t.Key),
+			"value":               aws.StringValue(t.Value),
+			"propagate_at_launch": aws.BoolValue(t.PropagateAtLaunch),
+		}
+		tags[aws.StringValue(t.Key)] = tag
+	}
+
+	return tags
 }
 
 // testAccCheckAWSALBTargetGroupHealthy checks an *elbv2.TargetGroup to make
@@ -2376,7 +2398,7 @@ resource "aws_elb" "bar" {
     timeout             = 2
   }
 
-  depends_on = ["aws_internet_gateway.gw"]
+  depends_on = [aws_internet_gateway.gw]
 }
 
 resource "aws_launch_configuration" "foobar" {
@@ -2475,7 +2497,7 @@ resource "aws_elb" "bar" {
     timeout             = 2
   }
 
-  depends_on = ["aws_internet_gateway.gw"]
+  depends_on = [aws_internet_gateway.gw]
 }
 
 resource "aws_launch_configuration" "foobar" {
@@ -3703,8 +3725,8 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_elb" "test" {
-  count = %[2]d
-  depends_on = ["aws_internet_gateway.test"]
+  count      = %[2]d
+  depends_on = [aws_internet_gateway.test]
 
   subnets = [aws_subnet.test.id]
 
@@ -3768,11 +3790,11 @@ resource "aws_autoscaling_group" "test" {
       }
 
       override {
-        instance_type   = "t2.micro"
+        instance_type     = "t2.micro"
         weighted_capacity = "1"
       }
       override {
-        instance_type   = "t3.small"
+        instance_type     = "t3.small"
         weighted_capacity = "2"
       }
     }
@@ -4075,11 +4097,11 @@ resource "aws_autoscaling_group" "test" {
       }
 
       override {
-        instance_type = "t2.micro"
+        instance_type     = "t2.micro"
         weighted_capacity = "2"
       }
       override {
-        instance_type = "t3.small"
+        instance_type     = "t3.small"
         weighted_capacity = "4"
       }
     }

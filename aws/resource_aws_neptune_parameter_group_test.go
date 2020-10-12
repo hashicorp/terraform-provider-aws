@@ -194,7 +194,6 @@ func testAccCheckAWSNeptuneParameterGroupDestroy(s *terraform.State) error {
 
 func testAccCheckAWSNeptuneParameterGroupAttributes(v *neptune.DBParameterGroup, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if *v.DBParameterGroupName != rName {
 			return fmt.Errorf("bad name: %#v", v.DBParameterGroupName)
 		}

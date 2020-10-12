@@ -750,6 +750,51 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_Failover_AutoFail
 	})
 }
 
+func TestAccAWSElasticacheReplicationGroup_tags(t *testing.T) {
+	var rg elasticache.ReplicationGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheReplicationGroupConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"}, //not in the API
+			},
+			{
+				Config: testAccAWSElasticacheReplicationGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheReplicationGroupConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestResourceAWSElastiCacheReplicationGroupEngineValidation(t *testing.T) {
 	cases := []struct {
 		Value    string
@@ -880,7 +925,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_elasticache_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_elasticache_replication_group" "test" {
@@ -932,7 +977,7 @@ resource "aws_elasticache_replication_group" "test" {
   apply_immediately             = true
   node_type                     = "cache.t3.small"
   number_cache_clusters         = 2
-  parameter_group_name          = "${aws_elasticache_parameter_group.test.*.name[%[2]d]}"
+  parameter_group_name          = aws_elasticache_parameter_group.test.*.name[%[2]d]
   replication_group_description = "test description"
   replication_group_id          = %[1]q
 }
@@ -1037,7 +1082,7 @@ resource "aws_elasticache_replication_group" "test" {
   port                          = 6379
   subnet_group_name             = aws_elasticache_subnet_group.test.name
   security_group_ids            = [aws_security_group.test.id]
-  availability_zones            = [data.aws_availability_zones.available.names[0]}
+  availability_zones            = [data.aws_availability_zones.available.names[0]]
   auto_minor_version_upgrade    = false
 }
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
@@ -1083,7 +1128,7 @@ resource "aws_subnet" "test2" {
 resource "aws_elasticache_subnet_group" "test" {
   name        = "tf-test-cache-subnet-%03d"
   description = "tf-test-cache-subnet-group-descr"
-  subnet_ids  = [
+  subnet_ids = [
     aws_subnet.test.id,
     aws_subnet.test2.id,
   ]
@@ -1119,9 +1164,7 @@ resource "aws_elasticache_replication_group" "test" {
 
 var testAccAWSElasticacheReplicationGroupRedisClusterInVPCConfig = fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-  # InvalidParameterValue: Specified node type cache.m3.medium is not available in AZ us-east-1b.
-  exclude_zone_ids = ["use1-az1"]
-  state            = "available"
+  state = "available"
 
   filter {
     name   = "opt-in-status"
@@ -1148,8 +1191,8 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_subnet" "test2" {
-  vpc_id = aws_vpc.test.id
-  cidr_block = "192.168.16.0/20"
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "192.168.16.0/20"
   availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
@@ -1160,7 +1203,7 @@ resource "aws_subnet" "test2" {
 resource "aws_elasticache_subnet_group" "test" {
   name        = "tf-test-cache-subnet-%03d"
   description = "tf-test-cache-subnet-group-descr"
-  subnet_ids  = [
+  subnet_ids = [
     aws_subnet.test.id,
     aws_subnet.test2.id,
   ]
@@ -1182,7 +1225,7 @@ resource "aws_security_group" "test" {
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = "tf-%s"
   replication_group_description = "test description"
-  node_type                     = "cache.m3.medium"
+  node_type                     = "cache.t3.medium"
   number_cache_clusters         = "2"
   port                          = 6379
   subnet_group_name             = aws_elasticache_subnet_group.test.name
@@ -1566,9 +1609,7 @@ resource "aws_elasticache_replication_group" "test" {
 func testAccAWSElasticacheReplicationGroupConfig_NumberCacheClusters(rName string, numberCacheClusters int, autoFailover bool) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-  # InvalidParameterValue: Specified node type cache.m3.medium is not available in AZ us-east-1b.
-  exclude_zone_ids = ["use1-az1"]
-  state            = "available"
+  state = "available"
 
   filter {
     name   = "opt-in-status"
@@ -1598,17 +1639,58 @@ resource "aws_subnet" "test" {
 
 resource "aws_elasticache_subnet_group" "test" {
   name       = "%[1]s"
-  subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_elasticache_replication_group" "test" {
   # InvalidParameterCombination: Automatic failover is not supported for T1 and T2 cache node types.
   automatic_failover_enabled    = %[2]t
-  node_type                     = "cache.m3.medium"
+  node_type                     = "cache.t3.medium"
   number_cache_clusters         = %[3]d
   replication_group_id          = "%[1]s"
   replication_group_description = "Terraform Acceptance Testing - number_cache_clusters"
   subnet_group_name             = aws_elasticache_subnet_group.test.name
 }
 `, rName, autoFailover, numberCacheClusters)
+}
+
+func testAccAWSElasticacheReplicationGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  number_cache_clusters         = 2
+  port                          = 6379
+  apply_immediately             = true
+  auto_minor_version_upgrade    = false
+  maintenance_window            = "tue:06:30-tue:07:30"
+  snapshot_window               = "01:00-02:00"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSElasticacheReplicationGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  number_cache_clusters         = 2
+  port                          = 6379
+  apply_immediately             = true
+  auto_minor_version_upgrade    = false
+  maintenance_window            = "tue:06:30-tue:07:30"
+  snapshot_window               = "01:00-02:00"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

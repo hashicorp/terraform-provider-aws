@@ -457,7 +457,7 @@ func expandTargetTrackingConfiguration(configs []interface{}) *autoscaling.Targe
 			MetricName: aws.String(spec["metric_name"].(string)),
 			Statistic:  aws.String(spec["statistic"].(string)),
 		}
-		if val, ok := spec["unit"]; ok {
+		if val, ok := spec["unit"]; ok && len(val.(string)) > 0 {
 			customSpec.Unit = aws.String(val.(string))
 		}
 		if val, ok := spec["metric_dimension"]; ok {

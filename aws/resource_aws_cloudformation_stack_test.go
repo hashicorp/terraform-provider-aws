@@ -487,7 +487,6 @@ resource "aws_cloudformation_stack" "test" {
   }
 }
 STACK
-
 }
 `, stackName)
 }
@@ -516,7 +515,6 @@ Outputs:
     Description: The VPC ID
     Value: !Ref MyVPC
 STACK
-
 }
 `, stackName)
 }
@@ -581,7 +579,7 @@ BODY
 
 var testAccAWSCloudFormationStackConfig_allAttributesWithBodies_tpl = `
 resource "aws_cloudformation_stack" "test" {
-  name = "%[1]s"
+  name          = "%[1]s"
   template_body = <<STACK
 {
   "Parameters" : {
@@ -641,15 +639,15 @@ STACK
     VpcCIDR = "10.0.0.0/16"
   }
 
-  policy_body = <<POLICY
+  policy_body        = <<POLICY
 %[2]s
 POLICY
-  capabilities = ["CAPABILITY_IAM"]
-  notification_arns = ["${aws_sns_topic.cf-updates.arn}"]
-  on_failure = "DELETE"
+  capabilities       = ["CAPABILITY_IAM"]
+  notification_arns  = ["${aws_sns_topic.cf-updates.arn}"]
+  on_failure         = "DELETE"
   timeout_in_minutes = 10
   tags = {
-    First = "Mickey"
+    First  = "Mickey"
     Second = "Mouse"
   }
 }
@@ -720,7 +718,7 @@ resource "aws_cloudformation_stack" "test" {
 }
 STACK
 
-  on_failure = "DELETE"
+  on_failure         = "DELETE"
   timeout_in_minutes = 1
 }
 `

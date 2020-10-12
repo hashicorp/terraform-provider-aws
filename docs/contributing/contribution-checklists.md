@@ -61,8 +61,8 @@ guidelines.
    see in the codebase, and ensure your code is formatted with `go fmt`.
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
-- [ ] __Vendor additions__: Create a separate PR if you are updating the vendor
-   folder. This is to avoid conflicts as the vendor versions tend to be fast-
+- [ ] __Dependency updates__: Create a separate PR if you are updating dependencies.
+   This is to avoid conflicts as version updates tend to be fast-
    moving targets. We will plan to merge the PR with this change first.
 
 ## Adding Resource Import Support
@@ -216,7 +216,7 @@ Some AWS components support [resource-based IAM policies](https://docs.aws.amazo
 - Splitting the resources allows operators to logically split their infrastructure on purely operational and security boundaries with separate configurations/modules.
 - Splitting the resources prevents any separate policy API calls from needing to be permitted in the main resource in environments with restrictive IAM permissions, which can be undesirable.
 
-Follow the [New Resource section][#new-resource] for more information about implementing the separate resource.
+See the [New Resource section](#new-resource) for more information about implementing the separate resource.
 
 ## Adding Resource Tagging Support
 
@@ -392,17 +392,17 @@ More details about this code generation, including fixes for potential error mes
     return testAccAWSEksClusterConfig_Base(rName) + fmt.Sprintf(`
   resource "aws_eks_cluster" "test" {
     name     = %[1]q
-    role_arn = "${aws_iam_role.test.arn}"
+    role_arn = aws_iam_role.test.arn
 
     tags = {
       %[2]q = %[3]q
     }
 
     vpc_config {
-      subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+      subnet_ids = aws_subnet.test[*].id
     }
 
-    depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy"]
+    depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
   }
   `, rName, tagKey1, tagValue1)
   }
@@ -411,7 +411,7 @@ More details about this code generation, including fixes for potential error mes
     return testAccAWSEksClusterConfig_Base(rName) + fmt.Sprintf(`
   resource "aws_eks_cluster" "test" {
     name     = %[1]q
-    role_arn = "${aws_iam_role.test.arn}"
+    role_arn = aws_iam_role.test.arn
 
     tags = {
       %[2]q = %[3]q
@@ -419,10 +419,10 @@ More details about this code generation, including fixes for potential error mes
     }
 
     vpc_config {
-      subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+      subnet_ids = aws_subnet.test[*].id
     }
 
-    depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy"]
+    depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
   }
   `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
   }
@@ -474,18 +474,15 @@ guidelines.
 - [ ] __Arguments_and_Attributes__: The HCL for arguments and attributes should
    mimic the types and structs presented by the AWS API. API arguments should be
    converted from `CamelCase` to `camel_case`.
-- [ ] __Documentation__: Each resource gets a page in the Terraform
-   documentation. The [Terraform website][website] source is in this
-   repo and includes instructions for getting a local copy of the site up and
-   running if you'd like to preview your changes. For a resource, you'll want
-   to add a new file in the appropriate place and add a link to the sidebar for
-   that page.
+- [ ] __Documentation__: Each data source and resource gets a page in the Terraform
+   documentation, which lives at `website/docs/d/<service>_<name>.html.markdown` and
+   `website/docs/r/<service>_<name>.html.markdown` respectively.
 - [ ] __Well-formed Code__: Do your best to follow existing conventions you
    see in the codebase, and ensure your code is formatted with `go fmt`.
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
-- [ ] __Vendor updates__: Create a separate PR if you are adding to the vendor
-   folder. This is to avoid conflicts as the vendor versions tend to be fast-
+- [ ] __Dependency updates__: Create a separate PR if you are updating dependencies.
+   This is to avoid conflicts as version updates tend to be fast-
    moving targets. We will plan to merge the PR with this change first.
 
 ## New Service
@@ -538,6 +535,7 @@ into Terraform.
     label_map = {
       # ... other services ...
       "service/quicksight" = [
+        "aws/internal/service/quicksight/**/*",
         "**/*_quicksight_*",
         "**/quicksight_*",
       ],
@@ -551,7 +549,6 @@ into Terraform.
   ```sh
   go test ./aws
   go mod tidy
-  go mod vendor
   ```
 
 - [ ] __Initial Resource__: Some services can be big and it can be

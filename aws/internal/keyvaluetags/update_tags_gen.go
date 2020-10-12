@@ -16,7 +16,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
+	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
@@ -110,6 +112,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/aws/aws-sdk-go/service/xray"
 )
 
 // AccessanalyzerUpdateTags updates accessanalyzer service tags.
@@ -472,6 +475,40 @@ func AthenaUpdateTags(conn *athena.Athena, identifier string, oldTagsMap interfa
 	return nil
 }
 
+// AutoscalingUpdateTags updates autoscaling service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func AutoscalingUpdateTags(conn *autoscaling.AutoScaling, identifier string, resourceType string, oldTagsSet interface{}, newTagsSet interface{}) error {
+	oldTags := AutoscalingKeyValueTags(oldTagsSet, identifier, resourceType)
+	newTags := AutoscalingKeyValueTags(newTagsSet, identifier, resourceType)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &autoscaling.DeleteTagsInput{
+			Tags: removedTags.IgnoreAws().AutoscalingTags(),
+		}
+
+		_, err := conn.DeleteTags(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &autoscaling.CreateOrUpdateTagsInput{
+			Tags: updatedTags.IgnoreAws().AutoscalingTags(),
+		}
+
+		_, err := conn.CreateOrUpdateTags(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
 // BackupUpdateTags updates backup service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -496,6 +533,42 @@ func BackupUpdateTags(conn *backup.Backup, identifier string, oldTagsMap interfa
 		input := &backup.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			Tags:        updatedTags.IgnoreAws().BackupTags(),
+		}
+
+		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// BatchUpdateTags updates batch service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func BatchUpdateTags(conn *batch.Batch, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &batch.UntagResourceInput{
+			ResourceArn: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
+		}
+
+		_, err := conn.UntagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &batch.TagResourceInput{
+			ResourceArn: aws.String(identifier),
+			Tags:        updatedTags.IgnoreAws().BatchTags(),
 		}
 
 		_, err := conn.TagResource(input)
@@ -3852,6 +3925,42 @@ func WorkspacesUpdateTags(conn *workspaces.WorkSpaces, identifier string, oldTag
 		}
 
 		_, err := conn.CreateTags(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// XrayUpdateTags updates xray service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func XrayUpdateTags(conn *xray.XRay, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &xray.UntagResourceInput{
+			ResourceARN: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
+		}
+
+		_, err := conn.UntagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &xray.TagResourceInput{
+			ResourceARN: aws.String(identifier),
+			Tags:        updatedTags.IgnoreAws().XrayTags(),
+		}
+
+		_, err := conn.TagResource(input)
 
 		if err != nil {
 			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)

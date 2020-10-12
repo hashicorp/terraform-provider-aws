@@ -29,7 +29,8 @@ jobs:
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: avto-dev/markdown-lint@v1.3.0
+      - uses: actions/checkout@v2
+      - uses: avto-dev/markdown-lint@v1
         with:
           config: '.markdownlint.yml'
           args: 'docs'
@@ -46,5 +47,5 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: go install github.com/client9/misspell/cmd/misspell
+      - run: cd tools && go install github.com/client9/misspell/cmd/misspell
       - run: misspell -error -source text docs/

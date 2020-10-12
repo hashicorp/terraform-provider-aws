@@ -83,7 +83,6 @@ func TestAccAWSRoute_ipv6Support(t *testing.T) {
 
 	//aws creates a default route
 	testCheck := func(s *terraform.State) error {
-
 		name := "aws_egress_only_internet_gateway.foo"
 		gwres, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -439,6 +438,33 @@ func TestAccAWSRoute_TransitGatewayID_DestinationCidrBlock(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute_LocalGatewayID(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	localGatewayDataSourceName := "data.aws_ec2_local_gateway.first"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteResourceConfigLocalGatewayID(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_id", localGatewayDataSourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute_ConditionalCidrBlock(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
@@ -550,7 +576,7 @@ func testAccAWSRouteBasicConfig() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  
+
   tags = {
     Name = "terraform-testacc-route-basic"
   }
@@ -619,7 +645,7 @@ resource "aws_vpc" "examplevpc" {
   cidr_block                       = "10.100.0.0/16"
   enable_dns_hostnames             = true
   assign_generated_ipv6_cidr_block = true
-  
+
   tags = {
     Name = "terraform-testacc-route-ipv6-network-interface"
   }
@@ -661,7 +687,7 @@ resource "aws_subnet" "router-network" {
   assign_ipv6_address_on_creation = true
   map_public_ip_on_launch         = true
   availability_zone               = data.aws_availability_zones.available.names[0]
-  
+
   tags = {
     Name = "tf-acc-route-ipv6-network-interface-router"
   }
@@ -674,7 +700,7 @@ resource "aws_subnet" "client-network" {
   assign_ipv6_address_on_creation = true
   map_public_ip_on_launch         = false
   availability_zone               = data.aws_availability_zones.available.names[0]
-  
+
   tags = {
     Name = "tf-acc-route-ipv6-network-interface-client"
   }
@@ -770,7 +796,7 @@ resource "aws_subnet" "router-network" {
   assign_ipv6_address_on_creation = true
   map_public_ip_on_launch         = true
   availability_zone               = data.aws_availability_zones.available.names[0]
-  
+
   tags = {
     Name = "tf-acc-route-ipv6-instance-router"
   }
@@ -783,7 +809,7 @@ resource "aws_subnet" "client-network" {
   assign_ipv6_address_on_creation = true
   map_public_ip_on_launch         = false
   availability_zone               = data.aws_availability_zones.available.names[0]
-  
+
   tags = {
     Name = "tf-acc-route-ipv6-instance-client"
   }
@@ -826,7 +852,7 @@ resource "aws_vpc" "examplevpc" {
   cidr_block                       = "10.100.0.0/16"
   enable_dns_hostnames             = true
   assign_generated_ipv6_cidr_block = true
-  
+
   tags = {
     Name = "terraform-testacc-route-ipv6-instance"
   }
@@ -868,7 +894,7 @@ resource "aws_subnet" "router-network" {
   assign_ipv6_address_on_creation = true
   map_public_ip_on_launch         = true
   availability_zone               = data.aws_availability_zones.available.names[0]
-  
+
   tags = {
     Name = "tf-acc-route-ipv6-instance-router"
   }
@@ -881,7 +907,7 @@ resource "aws_subnet" "client-network" {
   assign_ipv6_address_on_creation = true
   map_public_ip_on_launch         = false
   availability_zone               = data.aws_availability_zones.available.names[0]
-  
+
   tags = {
     Name = "tf-acc-route-ipv6-instance-client"
   }
@@ -921,7 +947,7 @@ func testAccAWSRouteConfigIpv6PeeringConnection() string {
 resource "aws_vpc" "foo" {
   cidr_block                       = "10.0.0.0/16"
   assign_generated_ipv6_cidr_block = true
-  
+
   tags = {
     Name = "terraform-testacc-route-ipv6-peering-connection"
   }
@@ -1008,7 +1034,7 @@ func testAccAWSRouteBasicConfigChangeCidr() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  
+
   tags = {
     Name = "terraform-testacc-route-change-cidr"
   }
@@ -1049,7 +1075,7 @@ data "aws_availability_zones" "available" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
-  
+
   tags = {
     Name = "terraform-testacc-route-noop-change"
   }
@@ -1063,7 +1089,7 @@ resource "aws_subnet" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   vpc_id            = aws_vpc.test.id
   cidr_block        = "10.10.10.0/24"
-  
+
   tags = {
     Name = "tf-acc-route-noop-change"
   }
@@ -1089,7 +1115,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  
+
   tags = {
     Name = "terraform-testacc-route-with-vpc-endpoint"
   }
@@ -1113,7 +1139,7 @@ resource "aws_route" "bar" {
   gateway_id             = aws_internet_gateway.foo.id
 
   # Forcing endpoint to create before route - without this the crash is a race.
-  depends_on = ["aws_vpc_endpoint.baz"]
+  depends_on = [aws_vpc_endpoint.baz]
 }
 
 resource "aws_vpc_endpoint" "baz" {
@@ -1128,7 +1154,7 @@ func testAccAWSRouteNewRouteTable() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  
+
   tags = {
     Name = "terraform-testacc-route-basic"
   }
@@ -1136,7 +1162,7 @@ resource "aws_vpc" "foo" {
 
 resource "aws_vpc" "bar" {
   cidr_block = "10.2.0.0/16"
-  
+
   tags = {
     Name = "terraform-testacc-route-new-route-table"
   }
@@ -1270,4 +1296,38 @@ resource "aws_route" "test" {
   destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
 }
 `, rName, ipv6Route)
+}
+
+func testAccAWSRouteResourceConfigLocalGatewayID() string {
+	return fmt.Sprintf(`
+data "aws_ec2_local_gateways" "all" {}
+data "aws_ec2_local_gateway" "first" {
+  id = tolist(data.aws_ec2_local_gateways.all.ids)[0]
+}
+
+data "aws_ec2_local_gateway_route_tables" "all" {}
+data "aws_ec2_local_gateway_route_table" "first" {
+  local_gateway_route_table_id = tolist(data.aws_ec2_local_gateway_route_tables.all.ids)[0]
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_ec2_local_gateway_route_table_vpc_association" "example" {
+  local_gateway_route_table_id = data.aws_ec2_local_gateway_route_table.first.id
+  vpc_id                       = aws_vpc.test.id
+}
+
+resource "aws_route_table" "test" {
+  vpc_id     = aws_vpc.test.id
+  depends_on = [aws_ec2_local_gateway_route_table_vpc_association.example]
+}
+
+resource "aws_route" "test" {
+  route_table_id         = aws_route_table.test.id
+  destination_cidr_block = "172.16.1.0/24"
+  local_gateway_id       = data.aws_ec2_local_gateway.first.id
+}
+`)
 }

@@ -190,7 +190,7 @@ func testAccAWSPinpointAPNSVoipChannelConfig_basicCertificate(conf *testAccAwsPi
 resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_apns_voip_channel" "test_channel" {
-  application_id                = "${aws_pinpoint_app.test_app.application_id}"
+  application_id                = aws_pinpoint_app.test_app.application_id
   enabled                       = false
   default_authentication_method = "CERTIFICATE"
   certificate                   = %s
@@ -204,7 +204,7 @@ func testAccAWSPinpointAPNSVoipChannelConfig_basicToken(conf *testAccAwsPinpoint
 resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_apns_voip_channel" "test_channel" {
-  application_id = "${aws_pinpoint_app.test_app.application_id}"
+  application_id = aws_pinpoint_app.test_app.application_id
   enabled        = false
 
   default_authentication_method = "TOKEN"

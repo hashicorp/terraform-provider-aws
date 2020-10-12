@@ -140,6 +140,7 @@ func TestAccAWSRouteTable_basic(t *testing.T) {
 					testAccCheckRouteTableExists(resourceName, &v),
 					testCheck,
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -190,7 +191,7 @@ func TestAccAWSRouteTable_instance(t *testing.T) {
 		CheckDestroy:  testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableConfigInstance,
+				Config: testAccRouteTableConfigInstance(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &v),
 					testCheck,
@@ -243,6 +244,7 @@ func TestAccAWSRouteTable_ipv6(t *testing.T) {
 func TestAccAWSRouteTable_tags(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -251,11 +253,11 @@ func TestAccAWSRouteTable_tags(t *testing.T) {
 		CheckDestroy:  testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableConfigTags,
+				Config: testAccAWSRouteTableConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -264,19 +266,27 @@ func TestAccAWSRouteTable_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRouteTableConfigTagsUpdate,
+				Config: testAccAWSRouteTableConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSRouteTableConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.bar", "baz"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
 	})
 }
 
-// For GH-13545, Fixes panic on an empty route config block
-func TestAccAWSRouteTable_panicEmptyRoute(t *testing.T) {
+func TestAccAWSRouteTable_RequireRouteDestination(t *testing.T) {
 	resourceName := "aws_route_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -286,8 +296,25 @@ func TestAccAWSRouteTable_panicEmptyRoute(t *testing.T) {
 		CheckDestroy:  testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccRouteTableConfigPanicEmptyRoute,
-				ExpectError: regexp.MustCompile("The request must contain the parameter destinationCidrBlock or destinationIpv6CidrBlock"),
+				Config:      testAccRouteTableConfigNoDestination(),
+				ExpectError: regexp.MustCompile("error creating route: one of `cidr_block"),
+			},
+		},
+	})
+}
+
+func TestAccAWSRouteTable_RequireRouteTarget(t *testing.T) {
+	resourceName := "aws_route_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRouteTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRouteTableConfigNoTarget,
+				ExpectError: regexp.MustCompile("error creating route: one of `egress_only_gateway_id"),
 			},
 		},
 	})
@@ -353,6 +380,30 @@ func TestAccAWSRouteTable_Route_TransitGatewayID(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSRouteTableConfigRouteTransitGatewayID(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRouteTable_Route_LocalGatewayID(t *testing.T) {
+	var routeTable1 ec2.RouteTable
+	resourceName := "aws_route_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRouteTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteTableConfigRouteLocalGatewayID(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable1),
 				),
@@ -560,24 +611,24 @@ resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-  	Name = "terraform-testacc-route-table"
+    Name = "terraform-testacc-route-table"
   }
 }
 
 resource "aws_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
-  	Name = "terraform-testacc-route-table"
+    Name = "terraform-testacc-route-table"
   }
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
     cidr_block = "10.2.0.0/16"
-    gateway_id = "${aws_internet_gateway.test.id}"
+    gateway_id = aws_internet_gateway.test.id
   }
 }
 `
@@ -592,7 +643,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = "terraform-testacc-route-table"
@@ -600,23 +651,23 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
     cidr_block = "10.3.0.0/16"
-    gateway_id = "${aws_internet_gateway.test.id}"
+    gateway_id = aws_internet_gateway.test.id
   }
 
   route {
     cidr_block = "10.4.0.0/16"
-    gateway_id = "${aws_internet_gateway.test.id}"
+    gateway_id = aws_internet_gateway.test.id
   }
 }
 `
 
 const testAccRouteTableConfigIpv6 = `
 resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
+  cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
@@ -625,115 +676,111 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_egress_only_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
-    ipv6_cidr_block = "::/0"
-    egress_only_gateway_id = "${aws_egress_only_internet_gateway.test.id}"
+    ipv6_cidr_block        = "::/0"
+    egress_only_gateway_id = aws_egress_only_internet_gateway.test.id
   }
 }
 `
 
-const testAccRouteTableConfigInstance = `
-data "aws_ami" "amzn-ami-minimal-hvm" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
+func testAccRouteTableConfigInstance() string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-  	Name = "terraform-testacc-route-table-instance"
+    Name = "terraform-testacc-route-table-instance"
   }
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.test.id}"
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-  	Name = "tf-acc-route-table-instance"
+    Name = "tf-acc-route-table-instance"
   }
 }
 
 resource "aws_instance" "test" {
-  ami           = "${data.aws_ami.amzn-ami-minimal-hvm.id}"
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
-  subnet_id     = "${aws_subnet.test.id}"
+  subnet_id     = aws_subnet.test.id
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
-    cidr_block = "10.2.0.0/16"
-    instance_id = "${aws_instance.test.id}"
+    cidr_block  = "10.2.0.0/16"
+    instance_id = aws_instance.test.id
   }
 }
-`
+`)
+}
 
-const testAccRouteTableConfigTags = `
+func testAccAWSRouteTableConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-route-table-tags"
+    Name = %[1]q
   }
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    foo = "bar"
+    %[2]q = %[3]q
   }
 }
-`
+`, rName, tagKey1, tagValue1)
+}
 
-const testAccRouteTableConfigTagsUpdate = `
+func testAccAWSRouteTableConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-route-table-tags"
+    Name = %[1]q
   }
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    bar = "baz"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
 
 // VPC Peering connections are prefixed with pcx
 const testAccRouteTableVpcPeeringConfig = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-route-table-vpc-peering-foo"
   }
 }
 
 resource "aws_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = "terraform-testacc-route-table-vpc-peering-foo"
@@ -749,7 +796,7 @@ resource "aws_vpc" "bar" {
 }
 
 resource "aws_internet_gateway" "bar" {
-  vpc_id = "${aws_vpc.bar.id}"
+  vpc_id = aws_vpc.bar.id
 
   tags = {
     Name = "terraform-testacc-route-table-vpc-peering-bar"
@@ -757,8 +804,8 @@ resource "aws_internet_gateway" "bar" {
 }
 
 resource "aws_vpc_peering_connection" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  peer_vpc_id = "${aws_vpc.bar.id}"
+  vpc_id      = aws_vpc.test.id
+  peer_vpc_id = aws_vpc.bar.id
 
   tags = {
     foo = "bar"
@@ -766,11 +813,11 @@ resource "aws_vpc_peering_connection" "test" {
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
-    cidr_block = "10.2.0.0/16"
-    vpc_peering_connection_id = "${aws_vpc_peering_connection.test.id}"
+    cidr_block                = "10.2.0.0/16"
+    vpc_peering_connection_id = aws_vpc_peering_connection.test.id
   }
 }
 `
@@ -785,29 +832,68 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_vpn_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_route_table" "test" {
-  vpc_id           = "${aws_vpc.test.id}"
-  propagating_vgws = ["${aws_vpn_gateway.test.id}"]
+  vpc_id           = aws_vpc.test.id
+  propagating_vgws = [aws_vpn_gateway.test.id]
 }
 `
 
-// For GH-13545
-const testAccRouteTableConfigPanicEmptyRoute = `
+func testAccRouteTableConfigNoDestination() string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(), `
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    instance_id = aws_instance.test.id
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "tf-acc-route-table-no-destination"
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = "tf-acc-route-table-no-destination"
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.test.id
+}
+`)
+}
+
+const testAccRouteTableConfigNoTarget = `
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block = "10.1.0.0/16"
+  }
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.2.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-route-table-panic-empty-route"
+    Name = "tf-acc-route-table-no-target"
   }
-}
-
-resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-
-  route {}
 }
 `
 
@@ -826,20 +912,20 @@ resource "aws_internet_gateway" "test" {
     Name = "tf-acc-test-ec2-route-table-config-mode"
   }
 
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
     cidr_block = "10.1.0.0/16"
-    gateway_id = "${aws_internet_gateway.test.id}"
+    gateway_id = aws_internet_gateway.test.id
   }
 
   route {
     cidr_block = "10.2.0.0/16"
-    gateway_id = "${aws_internet_gateway.test.id}"
+    gateway_id = aws_internet_gateway.test.id
   }
 }
 `
@@ -860,11 +946,11 @@ resource "aws_internet_gateway" "test" {
     Name = "tf-acc-test-ec2-route-table-config-mode"
   }
 
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 `
 }
@@ -884,27 +970,66 @@ resource "aws_internet_gateway" "test" {
     Name = "tf-acc-test-ec2-route-table-config-mode"
   }
 
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_route_table" "test" {
   route  = []
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 `
 }
 
 func testAccAWSRouteTableConfigRouteTransitGatewayID() string {
-	return `
-data "aws_availability_zones" "available" {
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
+	return composeConfig(
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(), `
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
+  tags = {
+    Name = "tf-acc-test-ec2-route-table-transit-gateway-id"
   }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-test-ec2-route-table-transit-gateway-id"
+  }
+}
+
+resource "aws_ec2_transit_gateway" "test" {}
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
+  subnet_ids         = [aws_subnet.test.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block         = "0.0.0.0/0"
+    transit_gateway_id = aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id
+  }
+}
+`)
+}
+
+func testAccAWSRouteTableConfigRouteLocalGatewayID() string {
+	return `
+data "aws_ec2_local_gateways" "all" {}
+data "aws_ec2_local_gateway" "first" {
+  id = tolist(data.aws_ec2_local_gateways.all.ids)[0]
+}
+
+data "aws_ec2_local_gateway_route_tables" "all" {}
+data "aws_ec2_local_gateway_route_table" "first" {
+  local_gateway_route_table_id = tolist(data.aws_ec2_local_gateway_route_tables.all.ids)[0]
 }
 
 resource "aws_vpc" "test" {
@@ -916,30 +1041,23 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
-
-  tags = {
-    Name = "tf-acc-test-ec2-route-table-transit-gateway-id"
-  }
+  cidr_block = "10.0.0.0/24"
+  vpc_id     = aws_vpc.test.id
 }
 
-resource "aws_ec2_transit_gateway" "test" {}
-
-resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = ["${aws_subnet.test.id}"]
-  transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
-  vpc_id             = "${aws_vpc.test.id}"
+resource "aws_ec2_local_gateway_route_table_vpc_association" "example" {
+  local_gateway_route_table_id = data.aws_ec2_local_gateway_route_table.first.id
+  vpc_id                       = aws_vpc.test.id
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
-    cidr_block         = "0.0.0.0/0"
-    transit_gateway_id = "${aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id}"
+    cidr_block       = "0.0.0.0/0"
+    local_gateway_id = data.aws_ec2_local_gateway.first.id
   }
+  depends_on = [aws_ec2_local_gateway_route_table_vpc_association.example]
 }
 `
 }
@@ -957,7 +1075,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_egress_only_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -965,13 +1083,12 @@ resource "aws_egress_only_internet_gateway" "test" {
 }
 
 resource "aws_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
   }
 }
-
 
 locals {
   ipv6             = %[2]t
@@ -980,12 +1097,12 @@ locals {
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
-    cidr_block      = "${local.ipv6 ? "" : local.destination}"
-    ipv6_cidr_block = "${local.ipv6 ? local.destination_ipv6 : ""}"
-    gateway_id      = "${aws_internet_gateway.test.id}"
+    cidr_block      = local.ipv6 ? "" : local.destination
+    ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
+    gateway_id      = aws_internet_gateway.test.id
   }
 
   tags = {

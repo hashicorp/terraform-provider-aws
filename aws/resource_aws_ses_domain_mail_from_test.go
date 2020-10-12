@@ -212,7 +212,7 @@ resource "aws_ses_domain_identity" "test" {
 }
 
 resource "aws_ses_domain_mail_from" "test" {
-  domain           = "${aws_ses_domain_identity.test.domain}"
+  domain           = aws_ses_domain_identity.test.domain
   mail_from_domain = "%s"
 }
 `, domain, mailFromDomain)
@@ -226,7 +226,7 @@ resource "aws_ses_domain_identity" "test" {
 
 resource "aws_ses_domain_mail_from" "test" {
   behavior_on_mx_failure = "%s"
-  domain                 = "${aws_ses_domain_identity.test.domain}"
+  domain                 = aws_ses_domain_identity.test.domain
   mail_from_domain       = "bounce.${aws_ses_domain_identity.test.domain}"
 }
 `, domain, behaviorOnMxFailure)

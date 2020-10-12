@@ -200,7 +200,7 @@ resource "aws_iam_user" "a_user" {
 }
 
 resource "aws_iam_access_key" "a_key" {
-  user = "${aws_iam_user.a_user.name}"
+  user = aws_iam_user.a_user.name
 }
 `, rName)
 }
@@ -212,7 +212,7 @@ resource "aws_iam_user" "a_user" {
 }
 
 resource "aws_iam_access_key" "a_key" {
-  user = "${aws_iam_user.a_user.name}"
+  user = aws_iam_user.a_user.name
 
   pgp_key = <<EOF
 %s
@@ -228,7 +228,7 @@ resource "aws_iam_user" "a_user" {
 }
 
 resource "aws_iam_access_key" "a_key" {
-  user   = "${aws_iam_user.a_user.name}"
+  user   = aws_iam_user.a_user.name
   status = "Inactive"
 }
 `, rName)

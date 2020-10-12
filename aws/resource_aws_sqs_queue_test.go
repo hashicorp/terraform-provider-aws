@@ -667,12 +667,12 @@ variable "sqs_name" {
 }
 
 resource "aws_sns_topic" "test_topic" {
-  name = "${var.sns_name}"
+  name = var.sns_name
 }
 
 resource "aws_sqs_queue" "test-email-events" {
-  name                       = "${var.sqs_name}"
-  depends_on                 = ["aws_sns_topic.test_topic"]
+  name                       = var.sqs_name
+  depends_on                 = [aws_sns_topic.test_topic]
   delay_seconds              = 90
   max_message_size           = 2048
   message_retention_seconds  = 86400
@@ -702,9 +702,9 @@ EOF
 }
 
 resource "aws_sns_topic_subscription" "test_queue_target" {
-  topic_arn = "${aws_sns_topic.test_topic.arn}"
+  topic_arn = aws_sns_topic.test_topic.arn
   protocol  = "sqs"
-  endpoint  = "${aws_sqs_queue.test-email-events.arn}"
+  endpoint  = aws_sqs_queue.test-email-events.arn
 }
 `, topic, queue)
 }

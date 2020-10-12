@@ -28,6 +28,12 @@ The `awsproviderlint` tool extends the `tfproviderlint` tool and its checks. See
 | [AWSR001](passes/AWSR001/README.md) | check for `fmt.Sprintf()` calls using `.amazonaws.com` domain suffix |
 | [AWSR002](passes/AWSR002/README.md) | check for `d.Set()` of `tags` attribute that should include `IgnoreConfig()` |
 
+### AWS Validation Checks
+
+| Check | Description |
+|---|---|
+| [AWSV001](passes/AWSV001) | check for `validation.StringInSlice()` calls using `[]string` parameter |
+
 ## Development and Testing
 
 This project is built on the [`tfproviderlint`](https://github.com/bflad/tfproviderlint) project and the [`go/analysis`](https://godoc.org/golang.org/x/tools/go/analysis) framework.
@@ -53,5 +59,5 @@ NOTE: Provider-specific analyzers should implement their own namespace outside `
     * Include passing and failing example code in `passes/NAME/README.md`.
     * Add `passes/NAME/NAME_test.go` which implements `analysistest.TestData()` and `analysistest.Run()`.
     * Add `passes/NAME/testdata/src/a` directory with Go source files that implement passing and failing code based on `analysistest` framework.
-    * Since the [`analysistest` package](https://godoc.org/golang.org/x/tools/go/analysis/analysistest) does not support Go Modules currently, each analyzer that implements testing must add a symlink to the top level `vendor` directory in the `testdata/src/a` directory. e.g. `ln -s ../../../../../../vendor passes/NAME/testdata/src/a/vendor`.
+    * Since the [`analysistest` package](https://godoc.org/golang.org/x/tools/go/analysis/analysistest) does not support Go Modules currently, each analyzer that implements testing must add a symlink to the top level `vendor` directory in the `testdata/src/a` directory. e.g. `ln -s ../../../../../vendor passes/NAME/testdata/src/a/vendor`.
 * Add new link to new analyzer in `README.md` (this file).

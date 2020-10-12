@@ -73,6 +73,7 @@ func TestAccAWSBatchJobQueue_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "priority", "1"),
 					resource.TestCheckResourceAttr(resourceName, "state", batch.JQStateEnabled),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -199,6 +200,50 @@ func TestAccAWSBatchJobQueue_State(t *testing.T) {
 	})
 }
 
+func TestAccAWSBatchJobQueue_Tags(t *testing.T) {
+	var jobQueue batch.JobQueueDetail
+	resourceName := "aws_batch_job_queue.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchJobQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBatchJobQueueConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBatchJobQueueExists(resourceName, &jobQueue),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBatchJobQueueConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBatchJobQueueExists(resourceName, &jobQueue),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccBatchJobQueueConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBatchJobQueueExists(resourceName, &jobQueue),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBatchJobQueueExists(n string, jq *batch.JobQueueDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -296,7 +341,7 @@ func testAccBatchJobQueueConfigBase(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name = %[1]q
+  name               = %[1]q
   assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -355,7 +400,7 @@ resource "aws_batch_compute_environment" "test" {
     type               = "EC2"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName)
 }
@@ -384,4 +429,39 @@ resource "aws_batch_job_queue" "test" {
   state                = %[2]q
 }
 `, rName, state))
+}
+
+func testAccBatchJobQueueConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return composeConfig(
+		testAccBatchJobQueueConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_batch_job_queue" "test" {
+  compute_environments = [aws_batch_compute_environment.test.arn]
+  name                 = %[1]q
+  priority             = 1
+  state                = "DISABLED"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccBatchJobQueueConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return composeConfig(
+		testAccBatchJobQueueConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_batch_job_queue" "test" {
+  compute_environments = [aws_batch_compute_environment.test.arn]
+  name                 = %[1]q
+  priority             = 1
+  state                = "DISABLED"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

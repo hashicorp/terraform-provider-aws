@@ -21,6 +21,7 @@ func init() {
 		F:    testSweepSnsTopics,
 		Dependencies: []string{
 			"aws_autoscaling_group",
+			"aws_backup_vault_notifications",
 			"aws_budgets_budget",
 			"aws_config_delivery_channel",
 			"aws_dax_cluster",
@@ -531,7 +532,7 @@ resource "aws_sns_topic" "test" {
 func testAccAWSSNSTopicConfig_withNamePrefix() string {
 	return `
 resource "aws_sns_topic" "test" {
-    name_prefix = "terraform-test-topic-"
+  name_prefix = "terraform-test-topic-"
 }
 `
 }
@@ -549,7 +550,7 @@ resource "aws_sns_topic" "test" {
       "Effect": "Allow",
       "Principal": {
         "AWS": "*"
-       },
+      },
       "Action": "sns:Publish",
       "Resource": "arn:aws:sns:us-west-2::example"
     }
@@ -597,7 +598,7 @@ resource "aws_sns_topic" "test" {
       "Effect": "Allow",
       "Principal": {
         "AWS": "${aws_iam_role.example.arn}"
-			},
+      },
       "Action": "sns:Publish",
       "Resource": "arn:aws:sns:us-west-2::example"
     }
@@ -650,7 +651,7 @@ resource "aws_sns_topic" "test" {
       "Effect": "Allow",
       "Principal": {
         "AWS": "arn:aws:iam::012345678901:role/wooo"
-			},
+      },
       "Action": "sns:Publish",
       "Resource": "arn:aws:sns:us-west-2::example"
     }
@@ -666,20 +667,20 @@ EOF
 func testAccAWSSNSTopicConfig_deliveryStatus(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
-  depends_on                               = ["aws_iam_role_policy.example"]
+  depends_on                               = [aws_iam_role_policy.example]
   name                                     = "sns-delivery-status-topic-%s"
-  application_success_feedback_role_arn    = "${aws_iam_role.example.arn}"
+  application_success_feedback_role_arn    = aws_iam_role.example.arn
   application_success_feedback_sample_rate = 100
-  application_failure_feedback_role_arn    = "${aws_iam_role.example.arn}"
-  lambda_success_feedback_role_arn         = "${aws_iam_role.example.arn}"
+  application_failure_feedback_role_arn    = aws_iam_role.example.arn
+  lambda_success_feedback_role_arn         = aws_iam_role.example.arn
   lambda_success_feedback_sample_rate      = 90
-  lambda_failure_feedback_role_arn         = "${aws_iam_role.example.arn}"
-  http_success_feedback_role_arn           = "${aws_iam_role.example.arn}"
+  lambda_failure_feedback_role_arn         = aws_iam_role.example.arn
+  http_success_feedback_role_arn           = aws_iam_role.example.arn
   http_success_feedback_sample_rate        = 80
-  http_failure_feedback_role_arn           = "${aws_iam_role.example.arn}"
-  sqs_success_feedback_role_arn            = "${aws_iam_role.example.arn}"
+  http_failure_feedback_role_arn           = aws_iam_role.example.arn
+  sqs_success_feedback_role_arn            = aws_iam_role.example.arn
   sqs_success_feedback_sample_rate         = 70
-  sqs_failure_feedback_role_arn            = "${aws_iam_role.example.arn}"
+  sqs_failure_feedback_role_arn            = aws_iam_role.example.arn
 }
 
 resource "aws_iam_role" "example" {
@@ -704,7 +705,7 @@ EOF
 
 resource "aws_iam_role_policy" "example" {
   name = "sns-delivery-status-role-policy-%s"
-  role = "${aws_iam_role.example.id}"
+  role = aws_iam_role.example.id
 
   policy = <<EOF
 {
@@ -742,22 +743,24 @@ resource "aws_sns_topic" "test" {
 func testAccAWSSNSTopicConfigTags1(r, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
-	name = "terraform-test-topic-%s"
-	tags = {
-		%q = %q
-	}
-	}
+  name = "terraform-test-topic-%s"
+
+  tags = {
+    %q = %q
+  }
+}
 `, r, tag1Key, tag1Value)
 }
 
 func testAccAWSSNSTopicConfigTags2(r, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
-	name = "terraform-test-topic-%s"
-	tags = {
-		%q = %q
-		%q = %q
-	  }
-	}
+  name = "terraform-test-topic-%s"
+
+  tags = {
+    %q = %q
+    %q = %q
+  }
+}
 `, r, tag1Key, tag1Value, tag2Key, tag2Value)
 }

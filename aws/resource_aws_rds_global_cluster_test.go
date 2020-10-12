@@ -523,12 +523,13 @@ func testAccAWSRdsGlobalClusterConfigSourceDbClusterIdentifier(rName string) str
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
   engine              = "aurora-postgresql"
-  engine_version      = "10.11"                 # Minimum supported version for Global Clusters
+  engine_version      = "10.11" # Minimum supported version for Global Clusters
   master_password     = "mustbeeightcharacters"
   master_username     = "test"
   skip_final_snapshot = true
 
   # global_cluster_identifier cannot be Computed
+
   lifecycle {
     ignore_changes = [global_cluster_identifier]
   }

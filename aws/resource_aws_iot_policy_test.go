@@ -147,13 +147,20 @@ resource "aws_iot_policy" "test" {
   policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Action": ["iot:*"],
-    "Resource": ["*"]
-  }]
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iot:*"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
 }
 EOF
+
 }
 `, rName)
 }
@@ -164,15 +171,22 @@ resource "aws_iot_policy" "test" {
   name = "%s"
 
   policy = <<EOF
-	{
-	  "Version": "2012-10-17",
-	  "Statement": [{
-		"Effect": "Allow",
-		"Action": ["iot:*"],
-		"Resource": ["*"]
-	  }]
-	}
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iot:*"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
 EOF
+
 }
 `, rName)
 }

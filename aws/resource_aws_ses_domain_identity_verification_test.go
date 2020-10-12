@@ -139,17 +139,17 @@ resource "aws_ses_domain_identity" "test" {
 }
 
 resource "aws_route53_record" "domain_identity_verification" {
-  zone_id = "${data.aws_route53_zone.test.id}"
+  zone_id = data.aws_route53_zone.test.id
   name    = "_amazonses.${aws_ses_domain_identity.test.id}"
   type    = "TXT"
   ttl     = "600"
-  records = ["${aws_ses_domain_identity.test.verification_token}"]
+  records = [aws_ses_domain_identity.test.verification_token]
 }
 
 resource "aws_ses_domain_identity_verification" "test" {
-  domain = "${aws_ses_domain_identity.test.id}"
+  domain = aws_ses_domain_identity.test.id
 
-  depends_on = ["aws_route53_record.domain_identity_verification"]
+  depends_on = [aws_route53_record.domain_identity_verification]
 }
 `, rootDomain, domain)
 }
@@ -161,7 +161,7 @@ resource "aws_ses_domain_identity" "test" {
 }
 
 resource "aws_ses_domain_identity_verification" "test" {
-  domain = "${aws_ses_domain_identity.test.id}"
+  domain = aws_ses_domain_identity.test.id
 
   timeouts {
     create = "5s"

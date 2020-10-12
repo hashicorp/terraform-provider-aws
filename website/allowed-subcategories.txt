@@ -58,6 +58,7 @@ Global Accelerator
 Glue
 GuardDuty
 IAM
+Identity Store
 Inspector
 IoT
 KMS
@@ -66,9 +67,11 @@ Kinesis Data Analytics v2 (SQL and Java Applications)
 Kinesis Firehose
 Kinesis Video
 Lambda
+Lex
 License Manager
 Lightsail
 MQ
+Macie
 Macie Classic
 Managed Streaming for Kafka (MSK)
 MediaConvert
@@ -91,10 +94,13 @@ Route53 Domains
 Route53 Resolver
 Route53
 S3
+S3 Control
+S3 Outposts
 SES
 SNS
 SQS
 SSM
+SSO Admin
 SWF
 Sagemaker
 Secrets Manager
@@ -107,6 +113,7 @@ SimpleDB
 Step Function (SFN)
 Storage Gateway
 Synthetics
+Timestream Write
 Transfer
 Transit Gateway Network Manager
 VPC

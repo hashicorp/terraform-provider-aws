@@ -272,17 +272,17 @@ resource "aws_pinpoint_app" "test" {
   name = %[1]q
 
   campaign_hook {
-    lambda_function_name = "${aws_lambda_function.test.arn}"
+    lambda_function_name = aws_lambda_function.test.arn
     mode                 = "DELIVERY"
   }
 
-  depends_on = ["aws_lambda_permission.test"]
+  depends_on = [aws_lambda_permission.test]
 }
 
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdapinpoint.zip"
   function_name = %[1]q
-  role          = "${aws_iam_role.test.arn}"
+  role          = aws_iam_role.test.arn
   handler       = "lambdapinpoint.handler"
   runtime       = "nodejs12.x"
   publish       = true
@@ -314,7 +314,7 @@ data "aws_region" "current" {}
 resource "aws_lambda_permission" "test" {
   statement_id  = "AllowExecutionFromPinpoint"
   action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.test.function_name}"
+  function_name = aws_lambda_function.test.function_name
   principal     = "pinpoint.${data.aws_region.current.name}.amazonaws.com"
   source_arn    = "arn:aws:mobiletargeting:${data.aws_region.current.name}:${data.aws_caller_identity.aws.account_id}:/apps/*"
 }

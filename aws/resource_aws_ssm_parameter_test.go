@@ -542,10 +542,10 @@ func testAccAWSSSMParameterConfigDataTypeAwsEc2Image(rName string) string {
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
-  name       = %[1]q
-  data_type  = "aws:ec2:image"
-  type       = "String"
-  value      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  name      = %[1]q
+  data_type = "aws:ec2:image"
+  type      = "String"
+  value     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 }
 `, rName))
 }
@@ -553,9 +553,9 @@ resource "aws_ssm_parameter" "test" {
 func testAccAWSSSMParameterBasicConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
-  name  =  %[1]q
+  name  = %[1]q
   type  = "String"
-  value =  %[1]q
+  value = %[1]q
 
   tags = {
     %[2]q = %[3]q
@@ -567,9 +567,9 @@ resource "aws_ssm_parameter" "test" {
 func testAccAWSSSMParameterBasicConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
-  name  =  %[1]q
+  name  = %[1]q
   type  = "String"
-  value =  %[1]q
+  value = %[1]q
 
   tags = {
     %[2]q = %[3]q
@@ -621,7 +621,7 @@ resource "aws_ssm_parameter" "secret_test" {
   type        = "SecureString"
   value       = "%[2]s"
   key_id      = "alias/%[3]s"
-  depends_on  = ["aws_kms_alias.test_alias"]
+  depends_on  = [aws_kms_alias.test_alias]
 }
 
 resource "aws_kms_key" "test_key" {
@@ -631,7 +631,7 @@ resource "aws_kms_key" "test_key" {
 
 resource "aws_kms_alias" "test_alias" {
   name          = "alias/%[3]s"
-  target_key_id = "${aws_kms_key.test_key.id}"
+  target_key_id = aws_kms_key.test_key.id
 }
 `, rName, value, keyAlias)
 }

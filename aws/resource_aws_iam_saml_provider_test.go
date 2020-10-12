@@ -121,7 +121,7 @@ func testAccIAMSamlProviderConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_saml_provider" "test" {
   name                   = %q
-  saml_metadata_document = "${file("./test-fixtures/saml-metadata.xml")}"
+  saml_metadata_document = file("./test-fixtures/saml-metadata.xml")
 }
 `, rName)
 }
@@ -130,7 +130,7 @@ func testAccIAMSamlProviderConfigUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_saml_provider" "test" {
   name                   = %q
-  saml_metadata_document = "${file("./test-fixtures/saml-metadata-modified.xml")}"
+  saml_metadata_document = file("./test-fixtures/saml-metadata-modified.xml")
 }
 `, rName)
 }

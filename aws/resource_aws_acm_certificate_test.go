@@ -308,6 +308,23 @@ func TestAccAWSAcmCertificate_rootAndWildcardSan(t *testing.T) {
 	})
 }
 
+func TestAccAWSAcmCertificate_SubjectAlternativeNames_EmptyString(t *testing.T) {
+	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
+	domain := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAcmCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(""), acm.ValidationMethodDns),
+				ExpectError: regexp.MustCompile(`expected length`),
+			},
+		},
+	})
+}
+
 func TestAccAWSAcmCertificate_san_single(t *testing.T) {
 	resourceName := "aws_acm_certificate.cert"
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
@@ -677,6 +694,37 @@ func TestAccAWSAcmCertificate_imported_IpAddress(t *testing.T) { // Reference: h
 	})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/15055
+func TestAccAWSAcmCertificate_PrivateKey_Tags(t *testing.T) {
+	resourceName := "aws_acm_certificate.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAcmCertificateConfigPrivateKeyTags("1.2.3.4"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"private_key", "certificate_body"},
+			},
+			{
+				Config: testAccAcmCertificateConfigPrivateKeyTags("5.6.7.8"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAcmCertificateConfig(domainName, validationMethod string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "cert" {
@@ -705,7 +753,7 @@ resource "aws_acmpca_certificate_authority" "test" {
 
 resource "aws_acm_certificate" "cert" {
   domain_name               = "%s.terraformtesting.com"
-  certificate_authority_arn = "${aws_acmpca_certificate_authority.test.arn}"
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
 }
 `, rName)
 }
@@ -715,7 +763,7 @@ func testAccAcmCertificateConfig_subjectAlternativeNames(domainName, subjectAlte
 resource "aws_acm_certificate" "cert" {
   domain_name               = "%s"
   subject_alternative_names = [%s]
-  validation_method = "%s"
+  validation_method         = "%s"
 }
 `, domainName, subjectAlternativeNames, validationMethod)
 }
@@ -759,11 +807,27 @@ resource "aws_acm_certificate" "test" {
 `, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
+func testAccAcmCertificateConfigPrivateKeyTags(commonName string) string {
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, commonName)
+
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[1]s"
+  private_key      = "%[2]s"
+
+  tags = {
+    key1 = "value1"
+  }
+}
+`, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+}
+
 func testAccAcmCertificateConfigPrivateKey(certificate, privateKey, chain string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
-  certificate_body =  "%[1]s"
-  private_key      =  "%[2]s"
+  certificate_body  = "%[1]s"
+  private_key       = "%[2]s"
   certificate_chain = "%[3]s"
 }
 `, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(privateKey), tlsPemEscapeNewlines(chain))
@@ -775,7 +839,7 @@ resource "aws_acm_certificate" "cert" {
   domain_name       = "%s"
   validation_method = "%s"
   options {
-	  certificate_transparency_logging_preference = "DISABLED"
+    certificate_transparency_logging_preference = "DISABLED"
   }
 }
 `, domainName, validationMethod)

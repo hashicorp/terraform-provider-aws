@@ -81,7 +81,7 @@ func testAccCheckAwsAutoscalingGroupsAvailable(attrs map[string]string) ([]strin
 }
 
 func testAccCheckAwsAutoscalingGroupsConfig(rInt1, rInt2, rInt3 int) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_ami" "test_ami" {
   most_recent = true
   owners      = ["amazon"]
@@ -89,15 +89,6 @@ data "aws_ami" "test_ami" {
   filter {
     name   = "name"
     values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 
@@ -163,7 +154,7 @@ resource "aws_autoscaling_group" "barbaz" {
 }
 
 func testAccCheckAwsAutoscalingGroupsConfigWithDataSource(rInt1, rInt2, rInt3 int) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_ami" "test_ami" {
   most_recent = true
   owners      = ["amazon"]
@@ -171,15 +162,6 @@ data "aws_ami" "test_ami" {
   filter {
     name   = "name"
     values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
   }
 }
 

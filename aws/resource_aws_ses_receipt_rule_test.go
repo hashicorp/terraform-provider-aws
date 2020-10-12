@@ -326,7 +326,7 @@ resource "aws_ses_receipt_rule_set" "test" {
 
 resource "aws_ses_receipt_rule" "basic" {
   name          = "basic"
-  rule_set_name = "${aws_ses_receipt_rule_set.test.rule_set_name}"
+  rule_set_name = aws_ses_receipt_rule_set.test.rule_set_name
   recipients    = ["test@example.com"]
   enabled       = true
   scan_enabled  = true
@@ -349,14 +349,14 @@ resource "aws_s3_bucket" "emails" {
 
 resource "aws_ses_receipt_rule" "basic" {
   name          = "basic"
-  rule_set_name = "${aws_ses_receipt_rule_set.test.rule_set_name}"
+  rule_set_name = aws_ses_receipt_rule_set.test.rule_set_name
   recipients    = ["test@example.com"]
   enabled       = true
   scan_enabled  = true
   tls_policy    = "Require"
 
   s3_action {
-    bucket_name = "${aws_s3_bucket.emails.id}"
+    bucket_name = aws_s3_bucket.emails.id
     position    = 1
   }
 }
@@ -371,13 +371,13 @@ resource "aws_ses_receipt_rule_set" "test" {
 
 resource "aws_ses_receipt_rule" "second" {
   name          = "second"
-  rule_set_name = "${aws_ses_receipt_rule_set.test.rule_set_name}"
-  after         = "${aws_ses_receipt_rule.first.name}"
+  rule_set_name = aws_ses_receipt_rule_set.test.rule_set_name
+  after         = aws_ses_receipt_rule.first.name
 }
 
 resource "aws_ses_receipt_rule" "first" {
   name          = "first"
-  rule_set_name = "${aws_ses_receipt_rule_set.test.rule_set_name}"
+  rule_set_name = aws_ses_receipt_rule_set.test.rule_set_name
 }
 `, rInt)
 }
@@ -390,7 +390,7 @@ resource "aws_ses_receipt_rule_set" "test" {
 
 resource "aws_ses_receipt_rule" "actions" {
   name          = "actions4"
-  rule_set_name = "${aws_ses_receipt_rule_set.test.rule_set_name}"
+  rule_set_name = aws_ses_receipt_rule_set.test.rule_set_name
 
   add_header_action {
     header_name  = "Added-By"

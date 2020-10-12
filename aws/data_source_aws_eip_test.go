@@ -289,18 +289,7 @@ data "aws_eip" "test" {
 }
 `
 
-const testAccDataSourceAwsEipConfigInstance = `
-data "aws_availability_zones" "available" {
-  # Error launching source instance: Unsupported: Your requested instance type (t2.micro) is not supported in your requested Availability Zone (us-west-2d).
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccDataSourceAwsEipConfigInstance = testAccAvailableAZsNoOptInDefaultExcludeConfig() + `
 resource "aws_vpc" "test" {
   cidr_block = "10.2.0.0/16"
 }

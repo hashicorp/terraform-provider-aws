@@ -442,12 +442,12 @@ resource "aws_glue_classifier" "test" {
   name = "%s"
 
   csv_classifier {
-	allow_single_column    = "%t"
-	contains_header        = "%s"
-	delimiter              = "%s"
-	disable_value_trimming = "%t"
-	header                 = ["header_column1", "header_column2"]
-	quote_symbol           = "\""
+    allow_single_column    = "%t"
+    contains_header        = "%s"
+    delimiter              = "%s"
+    disable_value_trimming = "%t"
+    header                 = ["header_column1", "header_column2"]
+    quote_symbol           = "\""
   }
 }
 `, rName, allowSingleColumn, containsHeader, delimiter, disableValueTrimming)

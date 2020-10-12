@@ -162,8 +162,8 @@ func testAccCheckAWSQLDBLedgerExists(n string, v *qldb.DescribeLedgerOutput) res
 func testAccAWSQLDBLedgerConfig(n int) string {
 	return fmt.Sprintf(`
 resource "aws_qldb_ledger" "test" {
-  name                            = "test-ledger-%d"
-  deletion_protection             = false
+  name                = "test-ledger-%d"
+  deletion_protection = false
 }
 `, n)
 }

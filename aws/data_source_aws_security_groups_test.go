@@ -64,7 +64,7 @@ resource "aws_security_group" "test" {
 
 data "aws_security_groups" "by_tag" {
   tags = {
-    Seed = aws_security_group.test.0.tags["Seed"]
+    Seed = aws_security_group.test[0].tags["Seed"]
   }
 }
 `, rInt)
@@ -98,7 +98,7 @@ data "aws_security_groups" "by_filter" {
 
   filter {
     name   = "group-name"
-    values = ["tf-${aws_security_group.test.0.tags["Seed"]}-*"]
+    values = ["tf-${aws_security_group.test[0].tags["Seed"]}-*"]
   }
 }
 `, rInt)

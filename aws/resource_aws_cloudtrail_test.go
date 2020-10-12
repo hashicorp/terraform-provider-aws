@@ -104,6 +104,7 @@ func TestAccAWSCloudTrail_serial(t *testing.T) {
 			"kmsKey":                     testAccAWSCloudTrail_kmsKey,
 			"tags":                       testAccAWSCloudTrail_tags,
 			"eventSelector":              testAccAWSCloudTrail_event_selector,
+			"insightSelector":            testAccAWSCloudTrail_insight_selector,
 		},
 	}
 
@@ -545,6 +546,31 @@ func testAccAWSCloudTrail_event_selector(t *testing.T) {
 	})
 }
 
+func testAccAWSCloudTrail_insight_selector(t *testing.T) {
+	resourceName := "aws_cloudtrail.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudTrailConfig_insightSelector(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.0.insight_type", "ApiCallRateInsight"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckCloudTrailExists(n string, trail *cloudtrail.Trail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -705,7 +731,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
@@ -750,7 +775,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
@@ -761,7 +785,7 @@ resource "aws_cloudtrail" "test" {
   name           = "tf-acc-test-%d"
   s3_bucket_name = aws_s3_bucket.test.id
 
-  cloud_watch_logs_group_arn = aws_cloudwatch_log_group.test.arn
+  cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.test.arn}:*"
   cloud_watch_logs_role_arn  = aws_iam_role.test.arn
 }
 
@@ -795,7 +819,6 @@ resource "aws_s3_bucket" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -820,7 +843,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -838,12 +860,11 @@ resource "aws_iam_role_policy" "test" {
         "logs:CreateLogStream",
         "logs:PutLogEvents"
       ],
-      "Resource": "${aws_cloudwatch_log_group.test.arn}"
+      "Resource": "${aws_cloudwatch_log_group.test.arn}:*"
     }
   ]
 }
 POLICY
-
 }
 `, randInt, randInt, randInt, randInt, randInt, randInt, randInt)
 }
@@ -854,7 +875,7 @@ resource "aws_cloudtrail" "test" {
   name           = "tf-acc-test-%d"
   s3_bucket_name = aws_s3_bucket.test.id
 
-  cloud_watch_logs_group_arn = aws_cloudwatch_log_group.second.arn
+  cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.second.arn}:*"
   cloud_watch_logs_role_arn  = aws_iam_role.test.arn
 }
 
@@ -888,7 +909,6 @@ resource "aws_s3_bucket" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -917,7 +937,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -935,12 +954,11 @@ resource "aws_iam_role_policy" "test" {
         "logs:CreateLogStream",
         "logs:PutLogEvents"
       ],
-      "Resource": "${aws_cloudwatch_log_group.second.arn}"
+      "Resource": "${aws_cloudwatch_log_group.second.arn}:*"
     }
   ]
 }
 POLICY
-
 }
 `, randInt, randInt, randInt, randInt, randInt, randInt, randInt, randInt)
 }
@@ -983,7 +1001,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
@@ -1030,7 +1047,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
@@ -1075,7 +1091,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
@@ -1118,7 +1133,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
@@ -1145,7 +1159,6 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_cloudtrail" "foobar" {
@@ -1185,7 +1198,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
@@ -1227,7 +1239,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `
 
@@ -1269,7 +1280,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
@@ -1363,7 +1373,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_s3_bucket" "bar" {
@@ -1415,7 +1424,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
@@ -1493,7 +1501,6 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_s3_bucket" "bar" {
@@ -1519,7 +1526,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lambda_function" "lambda_function_test" {
@@ -1569,7 +1575,52 @@ resource "aws_s3_bucket" "foo" {
   ]
 }
 POLICY
-
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
+}
+
+func testAccAWSCloudTrailConfig_insightSelector(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudtrail" "test" {
+  name           = %[1]q
+  s3_bucket_name = aws_s3_bucket.test.id
+
+
+  insight_selector {
+    insight_type = "ApiCallRateInsight"
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+
+  policy = <<POLICY
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "AWSCloudTrailAclCheck",
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:GetBucketAcl",
+			"Resource": "arn:aws:s3:::%[1]s"
+		},
+		{
+			"Sid": "AWSCloudTrailWrite",
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:PutObject",
+			"Resource": "arn:aws:s3:::%[1]s/*",
+			"Condition": {
+				"StringEquals": {
+					"s3:x-amz-acl": "bucket-owner-full-control"
+				}
+			}
+		}
+	]
+}
+POLICY
+}
+`, rName)
 }

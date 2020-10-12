@@ -128,6 +128,6 @@ const testAccAWSMacieMemberAccountAssociationConfig_self = `
 data "aws_caller_identity" "current" {}
 
 resource "aws_macie_member_account_association" "test" {
-  member_account_id = "${data.aws_caller_identity.current.account_id}"
+  member_account_id = data.aws_caller_identity.current.account_id
 }
 `

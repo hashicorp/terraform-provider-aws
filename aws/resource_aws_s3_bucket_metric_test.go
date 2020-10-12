@@ -636,8 +636,9 @@ func testAccAWSS3BucketMetricsConfigWithEmptyFilter(bucketName, metricName strin
 %s
 
 resource "aws_s3_bucket_metric" "test" {
-  bucket = "${aws_s3_bucket.bucket.id}"
-  name = "%s"
+  bucket = aws_s3_bucket.bucket.id
+  name   = "%s"
+
   filter {}
 }
 `, testAccAWSS3BucketMetricsConfigBucket(bucketName), metricName)
@@ -648,7 +649,7 @@ func testAccAWSS3BucketMetricsConfigWithFilterPrefix(bucketName, metricName, pre
 %s
 
 resource "aws_s3_bucket_metric" "test" {
-  bucket = "${aws_s3_bucket.bucket.id}"
+  bucket = aws_s3_bucket.bucket.id
   name   = "%s"
 
   filter {
@@ -663,7 +664,7 @@ func testAccAWSS3BucketMetricsConfigWithFilterPrefixAndMultipleTags(bucketName, 
 %s
 
 resource "aws_s3_bucket_metric" "test" {
-  bucket = "${aws_s3_bucket.bucket.id}"
+  bucket = aws_s3_bucket.bucket.id
   name   = "%s"
 
   filter {
@@ -683,7 +684,7 @@ func testAccAWSS3BucketMetricsConfigWithFilterPrefixAndSingleTag(bucketName, met
 %s
 
 resource "aws_s3_bucket_metric" "test" {
-  bucket = "${aws_s3_bucket.bucket.id}"
+  bucket = aws_s3_bucket.bucket.id
   name   = "%s"
 
   filter {
@@ -702,7 +703,7 @@ func testAccAWSS3BucketMetricsConfigWithFilterMultipleTags(bucketName, metricNam
 %s
 
 resource "aws_s3_bucket_metric" "test" {
-  bucket = "${aws_s3_bucket.bucket.id}"
+  bucket = aws_s3_bucket.bucket.id
   name   = "%s"
 
   filter {
@@ -720,7 +721,7 @@ func testAccAWSS3BucketMetricsConfigWithFilterSingleTag(bucketName, metricName, 
 %s
 
 resource "aws_s3_bucket_metric" "test" {
-  bucket = "${aws_s3_bucket.bucket.id}"
+  bucket = aws_s3_bucket.bucket.id
   name   = "%s"
 
   filter {
@@ -737,7 +738,7 @@ func testAccAWSS3BucketMetricsConfigWithoutFilter(bucketName, metricName string)
 %s
 
 resource "aws_s3_bucket_metric" "test" {
-  bucket = "${aws_s3_bucket.bucket.id}"
+  bucket = aws_s3_bucket.bucket.id
   name   = "%s"
 }
 `, testAccAWSS3BucketMetricsConfigBucket(bucketName), metricName)

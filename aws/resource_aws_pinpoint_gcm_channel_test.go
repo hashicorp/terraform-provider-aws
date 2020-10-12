@@ -92,7 +92,7 @@ func testAccAWSPinpointGCMChannelConfig_basic(apiKey string) string {
 resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_gcm_channel" "test_gcm_channel" {
-  application_id = "${aws_pinpoint_app.test_app.application_id}"
+  application_id = aws_pinpoint_app.test_app.application_id
   enabled        = "false"
   api_key        = "%s"
 }

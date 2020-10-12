@@ -109,7 +109,6 @@ resource "aws_ecr_lifecycle_policy" "test" {
   ]
 }
 EOF
-
 }
 `, rName)
 }

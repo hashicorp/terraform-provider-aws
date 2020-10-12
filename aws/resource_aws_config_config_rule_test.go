@@ -98,7 +98,7 @@ func testAccConfigConfigRule_customlambda(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.0.owner", "CUSTOM_LAMBDA"),
 					resource.TestCheckResourceAttrPair(resourceName, "source.0.source_identifier", "aws_lambda_function.f", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "source.0.source_detail", map[string]string{
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "source.0.source_detail.*", map[string]string{
 						"event_source":                "aws.config",
 						"message_type":                "ConfigurationSnapshotDeliveryCompleted",
 						"maximum_execution_frequency": "",
@@ -377,7 +377,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -491,7 +490,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy_attachment" "a" {
@@ -538,7 +536,6 @@ resource "aws_iam_role" "r" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy" "p" {
@@ -570,7 +567,6 @@ resource "aws_iam_role_policy" "p" {
   ]
 }
 POLICY
-
 }
 `, randInt, path, randInt, randInt, randInt, randInt, randInt, randInt, randInt)
 }
@@ -625,7 +621,8 @@ resource "aws_config_config_rule" "test" {
   }
 
   tags = {
-    Name  = %[1]q
+    Name = %[1]q
+
     %[2]s = %[3]q
     %[4]s = %[5]q
   }

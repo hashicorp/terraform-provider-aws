@@ -5,6 +5,7 @@ on:
       - master
   pull_request:
     paths:
+      - .github/workflows/examples.yml
       - examples/**
 
 env:
@@ -12,7 +13,7 @@ env:
   TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
 
 jobs:
-  terraform:
+  validate-terraform:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -43,10 +44,7 @@ jobs:
         # Needed to use the output of `terraform validate -json`
         terraform_wrapper: false
     - name: install tflint
-      env:
-        TFLINT_VERSION: "v0.18.0"
-      run: |
-        curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | sh
+      run: cd tools && go install github.com/terraform-linters/tflint
     - name: terraform
       run: |
         for DIR in $(find ./examples -type f -name '*.tf' -exec dirname {} \; | sort -u); do

@@ -590,9 +590,9 @@ resource "aws_internet_gateway" "igw" {
 }
 
 resource "aws_vpc_endpoint" "s3" {
-    vpc_id          = aws_vpc.test.id
-    service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
-    route_table_ids = [aws_vpc.test.default_route_table_id]
+  vpc_id          = aws_vpc.test.id
+  service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
+  route_table_ids = [aws_vpc.test.default_route_table_id]
 
   tags = {
     Name = "terraform-testacc-default-route-table-vpc-endpoint"
@@ -603,7 +603,7 @@ resource "aws_default_route_table" "foo" {
   default_route_table_id = aws_vpc.test.default_route_table_id
 
   tags = {
-        Name = "test"
+    Name = "test"
   }
 
   route {

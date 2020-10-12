@@ -125,17 +125,11 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										ForceNew: true,
 									},
 									"volume_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											ec2.VolumeTypeStandard,
-											ec2.VolumeTypeIo1,
-											ec2.VolumeTypeGp2,
-											ec2.VolumeTypeSc1,
-											ec2.VolumeTypeSt1,
-										}, false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
 									},
 								},
 							},
@@ -204,17 +198,11 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										ForceNew: true,
 									},
 									"volume_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											ec2.VolumeTypeStandard,
-											ec2.VolumeTypeIo1,
-											ec2.VolumeTypeGp2,
-											ec2.VolumeTypeSc1,
-											ec2.VolumeTypeSt1,
-										}, false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
 									},
 								},
 							},
@@ -890,7 +878,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		spotFleetConfig.InstancePoolsToUseCount = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("spot_price"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("spot_price"); ok {
 		spotFleetConfig.SpotPrice = aws.String(v.(string))
 	}
 

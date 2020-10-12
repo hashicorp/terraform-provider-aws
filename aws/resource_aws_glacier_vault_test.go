@@ -257,7 +257,7 @@ resource "aws_glacier_vault" "test" {
   name = "my_test_vault_%d"
 
   notification {
-    sns_topic = "${aws_sns_topic.aws_sns_topic.arn}"
+    sns_topic = aws_sns_topic.aws_sns_topic.arn
     events    = ["ArchiveRetrievalCompleted", "InventoryRetrievalCompleted"]
   }
 

@@ -145,6 +145,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_route53_zone" "test" {
   name = "example.com"
+
   vpc {
     vpc_id = aws_vpc.test.id
   }

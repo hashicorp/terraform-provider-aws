@@ -63,7 +63,7 @@ func testAccPreCheckAWSOutpostsOutposts(t *testing.T) {
 
 	// Ensure there is at least one Outpost
 	if output == nil || len(output.Outposts) == 0 {
-		t.Skip("skipping since no Outposts Outpost found")
+		t.Skip("skipping since no Outposts found")
 	}
 }
 

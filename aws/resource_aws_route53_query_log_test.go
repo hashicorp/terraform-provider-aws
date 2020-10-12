@@ -179,7 +179,7 @@ data "aws_iam_policy_document" "test" {
 
 resource "aws_cloudwatch_log_resource_policy" "test" {
   policy_name     = "%[1]s"
-  policy_document = "${data.aws_iam_policy_document.test.json}"
+  policy_document = data.aws_iam_policy_document.test.json
 }
 
 resource "aws_route53_zone" "test" {
@@ -187,10 +187,10 @@ resource "aws_route53_zone" "test" {
 }
 
 resource "aws_route53_query_log" "test" {
-  depends_on = ["aws_cloudwatch_log_resource_policy.test"]
+  depends_on = [aws_cloudwatch_log_resource_policy.test]
 
-  cloudwatch_log_group_arn = "${aws_cloudwatch_log_group.test.arn}"
-  zone_id                  = "${aws_route53_zone.test.zone_id}"
+  cloudwatch_log_group_arn = aws_cloudwatch_log_group.test.arn
+  zone_id                  = aws_route53_zone.test.zone_id
 }
 `, rName)
 }

@@ -7,6 +7,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -150,6 +152,47 @@ func testAccCheckResourceAttrRegionalARNAccountID(resourceName, attributeName, a
 			Service:   arnService,
 		}.String()
 		return resource.TestCheckResourceAttr(resourceName, attributeName, attributeValue)(s)
+	}
+}
+
+// testAccCheckResourceAttrRegionalHostname ensures the Terraform state exactly matches a formatted DNS hostname with region and partition DNS suffix
+func testAccCheckResourceAttrRegionalHostname(resourceName, attributeName, serviceName, hostnamePrefix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		hostname := fmt.Sprintf("%s.%s.%s.%s", hostnamePrefix, serviceName, testAccGetRegion(), testAccGetPartitionDNSSuffix())
+
+		return resource.TestCheckResourceAttr(resourceName, attributeName, hostname)(s)
+	}
+}
+
+// testAccCheckResourceAttrRegionalHostnameService ensures the Terraform state exactly matches a service DNS hostname with region and partition DNS suffix
+//
+// For example: ec2.us-west-2.amazonaws.com
+func testAccCheckResourceAttrRegionalHostnameService(resourceName, attributeName, serviceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		hostname := fmt.Sprintf("%s.%s.%s", serviceName, testAccGetRegion(), testAccGetPartitionDNSSuffix())
+
+		return resource.TestCheckResourceAttr(resourceName, attributeName, hostname)(s)
+	}
+}
+
+// testAccCheckResourceAttrRegionalReverseDnsService ensures the Terraform state exactly matches a service reverse DNS hostname with region and partition DNS suffix
+//
+// For example: com.amazonaws.us-west-2.s3
+func testAccCheckResourceAttrRegionalReverseDnsService(resourceName, attributeName, serviceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		reverseDns := fmt.Sprintf("%s.%s.%s", testAccGetPartitionReverseDNSPrefix(), testAccGetRegion(), serviceName)
+
+		return resource.TestCheckResourceAttr(resourceName, attributeName, reverseDns)(s)
+	}
+}
+
+// testAccCheckResourceAttrHostnameWithPort ensures the Terraform state regexp matches a formatted DNS hostname with prefix, partition DNS suffix, and given port
+func testAccCheckResourceAttrHostnameWithPort(resourceName, attributeName, serviceName, hostnamePrefix string, port int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		// kafka broker example: "ec2-12-345-678-901.compute-1.amazonaws.com:2345"
+		hostname := fmt.Sprintf("%s.%s.%s:%d", hostnamePrefix, serviceName, testAccGetPartitionDNSSuffix(), port)
+
+		return resource.TestCheckResourceAttr(resourceName, attributeName, hostname)(s)
 	}
 }
 
@@ -430,6 +473,16 @@ func testAccGetPartitionDNSSuffix() string {
 	return "amazonaws.com"
 }
 
+func testAccGetPartitionReverseDNSPrefix() string {
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
+		dnsParts := strings.Split(partition.DNSSuffix(), ".")
+		sort.Sort(sort.Reverse(sort.StringSlice(dnsParts)))
+		return strings.Join(dnsParts, ".")
+	}
+
+	return "com.amazonaws"
+}
+
 func testAccGetAlternateRegionPartition() string {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetAlternateRegion()); ok {
 		return partition.ID()
@@ -536,13 +589,6 @@ func testAccMultipleRegionsPreCheck(t *testing.T) {
 func testAccRegionPreCheck(t *testing.T, region string) {
 	if testAccGetRegion() != region {
 		t.Skipf("skipping tests; AWS_DEFAULT_REGION (%s) does not equal %s", testAccGetRegion(), region)
-	}
-}
-
-// testAccPartitionPreCheck checks that the test partition is the specified partition.
-func testAccPartitionPreCheck(t *testing.T, partition string) {
-	if testAccGetPartition() != partition {
-		t.Skipf("skipping tests; partition (%s) does not equal %s", testAccGetPartition(), partition)
 	}
 }
 
@@ -736,6 +782,18 @@ func testAccCheckResourceDisappears(provider *schema.Provider, resource *schema.
 
 		if resourceState.Primary.ID == "" {
 			return fmt.Errorf("resource ID missing: %s", resourceName)
+		}
+
+		if resource.DeleteContext != nil {
+			diags := resource.DeleteContext(context.Background(), resource.Data(resourceState.Primary), provider.Meta())
+
+			for i := range diags {
+				if diags[i].Severity == diag.Error {
+					return fmt.Errorf("error deleting resource: %s", diags[i].Summary)
+				}
+			}
+
+			return nil
 		}
 
 		return resource.Delete(resource.Data(resourceState.Primary), provider.Meta())
@@ -1535,10 +1593,10 @@ func testAccProviderConfigAssumeRolePolicy(policy string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
-	assume_role {
-		role_arn = %q
-		policy   = %q
-	}
+  assume_role {
+    role_arn = %q
+    policy   = %q
+  }
 }
 `, os.Getenv("TF_ACC_ASSUME_ROLE_ARN"), policy)
 }

@@ -54,7 +54,7 @@ We try to use a common set of branch name prefixes when submitting pull requests
 - d = documentation
 - t = tests
 - td = technical debt
-- v = "vendoring"/dependencies
+- v = dependencies ("vendoring" previously)
 
 Conventions across non-AWS providers varies so when working with other providers please check the names of previously created branches and conform to their standard practices.
 
@@ -96,9 +96,8 @@ The following resource checks need to be addressed before your contribution can 
 - [ ] __Uses AWS Go SDK Constants__: Many AWS services provide string constants for value enumerations, error codes, and status types. See also the "Constants" sections under each of the service packages in the [AWS Go SDK documentation](https://docs.aws.amazon.com/sdk-for-go/api/).
 - [ ] __Uses AWS Go SDK Pointer Conversion Functions__: Many APIs return pointer types and these functions return the zero value for the type if the pointer is `nil`. This prevents potential panics from unchecked `*` pointer dereferences and can eliminate boilerplate `nil` checking in many cases. See also the [`aws` package in the AWS Go SDK documentation](https://docs.aws.amazon.com/sdk-for-go/api/aws/).
 - [ ] __Uses AWS Go SDK Types__: Use available SDK structs instead of implementing custom types with indirection.
-- [ ] __Uses TypeList and MaxItems: 1__: Configuration block attributes (e.g. `Type: schema.TypeList` or `Type: schema.TypeSet` with `Elem: &schema.Resource{...}`) that can only have one block should use `Type: schema.TypeList` and `MaxItems: 1` in the schema definition.
 - [ ] __Uses Existing Validation Functions__: Schema definitions including `ValidateFunc` for attribute validation should use available [Terraform `helper/validation` package](https://godoc.org/github.com/hashicorp/terraform/helper/validation) functions. `All()`/`Any()` can be used for combining multiple validation function behaviors.
-- [ ] __Uses isResourceTimeoutError() with resource.Retry()__: Resource logic implementing [`resource.Retry()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Retry) should error check with `isResourceTimeoutError(err error)` and potentially unset the error before returning the error. For example:
+- [ ] __Uses tfresource.TimedOut() with resource.Retry()__: Resource logic implementing [`resource.Retry()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Retry) should error check with [`tfresource.TimedOut(err error)`](https://godoc.org/github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource#TimedOut) and potentially unset the error before returning the error. For example:
 
   ```go
   var output *kms.CreateKeyOutput
@@ -112,7 +111,7 @@ The following resource checks need to be addressed before your contribution can 
     return nil
   })
 
-  if isResourceTimeoutError(err) {
+  if tfresource.TimedOut(err) {
     output, err = conn.CreateKey(input)
   }
 
@@ -123,15 +122,14 @@ The following resource checks need to be addressed before your contribution can 
 
 - [ ] __Uses resource.NotFoundError__: Custom errors for missing resources should use [`resource.NotFoundError`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#NotFoundError).
 - [ ] __Uses resource.UniqueId()__: API fields for concurrency protection such as `CallerReference` and `IdempotencyToken` should use [`resource.UniqueId()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#UniqueId). The implementation includes a monotonic counter which is safer for concurrent operations than solutions such as `time.Now()`.
-- [ ] __Skips Exists Function__: Implementing a resource `Exists` function is extraneous as it often duplicates resource `Read` functionality. Ensure `d.SetId("")` is used to appropriately trigger resource recreation in the resource `Read` function.
 - [ ] __Skips id Attribute__: The `id` attribute is implicit for all Terraform resources and does not need to be defined in the schema.
 
 The below are style-based items that _may_ be noted during review and are recommended for simplicity, consistency, and quality assurance:
 
 - [ ] __Avoids CustomizeDiff__: Usage of `CustomizeDiff` is generally discouraged.
 - [ ] __Implements Error Message Context__: Returning errors from resource `Create`, `Read`, `Update`, and `Delete` functions should include additional messaging about the location or cause of the error for operators and code maintainers by wrapping with [`fmt.Errorf()`](https://godoc.org/golang.org/x/exp/errors/fmt#Errorf).
-    - An example `Delete` API error: `return fmt.Errorf("error deleting {SERVICE} {THING} (%s): %s", d.Id(), err)`
-    - An example `d.Set()` error: `return fmt.Errorf("error setting {ATTRIBUTE}: %s", err)`
+    - An example `Delete` API error: `return fmt.Errorf("error deleting {SERVICE} {THING} (%s): %w", d.Id(), err)`
+    - An example `d.Set()` error: `return fmt.Errorf("error setting {ATTRIBUTE}: %w", err)`
 - [ ] __Implements arn Attribute__: APIs that return an Amazon Resource Name (ARN) should implement `arn` as an attribute. Alternatively, the ARN can be synthesized using the AWS Go SDK [`arn.ARN`](https://docs.aws.amazon.com/sdk-for-go/api/aws/arn/#ARN) structure. For example:
 
   ```go
@@ -150,9 +148,35 @@ The below are style-based items that _may_ be noted during review and are recomm
   When the `arn` attribute is synthesized this way, add the resource to the [list](https://www.terraform.io/docs/providers/aws/index.html#argument-reference) of those affected by the provider's `skip_requesting_account_id` attribute.
 
 - [ ] __Implements Warning Logging With Resource State Removal__: If a resource is removed outside of Terraform (e.g. via different tool, API, or web UI), `d.SetId("")` and `return nil` can be used in the resource `Read` function to trigger resource recreation. When this occurs, a warning log message should be printed beforehand: `log.Printf("[WARN] {SERVICE} {THING} (%s) not found, removing from state", d.Id())`
-- [ ] __Uses isAWSErr() with AWS Go SDK Error Objects__: Use the available `isAWSErr(err error, code string, message string)` helper function instead of the `awserr` package to compare error code and message contents.
+- [ ] __Uses Functions from aws-sdk-go-base/tfawserr with AWS Go SDK Error Objects__: Use the [`ErrCodeEquals(err error, code string)`](https://godoc.org/github.com/hashicorp/aws-sdk-go-base/tfawserr#ErrCodeEquals) and [`ErrMessageContains(err error, code string, message string)`](https://godoc.org/github.com/hashicorp/aws-sdk-go-base/tfawserr#ErrMessageContains) helper functions instead of the `awserr` package to compare error code and message contents.
 - [ ] __Uses %s fmt Verb with AWS Go SDK Objects__: AWS Go SDK objects implement `String()` so using the `%v`, `%#v`, or `%+v` fmt verbs with the object are extraneous or provide unhelpful detail.
-- [ ] __Uses Elem with TypeMap__: While provider schema validation does not error when the `Elem` configuration is not present with `Type: schema.TypeMap` attributes, including the explicit `Elem: &schema.Schema{Type: schema.TypeString}` is recommended.
 - [ ] __Uses American English for Attribute Naming__: For any ambiguity with attribute naming, prefer American English over British English. e.g. `color` instead of `colour`.
 - [ ] __Skips Timestamp Attributes__: Generally, creation and modification dates from the API should be omitted from the schema.
 - [ ] __Skips Error() Call with AWS Go SDK Error Objects__: Error objects do not need to have `Error()` called.
+- [ ] __Adds Error Codes Missing from the AWS Go SDK to Internal Service Package__: If an AWS API error code is checked and the AWS Go SDK has no constant string value defined for that error code, a new constant should be added to a file named `errors.go` in a per-service internal package. For example:
+
+```go
+// In `aws/internal/service/s3/errors.go`.
+
+package s3
+
+const (
+	ErrCodeNoSuchTagSet = "NoSuchTagSet"
+)
+```
+
+```go
+// Example usage.
+
+import (
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	tfs3 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3"
+)
+
+output, err := conn.GetBucketTagging(input)
+
+if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchTagSet) {
+	return nil
+}
+```

@@ -658,14 +658,14 @@ func validateArn(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if value == "" {
-		return
+		return ws, errors
 	}
 
 	parsedARN, err := arn.Parse(value)
 
 	if err != nil {
 		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %s", k, value, err))
-		return
+		return ws, errors
 	}
 
 	if parsedARN.Partition == "" {
@@ -686,7 +686,7 @@ func validateArn(v interface{}, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: missing resource value", k, value))
 	}
 
-	return
+	return ws, errors
 }
 
 func validateEC2AutomateARN(v interface{}, k string) (ws []string, errors []error) {
@@ -833,6 +833,17 @@ func cidrBlocksEqual(cidr1, cidr2 string) bool {
 	return ip2.String() == ip1.String() && ipnet2.String() == ipnet1.String()
 }
 
+// canonicalCidrBlock returns the canonical representation of a CIDR block.
+// This function is especially useful for hash functions for sets which include IPv6 CIDR blocks.
+func canonicalCidrBlock(cidr string) string {
+	_, ipnet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return cidr
+	}
+
+	return ipnet.String()
+}
+
 func validateHTTPMethod() schema.SchemaValidateFunc {
 	return validation.StringInSlice([]string{
 		"ANY",
@@ -976,7 +987,7 @@ func validateIAMPolicyJson(v interface{}, k string) (ws []string, errors []error
 	return
 }
 
-func validateCloudFormationTemplate(v interface{}, k string) (ws []string, errors []error) {
+func validateStringIsJsonOrYaml(v interface{}, k string) (ws []string, errors []error) {
 	if looksLikeJsonString(v) {
 		if _, err := structure.NormalizeJsonString(v); err != nil {
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
@@ -1854,21 +1865,6 @@ func validateWafPredicatesType() schema.SchemaValidateFunc {
 	}, false)
 }
 
-func validateIamRoleDescription(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	if len(value) > 1000 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 1000 characters", k))
-	}
-
-	if !regexp.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			`Only alphanumeric & accented characters allowed in %q: %q (Must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`,
-			k, value))
-	}
-	return
-}
-
 func validateAwsSSMName(v interface{}, k string) (ws []string, errors []error) {
 	// http://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateDocument.html#EC2-CreateDocument-request-Name
 	value := v.(string)
@@ -2354,27 +2350,6 @@ func validateCloudFrontPublicKeyNamePrefix(v interface{}, k string) (ws []string
 	return
 }
 
-func validateServiceDiscoveryHttpNamespaceName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !regexp.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"only alphanumeric characters, underscores and hyphens allowed in %q", k))
-	}
-	if !regexp.MustCompile(`^[a-zA-Z]`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"first character of %q must be a letter", k))
-	}
-	if !regexp.MustCompile(`[a-zA-Z]$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"last character of %q must be a letter", k))
-	}
-	if len(value) > 1024 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be greater than 1024 characters", k))
-	}
-	return
-}
-
 func validateLbTargetGroupName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 32 {
@@ -2477,4 +2452,28 @@ func validateRoute53ResolverName(v interface{}, k string) (ws []string, errors [
 	}
 
 	return
+}
+
+var validateServiceDiscoveryNamespaceName = validation.All(
+	validation.StringLenBetween(1, 1024),
+	validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z._-]+$`), ""),
+)
+
+// validateNestedExactlyOneOf is called on the map representing a nested schema element
+// Once ExactlyOneOf is supported for nested elements, this should be deprecated.
+func validateNestedExactlyOneOf(m map[string]interface{}, valid []string) error {
+	specified := make([]string, 0)
+	for _, k := range valid {
+		if v, ok := m[k].(string); ok && v != "" {
+			specified = append(specified, k)
+		}
+	}
+
+	if len(specified) == 0 {
+		return fmt.Errorf("one of `%s` must be specified", strings.Join(valid, ", "))
+	}
+	if len(specified) > 1 {
+		return fmt.Errorf("only one of `%s` can be specified, but `%s` were specified.", strings.Join(valid, ", "), strings.Join(specified, ", "))
+	}
+	return nil
 }

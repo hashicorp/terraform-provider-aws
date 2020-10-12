@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsGlueCrawler() *schema.Resource {
@@ -81,23 +82,16 @@ func resourceAwsGlueCrawler() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"delete_behavior": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  glue.DeleteBehaviorDeprecateInDatabase,
-							ValidateFunc: validation.StringInSlice([]string{
-								glue.DeleteBehaviorDeleteFromDatabase,
-								glue.DeleteBehaviorDeprecateInDatabase,
-								glue.DeleteBehaviorLog,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      glue.DeleteBehaviorDeprecateInDatabase,
+							ValidateFunc: validation.StringInSlice(glue.DeleteBehavior_Values(), false),
 						},
 						"update_behavior": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  glue.UpdateBehaviorUpdateInDatabase,
-							ValidateFunc: validation.StringInSlice([]string{
-								glue.UpdateBehaviorLog,
-								glue.UpdateBehaviorUpdateInDatabase,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      glue.UpdateBehaviorUpdateInDatabase,
+							ValidateFunc: validation.StringInSlice(glue.UpdateBehavior_Values(), false),
 						},
 					},
 				},
@@ -112,6 +106,10 @@ func resourceAwsGlueCrawler() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"connection_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"path": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -133,6 +131,16 @@ func resourceAwsGlueCrawler() *schema.Resource {
 						"path": {
 							Type:     schema.TypeString,
 							Required: true,
+						},
+						"scan_all": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"scan_rate": {
+							Type:         schema.TypeFloat,
+							Optional:     true,
+							ValidateFunc: validation.FloatBetween(0.1, 1.5),
 						},
 					},
 				},
@@ -291,18 +299,21 @@ func updateCrawlerInput(crawlerName string, d *schema.ResourceData) (*glue.Updat
 	if description, ok := d.GetOk("description"); ok {
 		crawlerInput.Description = aws.String(description.(string))
 	}
+
 	if schedule, ok := d.GetOk("schedule"); ok {
 		crawlerInput.Schedule = aws.String(schedule.(string))
+	} else {
+		crawlerInput.Schedule = aws.String("")
 	}
+
 	if classifiers, ok := d.GetOk("classifiers"); ok {
 		crawlerInput.Classifiers = expandStringList(classifiers.([]interface{}))
 	}
 
 	crawlerInput.SchemaChangePolicy = expandGlueSchemaChangePolicy(d.Get("schema_change_policy").([]interface{}))
 
-	if tablePrefix, ok := d.GetOk("table_prefix"); ok {
-		crawlerInput.TablePrefix = aws.String(tablePrefix.(string))
-	}
+	crawlerInput.TablePrefix = aws.String(d.Get("table_prefix").(string))
+
 	if configuration, ok := d.GetOk("configuration"); ok {
 		crawlerInput.Configuration = aws.String(configuration.(string))
 	}
@@ -376,7 +387,12 @@ func expandGlueDynamoDBTargets(targets []interface{}) []*glue.DynamoDBTarget {
 
 func expandGlueDynamoDBTarget(cfg map[string]interface{}) *glue.DynamoDBTarget {
 	target := &glue.DynamoDBTarget{
-		Path: aws.String(cfg["path"].(string)),
+		Path:    aws.String(cfg["path"].(string)),
+		ScanAll: aws.Bool(cfg["scan_all"].(bool)),
+	}
+
+	if v, ok := cfg["scan_rate"].(float64); ok && v != 0 {
+		target.ScanRate = aws.Float64(v)
 	}
 
 	return target
@@ -398,6 +414,10 @@ func expandGlueS3Targets(targets []interface{}) []*glue.S3Target {
 func expandGlueS3Target(cfg map[string]interface{}) *glue.S3Target {
 	target := &glue.S3Target{
 		Path: aws.String(cfg["path"].(string)),
+	}
+
+	if connection, ok := cfg["connection_name"]; ok {
+		target.ConnectionName = aws.String(connection.(string))
 	}
 
 	if exclusions, ok := cfg["exclusions"]; ok {
@@ -480,6 +500,10 @@ func resourceAwsGlueCrawlerUpdate(d *schema.ResourceData, meta interface{}) erro
 			}
 			return nil
 		})
+
+		if tfresource.TimedOut(err) {
+			_, err = glueConn.UpdateCrawler(updateCrawlerInput)
+		}
 
 		if err != nil {
 			return fmt.Errorf("error updating Glue crawler: %s", err)
@@ -593,6 +617,7 @@ func flattenGlueS3Targets(s3Targets []*glue.S3Target) []map[string]interface{} {
 		attrs := make(map[string]interface{})
 		attrs["exclusions"] = flattenStringList(s3Target.Exclusions)
 		attrs["path"] = aws.StringValue(s3Target.Path)
+		attrs["connection_name"] = aws.StringValue(s3Target.ConnectionName)
 
 		result = append(result, attrs)
 	}
@@ -618,6 +643,8 @@ func flattenGlueDynamoDBTargets(dynamodbTargets []*glue.DynamoDBTarget) []map[st
 	for _, dynamodbTarget := range dynamodbTargets {
 		attrs := make(map[string]interface{})
 		attrs["path"] = aws.StringValue(dynamodbTarget.Path)
+		attrs["scan_all"] = aws.BoolValue(dynamodbTarget.ScanAll)
+		attrs["scan_rate"] = aws.Float64Value(dynamodbTarget.ScanRate)
 
 		result = append(result, attrs)
 	}

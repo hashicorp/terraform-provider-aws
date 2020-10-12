@@ -387,13 +387,11 @@ resource "aws_gamelift_alias" "test" {
   description = "%s"
 
   routing_strategy {
-    fleet_id = "${aws_gamelift_fleet.test.id}"
+    fleet_id = aws_gamelift_fleet.test.id
     type     = "SIMPLE"
   }
 }
-
 %s
-
 `, aliasName, description,
 		testAccAWSGameliftFleetBasicConfig(fleetName, launchPath, params, buildName, bucketName, key, roleArn))
 }

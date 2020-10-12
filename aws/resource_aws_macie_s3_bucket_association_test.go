@@ -164,7 +164,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_macie_s3_bucket_association" "test" {
-  bucket_name = "${aws_s3_bucket.test.id}"
+  bucket_name = aws_s3_bucket.test.id
 }
 `, randInt)
 }
@@ -176,7 +176,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_macie_s3_bucket_association" "test" {
-  bucket_name = "${aws_s3_bucket.test.id}"
+  bucket_name = aws_s3_bucket.test.id
 
   classification_type {
     one_time = "FULL"
@@ -194,8 +194,8 @@ resource "aws_s3_bucket" "test" {
 data "aws_caller_identity" "current" {}
 
 resource "aws_macie_s3_bucket_association" "test" {
-  bucket_name       = "${aws_s3_bucket.test.id}"
-  member_account_id = "${data.aws_caller_identity.current.account_id}"
+  bucket_name       = aws_s3_bucket.test.id
+  member_account_id = data.aws_caller_identity.current.account_id
   prefix            = "data"
 }
 `, randInt)
@@ -210,8 +210,8 @@ resource "aws_s3_bucket" "test" {
 data "aws_caller_identity" "current" {}
 
 resource "aws_macie_s3_bucket_association" "test" {
-  bucket_name       = "${aws_s3_bucket.test.id}"
-  member_account_id = "${data.aws_caller_identity.current.account_id}"
+  bucket_name       = aws_s3_bucket.test.id
+  member_account_id = data.aws_caller_identity.current.account_id
   prefix            = "data"
 
   classification_type {

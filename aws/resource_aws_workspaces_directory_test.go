@@ -62,7 +62,12 @@ func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
 	iamRoleDataSourceName := "data.aws_iam_role.workspaces-default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
@@ -78,7 +83,7 @@ func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.restart_workspace", "true"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.switch_running_mode", "false"),
 					resource.TestCheckResourceAttr(resourceName, "dns_ip_addresses.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "directory_type", "SIMPLE_AD"),
+					resource.TestCheckResourceAttr(resourceName, "directory_type", workspaces.WorkspaceDirectoryTypeSimpleAd),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_name", directoryResourceName, "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "alias", directoryResourceName, "alias"),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_id", directoryResourceName, "id"),
@@ -128,7 +133,12 @@ func TestAccAwsWorkspacesDirectory_disappears(t *testing.T) {
 	resourceName := "aws_workspaces_directory.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
@@ -151,7 +161,12 @@ func TestAccAwsWorkspacesDirectory_subnetIds(t *testing.T) {
 	resourceName := "aws_workspaces_directory.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
@@ -178,7 +193,12 @@ func TestAccAwsWorkspacesDirectory_tags(t *testing.T) {
 	resourceName := "aws_workspaces_directory.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
@@ -375,6 +395,22 @@ func TestFlattenSelfServicePermissions(t *testing.T) {
 	}
 }
 
+func testAccPreCheckWorkspacesDirectory(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).workspacesconn
+
+	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
+
+	_, err := conn.DescribeWorkspaceDirectories(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 // Extract common infra
 func testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName string) string {
 	return fmt.Sprintf(`
@@ -406,8 +442,8 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "primary" {
-  vpc_id               = "${aws_vpc.main.id}"
-  availability_zone_id = "${local.workspaces_az_ids[0]}"
+  vpc_id               = aws_vpc.main.id
+  availability_zone_id = local.workspaces_az_ids[0]
   cidr_block           = "10.0.1.0/24"
 
   tags = {
@@ -416,8 +452,8 @@ resource "aws_subnet" "primary" {
 }
 
 resource "aws_subnet" "secondary" {
-  vpc_id               = "${aws_vpc.main.id}"
-  availability_zone_id = "${local.workspaces_az_ids[1]}"
+  vpc_id               = aws_vpc.main.id
+  availability_zone_id = local.workspaces_az_ids[1]
   cidr_block           = "10.0.2.0/24"
 
   tags = {
@@ -431,8 +467,8 @@ resource "aws_directory_service_directory" "main" {
   password = "#S1ncerely"
 
   vpc_settings {
-    vpc_id     = "${aws_vpc.main.id}"
-    subnet_ids = ["${aws_subnet.primary.id}", "${aws_subnet.secondary.id}"]
+    vpc_id     = aws_vpc.main.id
+    subnet_ids = [aws_subnet.primary.id, aws_subnet.secondary.id]
   }
 
   tags = {
@@ -445,7 +481,7 @@ resource "aws_directory_service_directory" "main" {
 func testAccWorkspacesDirectoryConfigA(rName string) string {
 	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + `
 resource "aws_workspaces_directory" "main" {
-  directory_id = "${aws_directory_service_directory.main.id}"
+  directory_id = aws_directory_service_directory.main.id
 }
 
 data "aws_iam_role" "workspaces-default" {
@@ -457,7 +493,7 @@ data "aws_iam_role" "workspaces-default" {
 func testAccWorkspacesDirectoryConfigB(rName string) string {
 	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + `
 resource "aws_workspaces_directory" "main" {
-  directory_id = "${aws_directory_service_directory.main.id}"
+  directory_id = aws_directory_service_directory.main.id
 
   self_service_permissions {
     change_compute_type  = false
@@ -473,7 +509,7 @@ resource "aws_workspaces_directory" "main" {
 func testAccWorkspacesDirectoryConfigC(rName string) string {
 	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + `
 resource "aws_workspaces_directory" "main" {
-  directory_id = "${aws_directory_service_directory.main.id}"
+  directory_id = aws_directory_service_directory.main.id
 
   self_service_permissions {
     change_compute_type = true
@@ -486,8 +522,8 @@ resource "aws_workspaces_directory" "main" {
 func testAccWorkspacesDirectoryConfig_subnetIds(rName string) string {
 	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + `
 resource "aws_workspaces_directory" "main" {
-  directory_id = "${aws_directory_service_directory.main.id}"
-  subnet_ids = ["${aws_subnet.primary.id}","${aws_subnet.secondary.id}"]
+  directory_id = aws_directory_service_directory.main.id
+  subnet_ids   = [aws_subnet.primary.id, aws_subnet.secondary.id]
 }
 `
 }
@@ -495,7 +531,7 @@ resource "aws_workspaces_directory" "main" {
 func testAccWorkspacesDirectoryConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
-  directory_id = "${aws_directory_service_directory.main.id}"
+  directory_id = aws_directory_service_directory.main.id
 
   tags = {
     %[1]q = %[2]q
@@ -507,7 +543,7 @@ resource "aws_workspaces_directory" "main" {
 func testAccWorkspacesDirectoryConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
-  directory_id = "${aws_directory_service_directory.main.id}"
+  directory_id = aws_directory_service_directory.main.id
 
   tags = {
     %[1]q = %[2]q

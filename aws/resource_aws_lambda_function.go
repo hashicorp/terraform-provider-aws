@@ -25,30 +25,6 @@ import (
 
 const awsMutexLambdaKey = `aws_lambda_function`
 
-var validLambdaRuntimes = []string{
-	// lambda.RuntimeNodejs has reached end of life since October 2016 so not included here
-	lambda.RuntimeDotnetcore10,
-	lambda.RuntimeDotnetcore20,
-	lambda.RuntimeDotnetcore21,
-	lambda.RuntimeDotnetcore31,
-	lambda.RuntimeGo1X,
-	lambda.RuntimeJava8,
-	lambda.RuntimeJava11,
-	lambda.RuntimeNodejs43,
-	lambda.RuntimeNodejs43Edge,
-	lambda.RuntimeNodejs610,
-	lambda.RuntimeNodejs810,
-	lambda.RuntimeNodejs10X,
-	lambda.RuntimeNodejs12X,
-	lambda.RuntimeProvided,
-	lambda.RuntimePython27,
-	lambda.RuntimePython36,
-	lambda.RuntimePython37,
-	lambda.RuntimePython38,
-	lambda.RuntimeRuby25,
-	lambda.RuntimeRuby27,
-}
-
 func resourceAwsLambdaFunction() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLambdaFunctionCreate,
@@ -166,7 +142,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 			"runtime": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice(validLambdaRuntimes, false),
+				ValidateFunc: validation.StringInSlice(lambda.Runtime_Values(), false),
 			},
 			"timeout": {
 				Type:     schema.TypeInt,
@@ -429,7 +405,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	// IAM changes can take some time to propagate in AWS
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 		_, err := conn.CreateFunction(params)
 		if err != nil {
 			log.Printf("[DEBUG] Error creating Lambda Function: %s", err)
@@ -825,7 +801,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		log.Printf("[DEBUG] Send Update Lambda Function Configuration request: %#v", configReq)
 
 		// IAM changes can take 1 minute to propagate in AWS
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 			_, err := conn.UpdateFunctionConfiguration(configReq)
 			if err != nil {
 				log.Printf("[DEBUG] Received error modifying Lambda Function Configuration %s: %s", d.Id(), err)

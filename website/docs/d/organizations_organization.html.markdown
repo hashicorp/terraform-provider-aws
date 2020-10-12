@@ -77,7 +77,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the organization.
 * `feature_set` - The FeatureSet of the organization.
-* `id` - The ID of the organization. 
+* `id` - The ID of the organization.
 * `master_account_arn` - The Amazon Resource Name (ARN) of the account that is designated as the master account for the organization.
 * `master_account_email` - The email address that is associated with the AWS account that is designated as the master account for the organization.
 * `master_account_id` - The unique identifier (ID) of the master account of an organization.

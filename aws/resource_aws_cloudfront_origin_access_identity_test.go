@@ -16,7 +16,7 @@ func TestAccAWSCloudFrontOriginAccessIdentity_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_origin_access_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFront(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("cloudfront", t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -46,7 +46,7 @@ func TestAccAWSCloudFrontOriginAccessIdentity_noComment(t *testing.T) {
 	resourceName := "aws_cloudfront_origin_access_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFront(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("cloudfront", t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -75,7 +75,7 @@ func TestAccAWSCloudFrontOriginAccessIdentity_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_origin_access_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFront(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("cloudfront", t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{

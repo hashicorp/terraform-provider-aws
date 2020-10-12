@@ -68,6 +68,6 @@ resource "aws_organizations_organization" "test" {
 }
 
 resource "aws_fms_admin_account" "test" {
-  account_id = "${aws_organizations_organization.test.master_account_id}"
+  account_id = aws_organizations_organization.test.master_account_id
 }
 `

@@ -118,18 +118,18 @@ resource "aws_guardduty_detector" "member" {}
 resource "aws_guardduty_member" "member" {
   provider = "awsalternate"
 
-  account_id                 = "${aws_guardduty_detector.member.account_id}"
-  detector_id                = "${aws_guardduty_detector.master.id}"
+  account_id                 = aws_guardduty_detector.member.account_id
+  detector_id                = aws_guardduty_detector.master.id
   disable_email_notification = true
   email                      = %q
   invite                     = true
 }
 
 resource "aws_guardduty_invite_accepter" "test" {
-  depends_on = ["aws_guardduty_member.member"]
+  depends_on = [aws_guardduty_member.member]
 
-  detector_id       = "${aws_guardduty_detector.member.id}"
-  master_account_id = "${aws_guardduty_detector.master.account_id}"
+  detector_id       = aws_guardduty_detector.member.id
+  master_account_id = aws_guardduty_detector.master.account_id
 }
 `, email)
 }

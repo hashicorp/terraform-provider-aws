@@ -677,6 +677,7 @@ resource "aws_s3_bucket_analytics_configuration" "test" {
   storage_class_analysis {
     data_export {
       output_schema_version = "V_1"
+
       destination {
         s3_bucket_destination {
           format     = "CSV"
@@ -1167,7 +1168,6 @@ func TestFlattenS3StorageClassAnalysis(t *testing.T) {
 								map[string]interface{}{
 									"s3_bucket_destination": []interface{}{
 										map[string]interface{}{
-
 											"bucket_arn": "arn:aws:s3",
 											"format":     s3.AnalyticsS3ExportFileFormatCsv,
 										},

@@ -169,7 +169,7 @@ resource "aws_s3_bucket" "default" {
 }
 
 resource "aws_spot_datafeed_subscription" "default" {
-  bucket = "${aws_s3_bucket.default.bucket}"
+  bucket = aws_s3_bucket.default.bucket
 }
 `, randInt)
 }

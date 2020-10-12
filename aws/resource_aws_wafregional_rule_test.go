@@ -469,7 +469,7 @@ resource "aws_wafregional_rule" "wafrule" {
   metric_name = %[1]q
 
   predicate {
-    data_id = "${aws_wafregional_ipset.ipset.id}"
+    data_id = aws_wafregional_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -493,7 +493,7 @@ resource "aws_wafregional_rule" "wafrule" {
   metric_name = %[1]q
 
   predicate {
-    data_id = "${aws_wafregional_ipset.ipset.id}"
+    data_id = aws_wafregional_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -521,7 +521,7 @@ resource "aws_wafregional_rule" "wafrule" {
   metric_name = %[1]q
 
   predicate {
-    data_id = "${aws_wafregional_ipset.ipset.id}"
+    data_id = aws_wafregional_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -550,7 +550,7 @@ resource "aws_wafregional_rule" "wafrule" {
   metric_name = %[1]q
 
   predicate {
-    data_id = "${aws_wafregional_ipset.ipset.id}"
+    data_id = aws_wafregional_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -595,13 +595,13 @@ resource "aws_wafregional_rule" "wafrule" {
   metric_name = %[1]q
 
   predicate {
-    data_id = "${aws_wafregional_xss_match_set.xss_match_set.id}"
+    data_id = aws_wafregional_xss_match_set.xss_match_set.id
     negated = true
     type    = "XssMatch"
   }
 
   predicate {
-    data_id = "${aws_wafregional_ipset.ipset.id}"
+    data_id = aws_wafregional_ipset.ipset.id
     negated = true
     type    = "IPMatch"
   }

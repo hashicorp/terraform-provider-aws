@@ -5,7 +5,7 @@
 - [Pull Requests](#pull-requests)
     - [Pull Request Review Process](#pull-request-review-process)
         - [Dependency Updates](#dependency-updates)
-            - [Go Default Version Update](#go-default-version-update)        
+            - [Go Default Version Update](#go-default-version-update)
             - [AWS Go SDK Updates](#aws-go-sdk-updates)
             - [golangci-lint Updates](#golangci-lint-updates)
             - [Terraform Plugin SDK Updates](#terraform-plugin-sdk-updates)
@@ -18,6 +18,7 @@
 - [Branch Dictionary](#branch-dictionary)
 - [Environment Variable Dictionary](#environment-variable-dictionary)
 - [Label Dictionary](#label-dictionary)
+- [Release Process](#release-process)
 
 <!-- /TOC -->
 
@@ -33,7 +34,7 @@ Incoming issues are classified using labels. These are assigned either by automa
 
 ### Pull Request Review Process
 
-Throughout the review process our first priority is to interact with contributors with kindness, empathy and in accordance with the [Guidelines](https://www.hashicorp.com/community-guidelines) and [Principles](https://www.hashicorp.com/our-principles/) of Hashicorp. 
+Throughout the review process our first priority is to interact with contributors with kindness, empathy and in accordance with the [Guidelines](https://www.hashicorp.com/community-guidelines) and [Principles](https://www.hashicorp.com/our-principles/) of Hashicorp.
 
 Our contributors are often working within the provider as a hobby, or not in their main line of work so we need to give adequate time for response. By default this is two weeks, but it is worth considering taking on the work to complete the PR ourselves if the administrative effort of waiting for a response is greater than just resolving the issues ourselves (Don't wait two weeks, or add a context shift for yourself and the contributor to fix a typo). As long as we use their commits, contributions will be recorded by Github and as always ensure to thank the contributor for their work. Roadmap items are another area where we would consider taking on the work ourselves more quickly in order to meet the commitments made to our users.
 
@@ -188,7 +189,6 @@ ENHANCEMENTS:
 ```shell
 go get github.com/aws/aws-sdk-go@v#.#.#
 go mod tidy
-go mod vendor
 ```
 
 - Create a S3 Bucket in the new region and verify AWS Go SDK update works with new region by building the Terraform S3 Backend and testing a configuration like the following:
@@ -433,7 +433,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | [![breaking-change][breaking-change-badge]][breaking-change]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Introduces a breaking change in current functionality; breaking changes are usually deferred to the next major release. | None |
 | [![bug][bug-badge]][bug] | Addresses a defect in current functionality. | None |
 | [![crash][crash-badge]][crash] | Results from or addresses a Terraform crash or kernel panic. | None |
-| [![dependencies][dependencies-badge]][dependencies] | Used to indicate dependency or vendoring changes. | Added by Hashibot. |
+| [![dependencies][dependencies-badge]][dependencies] | Used to indicate dependency changes. | Added by Hashibot. |
 | [![documentation][documentation-badge]][documentation] | Introduces or discusses updates to documentation. | None |
 | [![enhancement][enhancement-badge]][enhancement] | Requests to existing resources that expand the functionality or scope. | None |
 | [![examples][examples-badge]][examples] | Introduces or discusses updates to examples. | None |
@@ -513,3 +513,14 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 [upstream]: https://github.com/terraform-providers/terraform-provider-aws/labels/upstream
 [waiting-response-badge]: https://img.shields.io/badge/waiting--response-5319e7
 [waiting-response]: https://github.com/terraform-providers/terraform-provider-aws/labels/waiting-response
+
+## Release Process
+
+- Create a milestone for the next release after this release (generally, the next milestone will be a minor version increase unless previously decided for a major or patch version)
+- Check the existing release milestone for open items and either work through them or move them to the next milestone
+- Run the HashiCorp (non-OSS) TeamCity release job either via:
+    - Slack command: `/tcrelease aws #.#.#` (no `v` prefix)
+    - Web interface: With the `DEPLOYMENT_TARGET_VERSION` matching the expected release milestone and `DEPLOYMENT_NEXT_VERSION` matching the next release milestone
+- Wait for the TeamCity release job to complete either by watching the build logs or Slack notifications
+- Close the release milestone
+- Create a new GitHub release with the release title exactly matching the tag and milestone (e.g. `v2.22.0`) and copy the entries from the CHANGELOG to the release notes. This will trigger [HashiBot](https://github.com/apps/hashibot) release comments.
