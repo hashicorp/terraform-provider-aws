@@ -490,6 +490,10 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/s3control" = [
       "aws_s3_account_",
+      "aws_s3control_",
+    ],
+    "service/s3outposts" = [
+      "aws_s3outposts_",
     ],
     "service/sagemaker" = [
       "aws_sagemaker_",
@@ -1334,7 +1338,14 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/s3control" = [
       "aws/internal/service/s3control/**/*",
       "**/*_s3_account_*",
-      "**/s3_account_*"
+      "**/s3_account_*",
+      "**/*_s3control_*",
+      "**/s3control_*"
+    ]
+    "service/s3outposts" = [
+      "aws/internal/service/s3outposts/**/*",
+      "**/*_s3outposts_*",
+      "**/s3outposts_*"
     ]
     "service/sagemaker" = [
       "aws/internal/service/sagemaker/**/*",
