@@ -176,6 +176,7 @@ func resourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{}) e
 		InstanceArn:      aws.String(instanceArn),
 		PermissionSetArn: aws.String(permissionSetArn),
 	})
+
 	if permissionSetErr != nil {
 		return fmt.Errorf("Error getting AWS SSO Permission Set: %s", permissionSetErr)
 	}
@@ -184,7 +185,9 @@ func resourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if permissionSet == nil {
-		return fmt.Errorf("AWS SSO Permission Set %v not found", name)
+		log.Printf("[WARN] AWS SSO Permission Set %s not found, removing from state", name)
+		d.SetId("")
+		return nil
 	}
 
 	log.Printf("[DEBUG] Found AWS SSO Permission Set: %s", permissionSet)
@@ -238,8 +241,97 @@ func resourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSsoPermissionSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	// conn := meta.(*AWSClient).ssoadminconn
-	// TODO
+	ssoadminconn := meta.(*AWSClient).ssoadminconn
+
+	permissionSetArn := d.Id()
+	instanceArn := d.Get("instance_arn").(string)
+
+	log.Printf("[DEBUG] Updating ASW SSO Permission Set: %s", permissionSetArn)
+
+	if d.HasChanges("description", "relay_state", "session_duration") {
+		input := &ssoadmin.UpdatePermissionSetInput{
+			PermissionSetArn: aws.String(permissionSetArn),
+			InstanceArn:      aws.String(instanceArn),
+			Description:      aws.String(d.Get("description").(string)),
+			RelayState:       aws.String(d.Get("relay_state").(string)),
+			SessionDuration:  aws.String(d.Get("session_duration").(string)),
+		}
+
+		log.Printf("[DEBUG] Updating ASW SSO Permission Set: %s", input)
+		_, permissionSetErr := ssoadminconn.UpdatePermissionSet(input)
+		if permissionSetErr != nil {
+			return fmt.Errorf("error updating AWS SSO Permission Set: %s", permissionSetErr)
+		}
+	}
+
+	if d.HasChange("tags") {
+		oldTags, newTags := d.GetChange("tags")
+		if updateTagsErr := keyvaluetags.SsoUpdateTags(ssoadminconn, d.Get("arn").(string), d.Get("instance_arn").(string), oldTags, newTags); updateTagsErr != nil {
+			return fmt.Errorf("error updating tags: %s", updateTagsErr)
+		}
+	}
+
+	if v, ok := d.GetOk("inline_policy"); ok {
+		log.Printf("[DEBUG] AWS SSO Permission Set %s updating IAM inline policy", permissionSetArn)
+
+		inlinePolicy := aws.String(v.(string))
+
+		updateInput := &ssoadmin.PutInlinePolicyToPermissionSetInput{
+			InlinePolicy:     inlinePolicy,
+			InstanceArn:      aws.String(instanceArn),
+			PermissionSetArn: aws.String(permissionSetArn),
+		}
+
+		_, inlinePolicyErr := ssoadminconn.PutInlinePolicyToPermissionSet(updateInput)
+		if inlinePolicyErr != nil {
+			return fmt.Errorf("Error attaching IAM inline policy to AWS SSO Permission Set: %s", inlinePolicyErr)
+		}
+	} else if d.HasChange("inline_policy") {
+		deleteInput := &ssoadmin.DeleteInlinePolicyFromPermissionSetInput{
+			InstanceArn:      aws.String(instanceArn),
+			PermissionSetArn: aws.String(permissionSetArn),
+		}
+
+		_, inlinePolicyErr := ssoadminconn.DeleteInlinePolicyFromPermissionSet(deleteInput)
+		if inlinePolicyErr != nil {
+			return fmt.Errorf("Error deleting IAM inline policy from AWS SSO Permission Set: %s", inlinePolicyErr)
+		}
+	}
+
+	if d.HasChange("managed_policies") {
+		o, n := d.GetChange("managed_policies")
+
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		removalList := os.Difference(ns)
+		for _, v := range removalList.List() {
+			input := &ssoadmin.DetachManagedPolicyFromPermissionSetInput{
+				InstanceArn:      aws.String(instanceArn),
+				ManagedPolicyArn: aws.String(v.(string)),
+				PermissionSetArn: aws.String(permissionSetArn),
+			}
+
+			_, managedPoliciesErr := ssoadminconn.DetachManagedPolicyFromPermissionSet(input)
+			if managedPoliciesErr != nil {
+				return fmt.Errorf("Error detaching Managed Policy from AWS SSO Permission Set: %s", managedPoliciesErr)
+			}
+		}
+
+		additionList := ns.Difference(os)
+		for _, v := range additionList.List() {
+			input := &ssoadmin.AttachManagedPolicyToPermissionSetInput{
+				InstanceArn:      aws.String(instanceArn),
+				ManagedPolicyArn: aws.String(v.(string)),
+				PermissionSetArn: aws.String(permissionSetArn),
+			}
+
+			_, managedPoliciesErr := ssoadminconn.AttachManagedPolicyToPermissionSet(input)
+			if managedPoliciesErr != nil {
+				return fmt.Errorf("Error attaching Managed Policy to AWS SSO Permission Set: %s", managedPoliciesErr)
+			}
+		}
+	}
 
 	return resourceAwsSsoPermissionSetRead(d, meta)
 }
