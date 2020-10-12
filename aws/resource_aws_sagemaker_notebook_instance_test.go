@@ -96,6 +96,8 @@ func TestAccAWSSagemakerNotebookInstance_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr(
 						"aws_sagemaker_notebook_instance.foo", "name", notebookName),
+					resource.TestCheckResourceAttr(
+						"aws_sagemaker_notebook_instance.foo", "volume_size", "5"),
 				),
 			},
 			{
@@ -123,8 +125,6 @@ func TestAccAWSSagemakerNotebookInstance_update(t *testing.T) {
 
 					resource.TestCheckResourceAttr(
 						"aws_sagemaker_notebook_instance.foo", "instance_type", "ml.t2.medium"),
-					resource.TestCheckResourceAttr(
-						"aws_sagemaker_notebook_instance.foo", "volume_size", "5"),
 				),
 			},
 
@@ -135,6 +135,41 @@ func TestAccAWSSagemakerNotebookInstance_update(t *testing.T) {
 
 					resource.TestCheckResourceAttr(
 						"aws_sagemaker_notebook_instance.foo", "instance_type", "ml.m4.xlarge"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerNotebookInstance_volumesize(t *testing.T) {
+	var notebook sagemaker.DescribeNotebookInstanceOutput
+	notebookName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerNotebookInstanceResourceNamePrefix)
+	var resourceName = "aws_sagemaker_notebook_instance.foo"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigVolume(notebookName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+
+					resource.TestCheckResourceAttr(
+						"aws_sagemaker_notebook_instance.foo", "volume_size", "5"),
+				),
+			},
+
+			{
+				Config: testAccAWSSagemakerNotebookInstanceUpdateConfig(notebookName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists("aws_sagemaker_notebook_instance.foo", &notebook),
+
 					resource.TestCheckResourceAttr(
 						"aws_sagemaker_notebook_instance.foo", "volume_size", "8"),
 				),
@@ -449,6 +484,34 @@ resource "aws_sagemaker_notebook_instance" "foo" {
   name          = "%s"
   role_arn      = aws_iam_role.foo.arn
   instance_type = "ml.t2.medium"
+}
+
+resource "aws_iam_role" "foo" {
+  name               = "%s"
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+`, notebookName, notebookName)
+}
+
+func testAccAWSSagemakerNotebookInstanceConfigVolume(notebookName string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_notebook_instance" "foo" {
+  name          = "%s"
+  role_arn      = aws_iam_role.foo.arn
+  instance_type = "ml.t2.medium"
+  volume_size   = "5"
 }
 
 resource "aws_iam_role" "foo" {
