@@ -8,6 +8,10 @@ BUG FIXES
 
 * resource/aws_ec2_transit_gateway_route: Prevent plan errors with compressed IPv6 addresses [GH-14846]
 
+ENHANCEMENTS
+
+* resource/aws_sagemaker_notebook_instance: Add `default_code_repository` attribute [GH-13772]
+
 ## 3.10.0 (October 09, 2020)
 
 FEATURES
