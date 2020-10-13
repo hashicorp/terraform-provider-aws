@@ -120,6 +120,8 @@ func resourceAwsOrganizationsOrganizationalUnitCreate(d *schema.ResourceData, me
 
 func resourceAwsOrganizationsOrganizationalUnitRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).organizationsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	describeOpts := &organizations.DescribeOrganizationalUnitInput{
 		OrganizationalUnitId: aws.String(d.Id()),
 	}
@@ -186,9 +188,9 @@ func resourceAwsOrganizationsOrganizationalUnitRead(d *schema.ResourceData, meta
 }
 
 func resourceAwsOrganizationsOrganizationalUnitUpdate(d *schema.ResourceData, meta interface{}) error {
-	if d.HasChange("name") {
-		conn := meta.(*AWSClient).organizationsconn
+	conn := meta.(*AWSClient).organizationsconn
 
+	if d.HasChange("name") {
 		updateOpts := &organizations.UpdateOrganizationalUnitInput{
 			Name:                 aws.String(d.Get("name").(string)),
 			OrganizationalUnitId: aws.String(d.Id()),
