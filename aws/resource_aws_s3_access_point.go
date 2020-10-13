@@ -137,12 +137,24 @@ func resourceAwsS3AccessPointCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	log.Printf("[DEBUG] Creating S3 Access Point: %s", input)
-	_, err := conn.CreateAccessPoint(input)
+	output, err := conn.CreateAccessPoint(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating S3 Access Point: %s", err)
+		return fmt.Errorf("error creating S3 Control Access Point (%s): %w", name, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", accountId, name))
+	if output == nil {
+		return fmt.Errorf("error creating S3 Control Access Point (%s): empty response", name)
+	}
+
+	parsedARN, err := arn.Parse(aws.StringValue(output.AccessPointArn))
+
+	if err == nil && strings.HasPrefix(parsedARN.Resource, "outpost/") {
+		d.SetId(aws.StringValue(output.AccessPointArn))
+		name = aws.StringValue(output.AccessPointArn)
+	} else {
+		d.SetId(fmt.Sprintf("%s:%s", accountId, name))
+	}
 
 	if v, ok := d.GetOk("policy"); ok {
 		log.Printf("[DEBUG] Putting S3 Access Point policy: %s", d.Id())
@@ -183,19 +195,23 @@ func resourceAwsS3AccessPointRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error reading S3 Access Point (%s): %s", d.Id(), err)
 	}
 
-	name = aws.StringValue(output.Name)
-	arn := arn.ARN{
-		AccountID: accountId,
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		Resource:  fmt.Sprintf("accesspoint/%s", name),
-		Service:   "s3",
+	if strings.HasPrefix(name, "arn:") {
+		d.Set("arn", name)
+	} else {
+		builtARN := arn.ARN{
+			AccountID: accountId,
+			Partition: meta.(*AWSClient).partition,
+			Region:    meta.(*AWSClient).region,
+			Resource:  fmt.Sprintf("accesspoint/%s", aws.StringValue(output.Name)),
+			Service:   "s3",
+		}
+		d.Set("arn", builtARN.String())
 	}
+
 	d.Set("account_id", accountId)
-	d.Set("arn", arn.String())
 	d.Set("bucket", output.Bucket)
-	d.Set("domain_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s-%s.s3-accesspoint", name, accountId)))
-	d.Set("name", name)
+	d.Set("domain_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s-%s.s3-accesspoint", aws.StringValue(output.Name), accountId)))
+	d.Set("name", output.Name)
 	d.Set("network_origin", output.NetworkOrigin)
 	if err := d.Set("public_access_block_configuration", flattenS3AccessPointPublicAccessBlockConfiguration(output.PublicAccessBlockConfiguration)); err != nil {
 		return fmt.Errorf("error setting public_access_block_configuration: %s", err)
@@ -298,7 +314,14 @@ func resourceAwsS3AccessPointDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
+// s3AccessPointParseId returns the Account ID and Access Point Name (S3) or ARN (S3 on Outposts)
 func s3AccessPointParseId(id string) (string, string, error) {
+	parsedARN, err := arn.Parse(id)
+
+	if err == nil {
+		return parsedARN.AccountID, id, nil
+	}
+
 	parts := strings.SplitN(id, ":", 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
