@@ -113,7 +113,6 @@ func testAccAwsOrganizationsOrganizationalUnit_Tags(t *testing.T) {
 	resourceName := "aws_organizations_organizational_unit.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationalUnitDestroy,
@@ -235,7 +234,7 @@ resource "aws_organizations_organizational_unit" "test" {
   parent_id = aws_organizations_organization.test.roots[0].id
 
   tags = {
-    %[3]q = %[4]q
+    %[2]q = %[3]q
   }
 }
 `, name, tagKey1, tagValue1)
@@ -250,8 +249,8 @@ resource "aws_organizations_organizational_unit" "test" {
   parent_id = aws_organizations_organization.test.roots[0].id
 
   tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, name, tagKey1, tagValue1, tagKey2, tagValue2)
