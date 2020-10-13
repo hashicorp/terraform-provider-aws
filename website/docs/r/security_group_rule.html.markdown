@@ -59,7 +59,7 @@ Only valid with `egress`.
 
 ## Usage with prefix list IDs
 
-Prefix list IDs are manged by AWS internally. Prefix list IDs
+Prefix list IDs are managed by AWS internally. Prefix list IDs
 are associated with a prefix list name, or service name, that is linked to a specific region.
 Prefix list IDs are exported on VPC Endpoints, so you can use this format:
 
