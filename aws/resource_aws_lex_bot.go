@@ -361,6 +361,11 @@ func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.PutBot(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error updating bot %s: %w", d.Id(), err)
 	}
@@ -371,10 +376,12 @@ func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsLexBotDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lexmodelconn
 
+	input := &lexmodelbuildingservice.DeleteBotInput{
+		Name: aws.String(d.Id()),
+	}
+
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteBot(&lexmodelbuildingservice.DeleteBotInput{
-			Name: aws.String(d.Id()),
-		})
+		_, err := conn.DeleteBot(input)
 
 		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
 			return resource.RetryableError(fmt.Errorf("%q: there is a pending operation, bot still deleting", d.Id()))
@@ -385,6 +392,10 @@ func resourceAwsLexBotDelete(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.DeleteBot(input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error deleting bot %s: %w", d.Id(), err)

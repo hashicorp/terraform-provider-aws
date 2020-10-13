@@ -690,6 +690,8 @@ func TestAccAWSElasticSearchDomain_LogPublishingOptions_AuditLogs(t *testing.T) 
 				ImportState:       true,
 				ImportStateId:     resourceId,
 				ImportStateVerify: true,
+				// MasterUserOptions are not returned from DescribeElasticsearchDomainConfig
+				ImportStateVerifyIgnore: []string{"advanced_security_options.0.master_user_options"},
 			},
 		},
 	})

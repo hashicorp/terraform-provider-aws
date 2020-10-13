@@ -245,6 +245,11 @@ func resourceAwsLexBotAliasUpdate(d *schema.ResourceData, meta interface{}) erro
 
 		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.PutBotAlias(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error updating bot alias '%s': %w", d.Id(), err)
 	}
@@ -258,11 +263,13 @@ func resourceAwsLexBotAliasDelete(d *schema.ResourceData, meta interface{}) erro
 	botName := d.Get("bot_name").(string)
 	botAliasName := d.Get("name").(string)
 
+	input := &lexmodelbuildingservice.DeleteBotAliasInput{
+		BotName: aws.String(botName),
+		Name:    aws.String(botAliasName),
+	}
+
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteBotAlias(&lexmodelbuildingservice.DeleteBotAliasInput{
-			BotName: aws.String(botName),
-			Name:    aws.String(botAliasName),
-		})
+		_, err := conn.DeleteBotAlias(input)
 
 		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
 			return resource.RetryableError(fmt.Errorf("'%q': bot alias still deleting", d.Id()))
@@ -273,6 +280,11 @@ func resourceAwsLexBotAliasDelete(d *schema.ResourceData, meta interface{}) erro
 
 		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.DeleteBotAlias(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error deleting bot alias '%s': %w", d.Id(), err)
 	}
