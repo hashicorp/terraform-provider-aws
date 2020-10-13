@@ -5,6 +5,10 @@ variable "workflow_labels" {
     "needs-triage"                   = "e236d7",
     "terraform-plugin-sdk-migration" = "fad8c7",
     "terraform-plugin-sdk-v1"        = "fad8c7",
+    "terraform-0.11"                 = "cccccc",
+    "terraform-0.12"                 = "cccccc",    
+    "terraform-0.13"                 = "cccccc",
+    "terraform-0.14"                 = "cccccc",
   }
   description = "Name-color mapping of workflow issues"
   type        = map(string)
