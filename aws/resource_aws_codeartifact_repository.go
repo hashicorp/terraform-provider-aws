@@ -63,6 +63,8 @@ func resourceAwsCodeArtifactRepository() *schema.Resource {
 			"external_connections": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"external_connection_name": {
