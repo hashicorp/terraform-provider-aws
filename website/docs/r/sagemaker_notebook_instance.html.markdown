@@ -39,6 +39,7 @@ The following arguments are supported:
 * `lifecycle_config_name` - (Optional) The name of a lifecycle configuration to associate with the notebook instance.
 * `root_access` - (Optional) Whether root access is `Enabled` or `Disabled` for users of the notebook instance. The default value is `Enabled`.
 * `direct_internet_access` - (Optional) Set to `Disabled` to disable internet access to notebook. Requires `security_groups` and `subnet_id` to be set. Supported values: `Enabled` (Default) or `Disabled`. If set to `Disabled`, the notebook instance will be able to access resources only in your VPC, and will not be able to connect to Amazon SageMaker training and endpoint services unless your configure a NAT Gateway in your VPC.
+* `default_code_repository` - (Optional) The Git repository associated with the notebook instance as its default code repository
 * `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference

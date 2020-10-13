@@ -94,6 +94,12 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 				}, false),
 			},
 
+			"default_code_repository": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -117,6 +123,10 @@ func resourceAwsSagemakerNotebookInstanceCreate(d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("direct_internet_access"); ok {
 		createOpts.DirectInternetAccess = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("default_code_repository"); ok {
+		createOpts.DefaultCodeRepository = aws.String(v.(string))
 	}
 
 	if s, ok := d.GetOk("subnet_id"); ok {
@@ -214,6 +224,10 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 
 	if err := d.Set("direct_internet_access", notebookInstance.DirectInternetAccess); err != nil {
 		return fmt.Errorf("error setting direct_internet_access for sagemaker notebook instance (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("default_code_repository", notebookInstance.DefaultCodeRepository); err != nil {
+		return fmt.Errorf("error setting default_code_repository for sagemaker notebook instance (%s): %s", d.Id(), err)
 	}
 
 	tags, err := keyvaluetags.SagemakerListTags(conn, aws.StringValue(notebookInstance.NotebookInstanceArn))
