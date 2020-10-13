@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsOrganizationsOrganizationalUnits() *schema.Resource {
@@ -38,7 +37,6 @@ func dataSourceAwsOrganizationsOrganizationalUnits() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchemaComputed(),
 		},
 	}
 }
@@ -69,10 +67,6 @@ func dataSourceAwsOrganizationsOrganizationalUnitsRead(d *schema.ResourceData, m
 
 	if err := d.Set("children", flattenOrganizationsOrganizationalUnits(children)); err != nil {
 		return fmt.Errorf("error setting children: %w", err)
-	}
-
-	if err := d.Set("tags", keyvaluetags.OrganizationsKeyValueTags(volume.Tags).IgnoreAws().IgnoreConfig(client.IgnoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
