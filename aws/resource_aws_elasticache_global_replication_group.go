@@ -145,7 +145,7 @@ func resourceAwsElasticacheGlobalReplicationGroupRead(d *schema.ResourceData, me
 
 	globalReplicationGroup, err := elasticacheDescribeGlobalReplicationGroup(conn, d.Id())
 
-	if isAWSErr(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
+	if isAWSErr(err, elasticache.ErrCodeGlobalReplicationGroupNotFoundFault, "") {
 		log.Printf("[WARN] ElastiCache Global Replication Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -219,7 +219,7 @@ func resourceAwsElasticacheGlobalReplicationGroupUpdate(d *schema.ResourceData, 
 			return fmt.Errorf("error deleting ElastiCache Global Replication Group: %s", err)
 		}
 
-		if err := waitForElasticacheGlobalReplicationUpdate(conn, d.Id()); err != nil {
+		if err := waitForElasticacheGlobalReplicationGroupUpdate(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for ElastiCache Global Replcation Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -303,7 +303,7 @@ func resourceAwsElasticacheGlobalReplicationGroupDelete(d *schema.ResourceData, 
 		return fmt.Errorf("error deleting ElastiCache Global Replication Group: %s", err)
 	}
 
-	if err := waitForElasticacheGlobalReplicationDeletion(conn, d.Id()); err != nil {
+	if err := waitForElasticacheGlobalReplicationGroupDeletion(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) deletion: %s", d.Id(), err)
 	}
 
@@ -395,7 +395,7 @@ func waitForElasticacheGlobalReplicationGroupCreation(conn *elasticache.ElastiCa
 	return err
 }
 
-func waitForElasticacheGlobalReplicationUpdate(conn *elasticache.ElastiCache, globalReplicationGroupID string) error {
+func waitForElasticacheGlobalReplicationGroupUpdate(conn *elasticache.ElastiCache, globalReplicationGroupID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"modifying"},
 		Target:  []string{"available"},
@@ -409,7 +409,7 @@ func waitForElasticacheGlobalReplicationUpdate(conn *elasticache.ElastiCache, gl
 	return err
 }
 
-func waitForElasticacheGlobalReplicationDeletion(conn *elasticache.ElastiCache, globalReplicationGroupID string) error {
+func waitForElasticacheGlobalReplicationGroupDeletion(conn *elasticache.ElastiCache, globalReplicationGroupID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			"available",
