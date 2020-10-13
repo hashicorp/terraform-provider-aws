@@ -25,6 +25,7 @@ The following arguments are supported:
 
 * `name` - The name for the organizational unit
 * `parent_id` - ID of the parent organizational unit, which may be the root
+* `tags` - (Optional) Key-value map of resource tags.
 
 ## Attributes Reference
 
