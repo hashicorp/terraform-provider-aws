@@ -458,7 +458,7 @@ The `xss_match_statement` block supports the following arguments:
 
 The `excluded_rule` block supports the following arguments:
 
-* `name` - (Required) The name of the rule to exclude.
+* `name` - (Required) The name of the rule to exclude. See the [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-list.html) for a list of names in the "AWSManagedRulesCommonRuleSet" managed rule group.
 
 ### Field to Match
 
