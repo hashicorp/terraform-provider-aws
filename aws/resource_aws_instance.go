@@ -339,7 +339,7 @@ func resourceAwsInstance() *schema.Resource {
 
 			"tags": tagsSchema(),
 
-			"volume_tags": tagsSchemaComputed(),
+			"volume_tags": tagsSchema(),
 
 			"ebs_block_device": {
 				Type:     schema.TypeSet,
@@ -396,6 +396,7 @@ func resourceAwsInstance() *schema.Resource {
 							ForceNew:         true,
 							DiffSuppressFunc: throughputDiffSuppressFunc,
 						},
+						"tags": tagsSchemaConflictsWith([]string{"volume_tags"}),
 
 						"volume_size": {
 							Type:     schema.TypeInt,
@@ -510,6 +511,7 @@ func resourceAwsInstance() *schema.Resource {
 							Computed:         true,
 							DiffSuppressFunc: throughputDiffSuppressFunc,
 						},
+						"tags": tagsSchemaConflictsWith([]string{"volume_tags"}),
 
 						"volume_size": {
 							Type:     schema.TypeInt,
@@ -762,6 +764,39 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		})
 	}
 
+	// tags in root_block_device and ebs_block_device
+	volumeTagsToCreate := map[string]map[string]interface{}{}
+	if v, ok := d.GetOk("root_block_device"); ok {
+		vL := v.([]interface{})
+		for _, v := range vL {
+			bd := v.(map[string]interface{})
+			if tagsm, ok := bd["tags"].(map[string]interface{}); ok && len(tagsm) > 0 {
+				if rootVolumeId := getRootVolumeId(instance); rootVolumeId != "" {
+					volumeTagsToCreate[rootVolumeId] = tagsm
+				}
+			}
+		}
+	}
+
+	if v, ok := d.GetOk("ebs_block_device"); ok {
+		vL := v.(*schema.Set).List()
+		for _, v := range vL {
+			bd := v.(map[string]interface{})
+			if tagsm, ok := bd["tags"].(map[string]interface{}); ok && len(tagsm) > 0 {
+				devName := bd["device_name"].(string)
+				if volumeId := getVolumeIdByDeviceName(instance, devName); volumeId != "" {
+					volumeTagsToCreate[volumeId] = tagsm
+				}
+			}
+		}
+	}
+
+	for vol, tagsm := range volumeTagsToCreate {
+		if err := keyvaluetags.Ec2CreateTags(conn, vol, tagsm); err != nil {
+			log.Printf("[ERR] Error creating tags for EBS volume %s: %s", vol, err)
+		}
+	}
+
 	// Update if we need to
 	return resourceAwsInstanceUpdate(d, meta)
 }
@@ -936,13 +971,15 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
-	volumeTags, err := readVolumeTags(conn, d.Id())
-	if err != nil {
-		return err
-	}
+	if _, ok := d.GetOk("volume_tags"); ok && !blockDeviceTagsDefined(d) {
+		volumeTags, err := readVolumeTags(conn, d.Id())
+		if err != nil {
+			return err
+		}
 
-	if err := d.Set("volume_tags", keyvaluetags.Ec2KeyValueTags(volumeTags).IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting volume_tags: %s", err)
+		if err := d.Set("volume_tags", keyvaluetags.Ec2KeyValueTags(volumeTags).IgnoreAws().Map()); err != nil {
+			return fmt.Errorf("error setting volume_tags: %s", err)
+		}
 	}
 
 	if err := readSecurityGroups(d, instance, conn); err != nil {
@@ -1522,6 +1559,14 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 		}
+
+		if d.HasChange("root_block_device.0.tags") {
+			o, n := d.GetChange("root_block_device.0.tags")
+
+			if err := keyvaluetags.Ec2UpdateTags(conn, volumeID, o, n); err != nil {
+				return fmt.Errorf("error updating tags for volume (%s): %s", volumeID, err)
+			}
+		}
 	}
 
 	// TODO(mitchellh): wait for the attributes we modified to
@@ -1667,7 +1712,7 @@ func stringifyStateReason(sr *ec2.StateReason) string {
 }
 
 func readBlockDevices(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2) error {
-	ibds, err := readBlockDevicesFromInstance(instance, conn)
+	ibds, err := readBlockDevicesFromInstance(d, instance, conn)
 	if err != nil {
 		return err
 	}
@@ -1743,7 +1788,7 @@ func disassociateInstanceProfile(associationId *string, conn *ec2.EC2) error {
 	return nil
 }
 
-func readBlockDevicesFromInstance(instance *ec2.Instance, conn *ec2.EC2) (map[string]interface{}, error) {
+func readBlockDevicesFromInstance(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2) (map[string]interface{}, error) {
 	blockDevices := make(map[string]interface{})
 	blockDevices["ebs"] = make([]map[string]interface{}, 0)
 	blockDevices["root"] = nil
@@ -1803,6 +1848,9 @@ func readBlockDevicesFromInstance(instance *ec2.Instance, conn *ec2.EC2) (map[st
 		}
 		if instanceBd.DeviceName != nil {
 			bd["device_name"] = aws.StringValue(instanceBd.DeviceName)
+		}
+		if _, ok := d.GetOk("volume_tags"); !ok && vol.Tags != nil {
+			bd["tags"] = keyvaluetags.Ec2KeyValueTags(vol.Tags).IgnoreAws().Map()
 		}
 
 		if blockDeviceIsRoot(instanceBd, instance) {
@@ -2519,6 +2567,58 @@ func getAwsInstanceVolumeIds(conn *ec2.EC2, instanceId string) ([]string, error)
 	}
 
 	return volumeIds, nil
+}
+
+func getRootVolumeId(instance *ec2.Instance) string {
+	rootVolumeId := ""
+	for _, bd := range instance.BlockDeviceMappings {
+		if bd.Ebs != nil && blockDeviceIsRoot(bd, instance) {
+			if bd.Ebs.VolumeId != nil {
+				rootVolumeId = aws.StringValue(bd.Ebs.VolumeId)
+			}
+			break
+		}
+	}
+
+	return rootVolumeId
+}
+
+func getVolumeIdByDeviceName(instance *ec2.Instance, deviceName string) string {
+	volumeId := ""
+	for _, bd := range instance.BlockDeviceMappings {
+		if aws.StringValue(bd.DeviceName) == deviceName {
+			if bd.Ebs != nil {
+				volumeId = aws.StringValue(bd.Ebs.VolumeId)
+				break
+			}
+		}
+	}
+
+	return volumeId
+}
+
+func blockDeviceTagsDefined(d *schema.ResourceData) bool {
+	if v, ok := d.GetOk("root_block_device"); ok {
+		vL := v.([]interface{})
+		for _, v := range vL {
+			bd := v.(map[string]interface{})
+			if tagsm, ok := bd["tags"].(map[string]interface{}); ok && len(tagsm) > 0 {
+				return true
+			}
+		}
+	}
+
+	if v, ok := d.GetOk("ebs_block_device"); ok {
+		vL := v.(*schema.Set).List()
+		for _, v := range vL {
+			bd := v.(map[string]interface{})
+			if tagsm, ok := bd["tags"].(map[string]interface{}); ok && len(tagsm) > 0 {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 func getCreditSpecifications(conn *ec2.EC2, instanceId string) ([]map[string]interface{}, error) {

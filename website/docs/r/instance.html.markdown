@@ -97,7 +97,7 @@ instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/Use
 * `ipv6_address_count`- (Optional) A number of IPv6 addresses to associate with the primary network interface. Amazon EC2 chooses the IPv6 addresses from the range of your subnet.
 * `ipv6_addresses` - (Optional) Specify one or more IPv6 addresses from the range of the subnet to associate with the primary network interface
 * `tags` - (Optional) A map of tags to assign to the resource.
-* `volume_tags` - (Optional) A map of tags to assign to the devices created by the instance at launch time.
+* `volume_tags` - (Optional) A map of tags to assign to the devices created by the instance at launch time. Not recommended to use in configurations with EBS volumes attached via `aws_volume_attachment` resource. Use `tags` in `root_block_device` parameter in such cases.
 * `root_block_device` - (Optional) Customize details about the root block
   device of the instance. See [Block Devices](#block-devices) below for details.
 * `ebs_block_device` - (Optional) Additional EBS block devices to attach to the
@@ -136,6 +136,7 @@ The `root_block_device` mapping supports the following:
   on instance termination (Default: `true`).
 * `encrypted` - (Optional) Enable volume encryption. (Default: `false`). Must be configured to perform drift detection.
 * `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the KMS Key to use when encrypting the volume. Must be configured to perform drift detection.
+* `tags` - (Optional) A map of tags to assign to the device.
 
 Modifying any of the `root_block_device` settings other than `volume_size` requires resource
 replacement.
@@ -156,6 +157,7 @@ Each `ebs_block_device` supports the following:
   encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
   on the volume (Default: `false`). Cannot be used with `snapshot_id`. Must be configured to perform drift detection.
 * `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the KMS Key to use when encrypting the volume. Must be configured to perform drift detection.
+* `tags` - (Optional) A map of tags to assign to the device.
 
 ~> **NOTE:** Currently, changes to the `ebs_block_device` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes and attachments of an EBS block to an instance, use the `aws_ebs_volume` and `aws_volume_attachment` resources instead. If you use `ebs_block_device` on an `aws_instance`, Terraform will assume management over the full set of non-root EBS block devices for the instance, treating additional block devices as drift. For this reason, `ebs_block_device` cannot be mixed with external `aws_ebs_volume` and `aws_volume_attachment` resources for a given instance.
 

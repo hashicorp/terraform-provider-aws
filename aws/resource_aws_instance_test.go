@@ -1116,7 +1116,7 @@ func TestAccAWSInstance_volumeTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_volumeTagsComputed(t *testing.T) {
+func TestAccAWSInstance_volumeTagsWithAttachedVolume(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 
@@ -1135,6 +1135,53 @@ func TestAccAWSInstance_volumeTagsComputed(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_blockDeviceVolumeTags(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckInstanceConfigBlockDeviceNoRootVolumeTags(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.Name", "terraform-test-ebs"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.1.tags.%", "0"),
+				),
+			},
+			{
+				Config: testAccCheckInstanceConfigBlockDeviceCreateVolumeTags(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.Name", "terraform-test-root"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.Purpose", "test"),
+				),
+			},
+			{
+				Config: testAccCheckInstanceConfigBlockDeviceUpdateVolumeTags(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.Name", "terraform-test-root-new"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.Env", "dev"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ephemeral_block_device"},
 			},
 		},
 	})
@@ -4068,6 +4115,112 @@ resource "aws_instance" "test" {
   }
 }
 `)
+}
+
+func testAccCheckInstanceConfigBlockDeviceNoRootVolumeTags() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+
+  instance_type = "t2.medium"
+
+  root_block_device {
+    volume_type = "gp2"
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdb"
+    volume_size = 1
+    tags = {
+      Name = "terraform-test-ebs"
+    }
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdc"
+    volume_size = 1
+  }
+
+
+  ephemeral_block_device {
+    device_name  = "/dev/sde"
+    virtual_name = "ephemeral0"
+  }
+}
+`))
+}
+
+func testAccCheckInstanceConfigBlockDeviceCreateVolumeTags() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+
+  instance_type = "t2.medium"
+
+  root_block_device {
+    volume_type = "gp2"
+    tags = {
+      Name    = "terraform-test-root"
+      Purpose = "test"
+    }
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdb"
+    volume_size = 1
+    tags = {
+      Name = "terraform-test-ebs"
+    }
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdc"
+    volume_size = 1
+  }
+
+  ephemeral_block_device {
+    device_name  = "/dev/sde"
+    virtual_name = "ephemeral0"
+  }
+}
+`))
+}
+
+func testAccCheckInstanceConfigBlockDeviceUpdateVolumeTags() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+
+  instance_type = "t2.medium"
+
+  root_block_device {
+    volume_type = "gp2"
+    tags = {
+      Name = "terraform-test-root-new"
+      Env  = "dev"
+    }
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdb"
+    volume_size = 1
+    tags = {
+      Name = "terraform-test-ebs"
+    }
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdc"
+    volume_size = 1
+  }
+
+
+  ephemeral_block_device {
+    device_name  = "/dev/sde"
+    virtual_name = "ephemeral0"
+  }
+}
+`))
 }
 
 var testAccCheckInstanceConfigEBSBlockDeviceInvalidIops = composeConfig(testAccAwsEc2InstanceAmiWithEbsRootVolume, `
