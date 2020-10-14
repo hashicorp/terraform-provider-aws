@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"testing"
@@ -147,7 +146,7 @@ func TestAccAWSSagemakerNotebookInstance_update(t *testing.T) {
 }
 
 func TestAccAWSSagemakerNotebookInstance_volumesize(t *testing.T) {
-	var notebook1, notebook2, notebook3 sagemaker.DescribeNotebookInstanceOutput
+	var notebook sagemaker.DescribeNotebookInstanceOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	var resourceName = "aws_sagemaker_notebook_instance.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -156,32 +155,24 @@ func TestAccAWSSagemakerNotebookInstance_volumesize(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerNotebookInstanceBasicConfig(rName),
+				Config: testAccAWSSagemakerNotebookInstanceConfigVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook1),
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "volume_size", "5"),
 				),
 			},
+
 			{
-				Config: testAccAWSSagemakerNotebookInstanceConfigVolume(rName),
+				Config: testAccAWSSagemakerNotebookInstanceUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook2),
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "volume_size", "8"),
-					testAccCheckAWSSagemakerNotebookInstanceNotRecreated(&notebook1, &notebook2),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSSagemakerNotebookInstanceBasicConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook3),
-					resource.TestCheckResourceAttr(resourceName, "volume_size", "5"),
-					testAccCheckAWSSagemakerNotebookInstanceRecreated(&notebook2, &notebook3),
-				),
 			},
 		},
 	})
@@ -365,26 +356,6 @@ func testAccCheckAWSSagemakerNotebookInstanceExists(n string, notebook *sagemake
 		}
 
 		*notebook = *resp
-
-		return nil
-	}
-}
-
-func testAccCheckAWSSagemakerNotebookInstanceNotRecreated(i, j *sagemaker.DescribeNotebookInstanceOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreationTime) != aws.TimeValue(j.CreationTime) {
-			return errors.New("Sagemaker Notebook Instance was recreated")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckAWSSagemakerNotebookInstanceRecreated(i, j *sagemaker.DescribeNotebookInstanceOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreationTime) == aws.TimeValue(j.CreationTime) {
-			return errors.New("Sagemaker Notebook Instance was not recreated")
-		}
 
 		return nil
 	}
@@ -624,10 +595,6 @@ resource "aws_subnet" "test" {
   }
 }
 
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-}
-
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -657,50 +624,6 @@ resource "aws_sagemaker_notebook_instance" "test" {
   instance_type           = "ml.t2.medium"
   default_code_repository = %[2]q
 }
-<<<<<<< HEAD
-
-resource "aws_iam_role" "foo" {
-  name               = %[1]q
-  path               = "/"
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-}
-
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "sagemaker" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.0.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-=======
->>>>>>> 7cac2f614... allow updating default code repo
 `, rName, defaultCodeRepository)
 }
 
