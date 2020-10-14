@@ -95,17 +95,18 @@ POLICY
 ```
 
 ### SNS Topic and Subscription (Account Id: 111111111111 / Region: us-west-1)
+
 ```hcl
 resource "aws_sns_topic" "this" {
   name = "example-sns-topic"
 }
 
 resource "aws_sns_topic_subscription" "this" {
-  topic_arn = aws_sns_topic.this.arn
-  protocol  = "sqs"
-  endpoint  = "arn:aws:sqs:us-east-1:222222222222:example-sqs-queue"
+  topic_arn                       = aws_sns_topic.this.arn
+  protocol                        = "sqs"
+  endpoint                        = "arn:aws:sqs:us-east-1:222222222222:example-sqs-queue"
   confirmation_timeout_in_minutes = "5"
-  depends_on = [ aws_sns_topic.this ]
+  depends_on                      = [aws_sns_topic.this]
 }
 ```
 
