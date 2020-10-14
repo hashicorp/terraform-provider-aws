@@ -12,7 +12,6 @@ on:
 env:
   GO_VERSION: "1.15"
   AWS_DEFAULT_REGION: us-west-2
-  TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
 
 jobs:
   validate-terraform:
