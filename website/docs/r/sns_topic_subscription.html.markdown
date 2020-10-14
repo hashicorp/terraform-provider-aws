@@ -57,40 +57,40 @@ resource "aws_sqs_queue" "this" {
   name = "example-sqs-queue"
 }
 
+data "aws_iam_policy_document" "sqs-queue-policy" {
+  policy_id = "${aws_sqs_queue.this.arn}/SQSDefaultPolicy"
+
+  statement {
+    sid    = "example-sns-topic"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "SQS:SendMessage",
+    ]
+
+    resources = [
+      aws_sqs_queue.this.arn
+    ]
+
+    condition {
+      test     = "ArnEquals"
+      variable = "aws:SourceArn"
+
+      values = [
+        "arn:aws:sns:us-west-1:111111111111:example-sns-topic",
+      ]
+    }
+  }
+}
+
 resource "aws_sqs_queue_policy" "this" {
   queue_url = aws_sqs_queue.this.id
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "example-sns-topic",
-  "Statement": [
-    {
-      "Sid": "sid1",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "SQS:SendMessage",
-      "Resource": "arn:aws:sqs:us-east-1:222222222222:example-sqs-queue",
-      "Condition": {
-        "ArnLike": {
-          "aws:SourceArn": "arn:aws:sns:us-west-1:111111111111:*"
-        }
-      }
-    },
-    {
-      "Sid": "Allow-other-account-to-subscribe-to-topic",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::111111111111:root"
-      },
-      "Action": "sqs:*",
-      "Resource": "arn:aws:sns:us-west-1:111111111111:*"
-    }
-  ]
-}
-POLICY
+  policy    = data.aws_iam_policy_document.sqs-queue-policy.json
 }
 ```
 
@@ -102,10 +102,9 @@ resource "aws_sns_topic" "this" {
 }
 
 resource "aws_sns_topic_subscription" "this" {
-  topic_arn  = aws_sns_topic.this.arn
-  protocol   = "sqs"
-  endpoint   = "arn:aws:sqs:us-east-1:222222222222:example-sqs-queue"
-  depends_on = [aws_sns_topic.this]
+  topic_arn = aws_sns_topic.this.arn
+  protocol  = "sqs"
+  endpoint  = "arn:aws:sqs:us-east-1:222222222222:example-sqs-queue"
 }
 ```
 
