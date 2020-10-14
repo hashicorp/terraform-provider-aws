@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -26,7 +27,7 @@ func init() {
 func testSweepCloudWatchEventBuses(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
+		return fmt.Errorf("Error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).cloudwatcheventsconn
 
@@ -36,14 +37,14 @@ func testSweepCloudWatchEventBuses(region string) error {
 		output, err := conn.ListEventBuses(input)
 		if err != nil {
 			if testSweepSkipSweepError(err) {
-				log.Printf("[WARN] Skipping CloudWatch Event Bus sweep for %s: %s", region, err)
+				log.Printf("[WARN] Skipping CloudWatch Events event bus sweep for %s: %s", region, err)
 				return nil
 			}
-			return fmt.Errorf("Error retrieving CloudWatch Event Buses: %s", err)
+			return fmt.Errorf("Error retrieving CloudWatch Events event bus: %w", err)
 		}
 
 		if len(output.EventBuses) == 0 {
-			log.Print("[DEBUG] No CloudWatch Event Buses to sweep")
+			log.Print("[DEBUG] No CloudWatch Events event buses to sweep")
 			return nil
 		}
 
@@ -53,12 +54,12 @@ func testSweepCloudWatchEventBuses(region string) error {
 				continue
 			}
 
-			log.Printf("[INFO] Deleting CloudWatch Event Bus %s", name)
+			log.Printf("[INFO] Deleting CloudWatch Events event bus (%s)", name)
 			_, err := conn.DeleteEventBus(&events.DeleteEventBusInput{
 				Name: aws.String(name),
 			})
 			if err != nil {
-				return fmt.Errorf("Error deleting CloudWatch Event Bus %s: %s", name, err)
+				return fmt.Errorf("Error deleting CloudWatch Events event bus (%s): %w", name, err)
 			}
 		}
 
@@ -92,12 +93,31 @@ func TestAccAWSCloudWatchEventBus_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSCloudWatchEventBusConfig(busNameModified),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventBusExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", busNameModified),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("event-bus/%s", busNameModified)),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudWatchEventBus_default(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSCloudWatchEventBusConfig("default"),
+				ExpectError: regexp.MustCompile(`cannot be 'default'`),
 			},
 		},
 	})
@@ -141,8 +161,7 @@ func testAccCheckAWSCloudWatchEventBusDestroy(s *terraform.State) error {
 		resp, err := conn.DescribeEventBus(&params)
 
 		if err == nil {
-			return fmt.Errorf("CloudWatch Event Bus %q still exists: %s",
-				rs.Primary.ID, resp)
+			return fmt.Errorf("CloudWatch Events event bus (%s) still exists: %s", rs.Primary.ID, resp)
 		}
 	}
 
@@ -165,7 +184,7 @@ func testAccCheckCloudWatchEventBusExists(n string, v *events.DescribeEventBusOu
 			return err
 		}
 		if resp == nil {
-			return fmt.Errorf("Event Bus not found")
+			return fmt.Errorf("CloudWatch Events event bus (%s) not found", n)
 		}
 
 		*v = *resp

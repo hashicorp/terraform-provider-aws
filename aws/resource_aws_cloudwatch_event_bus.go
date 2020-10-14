@@ -23,7 +23,7 @@ func resourceAwsCloudWatchEventBus() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCloudWatchEventBusName,
+				ValidateFunc: validateCloudWatchEventCustomEventBusName,
 			},
 			"arn": {
 				Type:     schema.TypeString,
