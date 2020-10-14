@@ -129,7 +129,6 @@ Refer to the [AWS SNS docs](https://docs.aws.amazon.com/sns/latest/dg/sns-send-m
 The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
 
 * `create` - (Defaults to 5 mins) - You should receive a confirmation message at the configured endpoint and validate the subscription.
-* `update` - (Defaults to 5 mins) - You should receive a confirmation message at the configured endpoint and validate the subscription.
 
 
 ### Protocols supported
