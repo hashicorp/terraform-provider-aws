@@ -98,7 +98,41 @@ func TestAccAWSCodeArtifactDomain_basic(t *testing.T) {
 	})
 }
 
+<<<<<<< HEAD
 func TestAccAWSCodeArtifactDomain_tags(t *testing.T) {
+=======
+func TestAccAWSCodeArtifactDomain_defaultencryptionkey(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codeartifact_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("codeartifact", t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeArtifactDomainDefaultEncryptionKeyConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeArtifactDomainExists(resourceName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codeartifact", fmt.Sprintf("domain/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "domain", rName),
+					resource.TestCheckResourceAttr(resourceName, "asset_size_bytes", "0"),
+					resource.TestCheckResourceAttr(resourceName, "repository_count", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeArtifactDomain_disappears(t *testing.T) {
+>>>>>>> a4649a922 (Add acceptance test + docs)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codeartifact_domain.test"
 
@@ -271,4 +305,11 @@ resource "aws_codeartifact_domain" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+
+func testAccAWSCodeArtifactDomainDefaultEncryptionKeyConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_codeartifact_domain" "test" {
+  domain = %[1]q
+}
+`, rName)
 }
