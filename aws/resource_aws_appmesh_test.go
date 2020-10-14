@@ -25,6 +25,15 @@ func TestAccAWSAppmesh_serial(t *testing.T) {
 			"tcpRouteTimeout":   testAccAwsAppmeshRoute_tcpRouteTimeout,
 			"tags":              testAccAwsAppmeshRoute_tags,
 		},
+		"VirtualGateway": {
+			"backendDefaults":      testAccAwsAppmeshVirtualGateway_BackendDefaults,
+			"basic":                testAccAwsAppmeshVirtualGateway_basic,
+			"disappears":           testAccAwsAppmeshVirtualGateway_disappears,
+			"listenerHealthChecks": testAccAwsAppmeshVirtualGateway_ListenerHealthChecks,
+			"logging":              testAccAwsAppmeshVirtualGateway_Logging,
+			"tags":                 testAccAwsAppmeshVirtualGateway_Tags,
+			"tls":                  testAccAwsAppmeshVirtualGateway_TLS,
+		},
 		"VirtualNode": {
 			"basic":                    testAccAwsAppmeshVirtualNode_basic,
 			"backendDefaults":          testAccAwsAppmeshVirtualNode_backendDefaults,
