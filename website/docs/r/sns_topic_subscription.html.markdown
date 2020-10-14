@@ -105,7 +105,6 @@ resource "aws_sns_topic_subscription" "this" {
   topic_arn                       = aws_sns_topic.this.arn
   protocol                        = "sqs"
   endpoint                        = "arn:aws:sqs:us-east-1:222222222222:example-sqs-queue"
-  confirmation_timeout_in_minutes = "5"
   depends_on                      = [aws_sns_topic.this]
 }
 ```
@@ -118,10 +117,20 @@ The following arguments are supported:
 * `protocol` - (Required) The protocol to use, see below. Refer to the [SNS API docs](https://docs.aws.amazon.com/sns/latest/api/API_Subscribe.html) for more details.
 * `endpoint` - (Required) The endpoint to send data to, the contents will vary with the protocol. (see below for more information)
 * `endpoint_auto_confirms` - (Deprecated) The endpoint auto confirms exists for historical compatibility and should not be used.
-* `confirmation_timeout_in_minutes` - (Optional) Integer indicating number of minutes to wait in retying mode for fetching subscription arn before marking it as failure. You must receive the confirmation message to accept the subscription. (default is 1 minute). Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/sns-send-message-to-sqs-cross-account.html) for more details.
+* `confirmation_timeout_in_minutes` - (Deprecated) The confirmation timeout in minutes exists for historical compatibility and should not be used.
 * `raw_message_delivery` - (Optional) Boolean indicating whether or not to enable raw message delivery (the original message is directly passed, not wrapped in JSON with the original message in the message property) (default is false).
 * `filter_policy` - (Optional) JSON String with the filter policy that will be used in the subscription to filter messages seen by the target resource. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/message-filtering.html) for more details.
 * `delivery_policy` - (Optional) JSON String with the delivery policy (retries, backoff, etc.) that will be used in the subscription - this only applies to HTTP/S subscriptions. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/DeliveryPolicies.html) for more details.
+
+### Timeouts
+
+Refer to the [AWS SNS docs](https://docs.aws.amazon.com/sns/latest/dg/sns-send-message-to-sqs-cross-account.html) for more details.
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+
+* `create` - (Defaults to 5 mins) - You should receive a confirmation message at the configured endpoint and validate the subscription.
+* `update` - (Defaults to 5 mins) - You should receive a confirmation message at the configured endpoint and validate the subscription.
+
 
 ### Protocols supported
 
@@ -136,8 +145,6 @@ Supported SNS protocols include:
 * `email` -- delivery of message via SMTP
 * `email-json` -- delivery of JSON-encoded message via SMTP
 
--> NOTE:
-You should receive a confirmation message at the configured endpoint and validate the subscription.
 
 ### Specifying endpoints
 
