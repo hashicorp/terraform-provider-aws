@@ -259,7 +259,7 @@ func TestAccAWSLaunchConfiguration_withSpotPrice(t *testing.T) {
 				Config: testAccAWSLaunchConfigurationWithSpotPriceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.01"),
+					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
 				),
 			},
 			{
@@ -280,7 +280,7 @@ func TestAccAWSLaunchConfiguration_withVpcClassicLink(t *testing.T) {
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -462,9 +462,9 @@ func testAccCheckAWSLaunchConfigurationWithEncryption(conf *autoscaling.LaunchCo
 		}
 
 		// Check if the root block device exists.
-		if _, ok := blockDevices["/dev/sda1"]; !ok {
-			return fmt.Errorf("block device doesn't exist: /dev/sda1")
-		} else if blockDevices["/dev/sda1"].Ebs.Encrypted != nil {
+		if _, ok := blockDevices["/dev/xvda"]; !ok {
+			return fmt.Errorf("block device doesn't exist: /dev/xvda")
+		} else if blockDevices["/dev/xvda"].Ebs.Encrypted != nil {
 			return fmt.Errorf("root device should not include value for Encrypted")
 		}
 
@@ -543,8 +543,8 @@ func testAccCheckAWSLaunchConfigurationAttributes(conf *autoscaling.LaunchConfig
 		}
 
 		// Check if the root block device exists.
-		if _, ok := blockDevices["/dev/sda1"]; !ok {
-			return fmt.Errorf("block device doesn't exist: /dev/sda1")
+		if _, ok := blockDevices["/dev/xvda"]; !ok {
+			return fmt.Errorf("block device doesn't exist: /dev/xvda")
 		}
 
 		// Check if the secondary block device exists.
@@ -557,9 +557,9 @@ func testAccCheckAWSLaunchConfigurationAttributes(conf *autoscaling.LaunchConfig
 			return fmt.Errorf("block device doesn't exist: /dev/sdc")
 		}
 
-		// Check if the secondary block device exists.
-		if _, ok := blockDevices["/dev/sdb"]; !ok {
-			return fmt.Errorf("block device doesn't exist: /dev/sdb")
+		// Check if the fourth block device exists.
+		if _, ok := blockDevices["/dev/sde"]; !ok {
+			return fmt.Errorf("block device doesn't exist: /dev/sde")
 		}
 
 		return nil
@@ -599,41 +599,8 @@ func testAccCheckAWSLaunchConfigurationExists(n string, res *autoscaling.LaunchC
 	}
 }
 
-func testAccAWSLaunchConfigurationConfig_ami() string {
-	return `
-data "aws_ami" "ubuntu" {
-  most_recent = true
-  owners      = ["099720109477"] # Canonical
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/ebs/ubuntu-precise-12.04-i386-server-2017*"]
-  }
-}
-`
-}
-
-func testAccAWSLaunchConfigurationConfig_HvmEbsAmi() string {
-	return `
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-`
-}
-
 func testAccAWSLaunchConfigurationConfigWithInstanceStoreAMI(rName string) string {
-	return testAccLatestAmazonLinuxPvInstanceStoreAmiConfig() + fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxPvInstanceStoreAmiConfig(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name     = %[1]q
   image_id = data.aws_ami.amzn-ami-minimal-pv-instance-store.id
@@ -641,11 +608,11 @@ resource "aws_launch_configuration" "test" {
   # When the instance type is updated, the new type must support ephemeral storage.
   instance_type = "m1.small"
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSLaunchConfigurationConfigWithRootBlockDeviceCopiedAmi(rName string) string {
-	return testAccAWSLaunchConfigurationConfig_HvmEbsAmi() + fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 data "aws_region" "current" {}
 
 resource "aws_ami_copy" "test" {
@@ -663,11 +630,11 @@ resource "aws_launch_configuration" "test" {
     volume_size = 10
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSLaunchConfigurationConfigWithRootBlockDeviceVolumeSize(rName string, volumeSize int) string {
-	return testAccAWSLaunchConfigurationConfig_HvmEbsAmi() + fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -677,13 +644,13 @@ resource "aws_launch_configuration" "test" {
     volume_size = %[2]d
   }
 }
-`, rName, volumeSize)
+`, rName, volumeSize))
 }
 
 func testAccAWSLaunchConfigurationConfigWithEncryptedRootBlockDevice(rInt int) string {
 	return composeConfig(
 		testAccAvailableAZsNoOptInConfig(),
-		testAccAWSLaunchConfigurationConfig_ami(),
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -705,7 +672,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_launch_configuration" "test" {
   name_prefix                 = "tf-acc-test-%[1]d"
-  image_id                    = data.aws_ami.ubuntu.id
+  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t3.nano"
   user_data                   = "testtest-user-data"
   associate_public_ip_address = true
@@ -720,10 +687,10 @@ resource "aws_launch_configuration" "test" {
 }
 
 func testAccAWSLaunchConfigurationConfig() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name                        = "tf-acc-test-%d"
-  image_id                    = data.aws_ami.ubuntu.id
+  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "m1.small"
   user_data                   = "testtest-user-data"
   associate_public_ip_address = true
@@ -750,47 +717,47 @@ resource "aws_launch_configuration" "test" {
     virtual_name = "ephemeral0"
   }
 }
-`, acctest.RandInt())
+`, acctest.RandInt()))
 }
 
 func testAccAWSLaunchConfigurationWithSpotPriceConfig() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = "tf-acc-test-%d"
-  image_id      = data.aws_ami.ubuntu.id
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
-  spot_price    = "0.01"
+  spot_price    = "0.05"
 }
-`, acctest.RandInt())
+`, acctest.RandInt()))
 }
 
 func testAccAWSLaunchConfigurationNoNameConfig() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + `
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_launch_configuration" "test" {
-  image_id                    = data.aws_ami.ubuntu.id
+  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t2.micro"
   user_data                   = "testtest-user-data-change"
   associate_public_ip_address = false
 }
-`
+`)
 }
 
 func testAccAWSLaunchConfigurationPrefixNameConfig() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + `
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_launch_configuration" "test" {
   name_prefix                 = "tf-acc-test-"
-  image_id                    = data.aws_ami.ubuntu.id
+  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t2.micro"
   user_data                   = "testtest-user-data-change"
   associate_public_ip_address = false
 }
-`
+`)
 }
 
 func testAccAWSLaunchConfigurationWithEncryption() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + `
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_launch_configuration" "test" {
-  image_id                    = data.aws_ami.ubuntu.id
+  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t2.micro"
   associate_public_ip_address = false
 
@@ -805,13 +772,13 @@ resource "aws_launch_configuration" "test" {
     encrypted   = true
   }
 }
-`
+`)
 }
 
 func testAccAWSLaunchConfigurationWithEncryptionUpdated() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + `
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_launch_configuration" "test" {
-  image_id                    = data.aws_ami.ubuntu.id
+  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t2.micro"
   associate_public_ip_address = false
 
@@ -826,11 +793,11 @@ resource "aws_launch_configuration" "test" {
     encrypted   = true
   }
 }
-`
+`)
 }
 
 func testAccAWSLaunchConfigurationConfig_withVpcClassicLink(rInt int) string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block         = "10.0.0.0/16"
   enable_classiclink = true
@@ -847,17 +814,17 @@ resource "aws_security_group" "test" {
 
 resource "aws_launch_configuration" "test" {
   name          = "tf-acc-test-%[1]d"
-  image_id      = data.aws_ami.ubuntu.id
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
 
   vpc_classic_link_id              = aws_vpc.test.id
   vpc_classic_link_security_groups = [aws_security_group.test.id]
 }
-`, rInt)
+`, rInt))
 }
 
 func testAccAWSLaunchConfigurationConfig_withIAMProfile(rInt int) string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "tf-acc-test-%[1]d"
 
@@ -884,18 +851,18 @@ resource "aws_iam_instance_profile" "profile" {
 }
 
 resource "aws_launch_configuration" "test" {
-  image_id             = data.aws_ami.ubuntu.id
+  image_id             = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type        = "t2.nano"
   iam_instance_profile = aws_iam_instance_profile.profile.name
 }
-`, rInt)
+`, rInt))
 }
 
 func testAccAWSLaunchConfigurationConfigEbsNoDevice(rInt int) string {
-	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name_prefix   = "tf-acc-test-%d"
-  image_id      = data.aws_ami.ubuntu.id
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "m1.small"
 
   ebs_block_device {
@@ -903,27 +870,27 @@ resource "aws_launch_configuration" "test" {
     no_device   = true
   }
 }
-`, rInt)
+`, rInt))
 }
 
 func testAccAWSLaunchConfigurationConfig_userData() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + `
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_launch_configuration" "test" {
-  image_id                    = data.aws_ami.ubuntu.id
+  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t2.micro"
   user_data                   = "foo:-with-character's"
   associate_public_ip_address = false
 }
-`
+`)
 }
 
 func testAccAWSLaunchConfigurationConfig_userDataBase64() string {
-	return testAccAWSLaunchConfigurationConfig_ami() + `
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_launch_configuration" "test" {
-  image_id                    = data.aws_ami.ubuntu.id
+  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t2.micro"
   user_data_base64            = base64encode("hello world")
   associate_public_ip_address = false
 }
-`
+`)
 }
