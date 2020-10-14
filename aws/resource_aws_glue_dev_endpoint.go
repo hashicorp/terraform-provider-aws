@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -29,6 +28,7 @@ func resourceAwsGlueDevEndpoint() *schema.Resource {
 			"arguments": {
 				Type:     schema.TypeMap,
 				Optional: true,
+				Elem:     schema.TypeString,
 			},
 
 			"arn": {
@@ -264,6 +264,10 @@ func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) 
 		return nil
 	})
 
+	if isResourceTimeoutError(err) {
+		_, err = conn.CreateDevEndpoint(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error creating Glue Dev Endpoint: %s", err)
 	}
@@ -288,6 +292,7 @@ func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) 
 
 func resourceAwsGlueDevEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	request := &glue.GetDevEndpointInput{
 		EndpointName: aws.String(d.Id()),
@@ -408,7 +413,7 @@ func resourceAwsGlueDevEndpointRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error listing tags for Glue Dev Endpoint (%s): %s", endpointARN, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -505,25 +510,19 @@ func resourceAwsDevEndpointDelete(d *schema.ResourceData, meta interface{}) erro
 	deleteOpts := &glue.DeleteDevEndpointInput{
 		EndpointName: aws.String(d.Id()),
 	}
+
 	log.Printf("[INFO] Deleting Glue Dev Endpoint: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteDevEndpoint(deleteOpts)
-		if err == nil {
+	_, err := conn.DeleteDevEndpoint(deleteOpts)
+	if err != nil {
+		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
 
-		glueErr, ok := err.(awserr.Error)
-		if !ok {
-			return resource.NonRetryableError(err)
-		}
+		return err
+	}
 
-		if glueErr.Code() == glue.ErrCodeEntityNotFoundException {
-			return nil
-		}
-
-		return resource.NonRetryableError(fmt.Errorf("error deleting Glue Dev Endpoint: %s", err))
-	})
+	return nil
 }
 
 func glueDevEndpointStateRefreshFunc(conn *glue.Glue, name string) resource.StateRefreshFunc {

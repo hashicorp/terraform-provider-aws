@@ -88,7 +88,7 @@ func TestAccGlueDevEndpoint_Basic(t *testing.T) {
 
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("devEndpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestMatchResourceAttr(resourceName, "role_arn", regexp.MustCompile(`^arn:[^:]+:iam::[^:]+:role/AWSGlueServiceRole-tf-acc-test-[0-9]+$`)),
+					testAccMatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexp.MustCompile(`role/AWSGlueServiceRole-tf-acc-test-[0-9]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
 					resource.TestCheckResourceAttr(resourceName, "arguments.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "5"),
@@ -673,7 +673,7 @@ resource "aws_iam_role_policy_attachment" "glue_service_role" {
 func testAccGlueDevEndpointConfig_Basic(rName string) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name = %q
+  name     = %q
   role_arn = aws_iam_role.test.arn
 }
 `, rName)
@@ -682,7 +682,7 @@ resource "aws_glue_dev_endpoint" "test" {
 func testAccGlueDevEndpointConfig_Arguments(rName, arguments string) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name = %q
+  name     = %q
   role_arn = aws_iam_role.test.arn
   arguments = {
     "--foo" = "%s"
@@ -694,10 +694,10 @@ resource "aws_glue_dev_endpoint" "test" {
 func testAccGlueDevEndpointConfig_Arguments2(rName, arguments1, arguments2 string) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name = %q
+  name     = %q
   role_arn = aws_iam_role.test.arn
   arguments = {
-    "--foo" = "%s"
+    "--foo"          = "%s"
     "--job-language" = "%s"
   }
 }
@@ -707,8 +707,8 @@ resource "aws_glue_dev_endpoint" "test" {
 func testAccGlueDevEndpointConfig_ExtraJarsS3Path(rName string, extraJarsS3Path string) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name = %q
-  role_arn = aws_iam_role.test.arn
+  name               = %q
+  role_arn           = aws_iam_role.test.arn
   extra_jars_s3_path = %q
 }
 `, rName, extraJarsS3Path)
@@ -717,8 +717,8 @@ resource "aws_glue_dev_endpoint" "test" {
 func testAccGlueDevEndpointConfig_ExtraPythonLibsS3Path(rName string, extraPythonLibsS3Path string) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name = %q
-  role_arn = aws_iam_role.test.arn
+  name                      = %q
+  role_arn                  = aws_iam_role.test.arn
   extra_python_libs_s3_path = %q
 }
 `, rName, extraPythonLibsS3Path)
@@ -727,8 +727,8 @@ resource "aws_glue_dev_endpoint" "test" {
 func testAccGlueDevEndpointConfig_GlueVersion(rName string, glueVersion string) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name = %[1]q
-  role_arn = aws_iam_role.test.arn
+  name         = %[1]q
+  role_arn     = aws_iam_role.test.arn
   glue_version = %[2]q
 }
 `, rName, glueVersion)
@@ -737,8 +737,8 @@ resource "aws_glue_dev_endpoint" "test" {
 func testAccGlueDevEndpointConfig_NumberOfNodes(rName string, numberOfNodes int) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name = %q
-  role_arn = aws_iam_role.test.arn
+  name            = %q
+  role_arn        = aws_iam_role.test.arn
   number_of_nodes = %d
 }
 `, rName, numberOfNodes)
@@ -747,9 +747,9 @@ resource "aws_glue_dev_endpoint" "test" {
 func testAccGlueDevEndpointConfig_NumberOfWorkers(rName string, numberOfWorkers int) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name = %q
-  role_arn = aws_iam_role.test.arn
-  worker_type = "G.1X"
+  name              = %q
+  role_arn          = aws_iam_role.test.arn
+  worker_type       = "G.1X"
   number_of_workers = %d
 }
 `, rName, numberOfWorkers)
@@ -758,8 +758,8 @@ resource "aws_glue_dev_endpoint" "test" {
 func testAccGlueDevEndpointConfig_PublicKey(rName string, publicKey string) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name = %q
-  role_arn = aws_iam_role.test.arn
+  name       = %q
+  role_arn   = aws_iam_role.test.arn
   public_key = "%s"
 }
 `, rName, publicKey)
@@ -768,8 +768,8 @@ resource "aws_glue_dev_endpoint" "test" {
 func testAccGlueDevEndpointConfig_PublicKeys2(rName string, publicKey1 string, publicKey2 string) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name = %[1]q
-  role_arn = aws_iam_role.test.arn
+  name        = %[1]q
+  role_arn    = aws_iam_role.test.arn
   public_keys = [%[2]q, %[3]q]
 }
 `, rName, publicKey1, publicKey2)
@@ -778,8 +778,8 @@ resource "aws_glue_dev_endpoint" "test" {
 func testAccGlueDevEndpointConfig_PublicKeys3(rName string, publicKey1 string, publicKey2 string, publicKey3 string) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name = %[1]q
-  role_arn = aws_iam_role.test.arn
+  name        = %[1]q
+  role_arn    = aws_iam_role.test.arn
   public_keys = [%[2]q, %[3]q, %[4]q]
 }
 `, rName, publicKey1, publicKey2, publicKey3)
@@ -788,8 +788,8 @@ resource "aws_glue_dev_endpoint" "test" {
 func testAccGlueDevEndpointConfig_PublicKeys4(rName string, publicKey1 string, publicKey2 string, publicKey3 string, publicKey4 string) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name = %[1]q
-  role_arn = aws_iam_role.test.arn
+  name        = %[1]q
+  role_arn    = aws_iam_role.test.arn
   public_keys = [%[2]q, %[3]q, %[4]q, %[5]q]
 }
 `, rName, publicKey1, publicKey2, publicKey3, publicKey4)
@@ -798,8 +798,8 @@ resource "aws_glue_dev_endpoint" "test" {
 func testAccGlueDevEndpointConfig_SecurityConfiguration(rName string) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name = %q
-  role_arn = aws_iam_role.test.arn
+  name                   = %q
+  role_arn               = aws_iam_role.test.arn
   security_configuration = aws_glue_security_configuration.test.name
 }
 
@@ -826,9 +826,9 @@ resource "aws_glue_security_configuration" "test" {
 func testAccGlueDevEndpointConfig_SubnetID_SecurityGroupIDs(rName string) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name = %q
-  role_arn = aws_iam_role.test.arn
-  subnet_id = aws_subnet.test.id
+  name               = %q
+  role_arn           = aws_iam_role.test.arn
+  subnet_id          = aws_subnet.test.id
   security_group_ids = [aws_security_group.test.id]
 }
 
@@ -847,7 +847,7 @@ resource "aws_vpc_endpoint_route_table_association" "test" {
 }
 
 resource "aws_vpc" "test" {
-  cidr_block       = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
 
   tags = {
     Name = %q
@@ -855,8 +855,8 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2a"
 
   tags = {
@@ -870,8 +870,8 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name = %q
-  vpc_id      = aws_vpc.test.id
+  name   = %q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -882,7 +882,7 @@ resource "aws_security_group" "test" {
 
   egress {
     from_port   = 0
-	to_port     = 0
+    to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -898,7 +898,7 @@ resource "aws_security_group" "test" {
 func testAccAWSGlueDevEndpointConfig_Tags1(rName, tagKey1, tagValue1 string) string {
 	return testAccAWSGlueJobConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name = %[1]q
+  name     = %[1]q
   role_arn = aws_iam_role.test.arn
 
   tags = {
@@ -911,7 +911,7 @@ resource "aws_glue_dev_endpoint" "test" {
 func testAccAWSGlueDevEndpointConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccAWSGlueJobConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name = %[1]q
+  name     = %[1]q
   role_arn = aws_iam_role.test.arn
 
   tags = {
@@ -925,9 +925,9 @@ resource "aws_glue_dev_endpoint" "test" {
 func testAccGlueDevEndpointConfig_WorkerType(rName, workerType string) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name = %[1]q
-  role_arn = aws_iam_role.test.arn
-  worker_type = %[2]q
+  name              = %[1]q
+  role_arn          = aws_iam_role.test.arn
+  worker_type       = %[2]q
   number_of_workers = 2
 }
 `, rName, workerType)
@@ -936,9 +936,9 @@ resource "aws_glue_dev_endpoint" "test" {
 func testAccGlueDevEndpointConfig_WorkerType_Standard(rName string) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name = %[1]q
-  role_arn = aws_iam_role.test.arn
-  worker_type = %[2]q
+  name              = %[1]q
+  role_arn          = aws_iam_role.test.arn
+  worker_type       = %[2]q
   number_of_workers = 2
 }
 `, rName, glue.WorkerTypeStandard)
