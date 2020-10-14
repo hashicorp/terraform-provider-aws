@@ -96,8 +96,8 @@ resource "aws_workspaces_workspace" "test" {
 
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "AWS_WorkSpaces" user is always present in a bare directory.
-  user_name = "AWS_WorkSpaces" 
- 
+  user_name = "AWS_WorkSpaces"
+
   workspace_properties {
     root_volume_size_gib = 80
     user_volume_size_gib = 10
@@ -124,8 +124,8 @@ resource "aws_workspaces_workspace" "test" {
 
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator" user is always present in a bare directory.
-  user_name = "Administrator" 
- 
+  user_name = "Administrator"
+
   workspace_properties {
     root_volume_size_gib = 80
     user_volume_size_gib = 10
