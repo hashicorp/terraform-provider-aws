@@ -97,6 +97,7 @@ func TestAccAWSSagemakerNotebookInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "root_access", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "volume_size", "5"),
+					resource.TestCheckResourceAttr(resourceName, "default_code_repository", ""),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -425,18 +426,18 @@ func TestAccAWSSagemakerNotebookInstance_direct_internet_access(t *testing.T) {
 
 func TestAccAWSSagemakerNotebookInstance_default_code_repository(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
-	notebookName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerNotebookInstanceResourceNamePrefix)
-	var resourceName = "aws_sagemaker_notebook_instance.foo"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	var resourceName = "aws_sagemaker_notebook_instance.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerNotebookInstanceConfigDefaultCodeRepository(notebookName, "https://github.com/terraform-providers/terraform-provider-aws.git"),
+				Config: testAccAWSSagemakerNotebookInstanceConfigDefaultCodeRepository(rName, "https://github.com/terraform-providers/terraform-provider-aws.git"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
-					testAccCheckAWSSagemakerNotebookDefaultCodeRepository(&notebook, "https://github.com/terraform-providers/terraform-provider-aws.git"),
+					resource.TestCheckResourceAttr(resourceName, "default_code_repository", "https://github.com/terraform-providers/terraform-provider-aws.git"),
 				),
 			},
 			{
@@ -446,17 +447,6 @@ func TestAccAWSSagemakerNotebookInstance_default_code_repository(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckAWSSagemakerNotebookDefaultCodeRepository(notebook *sagemaker.DescribeNotebookInstanceOutput, expected string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		defaultCodeRepository := notebook.DefaultCodeRepository
-		if *defaultCodeRepository != expected {
-			return fmt.Errorf("default_code_repository setting is incorrect: %s", *notebook.DefaultCodeRepository)
-		}
-
-		return nil
-	}
 }
 
 func testAccAWSSagemakerNotebookInstanceBaseConfig(rName string) string {
@@ -603,11 +593,11 @@ func testAccAWSSagemakerNotebookInstanceConfigVolume(rName string) string {
   `, rName)
 }
 
-func testAccAWSSagemakerNotebookInstanceConfigDefaultCodeRepository(notebookName string, defaultCodeRepository string) string {
-	return fmt.Sprintf(`
+func testAccAWSSagemakerNotebookInstanceConfigDefaultCodeRepository(rName string, defaultCodeRepository string) string {
+	return testAccAWSSagemakerNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "foo" {
   name                    = %[1]q
-  role_arn                = aws_iam_role.foo.arn
+  role_arn                = aws_iam_role.test.arn
   instance_type           = "ml.t2.medium"
   security_groups         = [aws_security_group.test.id]
   subnet_id               = aws_subnet.sagemaker.id
@@ -634,12 +624,16 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-sagemaker-notebook-instance-default-code-repository"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "sagemaker" {
@@ -647,10 +641,10 @@ resource "aws_subnet" "sagemaker" {
   cidr_block = "10.0.0.0/24"
 
   tags = {
-    Name = "tf-acc-test-sagemaker-notebook-instance-default-code-repository"
+    Name = %[1]q
   }
 }
-`, notebookName, defaultCodeRepository)
+`, rName, defaultCodeRepository)
 }
 
 func testAccAWSSagemakerNotebookInstanceKMSConfig(rName string) string {
