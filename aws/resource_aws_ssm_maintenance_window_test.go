@@ -2,15 +2,79 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_ssm_maintenance_window", &resource.Sweeper{
+		Name: "aws_ssm_maintenance_window",
+		F:    testSweepSsmMaintenanceWindows,
+	})
+}
+
+func testSweepSsmMaintenanceWindows(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).ssmconn
+	input := &ssm.DescribeMaintenanceWindowsInput{}
+	var sweeperErrs *multierror.Error
+
+	for {
+		output, err := conn.DescribeMaintenanceWindows(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping SSM Maintenance Window sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("Error retrieving SSM Maintenance Windows: %s", err)
+		}
+
+		for _, window := range output.WindowIdentities {
+			id := aws.StringValue(window.WindowId)
+			input := &ssm.DeleteMaintenanceWindowInput{
+				WindowId: window.WindowId,
+			}
+
+			log.Printf("[INFO] Deleting SSM Maintenance Window: %s", id)
+
+			_, err := conn.DeleteMaintenanceWindow(input)
+
+			if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+				continue
+			}
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting SSM Maintenance Window (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
 
 func TestAccAWSSSMMaintenanceWindow_basic(t *testing.T) {
 	var winId ssm.MaintenanceWindowIdentity
@@ -41,6 +105,41 @@ func TestAccAWSSSMMaintenanceWindow_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMMaintenanceWindow_description(t *testing.T) {
+	var winId ssm.MaintenanceWindowIdentity
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ssm_maintenance_window.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMMaintenanceWindowConfigDescription(rName, "foo"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowExists(resourceName, &winId),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "foo"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSSMMaintenanceWindowConfigDescription(rName, "bar"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowExists(resourceName, &winId),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "bar"),
+				),
 			},
 		},
 	})
@@ -496,6 +595,18 @@ resource "aws_ssm_maintenance_window" "test" {
 `, rName)
 }
 
+func testAccAWSSSMMaintenanceWindowConfigDescription(rName, desc string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_maintenance_window" "test" {
+  cutoff      = 1
+  duration    = 3
+  name        = %[1]q
+  description = %[2]q
+  schedule    = "cron(0 16 ? * TUE *)"
+}
+`, rName, desc)
+}
+
 func testAccAWSSSMMaintenanceWindowConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
@@ -521,7 +632,7 @@ resource "aws_ssm_maintenance_window" "test" {
 
   tags = {
     %[2]q = %[3]q
-	%[4]q = %[5]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)

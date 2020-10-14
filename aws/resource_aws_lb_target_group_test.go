@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -192,7 +192,7 @@ func TestAccAWSLBTargetGroup_withoutHealthcheck(t *testing.T) {
 }
 
 func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
-	var confBefore, confAfter elbv2.TargetGroup
+	var targetGroup1, targetGroup2, targetGroup3 elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resourceName := "aws_lb_target_group.test"
 
@@ -205,7 +205,7 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 			{
 				Config: testAccAWSLBTargetGroupConfig_typeTCP(targetGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBTargetGroupExists(resourceName, &confBefore),
+					testAccCheckAWSLBTargetGroupExists(resourceName, &targetGroup1),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", targetGroupName),
 					resource.TestCheckResourceAttr(resourceName, "port", "8082"),
@@ -216,15 +216,15 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "10"),
-					testAccCheckAWSLBTargetGroupHealthCheckInterval(&confBefore, 10),
+					testAccCheckAWSLBTargetGroupHealthCheckInterval(&targetGroup1, 10),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "traffic-port"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "10"),
-					testAccCheckAWSLBTargetGroupHealthCheckTimeout(&confBefore, 10),
+					testAccCheckAWSLBTargetGroupHealthCheckTimeout(&targetGroup1, 10),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
-					testAccCheckAWSLBTargetGroupHealthyThreshold(&confBefore, 3),
+					testAccCheckAWSLBTargetGroupHealthyThreshold(&targetGroup1, 3),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
-					testAccCheckAWSLBTargetGroupUnhealthyThreshold(&confBefore, 3),
+					testAccCheckAWSLBTargetGroupUnhealthyThreshold(&targetGroup1, 3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "TestAcc_networkLB_TargetGroup"),
 				),
@@ -236,7 +236,8 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 			{
 				Config: testAccAWSLBTargetGroupConfig_typeTCPThresholdUpdated(targetGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBTargetGroupExists(resourceName, &confAfter),
+					testAccCheckAWSLBTargetGroupExists(resourceName, &targetGroup2),
+					testAccCheckAWSLBTargetGroupNotRecreated(&targetGroup1, &targetGroup2),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", targetGroupName),
 					resource.TestCheckResourceAttr(resourceName, "port", "8082"),
@@ -246,24 +247,57 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "10"),
-					testAccCheckAWSLBTargetGroupHealthCheckInterval(&confAfter, 10),
+					testAccCheckAWSLBTargetGroupHealthCheckInterval(&targetGroup2, 10),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "traffic-port"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "10"),
-					testAccCheckAWSLBTargetGroupHealthCheckTimeout(&confAfter, 10),
+					testAccCheckAWSLBTargetGroupHealthCheckTimeout(&targetGroup2, 10),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "5"),
-					testAccCheckAWSLBTargetGroupHealthyThreshold(&confAfter, 5),
+					testAccCheckAWSLBTargetGroupHealthyThreshold(&targetGroup2, 5),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "5"),
-					testAccCheckAWSLBTargetGroupUnhealthyThreshold(&confAfter, 5),
+					testAccCheckAWSLBTargetGroupUnhealthyThreshold(&targetGroup2, 5),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "TestAcc_networkLB_TargetGroup"),
 				),
 			},
 			{
 				Config: testAccAWSLBTargetGroupConfig_typeTCPIntervalUpdated(targetGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &targetGroup3),
+					testAccCheckAWSLBTargetGroupRecreated(&targetGroup2, &targetGroup3),
+				),
+			},
+		},
+	})
+}
 
-				ExpectNonEmptyPlan: true,
-				ExpectError:        regexp.MustCompile("Health check interval cannot be updated"),
+func TestAccAWSLBTargetGroup_Protocol_Tcp_HealthCheck_Protocol(t *testing.T) {
+	var targetGroup1, targetGroup2 elbv2.TargetGroup
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_typeTCPIntervalUpdated(targetGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &targetGroup1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_typeTCP_HTTPHealthCheck(targetGroupName, "/", 5),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &targetGroup2),
+					testAccCheckAWSLBTargetGroupRecreated(&targetGroup1, &targetGroup2),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
+				),
 			},
 		},
 	})
@@ -387,7 +421,7 @@ func TestAccAWSLBTargetGroup_TCP_HTTPHealthCheck(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroupBackwardsCompatibility(t *testing.T) {
+func TestAccAWSLBTargetGroup_BackwardsCompatibility(t *testing.T) {
 	var conf elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resourceName := "aws_alb_target_group.test"
@@ -863,27 +897,27 @@ func TestAccAWSLBTargetGroup_defaults_network(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resourceName := "aws_lb_target_group.test"
 	healthCheckInvalid1 := `
-    path = "/health"
-    interval = 10
-    port     = 8081
-    protocol = "TCP"
+path     = "/health"
+interval = 10
+port     = 8081
+protocol = "TCP"
     `
 	healthCheckInvalid2 := `
-    interval = 10
-    port     = 8081
-    protocol = "TCP"
-    matcher = "200"
+interval = 10
+port     = 8081
+protocol = "TCP"
+matcher  = "200"
     `
 	healthCheckInvalid3 := `
-    interval = 10
-    port     = 8081
-    protocol = "TCP"
-    timeout = 4
+interval = 10
+port     = 8081
+protocol = "TCP"
+timeout  = 4
     `
 	healthCheckValid := `
-    interval = 10
-    port     = 8081
-    protocol = "TCP"
+interval = 10
+port     = 8081
+protocol = "TCP"
     `
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -930,7 +964,7 @@ func TestAccAWSLBTargetGroup_defaults_network(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_stickinessWithTCPDisabled(t *testing.T) {
+func TestAccAWSLBTargetGroup_stickinessDefaultNLB(t *testing.T) {
 	var conf elbv2.TargetGroup
 	resourceName := "aws_lb_target_group.test"
 
@@ -941,11 +975,135 @@ func TestAccAWSLBTargetGroup_stickinessWithTCPDisabled(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBTargetGroupConfig_stickinessWithTCP(false),
+				Config: testAccAWSLBTargetGroupConfig_stickinessDefault("TCP"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_stickinessDefault("UDP"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_stickinessDefault("TCP_UDP"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLBTargetGroup_stickinessDefaultALB(t *testing.T) {
+	var conf elbv2.TargetGroup
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_stickinessDefault("HTTP"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLBTargetGroup_stickinessValidNLB(t *testing.T) {
+	var conf elbv2.TargetGroup
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_stickinessValidity("TCP", "source_ip", false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_stickinessValidity("TCP", "source_ip", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_stickinessValidity("UDP", "source_ip", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_stickinessValidity("TCP_UDP", "source_ip", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLBTargetGroup_stickinessValidALB(t *testing.T) {
+	var conf elbv2.TargetGroup
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_stickinessValidity("HTTP", "lb_cookie", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "86400"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_stickinessValidity("HTTPS", "lb_cookie", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "86400"),
 				),
@@ -954,16 +1112,55 @@ func TestAccAWSLBTargetGroup_stickinessWithTCPDisabled(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroup_stickinessWithTCPEnabledShouldError(t *testing.T) {
+func TestAccAWSLBTargetGroup_stickinessInvalidNLB(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSLBTargetGroupConfig_stickinessWithTCP(true),
-				PlanOnly:    true,
-				ExpectError: regexp.MustCompile("Network Load Balancers do not support Stickiness"),
+				Config:      testAccAWSLBTargetGroupConfig_stickinessValidity("TCP", "lb_cookie", true),
+				ExpectError: regexp.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
+			},
+			{
+				Config:      testAccAWSLBTargetGroupConfig_stickinessValidity("UDP", "lb_cookie", true),
+				ExpectError: regexp.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
+			},
+			{
+				Config:      testAccAWSLBTargetGroupConfig_stickinessValidity("TCP_UDP", "lb_cookie", true),
+				ExpectError: regexp.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
+			},
+			{
+				Config:             testAccAWSLBTargetGroupConfig_stickinessValidity("TCP_UDP", "lb_cookie", false),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSLBTargetGroup_stickinessInvalidALB(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSLBTargetGroupConfig_stickinessValidity("HTTP", "source_ip", true),
+				ExpectError: regexp.MustCompile("Stickiness type 'source_ip' is not supported for target groups with"),
+			},
+			{
+				Config:      testAccAWSLBTargetGroupConfig_stickinessValidity("HTTPS", "source_ip", true),
+				ExpectError: regexp.MustCompile("Stickiness type 'source_ip' is not supported for target groups with"),
+			},
+			{
+				Config:      testAccAWSLBTargetGroupConfig_stickinessValidity("TLS", "lb_cookie", true),
+				ExpectError: regexp.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
+			},
+			{
+				Config:             testAccAWSLBTargetGroupConfig_stickinessValidity("TCP_UDP", "lb_cookie", false),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -996,6 +1193,26 @@ func testAccCheckAWSLBTargetGroupExists(n string, res *elbv2.TargetGroup) resour
 		}
 
 		*res = *describe.TargetGroups[0]
+		return nil
+	}
+}
+
+func testAccCheckAWSLBTargetGroupNotRecreated(i, j *elbv2.TargetGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(i.TargetGroupArn) != aws.StringValue(j.TargetGroupArn) {
+			return fmt.Errorf("ELBv2 Target Group (%s) unexpectedly recreated (%s)", aws.StringValue(i.TargetGroupArn), aws.StringValue(j.TargetGroupArn))
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSLBTargetGroupRecreated(i, j *elbv2.TargetGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(i.TargetGroupArn) == aws.StringValue(j.TargetGroupArn) {
+			return fmt.Errorf("ELBv2 Target Group (%s) not recreated", aws.StringValue(i.TargetGroupArn))
+		}
+
 		return nil
 	}
 }
@@ -1106,26 +1323,28 @@ resource "aws_lb_target_group" "test" {
   name     = "%s"
   port     = 443
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
-  slow_start = 0
+  slow_start           = 0
 
   # HTTP Only
+
   stickiness {
     type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    interval = 10
-    port     = 8081
-    protocol = "HTTP"
-    healthy_threshold = 3
+    interval            = 10
+    port                = 8081
+    protocol            = "HTTP"
+    healthy_threshold   = 3
     unhealthy_threshold = 3
   }
+
   tags = {
-    Name ="TestAccAWSLBTargetGroup_application_LB_defaults"
+    Name = "TestAccAWSLBTargetGroup_application_LB_defaults"
   }
 }
 
@@ -1135,7 +1354,8 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-alb-defaults"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccNLB_defaults(name, healthCheckBlock string) string {
@@ -1144,17 +1364,17 @@ resource "aws_lb_target_group" "test" {
   name     = "%s"
   port     = 443
   protocol = "TCP"
-  vpc_id   = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
-  slow_start = 0
+  slow_start           = 0
 
   health_check {
-                %s
+    %s
   }
 
   tags = {
-    Name ="TestAccAWSLBTargetGroup_application_LB_defaults"
+    Name = "TestAccAWSLBTargetGroup_application_LB_defaults"
   }
 }
 
@@ -1164,37 +1384,39 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-nlb-defaults"
   }
-}`, name, healthCheckBlock)
+}
+`, name, healthCheckBlock)
 }
 
 func testAccAWSLBTargetGroupConfig_basic(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 443
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = "%s"
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
-  slow_start = 0
+  slow_start           = 0
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
   tags = {
-    Name ="TestAccAWSLBTargetGroup_basic"
+    Name = "TestAccAWSLBTargetGroup_basic"
   }
 }
 
@@ -1204,33 +1426,35 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-basic"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfigTags1(targetGroupName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
-  name = %[1]q
-  port = 443
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
-  slow_start = 0
+  slow_start           = 0
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
   tags = {
@@ -1244,33 +1468,35 @@ resource "aws_vpc" "test" {
   tags = {
     Name = %[1]q
   }
-}`, targetGroupName, tagKey1, tagValue1)
+}
+`, targetGroupName, tagKey1, tagValue1)
 }
 
 func testAccAWSLBTargetGroupConfigTags2(targetGroupName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
-  name = %[1]q
-  port = 443
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
-  slow_start = 0
+  slow_start           = 0
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
   tags = {
@@ -1285,23 +1511,25 @@ resource "aws_vpc" "test" {
   tags = {
     Name = %[1]q
   }
-}`, targetGroupName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+`, targetGroupName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccAWSLBTargetGroupConfig_basicUdp(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 514
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = "%s"
+  port     = 514
   protocol = "UDP"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   health_check {
     protocol = "TCP"
-	port = 514
+    port     = 514
   }
 
   tags = {
-    Name ="TestAccAWSLBTargetGroup_basic"
+    Name = "TestAccAWSLBTargetGroup_basic"
   }
 }
 
@@ -1311,44 +1539,48 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-basic"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_withoutHealthcheck(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
-  name = "%s"
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name        = "%s"
   target_type = "lambda"
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfigBackwardsCompatibility(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
-  name = "%s"
-  port = 443
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  name     = "%s"
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
-  slow_start = 0
+  slow_start           = 0
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
   tags = {
-    Name ="TestAccAWSLBTargetGroup_basic"
+    Name = "TestAccAWSLBTargetGroup_basic"
   }
 }
 
@@ -1358,48 +1590,52 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-bc"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_enableHealthcheck(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
-  name = "%s"
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name        = "%s"
   target_type = "lambda"
 
   health_check {
-    path = "/health"
+    path     = "/health"
     interval = 60
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_updatedPort(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 442
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = "%s"
+  port     = 442
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
   tags = {
-    Name ="TestAccAWSLBTargetGroup_basic"
+    Name = "TestAccAWSLBTargetGroup_basic"
   }
 }
 
@@ -1409,36 +1645,38 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-basic"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_updatedProtocol(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 443
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = "%s"
+  port     = 443
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.test2.id}"
+  vpc_id   = aws_vpc.test2.id
 
   deregistration_delay = 200
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
   tags = {
-    Name ="TestAccAWSLBTargetGroup_basic"
+    Name = "TestAccAWSLBTargetGroup_basic"
   }
 }
 
@@ -1456,36 +1694,38 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-basic"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_updatedVpc(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 443
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = "%s"
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
   tags = {
-    Name ="TestAccAWSLBTargetGroup_basic"
+    Name = "TestAccAWSLBTargetGroup_basic"
   }
 }
 
@@ -1495,32 +1735,34 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-updated-vpc"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_updateHealthCheck(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 443
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = "%s"
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health2"
-    interval = 30
-    port = 8082
-    protocol = "HTTPS"
-    timeout = 4
-    healthy_threshold = 4
+    path                = "/health2"
+    interval            = 30
+    port                = 8082
+    protocol            = "HTTPS"
+    timeout             = 4
+    healthy_threshold   = 4
     unhealthy_threshold = 4
-    matcher = "200"
+    matcher             = "200"
   }
 }
 
@@ -1530,7 +1772,8 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-update-health-check"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_Protocol_Tls(targetGroupName string) string {
@@ -1547,7 +1790,7 @@ resource "aws_lb_target_group" "test" {
   name     = %q
   port     = 443
   protocol = "TLS"
-  vpc_id   = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   health_check {
     interval            = 10
@@ -1558,31 +1801,32 @@ resource "aws_lb_target_group" "test" {
   }
 
   tags = {
-    Name ="tf-acc-test-lb-target-group-protocol-tls"
+    Name = "tf-acc-test-lb-target-group-protocol-tls"
   }
 }
 `, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_typeTCP(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 8082
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = "%s"
+  port     = 8082
   protocol = "TCP"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
 
   health_check {
-    interval = 10
-    port = "traffic-port"
-    protocol = "TCP"
-    healthy_threshold = 3
+    interval            = 10
+    port                = "traffic-port"
+    protocol            = "TCP"
+    healthy_threshold   = 3
     unhealthy_threshold = 3
   }
 
   tags = {
-    Name ="TestAcc_networkLB_TargetGroup"
+    Name = "TestAcc_networkLB_TargetGroup"
   }
 }
 
@@ -1592,29 +1836,31 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-type-tcp"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_typeTCP_withProxyProtocol(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 8082
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = "%s"
+  port     = 8082
   protocol = "TCP"
-  vpc_id = "${aws_vpc.test.id}"
-	
-	proxy_protocol_v2 = "true"    
-	deregistration_delay = 200
+  vpc_id   = aws_vpc.test.id
+
+  proxy_protocol_v2    = "true"
+  deregistration_delay = 200
 
   health_check {
-    interval = 10
-    port = "traffic-port"
-    protocol = "TCP"
-    healthy_threshold = 3
+    interval            = 10
+    port                = "traffic-port"
+    protocol            = "TCP"
+    healthy_threshold   = 3
     unhealthy_threshold = 3
   }
 
   tags = {
-    Name ="TestAcc_networkLB_TargetGroup"
+    Name = "TestAcc_networkLB_TargetGroup"
   }
 }
 
@@ -1624,28 +1870,30 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-type-tcp"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_typeTCPInvalidThreshold(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 8082
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = "%s"
+  port     = 8082
   protocol = "TCP"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
 
   health_check {
-    interval = 10
-    port = "traffic-port"
-    protocol = "TCP"
-    healthy_threshold = 3
+    interval            = 10
+    port                = "traffic-port"
+    protocol            = "TCP"
+    healthy_threshold   = 3
     unhealthy_threshold = 4
   }
 
   tags = {
-    Name ="TestAcc_networkLB_TargetGroup"
+    Name = "TestAcc_networkLB_TargetGroup"
   }
 }
 
@@ -1655,28 +1903,30 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-type-tcp"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_typeTCPThresholdUpdated(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 8082
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = "%s"
+  port     = 8082
   protocol = "TCP"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
 
   health_check {
-    interval = 10
-    port = "traffic-port"
-    protocol = "TCP"
-    healthy_threshold = 5
+    interval            = 10
+    port                = "traffic-port"
+    protocol            = "TCP"
+    healthy_threshold   = 5
     unhealthy_threshold = 5
   }
 
   tags = {
-    Name ="TestAcc_networkLB_TargetGroup"
+    Name = "TestAcc_networkLB_TargetGroup"
   }
 }
 
@@ -1686,28 +1936,30 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-type-tcp-threshold-updated"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_typeTCPIntervalUpdated(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 8082
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = "%s"
+  port     = 8082
   protocol = "TCP"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
 
   health_check {
-    interval = 30
-    port = "traffic-port"
-    protocol = "TCP"
-    healthy_threshold = 5
+    interval            = 30
+    port                = "traffic-port"
+    protocol            = "TCP"
+    healthy_threshold   = 5
     unhealthy_threshold = 5
   }
 
   tags = {
-    Name ="TestAcc_networkLB_TargetGroup"
+    Name = "TestAcc_networkLB_TargetGroup"
   }
 }
 
@@ -1717,15 +1969,17 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-type-tcp-interval-updated"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_typeTCP_HTTPHealthCheck(targetGroupName, path string, threshold int) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
   name     = "%[1]s"
   port     = 8082
   protocol = "TCP"
-  vpc_id   = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   health_check {
     healthy_threshold   = %[2]d
@@ -1739,48 +1993,53 @@ func testAccAWSLBTargetGroupConfig_typeTCP_HTTPHealthCheck(targetGroupName, path
   }
 
   tags = {
-    Name ="TestAcc_networkLB_HTTPHealthCheck"
+    Name = "TestAcc_networkLB_HTTPHealthCheck"
   }
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = "terraform-testacc-lb-target-group-type-tcp-http-health-check"
   }
-}`, targetGroupName, threshold, path)
+}
+`, targetGroupName, threshold, path)
 }
 
 func testAccAWSLBTargetGroupConfig_stickiness(targetGroupName string, addStickinessBlock bool, enabled bool) string {
 	var stickinessBlock string
 
 	if addStickinessBlock {
-		stickinessBlock = fmt.Sprintf(`stickiness {
-	    enabled = "%t"
-	    type = "lb_cookie"
-	    cookie_duration = 10000
-	  }`, enabled)
+		stickinessBlock = fmt.Sprintf(`
+stickiness {
+  enabled         = "%t"
+  type            = "lb_cookie"
+  cookie_duration = 10000
+}
+`, enabled)
 	}
 
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 443
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = "%s"
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
 
   %s
 
   health_check {
-    path = "/health2"
-    interval = 30
-    port = 8082
-    protocol = "HTTPS"
-    timeout = 4
-    healthy_threshold = 4
+    path                = "/health2"
+    interval            = 30
+    port                = 8082
+    protocol            = "HTTPS"
+    timeout             = 4
+    healthy_threshold   = 4
     unhealthy_threshold = 4
-    matcher = "200"
+    matcher             = "200"
   }
 }
 
@@ -1790,50 +2049,72 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-stickiness"
   }
-}`, targetGroupName, stickinessBlock)
+}
+`, targetGroupName, stickinessBlock)
 }
 
 const testAccAWSLBTargetGroupConfig_namePrefix = `
 resource "aws_lb_target_group" "test" {
   name_prefix = "tf-"
-  port = 80
-  protocol = "HTTP"
-  vpc_id = "${aws_vpc.test.id}"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.test.id
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags = {
-		Name = "terraform-testacc-lb-target-group-name-prefix"
-	}
+
+  tags = {
+    Name = "terraform-testacc-lb-target-group-name-prefix"
+  }
 }
 `
 
 const testAccAWSLBTargetGroupConfig_generatedName = `
 resource "aws_lb_target_group" "test" {
-  port = 80
+  port     = 80
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags = {
-		Name = "terraform-testacc-lb-target-group-generated-name"
-	}
+
+  tags = {
+    Name = "terraform-testacc-lb-target-group-generated-name"
+  }
 }
 `
 
-func testAccAWSLBTargetGroupConfig_stickinessWithTCP(enabled bool) string {
+func testAccAWSLBTargetGroupConfig_stickinessDefault(protocol string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name_prefix = "tf-"
   port        = 25
-  protocol    = "TCP"
-  vpc_id      = "${aws_vpc.test.id}"
+  protocol    = %q
+  vpc_id      = aws_vpc.test.id
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "testAccAWSLBTargetGroupConfig_stickinessDefault"
+  }
+}
+`, protocol)
+}
+
+func testAccAWSLBTargetGroupConfig_stickinessValidity(protocol, stickyType string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name_prefix = "tf-"
+  port        = 25
+  protocol    = %q
+  vpc_id      = aws_vpc.test.id
 
   stickiness {
-    type    = "lb_cookie"
+    type    = %q
     enabled = %t
   }
 }
@@ -1842,8 +2123,8 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "testAccAWSLBTargetGroupConfig_namePrefix"
+    Name = "testAccAWSLBTargetGroupConfig_stickinessValidity"
   }
 }
-`, enabled)
+`, protocol, stickyType, enabled)
 }

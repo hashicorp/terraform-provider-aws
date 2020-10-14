@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSSSMParameter_basic(t *testing.T) {
@@ -31,6 +31,7 @@ func TestAccAWSSSMParameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tier", "Standard"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttr(resourceName, "data_type", "text"),
 				),
 			},
 			{
@@ -182,6 +183,36 @@ func TestAccAWSSSMParameter_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMParameter_updateType(t *testing.T) {
+	var param ssm.Parameter
+	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	resourceName := "aws_ssm_parameter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMParameterBasicConfig(name, "SecureString", "test2"),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"overwrite"},
+			},
+			{
+				Config: testAccAWSSSMParameterBasicConfig(name, "String", "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, "type", "String"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMParameter_updateDescription(t *testing.T) {
 	var param ssm.Parameter
 	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
@@ -292,6 +323,33 @@ func TestAccAWSSSMParameter_secure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "value", "secret"),
 					resource.TestCheckResourceAttr(resourceName, "type", "SecureString"),
 					resource.TestCheckResourceAttr(resourceName, "key_id", "alias/aws/ssm"), // Default SSM key id
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"overwrite"},
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMParameter_DataType_AwsEc2Image(t *testing.T) {
+	var param ssm.Parameter
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ssm_parameter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMParameterConfigDataTypeAwsEc2Image(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, "data_type", "aws:ec2:image"),
 				),
 			},
 			{
@@ -479,12 +537,25 @@ resource "aws_ssm_parameter" "test" {
 `, rName, tier)
 }
 
+func testAccAWSSSMParameterConfigDataTypeAwsEc2Image(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		fmt.Sprintf(`
+resource "aws_ssm_parameter" "test" {
+  name      = %[1]q
+  data_type = "aws:ec2:image"
+  type      = "String"
+  value     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+}
+`, rName))
+}
+
 func testAccAWSSSMParameterBasicConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
-  name  =  %[1]q
+  name  = %[1]q
   type  = "String"
-  value =  %[1]q
+  value = %[1]q
 
   tags = {
     %[2]q = %[3]q
@@ -496,9 +567,9 @@ resource "aws_ssm_parameter" "test" {
 func testAccAWSSSMParameterBasicConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
-  name  =  %[1]q
+  name  = %[1]q
   type  = "String"
-  value =  %[1]q
+  value = %[1]q
 
   tags = {
     %[2]q = %[3]q
@@ -550,7 +621,7 @@ resource "aws_ssm_parameter" "secret_test" {
   type        = "SecureString"
   value       = "%[2]s"
   key_id      = "alias/%[3]s"
-  depends_on  = ["aws_kms_alias.test_alias"]
+  depends_on  = [aws_kms_alias.test_alias]
 }
 
 resource "aws_kms_key" "test_key" {
@@ -560,7 +631,7 @@ resource "aws_kms_key" "test_key" {
 
 resource "aws_kms_alias" "test_alias" {
   name          = "alias/%[3]s"
-  target_key_id = "${aws_kms_key.test_key.id}"
+  target_key_id = aws_kms_key.test_key.id
 }
 `, rName, value, keyAlias)
 }

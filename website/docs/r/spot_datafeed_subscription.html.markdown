@@ -21,12 +21,13 @@ resource "aws_s3_bucket" "default" {
 }
 
 resource "aws_spot_datafeed_subscription" "default" {
-  bucket = "${aws_s3_bucket.default.bucket}"
+  bucket = aws_s3_bucket.default.bucket
   prefix = "my_subdirectory"
 }
 ```
 
 ## Argument Reference
+
 * `bucket` - (Required) The Amazon S3 bucket in which to store the Spot instance data feed.
 * `prefix` - (Optional) Path of folder inside bucket to place spot pricing data.
 

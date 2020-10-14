@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -25,6 +25,10 @@ func resourceAwsPlacementGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -54,8 +58,9 @@ func resourceAwsPlacementGroupCreate(d *schema.ResourceData, meta interface{}) e
 
 	name := d.Get("name").(string)
 	input := ec2.CreatePlacementGroupInput{
-		GroupName: aws.String(name),
-		Strategy:  aws.String(d.Get("strategy").(string)),
+		GroupName:         aws.String(name),
+		Strategy:          aws.String(d.Get("strategy").(string)),
+		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypePlacementGroup),
 	}
 	log.Printf("[DEBUG] Creating EC2 Placement group: %s", input)
 	_, err := conn.CreatePlacementGroup(&input)
@@ -74,6 +79,11 @@ func resourceAwsPlacementGroupCreate(d *schema.ResourceData, meta interface{}) e
 			})
 
 			if err != nil {
+				// Fix timing issue where describe is called prior to
+				// create being effectively processed by AWS
+				if isAWSErr(err, "InvalidPlacementGroup.Unknown", "") {
+					return out, "pending", nil
+				}
 				return out, "", err
 			}
 
@@ -82,7 +92,7 @@ func resourceAwsPlacementGroupCreate(d *schema.ResourceData, meta interface{}) e
 			}
 			pg := out.PlacementGroups[0]
 
-			return out, *pg.State, nil
+			return out, aws.StringValue(pg.State), nil
 		},
 	}
 
@@ -95,25 +105,13 @@ func resourceAwsPlacementGroupCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(name)
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		input := ec2.DescribePlacementGroupsInput{
-			GroupNames: []*string{aws.String(d.Id())},
-		}
-		out, err := conn.DescribePlacementGroups(&input)
-		if err != nil {
-			return err
-		}
-		pg := out.PlacementGroups[0]
-		if err := keyvaluetags.Ec2UpdateTags(conn, aws.StringValue(pg.GroupId), nil, v); err != nil {
-			return fmt.Errorf("error adding tags: %s", err)
-		}
-	}
-
 	return resourceAwsPlacementGroupRead(d, meta)
 }
 
 func resourceAwsPlacementGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	input := ec2.DescribePlacementGroupsInput{
 		GroupNames: []*string{aws.String(d.Id())},
 	}
@@ -134,9 +132,19 @@ func resourceAwsPlacementGroupRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("name", pg.GroupName)
 	d.Set("strategy", pg.Strategy)
 	d.Set("placement_group_id", pg.GroupId)
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(pg.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(pg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "ec2",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("placement-group/%s", d.Id()),
+	}.String()
+
+	d.Set("arn", arn)
 
 	return nil
 }
@@ -168,7 +176,7 @@ func resourceAwsPlacementGroupDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	wait := resource.StateChangeConf{
-		Pending:    []string{ec2.PlacementGroupStateDeleting},
+		Pending:    []string{ec2.PlacementGroupStateAvailable, ec2.PlacementGroupStateDeleting},
 		Target:     []string{ec2.PlacementGroupStateDeleted},
 		Timeout:    5 * time.Minute,
 		MinTimeout: 1 * time.Second,
@@ -178,11 +186,10 @@ func resourceAwsPlacementGroupDelete(d *schema.ResourceData, meta interface{}) e
 			})
 
 			if err != nil {
-				awsErr := err.(awserr.Error)
-				if awsErr.Code() == "InvalidPlacementGroup.Unknown" {
-					return out, "deleted", nil
+				if isAWSErr(err, "InvalidPlacementGroup.Unknown", "") {
+					return out, ec2.PlacementGroupStateDeleted, nil
 				}
-				return out, "", awsErr
+				return out, "", err
 			}
 
 			if len(out.PlacementGroups) == 0 {
@@ -190,8 +197,12 @@ func resourceAwsPlacementGroupDelete(d *schema.ResourceData, meta interface{}) e
 			}
 
 			pg := out.PlacementGroups[0]
+			if aws.StringValue(pg.State) == ec2.PlacementGroupStateAvailable {
+				log.Printf("[DEBUG] Accepted status when deleting EC2 Placement group: %q %v", d.Id(),
+					aws.StringValue(pg.State))
+			}
 
-			return out, *pg.State, nil
+			return out, aws.StringValue(pg.State), nil
 		},
 	}
 

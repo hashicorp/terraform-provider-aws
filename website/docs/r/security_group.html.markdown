@@ -29,48 +29,25 @@ Basic usage
 resource "aws_security_group" "allow_tls" {
   name        = "allow_tls"
   description = "Allow TLS inbound traffic"
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
-    # TLS (change to whatever ports you need)
+    description = "TLS from VPC"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    # Please restrict your ingress to only necessary IPs and ports.
-    # Opening to 0.0.0.0/0 can lead to security vulnerabilities.
-    cidr_blocks = # add a CIDR block here
+    cidr_blocks = [aws_vpc.main.cidr_block]
   }
 
   egress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    cidr_blocks     = ["0.0.0.0/0"]
-    prefix_list_ids = ["pl-12c4e678"]
-  }
-}
-```
-
-Basic usage with tags:
-
-```hcl
-resource "aws_security_group" "allow_tls" {
-  name        = "allow_tls"
-  description = "Allow TLS inbound traffic"
-  vpc_id      = "${aws_vpc.main.id}"
-
-  ingress {
-    # TLS (change to whatever ports you need)
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    # Please restrict your ingress to only necessary IPs and ports.
-    # Opening to 0.0.0.0/0 can lead to security vulnerabilities.
-    cidr_blocks = # add your IP address here
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
-    Name = "allow_all"
+    Name = "allow_tls"
   }
 }
 ```
@@ -101,7 +78,7 @@ with the service, and those rules may contain a cyclic dependency that prevent
 the security groups from being destroyed without removing the dependency first.
 Default `false`
 * `vpc_id` - (Optional, Forces new resource) The VPC ID.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 The `ingress` block supports:
 
@@ -141,11 +118,15 @@ surprises in terms of controlling your egress rules. If you desire this rule to
 be in place, you can use this `egress` block:
 
 ```hcl
-egress {
-  from_port   = 0
-  to_port     = 0
-  protocol    = "-1"
-  cidr_blocks = ["0.0.0.0/0"]
+resource "aws_security_group" "example" {
+  # ... other configuration ...
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 ```
 
@@ -156,17 +137,19 @@ are associated with a prefix list name, or service name, that is linked to a spe
 Prefix list IDs are exported on VPC Endpoints, so you can use this format:
 
 ```hcl
-# ...
-egress {
-  from_port       = 0
-  to_port         = 0
-  protocol        = "-1"
-  prefix_list_ids = ["${aws_vpc_endpoint.my_endpoint.prefix_list_id}"]
+resource "aws_security_group" "example" {
+  # ... other configuration ...
+
+  egress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    prefix_list_ids = [aws_vpc_endpoint.my_endpoint.prefix_list_id]
+  }
 }
 
-# ...
 resource "aws_vpc_endpoint" "my_endpoint" {
-  # ...
+  # ... other configuration ...
 }
 ```
 

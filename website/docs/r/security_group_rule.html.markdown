@@ -27,15 +27,12 @@ a conflict of rule settings and will overwrite rules.
 Basic usage
 
 ```hcl
-resource "aws_security_group_rule" "allow_all" {
-  type            = "ingress"
-  from_port       = 0
-  to_port         = 65535
-  protocol        = "tcp"
-  # Opening to 0.0.0.0/0 can lead to security vulnerabilities.
-  cidr_blocks = # add a CIDR block here
-  prefix_list_ids = ["pl-12c4e678"]
-
+resource "aws_security_group_rule" "example" {
+  type              = "ingress"
+  from_port         = 0
+  to_port           = 65535
+  protocol          = "tcp"
+  cidr_blocks       = [aws_vpc.example.cidr_block]
   security_group_id = "sg-123456"
 }
 ```
@@ -62,7 +59,7 @@ Only valid with `egress`.
 
 ## Usage with prefix list IDs
 
-Prefix list IDs are manged by AWS internally. Prefix list IDs
+Prefix list IDs are managed by AWS internally. Prefix list IDs
 are associated with a prefix list name, or service name, that is linked to a specific region.
 Prefix list IDs are exported on VPC Endpoints, so you can use this format:
 
@@ -71,7 +68,7 @@ resource "aws_security_group_rule" "allow_all" {
   type              = "egress"
   to_port           = 0
   protocol          = "-1"
-  prefix_list_ids   = ["${aws_vpc_endpoint.my_endpoint.prefix_list_id}"]
+  prefix_list_ids   = [aws_vpc_endpoint.my_endpoint.prefix_list_id]
   from_port         = 0
   security_group_id = "sg-123456"
 }

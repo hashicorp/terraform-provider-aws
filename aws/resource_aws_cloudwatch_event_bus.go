@@ -2,11 +2,11 @@ package aws
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsCloudWatchEventBus() *schema.Resource {
@@ -37,7 +37,7 @@ func resourceAwsCloudWatchEventBusCreate(d *schema.ResourceData, meta interface{
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
 	eventBusName := d.Get("name").(string)
-	params := &cloudwatchevents.CreateEventBusInput{
+	params := &events.CreateEventBusInput{
 		Name: aws.String(eventBusName),
 	}
 
@@ -59,12 +59,12 @@ func resourceAwsCloudWatchEventBusRead(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 	log.Printf("[DEBUG] Reading CloudWatch Event Bus: %v", d.Id())
 
-	input := &cloudwatchevents.DescribeEventBusInput{
+	input := &events.DescribeEventBusInput{
 		Name: aws.String(d.Id()),
 	}
 
 	output, err := conn.DescribeEventBus(input)
-	if isAWSErr(err, cloudwatchevents.ErrCodeResourceNotFoundException, "") {
+	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] CloudWatch Event Bus (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -84,10 +84,10 @@ func resourceAwsCloudWatchEventBusRead(d *schema.ResourceData, meta interface{})
 func resourceAwsCloudWatchEventBusDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 	log.Printf("[INFO] Deleting CloudWatch Event Bus: %v", d.Id())
-	_, err := conn.DeleteEventBus(&cloudwatchevents.DeleteEventBusInput{
+	_, err := conn.DeleteEventBus(&events.DeleteEventBusInput{
 		Name: aws.String(d.Id()),
 	})
-	if isAWSErr(err, cloudwatchevents.ErrCodeResourceNotFoundException, "") {
+	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] CloudWatch Event Bus (%s) not found", d.Id())
 		return nil
 	}

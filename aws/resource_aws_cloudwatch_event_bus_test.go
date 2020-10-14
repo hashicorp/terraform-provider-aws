@@ -2,14 +2,14 @@ package aws
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -30,7 +30,7 @@ func testSweepCloudWatchEventBuses(region string) error {
 	}
 	conn := client.(*AWSClient).cloudwatcheventsconn
 
-	input := &cloudwatchevents.ListEventBusesInput{}
+	input := &events.ListEventBusesInput{}
 
 	for {
 		output, err := conn.ListEventBuses(input)
@@ -54,7 +54,7 @@ func testSweepCloudWatchEventBuses(region string) error {
 			}
 
 			log.Printf("[INFO] Deleting CloudWatch Event Bus %s", name)
-			_, err := conn.DeleteEventBus(&cloudwatchevents.DeleteEventBusInput{
+			_, err := conn.DeleteEventBus(&events.DeleteEventBusInput{
 				Name: aws.String(name),
 			})
 			if err != nil {
@@ -72,9 +72,12 @@ func testSweepCloudWatchEventBuses(region string) error {
 }
 
 func TestAccAWSCloudWatchEventBus_basic(t *testing.T) {
-	var eventBusOutput cloudwatchevents.DescribeEventBusOutput
+	var v events.DescribeEventBusOutput
 	busName := acctest.RandomWithPrefix("tf-acc-test")
 	busNameModified := acctest.RandomWithPrefix("tf-acc-test")
+
+	resourceName := "aws_cloudwatch_event_bus.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -83,15 +86,17 @@ func TestAccAWSCloudWatchEventBus_basic(t *testing.T) {
 			{
 				Config: testAccAWSCloudWatchEventBusConfig(busName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventBusExists("aws_cloudwatch_event_bus.foo", &eventBusOutput),
-					resource.TestCheckResourceAttr("aws_cloudwatch_event_bus.foo", "name", busName),
+					testAccCheckCloudWatchEventBusExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "name", busName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("event-bus/%s", busName)),
 				),
 			},
 			{
 				Config: testAccAWSCloudWatchEventBusConfig(busNameModified),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventBusExists("aws_cloudwatch_event_bus.foo", &eventBusOutput),
-					resource.TestCheckResourceAttr("aws_cloudwatch_event_bus.foo", "name", busNameModified),
+					testAccCheckCloudWatchEventBusExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "name", busNameModified),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("event-bus/%s", busNameModified)),
 				),
 			},
 		},
@@ -99,8 +104,11 @@ func TestAccAWSCloudWatchEventBus_basic(t *testing.T) {
 }
 
 func TestAccAWSCloudWatchEventBus_disappears(t *testing.T) {
-	var eventBusOutput cloudwatchevents.DescribeEventBusOutput
+	var v events.DescribeEventBusOutput
 	busName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resourceName := "aws_cloudwatch_event_bus.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -109,8 +117,8 @@ func TestAccAWSCloudWatchEventBus_disappears(t *testing.T) {
 			{
 				Config: testAccAWSCloudWatchEventBusConfig(busName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventBusExists("aws_cloudwatch_event_bus.foo", &eventBusOutput),
-					testAccCheckCloudWatchEventBusDisappears(&eventBusOutput),
+					testAccCheckCloudWatchEventBusExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventBus(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -126,7 +134,7 @@ func testAccCheckAWSCloudWatchEventBusDestroy(s *terraform.State) error {
 			continue
 		}
 
-		params := cloudwatchevents.DescribeEventBusInput{
+		params := events.DescribeEventBusInput{
 			Name: aws.String(rs.Primary.ID),
 		}
 
@@ -141,7 +149,7 @@ func testAccCheckAWSCloudWatchEventBusDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckCloudWatchEventBusExists(n string, v *cloudwatchevents.DescribeEventBusOutput) resource.TestCheckFunc {
+func testAccCheckCloudWatchEventBusExists(n string, v *events.DescribeEventBusOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -149,7 +157,7 @@ func testAccCheckCloudWatchEventBusExists(n string, v *cloudwatchevents.Describe
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
-		params := cloudwatchevents.DescribeEventBusInput{
+		params := events.DescribeEventBusInput{
 			Name: aws.String(rs.Primary.ID),
 		}
 		resp, err := conn.DescribeEventBus(&params)
@@ -166,21 +174,10 @@ func testAccCheckCloudWatchEventBusExists(n string, v *cloudwatchevents.Describe
 	}
 }
 
-func testAccCheckCloudWatchEventBusDisappears(v *cloudwatchevents.DescribeEventBusOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
-		opts := &cloudwatchevents.DeleteEventBusInput{
-			Name: v.Name,
-		}
-		_, err := conn.DeleteEventBus(opts)
-		return err
-	}
-}
-
 func testAccAWSCloudWatchEventBusConfig(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_bus" "foo" {
-    name = "%s"
+resource "aws_cloudwatch_event_bus" "test" {
+  name = "%s"
 }
 `, name)
 }

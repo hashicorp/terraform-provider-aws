@@ -10,8 +10,6 @@ description: |-
 
 Subscribes to a Security Hub product.
 
-~> **NOTE:** This AWS service is in Preview and may change before General Availability release. Backwards compatibility is not guaranteed between Terraform AWS Provider releases.
-
 ## Example Usage
 
 ```hcl
@@ -20,7 +18,7 @@ resource "aws_securityhub_account" "example" {}
 data "aws_region" "current" {}
 
 resource "aws_securityhub_product_subscription" "example" {
-  depends_on  = ["aws_securityhub_account.example"]
+  depends_on  = [aws_securityhub_account.example]
   product_arn = "arn:aws:securityhub:${data.aws_region.current.name}:733251395267:product/alertlogic/althreatmanagement"
 }
 ```

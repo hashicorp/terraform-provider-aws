@@ -1,9 +1,11 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,35 +16,14 @@ import (
 
 	"errors"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 const awsMutexLambdaKey = `aws_lambda_function`
-
-var validLambdaRuntimes = []string{
-	// lambda.RuntimeNodejs has reached end of life since October 2016 so not included here
-	lambda.RuntimeDotnetcore10,
-	lambda.RuntimeDotnetcore20,
-	lambda.RuntimeDotnetcore21,
-	lambda.RuntimeGo1X,
-	lambda.RuntimeJava8,
-	lambda.RuntimeJava11,
-	lambda.RuntimeNodejs43,
-	lambda.RuntimeNodejs43Edge,
-	lambda.RuntimeNodejs610,
-	lambda.RuntimeNodejs810,
-	lambda.RuntimeNodejs10X,
-	lambda.RuntimeNodejs12X,
-	lambda.RuntimeProvided,
-	lambda.RuntimePython27,
-	lambda.RuntimePython36,
-	lambda.RuntimePython37,
-	lambda.RuntimePython38,
-	lambda.RuntimeRuby25,
-}
 
 func resourceAwsLambdaFunction() *schema.Resource {
 	return &schema.Resource{
@@ -101,14 +82,38 @@ func resourceAwsLambdaFunction() *schema.Resource {
 					},
 				},
 			},
+			"file_system_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 0,
+				// Lambda file system supports 1 EFS file system per lambda function. This might increase in future.
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						// EFS access point arn
+						"arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
+						},
+						// Local mount path inside a lambda function. Must start with "/mnt/".
+						"local_mount_path": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/mnt/[a-zA-Z0-9-_.]+$`), "must start with '/mnt/'"),
+						},
+					},
+				},
+			},
 			"function_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 			"handler": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"layers": {
 				Type:     schema.TypeList,
@@ -137,7 +142,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 			"runtime": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice(validLambdaRuntimes, false),
+				ValidateFunc: validation.StringInSlice(lambda.Runtime_Values(), false),
 			},
 			"timeout": {
 				Type:     schema.TypeInt,
@@ -189,7 +194,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 						return false
 					}
 
-					if d.HasChange("vpc_config.0.security_group_ids") || d.HasChange("vpc_config.0.subnet_ids") {
+					if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids") {
 						return false
 					}
 
@@ -265,7 +270,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 	}
 }
 
-func updateComputedAttributesOnPublish(d *schema.ResourceDiff, meta interface{}) error {
+func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	if needsFunctionCodeUpdate(d) {
 		d.SetNewComputed("last_modified")
 		publish := d.Get("publish").(bool)
@@ -354,6 +359,10 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
+	if v, ok := d.GetOk("file_system_config"); ok && len(v.([]interface{})) > 0 {
+		params.FileSystemConfigs = expandLambdaFileSystemConfigs(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 {
 		config := v.([]interface{})[0].(map[string]interface{})
 
@@ -395,8 +404,8 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		params.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().LambdaTags()
 	}
 
-	// IAM changes can take 1 minute to propagate in AWS
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	// IAM changes can take some time to propagate in AWS
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 		_, err := conn.CreateFunction(params)
 		if err != nil {
 			log.Printf("[DEBUG] Error creating Lambda Function: %s", err)
@@ -489,6 +498,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 // GetFunction in the API / SDK
 func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	params := &lambda.GetFunctionInput{
 		FunctionName: aws.String(d.Get("function_name").(string)),
@@ -521,7 +531,7 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	// Tagging operations are permitted on Lambda functions only.
 	// Tags on aliases and versions are not supported.
 	if !qualifierExistance {
-		if err := d.Set("tags", keyvaluetags.LambdaKeyValueTags(getFunctionOutput.Tags).IgnoreAws().Map()); err != nil {
+		if err := d.Set("tags", keyvaluetags.LambdaKeyValueTags(getFunctionOutput.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 			return fmt.Errorf("error setting tags: %s", err)
 		}
 	}
@@ -544,6 +554,12 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("kms_key_arn", function.KMSKeyArn)
 	d.Set("source_code_hash", function.CodeSha256)
 	d.Set("source_code_size", function.CodeSize)
+
+	fileSystemConfigs := flattenLambdaFileSystemConfigs(function.FileSystemConfigs)
+	log.Printf("[INFO] Setting Lambda %s file system configs %#v from API", d.Id(), fileSystemConfigs)
+	if err := d.Set("file_system_config", fileSystemConfigs); err != nil {
+		return fmt.Errorf("Error setting file system config for Lambda Function (%s): %s", d.Id(), err)
+	}
 
 	layers := flattenLambdaLayers(function.Layers)
 	log.Printf("[INFO] Setting Lambda %s Layers %#v from API", d.Id(), layers)
@@ -669,8 +685,6 @@ func needsFunctionCodeUpdate(d resourceDiffer) bool {
 func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
 
-	d.Partial(true)
-
 	arn := d.Get("arn").(string)
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
@@ -691,6 +705,13 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 	if d.HasChange("handler") {
 		configReq.Handler = aws.String(d.Get("handler").(string))
+		configUpdate = true
+	}
+	if d.HasChange("file_system_config") {
+		configReq.FileSystemConfigs = make([]*lambda.FileSystemConfig, 0)
+		if v, ok := d.GetOk("file_system_config"); ok && len(v.([]interface{})) > 0 {
+			configReq.FileSystemConfigs = expandLambdaFileSystemConfigs(v.([]interface{}))
+		}
 		configUpdate = true
 	}
 	if d.HasChange("memory_size") {
@@ -780,7 +801,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		log.Printf("[DEBUG] Send Update Lambda Function Configuration request: %#v", configReq)
 
 		// IAM changes can take 1 minute to propagate in AWS
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 			_, err := conn.UpdateFunctionConfiguration(configReq)
 			if err != nil {
 				log.Printf("[DEBUG] Received error modifying Lambda Function Configuration %s: %s", d.Id(), err)
@@ -835,18 +856,12 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		if err := waitForLambdaFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for Lambda Function (%s) update: %s", d.Id(), err)
 		}
-
-		d.SetPartial("description")
-		d.SetPartial("handler")
-		d.SetPartial("memory_size")
-		d.SetPartial("role")
-		d.SetPartial("timeout")
 	}
 
-	if needsFunctionCodeUpdate(d) {
+	codeUpdate := needsFunctionCodeUpdate(d)
+	if codeUpdate {
 		codeReq := &lambda.UpdateFunctionCodeInput{
 			FunctionName: aws.String(d.Id()),
-			Publish:      aws.Bool(d.Get("publish").(bool)),
 		}
 
 		if v, ok := d.GetOk("filename"); ok {
@@ -878,12 +893,6 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		if err != nil {
 			return fmt.Errorf("Error modifying Lambda Function Code %s: %s", d.Id(), err)
 		}
-
-		d.SetPartial("filename")
-		d.SetPartial("source_code_hash")
-		d.SetPartial("s3_bucket")
-		d.SetPartial("s3_key")
-		d.SetPartial("s3_object_version")
 	}
 
 	if d.HasChange("reserved_concurrent_executions") {
@@ -914,7 +923,17 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	d.Partial(false)
+	publish := d.Get("publish").(bool)
+	if publish && (codeUpdate || configUpdate) {
+		versionReq := &lambda.PublishVersionInput{
+			FunctionName: aws.String(d.Id()),
+		}
+
+		_, err := conn.PublishVersion(versionReq)
+		if err != nil {
+			return fmt.Errorf("Error publishing Lambda Function Version %s: %s", d.Id(), err)
+		}
+	}
 
 	return resourceAwsLambdaFunctionRead(d, meta)
 }
@@ -1029,4 +1048,28 @@ func waitForLambdaFunctionUpdate(conn *lambda.Lambda, functionName string, timeo
 	_, err := stateConf.WaitForState()
 
 	return err
+}
+
+func flattenLambdaFileSystemConfigs(fscList []*lambda.FileSystemConfig) []map[string]interface{} {
+	results := make([]map[string]interface{}, 0, len(fscList))
+	for _, fsc := range fscList {
+		f := make(map[string]interface{})
+		f["arn"] = *fsc.Arn
+		f["local_mount_path"] = *fsc.LocalMountPath
+
+		results = append(results, f)
+	}
+	return results
+}
+
+func expandLambdaFileSystemConfigs(fscMaps []interface{}) []*lambda.FileSystemConfig {
+	fileSystemConfigs := make([]*lambda.FileSystemConfig, 0, len(fscMaps))
+	for _, fsc := range fscMaps {
+		fscMap := fsc.(map[string]interface{})
+		fileSystemConfigs = append(fileSystemConfigs, &lambda.FileSystemConfig{
+			Arn:            aws.String(fscMap["arn"].(string)),
+			LocalMountPath: aws.String(fscMap["local_mount_path"].(string)),
+		})
+	}
+	return fileSystemConfigs
 }
