@@ -10,9 +10,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+)
+
+const (
+	AWSSSOPermissionSetCreateTimeout               = 5 * time.Minute
+	AWSSSOPermissionSetUpdateTimeout               = 10 * time.Minute
+	AWSSSOPermissionSetDeleteTimeout               = 5 * time.Minute
+	AWSSSOPermissionSetProvisioningRetryDelay      = 5 * time.Second
+	AWSSSOPermissionSetProvisioningRetryMinTimeout = 3 * time.Second
 )
 
 func resourceAwsSsoPermissionSet() *schema.Resource {
@@ -31,6 +40,11 @@ func resourceAwsSsoPermissionSet() *schema.Resource {
 				d.Set("instance_arn", instanceArn)
 				return []*schema.ResourceData{d}, nil
 			},
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(AWSSSOPermissionSetCreateTimeout),
+			Update: schema.DefaultTimeout(AWSSSOPermissionSetUpdateTimeout),
+			Delete: schema.DefaultTimeout(AWSSSOPermissionSetDeleteTimeout),
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -350,6 +364,45 @@ func resourceAwsSsoPermissionSetUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
+	// Reprovision if anything has changed
+	if d.HasChanges("description", "relay_state", "session_duration", "inline_policy", "managed_policies", "tags") {
+
+		// Auto provision all accounts
+		targetType := ssoadmin.ProvisionTargetTypeAllProvisionedAccounts
+		provisionInput := &ssoadmin.ProvisionPermissionSetInput{
+			InstanceArn:      aws.String(instanceArn),
+			PermissionSetArn: aws.String(permissionSetArn),
+			TargetType:       aws.String(targetType),
+		}
+
+		log.Printf("[INFO] Provisioning AWS SSO Permission Set")
+		provisionResponse, err := ssoadminconn.ProvisionPermissionSet(provisionInput)
+		if err != nil {
+			return fmt.Errorf("Error provisioning AWS SSO Permission Set (%s): %w", d.Id(), err)
+		}
+
+		if provisionResponse != nil && provisionResponse.PermissionSetProvisioningStatus != nil {
+			status := provisionResponse.PermissionSetProvisioningStatus
+
+			if status.CreatedDate != nil {
+				d.Set("created_date", status.CreatedDate.Format(time.RFC3339))
+			}
+
+			wait := resource.StateChangeConf{
+				Delay:      AWSSSOPermissionSetProvisioningRetryDelay,
+				Pending:    []string{ssoadmin.StatusValuesInProgress},
+				Target:     []string{ssoadmin.StatusValuesSucceeded},
+				Timeout:    d.Timeout(schema.TimeoutUpdate),
+				MinTimeout: AWSSSOPermissionSetProvisioningRetryMinTimeout,
+				Refresh:    resourceAwsSsoPermissionSetProvisioningRefreshFunc(ssoadminconn, aws.StringValue(status.RequestId), instanceArn),
+			}
+
+			if _, err := wait.WaitForState(); err != nil {
+				return fmt.Errorf("Error waiting for AWS SSO Permission Set (%s) provisioning: %w", d.Id(), err)
+			}
+		}
+	}
+
 	return resourceAwsSsoPermissionSetRead(d, meta)
 }
 
@@ -447,5 +500,27 @@ func resourceAwsSsoPermissionSetParseID(id string) (string, error) {
 	return instanceARN.String(), nil
 }
 
-// func waitForPermissionSetProvisioning(conn *identitystore.IdentityStore, arn string) error {
-// }
+func resourceAwsSsoPermissionSetProvisioningRefreshFunc(ssoadminconn *ssoadmin.SSOAdmin, instanceArn, requestID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &ssoadmin.DescribePermissionSetProvisioningStatusInput{
+			InstanceArn:                     aws.String(instanceArn),
+			ProvisionPermissionSetRequestId: aws.String(requestID),
+		}
+
+		return resourceAwsSsoPermissionSetProvisioningWait(ssoadminconn, input)
+	}
+}
+
+func resourceAwsSsoPermissionSetProvisioningWait(ssoadminconn *ssoadmin.SSOAdmin, input *ssoadmin.DescribePermissionSetProvisioningStatusInput) (result interface{}, state string, err error) {
+
+	resp, err := ssoadminconn.DescribePermissionSetProvisioningStatus(input)
+
+	if aws.StringValue(resp.PermissionSetProvisioningStatus.Status) == ssoadmin.StatusValuesFailed {
+		return nil, ssoadmin.StatusValuesFailed, fmt.Errorf("Failed to provision AWS SSO Permission Set (%s): %s", aws.StringValue(resp.PermissionSetProvisioningStatus.PermissionSetArn), aws.StringValue(resp.PermissionSetProvisioningStatus.FailureReason))
+	}
+
+	if err != nil {
+		return nil, *resp.PermissionSetProvisioningStatus.Status, err
+	}
+	return true, *resp.PermissionSetProvisioningStatus.Status, nil
+}
