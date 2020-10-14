@@ -73,7 +73,7 @@ The following arguments are supported:
 * `domain_owner` - (Optional) The account number of the AWS account that owns the domain.
 * `description` - (Optional) The description of the repository.
 * `upstream` - (Optional) A list of upstream repositories to associate with the repository. The order of the upstream repositories in the list determines their priority order when AWS CodeArtifact looks for a requested package version. see [Upstream](#upstream)
-* `external_connections` - An array of external connections associated with the repository. see [External Connections](#external-connections)
+* `external_connections` - An array of external connections associated with the repository. Only one extrenal connection can be set per repository. see [External Connections](#external-connections). Note that setting an external connection may replace any extrenal connections created outside of terraform.
 
 ### Upstream
 
