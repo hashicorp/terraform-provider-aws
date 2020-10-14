@@ -59,14 +59,16 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 				ForceNew: true,
 			},
 			"endpoint_auto_confirms": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Default:    false,
+				Deprecated: "endpoint_auto_confirms exists for historical compatibility and should not be used.",
 			},
 			"confirmation_timeout_in_minutes": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  1,
+				Type:       schema.TypeInt,
+				Optional:   true,
+				Default:    1,
+				Deprecated: "confirmation_timeout_in_minutes exists for historical compatibility and should not be used.",
 			},
 			"topic_arn": {
 				Type:     schema.TypeString,
@@ -234,17 +236,7 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 	protocol := d.Get("protocol").(string)
 	endpoint := d.Get("endpoint").(string)
 	topic_arn := d.Get("topic_arn").(string)
-	endpoint_auto_confirms := d.Get("endpoint_auto_confirms").(bool)
-	confirmation_timeout_in_minutes := d.Get("confirmation_timeout_in_minutes").(int)
 	attributes := getResourceAttributes(d)
-
-	if endpoint_auto_confirms {
-		log.Printf("[DEBUG] Deprecated: endpoint_auto_confirms exists for historical compatibility and should not be used.")
-	}
-
-	if confirmation_timeout_in_minutes > 0 {
-		log.Printf("[DEBUG] Deprecated: confirmation_timeout_in_minutes exists for historical compatibility and should not be used.")
-	}
 
 	log.Printf("[DEBUG] SNS create topic subscription: %s (%s) @ '%s'", endpoint, protocol, topic_arn)
 

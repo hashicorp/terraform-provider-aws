@@ -116,8 +116,8 @@ The following arguments are supported:
 * `topic_arn` - (Required) The ARN of the SNS topic to subscribe to
 * `protocol` - (Required) The protocol to use, see below. Refer to the [SNS API docs](https://docs.aws.amazon.com/sns/latest/api/API_Subscribe.html) for more details.
 * `endpoint` - (Required) The endpoint to send data to, the contents will vary with the protocol. (see below for more information)
-* `endpoint_auto_confirms` - (Deprecated) The endpoint auto confirms exists for historical compatibility and should not be used.
-* `confirmation_timeout_in_minutes` - (Deprecated) The confirmation timeout in minutes exists for historical compatibility and should not be used.
+* `endpoint_auto_confirms` - (Optional, **DEPRECATED**) Boolean indicating whether the end point is capable of [auto confirming subscription](http://docs.aws.amazon.com/sns/latest/dg/SendMessageToHttp.html#SendMessageToHttp.prepare) e.g., PagerDuty (default is false)
+￼* `confirmation_timeout_in_minutes` - (Optional, **DEPRECATED**) Integer indicating number of minutes to wait in retying mode for fetching subscription arn before marking it as failure. Only applicable for http and https protocols (default is 1 minute).
 * `raw_message_delivery` - (Optional) Boolean indicating whether or not to enable raw message delivery (the original message is directly passed, not wrapped in JSON with the original message in the message property) (default is false).
 * `filter_policy` - (Optional) JSON String with the filter policy that will be used in the subscription to filter messages seen by the target resource. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/message-filtering.html) for more details.
 * `delivery_policy` - (Optional) JSON String with the delivery policy (retries, backoff, etc.) that will be used in the subscription - this only applies to HTTP/S subscriptions. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/DeliveryPolicies.html) for more details.
