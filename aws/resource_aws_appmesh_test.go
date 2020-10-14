@@ -6,6 +6,14 @@ import (
 
 func TestAccAWSAppmesh_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
+		"GatewayRoute": {
+			"basic":      testAccAwsAppmeshGatewayRoute_basic,
+			"disappears": testAccAwsAppmeshGatewayRoute_disappears,
+			"grpcRoute":  testAccAwsAppmeshGatewayRoute_GrpcRoute,
+			"httpRoute":  testAccAwsAppmeshGatewayRoute_HttpRoute,
+			"http2Route": testAccAwsAppmeshGatewayRoute_Http2Route,
+			"tags":       testAccAwsAppmeshGatewayRoute_Tags,
+		},
 		"Mesh": {
 			"basic":        testAccAwsAppmeshMesh_basic,
 			"egressFilter": testAccAwsAppmeshMesh_egressFilter,

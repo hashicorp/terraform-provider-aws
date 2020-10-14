@@ -3,20 +3,47 @@ on:
   push:
     branches:
       - master
-      - 'release/**'
+      - "release/**"
   pull_request:
     paths:
       - .github/workflows/acctest-terraform-lint.yml
       - aws/core_acceptance_test.go
       - aws/data_source_aws_*_test.go
       - aws/resource_aws_*_test.go
+      - scripts/validate-terraform.sh
+      - tools/go.mod
 
 env:
   GO_VERSION: "1.15"
   GO111MODULE: on
 
 jobs:
+  changes:
+    name: Filter Changes
+    runs-on: ubuntu-latest
+    outputs:
+      tools: ${{ steps.filter.outputs.tools }}
+      terrafmt: ${{ steps.filter.outputs.terrafmt }}
+      validate-terraform: ${{ steps.filter.outputs.validate-terraform }}
+    steps:
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            tools:
+              - tools/go.mod
+            terrafmt: &terrafmt
+              - .github/workflows/acctest-terraform-lint.yml
+              - aws/core_acceptance_test.go
+              - aws/data_source_aws_*_test.go
+              - aws/resource_aws_[a-s]*_test.go
+            validate-terraform:
+              - *terrafmt
+              - scripts/validate-terraform.sh
+
   terrafmt:
+    needs: changes
+    if: needs.changes.outputs.terrafmt == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -54,6 +81,8 @@ jobs:
             | xargs -I {} terrafmt diff --check --quiet --fmtcompat {}
 
   validate-terraform:
+    needs: changes
+    if: needs.changes.outputs.validate-terraform == 'true' || needs.changes.outputs.tools == 'true' && startsWith(github.head_ref, 'renovate/github.com-terraform-linters-tflint-')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -91,4 +120,3 @@ jobs:
             | grep -v resource_aws_s3_bucket_object_test.go \
             | grep -v resource_aws_sns_platform_application_test.go \
             | ./scripts/validate-terraform.sh
-          

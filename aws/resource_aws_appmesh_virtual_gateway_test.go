@@ -20,6 +20,9 @@ func init() {
 	resource.AddTestSweepers("aws_appmesh_virtual_gateway", &resource.Sweeper{
 		Name: "aws_appmesh_virtual_gateway",
 		F:    testSweepAppmeshVirtualGateways,
+		Dependencies: []string{
+			"aws_appmesh_gateway_route",
+		},
 	})
 }
 
@@ -40,7 +43,7 @@ func testSweepAppmeshVirtualGateways(region string) error {
 		for _, mesh := range page.Meshes {
 			meshName := aws.StringValue(mesh.MeshName)
 
-			err := conn.ListVirtualGatewaysPages(&appmesh.ListVirtualGatewaysInput{MeshName: mesh.MeshName}, func(page *appmesh.ListVirtualGatewaysOutput, isLast bool) bool {
+			err = conn.ListVirtualGatewaysPages(&appmesh.ListVirtualGatewaysInput{MeshName: mesh.MeshName}, func(page *appmesh.ListVirtualGatewaysOutput, isLast bool) bool {
 				if page == nil {
 					return !isLast
 				}
@@ -51,7 +54,7 @@ func testSweepAppmeshVirtualGateways(region string) error {
 					log.Printf("[INFO] Deleting App Mesh service mesh (%s) virtual gateway: %s", meshName, virtualGatewayName)
 					r := resourceAwsAppmeshVirtualGateway()
 					d := r.Data(nil)
-					d.SetId("ID")
+					d.SetId("????????????????") // ID not used in Delete.
 					d.Set("mesh_name", meshName)
 					d.Set("name", virtualGatewayName)
 					err := r.Delete(d, client)

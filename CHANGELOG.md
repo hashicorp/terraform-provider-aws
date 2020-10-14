@@ -3,6 +3,7 @@
 FEATURES
 
 * **New Data Source:** `aws_codeartifact_repository_endpoint` [GH-15566]
+* **New Resource:** `aws_appmesh_gateway_route` [GH-15638]
 * **New Resource:** `aws_appmesh_virtual_gateway` [GH-15611]
 
 BUG FIXES
@@ -11,10 +12,11 @@ BUG FIXES
 
 ENHANCEMENTS
 
-* data-source/aws_workspaces_directory: Add workspaces creation properties (GH-14577)
+* data-source/aws_workspaces_directory: Add workspaces creation properties [GH-14577]
+* resource/aws_backup_plan: Add support for AdvancedBackupSettings [GH-15341]
 * resource/aws_sagemaker_notebook_instance: Add `default_code_repository` attribute [GH-13772]
 * resource/aws_sagemaker_notebook_instance: Add `volume_size` attribute [GH-15521]
-* resource/aws_workspaces_directory: Add workspaces creation properties (GH-14577)
+* resource/aws_workspaces_directory: Add workspaces creation properties [GH-14577]
 
 ## 3.10.0 (October 09, 2020)
 
