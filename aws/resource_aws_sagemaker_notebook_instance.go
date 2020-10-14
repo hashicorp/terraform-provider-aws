@@ -278,6 +278,7 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 
 	if d.HasChange("volume_size") {
 		updateOpts.VolumeSizeInGB = aws.Int64(int64(d.Get("volume_size").(int)))
+		hasChanged = true
 	}
 
 	if d.HasChange("lifecycle_config_name") {
