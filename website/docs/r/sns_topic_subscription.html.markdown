@@ -102,10 +102,10 @@ resource "aws_sns_topic" "this" {
 }
 
 resource "aws_sns_topic_subscription" "this" {
-  topic_arn                       = aws_sns_topic.this.arn
-  protocol                        = "sqs"
-  endpoint                        = "arn:aws:sqs:us-east-1:222222222222:example-sqs-queue"
-  depends_on                      = [aws_sns_topic.this]
+  topic_arn  = aws_sns_topic.this.arn
+  protocol   = "sqs"
+  endpoint   = "arn:aws:sqs:us-east-1:222222222222:example-sqs-queue"
+  depends_on = [aws_sns_topic.this]
 }
 ```
 
