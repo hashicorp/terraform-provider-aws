@@ -10,8 +10,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+)
+
+const (
+	AWSSSOAssignmentCreateRetryTimeout = 5 * time.Minute
+	AWSSSOAssignmentDeleteRetryTimeout = 5 * time.Minute
+	AWSSSOAssignmentRetryDelay         = 5 * time.Second
+	AWSSSOAssignmentRetryMinTimeout    = 3 * time.Second
 )
 
 func resourceAwsSsoAssignment() *schema.Resource {
@@ -19,9 +27,17 @@ func resourceAwsSsoAssignment() *schema.Resource {
 		Create: resourceAwsSsoAssignmentCreate,
 		Read:   resourceAwsSsoAssignmentRead,
 		Delete: resourceAwsSsoAssignmentDelete,
+
+		// TODO
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(AWSSSOAssignmentCreateRetryTimeout),
+			Delete: schema.DefaultTimeout(AWSSSOAssignmentDeleteRetryTimeout),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"created_date": {
 				Type:     schema.TypeString,
@@ -114,14 +130,9 @@ func resourceAwsSsoAssignmentCreate(d *schema.ResourceData, meta interface{}) er
 		d.Set("created_date", status.CreatedDate.Format(time.RFC3339))
 	}
 
-	waitResp, waitErr := waitForAssignmentCreation(conn, instanceArn, aws.StringValue(status.RequestId))
+	waitResp, waitErr := waitForAssignmentCreation(conn, instanceArn, aws.StringValue(status.RequestId), d.Timeout(schema.TimeoutCreate))
 	if waitErr != nil {
-		return fmt.Errorf("Error waiting for AWS SSO Assignment creation: %s", waitErr)
-	}
-
-	// IN_PROGRESS | FAILED | SUCCEEDED
-	if aws.StringValue(waitResp.Status) == "FAILED" {
-		return fmt.Errorf("Failed to create AWS SSO Assignment: %s", aws.StringValue(waitResp.FailureReason))
+		return waitErr
 	}
 
 	vars := []string{
@@ -225,70 +236,63 @@ func resourceAwsSsoAssignmentDelete(d *schema.ResourceData, meta interface{}) er
 
 	status := resp.AccountAssignmentDeletionStatus
 
-	waitResp, waitErr := waitForAssignmentDeletion(conn, instanceArn, aws.StringValue(status.RequestId))
+	_, waitErr := waitForAssignmentDeletion(conn, instanceArn, aws.StringValue(status.RequestId), d.Timeout(schema.TimeoutDelete))
 	if waitErr != nil {
-		return fmt.Errorf("Error waiting for AWS SSO Assignment deletion: %s", waitErr)
-	}
-
-	// IN_PROGRESS | FAILED | SUCCEEDED
-	if aws.StringValue(waitResp.Status) == "FAILED" {
-		return fmt.Errorf("Failed to delete AWS SSO Assignment: %s", aws.StringValue(waitResp.FailureReason))
+		return waitErr
 	}
 
 	d.SetId("")
 	return nil
 }
 
-func waitForAssignmentCreation(conn *ssoadmin.SSOAdmin, instanceArn string, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
-	var status *ssoadmin.AccountAssignmentOperationStatus
-
-	// TODO: timeout
-	for {
-		resp, err := conn.DescribeAccountAssignmentCreationStatus(&ssoadmin.DescribeAccountAssignmentCreationStatusInput{
-			InstanceArn:                        aws.String(instanceArn),
-			AccountAssignmentCreationRequestId: aws.String(requestID),
-		})
-
-		if err != nil {
-			return nil, err
-		}
-
-		status = resp.AccountAssignmentCreationStatus
-
-		if aws.StringValue(status.Status) != "IN_PROGRESS" {
-			break
-		}
-
-		// TODO: configure wait time
-		time.Sleep(time.Second)
+func waitForAssignmentCreation(conn *ssoadmin.SSOAdmin, instanceArn string, requestID string, timeout time.Duration) (*ssoadmin.AccountAssignmentOperationStatus, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ssoadmin.StatusValuesInProgress},
+		Target:  []string{ssoadmin.StatusValuesSucceeded},
+		Refresh: func() (interface{}, string, error) {
+			resp, err := conn.DescribeAccountAssignmentCreationStatus(&ssoadmin.DescribeAccountAssignmentCreationStatusInput{
+				InstanceArn:                        aws.String(instanceArn),
+				AccountAssignmentCreationRequestId: aws.String(requestID),
+			})
+			if err != nil {
+				return resp, "", fmt.Errorf("Error describing account assignment creation status: %s", err)
+			}
+			status := resp.AccountAssignmentCreationStatus
+			return status, aws.StringValue(status.Status), nil
+		},
+		Timeout:    timeout,
+		Delay:      AWSSSOAssignmentRetryDelay,
+		MinTimeout: AWSSSOAssignmentRetryMinTimeout,
 	}
-
-	return status, nil
+	status, err := stateConf.WaitForState()
+	if err != nil {
+		return nil, fmt.Errorf("Error waiting for account assignment to be created: %s", err)
+	}
+	return status.(*ssoadmin.AccountAssignmentOperationStatus), nil
 }
 
-func waitForAssignmentDeletion(conn *ssoadmin.SSOAdmin, instanceArn string, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
-	var status *ssoadmin.AccountAssignmentOperationStatus
-
-	// TODO: timeout
-	for {
-		resp, err := conn.DescribeAccountAssignmentDeletionStatus(&ssoadmin.DescribeAccountAssignmentDeletionStatusInput{
-			InstanceArn:                        aws.String(instanceArn),
-			AccountAssignmentDeletionRequestId: aws.String(requestID),
-		})
-
-		if err != nil {
-			return nil, err
-		}
-
-		status = resp.AccountAssignmentDeletionStatus
-
-		if aws.StringValue(status.Status) != "IN_PROGRESS" {
-			break
-		}
-
-		// TODO: configure wait time
-		time.Sleep(time.Second)
+func waitForAssignmentDeletion(conn *ssoadmin.SSOAdmin, instanceArn string, requestID string, timeout time.Duration) (*ssoadmin.AccountAssignmentOperationStatus, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ssoadmin.StatusValuesInProgress},
+		Target:  []string{ssoadmin.StatusValuesSucceeded},
+		Refresh: func() (interface{}, string, error) {
+			resp, err := conn.DescribeAccountAssignmentDeletionStatus(&ssoadmin.DescribeAccountAssignmentDeletionStatusInput{
+				InstanceArn:                        aws.String(instanceArn),
+				AccountAssignmentDeletionRequestId: aws.String(requestID),
+			})
+			if err != nil {
+				return resp, "", fmt.Errorf("Error describing account assignment deletion status: %s", err)
+			}
+			status := resp.AccountAssignmentDeletionStatus
+			return status, aws.StringValue(status.Status), nil
+		},
+		Timeout:    timeout,
+		Delay:      AWSSSOAssignmentRetryDelay,
+		MinTimeout: AWSSSOAssignmentRetryMinTimeout,
 	}
-
-	return status, nil
+	status, err := stateConf.WaitForState()
+	if err != nil {
+		return nil, fmt.Errorf("Error waiting for account assignment to be deleted: %s", err)
+	}
+	return status.(*ssoadmin.AccountAssignmentOperationStatus), nil
 }
