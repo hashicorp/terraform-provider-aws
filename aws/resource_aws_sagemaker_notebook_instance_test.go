@@ -607,6 +607,7 @@ resource "aws_security_group" "test" {
 
 func testAccAWSSagemakerNotebookInstanceConfigVolume(rName string) string {
 	return testAccAWSSagemakerNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_notebook_instance" "test" {
   name          = %[1]q
   role_arn      = aws_iam_role.test.arn
   instance_type = "ml.t2.medium"
