@@ -14,7 +14,7 @@
         - [Randomized Naming](#randomized-naming)
         - [Other Recommended Variables](#other-recommended-variables)
         - [Basic Acceptance Tests](#basic-acceptance-tests)
-        - [Service Availability PreCheck](#service-availability-precheck)
+        - [PreChecks](#prechecks)
         - [Disappears Acceptance Tests](#disappears-acceptance-tests)
         - [Per Attribute Acceptance Tests](#per-attribute-acceptance-tests)
         - [Cross-Account Acceptance Tests](#cross-account-acceptance-tests)
@@ -502,11 +502,34 @@ resource "aws_example_thing" "test" {
 }
 ```
 
-#### Service Availability PreCheck
+#### PreChecks
 
-When new AWS services are added to the provider, a simple read-only request (e.g. list all X service things) should be implemented in an acceptance test PreCheck function that helps the acceptance testing determine if the service exists for the particular environment it runs in. Note: This was not common practice in the past so many existing tests will not include this step.
+Acceptance test cases have a PreCheck. The PreCheck ensures that the testing environment meets certain preconditions. If the environment does not meet the preconditions, Go skips the test. Skipping a test avoids reporting a failure and wasting resources where the test cannot succeed.
 
-For example:
+Here is an example of the default PreCheck:
+
+```go
+func TestAccAwsExampleThing_basic(t *testing.T) {
+  rName := acctest.RandomWithPrefix("tf-acc-test")
+  resourceName := "aws_example_thing.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck:     func() { testAccPreCheck(t) },
+    // ... additional checks follow ...
+  })
+}
+```
+
+Extend the default PreCheck by adding calls to functions in the anonymous PreCheck function. The functions can be existing functions in the provider or custom functions you add for new capabilities.
+
+These are some of the existing functions:
+
+* `testAccPartitionHasServicePreCheck(serviceId string, t *testing.T)` checks whether the current partition lists the service as part of its offerings. Note: AWS may not add new or public preview services to the service list immediately. This function will return a false positive in that case.
+* `testAccOrganizationsAccountPreCheck(t *testing.T)` checks whether the current account can perform AWS Organizations tests.
+* `testAccAlternateAccountPreCheck(t *testing.T)` checks whether the environment is set up for tests across accounts.
+* `testAccMultipleRegionPreCheck(t *testing.T, regions int)` checks whether the environment is set up for tests across regions.
+
+Below is an example of adding a custom PreCheck function. For a new or preview service that AWS does not include in the partition service list yet, you can verify the existence of the service with a simple read-only request (e.g., list all X service things). (For acceptance tests of established services, use `testAccPartitionHasServicePreCheck()` instead.)
 
 ```go
 func TestAccAwsExampleThing_basic(t *testing.T) {
