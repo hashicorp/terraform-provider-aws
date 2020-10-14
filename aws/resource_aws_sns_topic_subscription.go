@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -39,13 +38,14 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					// email and email-json not supported
 					"application",
 					"http",
 					"https",
 					"lambda",
 					"sms",
 					"sqs",
+					"email",
+					"email-json",
 				}, true),
 			},
 			"endpoint": {
@@ -233,9 +233,12 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 	confirmation_timeout_in_minutes := d.Get("confirmation_timeout_in_minutes").(int)
 	attributes := getResourceAttributes(d)
 
-	if strings.Contains(protocol, "http") && !endpoint_auto_confirms {
-		return nil, fmt.Errorf("Protocol http/https is only supported for endpoints which auto confirms!")
+	if endpoint_auto_confirms {
+		log.Printf("[DEBUG] Deprecated: endpoint_auto_confirms exists for historical compatibility and should not be used.")
 	}
+
+	var time_to_sleep int = 10
+	var count_time_to_sleep int = (confirmation_timeout_in_minutes * 60) / time_to_sleep
 
 	log.Printf("[DEBUG] SNS create topic subscription: %s (%s) @ '%s'", endpoint, protocol, topic_arn)
 
@@ -251,42 +254,33 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 		return nil, fmt.Errorf("Error creating SNS topic subscription: %s", err)
 	}
 
-	log.Printf("[DEBUG] Finished subscribing to topic %s with subscription arn %s", topic_arn, *output.SubscriptionArn)
+	for i := 1; i < count_time_to_sleep; i++ {
+		var subscription *sns.Subscription
+		subscription, err = findSubscriptionByNonID(d, snsconn)
 
-	if strings.Contains(protocol, "http") && subscriptionHasPendingConfirmation(output.SubscriptionArn) {
-
-		log.Printf("[DEBUG] SNS create topic subscription is pending so fetching the subscription list for topic : %s (%s) @ '%s'", endpoint, protocol, topic_arn)
-
-		err = resource.Retry(time.Duration(confirmation_timeout_in_minutes)*time.Minute, func() *resource.RetryError {
-
-			subscription, err := findSubscriptionByNonID(d, snsconn)
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			if subscription == nil {
-				return resource.RetryableError(fmt.Errorf("Endpoint (%s) did not autoconfirm the subscription for topic %s", endpoint, topic_arn))
-			}
-
+		if subscription != nil {
 			output.SubscriptionArn = subscription.SubscriptionArn
-			return nil
-		})
-
-		if isResourceTimeoutError(err) {
-			var subscription *sns.Subscription
-			subscription, err = findSubscriptionByNonID(d, snsconn)
-
-			if subscription != nil {
-				output.SubscriptionArn = subscription.SubscriptionArn
-			}
 		}
 
 		if err != nil {
 			return nil, err
 		}
+
+		if !subscriptionHasPendingConfirmation(output.SubscriptionArn) {
+			log.Printf("[DEBUG] SubscriptionArn: %s", *output.SubscriptionArn)
+			break
+		}
+
+		log.Printf("[DEBUG] SubscriptionArn: %s trying again (%d / %d)", *output.SubscriptionArn, i, count_time_to_sleep)
+
+		time.Sleep(10 * time.Second)
 	}
 
+	if subscriptionHasPendingConfirmation(output.SubscriptionArn) {
+		return nil, fmt.Errorf("Endpoint (%s) did not confirm the subscription for topic %s", endpoint, topic_arn)
+	}
+
+	log.Printf("[DEBUG] Finished subscribing to topic %s with subscription arn %s", topic_arn, *output.SubscriptionArn)
 	log.Printf("[DEBUG] Created new subscription! %s", *output.SubscriptionArn)
 	return output, nil
 }
