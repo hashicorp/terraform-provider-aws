@@ -14,7 +14,7 @@ Provides a CodeArtifact Domain Resource.
 
 ```hcl
 resource "aws_codeartifact_domain" "example" {
-  domain         = "example"
+  domain = "example"
 }
 ```
 
