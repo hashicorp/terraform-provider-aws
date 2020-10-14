@@ -100,7 +100,6 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 			"default_code_repository": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 
 			"tags": tagsSchema(),
@@ -280,7 +279,15 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 		} else {
 			updateOpts.DisassociateLifecycleConfig = aws.Bool(true)
 		}
-		updateOpts.InstanceType = aws.String(d.Get("instance_type").(string))
+		hasChanged = true
+	}
+
+	if d.HasChange("default_code_repository") {
+		if v, ok := d.GetOk("default_code_repository"); ok {
+			updateOpts.DefaultCodeRepository = aws.String(v.(string))
+		} else {
+			updateOpts.DisassociateDefaultCodeRepository = aws.Bool(true)
+		}
 		hasChanged = true
 	}
 

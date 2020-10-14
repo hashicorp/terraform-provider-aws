@@ -208,6 +208,13 @@ func TestAccAWSSagemakerNotebookInstance_LifecycleConfigName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_config_name", ""),
 				),
 			},
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigLifecycleConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttrPair(resourceName, "lifecycle_config_name", sagemakerLifecycleConfigResourceName, "name"),
+				),
+			},
 		},
 	})
 }
@@ -445,6 +452,20 @@ func TestAccAWSSagemakerNotebookInstance_default_code_repository(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccAWSSagemakerNotebookInstanceBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "default_code_repository", ""),
+				),
+			},
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigDefaultCodeRepository(rName, "https://github.com/terraform-providers/terraform-provider-aws.git"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "default_code_repository", "https://github.com/terraform-providers/terraform-provider-aws.git"),
+				),
+			},
 		},
 	})
 }
@@ -595,14 +616,13 @@ func testAccAWSSagemakerNotebookInstanceConfigVolume(rName string) string {
 
 func testAccAWSSagemakerNotebookInstanceConfigDefaultCodeRepository(rName string, defaultCodeRepository string) string {
 	return testAccAWSSagemakerNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
-resource "aws_sagemaker_notebook_instance" "foo" {
+resource "aws_sagemaker_notebook_instance" "test" {
   name                    = %[1]q
   role_arn                = aws_iam_role.test.arn
   instance_type           = "ml.t2.medium"
-  security_groups         = [aws_security_group.test.id]
-  subnet_id               = aws_subnet.sagemaker.id
   default_code_repository = %[2]q
 }
+<<<<<<< HEAD
 
 resource "aws_iam_role" "foo" {
   name               = %[1]q
@@ -644,6 +664,8 @@ resource "aws_subnet" "sagemaker" {
     Name = %[1]q
   }
 }
+=======
+>>>>>>> 7cac2f614... allow updating default code repo
 `, rName, defaultCodeRepository)
 }
 
