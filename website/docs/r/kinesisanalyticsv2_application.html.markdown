@@ -37,8 +37,8 @@ resource "aws_kinesisanalyticsv2_application" "example" {
     application_code_configuration {
       code_content {
         s3_content_location {
-          bucket_arn     = aws_s3_bucket.example.arn
-          file_key       = aws_s3_bucket_object.example.key
+          bucket_arn = aws_s3_bucket.example.arn
+          file_key   = aws_s3_bucket_object.example.key
         }
       }
 
@@ -235,8 +235,8 @@ resource "aws_kinesisanalyticsv2_application" "example" {
     application_code_configuration {
       code_content {
         s3_content_location {
-          bucket_arn     = aws_s3_bucket.example.arn
-          file_key       = aws_s3_bucket_object.example.key
+          bucket_arn = aws_s3_bucket.example.arn
+          file_key   = aws_s3_bucket_object.example.key
         }
       }
 
@@ -244,7 +244,7 @@ resource "aws_kinesisanalyticsv2_application" "example" {
     }
 
     vpc_configuration {
-      security_group_ids = [aws_security_group.example.0.id, aws_security_group.example.1.id]
+      security_group_ids = [aws_security_group.example[0].id, aws_security_group.example[1].id]
       subnet_ids         = [aws_subnet.example.id]
     }
   }

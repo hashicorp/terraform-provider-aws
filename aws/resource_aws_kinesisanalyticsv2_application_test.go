@@ -2802,7 +2802,7 @@ resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s_${count.index}"
   handler       = "exports.example"
-  role          = aws_iam_role.test.0.arn
+  role          = aws_iam_role.test[0].arn
   runtime       = "nodejs12.x"
 }
 
@@ -2812,7 +2812,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
   extended_s3_configuration {
     bucket_arn = aws_s3_bucket.test.arn
-    role_arn   = aws_iam_role.test.0.arn
+    role_arn   = aws_iam_role.test[0].arn
   }
 }
 
@@ -2866,7 +2866,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigBasicFlinkApplication(rName strin
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "FLINK-1_8"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 }
 `, rName))
 }
@@ -2878,7 +2878,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigBasicSQLApplication(rName string)
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 }
 `, rName))
 }
@@ -2890,7 +2890,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigBasicSQLApplicationPlusDescriptio
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
   description            = "Testing"
 }
 `, rName))
@@ -2903,7 +2903,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigBasicSQLApplicationServiceExecuti
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.1.arn
+  service_execution_role = aws_iam_role.test[1].arn
   description            = "Testing"
 }
 `, rName))
@@ -2916,7 +2916,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigApplicationCodeConfiguration(rNam
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
     application_code_configuration {
@@ -2949,7 +2949,7 @@ resource "aws_cloudwatch_log_stream" "test" {
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   cloudwatch_logging_options {
     log_stream_arn = aws_cloudwatch_log_stream.test.%[2]d.arn
@@ -2966,14 +2966,14 @@ func testAccKinesisAnalyticsV2ApplicationConfigEnvironmentProperties(rName strin
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "FLINK-1_8"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
     application_code_configuration {
       code_content {
         s3_content_location {
-          bucket_arn     = aws_s3_bucket.test.arn
-          file_key       = aws_s3_bucket_object.test.0.key
+          bucket_arn = aws_s3_bucket.test.arn
+          file_key   = aws_s3_bucket_object.test[0].key
         }
       }
 
@@ -3013,14 +3013,14 @@ func testAccKinesisAnalyticsV2ApplicationConfigEnvironmentPropertiesUpdated(rNam
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "FLINK-1_8"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
     application_code_configuration {
       code_content {
         s3_content_location {
-          bucket_arn     = aws_s3_bucket.test.arn
-          file_key       = aws_s3_bucket_object.test.0.key
+          bucket_arn = aws_s3_bucket.test.arn
+          file_key   = aws_s3_bucket_object.test[0].key
         }
       }
 
@@ -3066,14 +3066,14 @@ func testAccKinesisAnalyticsV2ApplicationConfigEnvironmentPropertiesNotSpecified
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "FLINK-1_8"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
     application_code_configuration {
       code_content {
         s3_content_location {
-          bucket_arn     = aws_s3_bucket.test.arn
-          file_key       = aws_s3_bucket_object.test.0.key
+          bucket_arn = aws_s3_bucket.test.arn
+          file_key   = aws_s3_bucket_object.test[0].key
         }
       }
 
@@ -3092,15 +3092,15 @@ func testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfiguration(rNa
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "FLINK-1_8"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
     application_code_configuration {
       code_content {
         s3_content_location {
           bucket_arn     = aws_s3_bucket.test.arn
-          file_key       = aws_s3_bucket_object.test.0.key
-          object_version = aws_s3_bucket_object.test.0.version_id
+          file_key       = aws_s3_bucket_object.test[0].key
+          object_version = aws_s3_bucket_object.test[0].version_id
         }
       }
 
@@ -3142,15 +3142,15 @@ func testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfigurationUpda
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "FLINK-1_8"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
     application_code_configuration {
       code_content {
         s3_content_location {
           bucket_arn     = aws_s3_bucket.test.arn
-          file_key       = aws_s3_bucket_object.test.1.key
-          object_version = aws_s3_bucket_object.test.1.version_id
+          file_key       = aws_s3_bucket_object.test[1].key
+          object_version = aws_s3_bucket_object.test[1].version_id
         }
       }
 
@@ -3192,15 +3192,15 @@ func testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfigurationEnvi
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "FLINK-1_8"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
     application_code_configuration {
       code_content {
         s3_content_location {
           bucket_arn     = aws_s3_bucket.test.arn
-          file_key       = aws_s3_bucket_object.test.0.key
-          object_version = aws_s3_bucket_object.test.0.version_id
+          file_key       = aws_s3_bucket_object.test[0].key
+          object_version = aws_s3_bucket_object.test[0].version_id
         }
       }
 
@@ -3267,15 +3267,15 @@ func testAccKinesisAnalyticsV2ApplicationConfigFlinkApplicationConfigurationEnvi
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "FLINK-1_8"
-  service_execution_role = aws_iam_role.test.1.arn
+  service_execution_role = aws_iam_role.test[1].arn
 
   application_configuration {
     application_code_configuration {
       code_content {
         s3_content_location {
           bucket_arn     = aws_s3_bucket.test.arn
-          file_key       = aws_s3_bucket_object.test.1.key
-          object_version = aws_s3_bucket_object.test.1.version_id
+          file_key       = aws_s3_bucket_object.test[1].key
+          object_version = aws_s3_bucket_object.test[1].version_id
         }
       }
 
@@ -3349,7 +3349,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationNotSpe
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
     application_code_configuration {
@@ -3372,7 +3372,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationInput(
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
     application_code_configuration {
@@ -3423,7 +3423,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationInputU
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
     application_code_configuration {
@@ -3486,7 +3486,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationInputP
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
     application_code_configuration {
@@ -3552,7 +3552,7 @@ resource "aws_cloudwatch_log_stream" "test" {
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
     application_code_configuration {
@@ -3587,7 +3587,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
         input_processing_configuration {
           input_lambda_processor {
-            resource_arn = aws_lambda_function.test.0.arn
+            resource_arn = aws_lambda_function.test[0].arn
           }
         }
 
@@ -3629,7 +3629,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationMultip
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.1.arn
+  service_execution_role = aws_iam_role.test[1].arn
 
   application_configuration {
     application_code_configuration {
@@ -3699,7 +3699,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
         }
 
         lambda_output {
-          resource_arn = aws_lambda_function.test.0.arn
+          resource_arn = aws_lambda_function.test[0].arn
         }
       }
 
@@ -3748,7 +3748,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationOutput
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
     application_code_configuration {
@@ -3785,7 +3785,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationOutput
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
     application_code_configuration {
@@ -3817,7 +3817,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
         }
 
         lambda_output {
-          resource_arn = aws_lambda_function.test.0.arn
+          resource_arn = aws_lambda_function.test[0].arn
         }
       }
     }
@@ -3834,7 +3834,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationRefere
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
     application_code_configuration {
@@ -3886,7 +3886,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationRefere
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
     application_code_configuration {
@@ -3945,7 +3945,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigTags1(rName, tagKey1, tagValue1 s
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   tags = {
     %[2]q = %[3]q
@@ -3961,7 +3961,7 @@ func testAccKinesisAnalyticsV2ApplicationConfigTags2(rName, tagKey1, tagValue1, 
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "SQL-1_0"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   tags = {
     %[2]q = %[3]q
@@ -3980,14 +3980,14 @@ func testAccKinesisAnalyticsV2ApplicationConfigVPCConfiguration(rName string) st
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "FLINK-1_8"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
     application_code_configuration {
       code_content {
         s3_content_location {
-          bucket_arn     = aws_s3_bucket.test.arn
-          file_key       = aws_s3_bucket_object.test.0.key
+          bucket_arn = aws_s3_bucket.test.arn
+          file_key   = aws_s3_bucket_object.test[0].key
         }
       }
 
@@ -4012,14 +4012,14 @@ func testAccKinesisAnalyticsV2ApplicationConfigVPCConfigurationUpdated(rName str
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "FLINK-1_8"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
     application_code_configuration {
       code_content {
         s3_content_location {
-          bucket_arn     = aws_s3_bucket.test.arn
-          file_key       = aws_s3_bucket_object.test.0.key
+          bucket_arn = aws_s3_bucket.test.arn
+          file_key   = aws_s3_bucket_object.test[0].key
         }
       }
 
@@ -4027,8 +4027,8 @@ resource "aws_kinesisanalyticsv2_application" "test" {
     }
 
     vpc_configuration {
-      security_group_ids = [aws_security_group.test.0.id]
-      subnet_ids         = [aws_subnet.test.0.id]
+      security_group_ids = [aws_security_group.test[0].id]
+      subnet_ids         = [aws_subnet.test[0].id]
     }
   }
 }
@@ -4044,14 +4044,14 @@ func testAccKinesisAnalyticsV2ApplicationConfigVPCConfigurationNotSpecified(rNam
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "FLINK-1_8"
-  service_execution_role = aws_iam_role.test.0.arn
+  service_execution_role = aws_iam_role.test[0].arn
 
   application_configuration {
     application_code_configuration {
       code_content {
         s3_content_location {
-          bucket_arn     = aws_s3_bucket.test.arn
-          file_key       = aws_s3_bucket_object.test.0.key
+          bucket_arn = aws_s3_bucket.test.arn
+          file_key   = aws_s3_bucket_object.test[0].key
         }
       }
 
