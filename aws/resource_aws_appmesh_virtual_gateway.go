@@ -524,12 +524,12 @@ func resourceAwsAppmeshVirtualGatewayImport(d *schema.ResourceData, meta interfa
 }
 
 func expandAppmeshVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewaySpec {
+	if len(vSpec) == 0 || vSpec[0] == nil {
+		return nil
+	}
+
 	spec := &appmesh.VirtualGatewaySpec{}
 
-	if len(vSpec) == 0 || vSpec[0] == nil {
-		// Empty Spec is allowed.
-		return spec
-	}
 	mSpec := vSpec[0].(map[string]interface{})
 
 	if vBackendDefaults, ok := mSpec["backend_defaults"].([]interface{}); ok && len(vBackendDefaults) > 0 && vBackendDefaults[0] != nil {
