@@ -1012,6 +1012,8 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 						if d.HasChange("application_configuration.0.sql_application_configuration.0.input.0.input_processing_configuration") {
 							o, n := d.GetChange("application_configuration.0.sql_application_configuration.0.input.0.input_processing_configuration")
 
+							// Update of existing input processing configuration is handled via the updating of the existing input.
+
 							if len(o.([]interface{})) == 0 {
 								// Add new input processing configuration.
 								input := &kinesisanalyticsv2.AddApplicationInputProcessingConfigurationInput{
@@ -1055,9 +1057,6 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 								output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationInputProcessingConfigurationOutput)
 
 								currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
-							} else {
-								// Update existing input processing configuration.
-								// This is handled via the updating of the existing input.
 							}
 						}
 
@@ -1329,17 +1328,13 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 			log.Printf("[DEBUG] Updating Kinesis Analytics v2 Application (%s): %s", d.Id(), input)
 
-			outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+			_, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
 				return conn.UpdateApplication(input)
 			})
 
 			if err != nil {
 				return fmt.Errorf("error updating Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
 			}
-
-			output := outputRaw.(*kinesisanalyticsv2.UpdateApplicationOutput)
-
-			currentApplicationVersionId = aws.Int64Value(output.ApplicationDetail.ApplicationVersionId)
 		}
 	}
 
@@ -2295,79 +2290,6 @@ func expandKinesisAnalyticsV2Outputs(vOutputs []interface{}) []*kinesisanalytics
 	}
 
 	return outputs
-}
-
-func expandKinesisAnalyticsV2OutputUpdate(vOutput interface{}) *kinesisanalyticsv2.OutputUpdate {
-	if vOutput == nil {
-		return nil
-	}
-	outputUpdate := &kinesisanalyticsv2.OutputUpdate{}
-
-	mOutput := vOutput.(map[string]interface{})
-
-	if vDestinationSchema, ok := mOutput["destination_schema"].([]interface{}); ok {
-		outputUpdate.DestinationSchemaUpdate = expandKinesisAnalyticsV2DestinationSchema(vDestinationSchema)
-	}
-
-	if vKinesisFirehoseOutput, ok := mOutput["kinesis_firehose_output"].([]interface{}); ok && len(vKinesisFirehoseOutput) > 0 && vKinesisFirehoseOutput[0] != nil {
-		kinesisFirehoseOutputUpdate := &kinesisanalyticsv2.KinesisFirehoseOutputUpdate{}
-
-		mKinesisFirehoseOutput := vKinesisFirehoseOutput[0].(map[string]interface{})
-
-		if vResourceArn, ok := mKinesisFirehoseOutput["resource_arn"].(string); ok && vResourceArn != "" {
-			kinesisFirehoseOutputUpdate.ResourceARNUpdate = aws.String(vResourceArn)
-		}
-
-		outputUpdate.KinesisFirehoseOutputUpdate = kinesisFirehoseOutputUpdate
-	}
-
-	if vKinesisStreamsOutput, ok := mOutput["kinesis_streams_output"].([]interface{}); ok && len(vKinesisStreamsOutput) > 0 && vKinesisStreamsOutput[0] != nil {
-		kinesisStreamsOutputUpdate := &kinesisanalyticsv2.KinesisStreamsOutputUpdate{}
-
-		mKinesisStreamsOutput := vKinesisStreamsOutput[0].(map[string]interface{})
-
-		if vResourceArn, ok := mKinesisStreamsOutput["resource_arn"].(string); ok && vResourceArn != "" {
-			kinesisStreamsOutputUpdate.ResourceARNUpdate = aws.String(vResourceArn)
-		}
-
-		outputUpdate.KinesisStreamsOutputUpdate = kinesisStreamsOutputUpdate
-	}
-
-	if vLambdaOutput, ok := mOutput["lambda_output"].([]interface{}); ok && len(vLambdaOutput) > 0 && vLambdaOutput[0] != nil {
-		lambdaOutputUpdate := &kinesisanalyticsv2.LambdaOutputUpdate{}
-
-		mLambdaOutput := vLambdaOutput[0].(map[string]interface{})
-
-		if vResourceArn, ok := mLambdaOutput["resource_arn"].(string); ok && vResourceArn != "" {
-			lambdaOutputUpdate.ResourceARNUpdate = aws.String(vResourceArn)
-		}
-
-		outputUpdate.LambdaOutputUpdate = lambdaOutputUpdate
-	}
-
-	if vName, ok := mOutput["name"].(string); ok && vName != "" {
-		outputUpdate.NameUpdate = aws.String(vName)
-	}
-
-	if vOutputId, ok := mOutput["output_id"].(string); ok && vOutputId != "" {
-		outputUpdate.OutputId = aws.String(vOutputId)
-	}
-
-	return outputUpdate
-}
-
-func expandKinesisAnalyticsV2OutputUpdates(vOutputs []interface{}) []*kinesisanalyticsv2.OutputUpdate {
-	outputUpdates := []*kinesisanalyticsv2.OutputUpdate{}
-
-	for _, vOutput := range vOutputs {
-		outputUpdate := expandKinesisAnalyticsV2OutputUpdate(vOutput)
-
-		if outputUpdate != nil {
-			outputUpdates = append(outputUpdates, outputUpdate)
-		}
-	}
-
-	return outputUpdates
 }
 
 func expandKinesisAnalyticsV2PropertyGroups(vPropertyGroups []interface{}) []*kinesisanalyticsv2.PropertyGroup {
