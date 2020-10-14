@@ -10,7 +10,9 @@ BUG FIXES
 
 ENHANCEMENTS
 
+* data-source/aws_workspaces_directory: Add workspaces creation properties (GH-14577)
 * resource/aws_sagemaker_notebook_instance: Add `default_code_repository` attribute [GH-13772]
+* resource/aws_sagemaker_notebook_instance: Add `volume_size` attribute [GH-15521]
 * resource/aws_workspaces_directory: Add workspaces creation properties (GH-14577)
 
 ## 3.10.0 (October 09, 2020)
