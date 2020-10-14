@@ -772,28 +772,28 @@ resource "aws_subnet" "sagemaker" {
 func testAccAWSSagemakerNotebookInstanceConfigDefaultCodeRepository(notebookName string, defaultCodeRepository string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "foo" {
-	name = %[1]q
-	role_arn = aws_iam_role.foo.arn
-	instance_type = "ml.t2.medium"
-	security_groups = [aws_security_group.test.id]
-	subnet_id = aws_subnet.sagemaker.id
-	default_code_repository = %[2]q
+  name                    = %[1]q
+  role_arn                = aws_iam_role.foo.arn
+  instance_type           = "ml.t2.medium"
+  security_groups         = [aws_security_group.test.id]
+  subnet_id               = aws_subnet.sagemaker.id
+  default_code_repository = %[2]q
 }
 
 resource "aws_iam_role" "foo" {
-	name = %[1]q
-	path = "/"
-	assume_role_policy = data.aws_iam_policy_document.assume_role.json
+  name               = %[1]q
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 data "aws_iam_policy_document" "assume_role" {
-	statement {
-		actions = [ "sts:AssumeRole" ]
-		principals {
-			type = "Service"
-			identifiers = [ "sagemaker.amazonaws.com" ]
-		}
-	}
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
 }
 
 resource "aws_vpc" "test" {
