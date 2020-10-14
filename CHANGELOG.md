@@ -3,6 +3,7 @@
 FEATURES
 
 * **New Data Source:** `aws_codeartifact_repository_endpoint` [GH-15566]
+* **New Resource:** `aws_appmesh_virtual_gateway` [GH-15611]
 
 BUG FIXES
 
