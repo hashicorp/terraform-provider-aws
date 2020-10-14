@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -30,6 +31,11 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 		Delete: resourceAwsSnsTopicSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -237,8 +243,9 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 		log.Printf("[DEBUG] Deprecated: endpoint_auto_confirms exists for historical compatibility and should not be used.")
 	}
 
-	var time_to_sleep int = 10
-	var count_time_to_sleep int = (confirmation_timeout_in_minutes * 60) / time_to_sleep
+	if confirmation_timeout_in_minutes > 0 {
+		log.Printf("[DEBUG] Deprecated: confirmation_timeout_in_minutes exists for historical compatibility and should not be used.")
+	}
 
 	log.Printf("[DEBUG] SNS create topic subscription: %s (%s) @ '%s'", endpoint, protocol, topic_arn)
 
@@ -254,33 +261,42 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 		return nil, fmt.Errorf("Error creating SNS topic subscription: %s", err)
 	}
 
-	for i := 1; i < count_time_to_sleep; i++ {
-		var subscription *sns.Subscription
-		subscription, err = findSubscriptionByNonID(d, snsconn)
+	log.Printf("[DEBUG] Finished subscribing to topic %s with subscription arn %s", topic_arn, *output.SubscriptionArn)
 
-		if subscription != nil {
+	if subscriptionHasPendingConfirmation(output.SubscriptionArn) {
+
+		log.Printf("[DEBUG] SNS create topic subscription is pending so fetching the subscription list for topic : %s (%s) @ '%s'", endpoint, protocol, topic_arn)
+
+		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+
+			subscription, err := findSubscriptionByNonID(d, snsconn)
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			if subscription == nil {
+				return resource.RetryableError(fmt.Errorf("Endpoint (%s) did not confirm the subscription for topic %s", endpoint, topic_arn))
+			}
+
 			output.SubscriptionArn = subscription.SubscriptionArn
+			return nil
+		})
+
+		if isResourceTimeoutError(err) {
+			var subscription *sns.Subscription
+			subscription, err = findSubscriptionByNonID(d, snsconn)
+
+			if subscription != nil {
+				output.SubscriptionArn = subscription.SubscriptionArn
+			}
 		}
 
 		if err != nil {
 			return nil, err
 		}
-
-		if !subscriptionHasPendingConfirmation(output.SubscriptionArn) {
-			log.Printf("[DEBUG] SubscriptionArn: %s", *output.SubscriptionArn)
-			break
-		}
-
-		log.Printf("[DEBUG] SubscriptionArn: %s trying again (%d / %d)", *output.SubscriptionArn, i, count_time_to_sleep)
-
-		time.Sleep(10 * time.Second)
 	}
 
-	if subscriptionHasPendingConfirmation(output.SubscriptionArn) {
-		return nil, fmt.Errorf("Endpoint (%s) did not confirm the subscription for topic %s", endpoint, topic_arn)
-	}
-
-	log.Printf("[DEBUG] Finished subscribing to topic %s with subscription arn %s", topic_arn, *output.SubscriptionArn)
 	log.Printf("[DEBUG] Created new subscription! %s", *output.SubscriptionArn)
 	return output, nil
 }
