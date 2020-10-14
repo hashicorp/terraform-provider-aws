@@ -641,6 +641,7 @@ resource "aws_sagemaker_notebook_instance" "test" {
   role_arn      = aws_iam_role.test.arn
   instance_type = "ml.t2.medium"
   volume_size   = 8
+}
   `, rName)
 }
 
