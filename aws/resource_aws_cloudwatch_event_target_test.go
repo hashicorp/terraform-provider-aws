@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/lister"
 )
 
 func init() {
@@ -26,66 +28,76 @@ func testSweepCloudWatchEventTargets(region string) error {
 	}
 	conn := client.(*AWSClient).cloudwatcheventsconn
 
-	input := &events.ListRulesInput{}
+	var sweeperErrs *multierror.Error
+	var rulesCount, targetsCount int
 
-	for {
-		output, err := conn.ListRules(input)
+	rulesInput := &events.ListRulesInput{}
 
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping CloudWatch Event Target sweep for %s: %s", region, err)
-			return nil
+	err = lister.ListRulesPages(conn, rulesInput, func(rulesPage *events.ListRulesOutput, lastRulesPage bool) bool {
+		if rulesPage == nil {
+			return !lastRulesPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("Error retrieving CloudWatch Event Targets: %s", err)
-		}
-
-		for _, rule := range output.Rules {
-			listTargetsByRuleInput := &events.ListTargetsByRuleInput{
-				Limit: aws.Int64(100), // Set limit to allowed maximum to prevent API throttling
-				Rule:  rule.Name,
-			}
+		for _, rule := range rulesPage.Rules {
+			rulesCount++
 			ruleName := aws.StringValue(rule.Name)
 
-			for {
-				listTargetsByRuleOutput, err := conn.ListTargetsByRule(listTargetsByRuleInput)
+			log.Printf("[INFO] Deleting CloudWatch Events targets for rule (%s)", ruleName)
+			targetsInput := &events.ListTargetsByRuleInput{
+				Rule:  rule.Name,
+				Limit: aws.Int64(100), // Set limit to allowed maximum to prevent API throttling
+			}
 
-				if err != nil {
-					return fmt.Errorf("Error retrieving CloudWatch Event Targets: %s", err)
+			err := lister.ListTargetsByRulePages(conn, targetsInput, func(targetsPage *events.ListTargetsByRuleOutput, lastTargetsPage bool) bool {
+				if targetsPage == nil {
+					return !lastTargetsPage
 				}
 
-				for _, target := range listTargetsByRuleOutput.Targets {
+				for _, target := range targetsPage.Targets {
+					targetsCount++
 					removeTargetsInput := &events.RemoveTargetsInput{
 						Ids:   []*string{target.Id},
 						Rule:  rule.Name,
-						Force: aws.Bool(true),
+						Force: aws.Bool(true), // Required for AWS-managed rules, ignored otherwise
 					}
 					targetID := aws.StringValue(target.Id)
 
-					log.Printf("[INFO] Deleting CloudWatch Event Rule (%s) Target: %s", ruleName, targetID)
+					log.Printf("[INFO] Deleting CloudWatch Events target (%s/%s)", ruleName, targetID)
 					_, err := conn.RemoveTargets(removeTargetsInput)
 
 					if err != nil {
-						return fmt.Errorf("Error deleting CloudWatch Event Rule (%s) Target %s: %s", ruleName, targetID, err)
+						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("Error deleting CloudWatch Events target (%s/%s): %w", ruleName, targetID, err))
+						continue
 					}
 				}
 
-				if aws.StringValue(listTargetsByRuleOutput.NextToken) == "" {
-					break
-				}
+				return !lastTargetsPage
+			})
 
-				listTargetsByRuleInput.NextToken = listTargetsByRuleOutput.NextToken
+			if testSweepSkipSweepError(err) {
+				log.Printf("[WARN] Skipping CloudWatch Events target sweeper for %q: %s", region, err)
+				return false
+			}
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing CloudWatch Events targets for rule (%s): %w", ruleName, err))
 			}
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastRulesPage
+	})
 
-		input.NextToken = output.NextToken
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudWatch Events rule target sweeper for %q: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
-	return nil
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing CloudWatch Events rules: %w", err))
+	}
+
+	log.Printf("[INFO] Deleted %d CloudWatch Events targets across %d CloudWatch Events rules", targetsCount, rulesCount)
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSCloudWatchEventTarget_basic(t *testing.T) {
@@ -405,7 +417,7 @@ func testAccCheckAWSCloudWatchEventTargetDestroy(s *terraform.State) error {
 		t, err := findEventTargetById(rs.Primary.Attributes["target_id"],
 			rs.Primary.Attributes["rule"], nil, conn)
 		if err == nil {
-			return fmt.Errorf("CloudWatch Event Target %q still exists: %s",
+			return fmt.Errorf("CloudWatch Events Target %q still exists: %s",
 				rs.Primary.ID, t)
 		}
 	}
