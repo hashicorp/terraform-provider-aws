@@ -330,7 +330,7 @@ func resourceAwsSsoAssignmentID(
 	}
 	pArnResourceParts := strings.Split(pArn.Resource, "/")
 	if len(iArnResourceParts) != 3 || pArnResourceParts[0] != "permissionSet" || pArnResourceParts[1] == "" || pArnResourceParts[2] == "" {
-		return "", fmt.Errorf("Unexpected format of ARN (%s), expected arn:${Partition}:sso:::permissionSet/${InstanceId}/${PermissionSetId}", instanceArn)
+		return "", fmt.Errorf("Unexpected format of ARN (%s), expected arn:${Partition}:sso:::permissionSet/${InstanceId}/${PermissionSetId}", permissionSetArn)
 	}
 	permissionSetID := pArnResourceParts[2]
 
