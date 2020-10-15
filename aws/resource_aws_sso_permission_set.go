@@ -303,9 +303,18 @@ func resourceAwsSsoPermissionSetUpdate(d *schema.ResourceData, meta interface{})
 		input := &ssoadmin.UpdatePermissionSetInput{
 			PermissionSetArn: aws.String(permissionSetArn),
 			InstanceArn:      aws.String(instanceArn),
-			Description:      aws.String(d.Get("description").(string)),
-			RelayState:       aws.String(d.Get("relay_state").(string)),
-			SessionDuration:  aws.String(d.Get("session_duration").(string)),
+		}
+
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
+		}
+
+		if d.HasChange("relay_state") {
+			input.RelayState = aws.String(d.Get("relay_state").(string))
+		}
+
+		if d.HasChange("session_duration") {
+			input.SessionDuration = aws.String(d.Get("session_duration").(string))
 		}
 
 		log.Printf("[DEBUG] Updating AWS SSO Permission Set: %s", input)
@@ -401,25 +410,11 @@ func resourceAwsSsoPermissionSetUpdate(d *schema.ResourceData, meta interface{})
 			return fmt.Errorf("Error provisioning AWS SSO Permission Set (%s): %w", d.Id(), err)
 		}
 
-		if provisionResponse != nil && provisionResponse.PermissionSetProvisioningStatus != nil {
-			status := provisionResponse.PermissionSetProvisioningStatus
+		status := provisionResponse.PermissionSetProvisioningStatus
 
-			if status.CreatedDate != nil {
-				d.Set("created_date", status.CreatedDate.Format(time.RFC3339))
-			}
-
-			wait := resource.StateChangeConf{
-				Delay:      AWSSSOPermissionSetProvisioningRetryDelay,
-				Pending:    []string{ssoadmin.StatusValuesInProgress},
-				Target:     []string{ssoadmin.StatusValuesSucceeded},
-				Timeout:    d.Timeout(schema.TimeoutUpdate),
-				MinTimeout: AWSSSOPermissionSetProvisioningRetryMinTimeout,
-				Refresh:    resourceAwsSsoPermissionSetProvisioningRefreshFunc(ssoadminconn, aws.StringValue(status.RequestId), instanceArn),
-			}
-
-			if _, err := wait.WaitForState(); err != nil {
-				return fmt.Errorf("Error waiting for AWS SSO Permission Set (%s) provisioning: %w", d.Id(), err)
-			}
+		_, waitErr := waitForPermissionSetProvisioning(ssoadminconn, instanceArn, aws.StringValue(status.RequestId), d.Timeout(schema.TimeoutUpdate))
+		if waitErr != nil {
+			return waitErr
 		}
 	}
 
@@ -516,27 +511,39 @@ func resourceAwsSsoPermissionSetParseID(id string) (string, error) {
 	return instanceARN.String(), nil
 }
 
-func resourceAwsSsoPermissionSetProvisioningRefreshFunc(ssoadminconn *ssoadmin.SSOAdmin, instanceArn, requestID string) resource.StateRefreshFunc {
+func waitForPermissionSetProvisioning(ssoadminconn *ssoadmin.SSOAdmin, instanceArn string, requestID string, timeout time.Duration) (*ssoadmin.PermissionSetProvisioningStatus, error) {
+
+	stateConf := resource.StateChangeConf{
+		Delay:      AWSSSOPermissionSetProvisioningRetryDelay,
+		Pending:    []string{ssoadmin.StatusValuesInProgress},
+		Target:     []string{ssoadmin.StatusValuesSucceeded},
+		Timeout:    timeout,
+		MinTimeout: AWSSSOPermissionSetProvisioningRetryMinTimeout,
+		Refresh:    resourceAwsSsoPermissionSetProvisioningRefreshFunc(ssoadminconn, requestID, instanceArn),
+	}
+	status, err := stateConf.WaitForState()
+	if err != nil {
+		return nil, fmt.Errorf("Error waiting for AWS SSO Permission Set provisioning status: %s", err)
+	}
+	return status.(*ssoadmin.PermissionSetProvisioningStatus), nil
+}
+
+func resourceAwsSsoPermissionSetProvisioningRefreshFunc(ssoadminconn *ssoadmin.SSOAdmin, requestID, instanceArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &ssoadmin.DescribePermissionSetProvisioningStatusInput{
 			InstanceArn:                     aws.String(instanceArn),
 			ProvisionPermissionSetRequestId: aws.String(requestID),
 		}
 
-		return resourceAwsSsoPermissionSetProvisioningWait(ssoadminconn, input)
+		resp, err := ssoadminconn.DescribePermissionSetProvisioningStatus(input)
+		if err != nil {
+			return resp, "", fmt.Errorf("Error describing permission set provisioning status: %s", err)
+		}
+		status := resp.PermissionSetProvisioningStatus
+		if aws.StringValue(status.Status) == ssoadmin.StatusValuesFailed {
+			return resp, ssoadmin.StatusValuesFailed, fmt.Errorf("Failed to provision AWS SSO Permission Set (%s): %s", aws.StringValue(status.PermissionSetArn), aws.StringValue(status.FailureReason))
+		}
+		return status, aws.StringValue(status.Status), nil
+
 	}
-}
-
-func resourceAwsSsoPermissionSetProvisioningWait(ssoadminconn *ssoadmin.SSOAdmin, input *ssoadmin.DescribePermissionSetProvisioningStatusInput) (result interface{}, state string, err error) {
-
-	resp, err := ssoadminconn.DescribePermissionSetProvisioningStatus(input)
-
-	if aws.StringValue(resp.PermissionSetProvisioningStatus.Status) == ssoadmin.StatusValuesFailed {
-		return nil, ssoadmin.StatusValuesFailed, fmt.Errorf("Failed to provision AWS SSO Permission Set (%s): %s", aws.StringValue(resp.PermissionSetProvisioningStatus.PermissionSetArn), aws.StringValue(resp.PermissionSetProvisioningStatus.FailureReason))
-	}
-
-	if err != nil {
-		return nil, *resp.PermissionSetProvisioningStatus.Status, err
-	}
-	return true, *resp.PermissionSetProvisioningStatus.Status, nil
 }
