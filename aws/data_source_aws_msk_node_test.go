@@ -46,8 +46,9 @@ resource "aws_msk_cluster" "test" {
     security_groups = [aws_security_group.example_sg.id]
   }
 }
+
 data "aws_msk_node" "test" {
-  cluster_arn = aws_msk_cluster.test.arn
+  cluster_arn     = aws_msk_cluster.test.arn
   broker_endpoint = trimsuffix(split(",", aws_msk_cluster.test.bootstrap_brokers_tls)[0], ":9094")
 }
 `, rName)
