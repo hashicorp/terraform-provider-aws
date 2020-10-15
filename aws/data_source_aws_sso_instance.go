@@ -33,7 +33,7 @@ func dataSourceAwsSsoInstanceRead(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Reading AWS SSO Instances")
 	instances := []*ssoadmin.InstanceMetadata{}
 	err := conn.ListInstancesPages(&ssoadmin.ListInstancesInput{}, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
-		if page != nil && page.Instances != nil && len(page.Instances) != 0 {
+		if page != nil && len(page.Instances) != 0 {
 			instances = append(instances, page.Instances...)
 		}
 		return !lastPage

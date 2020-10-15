@@ -365,34 +365,30 @@ func resourceAwsSsoAssignmentGet(
 	if targetType != ssoadmin.TargetTypeAwsAccount {
 		return nil, fmt.Errorf("Invalid AWS SSO Assignments Target type %s. Only %s is supported", targetType, ssoadmin.TargetTypeAwsAccount)
 	}
-
 	req := &ssoadmin.ListAccountAssignmentsInput{
 		InstanceArn:      aws.String(instanceArn),
 		PermissionSetArn: aws.String(permissionSetArn),
 		AccountId:        aws.String(targetID),
 	}
-
 	log.Printf("[DEBUG] Reading AWS SSO Assignments for %s", req)
-	resp, err := conn.ListAccountAssignments(req)
+	var accountAssignment *ssoadmin.AccountAssignment
+	err := conn.ListAccountAssignmentsPages(req, func(page *ssoadmin.ListAccountAssignmentsOutput, lastPage bool) bool {
+		if page != nil && len(page.AccountAssignments) != 0 {
+			for _, a := range page.AccountAssignments {
+				if aws.StringValue(a.PrincipalType) == principalType {
+					if aws.StringValue(a.PrincipalId) == principalID {
+						accountAssignment = a
+						return false
+					}
+				}
+			}
+		}
+		return !lastPage
+	})
 	if err != nil {
 		return nil, fmt.Errorf("Error getting AWS SSO Assignments: %s", err)
 	}
-
-	if resp == nil || len(resp.AccountAssignments) == 0 {
-		log.Printf("[DEBUG] No account assignments found")
-		return nil, nil
-	}
-
-	for _, accountAssignment := range resp.AccountAssignments {
-		if aws.StringValue(accountAssignment.PrincipalType) == principalType {
-			if aws.StringValue(accountAssignment.PrincipalId) == principalID {
-				return accountAssignment, nil
-			}
-		}
-	}
-
-	// not found
-	return nil, nil
+	return accountAssignment, nil
 }
 
 func waitForAssignmentCreation(conn *ssoadmin.SSOAdmin, instanceArn string, requestID string, timeout time.Duration) (*ssoadmin.AccountAssignmentOperationStatus, error) {

@@ -88,7 +88,7 @@ func dataSourceAwsIdentityStoreUserRead(d *schema.ResourceData, meta interface{}
 		}
 		users := []*identitystore.User{}
 		err := conn.ListUsersPages(req, func(page *identitystore.ListUsersOutput, lastPage bool) bool {
-			if page != nil && page.Users != nil && len(page.Users) != 0 {
+			if page != nil && len(page.Users) != 0 {
 				users = append(users, page.Users...)
 			}
 			return !lastPage

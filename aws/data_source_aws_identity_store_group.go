@@ -88,7 +88,7 @@ func dataSourceAwsIdentityStoreGroupRead(d *schema.ResourceData, meta interface{
 		}
 		groups := []*identitystore.Group{}
 		err := conn.ListGroupsPages(req, func(page *identitystore.ListGroupsOutput, lastPage bool) bool {
-			if page != nil && page.Groups != nil && len(page.Groups) != 0 {
+			if page != nil && len(page.Groups) != 0 {
 				groups = append(groups, page.Groups...)
 			}
 			return !lastPage
