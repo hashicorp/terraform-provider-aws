@@ -1420,9 +1420,11 @@ provider "aws" {
   }
 }
 
+data "aws_partition" "provider_test" {}
+
 # Required to initialize the provider
 data "aws_arn" "test" {
-  arn = "arn:aws:s3:::test"
+  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
 }
 `, endpoints)
 }
@@ -1439,9 +1441,11 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
+data "aws_partition" "provider_test" {}
+
 # Required to initialize the provider
 data "aws_arn" "test" {
-  arn = "arn:aws:s3:::test"
+  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
 }
 `
 }
@@ -1456,9 +1460,11 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
+data "aws_partition" "provider_test" {}
+
 # Required to initialize the provider
 data "aws_arn" "test" {
-  arn = "arn:aws:s3:::test"
+  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
 }
 `
 }
@@ -1477,9 +1483,11 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
+data "aws_partition" "provider_test" {}
+
 # Required to initialize the provider
 data "aws_arn" "test" {
-  arn = "arn:aws:s3:::test"
+  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
 }
 `, tagPrefix1)
 }
@@ -1498,9 +1506,11 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
+data "aws_partition" "provider_test" {}
+
 # Required to initialize the provider
 data "aws_arn" "test" {
-  arn = "arn:aws:s3:::test"
+  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
 }
 `, tagPrefix1, tagPrefix2)
 }
@@ -1515,9 +1525,11 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
+data "aws_partition" "provider_test" {}
+
 # Required to initialize the provider
 data "aws_arn" "test" {
-  arn = "arn:aws:s3:::test"
+  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
 }
 `
 }
@@ -1536,9 +1548,11 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
+data "aws_partition" "provider_test" {}
+
 # Required to initialize the provider
 data "aws_arn" "test" {
-  arn = "arn:aws:s3:::test"
+  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
 }
 `, tag1)
 }
@@ -1557,9 +1571,11 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
+data "aws_partition" "provider_test" {}
+
 # Required to initialize the provider
 data "aws_arn" "test" {
-  arn = "arn:aws:s3:::test"
+  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
 }
 `, tag1, tag2)
 }
@@ -1575,9 +1591,11 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
+data "aws_partition" "provider_test" {}
+
 # Required to initialize the provider
 data "aws_arn" "test" {
-  arn = "arn:aws:s3:::test"
+  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
 }
 `, region)
 }
