@@ -185,7 +185,7 @@ func TestAccAWSS3AccessPoint_Bucket_Arn(t *testing.T) {
 					testAccMatchResourceAttrRegionalHostname(resourceName, "domain_name", "s3-accesspoint", regexp.MustCompile(fmt.Sprintf("^%s-\\d{12}", rName))),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "network_origin", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, "network_origin", "Vpc"),
 					resource.TestCheckResourceAttr(resourceName, "policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.block_public_acls", "true"),

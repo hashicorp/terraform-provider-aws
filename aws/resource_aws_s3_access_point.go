@@ -196,20 +196,41 @@ func resourceAwsS3AccessPointRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if strings.HasPrefix(name, "arn:") {
+		parsedAccessPointARN, err := arn.Parse(name)
+
+		if err != nil {
+			return fmt.Errorf("error parsing S3 Control Access Point ARN (%s): %w", name, err)
+		}
+
+		bucketARN := arn.ARN{
+			AccountID: parsedAccessPointARN.AccountID,
+			Partition: parsedAccessPointARN.Partition,
+			Region:    parsedAccessPointARN.Region,
+			Resource: strings.Replace(
+				parsedAccessPointARN.Resource,
+				fmt.Sprintf("accesspoint/%s", aws.StringValue(output.Name)),
+				fmt.Sprintf("bucket/%s", aws.StringValue(output.Bucket)),
+				1,
+			),
+			Service: parsedAccessPointARN.Service,
+		}
+
 		d.Set("arn", name)
+		d.Set("bucket", bucketARN.String())
 	} else {
-		builtARN := arn.ARN{
+		accessPointARN := arn.ARN{
 			AccountID: accountId,
 			Partition: meta.(*AWSClient).partition,
 			Region:    meta.(*AWSClient).region,
 			Resource:  fmt.Sprintf("accesspoint/%s", aws.StringValue(output.Name)),
 			Service:   "s3",
 		}
-		d.Set("arn", builtARN.String())
+
+		d.Set("arn", accessPointARN.String())
+		d.Set("bucket", output.Bucket)
 	}
 
 	d.Set("account_id", accountId)
-	d.Set("bucket", output.Bucket)
 	d.Set("domain_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s-%s.s3-accesspoint", aws.StringValue(output.Name), accountId)))
 	d.Set("name", output.Name)
 	d.Set("network_origin", output.NetworkOrigin)
@@ -233,6 +254,13 @@ func resourceAwsS3AccessPointRead(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		d.Set("policy", policyOutput.Policy)
+	}
+
+	// Return early since S3 on Outposts cannot have public policies
+	if strings.HasPrefix(name, "arn:") {
+		d.Set("has_public_access_policy", false)
+
+		return nil
 	}
 
 	policyStatusOutput, err := conn.GetAccessPointPolicyStatus(&s3control.GetAccessPointPolicyStatusInput{
