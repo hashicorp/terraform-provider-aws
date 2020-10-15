@@ -77,7 +77,7 @@ func dataSourceAwsIdentityStoreGroupRead(d *schema.ResourceData, meta interface{
 		d.Set("display_name", resp.DisplayName)
 	} else if displayName != "" {
 		log.Printf("[DEBUG] Reading AWS Identity Store Groups")
-		resp, err := conn.ListGroups(&identitystore.ListGroupsInput{
+		req := &identitystore.ListGroupsInput{
 			IdentityStoreId: aws.String(identityStoreID),
 			Filters: []*identitystore.Filter{
 				{
@@ -85,19 +85,26 @@ func dataSourceAwsIdentityStoreGroupRead(d *schema.ResourceData, meta interface{
 					AttributeValue: aws.String(displayName),
 				},
 			},
+		}
+		groups := []*identitystore.Group{}
+		err := conn.ListGroupsPages(req, func(page *identitystore.ListGroupsOutput, lastPage bool) bool {
+			if page != nil && page.Groups != nil && len(page.Groups) != 0 {
+				groups = append(groups, page.Groups...)
+			}
+			return !lastPage
 		})
 		if err != nil {
 			return fmt.Errorf("Error getting AWS Identity Store Groups: %s", err)
 		}
-		if resp == nil || len(resp.Groups) == 0 {
+		if len(groups) == 0 {
 			log.Printf("[DEBUG] No AWS Identity Store Groups found")
 			d.SetId("")
 			return nil
 		}
-		if len(resp.Groups) > 1 {
-			return fmt.Errorf("Found multiple AWS Identity Store Groups with the DisplayName %v. Not sure which one to use. %s", displayName, resp.Groups)
+		if len(groups) > 1 {
+			return fmt.Errorf("Found multiple AWS Identity Store Groups with the DisplayName %v. Not sure which one to use. %s", displayName, groups)
 		}
-		group := resp.Groups[0]
+		group := groups[0]
 		d.SetId(aws.StringValue(group.GroupId))
 		d.Set("group_id", group.GroupId)
 	} else {

@@ -42,7 +42,7 @@ func dataSourceAwsSsoInstanceRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Error getting AWS SSO Instances: %s", err)
 	}
 
-	if instances == nil || len(instances) == 0 {
+	if len(instances) == 0 {
 		log.Printf("[DEBUG] No AWS SSO Instance found")
 		d.SetId("")
 		return nil

@@ -77,7 +77,7 @@ func dataSourceAwsIdentityStoreUserRead(d *schema.ResourceData, meta interface{}
 		d.Set("user_name", resp.UserName)
 	} else if userName != "" {
 		log.Printf("[DEBUG] Reading AWS Identity Store Users")
-		resp, err := conn.ListUsers(&identitystore.ListUsersInput{
+		req := &identitystore.ListUsersInput{
 			IdentityStoreId: aws.String(identityStoreID),
 			Filters: []*identitystore.Filter{
 				{
@@ -85,19 +85,26 @@ func dataSourceAwsIdentityStoreUserRead(d *schema.ResourceData, meta interface{}
 					AttributeValue: aws.String(userName),
 				},
 			},
+		}
+		users := []*identitystore.User{}
+		err := conn.ListUsersPages(req, func(page *identitystore.ListUsersOutput, lastPage bool) bool {
+			if page != nil && page.Users != nil && len(page.Users) != 0 {
+				users = append(users, page.Users...)
+			}
+			return !lastPage
 		})
 		if err != nil {
 			return fmt.Errorf("Error getting AWS Identity Store Users: %s", err)
 		}
-		if resp == nil || len(resp.Users) == 0 {
+		if len(users) == 0 {
 			log.Printf("[DEBUG] No AWS Identity Store Users found")
 			d.SetId("")
 			return nil
 		}
-		if len(resp.Users) > 1 {
-			return fmt.Errorf("Found multiple AWS Identity Store Users with the UserName %v. Not sure which one to use. %s", userName, resp.Users)
+		if len(users) > 1 {
+			return fmt.Errorf("Found multiple AWS Identity Store Users with the UserName %v. Not sure which one to use. %s", userName, users)
 		}
-		user := resp.Users[0]
+		user := users[0]
 		d.SetId(aws.StringValue(user.UserId))
 		d.Set("user_id", user.UserId)
 	} else {
