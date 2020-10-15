@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"regexp"
@@ -11,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -68,21 +66,11 @@ func dataSourceAwsSsoPermissionSet() *schema.Resource {
 				Computed: true,
 			},
 
-			"managed_policies": {
+			"managed_policy_arns": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Set:      permissionSetManagedPoliciesHash,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 
@@ -156,14 +144,9 @@ func dataSourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{})
 	if managedPoliciesErr != nil {
 		return fmt.Errorf("Error getting Managed Policies for AWS SSO Permission Set: %s", managedPoliciesErr)
 	}
-	managedPoliciesSet := &schema.Set{
-		F: permissionSetManagedPoliciesHash,
-	}
+	var managedPolicyArns []string
 	for _, managedPolicy := range managedPoliciesResp.AttachedManagedPolicies {
-		managedPoliciesSet.Add(map[string]interface{}{
-			"arn":  aws.StringValue(managedPolicy.Arn),
-			"name": aws.StringValue(managedPolicy.Name),
-		})
+		managedPolicyArns = append(managedPolicyArns, aws.StringValue(managedPolicy.Arn))
 	}
 
 	tags, err := keyvaluetags.SsoListTags(conn, permissionSetArn, instanceArn)
@@ -180,20 +163,10 @@ func dataSourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{})
 	d.Set("session_duration", permissionSet.SessionDuration)
 	d.Set("relay_state", permissionSet.RelayState)
 	d.Set("inline_policy", inlinePolicyResp.InlinePolicy)
-	d.Set("managed_policies", managedPoliciesSet)
+	d.Set("managed_policy_arns", managedPolicyArns)
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
-}
-
-// Generates a hash for the set hash function used by the
-// managed_policies attribute.
-func permissionSetManagedPoliciesHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["arn"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
-	return hashcode.String(buf.String())
 }

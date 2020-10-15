@@ -37,7 +37,10 @@ func resourceAwsSsoPermissionSet() *schema.Resource {
 					return nil, fmt.Errorf("Error parsing AWS Permission Set ID %s: %s", d.Id(), err)
 				}
 
-				d.Set("instance_arn", instanceArn)
+				err = d.Set("instance_arn", instanceArn)
+				if err != nil {
+					return nil, err
+				}
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -110,6 +113,7 @@ func resourceAwsSsoPermissionSet() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
+				Default:      "PT1H",
 			},
 
 			"relay_state": {
@@ -128,13 +132,14 @@ func resourceAwsSsoPermissionSet() *schema.Resource {
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 
-			"managed_policies": {
+			"managed_policy_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validateArn,
 				},
+				Set: schema.HashString,
 			},
 
 			"tags": tagsSchema(),
@@ -170,9 +175,9 @@ func resourceAwsSsoPermissionSetCreate(d *schema.ResourceData, meta interface{})
 		params.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SsoTags()
 	}
 
-	createPermissionSetResp, createPermissionSetErr := ssoadminconn.CreatePermissionSet(params)
-	if createPermissionSetErr != nil {
-		return fmt.Errorf("Error creating AWS SSO Permission Set: %s", createPermissionSetErr)
+	createPermissionSetResp, createPermissionerr := ssoadminconn.CreatePermissionSet(params)
+	if createPermissionerr != nil {
+		return fmt.Errorf("Error creating AWS SSO Permission Set: %s", createPermissionerr)
 	}
 
 	permissionSetArn := createPermissionSetResp.PermissionSet.PermissionSetArn
@@ -191,22 +196,18 @@ func resourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{}) e
 
 	var permissionSet *ssoadmin.PermissionSet
 	permissionSetArn := d.Id()
-	instanceArn, err := resourceAwsSsoPermissionSetParseID(d.Id())
-	if err != nil {
-		return fmt.Errorf("Error parsing AWS Permission Set ID %s: %s", d.Id(), err)
-	}
-
+	instanceArn := d.Get("instance_arn").(string)
 	name := d.Get("name").(string)
 
 	log.Printf("[DEBUG] Reading AWS SSO Permission Set: %s", permissionSetArn)
 
-	permissionSetResp, permissionSetErr := ssoadminconn.DescribePermissionSet(&ssoadmin.DescribePermissionSetInput{
+	permissionSetResp, permissionerr := ssoadminconn.DescribePermissionSet(&ssoadmin.DescribePermissionSetInput{
 		InstanceArn:      aws.String(instanceArn),
 		PermissionSetArn: aws.String(permissionSetArn),
 	})
 
-	if permissionSetErr != nil {
-		return fmt.Errorf("Error getting AWS SSO Permission Set: %s", permissionSetErr)
+	if permissionerr != nil {
+		return fmt.Errorf("Error getting AWS SSO Permission Set: %s", permissionerr)
 	}
 	if aws.StringValue(permissionSetResp.PermissionSet.Name) == name {
 		permissionSet = permissionSetResp.PermissionSet
@@ -237,14 +238,9 @@ func resourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{}) e
 	if managedPoliciesErr != nil {
 		return fmt.Errorf("Error getting Managed Policies for AWS SSO Permission Set: %s", managedPoliciesErr)
 	}
-	managedPoliciesSet := &schema.Set{
-		F: permissionSetManagedPoliciesHash,
-	}
+	var managedPolicyArns []string
 	for _, managedPolicy := range managedPoliciesResp.AttachedManagedPolicies {
-		managedPoliciesSet.Add(map[string]interface{}{
-			"arn":  aws.StringValue(managedPolicy.Arn),
-			"name": aws.StringValue(managedPolicy.Name),
-		})
+		managedPolicyArns = append(managedPolicyArns, aws.StringValue(managedPolicy.Arn))
 	}
 
 	tags, err := keyvaluetags.SsoListTags(ssoadminconn, permissionSetArn, instanceArn)
@@ -252,15 +248,42 @@ func resourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error listing tags for AWS SSO Permission Set (%s): %s", permissionSetArn, err)
 	}
 
-	d.Set("arn", permissionSetArn)
-	d.Set("created_date", permissionSet.CreatedDate.Format(time.RFC3339))
-	d.Set("instance_arn", instanceArn)
-	d.Set("name", permissionSet.Name)
-	d.Set("description", permissionSet.Description)
-	d.Set("session_duration", permissionSet.SessionDuration)
-	d.Set("relay_state", permissionSet.RelayState)
-	d.Set("inline_policy", inlinePolicyResp.InlinePolicy)
-	d.Set("managed_policies", managedPoliciesSet)
+	err = d.Set("arn", permissionSetArn)
+	if err != nil {
+		return err
+	}
+	err = d.Set("created_date", permissionSet.CreatedDate.Format(time.RFC3339))
+	if err != nil {
+		return err
+	}
+	err = d.Set("instance_arn", instanceArn)
+	if err != nil {
+		return err
+	}
+	err = d.Set("name", permissionSet.Name)
+	if err != nil {
+		return err
+	}
+	err = d.Set("description", permissionSet.Description)
+	if err != nil {
+		return err
+	}
+	err = d.Set("session_duration", permissionSet.SessionDuration)
+	if err != nil {
+		return err
+	}
+	err = d.Set("relay_state", permissionSet.RelayState)
+	if err != nil {
+		return err
+	}
+	err = d.Set("inline_policy", inlinePolicyResp.InlinePolicy)
+	if err != nil {
+		return err
+	}
+	err = d.Set("managed_policy_arns", managedPolicyArns)
+	if err != nil {
+		return err
+	}
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("Error setting tags: %s", err)
 	}
@@ -272,10 +295,7 @@ func resourceAwsSsoPermissionSetUpdate(d *schema.ResourceData, meta interface{})
 	ssoadminconn := meta.(*AWSClient).ssoadminconn
 
 	permissionSetArn := d.Id()
-	instanceArn, err := resourceAwsSsoPermissionSetParseID(permissionSetArn)
-	if err != nil {
-		return fmt.Errorf("Error parsing AWS Permission Set ID %s: %s", permissionSetArn, err)
-	}
+	instanceArn := d.Get("instance_arn").(string)
 
 	log.Printf("[DEBUG] Updating AWS SSO Permission Set: %s", permissionSetArn)
 
@@ -289,9 +309,9 @@ func resourceAwsSsoPermissionSetUpdate(d *schema.ResourceData, meta interface{})
 		}
 
 		log.Printf("[DEBUG] Updating AWS SSO Permission Set: %s", input)
-		_, permissionSetErr := ssoadminconn.UpdatePermissionSet(input)
-		if permissionSetErr != nil {
-			return fmt.Errorf("Error updating AWS SSO Permission Set: %s", permissionSetErr)
+		_, permissionerr := ssoadminconn.UpdatePermissionSet(input)
+		if permissionerr != nil {
+			return fmt.Errorf("Error updating AWS SSO Permission Set: %s", permissionerr)
 		}
 	}
 
@@ -329,8 +349,8 @@ func resourceAwsSsoPermissionSetUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	if d.HasChange("managed_policies") {
-		o, n := d.GetChange("managed_policies")
+	if d.HasChange("managed_policy_arns") {
+		o, n := d.GetChange("managed_policy_arns")
 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
@@ -365,7 +385,7 @@ func resourceAwsSsoPermissionSetUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	// Reprovision if anything has changed
-	if d.HasChanges("description", "relay_state", "session_duration", "inline_policy", "managed_policies", "tags") {
+	if d.HasChanges("description", "relay_state", "session_duration", "inline_policy", "managed_policy_arns", "tags") {
 
 		// Auto provision all accounts
 		targetType := ssoadmin.ProvisionTargetTypeAllProvisionedAccounts
@@ -410,10 +430,7 @@ func resourceAwsSsoPermissionSetDelete(d *schema.ResourceData, meta interface{})
 	ssoadminconn := meta.(*AWSClient).ssoadminconn
 
 	permissionSetArn := d.Id()
-	instanceArn, parseErr := resourceAwsSsoPermissionSetParseID(permissionSetArn)
-	if parseErr != nil {
-		return fmt.Errorf("Error parsing AWS Permission Set ID %s: %s", permissionSetArn, parseErr)
-	}
+	instanceArn := d.Get("instance_arn").(string)
 
 	log.Printf("[INFO] Deleting AWS SSO Permission Set: %s", permissionSetArn)
 
@@ -431,7 +448,7 @@ func resourceAwsSsoPermissionSetDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func attachPoliciesToPermissionSet(ssoadminconn *ssoadmin.SSOAdmin, d *schema.ResourceData, instanceArn *string, permissionSetArn *string) error {
+func attachPoliciesToPermissionSet(ssoadminconn *ssoadmin.SSOAdmin, d *schema.ResourceData, permissionSetArn *string, instanceArn *string) error {
 
 	if v, ok := d.GetOk("inline_policy"); ok {
 		log.Printf("[INFO] Attaching IAM inline policy to AWS SSO Permission Set")
@@ -450,7 +467,7 @@ func attachPoliciesToPermissionSet(ssoadminconn *ssoadmin.SSOAdmin, d *schema.Re
 		}
 	}
 
-	if v, ok := d.GetOk("managed_policies"); ok {
+	if v, ok := d.GetOk("managed_policy_arns"); ok {
 		log.Printf("[INFO] Attaching Managed Policies to AWS SSO Permission Set")
 
 		managedPolicies := expandStringSet(v.(*schema.Set))
@@ -474,27 +491,26 @@ func attachPoliciesToPermissionSet(ssoadminconn *ssoadmin.SSOAdmin, d *schema.Re
 }
 
 func resourceAwsSsoPermissionSetParseID(id string) (string, error) {
-	// id = arn:aws:sso:::permissionSet/${InstanceID}/${PermissionSetID}
-	idFormatErr := fmt.Errorf("Unexpected format of AWS Permission Set ID (%s), expected format arn:aws:sso:::permissionSet/ins-123456A/ps-56789B", id)
+	// id = arn:${Partition}:sso:::permissionSet/${InstanceID}/${PermissionSetID}
+	idFormatErr := fmt.Errorf("Unexpected format of ARN (%s), expected arn:${Partition}:sso:::permissionSet/${InstanceId}/${PermissionSetId}", id)
 	permissionSetARN, err := arn.Parse(id)
 	if err != nil {
 		return "", idFormatErr
 	}
 
 	// We need:
-	//  * The InstanceID portion of the permission set ARN resource (arn:aws:sso:::permissionSet/ins-123456A/ps-56789B)
+	//  * The InstanceID portion of the permission set ARN resource (arn:aws:sso:::permissionSet/${InstanceId}/${PermissionSetId})
 	// Split up the resource of the permission set ARN
-	resourceParts := strings.SplitN(permissionSetARN.Resource, "/", 3)
-	if len(resourceParts) != 3 {
+	resourceParts := strings.Split(permissionSetARN.Resource, "/")
+	if len(resourceParts) != 3 || resourceParts[0] != "permissionSet" || resourceParts[1] == "" || resourceParts[2] == "" {
 		return "", idFormatErr
 	}
+
 	// resourceParts = ["permissionSet","ins-123456A", "ps-56789B"]
 	instanceARN := &arn.ARN{
-		AccountID: permissionSetARN.AccountID,
 		Partition: permissionSetARN.Partition,
-		Region:    permissionSetARN.Region,
-		Service:   "instance",
-		Resource:  resourceParts[1],
+		Service:   permissionSetARN.Service,
+		Resource:  fmt.Sprintf("instance/%s", resourceParts[1]),
 	}
 
 	return instanceARN.String(), nil
