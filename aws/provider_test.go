@@ -650,6 +650,13 @@ func testAccRegionPreCheck(t *testing.T, region string) {
 	}
 }
 
+// testAccPartitionPreCheck checks that the test partition is the specified partition.
+func testAccPartitionPreCheck(partition string, t *testing.T) {
+	if testAccGetPartition() != partition {
+		t.Skipf("skipping tests; current partition (%s) does not equal %s", testAccGetPartition(), partition)
+	}
+}
+
 func testAccOrganizationsAccountPreCheck(t *testing.T) {
 	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
 	input := &organizations.DescribeOrganizationInput{}
