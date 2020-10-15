@@ -469,6 +469,8 @@ resource "aws_cloudwatch_event_rule" "test" {
   role_arn            = aws_iam_role.role.arn
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "role" {
   name = "%s"
 
@@ -479,7 +481,7 @@ resource "aws_iam_role" "role" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "events.amazonaws.com"
+        "Service": "events.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -582,6 +584,8 @@ resource "aws_cloudwatch_event_target" "test" {
   }
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test_role" {
   name = "%s"
 
@@ -592,7 +596,7 @@ resource "aws_iam_role" "test_role" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "events.amazonaws.com"
+        "Service": "events.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -658,6 +662,8 @@ resource "aws_cloudwatch_event_target" "test" {
   }
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test_role" {
   name = "%s"
 
@@ -668,7 +674,7 @@ resource "aws_iam_role" "test_role" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "events.amazonaws.com"
+        "Service": "events.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -759,6 +765,8 @@ resource "aws_cloudwatch_event_target" "test" {
   }
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test_role" {
   name = "%[1]s"
 
@@ -769,7 +777,7 @@ resource "aws_iam_role" "test_role" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "events.amazonaws.com"
+        "Service": "events.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -852,6 +860,8 @@ resource "aws_cloudwatch_event_target" "test" {
   ]
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "event_iam_role" {
   name = "event_%[1]s"
 
@@ -863,7 +873,7 @@ resource "aws_iam_role" "event_iam_role" {
       "Action": "sts:AssumeRole",
       "Effect": "Allow",
       "Principal": {
-        "Service": "events.amazonaws.com"
+        "Service": "events.${data.aws_partition.current.dns_suffix}"
       }
     }
   ]
@@ -882,7 +892,7 @@ resource "aws_iam_role" "ecs_iam_role" {
       "Action": "sts:AssumeRole",
       "Effect": "Allow",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       }
     }
   ]
@@ -892,7 +902,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "ecs_policy_attachment" {
   role       = aws_iam_role.ecs_iam_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
 }
 
 resource "aws_iam_instance_profile" "iam_instance_profile" {
@@ -911,7 +921,7 @@ resource "aws_iam_role" "batch_iam_role" {
         "Action": "sts:AssumeRole",
         "Effect": "Allow",
         "Principal": {
-          "Service": "batch.amazonaws.com"
+          "Service": "batch.${data.aws_partition.current.dns_suffix}"
         }
     }
     ]
@@ -921,7 +931,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "batch_policy_attachment" {
   role       = aws_iam_role.batch_iam_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSBatchServiceRole"
 }
 
 resource "aws_security_group" "security_group" {
@@ -1012,6 +1022,8 @@ resource "aws_cloudwatch_event_target" "test" {
   }
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "iam_role" {
   name = "event_%[1]s"
 
@@ -1023,7 +1035,7 @@ resource "aws_iam_role" "iam_role" {
       "Action": "sts:AssumeRole",
       "Effect": "Allow",
       "Principal": {
-        "Service": "events.amazonaws.com"
+        "Service": "events.${data.aws_partition.current.dns_suffix}"
       }
     }
   ]
@@ -1064,6 +1076,8 @@ resource "aws_sqs_queue" "sqs_queue" {
 
 func testAccAWSCloudWatchEventTargetConfigInputTransformer(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "iam_for_lambda" {
   name = "tf_acc_input_transformer"
 
@@ -1074,7 +1088,7 @@ resource "aws_iam_role" "iam_for_lambda" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "lambda.amazonaws.com"
+        "Service": "lambda.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
