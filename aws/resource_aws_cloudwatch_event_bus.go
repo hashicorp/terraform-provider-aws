@@ -7,12 +7,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCloudWatchEventBus() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsCloudWatchEventBusCreate,
 		Read:   resourceAwsCloudWatchEventBusRead,
+		Update: resourceAwsCloudWatchEventBusUpdate,
 		Delete: resourceAwsCloudWatchEventBusDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -29,6 +31,7 @@ func resourceAwsCloudWatchEventBus() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -37,40 +40,45 @@ func resourceAwsCloudWatchEventBusCreate(d *schema.ResourceData, meta interface{
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
 	eventBusName := d.Get("name").(string)
-	params := &events.CreateEventBusInput{
+	input := &events.CreateEventBusInput{
 		Name: aws.String(eventBusName),
 	}
 
-	log.Printf("[DEBUG] Creating CloudWatch Event Bus: %v", params)
+	if v, ok := d.GetOk("tags"); ok {
+		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CloudwatcheventsTags()
+	}
 
-	_, err := conn.CreateEventBus(params)
+	log.Printf("[DEBUG] Creating CloudWatch Events event bus: %v", input)
+
+	_, err := conn.CreateEventBus(input)
 	if err != nil {
-		return fmt.Errorf("Creating CloudWatch Event Bus %v failed: %v", eventBusName, err)
+		return fmt.Errorf("Creating CloudWatch Events event bus (%s) failed: %w", eventBusName, err)
 	}
 
 	d.SetId(eventBusName)
 
-	log.Printf("[INFO] CloudWatch Event Bus %v created", d.Id())
+	log.Printf("[INFO] CloudWatch Events event bus (%s) created", d.Id())
 
 	return resourceAwsCloudWatchEventBusRead(d, meta)
 }
 
 func resourceAwsCloudWatchEventBusRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
-	log.Printf("[DEBUG] Reading CloudWatch Event Bus: %v", d.Id())
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &events.DescribeEventBusInput{
 		Name: aws.String(d.Id()),
 	}
 
+	log.Printf("[DEBUG] Reading CloudWatch Events event bus (%s)", d.Id())
 	output, err := conn.DescribeEventBus(input)
 	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] CloudWatch Event Bus (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] CloudWatch Events event bus (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading CloudWatch Event Bus: %s", err)
+		return fmt.Errorf("error reading CloudWatch Events event bus: %w", err)
 	}
 
 	log.Printf("[DEBUG] Found CloudWatch Event bus: %#v", *output)
@@ -78,23 +86,46 @@ func resourceAwsCloudWatchEventBusRead(d *schema.ResourceData, meta interface{})
 	d.Set("arn", output.Arn)
 	d.Set("name", output.Name)
 
+	tags, err := keyvaluetags.CloudwatcheventsListTags(conn, aws.StringValue(output.Arn))
+	if err != nil {
+		return fmt.Errorf("error listing tags for CloudWatch Events event bus (%s): %w", d.Id(), err)
+	}
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
 	return nil
+}
+
+func resourceAwsCloudWatchEventBusUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).cloudwatcheventsconn
+
+	arn := d.Get("arn").(string)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.CloudwatcheventsUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating CloudwWatch Events event bus (%s) tags: %w", arn, err)
+		}
+	}
+
+	return resourceAwsCloudWatchEventBusRead(d, meta)
 }
 
 func resourceAwsCloudWatchEventBusDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
-	log.Printf("[INFO] Deleting CloudWatch Event Bus: %v", d.Id())
+	log.Printf("[INFO] Deleting CloudWatch Events event bus (%s)", d.Id())
 	_, err := conn.DeleteEventBus(&events.DeleteEventBusInput{
 		Name: aws.String(d.Id()),
 	})
 	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] CloudWatch Event Bus (%s) not found", d.Id())
+		log.Printf("[WARN] CloudWatch Events event bus (%s) not found", d.Id())
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting CloudWatch Event Bus %v: %v", d.Id(), err)
+		return fmt.Errorf("Error deleting CloudWatch Events event bus (%s): %w", d.Id(), err)
 	}
-	log.Printf("[INFO] CloudWatch Event Bus %v deleted", d.Id())
+	log.Printf("[INFO] CloudWatch Events event bus (%s) deleted", d.Id())
 
 	return nil
 }
