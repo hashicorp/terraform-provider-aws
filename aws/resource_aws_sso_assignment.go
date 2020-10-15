@@ -29,7 +29,6 @@ func resourceAwsSsoAssignment() *schema.Resource {
 		Read:   resourceAwsSsoAssignmentRead,
 		Delete: resourceAwsSsoAssignmentDelete,
 
-		// TODO
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsSsoAssignmentImport,
 		},
@@ -110,6 +109,29 @@ func resourceAwsSsoAssignmentCreate(d *schema.ResourceData, meta interface{}) er
 	principalType := d.Get("principal_type").(string)
 	principalID := d.Get("principal_id").(string)
 
+	id, idErr := resourceAwsSsoAssignmentID(instanceArn, permissionSetArn, targetType, targetID, principalType, principalID)
+	if idErr != nil {
+		return idErr
+	}
+
+	// We need to check if the assignment exists before creating it
+	// since the AWS SSO API doesn't prevent us from creating duplicates
+	accountAssignment, getAccountAssignmentErr := resourceAwsSsoAssignmentGet(
+		conn,
+		instanceArn,
+		permissionSetArn,
+		targetType,
+		targetID,
+		principalType,
+		principalID,
+	)
+	if getAccountAssignmentErr != nil {
+		return getAccountAssignmentErr
+	}
+	if accountAssignment != nil {
+		return fmt.Errorf("AWS SSO Assignment already exists. Import the resource by calling: terraform import <resource_address> %s", id)
+	}
+
 	req := &ssoadmin.CreateAccountAssignmentInput{
 		InstanceArn:      aws.String(instanceArn),
 		PermissionSetArn: aws.String(permissionSetArn),
@@ -136,10 +158,6 @@ func resourceAwsSsoAssignmentCreate(d *schema.ResourceData, meta interface{}) er
 		return waitErr
 	}
 
-	id, idErr := resourceAwsSsoAssignmentID(instanceArn, permissionSetArn, targetType, targetID, principalType, principalID)
-	if idErr != nil {
-		return idErr
-	}
 	d.SetId(id)
 
 	if waitResp.CreatedDate != nil {
@@ -159,42 +177,32 @@ func resourceAwsSsoAssignmentRead(d *schema.ResourceData, meta interface{}) erro
 	principalType := d.Get("principal_type").(string)
 	principalID := d.Get("principal_id").(string)
 
-	req := &ssoadmin.ListAccountAssignmentsInput{
-		InstanceArn:      aws.String(instanceArn),
-		PermissionSetArn: aws.String(permissionSetArn),
-		AccountId:        aws.String(targetID),
-	}
-
-	log.Printf("[DEBUG] Reading AWS SSO Assignments for %s", req)
-	resp, err := conn.ListAccountAssignments(req)
+	accountAssignment, err := resourceAwsSsoAssignmentGet(
+		conn,
+		instanceArn,
+		permissionSetArn,
+		targetType,
+		targetID,
+		principalType,
+		principalID,
+	)
 	if err != nil {
-		return fmt.Errorf("Error getting AWS SSO Assignments: %s", err)
+		return err
 	}
-
-	if resp == nil || len(resp.AccountAssignments) == 0 {
-		log.Printf("[DEBUG] No account assignments found")
+	if accountAssignment == nil {
+		log.Printf("[DEBUG] Account assignment not found for %s", map[string]string{
+			"PrincipalType": principalType,
+			"PrincipalId":   principalID,
+		})
 		d.SetId("")
 		return nil
 	}
 
-	for _, accountAssignment := range resp.AccountAssignments {
-		if aws.StringValue(accountAssignment.PrincipalType) == principalType {
-			if aws.StringValue(accountAssignment.PrincipalId) == principalID {
-				id, idErr := resourceAwsSsoAssignmentID(instanceArn, permissionSetArn, targetType, targetID, principalType, principalID)
-				if idErr != nil {
-					return idErr
-				}
-				d.SetId(id)
-				return nil
-			}
-		}
+	id, idErr := resourceAwsSsoAssignmentID(instanceArn, permissionSetArn, targetType, targetID, principalType, principalID)
+	if idErr != nil {
+		return idErr
 	}
-
-	log.Printf("[DEBUG] Account assignment not found for %s", map[string]string{
-		"PrincipalType": principalType,
-		"PrincipalId":   principalID,
-	})
-	d.SetId("")
+	d.SetId(id)
 	return nil
 }
 
@@ -343,6 +351,48 @@ func resourceAwsSsoAssignmentID(
 		principalID,
 	}
 	return strings.Join(vars, "/"), nil
+}
+
+func resourceAwsSsoAssignmentGet(
+	conn *ssoadmin.SSOAdmin,
+	instanceArn string,
+	permissionSetArn string,
+	targetType string,
+	targetID string,
+	principalType string,
+	principalID string,
+) (*ssoadmin.AccountAssignment, error) {
+	if targetType != ssoadmin.TargetTypeAwsAccount {
+		return nil, fmt.Errorf("Invalid AWS SSO Assignments Target type %s. Only %s is supported", targetType, ssoadmin.TargetTypeAwsAccount)
+	}
+
+	req := &ssoadmin.ListAccountAssignmentsInput{
+		InstanceArn:      aws.String(instanceArn),
+		PermissionSetArn: aws.String(permissionSetArn),
+		AccountId:        aws.String(targetID),
+	}
+
+	log.Printf("[DEBUG] Reading AWS SSO Assignments for %s", req)
+	resp, err := conn.ListAccountAssignments(req)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting AWS SSO Assignments: %s", err)
+	}
+
+	if resp == nil || len(resp.AccountAssignments) == 0 {
+		log.Printf("[DEBUG] No account assignments found")
+		return nil, nil
+	}
+
+	for _, accountAssignment := range resp.AccountAssignments {
+		if aws.StringValue(accountAssignment.PrincipalType) == principalType {
+			if aws.StringValue(accountAssignment.PrincipalId) == principalID {
+				return accountAssignment, nil
+			}
+		}
+	}
+
+	// not found
+	return nil, nil
 }
 
 func waitForAssignmentCreation(conn *ssoadmin.SSOAdmin, instanceArn string, requestID string, timeout time.Duration) (*ssoadmin.AccountAssignmentOperationStatus, error) {
