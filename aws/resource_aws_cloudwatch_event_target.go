@@ -216,6 +216,10 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+							ValidateFunc: validation.All(
+								MapLenBetween(0, 10),
+								MapKeyNotMatch(regexp.MustCompile(`^AWS.*$`), "input_path must not start with \"AWS\""),
+							),
 						},
 						"input_template": {
 							Type:         schema.TypeString,

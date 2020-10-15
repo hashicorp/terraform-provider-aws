@@ -1107,6 +1107,15 @@ resource "aws_cloudwatch_event_target" "test" {
   input_transformer {
     input_paths = {
       time = "$.time"
+      severity : "$.detail.severity",
+      Finding_ID : "$.detail.id",
+      instanceId : "$.detail.resource.instanceDetails.instanceId",
+      port : "$.detail.service.action.networkConnectionAction.localPortDetails.port",
+      eventFirstSeen : "$.detail.service.eventFirstSeen",
+      eventLastSeen : "$.detail.service.eventLastSeen",
+      count : "$.detail.service.count",
+      Finding_Type : "$.detail.type",
+      region : "$.region",
     }
 
     input_template = <<EOF
@@ -1114,7 +1123,15 @@ resource "aws_cloudwatch_event_target" "test" {
   "detail-type": "Scheduled Event",
   "source": "aws.events",
   "time": <time>,
-  "region": "eu-west-1",
+  "severity": <severity>,
+  "Finding_ID": <Finding_ID>,
+  "instanceId": <instanceId>,
+  "port": <port>,
+  "eventFirstSeen": <eventFirstSeen>,
+  "eventLastSeen": <eventLastSeen>,
+  "count": <count>,
+  "Finding_Type": <Finding_Type>,
+  "region": <region>,
   "detail": {}
 }
 EOF
