@@ -3143,6 +3143,51 @@ func TestValidateRoute53ResolverName(t *testing.T) {
 	}
 }
 
+func TestCloudWatchEventCustomEventBusName(t *testing.T) {
+	cases := []struct {
+		Value   string
+		IsValid bool
+	}{
+		{
+			Value:   "",
+			IsValid: false,
+		},
+		{
+			Value:   "default",
+			IsValid: false,
+		},
+		{
+			Value:   acctest.RandStringFromCharSet(256, acctest.CharSetAlpha),
+			IsValid: true,
+		},
+		{
+			Value:   acctest.RandStringFromCharSet(257, acctest.CharSetAlpha),
+			IsValid: false,
+		},
+		{
+			Value:   "aws.partner/test/test",
+			IsValid: false,
+		},
+		{
+			Value:   "/test0._1-",
+			IsValid: false,
+		},
+		{
+			Value:   "test0._1-",
+			IsValid: true,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateCloudWatchEventCustomEventBusName(tc.Value, "aws_cloudwatch_event_bus")
+		isValid := len(errors) == 0
+		if tc.IsValid && !isValid {
+			t.Errorf("expected %q to return valid, but did not", tc.Value)
+		} else if !tc.IsValid && isValid {
+			t.Errorf("expected %q to not return valid, but did", tc.Value)
+		}
+	}
+}
+
 func TestValidateServiceDiscoveryNamespaceName(t *testing.T) {
 	validNames := []string{
 		"ValidName",
