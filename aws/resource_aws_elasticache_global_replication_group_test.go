@@ -186,8 +186,8 @@ func testAccPreCheckAWSElasticacheGlobalReplicationGroup(t *testing.T) {
 func testAccAWSElasticacheGlobalReplicationGroupConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_global_replication_group" "test" {
-  global_replication_group_id_suffix   = %q
-  primary_replication_group_id         = aws_elasticache_replication_group.test.id
+  global_replication_group_id_suffix = %q
+  primary_replication_group_id       = aws_elasticache_replication_group.test.id
 }
 
 resource "aws_elasticache_replication_group" "test" {

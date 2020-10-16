@@ -28,8 +28,7 @@ func resourceAwsElasticacheGlobalReplicationGroup() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"apply_immediately": {
 				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
+				Required: true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -188,11 +187,16 @@ func resourceAwsElasticacheGlobalReplicationGroupUpdate(d *schema.ResourceData, 
 
 	input := &elasticache.ModifyGlobalReplicationGroupInput{
 		ApplyImmediately:         aws.Bool(d.Get("apply_immediately").(bool)),
-		AutomaticFailoverEnabled: aws.Bool(d.Get("automatic_failover_enabled").(bool)),
 		GlobalReplicationGroupId: aws.String(d.Id()),
 	}
 
 	requestUpdate := false
+
+	if d.HasChange("automatic_failover_enabled") {
+		input.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
+		requestUpdate = true
+	}
+
 	if d.HasChange("cache_node_type") {
 		input.CacheNodeType = aws.String(d.Get("cache_node_type").(string))
 		requestUpdate = true
