@@ -20,8 +20,8 @@ func TestParseStorageGatewayVolumeGatewayARNAndTargetNameFromARN(t *testing.T) {
 		ErrCount           int
 	}{
 		{
-			Input:              "arn:aws:storagegateway:us-east-2:111122223333:gateway/sgw-12A3456B/target/iqn.1997-05.com.amazon:TargetName",
-			ExpectedGatewayARN: "arn:aws:storagegateway:us-east-2:111122223333:gateway/sgw-12A3456B",
+			Input:              "arn:aws:storagegateway:us-east-2:111122223333:gateway/sgw-12A3456B/target/iqn.1997-05.com.amazon:TargetName", //lintignore:AWSAT003,AWSAT005
+			ExpectedGatewayARN: "arn:aws:storagegateway:us-east-2:111122223333:gateway/sgw-12A3456B",                                          //lintignore:AWSAT003,AWSAT005
 			ExpectedTargetName: "TargetName",
 			ErrCount:           0,
 		},
@@ -30,11 +30,11 @@ func TestParseStorageGatewayVolumeGatewayARNAndTargetNameFromARN(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Input:    "arn:aws:storagegateway:us-east-2:111122223333:target/iqn.1997-05.com.amazon:TargetName",
+			Input:    "arn:aws:storagegateway:us-east-2:111122223333:target/iqn.1997-05.com.amazon:TargetName", //lintignore:AWSAT003,AWSAT005
 			ErrCount: 1,
 		},
 		{
-			Input:    "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678",
+			Input:    "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678", //lintignore:AWSAT003,AWSAT005
 			ErrCount: 1,
 		},
 		{
