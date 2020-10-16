@@ -23,6 +23,12 @@
 /aws/*_aws_glue_*.go     @DrFaust92 @terraform-providers/aws-provider
 /website/**/glue*        @DrFaust92 @terraform-providers/aws-provider
 
+/aws/*kinesis_analytics*    @ewbankkit @terraform-providers/aws-provider
+/website/**/kinesis_analytics*    @ewbankkit @terraform-providers/aws-provider
+
+/aws/*kinesisanalyticsv2*    @ewbankkit @terraform-providers/aws-provider
+/website/**/kinesisanalyticsv2*    @ewbankkit @terraform-providers/aws-provider
+
 /aws/*route53_resolver*    @ewbankkit @terraform-providers/aws-provider
 /website/**/route53_resolver*    @ewbankkit @terraform-providers/aws-provider
 
