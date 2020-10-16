@@ -39,8 +39,12 @@ func ScalingPlanCreated(conn *autoscalingplans.AutoScalingPlans, scalingPlanName
 // ScalingPlanDeleted waits for a ScalingPlan to return Deleted
 func ScalingPlanDeleted(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) (*autoscalingplans.ScalingPlan, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{autoscalingplans.ScalingPlanStatusCodeDeletionInProgress},
-		Target:  []string{ScalingPlanStatusNotFound},
+		Pending: []string{
+			autoscalingplans.ScalingPlanStatusCodeActive,
+			autoscalingplans.ScalingPlanStatusCodeActiveWithProblems,
+			autoscalingplans.ScalingPlanStatusCodeDeletionInProgress,
+		},
+		Target:  []string{},
 		Refresh: ScalingPlanStatus(conn, scalingPlanName, scalingPlanVersion),
 		Timeout: ScalingPlanDeletedTimeout,
 	}

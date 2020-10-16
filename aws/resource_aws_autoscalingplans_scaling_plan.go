@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscalingplans/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscalingplans/waiter"
 )
 
@@ -347,20 +348,16 @@ func resourceAwsAutoScalingPlansScalingPlanCreate(d *schema.ResourceData, meta i
 func resourceAwsAutoScalingPlansScalingPlanRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).autoscalingplansconn
 
-	scalingPlanName := d.Get("name").(string)
-	scalingPlanVersion := d.Get("scaling_plan_version").(int)
-
-	v, state, err := waiter.ScalingPlanStatus(conn, scalingPlanName, scalingPlanVersion)()
-	if isAWSErr(err, autoscalingplans.ErrCodeObjectNotFoundException, "") || state == waiter.ScalingPlanStatusNotFound {
+	scalingPlan, err := finder.ScalingPlan(conn, d.Get("name").(string), d.Get("scaling_plan_version").(int))
+	if err != nil {
+		return fmt.Errorf("error reading Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
+	}
+	if scalingPlan == nil {
 		log.Printf("[WARN] Auto Scaling Scaling Plan (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
-	if err != nil {
-		return fmt.Errorf("error reading Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
-	}
 
-	scalingPlan := v.(*autoscalingplans.ScalingPlan)
 	err = d.Set("application_source", flattenAutoScalingPlansApplicationSource(scalingPlan.ApplicationSource))
 	if err != nil {
 		return fmt.Errorf("error setting application_source: %w", err)
@@ -421,9 +418,6 @@ func resourceAwsAutoScalingPlansScalingPlanDelete(d *schema.ResourceData, meta i
 	}
 
 	_, err = waiter.ScalingPlanDeleted(conn, scalingPlanName, scalingPlanVersion)
-	if isAWSErr(err, autoscalingplans.ErrCodeObjectNotFoundException, "") {
-		return nil
-	}
 	if err != nil {
 		return fmt.Errorf("error waiting for Auto Scaling Scaling Plan (%s) to be deleted: %w", d.Id(), err)
 	}

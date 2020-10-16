@@ -5,36 +5,33 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscalingplans/finder"
 )
 
 const (
-	// ScalingPlan NotFound
-	ScalingPlanStatusNotFound = "NotFound"
-
-	// ScalingPlan Unknown
-	ScalingPlanStatusUnknown = "Unknown"
+	scalingPlanStatusNotFound = "NotFound"
+	scalingPlanStatusUnknown  = "Unknown"
 )
 
 // ScalingPlanStatus fetches the ScalingPlan and its Status
 func ScalingPlanStatus(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &autoscalingplans.DescribeScalingPlansInput{
-			ScalingPlanNames:   aws.StringSlice([]string{scalingPlanName}),
-			ScalingPlanVersion: aws.Int64(int64(scalingPlanVersion)),
-		}
+		scalingPlan, err := finder.ScalingPlan(conn, scalingPlanName, scalingPlanVersion)
 
-		output, err := conn.DescribeScalingPlans(input)
+		if tfawserr.ErrCodeEquals(err, autoscalingplans.ErrCodeObjectNotFoundException) {
+			return nil, scalingPlanStatusNotFound, nil
+		}
 
 		if err != nil {
-			return nil, ScalingPlanStatusUnknown, err
+			return nil, scalingPlanStatusUnknown, err
 		}
 
-		if len(output.ScalingPlans) == 0 {
-			return "", ScalingPlanStatusNotFound, nil
+		if scalingPlan == nil {
+			return nil, scalingPlanStatusNotFound, nil
 		}
 
-		scalingPlan := output.ScalingPlans[0]
 		if statusMessage := aws.StringValue(scalingPlan.StatusMessage); statusMessage != "" {
 			log.Printf("[INFO] Auto Scaling Scaling Plan (%s/%d) status message: %s", scalingPlanName, scalingPlanVersion, statusMessage)
 		}
