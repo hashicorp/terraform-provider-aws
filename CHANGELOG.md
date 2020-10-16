@@ -1,3 +1,9 @@
+## 3.12.0 (Unreleased)
+
+FEATURES
+
+* **New Resource:** `aws_cloudwatch_event_bus` [GH-10256]
+
 ## 3.11.0 (October 15, 2020)
 
 FEATURES
