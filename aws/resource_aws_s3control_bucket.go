@@ -199,9 +199,6 @@ func resourceAwsS3ControlBucketDelete(d *schema.ResourceData, meta interface{}) 
 	// can occur on deletion:
 	//   InvalidBucketState: Bucket is in an invalid state
 	err = resource.Retry(s3controlBucketStatePropagationTimeout, func() *resource.RetryError {
-		// Reference: https://github.com/aws/aws-sdk-go/issues/3583
-		input.Bucket = aws.String(d.Id())
-
 		_, err := conn.DeleteBucket(input)
 
 		if tfawserr.ErrCodeEquals(err, "InvalidBucketState") {
@@ -216,9 +213,6 @@ func resourceAwsS3ControlBucketDelete(d *schema.ResourceData, meta interface{}) 
 	})
 
 	if tfresource.TimedOut(err) {
-		// Reference: https://github.com/aws/aws-sdk-go/issues/3583
-		input.Bucket = aws.String(d.Id())
-
 		_, err = conn.DeleteBucket(input)
 	}
 
