@@ -98,7 +98,7 @@ func TestAccAWSFsxLustreFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypeScratch1),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", false),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
 				),
 			},
 			{
@@ -633,7 +633,7 @@ func TestAccAWSFsxLustreFileSystemCopyTagsToBackups(t *testing.T) {
 				Config: testAccAwsFsxLustreFileSystemCopyTagsToBackups(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", true),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "true"),
 				),
 			},
 			{
