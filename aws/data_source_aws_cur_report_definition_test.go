@@ -11,6 +11,10 @@ import (
 )
 
 func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
+	if testAccGetPartition() != "aws" {
+		t.Skipf("skipping test; hardcoded us-east-1 test, not supported in partition %s", testAccGetPartition()) //lintignore:AWSAT003
+	}
+
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
@@ -45,8 +49,12 @@ func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsCurReportDefinition_additional(t *testing.T) {
+	if testAccGetPartition() != "aws" {
+		t.Skipf("skipping test; hardcoded us-east-1 test, not supported in partition %s", testAccGetPartition()) //lintignore:AWSAT003
+	}
+
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1") //lintignore:AWSAT003
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resourceName := "aws_cur_report_definition.test"
@@ -96,6 +104,7 @@ func testAccDataSourceAwsCurReportDefinitionCheckExists(datasourceName, resource
 
 // note: cur report definitions are currently only supported in us-east-1
 func testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName string, bucketName string) string {
+	//lintignore:AWSAT003,AWSAT005
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
@@ -164,6 +173,7 @@ data "aws_cur_report_definition" "test" {
 }
 
 func testAccDataSourceAwsCurReportDefinitionConfig_additional(reportName string, bucketName string) string {
+	//lintignore:AWSAT003,AWSAT005
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
