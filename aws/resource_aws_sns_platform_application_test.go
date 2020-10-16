@@ -134,35 +134,35 @@ func TestDecodeResourceAwsSnsPlatformApplicationID(t *testing.T) {
 		ErrCount         int
 	}{
 		{
-			Input:            "arn:aws:sns:us-east-1:123456789012:app/APNS_SANDBOX/myAppName",
-			ExpectedArn:      "arn:aws:sns:us-east-1:123456789012:app/APNS_SANDBOX/myAppName",
+			Input:            "arn:aws:sns:us-east-1:123456789012:app/APNS_SANDBOX/myAppName", //lintignore:AWSAT003,AWSAT005
+			ExpectedArn:      "arn:aws:sns:us-east-1:123456789012:app/APNS_SANDBOX/myAppName", //lintignore:AWSAT003,AWSAT005
 			ExpectedName:     "myAppName",
 			ExpectedPlatform: "APNS_SANDBOX",
 			ErrCount:         0,
 		},
 		{
-			Input:            "arn:aws:sns:us-east-1:123456789012:app/APNS_SANDBOX/myAppName/extra",
+			Input:            "arn:aws:sns:us-east-1:123456789012:app/APNS_SANDBOX/myAppName/extra", //lintignore:AWSAT003,AWSAT005
 			ExpectedArn:      "",
 			ExpectedName:     "",
 			ExpectedPlatform: "",
 			ErrCount:         1,
 		},
 		{
-			Input:            "arn:aws:sns:us-east-1:123456789012:endpoint/APNS_SANDBOX/myAppName/someID",
+			Input:            "arn:aws:sns:us-east-1:123456789012:endpoint/APNS_SANDBOX/myAppName/someID", //lintignore:AWSAT003,AWSAT005
 			ExpectedArn:      "",
 			ExpectedName:     "",
 			ExpectedPlatform: "",
 			ErrCount:         1,
 		},
 		{
-			Input:            "arn:aws:sns:us-east-1:123456789012:APNS_SANDBOX/myAppName",
+			Input:            "arn:aws:sns:us-east-1:123456789012:APNS_SANDBOX/myAppName", //lintignore:AWSAT003,AWSAT005
 			ExpectedArn:      "",
 			ExpectedName:     "",
 			ExpectedPlatform: "",
 			ErrCount:         1,
 		},
 		{
-			Input:            "arn:aws:sns:us-east-1:123456789012:app",
+			Input:            "arn:aws:sns:us-east-1:123456789012:app", //lintignore:AWSAT003,AWSAT005
 			ExpectedArn:      "",
 			ExpectedName:     "",
 			ExpectedPlatform: "",
