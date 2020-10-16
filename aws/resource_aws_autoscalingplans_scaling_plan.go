@@ -145,14 +145,9 @@ func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"predefined_load_metric_type": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											autoscalingplans.LoadMetricTypeAlbtargetGroupRequestCount,
-											autoscalingplans.LoadMetricTypeAsgtotalCpuutilization,
-											autoscalingplans.LoadMetricTypeAsgtotalNetworkIn,
-											autoscalingplans.LoadMetricTypeAsgtotalNetworkOut,
-										}, false),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(autoscalingplans.LoadMetricType_Values(), false),
 									},
 
 									"resource_label": {
@@ -165,13 +160,9 @@ func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
 						},
 
 						"predictive_scaling_max_capacity_behavior": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								autoscalingplans.PredictiveScalingMaxCapacityBehaviorSetForecastCapacityToMaxCapacity,
-								autoscalingplans.PredictiveScalingMaxCapacityBehaviorSetMaxCapacityAboveForecastCapacity,
-								autoscalingplans.PredictiveScalingMaxCapacityBehaviorSetMaxCapacityToForecastCapacity,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(autoscalingplans.PredictiveScalingMaxCapacityBehavior_Values(), false),
 						},
 
 						"predictive_scaling_max_capacity_buffer": {
@@ -181,12 +172,9 @@ func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
 						},
 
 						"predictive_scaling_mode": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								autoscalingplans.PredictiveScalingModeForecastAndScale,
-								autoscalingplans.PredictiveScalingModeForecastOnly,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(autoscalingplans.PredictiveScalingMode_Values(), false),
 						},
 
 						"resource_id": {
@@ -196,28 +184,16 @@ func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
 						},
 
 						"scalable_dimension": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								autoscalingplans.ScalableDimensionAutoscalingAutoScalingGroupDesiredCapacity,
-								autoscalingplans.ScalableDimensionDynamodbIndexReadCapacityUnits,
-								autoscalingplans.ScalableDimensionDynamodbIndexWriteCapacityUnits,
-								autoscalingplans.ScalableDimensionDynamodbTableReadCapacityUnits,
-								autoscalingplans.ScalableDimensionDynamodbTableWriteCapacityUnits,
-								autoscalingplans.ScalableDimensionEcsServiceDesiredCount,
-								autoscalingplans.ScalableDimensionEc2SpotFleetRequestTargetCapacity,
-								autoscalingplans.ScalableDimensionRdsClusterReadReplicaCount,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(autoscalingplans.ScalableDimension_Values(), false),
 						},
 
 						"scaling_policy_update_behavior": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  autoscalingplans.ScalingPolicyUpdateBehaviorKeepExternalPolicies,
-							ValidateFunc: validation.StringInSlice([]string{
-								autoscalingplans.ScalingPolicyUpdateBehaviorKeepExternalPolicies,
-								autoscalingplans.ScalingPolicyUpdateBehaviorReplaceExternalPolicies,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      autoscalingplans.ScalingPolicyUpdateBehaviorKeepExternalPolicies,
+							ValidateFunc: validation.StringInSlice(autoscalingplans.ScalingPolicyUpdateBehavior_Values(), false),
 						},
 
 						"scheduled_action_buffer_time": {
@@ -227,15 +203,9 @@ func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
 						},
 
 						"service_namespace": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								autoscalingplans.ServiceNamespaceAutoscaling,
-								autoscalingplans.ServiceNamespaceDynamodb,
-								autoscalingplans.ServiceNamespaceEcs,
-								autoscalingplans.ServiceNamespaceEc2,
-								autoscalingplans.ServiceNamespaceRds,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(autoscalingplans.ServiceNamespace_Values(), false),
 						},
 
 						"target_tracking_configuration": {
@@ -269,15 +239,9 @@ func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
 												},
 
 												"statistic": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														autoscalingplans.MetricStatisticAverage,
-														autoscalingplans.MetricStatisticMaximum,
-														autoscalingplans.MetricStatisticMinimum,
-														autoscalingplans.MetricStatisticSampleCount,
-														autoscalingplans.MetricStatisticSum,
-													}, false),
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(autoscalingplans.MetricStatistic_Values(), false),
 												},
 
 												"unit": {
@@ -307,23 +271,9 @@ func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"predefined_scaling_metric_type": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														autoscalingplans.ScalingMetricTypeAlbrequestCountPerTarget,
-														autoscalingplans.ScalingMetricTypeAsgaverageCpuutilization,
-														autoscalingplans.ScalingMetricTypeAsgaverageNetworkIn,
-														autoscalingplans.ScalingMetricTypeAsgaverageNetworkOut,
-														autoscalingplans.ScalingMetricTypeDynamoDbreadCapacityUtilization,
-														autoscalingplans.ScalingMetricTypeDynamoDbwriteCapacityUtilization,
-														autoscalingplans.ScalingMetricTypeEcsserviceAverageCpuutilization,
-														autoscalingplans.ScalingMetricTypeEcsserviceAverageMemoryUtilization,
-														autoscalingplans.ScalingMetricTypeEc2spotFleetRequestAverageCpuutilization,
-														autoscalingplans.ScalingMetricTypeEc2spotFleetRequestAverageNetworkIn,
-														autoscalingplans.ScalingMetricTypeEc2spotFleetRequestAverageNetworkOut,
-														autoscalingplans.ScalingMetricTypeRdsreaderAverageCpuutilization,
-														autoscalingplans.ScalingMetricTypeRdsreaderAverageDatabaseConnections,
-													}, false),
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(autoscalingplans.ScalingMetricType_Values(), false),
 												},
 
 												"resource_label": {
