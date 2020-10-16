@@ -31,18 +31,7 @@ func resourceAwsSsoPermissionSet() *schema.Resource {
 		Update: resourceAwsSsoPermissionSetUpdate,
 		Delete: resourceAwsSsoPermissionSetDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				instanceArn, err := resourceAwsSsoPermissionSetParseID(d.Id())
-				if err != nil {
-					return nil, fmt.Errorf("Error parsing AWS Permission Set ID %s: %s", d.Id(), err)
-				}
-
-				err = d.Set("instance_arn", instanceArn)
-				if err != nil {
-					return nil, err
-				}
-				return []*schema.ResourceData{d}, nil
-			},
+			State: resourceAwsSsoPermissionSetImport,
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(AWSSSOPermissionSetCreateTimeout),
@@ -145,6 +134,99 @@ func resourceAwsSsoPermissionSet() *schema.Resource {
 			"tags": tagsSchema(),
 		},
 	}
+}
+
+func resourceAwsSsoPermissionSetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	permissionSetArn := d.Id()
+	instanceArn, err := resourceAwsSsoPermissionSetParseID(permissionSetArn)
+	if err != nil {
+		return []*schema.ResourceData{}, fmt.Errorf("Error parsing AWS Permission Set (%s) for import: %s", permissionSetArn, err)
+	}
+
+	ssoadminconn := meta.(*AWSClient).ssoadminconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
+	permissionSetResp, permissionSetErr := ssoadminconn.DescribePermissionSet(&ssoadmin.DescribePermissionSetInput{
+		InstanceArn:      aws.String(instanceArn),
+		PermissionSetArn: aws.String(permissionSetArn),
+	})
+
+	if permissionSetErr != nil {
+		return []*schema.ResourceData{}, permissionSetErr
+	}
+
+	var permissionSet *ssoadmin.PermissionSet
+	permissionSet = permissionSetResp.PermissionSet
+
+	log.Printf("[DEBUG] Getting Inline Policy for AWS SSO Permission Set")
+	inlinePolicyResp, inlinePolicyErr := ssoadminconn.GetInlinePolicyForPermissionSet(&ssoadmin.GetInlinePolicyForPermissionSetInput{
+		InstanceArn:      aws.String(instanceArn),
+		PermissionSetArn: aws.String(permissionSetArn),
+	})
+	if inlinePolicyErr != nil {
+		return []*schema.ResourceData{}, fmt.Errorf("Error importing Inline Policy for AWS SSO Permission Set (%s): %s", permissionSetArn, inlinePolicyErr)
+	}
+
+	log.Printf("[DEBUG] Getting Managed Policies for AWS SSO Permission Set")
+	managedPoliciesResp, managedPoliciesErr := ssoadminconn.ListManagedPoliciesInPermissionSet(&ssoadmin.ListManagedPoliciesInPermissionSetInput{
+		InstanceArn:      aws.String(instanceArn),
+		PermissionSetArn: aws.String(permissionSetArn),
+	})
+	if managedPoliciesErr != nil {
+		return []*schema.ResourceData{}, fmt.Errorf("Error importing Managed Policies for AWS SSO Permission Set (%s): %s", permissionSetArn, managedPoliciesErr)
+	}
+	var managedPolicyArns []string
+	for _, managedPolicy := range managedPoliciesResp.AttachedManagedPolicies {
+		managedPolicyArns = append(managedPolicyArns, aws.StringValue(managedPolicy.Arn))
+	}
+
+	tags, err := keyvaluetags.SsoListTags(ssoadminconn, permissionSetArn, instanceArn)
+	if err != nil {
+		return []*schema.ResourceData{}, fmt.Errorf("Error listing tags during AWS SSO Permission Set (%s) import: %s", permissionSetArn, err)
+	}
+
+	err = d.Set("instance_arn", instanceArn)
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
+	err = d.Set("arn", permissionSetArn)
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
+	err = d.Set("created_date", permissionSet.CreatedDate.Format(time.RFC3339))
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
+	err = d.Set("name", permissionSet.Name)
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
+	err = d.Set("description", permissionSet.Description)
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
+	err = d.Set("session_duration", permissionSet.SessionDuration)
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
+	err = d.Set("relay_state", permissionSet.RelayState)
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
+	err = d.Set("inline_policy", inlinePolicyResp.InlinePolicy)
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
+	err = d.Set("managed_policy_arns", managedPolicyArns)
+	if err != nil {
+		return []*schema.ResourceData{}, err
+	}
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return []*schema.ResourceData{}, fmt.Errorf("Error importing AWS SSO Permission Set (%s) tags: %s", permissionSetArn, err)
+	}
+	d.SetId(permissionSetArn)
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func resourceAwsSsoPermissionSetCreate(d *schema.ResourceData, meta interface{}) error {
