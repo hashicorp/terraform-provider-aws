@@ -323,6 +323,8 @@ resource "aws_iam_user" "user" {
 
 data "aws_caller_identity" "current" {}
 
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_document" "user" {
   statement {
     effect    = "Allow"
@@ -333,7 +335,7 @@ data "aws_iam_policy_document" "user" {
   statement {
     effect    = "Allow"
     actions   = ["iam:ChangePassword"]
-    resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/&{aws:username}"]
+    resources = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:user/&{aws:username}"]
   }
 }
 
