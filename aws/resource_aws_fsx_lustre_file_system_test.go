@@ -620,7 +620,7 @@ func TestAccAWSFsxLustreFileSystem_StorageTypeHddDriveCacheNone(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystemCopyTagsToBackups(t *testing.T) {
+func TestAccAWSFsxLustreFileSystem_copyTagsToBackups(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 
