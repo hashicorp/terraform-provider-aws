@@ -30,4 +30,5 @@ data "aws_iam_policy" "example" {
 * `path` - The path to the policy.
 * `description` - The description of the policy.
 * `policy` - The policy document of the policy.
+* `role` - The role the policy should be applied to.
 
