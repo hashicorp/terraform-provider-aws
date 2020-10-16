@@ -538,7 +538,7 @@ func testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(certificateAuthority *a
 			Csr:                     []byte(aws.StringValue(getCsrResp.Csr)),
 			IdempotencyToken:        aws.String(resource.UniqueId()),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
-			TemplateArn:             aws.String("arn:aws:acm-pca:::template/RootCACertificate/V1"),
+			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/RootCACertificate/V1", testAccGetPartition())),
 			Validity: &acmpca.Validity{
 				Type:  aws.String(acmpca.ValidityPeriodTypeYears),
 				Value: aws.Int64(10),
