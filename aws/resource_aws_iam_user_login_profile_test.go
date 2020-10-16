@@ -253,7 +253,7 @@ func testDecryptPasswordAndTest(nProfile, nAccessKey, key string) resource.TestC
 		}
 
 		iamAsCreatedUserSession := session.New(&aws.Config{
-			Region:      aws.String("us-west-2"),
+			Region:      aws.String(testAccGetRegion()),
 			Credentials: credentials.NewStaticCredentials(accessKeyId, secretAccessKey, ""),
 		})
 		_, err = iamAsCreatedUserSession.Config.Credentials.Get()
