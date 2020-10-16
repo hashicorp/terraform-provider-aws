@@ -502,6 +502,8 @@ resource "aws_sns_platform_application" "test" {
 
 func testAccAwsSnsPlatformApplicationConfig_iamRoleAttribute(name string, platform *testAccAwsSnsPlatformApplicationPlatform, attributeKey, iamRoleName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   assume_role_policy = <<EOF
 {
@@ -509,7 +511,7 @@ resource "aws_iam_role" "test" {
   "Statement": {
     "Effect": "Allow",
     "Principal": {
-      "Service": "sns.amazonaws.com"
+      "Service": "sns.${data.aws_partition.current.dns_suffix}"
     },
     "Action": "sts:AssumeRole"
   }
@@ -520,12 +522,11 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
-  policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/CloudWatchLogsFullAccess"
   role       = aws_iam_role.test.id
 }
 
 %s
-
 `, iamRoleName, testAccAwsSnsPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_iam_role.test.arn}"))
 }
 
@@ -536,6 +537,5 @@ resource "aws_sns_topic" "test" {
 }
 
 %s
-
 `, snsTopicName, testAccAwsSnsPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_sns_topic.test.arn}"))
 }
