@@ -52,8 +52,8 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the ElastiCache Global Replication Group.
 * `arn` - The ARN of the ElastiCache Global Replication Group.
-* `at_rest_encryption_enabled` - A flag that indicate wheter the encryption at rest is enabled.
-* `auth_token_enabled` - A flag that indicate wheter AuthToken (password) is enabled.
+* `at_rest_encryption_enabled` - A flag that indicate whether the encryption at rest is enabled.
+* `auth_token_enabled` - A flag that indicate whether AuthToken (password) is enabled.
 * `cluster_enabled` - A flag that indicates whether the Global Datastore is cluster enabled.
 * `engine` - The Elasticache engine. For redis only
 * `global_replication_group_members` - The identifiers of all the replication group members that are part of this global replication group.
