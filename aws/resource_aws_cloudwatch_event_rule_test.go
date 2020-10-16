@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -397,9 +397,9 @@ func testAccCheckAWSCloudWatchEventRuleDestroy(s *terraform.State) error {
 func testAccAWSCloudWatchEventRuleConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
-	name = "%s"
-	schedule_expression = "rate(1 hour)"
-	event_bus_name = "default"
+  name                = "%s"
+  schedule_expression = "rate(1 hour)"
+  event_bus_name      = "default"
 }
 `, name)
 }
@@ -407,11 +407,11 @@ resource "aws_cloudwatch_event_rule" "test" {
 func testAccAWSCloudWatchEventRuleConfigPattern(name, pattern string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
-	name = "%s"
-	schedule_expression = "rate(1 hour)"
-	event_pattern = <<PATTERN
+  name                = "%s"
+  schedule_expression = "rate(1 hour)"
+  event_pattern       = <<PATTERN
 	%s
-	PATTERN
+PATTERN
 }
 `, name, pattern)
 }
@@ -419,9 +419,9 @@ resource "aws_cloudwatch_event_rule" "test" {
 func testAccAWSCloudWatchEventRuleConfigDescription(name, description string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
-	name = %[1]q
-	description = %[2]q
-	schedule_expression = "rate(1 hour)"
+  name                = %[1]q
+  description         = %[2]q
+  schedule_expression = "rate(1 hour)"
 }
 `, name, description)
 }
@@ -429,9 +429,9 @@ resource "aws_cloudwatch_event_rule" "test" {
 func testAccAWSCloudWatchEventRuleConfigIsEnabled(name string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
-	name = "%s"
-	schedule_expression = "rate(1 hour)"
-	is_enabled = %t
+  name                = "%s"
+  schedule_expression = "rate(1 hour)"
+  is_enabled          = %t
 }
 `, name, enabled)
 }
@@ -439,8 +439,8 @@ resource "aws_cloudwatch_event_rule" "test" {
 func testAccAWSCloudWatchEventRuleConfigPrefix(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
-	name_prefix = "%s"
-	schedule_expression = "rate(5 minutes)"
+  name_prefix         = "%s"
+  schedule_expression = "rate(5 minutes)"
 }
 `, name)
 }
@@ -448,12 +448,12 @@ resource "aws_cloudwatch_event_rule" "test" {
 func testAccAWSCloudWatchEventRuleConfigTags1(name, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
-	name = %[1]q
-	schedule_expression = "rate(1 hour)"
+  name                = %[1]q
+  schedule_expression = "rate(1 hour)"
 
-	tags = {
-	  %[2]q = %[3]q
-	}
+  tags = {
+    %[2]q = %[3]q
+  }
 }
 `, name, tagKey1, tagValue1)
 }
@@ -461,13 +461,13 @@ resource "aws_cloudwatch_event_rule" "test" {
 func testAccAWSCloudWatchEventRuleConfigTags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
-    name = %[1]q
-    schedule_expression = "rate(1 hour)"
+  name                = %[1]q
+  schedule_expression = "rate(1 hour)"
 
-	tags = {
-	  %[2]q = %[3]q
-	  %[4]q = %[5]q
-	}
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
 }
 `, name, tagKey1, tagValue1, tagKey2, tagValue2)
 }
@@ -495,9 +495,9 @@ POLICY
 }
 
 resource "aws_cloudwatch_event_rule" "test" {
-	name = %[1]q
-	schedule_expression = "rate(1 hour)"
-	role_arn = "${aws_iam_role.test.arn}"
+  name                = %[1]q
+  schedule_expression = "rate(1 hour)"
+  role_arn            = aws_iam_role.test.arn
 }
 `, name)
 }
