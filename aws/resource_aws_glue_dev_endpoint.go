@@ -3,7 +3,10 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"time"
+
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/waiter"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -47,10 +50,18 @@ func resourceAwsGlueDevEndpoint() *schema.Resource {
 			},
 
 			"glue_version": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateGlueVersion,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+					value := v.(string)
+					if !regexp.MustCompile(`^\w+\.\w+$`).MatchString(value) {
+						errors = append(errors, fmt.Errorf(
+							"attribute %s must match version pattern X.X: %s",
+							k, value))
+					}
+					return
+				},
 			},
 
 			"name": {
@@ -95,9 +106,10 @@ func resourceAwsGlueDevEndpoint() *schema.Resource {
 			},
 
 			"role_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"security_configuration": {
@@ -107,17 +119,19 @@ func resourceAwsGlueDevEndpoint() *schema.Resource {
 			},
 
 			"security_group_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Type:         schema.TypeSet,
+				Optional:     true,
+				ForceNew:     true,
+				Elem:         &schema.Schema{Type: schema.TypeString},
+				Set:          schema.HashString,
+				RequiredWith: []string{"subnet_id"},
 			},
 
 			"subnet_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{"security_group_ids"},
 			},
 
 			"tags": tagsSchema(),
@@ -143,13 +157,9 @@ func resourceAwsGlueDevEndpoint() *schema.Resource {
 			},
 
 			"worker_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					glue.WorkerTypeG1x,
-					glue.WorkerTypeG2x,
-					glue.WorkerTypeStandard,
-				}, false),
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  validation.StringInSlice(glue.WorkerType_Values(), false),
 				ConflictsWith: []string{"number_of_nodes"},
 				ForceNew:      true,
 			},
@@ -280,7 +290,7 @@ func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) 
 			"PROVISIONING",
 		},
 		Target:  []string{"READY"},
-		Refresh: glueDevEndpointStateRefreshFunc(conn, d.Id()),
+		Refresh: waiter.GlueDevEndpointStatus(conn, d.Id()),
 		Timeout: 15 * time.Minute,
 	}
 	if _, err := stateConf.WaitForState(); err != nil {
@@ -473,13 +483,22 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if d.HasChange("public_keys") {
-		oldRaw, newRaw := d.GetChange("public_keys")
-		old := oldRaw.(*schema.Set)
-		new := newRaw.(*schema.Set)
-		create, remove := diffPublicKeys(expandStringSet(old), expandStringSet(new))
-		input.AddPublicKeys = create
+		o, n := d.GetChange("public_keys")
+		if o == nil {
+			o = new(schema.Set)
+		}
+		if n == nil {
+			n = new(schema.Set)
+		}
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+		remove := os.Difference(ns).List()
+		create := ns.Difference(os).List()
+
+		input.AddPublicKeys = expandStringList(create)
 		log.Printf("[DEBUG] expectedCreate public keys: %v", create)
-		input.DeletePublicKeys = remove
+
+		input.DeletePublicKeys = expandStringList(remove)
 		log.Printf("[DEBUG] remove public keys: %v", remove)
 
 		hasChanged = true
@@ -523,61 +542,6 @@ func resourceAwsDevEndpointDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	return nil
-}
-
-func glueDevEndpointStateRefreshFunc(conn *glue.Glue, name string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		getDevEndpointInput := &glue.GetDevEndpointInput{
-			EndpointName: aws.String(name),
-		}
-		endpoint, err := conn.GetDevEndpoint(getDevEndpointInput)
-		if err != nil {
-			if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
-				return nil, "", nil
-			}
-
-			return nil, "", err
-		}
-
-		if endpoint == nil {
-			return nil, "", nil
-		}
-
-		return endpoint, *endpoint.DevEndpoint.Status, nil
-	}
-}
-
-func diffPublicKeys(oldKeys, newKeys []*string) ([]*string, []*string) {
-	var create []*string
-	var remove []*string
-
-	for _, oldKey := range oldKeys {
-		found := false
-		for _, newKey := range newKeys {
-			if *oldKey == *newKey {
-				found = true
-				break
-			}
-		}
-		if !found {
-			remove = append(remove, oldKey)
-		}
-	}
-
-	for _, newKey := range newKeys {
-		found := false
-		for _, oldKey := range oldKeys {
-			if *oldKey == *newKey {
-				found = true
-				break
-			}
-		}
-		if !found {
-			create = append(create, newKey)
-		}
-	}
-
-	return create, remove
 }
 
 func diffArguments(oldArgs, newArgs map[string]interface{}) (map[string]*string, []*string) {

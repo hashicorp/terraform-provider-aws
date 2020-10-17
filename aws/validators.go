@@ -434,16 +434,6 @@ func validateElbNamePrefix(v interface{}, k string) (ws []string, errors []error
 	return
 }
 
-func validateGlueVersion(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !regexp.MustCompile(`^\w+\.\w+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"attribute %s must match version pattern X.X: %s",
-			k, value))
-	}
-	return
-}
-
 func validateSagemakerName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {

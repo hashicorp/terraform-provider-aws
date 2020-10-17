@@ -85,10 +85,9 @@ func TestAccGlueDevEndpoint_Basic(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("devEndpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					testAccMatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexp.MustCompile(`role/AWSGlueServiceRole-tf-acc-test-[0-9]+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
 					resource.TestCheckResourceAttr(resourceName, "arguments.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "5"),
@@ -119,7 +118,6 @@ func TestAccGlueDevEndpoint_Arguments(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_Arguments2(rName, "bar", "python"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "arguments.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "arguments.--foo", "bar"),
 					resource.TestCheckResourceAttr(resourceName, "arguments.--job-language", "python"),
@@ -129,7 +127,6 @@ func TestAccGlueDevEndpoint_Arguments(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_Arguments(rName, "baz"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "arguments.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "arguments.--foo", "baz"),
 				),
@@ -160,7 +157,6 @@ func TestAccGlueDevEndpoint_ExtraJarsS3Path(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_ExtraJarsS3Path(rName, extraJarsS3Path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "extra_jars_s3_path", extraJarsS3Path),
 				),
 			},
@@ -168,7 +164,6 @@ func TestAccGlueDevEndpoint_ExtraJarsS3Path(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_ExtraJarsS3Path(rName, extraJarsS3PathUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "extra_jars_s3_path", extraJarsS3PathUpdated),
 				),
 			},
@@ -187,7 +182,6 @@ func TestAccGlueDevEndpoint_ExtraPythonLibsS3Path(t *testing.T) {
 	rName := acctest.RandomWithPrefix(GlueDevEndpointResourcePrefix)
 	extraPythonLibsS3Path := "foo"
 	extraPythonLibsS3PathUpdated := "bar"
-
 	resourceName := "aws_glue_dev_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -199,7 +193,6 @@ func TestAccGlueDevEndpoint_ExtraPythonLibsS3Path(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_ExtraPythonLibsS3Path(rName, extraPythonLibsS3Path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "extra_python_libs_s3_path", extraPythonLibsS3Path),
 				),
 			},
@@ -207,7 +200,6 @@ func TestAccGlueDevEndpoint_ExtraPythonLibsS3Path(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_ExtraPythonLibsS3Path(rName, extraPythonLibsS3PathUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "extra_python_libs_s3_path", extraPythonLibsS3PathUpdated),
 				),
 			},
