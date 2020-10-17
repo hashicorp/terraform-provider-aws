@@ -2467,7 +2467,7 @@ func validateNestedExactlyOneOf(m map[string]interface{}, valid []string) error 
 	return nil
 }
 
-func MapLenBetween(min, max int) schema.SchemaValidateFunc {
+func MapMaxItems(max int) schema.SchemaValidateFunc {
 	return func(i interface{}, k string) (warnings []string, errors []error) {
 		m, ok := i.(map[string]interface{})
 		if !ok {
@@ -2475,15 +2475,15 @@ func MapLenBetween(min, max int) schema.SchemaValidateFunc {
 			return warnings, errors
 		}
 
-		if len(m) < min || len(m) > max {
-			errors = append(errors, fmt.Errorf("expected length of %s to be in the range (%d - %d), got %d", k, min, max, len(m)))
+		if len(m) > max {
+			errors = append(errors, fmt.Errorf("expected number of items in %s to be lesser than or equal to %d, got %d", k, max, len(m)))
 		}
 
 		return warnings, errors
 	}
 }
 
-func MapKeyNotMatch(r *regexp.Regexp, message string) schema.SchemaValidateFunc {
+func MapKeysDoNotMatch(r *regexp.Regexp, message string) schema.SchemaValidateFunc {
 	return func(i interface{}, k string) (warnings []string, errors []error) {
 		m, ok := i.(map[string]interface{})
 		if !ok {
