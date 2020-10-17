@@ -1088,13 +1088,13 @@ func testAccAWSCloudWatchEventTargetConfigInputTransformer(rName string, inputPa
 	if len(sampleInputPaths) < inputPathCount {
 		inputPathCount = len(sampleInputPaths)
 	}
+
 	for i := 0; i < inputPathCount; i++ {
 		fmt.Fprintf(&inputPaths, `
       %s = "$.%s"`, sampleInputPaths[i], sampleInputPaths[i])
 
 		fmt.Fprintf(&inputTemplates, `
   "%s": <%s>,`, sampleInputPaths[i], sampleInputPaths[i])
-
 	}
 
 	return fmt.Sprintf(`
@@ -1139,7 +1139,8 @@ resource "aws_cloudwatch_event_target" "test" {
   rule = aws_cloudwatch_event_rule.schedule.id
 
   input_transformer {
-    input_paths = {%s
+    input_paths = {
+      %s
     }
 
     input_template = <<EOF
