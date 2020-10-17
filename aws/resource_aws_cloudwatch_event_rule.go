@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
 const (
@@ -40,10 +41,11 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 				ValidateFunc:  validateCloudWatchEventRuleName,
 			},
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateCloudWatchEventRuleName,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateCloudWatchEventRuleName,
 			},
 			"schedule_expression": {
 				Type:         schema.TypeString,
@@ -100,14 +102,7 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
-	var name string
-	if v, ok := d.GetOk("name"); ok {
-		name = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		name = resource.PrefixedUniqueId(v.(string))
-	} else {
-		name = resource.UniqueId()
-	}
+	name := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
 
 	input, err := buildPutRuleInputStruct(d, name)
 	if err != nil {
@@ -188,6 +183,7 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 		d.Set("event_pattern", pattern)
 	}
 	d.Set("name", out.Name)
+	d.Set("name_prefix", aws.StringValue(naming.NamePrefixFromName(aws.StringValue(out.Name))))
 	d.Set("role_arn", out.RoleArn)
 	d.Set("schedule_expression", out.ScheduleExpression)
 	if aws.StringValue(out.EventBusName) != "default" {

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
 func init() {
@@ -86,6 +87,7 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v1),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s$`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
 					resource.TestCheckNoResourceAttr(resourceName, "event_bus_name"),
 					resource.TestCheckNoResourceAttr(resourceName, "event_pattern"),
@@ -217,10 +219,9 @@ func TestAccAWSCloudWatchEventRule_pattern(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventRule_prefix(t *testing.T) {
+func TestAccAWSCloudWatchEventRule_NamePrefix(t *testing.T) {
 	var v events.DescribeRuleOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	startsWithPrefix := regexp.MustCompile(rName)
+	rName := "tf-acc-test-prefix-"
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -229,11 +230,43 @@ func TestAccAWSCloudWatchEventRule_prefix(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigPrefix(rName),
+				Config: testAccAWSCloudWatchEventRuleConfigNamePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "name", startsWithPrefix),
+					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudWatchEventRule_Name_Generated(t *testing.T) {
+	var v events.DescribeRuleOutput
+	resourceName := "aws_cloudwatch_event_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchEventRuleConfigNameGenerated,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventRuleExists(resourceName, &v),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -449,7 +482,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 `, name, enabled)
 }
 
-func testAccAWSCloudWatchEventRuleConfigPrefix(name string) string {
+func testAccAWSCloudWatchEventRuleConfigNamePrefix(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name_prefix         = "%s"
@@ -457,6 +490,12 @@ resource "aws_cloudwatch_event_rule" "test" {
 }
 `, name)
 }
+
+const testAccAWSCloudWatchEventRuleConfigNameGenerated = `
+resource "aws_cloudwatch_event_rule" "test" {
+  schedule_expression = "rate(5 minutes)"
+}
+`
 
 func testAccAWSCloudWatchEventRuleConfigTags1(name, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
