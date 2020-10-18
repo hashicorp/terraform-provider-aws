@@ -40,6 +40,7 @@ jobs:
             | grep -v resource_aws_kinesis_stream_test.go \
             | grep -v resource_aws_kms_grant_test.go \
             | grep -v resource_aws_quicksight_user_test.go \
+            | grep -v resource_aws_route_table_test.go \
             | grep -v resource_aws_s3_bucket_object_test.go \
             | grep -v resource_aws_sns_platform_application_test.go \
             | xargs -I {} terrafmt diff --check --fmtcompat {}
@@ -70,6 +71,7 @@ jobs:
             | grep -v resource_aws_kms_grant_test.go \
             | grep -v resource_aws_lambda_permission_test.go \
             | grep -v resource_aws_quicksight_user_test.go \
+            | grep -v resource_aws_route_table_test.go \
             | grep -v resource_aws_s3_bucket_object_test.go \
             | grep -v resource_aws_sns_platform_application_test.go \
             | ./scripts/validate-terraform.sh
