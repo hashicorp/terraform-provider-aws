@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
 )
 
 func resourceAwsStorageGatewayStoredIscsiVolume() *schema.Resource {
@@ -143,6 +144,12 @@ func resourceAwsStorageGatewayStoredIscsiVolumeCreate(d *schema.ResourceData, me
 	}
 
 	d.SetId(aws.StringValue(output.VolumeARN))
+
+	_, err = waiter.StoredIscsiVolumeAvailable(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error waiting for Stored Iscsi Volume %q to be Available: %s", d.Id(), err)
+	}
 
 	return resourceAwsStorageGatewayStoredIscsiVolumeRead(d, meta)
 }
