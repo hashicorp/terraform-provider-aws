@@ -14,7 +14,7 @@ const (
 // StoredIscsiVolumeAvailable waits for a StoredIscsiVolume to return Available
 func StoredIscsiVolumeAvailable(conn *storagegateway.StorageGateway, volumeARN string) (*storagegateway.DescribeStorediSCSIVolumesOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"BOOTSTRAPPING", "CREATING"},
+		Pending: []string{"BOOTSTRAPPING", "CREATING", "RESTORING"},
 		Target:  []string{"AVAILABLE"},
 		Refresh: StoredIscsiVolumeStatus(conn, volumeARN),
 		Timeout: StoredIscsiVolumeAvailableTimeout,
