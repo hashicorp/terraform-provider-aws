@@ -102,6 +102,20 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					versions := strings.Split(new, ".")
+
+					// For example 6.x
+					if len(versions) == 2 {
+						major, minor := versions[0], versions[1]
+
+						if minor == "x" && strings.HasPrefix(old, major) {
+							return true
+						}
+					}
+
+					return false
+				},
 			},
 			"maintenance_window": {
 				Type:     schema.TypeString,
