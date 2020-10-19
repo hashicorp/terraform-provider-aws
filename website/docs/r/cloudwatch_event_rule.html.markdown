@@ -62,11 +62,10 @@ The following arguments are supported:
 
 * `name` - (Optional) The name of the rule. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
-* `schedule_expression` - (Required, if `event_pattern` isn't specified) The scheduling expression.
-	For example, `cron(0 20 * * ? *)` or `rate(5 minutes)`.
+* `schedule_expression` - (Optional) The scheduling expression.
+	For example, `cron(0 20 * * ? *)` or `rate(5 minutes)`. At least one of `schedule_expression` or `event_pattern` is required.
 * `event_bus_name` - (Optional) The event bus to associate with this rule. If you omit this, the `default` event bus is used.
-* `event_pattern` - (Required, if `schedule_expression` isn't specified) Event pattern
-	described a JSON object.
+* `event_pattern` - (Optional) The event pattern described a JSON object. At least one of `schedule_expression` or `event_pattern` is required.
 	See full documentation of [CloudWatch Events and Event Patterns](http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CloudWatchEventsandEventPatterns.html) for details.
 * `description` - (Optional) The description of the rule.
 * `role_arn` - (Optional) The Amazon Resource Name (ARN) associated with the role that is used for target invocation.

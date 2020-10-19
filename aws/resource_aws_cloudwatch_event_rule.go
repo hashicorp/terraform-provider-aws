@@ -51,6 +51,7 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
+				AtLeastOneOf: []string{"schedule_expression", "event_pattern"},
 			},
 			"event_bus_name": {
 				Type:         schema.TypeString,
@@ -62,7 +63,6 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 						// "default" event bus name is not stored in the state to support the case when event_bus_name is omitted
 						return ""
 					}
-
 					return v.(string)
 				},
 			},
@@ -70,6 +70,7 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateEventPatternValue(),
+				AtLeastOneOf: []string{"schedule_expression", "event_pattern"},
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v.(string))
 					return json
