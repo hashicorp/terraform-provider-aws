@@ -27,7 +27,7 @@ func init() {
 func testSweepCloudWatchEventRules(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
+		return fmt.Errorf("Error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).cloudwatcheventsconn
 
@@ -37,27 +37,27 @@ func testSweepCloudWatchEventRules(region string) error {
 		output, err := conn.ListRules(input)
 		if err != nil {
 			if testSweepSkipSweepError(err) {
-				log.Printf("[WARN] Skipping CloudWatch Event Rule sweep for %s: %s", region, err)
+				log.Printf("[WARN] Skipping CloudWatch Events Rule sweep for %s: %s", region, err)
 				return nil
 			}
-			return fmt.Errorf("Error retrieving CloudWatch Event Rules: %s", err)
+			return fmt.Errorf("Error retrieving CloudWatch Events Rules: %w", err)
 		}
 
 		if len(output.Rules) == 0 {
-			log.Print("[DEBUG] No CloudWatch Event Rules to sweep")
+			log.Print("[DEBUG] No CloudWatch Events Rules to sweep")
 			return nil
 		}
 
 		for _, rule := range output.Rules {
 			name := aws.StringValue(rule.Name)
 
-			log.Printf("[INFO] Deleting CloudWatch Event Rule %s", name)
+			log.Printf("[INFO] Deleting CloudWatch Events Rule (%s)", name)
 			_, err := conn.DeleteRule(&events.DeleteRuleInput{
 				Name:  aws.String(name),
 				Force: aws.Bool(true),
 			})
 			if err != nil {
-				return fmt.Errorf("Error deleting CloudWatch Event Rule %s: %s", name, err)
+				return fmt.Errorf("Error deleting CloudWatch Events Rule (%s): %w", name, err)
 			}
 		}
 
@@ -452,8 +452,7 @@ func testAccCheckAWSCloudWatchEventRuleDestroy(s *terraform.State) error {
 		resp, err := conn.DescribeRule(&params)
 
 		if err == nil {
-			return fmt.Errorf("CloudWatch Event Rule %q still exists: %s",
-				rs.Primary.ID, resp)
+			return fmt.Errorf("CloudWatch Events Rule (%s) still exists: %s", rs.Primary.ID, resp)
 		}
 	}
 
@@ -562,6 +561,15 @@ resource "aws_cloudwatch_event_rule" "test" {
   }
 }
 `, name, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAWSCloudWatchEventRuleConfigTags0(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_rule" "test" {
+  name                = %[1]q
+  schedule_expression = "rate(1 hour)"
+}
+`, name)
 }
 
 func testAccAWSCloudWatchEventRuleConfigRole(name string) string {

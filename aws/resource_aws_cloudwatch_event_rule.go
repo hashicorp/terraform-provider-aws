@@ -107,9 +107,9 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 
 	input, err := buildPutRuleInputStruct(d, name)
 	if err != nil {
-		return fmt.Errorf("Creating CloudWatch Event Rule failed: %s", err)
+		return fmt.Errorf("Creating CloudWatch Events Rule failed: %w", err)
 	}
-	log.Printf("[DEBUG] Creating CloudWatch Event Rule: %s", input)
+	log.Printf("[DEBUG] Creating CloudWatch Events Rule: %s", input)
 
 	// IAM Roles take some time to propagate
 	var out *events.PutRuleOutput
@@ -117,7 +117,7 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 		out, err = conn.PutRule(input)
 
 		if isAWSErr(err, "ValidationException", "cannot be assumed by principal") {
-			log.Printf("[DEBUG] Retrying update of CloudWatch Event Rule %q", *input.Name)
+			log.Printf("[DEBUG] Retrying update of CloudWatch Events Rule %q", aws.StringValue(input.Name))
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -130,7 +130,7 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 	}
 
 	if err != nil {
-		return fmt.Errorf("Updating CloudWatch Event Rule failed: %s", err)
+		return fmt.Errorf("Updating CloudWatch Events Rule failed: %w", err)
 	}
 
 	d.Set("arn", out.RuleArn)
@@ -141,7 +141,7 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 	}
 	d.SetId(id)
 
-	log.Printf("[INFO] CloudWatch Event Rule %q created", *out.RuleArn)
+	log.Printf("[INFO] CloudWatch Events Rule (%s) created", aws.StringValue(out.RuleArn))
 
 	return resourceAwsCloudWatchEventRuleRead(d, meta)
 }
@@ -159,11 +159,11 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 		Name:         aws.String(ruleName),
 		EventBusName: aws.String(busName),
 	}
-	log.Printf("[DEBUG] Reading CloudWatch Event Rule: %s", input)
+	log.Printf("[DEBUG] Reading CloudWatch Events Rule: %s", input)
 	out, err := conn.DescribeRule(&input)
 	if awsErr, ok := err.(awserr.Error); ok {
 		if awsErr.Code() == events.ErrCodeResourceNotFoundException {
-			log.Printf("[WARN] Removing CloudWatch Event Rule %q because it's gone.", d.Id())
+			log.Printf("[WARN] Removing CloudWatch Events Rule (%s) because it's gone.", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -179,7 +179,7 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 	if out.EventPattern != nil {
 		pattern, err := structure.NormalizeJsonString(*out.EventPattern)
 		if err != nil {
-			return fmt.Errorf("event pattern contains an invalid JSON: %s", err)
+			return fmt.Errorf("event pattern contains an invalid JSON: %w", err)
 		}
 		d.Set("event_pattern", pattern)
 	}
@@ -201,11 +201,11 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 	tags, err := keyvaluetags.CloudwatcheventsListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for CloudWatch Event Rule (%s): %s", arn, err)
+		return fmt.Errorf("error listing tags for CloudWatch Events Rule (%s): %w", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -219,16 +219,16 @@ func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface
 	}
 	input, err := buildPutRuleInputStruct(d, ruleName)
 	if err != nil {
-		return fmt.Errorf("Updating CloudWatch Event Rule failed: %s", err)
+		return fmt.Errorf("Updating CloudWatch Events Rule (%s) failed: %w", ruleName, err)
 	}
-	log.Printf("[DEBUG] Updating CloudWatch Event Rule: %s", input)
+	log.Printf("[DEBUG] Updating CloudWatch Events Rule: %s", input)
 
 	// IAM Roles take some time to propagate
 	err = resource.Retry(30*time.Second, func() *resource.RetryError {
 		_, err := conn.PutRule(input)
 
 		if isAWSErr(err, "ValidationException", "cannot be assumed by principal") {
-			log.Printf("[DEBUG] Retrying update of CloudWatch Event Rule %q", *input.Name)
+			log.Printf("[DEBUG] Retrying update of CloudWatch Events Rule %q", aws.StringValue(input.Name))
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -241,7 +241,7 @@ func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface
 	}
 
 	if err != nil {
-		return fmt.Errorf("Updating CloudWatch Event Rule failed: %s", err)
+		return fmt.Errorf("Updating CloudWatch Events Rule (%s) failed: %w", ruleName, err)
 	}
 
 	arn := d.Get("arn").(string)
@@ -249,7 +249,7 @@ func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.CloudwatcheventsUpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating CloudwWatch Event Rule (%s) tags: %s", arn, err)
+			return fmt.Errorf("error updating CloudwWatch Event Rule (%s) tags: %w", arn, err)
 		}
 	}
 
@@ -286,7 +286,7 @@ func resourceAwsCloudWatchEventRuleDelete(d *schema.ResourceData, meta interface
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CloudWatch Event Rule (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting CloudWatch Events Rule (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -305,7 +305,7 @@ func buildPutRuleInputStruct(d *schema.ResourceData, name string) (*events.PutRu
 	if v, ok := d.GetOk("event_pattern"); ok {
 		pattern, err := structure.NormalizeJsonString(v)
 		if err != nil {
-			return nil, fmt.Errorf("event pattern contains an invalid JSON: %s", err)
+			return nil, fmt.Errorf("event pattern contains an invalid JSON: %w", err)
 		}
 		input.EventPattern = aws.String(pattern)
 	}
@@ -349,7 +349,7 @@ func validateEventPatternValue() schema.SchemaValidateFunc {
 	return func(v interface{}, k string) (ws []string, errors []error) {
 		json, err := structure.NormalizeJsonString(v)
 		if err != nil {
-			errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
+			errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %w", k, err))
 
 			// Invalid JSON? Return immediately,
 			// there is no need to collect other
@@ -359,8 +359,7 @@ func validateEventPatternValue() schema.SchemaValidateFunc {
 
 		// Check whether the normalized JSON is within the given length.
 		if len(json) > 2048 {
-			errors = append(errors, fmt.Errorf(
-				"%q cannot be longer than %d characters: %q", k, 2048, json))
+			errors = append(errors, fmt.Errorf("%q cannot be longer than %d characters: %q", k, 2048, json))
 		}
 		return
 	}
@@ -371,7 +370,7 @@ func determineCloudwatchEventBusNameAndEventRuleNameFromRuleId(id string) (strin
 	busName := "default"
 	var ruleName string
 	if len(splitId) > 2 {
-		return busName, ruleName, fmt.Errorf("wrong format of resource: %s. Please follow <event-bus-name>/<rule-name> or <rule-name>", id)
+		return busName, ruleName, fmt.Errorf("wrong format of resource: %q. Please follow <event-bus-name>/<rule-name> or <rule-name>", id)
 	} else if len(splitId) == 2 {
 		busName = splitId[0]
 		ruleName = splitId[1]
