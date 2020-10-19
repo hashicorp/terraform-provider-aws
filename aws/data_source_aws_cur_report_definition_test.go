@@ -11,12 +11,10 @@ import (
 )
 
 func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
-	if testAccGetPartition() != "aws" {
-		t.Skipf("skipping test; hardcoded us-east-1 test, not supported in partition %s", testAccGetPartition()) //lintignore:AWSAT003
-	}
+	testAccPartitionHasServicePreCheck("cur", t) // This check must come before os.Setenv() or creds fail on GovCloud
 
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1") // lintignore:AWSAT003
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resourceName := "aws_cur_report_definition.test"
@@ -49,9 +47,7 @@ func TestAccDataSourceAwsCurReportDefinition_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsCurReportDefinition_additional(t *testing.T) {
-	if testAccGetPartition() != "aws" {
-		t.Skipf("skipping test; hardcoded us-east-1 test, not supported in partition %s", testAccGetPartition()) //lintignore:AWSAT003
-	}
+	testAccPartitionHasServicePreCheck("cur", t) // This check must come before os.Setenv() or creds fail on GovCloud
 
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1") //lintignore:AWSAT003
