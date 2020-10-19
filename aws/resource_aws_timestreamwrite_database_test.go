@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,7 +13,7 @@ import (
 )
 
 func TestAccAWSTimestreamWriteDatabase_basic(t *testing.T) {
-	resourceName := "aws_timestreamwrite_database.test_database"
+	resourceName := "aws_timestreamwrite_database.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -24,7 +25,9 @@ func TestAccAWSTimestreamWriteDatabase_basic(t *testing.T) {
 				Config: testAccAWSTimestreamWriteDatabaseConfigNoTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTimestreamWriteDatabaseExists(resourceName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "timestream", fmt.Sprintf("database/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexp.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -38,9 +41,9 @@ func TestAccAWSTimestreamWriteDatabase_basic(t *testing.T) {
 }
 
 func TestAccAWSTimestreamWriteDatabase_kmsKey(t *testing.T) {
-	resourceName := "aws_timestreamwrite_database.test_database"
+	resourceName := "aws_timestreamwrite_database.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	kmsResourceName := "aws_kms_key.foo"
+	kmsResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -65,7 +68,7 @@ func TestAccAWSTimestreamWriteDatabase_kmsKey(t *testing.T) {
 }
 
 func TestAccAWSTimestreamWriteDatabase_Tags(t *testing.T) {
-	resourceName := "aws_timestreamwrite_database.test_database"
+	resourceName := "aws_timestreamwrite_database.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -158,7 +161,7 @@ func testAccCheckAWSTimestreamWriteDatabaseExists(n string) resource.TestCheckFu
 
 func testAccAWSTimestreamWriteDatabaseConfigNoTags(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_timestreamwrite_database" "test_database" {
+resource "aws_timestreamwrite_database" "test" {
   database_name = %[1]q
 }
 `, rName)
@@ -166,7 +169,7 @@ resource "aws_timestreamwrite_database" "test_database" {
 
 func testAccAWSTimestreamWriteDatabaseConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_timestreamwrite_database" "test_database" {
+resource "aws_timestreamwrite_database" "test" {
   database_name = %[1]q
 
   tags = {
@@ -178,7 +181,7 @@ resource "aws_timestreamwrite_database" "test_database" {
 
 func testAccAWSTimestreamWriteDatabaseConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_timestreamwrite_database" "test_database" {
+resource "aws_timestreamwrite_database" "test" {
   database_name = %[1]q
 
   tags = {
@@ -191,7 +194,7 @@ resource "aws_timestreamwrite_database" "test_database" {
 
 func testAccAWSTimestreamWriteDatabaseConfigKmsKey(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "foo" {
+resource "aws_kms_key" "test" {
   description = "Terraform acc test"
 
   policy = <<POLICY
@@ -211,9 +214,9 @@ resource "aws_kms_key" "foo" {
 POLICY
 }
 
-resource "aws_timestreamwrite_database" "test_database" {
+resource "aws_timestreamwrite_database" "test" {
   database_name = %[1]q
-  kms_key_id    = aws_kms_key.foo.arn
+  kms_key_id    = aws_kms_key.test.arn
 }
 `, rName)
 }

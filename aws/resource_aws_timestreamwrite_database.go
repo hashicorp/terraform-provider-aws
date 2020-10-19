@@ -34,9 +34,10 @@ func resourceAwsTimestreamWriteDatabase() *schema.Resource {
 			},
 
 			"kms_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"tags": tagsSchema(),
@@ -58,12 +59,15 @@ func resourceAwsTimestreamWriteDatabaseCreate(d *schema.ResourceData, meta inter
 		input.Tags = keyvaluetags.New(attr.(map[string]interface{})).IgnoreAws().TimestreamwriteTags()
 	}
 
-	_, err := conn.CreateDatabase(input)
+	resp, err := conn.CreateDatabase(input)
+
 	if err != nil {
 		return err
 	}
 
-	d.SetId(d.Get("database_name").(string))
+	name := aws.StringValue(resp.Database.DatabaseName)
+
+	d.SetId(name)
 
 	return resourceAwsTimestreamWriteDatabaseRead(d, meta)
 }
