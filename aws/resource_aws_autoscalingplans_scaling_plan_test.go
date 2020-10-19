@@ -126,7 +126,10 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckIamServiceLinkedRole(t, "/aws-service-role/autoscaling-plans")
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAutoScalingPlansScalingPlanDestroy,
 		Steps: []resource.TestStep{
@@ -178,7 +181,10 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 	rNameUpdated := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckIamServiceLinkedRole(t, "/aws-service-role/autoscaling-plans")
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAutoScalingPlansScalingPlanDestroy,
 		Steps: []resource.TestStep{
