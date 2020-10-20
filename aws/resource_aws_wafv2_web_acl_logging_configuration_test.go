@@ -306,7 +306,7 @@ resource "aws_iam_role" "firehose" {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "Service": "firehose.amazonaws.com"
+        "Service": "firehose.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole",
       "Condition": {
@@ -353,7 +353,7 @@ resource "aws_iam_role_policy" "test" {
     {
       "Effect": "Allow",
       "Action": "iam:CreateServiceLinkedRole",
-      "Resource": "arn:aws:iam::*:role/aws-service-role/wafv2.amazonaws.com/AWSServiceRoleForWAFV2Logging",
+      "Resource": "arn:${data.aws_partition.current.partition}:iam::*:role/aws-service-role/wafv2.${data.aws_partition.current.dns_suffix}/AWSServiceRoleForWAFV2Logging",
       "Condition": {
         "StringLike": {
           "iam:AWSServiceName": "wafv2.${data.aws_partition.current.dns_suffix}"
