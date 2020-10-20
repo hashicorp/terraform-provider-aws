@@ -62,17 +62,17 @@ func testAccDataSourceAwsSsoPermissionSetConfigBasic(rName string) string {
 data "aws_sso_instance" "selected" {}
 
 resource "aws_sso_permission_set" "test" {
-	name                = "%s"
-	description         = "testing"
-	instance_arn        = data.aws_sso_instance.selected.arn
-	session_duration    = "PT1H"
-	relay_state         = "https://console.aws.amazon.com/console/home"
-	managed_policy_arns = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
+  name                = "%s"
+  description         = "testing"
+  instance_arn        = data.aws_sso_instance.selected.arn
+  session_duration    = "PT1H"
+  relay_state         = "https://console.aws.amazon.com/console/home"
+  managed_policy_arns = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
 }
 
 data "aws_sso_permission_set" "test" {
-	instance_arn = data.aws_sso_instance.selected.arn
-	name         = aws_sso_permission_set.test.name
+  instance_arn = data.aws_sso_instance.selected.arn
+  name         = aws_sso_permission_set.test.name
 }
 `, rName)
 }
@@ -82,29 +82,29 @@ func testAccDataSourceAwsSsoPermissionSetConfigByTags(rName string) string {
 data "aws_sso_instance" "selected" {}
 
 resource "aws_sso_permission_set" "test" {
-	name                = "%s"
-	description         = "testing"
-	instance_arn        = data.aws_sso_instance.selected.arn
-	session_duration    = "PT1H"
-	relay_state         = "https://console.aws.amazon.com/console/home"
-	managed_policy_arns = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
+  name                = "%s"
+  description         = "testing"
+  instance_arn        = data.aws_sso_instance.selected.arn
+  session_duration    = "PT1H"
+  relay_state         = "https://console.aws.amazon.com/console/home"
+  managed_policy_arns = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
 
-	tags = {
-		Key1 = "Value1"
-		Key2 = "Value2"
-		Key3 = "Value3"
-	}
+  tags = {
+    Key1 = "Value1"
+    Key2 = "Value2"
+    Key3 = "Value3"
+  }
 }
 
 data "aws_sso_permission_set" "test" {
-	instance_arn = data.aws_sso_instance.selected.arn
-	name         = aws_sso_permission_set.test.name
+  instance_arn = data.aws_sso_instance.selected.arn
+  name         = aws_sso_permission_set.test.name
 
-	tags = {
-	Key1 = "Value1"
-	Key2 = "Value2"
-	Key3 = "Value3"
-	}
+  tags = {
+    Key1 = "Value1"
+    Key2 = "Value2"
+    Key3 = "Value3"
+  }
 }
 `, rName)
 }
