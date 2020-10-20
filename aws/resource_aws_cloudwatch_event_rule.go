@@ -17,6 +17,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 const (
@@ -109,7 +110,7 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 
 	// IAM Roles take some time to propagate
 	var out *events.PutRuleOutput
-	err = resource.Retry(30*time.Second, func() *resource.RetryError {
+	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		out, err = conn.PutRule(input)
 
 		if isAWSErr(err, "ValidationException", "cannot be assumed by principal") {
@@ -203,7 +204,7 @@ func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] Updating CloudWatch Events Rule: %s", input)
 
 	// IAM Roles take some time to propagate
-	err = resource.Retry(30*time.Second, func() *resource.RetryError {
+	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutRule(input)
 
 		if isAWSErr(err, "ValidationException", "cannot be assumed by principal") {
