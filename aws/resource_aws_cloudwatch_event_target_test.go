@@ -3,6 +3,8 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -359,7 +361,11 @@ func TestAccAWSCloudWatchEventTarget_input_transformer(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventTargetConfigInputTransformer(rName),
+				Config:      testAccAWSCloudWatchEventTargetConfigInputTransformer(rName, 11),
+				ExpectError: regexp.MustCompile(`.*expected number of items in.* to be lesser than or equal to.*`),
+			},
+			{
+				Config: testAccAWSCloudWatchEventTargetConfigInputTransformer(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventTargetExists("aws_cloudwatch_event_target.test", &target),
 				),
@@ -1074,7 +1080,35 @@ resource "aws_sqs_queue" "sqs_queue" {
 `, rName)
 }
 
-func testAccAWSCloudWatchEventTargetConfigInputTransformer(rName string) string {
+func testAccAWSCloudWatchEventTargetConfigInputTransformer(rName string, inputPathCount int) string {
+	sampleInputPaths := [...]string{
+		"account",
+		"count",
+		"eventFirstSeen",
+		"eventLastSeen",
+		"Finding_ID",
+		"Finding_Type",
+		"instanceId",
+		"port",
+		"region",
+		"severity",
+		"time",
+	}
+	var inputPaths strings.Builder
+	var inputTemplates strings.Builder
+
+	if len(sampleInputPaths) < inputPathCount {
+		inputPathCount = len(sampleInputPaths)
+	}
+
+	for i := 0; i < inputPathCount; i++ {
+		fmt.Fprintf(&inputPaths, `
+      %s = "$.%s"`, sampleInputPaths[i], sampleInputPaths[i])
+
+		fmt.Fprintf(&inputTemplates, `
+  "%s": <%s>,`, sampleInputPaths[i], sampleInputPaths[i])
+	}
+
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1120,20 +1154,18 @@ resource "aws_cloudwatch_event_target" "test" {
 
   input_transformer {
     input_paths = {
-      time = "$.time"
+      %s
     }
 
     input_template = <<EOF
 {
   "detail-type": "Scheduled Event",
-  "source": "aws.events",
-  "time": <time>,
-  "region": "eu-west-1",
+  "source": "aws.events",%s
   "detail": {}
 }
 EOF
 
   }
 }
-`, rName)
+`, rName, inputPaths.String(), inputTemplates.String())
 }
