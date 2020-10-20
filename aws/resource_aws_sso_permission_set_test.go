@@ -30,7 +30,7 @@ func testAccPreCheckAWSSSOPermissionSet(t *testing.T) {
 	}
 }
 
-func TestAccAWSSSOPermissionSet_basic(t *testing.T) {
+func TestAccAWSSSOPermissionSetBasic(t *testing.T) {
 	var permissionSet, updatedPermissionSet ssoadmin.PermissionSet
 	resourceName := "aws_sso_permission_set.example"
 	name := acctest.RandString(5)
@@ -160,34 +160,28 @@ func testAccCheckAWSSSOPermissionSetDestroy(s *terraform.State) error {
 
 func testAccAWSSSOPermissionSetBasicConfig(rName string) string {
 	return fmt.Sprintf(`
-	data "aws_caller_identity" "current" {}
-
 	data "aws_sso_instance" "selected" { }
 	
 	resource "aws_sso_permission_set" "example" {
-		name = "Test_Permission_Set_%s"
-		description = "Just a test"
-		instance_arn       = data.aws_sso_instance.selected.arn
-		managed_policy_arns = [
-		"arn:aws:iam::aws:policy/ReadOnlyAccess",
-	  ]
+		name                = "Test_Permission_Set_%s"
+		description         = "Just a test"
+		instance_arn        = data.aws_sso_instance.selected.arn
+		managed_policy_arns = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
 	}
 `, rName)
 }
 
 func testAccAWSSSOPermissionSetBasicConfigUpdated(rName string) string {
 	return fmt.Sprintf(`
-	data "aws_caller_identity" "current" {}
-
 	data "aws_sso_instance" "selected" { }
 	
 	resource "aws_sso_permission_set" "example" {
-		name = "Test_Permission_Set_Update_%s"
-		description = "Just a test update"
-		instance_arn       = data.aws_sso_instance.selected.arn
+		name                = "Test_Permission_Set_Update_%s"
+		description         = "Just a test update"
+		instance_arn        = data.aws_sso_instance.selected.arn
 		managed_policy_arns = [
 		"arn:aws:iam::aws:policy/ReadOnlyAccess",
-		"arn:aws:iam::aws:policy/job-function/ViewOnlyAccess",
+		"arn:aws:iam::aws:policy/job-function/ViewOnlyAccess"
 	  ]
 	}
 `, rName)
