@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"log"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
 )
 
 func init() {
@@ -51,15 +51,9 @@ func testSweepSagemakerNotebookInstances(region string) error {
 				continue
 			}
 
-			stateConf := &resource.StateChangeConf{
-				Pending: []string{sagemaker.NotebookInstanceStatusDeleting},
-				Target:  []string{""},
-				Refresh: sagemakerNotebookInstanceStateRefreshFunc(conn, name),
-				Timeout: 10 * time.Minute,
-			}
-
-			if _, err := stateConf.WaitForState(); err != nil {
-				log.Printf("[ERROR] Error waiting for SageMaker Notebook Instance (%s) deletion: %s", name, err)
+			if _, err := waiter.NotebookInstanceDeleted(conn, name); err != nil {
+				log.Printf("error waiting for sagemaker notebook instance (%s) to delete: %s", name, err)
+				continue
 			}
 		}
 
@@ -336,7 +330,7 @@ func testAccCheckAWSSagemakerNotebookInstanceDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		if *notebookInstance.NotebookInstanceName == rs.Primary.ID {
+		if aws.StringValue(notebookInstance.NotebookInstanceName) == rs.Primary.ID {
 			return fmt.Errorf("sagemaker notebook instance %q still exists", rs.Primary.ID)
 		}
 	}
@@ -624,9 +618,9 @@ resource "aws_subnet" "test" {
   }
 }
 
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-}
+// resource "aws_internet_gateway" "test" {
+//   vpc_id = aws_vpc.test.id
+// }
 
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id

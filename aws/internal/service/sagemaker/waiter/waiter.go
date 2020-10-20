@@ -17,6 +17,7 @@ const (
 func NotebookInstanceInService(conn *sagemaker.SageMaker, notebookName string) (*sagemaker.DescribeNotebookInstanceOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
+			SagemakerNotebookInstanceStatusNotFound,
 			sagemaker.NotebookInstanceStatusUpdating,
 			sagemaker.NotebookInstanceStatusPending,
 			sagemaker.NotebookInstanceStatusStopped,
@@ -62,7 +63,7 @@ func NotebookInstanceDeleted(conn *sagemaker.SageMaker, notebookName string) (*s
 		Pending: []string{
 			sagemaker.NotebookInstanceStatusDeleting,
 		},
-		Target:  []string{""},
+		Target:  []string{},
 		Refresh: NotebookInstanceStatus(conn, notebookName),
 		Timeout: NotebookInstanceDeletedTimeout,
 	}
