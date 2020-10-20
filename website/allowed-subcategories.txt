@@ -18,6 +18,7 @@ CloudFront
 CloudHSM v2
 CloudTrail
 CloudWatch
+CodeArtifact
 CodeBuild
 CodeCommit
 CodeDeploy
@@ -56,17 +57,21 @@ Global Accelerator
 Glue
 GuardDuty
 IAM
+Identity Store
 Inspector
 IoT
 KMS
-Kinesis Firehose
 Kinesis
+Kinesis Data Analytics v2 (SQL and Java Applications)
+Kinesis Firehose
 Kinesis Video
 Lambda
+Lex
 License Manager
 Lightsail
 MQ
 Macie
+Macie Classic
 Managed Streaming for Kafka (MSK)
 MediaConvert
 MediaPackage
@@ -74,6 +79,7 @@ MediaStore
 Neptune
 OpsWorks
 Organizations
+Outposts
 Pinpoint
 Pricing
 Quantum Ledger Database (QLDB)
@@ -82,13 +88,18 @@ RAM
 RDS
 Redshift
 Resource Groups
+Resource Groups Tagging API
+Route53 Domains
 Route53 Resolver
 Route53
 S3
+S3 Control
+S3 Outposts
 SES
 SNS
 SQS
 SSM
+SSO Admin
 SWF
 Sagemaker
 Secrets Manager
@@ -100,10 +111,14 @@ Shield
 SimpleDB
 Step Function (SFN)
 Storage Gateway
+Synthetics
+Timestream Write
 Transfer
+Transit Gateway Network Manager
 VPC
 WAF Regional
 WAF
+WAFv2
 WorkLink
 WorkMail
 WorkSpaces
