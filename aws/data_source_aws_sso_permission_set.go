@@ -87,36 +87,42 @@ func dataSourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{})
 	name := d.Get("name").(string)
 
 	log.Printf("[DEBUG] Reading AWS SSO Permission Sets")
-	resp, err := conn.ListPermissionSets(&ssoadmin.ListPermissionSetsInput{
+
+	var permissionSetArn string
+	var permissionSet *ssoadmin.PermissionSet
+	var permissionSetErr error
+
+	req := &ssoadmin.ListPermissionSetsInput{
 		InstanceArn: aws.String(instanceArn),
-		MaxResults:  aws.Int64(100),
+	}
+	err := conn.ListPermissionSetsPages(req, func(page *ssoadmin.ListPermissionSetsOutput, lastPage bool) bool {
+		if page != nil && len(page.PermissionSets) != 0 {
+			for _, ps := range page.PermissionSets {
+				permissionSetArn = aws.StringValue(ps)
+				log.Printf("[DEBUG] Reading AWS SSO Permission Set: %v", permissionSetArn)
+				var permissionSetResp *ssoadmin.DescribePermissionSetOutput
+				permissionSetResp, permissionSetErr = conn.DescribePermissionSet(&ssoadmin.DescribePermissionSetInput{
+					InstanceArn:      aws.String(instanceArn),
+					PermissionSetArn: aws.String(permissionSetArn),
+				})
+				if permissionSetErr != nil {
+					return false
+				}
+				if aws.StringValue(permissionSetResp.PermissionSet.Name) == name {
+					permissionSet = permissionSetResp.PermissionSet
+					return false
+				}
+			}
+		}
+		return !lastPage
 	})
+
 	if err != nil {
 		return fmt.Errorf("Error getting AWS SSO Permission Sets: %s", err)
 	}
-	if resp == nil || len(resp.PermissionSets) == 0 {
-		log.Printf("[DEBUG] No AWS SSO Permission Sets found")
-		d.SetId("")
-		return nil
-	}
 
-	// TODO: paging (if resp.NextToken != nil)
-	var permissionSetArn string
-	var permissionSet *ssoadmin.PermissionSet
-	for _, permissionSetArns := range resp.PermissionSets {
-		permissionSetArn = aws.StringValue(permissionSetArns)
-		log.Printf("[DEBUG] Reading AWS SSO Permission Set: %v", permissionSetArn)
-		permissionSetResp, permissionSetErr := conn.DescribePermissionSet(&ssoadmin.DescribePermissionSetInput{
-			InstanceArn:      aws.String(instanceArn),
-			PermissionSetArn: aws.String(permissionSetArn),
-		})
-		if permissionSetErr != nil {
-			return fmt.Errorf("Error getting AWS SSO Permission Set: %s", permissionSetErr)
-		}
-		if aws.StringValue(permissionSetResp.PermissionSet.Name) == name {
-			permissionSet = permissionSetResp.PermissionSet
-			break
-		}
+	if permissionSetErr != nil {
+		return fmt.Errorf("Error getting AWS SSO Permission Set: %s", permissionSetErr)
 	}
 
 	if permissionSet == nil {
@@ -137,21 +143,24 @@ func dataSourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{})
 	}
 
 	log.Printf("[DEBUG] Getting Managed Policies for AWS SSO Permission Set")
-	managedPoliciesResp, managedPoliciesErr := conn.ListManagedPoliciesInPermissionSet(&ssoadmin.ListManagedPoliciesInPermissionSetInput{
+	var managedPolicyArns []string
+	managedPoliciesReq := &ssoadmin.ListManagedPoliciesInPermissionSetInput{
 		InstanceArn:      aws.String(instanceArn),
 		PermissionSetArn: aws.String(permissionSetArn),
+	}
+	managedPoliciesErr := conn.ListManagedPoliciesInPermissionSetPages(managedPoliciesReq, func(page *ssoadmin.ListManagedPoliciesInPermissionSetOutput, lastPage bool) bool {
+		for _, managedPolicy := range page.AttachedManagedPolicies {
+			managedPolicyArns = append(managedPolicyArns, aws.StringValue(managedPolicy.Arn))
+		}
+		return !lastPage
 	})
 	if managedPoliciesErr != nil {
 		return fmt.Errorf("Error getting Managed Policies for AWS SSO Permission Set: %s", managedPoliciesErr)
 	}
-	var managedPolicyArns []string
-	for _, managedPolicy := range managedPoliciesResp.AttachedManagedPolicies {
-		managedPolicyArns = append(managedPolicyArns, aws.StringValue(managedPolicy.Arn))
-	}
 
-	tags, err := keyvaluetags.SsoListTags(conn, permissionSetArn, instanceArn)
-	if err != nil {
-		return fmt.Errorf("Error listing tags for ASW SSO Permission Set (%s): %s", permissionSetArn, err)
+	tags, tagsErr := keyvaluetags.SsoListTags(conn, permissionSetArn, instanceArn)
+	if tagsErr != nil {
+		return fmt.Errorf("Error listing tags for ASW SSO Permission Set (%s): %s", permissionSetArn, tagsErr)
 	}
 
 	d.SetId(permissionSetArn)
@@ -164,8 +173,9 @@ func dataSourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{})
 	d.Set("relay_state", permissionSet.RelayState)
 	d.Set("inline_policy", inlinePolicyResp.InlinePolicy)
 	d.Set("managed_policy_arns", managedPolicyArns)
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tagsMapErr := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
+	if tagsMapErr != nil {
+		return fmt.Errorf("Error setting tags: %s", tagsMapErr)
 	}
 
 	return nil
