@@ -65,7 +65,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 			"input": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"input_path"},
+				ConflictsWith: []string{"input_path", "input_transformer"},
 				// We could be normalizing the JSON here,
 				// but for built-in targets input may not be JSON
 			},
@@ -73,7 +73,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 			"input_path": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"input"},
+				ConflictsWith: []string{"input", "input_transformer"},
 			},
 
 			"role_arn": {
@@ -221,9 +221,10 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 			},
 
 			"input_transformer": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"input", "input_path"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"input_paths": {

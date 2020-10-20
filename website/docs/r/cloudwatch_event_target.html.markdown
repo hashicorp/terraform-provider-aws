@@ -237,8 +237,6 @@ DOC
 
 ## Argument Reference
 
--> **Note:** `input` and `input_path` are mutually exclusive options.
-
 -> **Note:** In order to be able to have your AWS Lambda function or
    SNS topic invoked by a CloudWatch Events rule, you must setup the right permissions
    using [`aws_lambda_permission`](https://www.terraform.io/docs/providers/aws/r/lambda_permission.html)
@@ -251,16 +249,16 @@ The following arguments are supported:
 * `event_bus_name` - (Optional) The event bus to associate with the rule. If you omit this, the `default` event bus is used.
 * `target_id` - (Optional) The unique target assignment ID.  If missing, will generate a random, unique id.
 * `arn` - (Required) The Amazon Resource Name (ARN) associated of the target.
-* `input` - (Optional) Valid JSON text passed to the target.
+* `input` - (Optional) Valid JSON text passed to the target. Conflicts with `input_path` and `input_transformer`.
 * `input_path` - (Optional) The value of the [JSONPath](http://goessner.net/articles/JsonPath/)
-	that is used for extracting part of the matched event when passing it to the target.
+	that is used for extracting part of the matched event when passing it to the target. Conflicts with `input` and `input_transformer`.
 * `role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to be used for this target when the rule is triggered. Required if `ecs_target` is used.
 * `run_command_targets` - (Optional) Parameters used when you are using the rule to invoke Amazon EC2 Run Command. Documented below. A maximum of 5 are allowed.
 * `ecs_target` - (Optional) Parameters used when you are using the rule to invoke Amazon ECS Task. Documented below. A maximum of 1 are allowed.
 * `batch_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Batch Job. Documented below. A maximum of 1 are allowed.
 * `kinesis_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Kinesis Stream. Documented below. A maximum of 1 are allowed.
 * `sqs_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SQS Queue. Documented below. A maximum of 1 are allowed.
-* `input_transformer` - (Optional) Parameters used when you are providing a custom input to a target based on certain event data.
+* `input_transformer` - (Optional) Parameters used when you are providing a custom input to a target based on certain event data. Conflicts with `input` and `input_path`.
 
 `run_command_targets` support the following:
 
