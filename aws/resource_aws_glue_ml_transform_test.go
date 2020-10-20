@@ -514,8 +514,10 @@ func testAccCheckAWSGlueMLTransformDestroy(s *terraform.State) error {
 
 func testAccAWSGlueMLTransformConfigBase(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_iam_policy" "AWSGlueServiceRole" {
-  arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+  arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
 }
 
 resource "aws_iam_role" "test" {
@@ -528,7 +530,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "glue.amazonaws.com"
+        "Service": "glue.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
