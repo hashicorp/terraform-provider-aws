@@ -106,6 +106,11 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 	if err != nil {
 		return fmt.Errorf("Creating CloudWatch Events Rule failed: %w", err)
 	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CloudwatcheventsTags()
+	}
+
 	log.Printf("[DEBUG] Creating CloudWatch Events Rule: %s", input)
 
 	// IAM Roles take some time to propagate
@@ -301,10 +306,6 @@ func buildPutRuleInputStruct(d *schema.ResourceData, name string) (*events.PutRu
 		} else {
 			return nil, errors.New("schedule_expression can only be set on the default event bus")
 		}
-	}
-
-	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CloudwatcheventsTags()
 	}
 
 	input.State = aws.String(getStringStateFromBoolean(d.Get("is_enabled").(bool)))
