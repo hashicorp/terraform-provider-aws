@@ -43,5 +43,5 @@ In addition to all arguments above, the following attributes are exported:
 * `session_duration` - The session duration of the permission set.
 * `relay_state` - The relay state of the permission set.
 * `inline_policy` - The inline policy of the permission set.
-* `managed_policies` - The managed policies attached to the permission set.
+* `managed_policy_arns` - The managed policies attached to the permission set.
 * `tags` - The tags of the permission set.
