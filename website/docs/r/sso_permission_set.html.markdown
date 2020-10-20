@@ -13,7 +13,7 @@ Provides an AWS Single Sign-On Permission Set resource
 ## Example Usage
 
 ```hcl
-data "aws_sso_instance" "selected" { }
+data "aws_sso_instance" "selected" {}
 
 data "aws_iam_policy_document" "example" {
   statement {
@@ -31,14 +31,14 @@ data "aws_iam_policy_document" "example" {
 }
 
 resource "aws_sso_permission_set" "example" {
-  name                = "Example"
-  description         = "An example"
-  instance_arn        = data.aws_sso_instance.selected.arn
-  session_duration    = "PT1H"
-  relay_state         = "https://console.aws.amazon.com/console/home"
-  inline_policy       = data.aws_iam_policy_document.example.json
+  name             = "Example"
+  description      = "An example"
+  instance_arn     = data.aws_sso_instance.selected.arn
+  session_duration = "PT1H"
+  relay_state      = "https://console.aws.amazon.com/console/home"
+  inline_policy    = data.aws_iam_policy_document.example.json
   managed_policy_arns = [
-  "arn:aws:iam::aws:policy/ReadOnlyAccess",
+    "arn:aws:iam::aws:policy/ReadOnlyAccess",
   ]
 }
 ```
@@ -50,8 +50,8 @@ The following arguments are supported:
 * `instance_arn` - (Required) The AWS ARN associated with the AWS Single Sign-On Instance.
 * `name` - (Required) The name of the AWS Single Sign-On Permission Set.
 * `description` - (Optional) The description of the AWS Single Sign-On Permission Set.
-* `session_duration` - (Optional) The session duration of the AWS Single Sign-On Permission Set in the ISO-8601 standard. The default value is `PT1H`. 
-* `relay_state` - (Optional) The relay state of AWS Single Sign-On Permission Set. 
+* `session_duration` - (Optional) The session duration of the AWS Single Sign-On Permission Set in the ISO-8601 standard. The default value is `PT1H`.
+* `relay_state` - (Optional) The relay state of AWS Single Sign-On Permission Set.
 * `inline_policy` - (Optional) The inline policy of the AWS Single Sign-On Permission Set.
 * `managed_policy_arns` - (Optional) The managed policies attached to the AWS Single Sign-On Permission Set.
 * `tags` - (Optional) Key-value map of resource tags.
