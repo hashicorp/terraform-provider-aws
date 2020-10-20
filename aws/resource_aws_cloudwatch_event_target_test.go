@@ -33,12 +33,12 @@ func testSweepCloudWatchEventTargets(region string) error {
 		output, err := conn.ListRules(input)
 
 		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping CloudWatch Event Target sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping CloudWatch Events Target sweep for %s: %s", region, err)
 			return nil
 		}
 
 		if err != nil {
-			return fmt.Errorf("Error retrieving CloudWatch Event Targets: %w", err)
+			return fmt.Errorf("Error retrieving CloudWatch Events Targets: %w", err)
 		}
 
 		for _, rule := range output.Rules {
@@ -52,7 +52,7 @@ func testSweepCloudWatchEventTargets(region string) error {
 				listTargetsByRuleOutput, err := conn.ListTargetsByRule(listTargetsByRuleInput)
 
 				if err != nil {
-					return fmt.Errorf("Error retrieving CloudWatch Event Targets: %w", err)
+					return fmt.Errorf("Error retrieving CloudWatch Events Targets: %w", err)
 				}
 
 				for _, target := range listTargetsByRuleOutput.Targets {
@@ -63,11 +63,11 @@ func testSweepCloudWatchEventTargets(region string) error {
 					}
 					targetID := aws.StringValue(target.Id)
 
-					log.Printf("[INFO] Deleting CloudWatch Event Rule (%s) Target: %s", ruleName, targetID)
+					log.Printf("[INFO] Deleting CloudWatch Events Rule (%s) Target: %s", ruleName, targetID)
 					_, err := conn.RemoveTargets(removeTargetsInput)
 
 					if err != nil {
-						return fmt.Errorf("Error deleting CloudWatch Event Rule (%s) Target %s: %w", ruleName, targetID, err)
+						return fmt.Errorf("Error deleting CloudWatch Events Rule (%s) Target %s: %w", ruleName, targetID, err)
 					}
 				}
 
@@ -457,7 +457,7 @@ func testAccCheckAWSCloudWatchEventTargetDestroy(s *terraform.State) error {
 		t, err := findEventTargetById(rs.Primary.Attributes["target_id"],
 			rs.Primary.Attributes["rule"], "", nil, conn)
 		if err == nil {
-			return fmt.Errorf("CloudWatch Event Target %q still exists: %s", rs.Primary.ID, t)
+			return fmt.Errorf("CloudWatch Events Target %q still exists: %s", rs.Primary.ID, t)
 		}
 	}
 
