@@ -618,10 +618,6 @@ resource "aws_subnet" "test" {
   }
 }
 
-// resource "aws_internet_gateway" "test" {
-//   vpc_id = aws_vpc.test.id
-// }
-
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 
