@@ -155,8 +155,7 @@ func resourceAwsSsoPermissionSetImport(d *schema.ResourceData, meta interface{})
 		return []*schema.ResourceData{}, permissionSetErr
 	}
 
-	var permissionSet *ssoadmin.PermissionSet
-	permissionSet = permissionSetResp.PermissionSet
+	permissionSet := permissionSetResp.PermissionSet
 
 	log.Printf("[DEBUG] Getting Inline Policy for AWS SSO Permission Set")
 	inlinePolicyResp, inlinePolicyErr := ssoadminconn.GetInlinePolicyForPermissionSet(&ssoadmin.GetInlinePolicyForPermissionSetInput{
