@@ -7,6 +7,7 @@ FEATURES
 ENHANCEMENTS
 
 * resource/aws_network_interface: Add `ipv6_addresses` and `ipv6_address_count` arguments [GH-12281]
+* resource/aws_cloudwatch_event_target: Add validation to `input_transformer.input_paths` map [GH-15669]
 
 ## 3.11.0 (October 15, 2020)
 
