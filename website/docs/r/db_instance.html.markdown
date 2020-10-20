@@ -239,7 +239,7 @@ This will not recreate the resource if the S3 object changes in some way.  It's 
 - `create` - (Default `40 minutes`) Used for Creating Instances, Replicas, and
 restoring from Snapshots.
 - `update` - (Default `80 minutes`) Used for Database modifications.
-- `delete` - (Default `40 minutes`) Used for destroying databases. This includes
+- `delete` - (Default `60 minutes`) Used for destroying databases. This includes
 the time required to take snapshots.
 
 [1]:
