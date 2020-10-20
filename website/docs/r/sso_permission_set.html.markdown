@@ -49,20 +49,20 @@ The following arguments are supported:
 
 * `instance_arn` - (Required) The AWS ARN associated with the AWS Single Sign-On Instance.
 * `name` - (Required) The name of the AWS Single Sign-On Permission Set.
+* `description` - (Optional) The description of the AWS Single Sign-On Permission Set.
+* `session_duration` - (Optional) The session duration of the AWS Single Sign-On Permission Set in the ISO-8601 standard. The default value is `PT1H`. 
+* `relay_state` - (Optional) The relay state of AWS Single Sign-On Permission Set. 
+* `inline_policy` - (Optional) The inline policy of the AWS Single Sign-On Permission Set.
+* `managed_policy_arns` - (Optional) The managed policies attached to the AWS Single Sign-On Permission Set.
+* `tags` - (Optional) Key-value map of resource tags.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The arn of the permission set.
-* `arn` - The arn of the permission set.
-* `created_date` - The created date of the permission set.
-* `description` - The description of the permission set.
-* `session_duration` - The session duration of the permission set in the ISO-8601 standard.
-* `relay_state` - The relay state of the permission set.
-* `inline_policy` - The inline policy of the permission set.
-* `managed_policy_arns` - The managed policies attached to the permission set.
-* `tags` - The tags of the permission set.
+* `id` - The arn of the AWS Single Sign-On Permission Set.
+* `arn` - The arn of the AWS Single Sign-On Permission Set.
+* `created_date` - The created date of the AWS Single Sign-On Permission Set.
 
 ## Import
 
