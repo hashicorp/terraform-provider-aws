@@ -29,7 +29,7 @@ data "aws_iam_policy_document" "example" {
     ]
   }
 }
-	
+
 resource "aws_sso_permission_set" "example" {
   name                = "Example"
   description         = "An example"

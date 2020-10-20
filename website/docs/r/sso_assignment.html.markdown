@@ -57,6 +57,7 @@ In addition to all arguments above, the following attributes are exported:
 
 `aws_sso_assignment` can be imported by using the identifier of the AWS Single Sign-On Assignment, e.g.
 identifier = ${InstanceID}/${PermissionSetID}/${TargetType}/${TargetID}/${PrincipalType}/${PrincipalID}
+
 ```
 $ terraform import aws_sso_assignment.example ssoins-0123456789abcdef/ps-0123456789abcdef/AWS_ACCOUNT/012347678910/GROUP/51b3755f39-e945c18b-e449-4a93-3e95-12231cb7ef96
 ```
