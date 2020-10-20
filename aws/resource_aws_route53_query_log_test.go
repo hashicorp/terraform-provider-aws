@@ -161,6 +161,8 @@ resource "aws_cloudwatch_log_group" "test" {
   retention_in_days = 1
 }
 
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_document" "test" {
   statement {
     actions = [
@@ -168,10 +170,10 @@ data "aws_iam_policy_document" "test" {
       "logs:PutLogEvents",
     ]
 
-    resources = ["arn:aws:logs:*:*:log-group:/aws/route53/*"]
+    resources = ["arn:${data.aws_partition.current.partition}:logs:*:*:log-group:/aws/route53/*"]
 
     principals {
-      identifiers = ["route53.amazonaws.com"]
+      identifiers = ["route53.${data.aws_partition.current.dns_suffix}"]
       type        = "Service"
     }
   }
