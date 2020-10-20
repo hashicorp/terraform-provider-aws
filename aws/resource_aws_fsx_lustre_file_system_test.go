@@ -402,10 +402,10 @@ func TestAccAWSFsxLustreFileSystem_automaticBackupRetentionDays(t *testing.T) {
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxLustreFileSystemConfigAutomaticBackupRetentionDays(1),
+				Config: testAccAwsFsxLustreFileSystemConfigAutomaticBackupRetentionDays(90),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "1"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "90"),
 				),
 			},
 			{
