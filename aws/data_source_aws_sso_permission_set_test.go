@@ -14,7 +14,7 @@ func TestAccDataSourceAwsSsoPermissionSetBasic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-sso-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSSOPermissionSet(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSSOInstance(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -38,7 +38,7 @@ func TestAccDataSourceAwsSsoPermissionSetByTags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-sso-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSSOPermissionSet(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSSOInstance(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

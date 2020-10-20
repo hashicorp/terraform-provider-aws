@@ -14,29 +14,13 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
-func testAccPreCheckAWSSSOPermissionSet(t *testing.T) {
-	ssoadminconn := testAccProvider.Meta().(*AWSClient).ssoadminconn
-
-	input := &ssoadmin.ListInstancesInput{}
-
-	_, err := ssoadminconn.ListInstances(input)
-
-	if testAccPreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
 func TestAccAWSSSOPermissionSetBasic(t *testing.T) {
 	var permissionSet, updatedPermissionSet ssoadmin.PermissionSet
 	resourceName := "aws_sso_permission_set.example"
 	name := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSSOPermissionSet(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSSOInstance(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSOPermissionSetDestroy,
 		Steps: []resource.TestStep{
