@@ -1,20 +1,22 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
 )
 
 const (
@@ -57,14 +59,8 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
-				StateFunc: func(v interface{}) string {
-					if v.(string) == "default" {
-						// "default" event bus name is not stored in the state to support the case when event_bus_name is omitted
-						return ""
-					}
-					return v.(string)
-				},
+				ValidateFunc: validateCloudWatchEventBusName,
+				Default:      tfevents.DefaultEventBusName,
 			},
 			"event_pattern": {
 				Type:         schema.TypeString,
@@ -130,15 +126,12 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 	}
 
 	if err != nil {
-		return fmt.Errorf("Updating CloudWatch Events Rule failed: %w", err)
+		return fmt.Errorf("Creating CloudWatch Events Rule failed: %w", err)
 	}
 
 	d.Set("arn", out.RuleArn)
-	id := aws.StringValue(input.Name)
-	eventBusName := aws.StringValue(input.EventBusName)
-	if eventBusName != "" && eventBusName != "default" {
-		id = eventBusName + "/" + id
-	}
+
+	id := tfevents.RuleCreateID(aws.StringValue(input.EventBusName), aws.StringValue(input.Name))
 	d.SetId(id)
 
 	log.Printf("[INFO] CloudWatch Events Rule (%s) created", aws.StringValue(out.RuleArn))
@@ -150,34 +143,22 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	busName, ruleName, err := determineCloudwatchEventBusNameAndEventRuleNameFromRuleId(d.Id())
-	if err != nil {
-		return err
-	}
-
-	input := events.DescribeRuleInput{
-		Name:         aws.String(ruleName),
-		EventBusName: aws.String(busName),
-	}
-	log.Printf("[DEBUG] Reading CloudWatch Events Rule: %s", input)
-	out, err := conn.DescribeRule(&input)
-	if awsErr, ok := err.(awserr.Error); ok {
-		if awsErr.Code() == events.ErrCodeResourceNotFoundException {
-			log.Printf("[WARN] Removing CloudWatch Events Rule (%s) because it's gone.", d.Id())
-			d.SetId("")
-			return nil
-		}
+	out, err := finder.RuleByID(conn, d.Id())
+	if tfawserr.ErrCodeEquals(err, events.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Removing CloudWatch Events Rule (%s) because it's gone.", d.Id())
+		d.SetId("")
+		return nil
 	}
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading CloudWatch Events Rule (%s): %w", d.Id(), err)
 	}
 	log.Printf("[DEBUG] Found Event Rule: %s", out)
 
-	arn := *out.Arn
+	arn := aws.StringValue(out.Arn)
 	d.Set("arn", arn)
 	d.Set("description", out.Description)
 	if out.EventPattern != nil {
-		pattern, err := structure.NormalizeJsonString(*out.EventPattern)
+		pattern, err := structure.NormalizeJsonString(aws.StringValue(out.EventPattern))
 		if err != nil {
 			return fmt.Errorf("event pattern contains an invalid JSON: %w", err)
 		}
@@ -187,9 +168,7 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 	d.Set("name_prefix", aws.StringValue(naming.NamePrefixFromName(aws.StringValue(out.Name))))
 	d.Set("role_arn", out.RoleArn)
 	d.Set("schedule_expression", out.ScheduleExpression)
-	if aws.StringValue(out.EventBusName) != "default" {
-		d.Set("event_bus_name", out.EventBusName)
-	}
+	d.Set("event_bus_name", out.EventBusName)
 
 	boolState, err := getBooleanStateFromString(*out.State)
 	if err != nil {
@@ -213,7 +192,7 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 
 func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
-	_, ruleName, err := determineCloudwatchEventBusNameAndEventRuleNameFromRuleId(d.Id())
+	_, ruleName, err := tfevents.RuleParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -258,7 +237,7 @@ func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface
 
 func resourceAwsCloudWatchEventRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
-	busName, ruleName, err := determineCloudwatchEventBusNameAndEventRuleNameFromRuleId(d.Id())
+	busName, ruleName, err := tfevents.RuleParseID(d.Id())
 	if err != nil {
 		return err
 	}
@@ -296,11 +275,13 @@ func buildPutRuleInputStruct(d *schema.ResourceData, name string) (*events.PutRu
 	input := events.PutRuleInput{
 		Name: aws.String(name),
 	}
+	var eventBusName string
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("event_bus_name"); ok {
-		input.EventBusName = aws.String(v.(string))
+		eventBusName = v.(string)
+		input.EventBusName = aws.String(eventBusName)
 	}
 	if v, ok := d.GetOk("event_pattern"); ok {
 		pattern, err := structure.NormalizeJsonString(v)
@@ -313,7 +294,12 @@ func buildPutRuleInputStruct(d *schema.ResourceData, name string) (*events.PutRu
 		input.RoleArn = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("schedule_expression"); ok {
-		input.ScheduleExpression = aws.String(v.(string))
+		scheduleExpression := v.(string)
+		if eventBusName == tfevents.DefaultEventBusName {
+			input.ScheduleExpression = aws.String(scheduleExpression)
+		} else {
+			return nil, errors.New("schedule_expression can only be set on the default event bus")
+		}
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
@@ -365,28 +351,12 @@ func validateEventPatternValue() schema.SchemaValidateFunc {
 	}
 }
 
-func determineCloudwatchEventBusNameAndEventRuleNameFromRuleId(id string) (string, string, error) {
-	splitId := strings.Split(id, "/")
-	busName := "default"
-	var ruleName string
-	if len(splitId) > 2 {
-		return busName, ruleName, fmt.Errorf("wrong format of resource: %q. Please follow <event-bus-name>/<rule-name> or <rule-name>", id)
-	} else if len(splitId) == 2 {
-		busName = splitId[0]
-		ruleName = splitId[1]
-	} else {
-		ruleName = splitId[0]
-	}
-
-	return busName, ruleName, nil
-}
-
 func resourceAwsCloudWatchEventRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	busName, ruleName, err := determineCloudwatchEventBusNameAndEventRuleNameFromRuleId(d.Id())
+	busName, ruleName, err := tfevents.RuleParseID(d.Id())
 	if err != nil {
 		return []*schema.ResourceData{}, err
 	}
-	if busName != "default" {
+	if busName != tfevents.DefaultEventBusName {
 		d.Set("event_bus_name", busName)
 	}
 	d.Set("name", ruleName)

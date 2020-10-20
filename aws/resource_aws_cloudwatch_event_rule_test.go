@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
 )
 
 func init() {
@@ -71,7 +72,7 @@ func testSweepCloudWatchEventRules(region string) error {
 }
 
 func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
-	var v1, v2 events.DescribeRuleOutput
+	var v1, v2, v3 events.DescribeRuleOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudwatch_event_rule.test"
@@ -89,7 +90,7 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
-					resource.TestCheckNoResourceAttr(resourceName, "event_bus_name"),
+					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
 					resource.TestCheckNoResourceAttr(resourceName, "event_pattern"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
@@ -108,12 +109,74 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v2),
 					testAccCheckCloudWatchEventRuleRecreated(&v1, &v2),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s$`, rName2))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
 					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
 					testAccCheckCloudWatchEventRuleEnabled(resourceName, "ENABLED"),
+				),
+			},
+			{
+				Config: testAccAWSCloudWatchEventRuleConfigDefaultEventBusName(rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventRuleExists(resourceName, &v3),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s$`, rName2))),
+					testAccCheckCloudWatchEventRuleNotRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudWatchEventRule_EventBusName(t *testing.T) {
+	var v1, v2, v3 events.DescribeRuleOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test-rule")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test-rule")
+	busName := acctest.RandomWithPrefix("tf-acc-test-bus")
+	busName2 := acctest.RandomWithPrefix("tf-acc-test-bus")
+	resourceName := "aws_cloudwatch_event_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchEventRuleConfigEventBusName(rName, busName, "description 1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventRuleExists(resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName, rName))),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCloudWatchEventRuleConfigEventBusName(rName, busName, "description 2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventRuleExists(resourceName, &v2),
+					testAccCheckCloudWatchEventRuleNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
+				),
+			},
+			{
+				Config: testAccAWSCloudWatchEventRuleConfigEventBusName(rName2, busName2, "description 2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventRuleExists(resourceName, &v3),
+					testAccCheckCloudWatchEventRuleRecreated(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName2),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName2, rName2))),
 				),
 			},
 		},
@@ -403,15 +466,13 @@ func testAccCheckCloudWatchEventRuleExists(n string, rule *events.DescribeRuleOu
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
-		params := events.DescribeRuleInput{
-			Name: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.DescribeRule(&params)
+
+		resp, err := finder.RuleByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 		if resp == nil {
-			return fmt.Errorf("Rule not found")
+			return fmt.Errorf("CloudWatch Events rule (%s) not found", rs.Primary.ID)
 		}
 
 		*rule = *resp
@@ -428,16 +489,13 @@ func testAccCheckCloudWatchEventRuleEnabled(n string, desired string) resource.T
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
-		params := events.DescribeRuleInput{
-			Name: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.DescribeRule(&params)
 
+		resp, err := finder.RuleByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
-		if *resp.State != desired {
-			return fmt.Errorf("Expected state %q, given %q", desired, *resp.State)
+		if aws.StringValue(resp.State) != desired {
+			return fmt.Errorf("Expected state %q, given %q", desired, aws.StringValue(resp.State))
 		}
 
 		return nil
@@ -452,12 +510,7 @@ func testAccCheckAWSCloudWatchEventRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		params := events.DescribeRuleInput{
-			Name: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeRule(&params)
-
+		resp, err := finder.RuleByID(conn, rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("CloudWatch Events Rule (%s) still exists: %s", rs.Primary.ID, resp)
 		}
@@ -469,7 +522,16 @@ func testAccCheckAWSCloudWatchEventRuleDestroy(s *terraform.State) error {
 func testAccCheckCloudWatchEventRuleRecreated(i, j *events.DescribeRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.Arn) == aws.StringValue(j.Arn) {
-			return fmt.Errorf("CloudWatch Events rule not recreated")
+			return fmt.Errorf("CloudWatch Events rule not recreated, but expected it to be")
+		}
+		return nil
+	}
+}
+
+func testAccCheckCloudWatchEventRuleNotRecreated(i, j *events.DescribeRuleOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(i.Arn) != aws.StringValue(j.Arn) {
+			return fmt.Errorf("CloudWatch Events rule recreated, but expected it to not be")
 		}
 		return nil
 	}
@@ -480,9 +542,39 @@ func testAccAWSCloudWatchEventRuleConfig(name string) string {
 resource "aws_cloudwatch_event_rule" "test" {
   name                = "%s"
   schedule_expression = "rate(1 hour)"
+}
+`, name)
+}
+
+func testAccAWSCloudWatchEventRuleConfigDefaultEventBusName(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_rule" "test" {
+  name                = %[1]q
+  schedule_expression = "rate(1 hour)"
   event_bus_name      = "default"
 }
 `, name)
+}
+
+func testAccAWSCloudWatchEventRuleConfigEventBusName(name, eventBusName, description string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_rule" "test" {
+  name           = %[1]q
+  event_bus_name = aws_cloudwatch_event_bus.test.name
+  description    = %[2]q
+  event_pattern  = <<PATTERN
+{
+	"source": [
+		"aws.ec2"
+	]
+}
+PATTERN
+}
+
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[3]q
+}  
+`, name, description, eventBusName)
 }
 
 func testAccAWSCloudWatchEventRuleConfigPattern(name, pattern string) string {
