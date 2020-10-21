@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -8,11 +9,12 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
 )
 
 func resourceAwsCloudWatchEventTarget() *schema.Resource {
@@ -31,15 +33,8 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
-				StateFunc: func(v interface{}) string {
-					if v.(string) == "default" {
-						// "default" event bus name is not stored in the state to support the case when event_bus_name is omitted
-						return ""
-					}
-
-					return v.(string)
-				},
+				ValidateFunc: validateCloudWatchEventBusName,
+				Default:      tfevents.DefaultEventBusName,
 			},
 
 			"rule": {
@@ -249,12 +244,12 @@ func resourceAwsCloudWatchEventTargetCreate(d *schema.ResourceData, meta interfa
 
 	rule := d.Get("rule").(string)
 
-	var targetId string
+	var targetID string
 	if v, ok := d.GetOk("target_id"); ok {
-		targetId = v.(string)
+		targetID = v.(string)
 	} else {
-		targetId = resource.UniqueId()
-		d.Set("target_id", targetId)
+		targetID = resource.UniqueId()
+		d.Set("target_id", targetID)
 	}
 	var busName string
 	if v, ok := d.GetOk("event_bus_name"); ok {
@@ -273,7 +268,7 @@ func resourceAwsCloudWatchEventTargetCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Creating CloudWatch Events Target failed: %s", out.FailedEntries)
 	}
 
-	id := prepareAwsCloudWatchEventTargetResourceId(busName, rule, targetId)
+	id := prepareAwsCloudWatchEventTargetResourceId(busName, rule, targetID)
 	d.SetId(id)
 
 	log.Printf("[INFO] CloudWatch Events Target (%s) created", d.Id())
@@ -283,36 +278,29 @@ func resourceAwsCloudWatchEventTargetCreate(d *schema.ResourceData, meta interfa
 
 func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
+
 	var busName string
 	if v, ok := d.GetOk("event_bus_name"); ok {
 		busName = v.(string)
 	}
-	t, err := findEventTargetById(
-		d.Get("target_id").(string),
-		d.Get("rule").(string),
-		busName,
-		nil, conn)
+
+	t, err := findEventTargetById(d.Get("target_id").(string), d.Get("rule").(string), busName, nil, conn)
 	if err != nil {
 		if regexp.MustCompile(" not found$").MatchString(err.Error()) {
 			log.Printf("[WARN] Removing CloudWatch Events Target (%s) because it's gone.", d.Id())
 			d.SetId("")
 			return nil
 		}
-		if awsErr, ok := err.(awserr.Error); ok {
-			// This should never happen, but it's useful
-			// for recovering from https://github.com/hashicorp/terraform/issues/5389
-			if awsErr.Code() == "ValidationException" {
-				log.Printf("[WARN] Removing CloudWatch Events Target (%s) because it never existed.", d.Id())
-				d.SetId("")
-				return nil
-			}
+		if tfawserr.ErrCodeEquals(err, "ValidationException") {
+			log.Printf("[WARN] Removing CloudWatch Events Target (%s) because it never existed.", d.Id())
+			d.SetId("")
+			return nil
+		}
 
-			if awsErr.Code() == "ResourceNotFoundException" {
-				log.Printf("[WARN] CloudWatch Events Target (%s) not found. Removing it from state.", d.Id())
-				d.SetId("")
-				return nil
-			}
-
+		if tfawserr.ErrCodeEquals(err, events.ErrCodeResourceNotFoundException) {
+			log.Printf("[WARN] CloudWatch Events Target (%s) not found. Removing it from state.", d.Id())
+			d.SetId("")
+			return nil
 		}
 		return err
 	}
@@ -323,6 +311,7 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 	d.Set("input", t.Input)
 	d.Set("input_path", t.InputPath)
 	d.Set("role_arn", t.RoleArn)
+	d.Set("event_bus_name", busName)
 
 	if t.RunCommandParameters != nil {
 		if err := d.Set("run_command_targets", flattenAwsCloudWatchEventTargetRunParameters(t.RunCommandParameters)); err != nil {
@@ -363,14 +352,15 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func findEventTargetById(id, rule string, busName string, nextToken *string, conn *events.CloudWatchEvents) (*events.Target, error) {
-	input := events.ListTargetsByRuleInput{
-		Rule:      aws.String(rule),
-		NextToken: nextToken,
-		Limit:     aws.Int64(100), // Set limit to allowed maximum to prevent API throttling
+func findEventTargetById(id, rule, busName string, nextToken *string, conn *events.CloudWatchEvents) (*events.Target, error) {
+	if len(busName) == 0 {
+		return nil, errors.New("internal error: bus name is required in findEventTargetById()")
 	}
-	if len(busName) > 0 {
-		input.EventBusName = aws.String(busName)
+	input := events.ListTargetsByRuleInput{
+		Rule:         aws.String(rule),
+		EventBusName: aws.String(busName),
+		NextToken:    nextToken,
+		Limit:        aws.Int64(100), // Set limit to allowed maximum to prevent API throttling
 	}
 	log.Printf("[DEBUG] Reading CloudWatch Events Target: %s", input)
 	out, err := conn.ListTargetsByRule(&input)
@@ -729,9 +719,7 @@ func resourceAwsCloudWatchEventTargetImport(d *schema.ResourceData, meta interfa
 	}
 	d.Set("target_id", targetName)
 	d.Set("rule", ruleName)
-	if busName != "default" {
-		d.Set("event_bus_name", busName)
-	}
+	d.Set("event_bus_name", busName)
 	id := prepareAwsCloudWatchEventTargetResourceId(busName, ruleName, targetName)
 	d.SetId(id)
 
