@@ -31,7 +31,7 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 		Update: resourceAwsCloudWatchEventRuleUpdate,
 		Delete: resourceAwsCloudWatchEventRuleDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsCloudWatchEventRuleImport,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -351,17 +351,4 @@ func validateEventPatternValue() schema.SchemaValidateFunc {
 		}
 		return
 	}
-}
-
-func resourceAwsCloudWatchEventRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	busName, ruleName, err := tfevents.RuleParseID(d.Id())
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-	if busName != tfevents.DefaultEventBusName {
-		d.Set("event_bus_name", busName)
-	}
-	d.Set("name", ruleName)
-
-	return []*schema.ResourceData{d}, nil
 }

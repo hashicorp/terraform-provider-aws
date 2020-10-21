@@ -110,6 +110,12 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCloudWatchEventRuleNoBusNameImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSCloudWatchEventRuleConfig(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v2),
@@ -539,6 +545,17 @@ func testAccCheckCloudWatchEventRuleNotRecreated(i, j *events.DescribeRuleOutput
 			return fmt.Errorf("CloudWatch Events rule recreated, but expected it to not be")
 		}
 		return nil
+	}
+}
+
+func testAccAWSCloudWatchEventRuleNoBusNameImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes["name"], nil
 	}
 }
 
