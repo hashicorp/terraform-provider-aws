@@ -179,7 +179,7 @@ func testAccCheckAWSEc2TrafficMirrorFilterRuleExists(name string) resource.TestC
 
 func testAccEc2TrafficMirrorFilterRuleConfig(dstCidr, srcCidr, action, dir string, num int) string {
 	return fmt.Sprintf(`
-resource "aws_ec2_traffic_mirror_filter" "filter" {
+resource "aws_ec2_traffic_mirror_filter" "test" {
 }
 
 resource "aws_ec2_traffic_mirror_filter_rule" "rule" {
@@ -197,7 +197,7 @@ func testAccEc2TrafficMirrorFilterRuleConfigFull(dstCidr, srcCidr, action, dir, 
 	return fmt.Sprintf(`
 resource "aws_ec2_traffic_mirror_filter" "test" {}
 
-resource "aws_ec2_traffic_mirror_filter_rule" "rule" {
+resource "aws_ec2_traffic_mirror_filter_rule" "test" {
   traffic_mirror_filter_id = aws_ec2_traffic_mirror_filter.filter.id
   destination_cidr_block   = "%s"
   rule_action              = "%s"
