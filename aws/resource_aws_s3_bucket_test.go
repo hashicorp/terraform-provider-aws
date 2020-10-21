@@ -3890,8 +3890,8 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigReplicationWithTimeWithConfiguration(randInt int, storageClass string) string {
 	return testAccAWSS3BucketConfigReplicationBasic(randInt) + fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-  bucket   = "tf-test-bucket-%d"
-  acl      = "private"
+  bucket = "tf-test-bucket-%d"
+  acl    = "private"
 
   versioning {
     enabled = true
