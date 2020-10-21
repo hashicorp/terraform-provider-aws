@@ -169,7 +169,7 @@ func TestAccAWSSNSTopic_policy(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic.test"
 	rName := acctest.RandString(10)
-	expectedPolicy := `{"Statement":[{"Sid":"Stmt1445931846145","Effect":"Allow","Principal":{"AWS":"*"},"Action":"sns:Publish","Resource":"arn:aws:sns:us-west-2::example"}],"Version":"2012-10-17","Id":"Policy1445931846145"}`
+	expectedPolicy := fmt.Sprintf(`{"Statement":[{"Sid":"Stmt1445931846145","Effect":"Allow","Principal":{"AWS":"*"},"Action":"sns:Publish","Resource":"arn:%s:sns:%s::example"}],"Version":"2012-10-17","Id":"Policy1445931846145"}`, testAccGetPartition(), testAccGetRegion())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -539,6 +539,10 @@ resource "aws_sns_topic" "test" {
 
 func testAccAWSSNSTopicWithPolicy(r string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
 resource "aws_sns_topic" "test" {
   name = "example-%s"
 
@@ -552,7 +556,7 @@ resource "aws_sns_topic" "test" {
         "AWS": "*"
       },
       "Action": "sns:Publish",
-      "Resource": "arn:aws:sns:us-west-2::example"
+      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}::example"
     }
   ],
   "Version": "2012-10-17",
@@ -566,8 +570,10 @@ EOF
 // Test for https://github.com/hashicorp/terraform/issues/3660
 func testAccAWSSNSTopicConfig_withIAMRole(r string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "example" {
-  name = "tf_acc_test_%s"
+  name = "tf_acc_test_%[1]s"
   path = "/test/"
 
   assume_role_policy = <<EOF
@@ -577,7 +583,7 @@ resource "aws_iam_role" "example" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -587,8 +593,10 @@ resource "aws_iam_role" "example" {
 EOF
 }
 
+data "aws_region" "current" {}
+
 resource "aws_sns_topic" "test" {
-  name = "tf-acc-test-with-iam-role-%s"
+  name = "tf-acc-test-with-iam-role-%[1]s"
 
   policy = <<EOF
 {
@@ -600,7 +608,7 @@ resource "aws_sns_topic" "test" {
         "AWS": "${aws_iam_role.example.arn}"
       },
       "Action": "sns:Publish",
-      "Resource": "arn:aws:sns:us-west-2::example"
+      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}::example"
     }
   ],
   "Version": "2012-10-17",
@@ -608,7 +616,7 @@ resource "aws_sns_topic" "test" {
 }
 EOF
 }
-`, r, r)
+`, r)
 }
 
 // Test for https://github.com/hashicorp/terraform/issues/14024
@@ -640,6 +648,10 @@ EOF
 // Test for https://github.com/hashicorp/terraform/issues/3660
 func testAccAWSSNSTopicConfig_withFakeIAMRole(r string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
 resource "aws_sns_topic" "test" {
   name = "tf_acc_test_fake_iam_role_%s"
 
@@ -650,10 +662,10 @@ resource "aws_sns_topic" "test" {
       "Sid": "Stmt1445931846145",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::012345678901:role/wooo"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::012345678901:role/wooo"
       },
       "Action": "sns:Publish",
-      "Resource": "arn:aws:sns:us-west-2::example"
+      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}::example"
     }
   ],
   "Version": "2012-10-17",
@@ -668,7 +680,7 @@ func testAccAWSSNSTopicConfig_deliveryStatus(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   depends_on                               = [aws_iam_role_policy.example]
-  name                                     = "sns-delivery-status-topic-%s"
+  name                                     = "sns-delivery-status-topic-%[1]s"
   application_success_feedback_role_arn    = aws_iam_role.example.arn
   application_success_feedback_sample_rate = 100
   application_failure_feedback_role_arn    = aws_iam_role.example.arn
@@ -683,8 +695,10 @@ resource "aws_sns_topic" "test" {
   sqs_failure_feedback_role_arn            = aws_iam_role.example.arn
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "example" {
-  name = "sns-delivery-status-role-%s"
+  name = "sns-delivery-status-role-%[1]s"
   path = "/"
 
   assume_role_policy = <<EOF
@@ -694,7 +708,7 @@ resource "aws_iam_role" "example" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "sns.amazonaws.com"
+        "Service": "sns.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -704,7 +718,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "example" {
-  name = "sns-delivery-status-role-policy-%s"
+  name = "sns-delivery-status-role-policy-%[1]s"
   role = aws_iam_role.example.id
 
   policy = <<EOF
@@ -728,7 +742,7 @@ resource "aws_iam_role_policy" "example" {
 }
 EOF
 }
-`, r, r, r)
+`, r)
 }
 
 func testAccAWSSNSTopicConfig_withEncryption(r string) string {

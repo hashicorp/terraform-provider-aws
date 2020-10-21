@@ -367,6 +367,45 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_SerDeInfo_EmptyConfigurationBl
 	})
 }
 
+func TestAccAWSGlueCatalogTable_StorageDescriptor_SerDeInfo_UpdateValues(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_catalog_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlueTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:  testAccGlueCatalogTableConfigStorageDescriptorSerDeInfo(rName),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueCatalogTableExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.name", "ser_de_name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:  testAccGlueCatalogTableConfigStorageDescriptorSerDeInfoUpdate(rName),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueCatalogTableExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.parameters.param1", "param_val_1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.serialization_library", "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"),
+				),
+			},
+		},
+	})
+}
+
 // Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/11784
 func TestAccAWSGlueCatalogTable_StorageDescriptor_SkewedInfo_EmptyConfigurationBlock(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -636,6 +675,47 @@ resource "aws_glue_catalog_table" "test" {
 
   storage_descriptor {
     ser_de_info {}
+  }
+}
+`, rName)
+}
+
+func testAccGlueCatalogTableConfigStorageDescriptorSerDeInfo(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+
+  storage_descriptor {
+    ser_de_info {
+      name = "ser_de_name"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccGlueCatalogTableConfigStorageDescriptorSerDeInfoUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+
+  storage_descriptor {
+    ser_de_info {
+      parameters = {
+        param1 = "param_val_1"
+      }
+      serialization_library = "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"
+    }
   }
 }
 `, rName)

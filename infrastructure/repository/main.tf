@@ -4,7 +4,7 @@ terraform {
   }
 
   required_providers {
-    github = "3.0.0"
+    github = "3.1.0"
   }
 
   required_version = "~> 0.12.24"

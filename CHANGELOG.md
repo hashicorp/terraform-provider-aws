@@ -2,7 +2,25 @@
 
 FEATURES
 
+* **New Resource:** `aws_autoscalingplans_scaling_plan` [GH-8965]
 * **New Resource:** `aws_cloudwatch_event_bus` [GH-10256]
+* **New Resource:** `aws_kinesisanalyticsv2_application` [GH-11652]
+* **New Resource:** `aws_storagegateway_stored_iscsi_volume` [GH-12027]
+
+ENHANCEMENTS
+
+* resource/aws_cloudwatch_event_target: Add validation to `input_transformer.input_paths` map [GH-15669]
+* resource/aws_codeartifact_repository - support external connections [GH-15569]
+* resource/aws_fsx_lustre_file_system: Add `copy_tags_to_backups` support [GH-15687]
+* resource/aws_fsx_lustre_file_system: Increased maximum `automatic_backup_retention_days` from 35 to 90 [GH-15641]
+* resource/aws_fsx_windows_file_system: Increased maximum `automatic_backup_retention_days` from 35 to 90 [GH-15641]
+* resource/aws_glue_catalog_table: add validation checks for resource properties [GH-12523]
+* resource/aws_network_interface: Add `ipv6_addresses` and `ipv6_address_count` arguments [GH-12281]
+
+BUGFIXES
+
+* resource/aws_glue_table_catalog_table: Prevent errors on `unset` of `ser_de_info.name` [GH-15127]
+* resource/aws_glue_security_configuration: Don't send empty `kms_arn` if mode is `DISABLED` [GH-13618]
 
 ## 3.11.0 (October 15, 2020)
 

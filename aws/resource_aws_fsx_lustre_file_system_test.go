@@ -98,6 +98,7 @@ func TestAccAWSFsxLustreFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypeScratch1),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
 				),
 			},
 			{
@@ -402,10 +403,10 @@ func TestAccAWSFsxLustreFileSystem_automaticBackupRetentionDays(t *testing.T) {
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxLustreFileSystemConfigAutomaticBackupRetentionDays(1),
+				Config: testAccAwsFsxLustreFileSystemConfigAutomaticBackupRetentionDays(90),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "1"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "90"),
 				),
 			},
 			{
@@ -607,6 +608,32 @@ func TestAccAWSFsxLustreFileSystem_StorageTypeHddDriveCacheNone(t *testing.T) {
 					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeHdd),
 					resource.TestCheckResourceAttr(resourceName, "drive_cache_type", fsx.DriveCacheTypeNone),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+		},
+	})
+}
+
+func TestAccAWSFsxLustreFileSystem_copyTagsToBackups(t *testing.T) {
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsFsxLustreFileSystemCopyTagsToBackups(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "true"),
 				),
 			},
 			{
@@ -1033,4 +1060,16 @@ resource "aws_fsx_lustre_file_system" "test" {
   subnet_ids         = [aws_subnet.test1.id]
 }
 `, rName, exportPrefix, policy)
+}
+
+func testAccAwsFsxLustreFileSystemCopyTagsToBackups() string {
+	return testAccAwsFsxLustreFileSystemConfigBase() + `
+resource "aws_fsx_lustre_file_system" "test" {
+  storage_capacity            = 1200
+  deployment_type             = "PERSISTENT_1"
+  subnet_ids                  = [aws_subnet.test1.id]
+  per_unit_storage_throughput = 50
+  copy_tags_to_backups        = true
+}
+`
 }

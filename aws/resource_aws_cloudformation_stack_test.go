@@ -578,6 +578,8 @@ BODY
 }
 
 var testAccAWSCloudFormationStackConfig_allAttributesWithBodies_tpl = `
+data "aws_partition" "current" {}
+
 resource "aws_cloudformation_stack" "test" {
   name          = "%[1]s"
   template_body = <<STACK
@@ -614,7 +616,7 @@ resource "aws_cloudformation_stack" "test" {
           "Version": "2012-10-17",
           "Statement": [ {
             "Effect": "Allow",
-            "Principal": { "Service": "ec2.amazonaws.com" },
+            "Principal": { "Service": "ec2.${data.aws_partition.current.dns_suffix}" },
             "Action": "sts:AssumeRole"
           } ]
         },
@@ -739,6 +741,10 @@ func testAccAWSCloudFormationStackConfig_withParams_modified(stackName string) s
 
 func testAccAWSCloudFormationStackConfig_templateUrl_withParams(rName, bucketKey, vpcCidr string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
 resource "aws_s3_bucket" "b" {
   bucket = "%[1]s"
   acl    = "public-read"
@@ -754,7 +760,7 @@ resource "aws_s3_bucket" "b" {
         "AWS": "*"
       },
       "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::%[1]s/*"
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*"
     }
   ]
 }
@@ -780,7 +786,7 @@ resource "aws_cloudformation_stack" "test" {
     VpcCIDR = "%[3]s"
   }
 
-  template_url       = "https://${aws_s3_bucket.b.id}.s3-us-west-2.amazonaws.com/${aws_s3_bucket_object.object.key}"
+  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${aws_s3_bucket_object.object.key}"
   on_failure         = "DELETE"
   timeout_in_minutes = 1
 }
@@ -789,6 +795,10 @@ resource "aws_cloudformation_stack" "test" {
 
 func testAccAWSCloudFormationStackConfig_templateUrl_withParams_withYaml(rName, bucketKey, vpcCidr string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
 resource "aws_s3_bucket" "b" {
   bucket = "%[1]s"
   acl    = "public-read"
@@ -804,7 +814,7 @@ resource "aws_s3_bucket" "b" {
         "AWS": "*"
       },
       "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::%[1]s/*"
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*"
     }
   ]
 }
@@ -830,7 +840,7 @@ resource "aws_cloudformation_stack" "test" {
     VpcCIDR = "%[3]s"
   }
 
-  template_url       = "https://${aws_s3_bucket.b.id}.s3-us-west-2.amazonaws.com/${aws_s3_bucket_object.object.key}"
+  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${aws_s3_bucket_object.object.key}"
   on_failure         = "DELETE"
   timeout_in_minutes = 1
 }
@@ -885,7 +895,6 @@ resource "aws_cloudformation_stack" "with-transform" {
   }
 }
 STACK
-
 
   capabilities       = ["CAPABILITY_AUTO_EXPAND"]
   on_failure         = "DELETE"

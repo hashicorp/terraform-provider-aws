@@ -14,8 +14,10 @@ import (
 )
 
 func TestAccAwsCurReportDefinition_basic(t *testing.T) {
+	testAccPartitionHasServicePreCheck("cur", t) // This check must come before os.Setenv() or creds fail on GovCloud
+
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1") // lintignore:AWSAT003
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resourceName := "aws_cur_report_definition.test"
@@ -47,8 +49,10 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 }
 
 func TestAccAwsCurReportDefinition_textOrCsv(t *testing.T) {
+	testAccPartitionHasServicePreCheck("cur", t) // This check must come before os.Setenv() or creds fail on GovCloud
+
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1") // lintignore:AWSAT003
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resourceName := "aws_cur_report_definition.test"
@@ -89,8 +93,10 @@ func TestAccAwsCurReportDefinition_textOrCsv(t *testing.T) {
 }
 
 func TestAccAwsCurReportDefinition_parquet(t *testing.T) {
+	testAccPartitionHasServicePreCheck("cur", t) // This check must come before os.Setenv() or creds fail on GovCloud
+
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1") // lintignore:AWSAT003
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resourceName := "aws_cur_report_definition.test"
@@ -130,8 +136,10 @@ func TestAccAwsCurReportDefinition_parquet(t *testing.T) {
 }
 
 func TestAccAwsCurReportDefinition_athena(t *testing.T) {
+	testAccPartitionHasServicePreCheck("cur", t) // This check must come before os.Setenv() or creds fail on GovCloud
+
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1") // lintignore:AWSAT003
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resourceName := "aws_cur_report_definition.test"
@@ -172,8 +180,10 @@ func TestAccAwsCurReportDefinition_athena(t *testing.T) {
 }
 
 func TestAccAwsCurReportDefinition_refresh(t *testing.T) {
+	testAccPartitionHasServicePreCheck("cur", t) // This check must come before os.Setenv() or creds fail on GovCloud
+
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1") // lintignore:AWSAT003
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resourceName := "aws_cur_report_definition.test"
@@ -214,8 +224,10 @@ func TestAccAwsCurReportDefinition_refresh(t *testing.T) {
 }
 
 func TestAccAwsCurReportDefinition_overwrite(t *testing.T) {
+	testAccPartitionHasServicePreCheck("cur", t) // This check must come before os.Setenv() or creds fail on GovCloud
+
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1") // lintignore:AWSAT003
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resourceName := "aws_cur_report_definition.test"
@@ -313,17 +325,22 @@ func testAccPreCheckAWSCur(t *testing.T) {
 	}
 }
 
-// note: cur report definitions are currently only supported in us-east-1
+// note: cur report definitions are currently only supported in US East (Northern Va)
 func testAccAwsCurReportDefinitionConfig_basic(reportName string, bucketName string) string {
+	// lintignore:AWSAT003
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
 }
+
 resource "aws_s3_bucket" "test" {
   bucket        = "%[2]s"
   acl           = "private"
   force_destroy = true
 }
+
+data "aws_partition" "current" {}
+
 resource "aws_s3_bucket_policy" "test" {
   bucket = aws_s3_bucket.test.id
 
@@ -336,22 +353,22 @@ resource "aws_s3_bucket_policy" "test" {
       "Sid": "AllowCURBillingACLPolicy",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::386209384616:root"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
       },
       "Action": [
         "s3:GetBucketAcl",
         "s3:GetBucketPolicy"
       ],
-      "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}"
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}"
     },
     {
       "Sid": "AllowCURPutObject",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::386209384616:root"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
       },
       "Action": "s3:PutObject",
-      "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}/*"
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
     }
   ]
 }
@@ -383,15 +400,20 @@ func testAccAwsCurReportDefinitionConfig_additional(reportName string, bucketNam
 		artifactsStr = ""
 	}
 
+	// lintignore:AWSAT003
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
 }
+
 resource "aws_s3_bucket" "test" {
   bucket        = "%[2]s"
   acl           = "private"
   force_destroy = true
 }
+
+data "aws_partition" "current" {}
+
 resource "aws_s3_bucket_policy" "test" {
   bucket = aws_s3_bucket.test.id
 
@@ -404,22 +426,22 @@ resource "aws_s3_bucket_policy" "test" {
       "Sid": "AllowCURBillingACLPolicy",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::386209384616:root"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
       },
       "Action": [
         "s3:GetBucketAcl",
         "s3:GetBucketPolicy"
       ],
-      "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}"
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}"
     },
     {
       "Sid": "AllowCURPutObject",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::386209384616:root"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::386209384616:root"
       },
       "Action": "s3:PutObject",
-      "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}/*"
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
     }
   ]
 }

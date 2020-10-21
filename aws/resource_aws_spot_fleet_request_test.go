@@ -1293,7 +1293,7 @@ func testAccCheckAWSSpotFleetRequest_IamInstanceProfileArn(sfr *ec2.SpotFleetReq
 			return fmt.Errorf("Expected IamInstanceProfile to be set, got nil")
 		}
 		//Validate the string whether it is ARN
-		re := regexp.MustCompile(`arn:aws:iam::\d{12}:instance-profile/?[a-zA-Z0-9+=,.@-_].*`)
+		re := regexp.MustCompile(fmt.Sprintf(`arn:%s:iam::\d{12}:instance-profile/?[a-zA-Z0-9+=,.@-_].*`, testAccGetPartition()))
 		if !re.MatchString(*profile.Arn) {
 			return fmt.Errorf("Expected IamInstanceProfile input as ARN, got %s", *profile.Arn)
 		}
@@ -1317,6 +1317,8 @@ resource "aws_key_pair" "test" {
   }
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -1329,8 +1331,8 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "spotfleet.amazonaws.com",
-          "ec2.amazonaws.com"
+          "spotfleet.${data.aws_partition.current.dns_suffix}",
+          "ec2.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": "sts:AssumeRole"
@@ -1682,8 +1684,8 @@ resource "aws_iam_role" "test-role1" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "spotfleet.amazonaws.com",
-          "ec2.amazonaws.com"
+          "spotfleet.${data.aws_partition.current.dns_suffix}",
+          "ec2.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": "sts:AssumeRole"
@@ -1716,7 +1718,7 @@ resource "aws_iam_instance_profile" "test-iam-instance-profile1" {
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.25"
   target_capacity                     = 2
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true

@@ -276,10 +276,10 @@ func TestAccAWSFsxWindowsFileSystem_AutomaticBackupRetentionDays(t *testing.T) {
 		CheckDestroy: testAccCheckFsxWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxWindowsFileSystemConfigAutomaticBackupRetentionDays(35),
+				Config: testAccAwsFsxWindowsFileSystemConfigAutomaticBackupRetentionDays(90),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "35"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "90"),
 				),
 			},
 			{
