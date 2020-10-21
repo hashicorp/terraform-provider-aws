@@ -3898,12 +3898,12 @@ resource "aws_s3_bucket" "bucket" {
   }
 
   replication_configuration {
-    role = "${aws_iam_role.role.arn}"
+    role = aws_iam_role.role.arn
     rules {
       id     = "foobar"
       status = "Enabled"
       destination {
-        bucket        = "${aws_s3_bucket.destination.arn}"
+        bucket        = aws_s3_bucket.destination.arn
         storage_class = "%s"
         replication_time {
           status = "Enabled"
