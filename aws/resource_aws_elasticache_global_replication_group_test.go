@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -81,26 +82,47 @@ func TestAccAWSElasticacheGlobalReplicationGroup_basic(t *testing.T) {
 				Config: testAccAWSElasticacheGlobalReplicationGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplcationGroup1),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "elasticache", fmt.Sprintf("global-replication-group:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "at_rest_encryption_enabled", ""),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "elasticache", regexp.MustCompile(`globalreplicationgroup:\w{5}-`+rName)), // \w{5} is the AWS prefix
+					resource.TestCheckResourceAttr(resourceName, "at_rest_encryption_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "auth_token_enabled", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "automatic_failover_enabled"),
-					resource.TestCheckResourceAttrSet(resourceName, "cache_node_type"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", rName),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cache_node_type", "cache.m5.large"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.6"),
 					resource.TestCheckResourceAttr(resourceName, "global_replication_group_id_suffix", rName),
-					resource.TestCheckResourceAttr(resourceName, "global_replication_group_description", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "global_replication_group_members"),
+					resource.TestCheckResourceAttr(resourceName, "global_replication_group_description", "0"),
 					resource.TestCheckResourceAttr(resourceName, "primary_replication_group_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "retain_primary_replication_group", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "transit_encryption_enabled"),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "false"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheGlobalReplicationGroup_disappears(t *testing.T) {
+	var globalReplcationGroup1 elasticache.GlobalReplicationGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_elasticache_global_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticacheGlobalReplicationGroup(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheGlobalReplicationGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheGlobalReplicationGroupConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplcationGroup1),
+					testAccCheckAWSElasticacheGlobalReplicationGroupDisappears(&globalReplcationGroup1),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -136,6 +158,25 @@ func testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName string,
 		*globalReplicationGroup = *cluster
 
 		return nil
+	}
+}
+
+func testAccCheckAWSElasticacheGlobalReplicationGroupDisappears(globalReplicationGroup *elasticache.GlobalReplicationGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
+
+		input := &elasticache.DeleteGlobalReplicationGroupInput{
+			GlobalReplicationGroupId:      globalReplicationGroup.GlobalReplicationGroupId,
+			RetainPrimaryReplicationGroup: aws.Bool(true),
+		}
+
+		_, err := conn.DeleteGlobalReplicationGroup(input)
+
+		if err != nil {
+			return err
+		}
+
+		return waitForElasticacheGlobalReplicationGroupDeletion(conn, aws.StringValue(globalReplicationGroup.GlobalReplicationGroupId))
 	}
 }
 

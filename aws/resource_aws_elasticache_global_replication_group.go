@@ -28,7 +28,8 @@ func resourceAwsElasticacheGlobalReplicationGroup() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"apply_immediately": {
 				Type:     schema.TypeBool,
-				Required: true,
+				Optional: true,
+				Default:  true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
