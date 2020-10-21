@@ -4,6 +4,7 @@ FEATURES
 
 * **New Resource:** `aws_autoscalingplans_scaling_plan` [GH-8965]
 * **New Resource:** `aws_cloudwatch_event_bus` [GH-10256]
+* **New Resource:** `aws_storagegateway_stored_iscsi_volume` [GH-12027]
 
 ENHANCEMENTS
 
