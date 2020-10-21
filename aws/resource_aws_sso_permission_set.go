@@ -287,6 +287,12 @@ func resourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{}) e
 		PermissionSetArn: aws.String(permissionSetArn),
 	})
 
+	if isAWSErr(permissionerr, ssoadmin.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] AWS SSO Permission Set (%s) not found, removing from state", permissionSetArn)
+		d.SetId("")
+		return nil
+	}
+
 	if permissionerr != nil {
 		return fmt.Errorf("Error getting AWS SSO Permission Set: %s", permissionerr)
 	}
@@ -516,7 +522,13 @@ func resourceAwsSsoPermissionSetDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	_, err := ssoadminconn.DeletePermissionSet(params)
+
 	if err != nil {
+		if isAWSErr(err, ssoadmin.ErrCodeResourceNotFoundException, "") {
+			log.Printf("[DEBUG] AWS SSO Permission Set not found")
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("Error deleting AWS SSO Permission Set (%s): %s", d.Id(), err)
 	}
 

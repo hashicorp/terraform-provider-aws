@@ -9,7 +9,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
-func TestAccDataSourceAwsSsoPermissionSetBasic(t *testing.T) {
+func TestAccDataSourceAwsSsoPermissionSet_basic(t *testing.T) {
 	datasourceName := "data.aws_sso_permission_set.test"
 	rName := acctest.RandomWithPrefix("tf-sso-test")
 
@@ -33,7 +33,7 @@ func TestAccDataSourceAwsSsoPermissionSetBasic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsSsoPermissionSetByTags(t *testing.T) {
+func TestAccDataSourceAwsSsoPermissionSet_byTags(t *testing.T) {
 	datasourceName := "data.aws_sso_permission_set.test"
 	rName := acctest.RandomWithPrefix("tf-sso-test")
 
