@@ -9,6 +9,7 @@ AppSync
 Application Autoscaling
 Athena
 Autoscaling
+Autoscaling Plans
 Backup
 Batch
 Budgets

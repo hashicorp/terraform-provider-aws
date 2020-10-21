@@ -449,6 +449,7 @@ func Provider() *schema.Provider {
 			"aws_autoscaling_notification":                            resourceAwsAutoscalingNotification(),
 			"aws_autoscaling_policy":                                  resourceAwsAutoscalingPolicy(),
 			"aws_autoscaling_schedule":                                resourceAwsAutoscalingSchedule(),
+			"aws_autoscalingplans_scaling_plan":                       resourceAwsAutoScalingPlansScalingPlan(),
 			"aws_backup_plan":                                         resourceAwsBackupPlan(),
 			"aws_backup_selection":                                    resourceAwsBackupSelection(),
 			"aws_backup_vault":                                        resourceAwsBackupVault(),
