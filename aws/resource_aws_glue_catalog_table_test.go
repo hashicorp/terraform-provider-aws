@@ -692,7 +692,7 @@ resource "aws_glue_catalog_table" "test" {
 
   storage_descriptor {
     ser_de_info {
-        name = "ser_de_name"
+      name = "ser_de_name"
     }
   }
 }
