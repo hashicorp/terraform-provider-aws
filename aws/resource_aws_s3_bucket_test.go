@@ -3889,29 +3889,29 @@ resource "aws_s3_bucket" "bucket" {
 
 func testAccAWSS3BucketConfigReplicationWithTimeWithConfiguration(randInt int, storageClass string) string {
 	return testAccAWSS3BucketConfigReplicationBasic(randInt) + fmt.Sprintf(`
-	resource "aws_s3_bucket" "bucket" {
-		bucket   = "tf-test-bucket-%d"
-		acl      = "private"
-	
-		versioning {
-			enabled = true
-		}
-	
-		replication_configuration {
-			role = "${aws_iam_role.role.arn}"
-			rules {
-				id     = "foobar"
-				status = "Enabled"
-				destination {
-					bucket        = "${aws_s3_bucket.destination.arn}"
-					storage_class = "%s"
-					replication_time {
-						status = "Enabled"
-					}
-				}
-			}
-		}
-	}
+resource "aws_s3_bucket" "bucket" {
+  bucket   = "tf-test-bucket-%d"
+  acl      = "private"
+
+  versioning {
+    enabled = true
+  }
+
+  replication_configuration {
+    role = "${aws_iam_role.role.arn}"
+    rules {
+      id     = "foobar"
+      status = "Enabled"
+      destination {
+        bucket        = "${aws_s3_bucket.destination.arn}"
+        storage_class = "%s"
+        replication_time {
+          status = "Enabled"
+        }
+      }
+    }
+  }
+}
 	`, randInt, storageClass)
 }
 
