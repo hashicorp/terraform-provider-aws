@@ -1550,7 +1550,12 @@ func readBlockDevicesFromInstance(instance *ec2.Instance, conn *ec2.EC2) (map[st
 	volResp, err := conn.DescribeVolumes(&ec2.DescribeVolumesInput{
 		VolumeIds: volIDs,
 	})
+
 	if err != nil {
+		if isAWSErr(err, "InvalidVolume.NotFound", "does not exist") {
+			log.Print("[WARN] Unable to describe volumes attached to instance")
+			return blockDevices, nil
+		}
 		return nil, err
 	}
 
