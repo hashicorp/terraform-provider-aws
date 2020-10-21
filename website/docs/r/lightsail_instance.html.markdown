@@ -68,30 +68,41 @@ Lightsail currently supports the following Blueprint IDs:
 
 ### OS Only
 
-- `amazon_linux_2018_03_0_2`
-- `centos_7_1901_01`
-- `debian_8_7`
-- `debian_9_5`
-- `freebsd_11_1`
-- `opensuse_42_2`
-- `ubuntu_16_04_2`
+- `windows_server_2019`
+- `windows_server_2016`
+- `windows_server_2012`
+- `amazon_linux_2`
+- `amazon_linux`
+- `ubuntu_20_04`
 - `ubuntu_18_04`
+- `ubuntu_16_04_2`
+- `debian_10`
+- `debian_9_5`
+- `debian_8_7`
+- `freebsd_12`
+- `opensuse_15_1`
+- `centos_7_1901_01`
 
 ### Apps and OS
 
-- `drupal_8_5_6`
-- `gitlab_11_1_4_1`
-- `joomla_3_8_11`
-- `lamp_5_6_37_2`
-- `lamp_7_1_20_1`
-- `magento_2_2_5`
-- `mean_4_0_1`
-- `nginx_1_14_0_1`
-- `nodejs_10_8_0`
-- `plesk_ubuntu_17_8_11_1`
-- `redmine_3_4_6`
-- `wordpress_4_9_8`
-- `wordpress_multisite_4_9_8`
+- `windows_server_2016_sql_2016_express`
+- `wordpress`
+- `wordpress_multisite`
+- `lamp_7`
+- `nodejs`
+- `joomla`
+- `magento`
+- `mean`
+- `drupal`
+- `gitlab`
+- `redmine`
+- `nginx`
+- `ghost_bitnami`
+- `django_bitnami`
+- `plesk_ubuntu_18_0_28`
+- `cpanel_whm_linux`
+
+**Note:** The following AWS CLI command can be used to obtain a full list of available Blueprint IDs: `aws lightsail get-blueprints`
 
 ## Bundles
 
