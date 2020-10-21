@@ -41,7 +41,7 @@ The following arguments are supported:
 * `primary_replication_group_id` – (Required) The name of the primary cluster that accepts writes and will replicate updates to the secondary cluster.
 * `global_replication_group_description` – (Optional) A user-created description for the global replication group.
 * `retain_primary_replication_group` - (Optional) Whether to retain the primary replication group when the global replication group is deleted.
-* `apply_immediately` - (Required) This parameter causes the modifications in this request and any pending modifications to be applied, asynchronously and as soon as possible. Modifications to Global Replication Groups cannot be requested to be applied in PreferredMaintenceWindow.
+* `apply_immediately` - (Optional) This parameter causes the modifications in this request and any pending modifications to be applied, asynchronously and as soon as possible. Modifications to Global Replication Groups cannot be requested to be applied in PreferredMaintenceWindow. Default to true.
 * `automatic_failover_enabled` - (Optional) Determines whether a read replica is automatically promoted to read/write primary if the existing primary encounters a failure.
 * `cache_node_type` - (Optional) A valid cache node type that you want to scale this Global Datastore to.
 * `engine_version` - (Optional) The upgraded version of the cache engine to be run on the clusters in the Global Datastore.
