@@ -13,6 +13,10 @@ ENHANCEMENTS
 * resource/aws_fsx_windows_file_system: Increased maximum `automatic_backup_retention_days` from 35 to 90 [GH-15641]
 * resource/aws_glue_catalog_table: add validation checks for resource properties [GH-12523]
 
+BUGFIXES
+
+* resource/aws_glue_table_catalog_table: Prevent errors on `unset` of `ser_de_info.name` [GH-15127]
+
 ## 3.11.0 (October 15, 2020)
 
 FEATURES
