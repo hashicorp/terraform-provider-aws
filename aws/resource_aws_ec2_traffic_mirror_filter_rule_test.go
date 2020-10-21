@@ -179,7 +179,6 @@ func testAccCheckAWSEc2TrafficMirrorFilterRuleExists(name string) resource.TestC
 
 func testAccEc2TrafficMirrorFilterRuleConfig(dstCidr, srcCidr, action, dir string, num int) string {
 	return fmt.Sprintf(`
-<<<<<<< HEAD
 resource "aws_ec2_traffic_mirror_filter" "filter" {
 }
 
@@ -190,17 +189,6 @@ resource "aws_ec2_traffic_mirror_filter_rule" "rule" {
   rule_number              = %d
   source_cidr_block        = "%s"
   traffic_direction        = "%s"
-=======
-resource "aws_ec2_traffic_mirror_filter" "test" {}
-
-resource "aws_ec2_traffic_mirror_filter_rule" "test" {
-	traffic_mirror_filter_id = "${aws_ec2_traffic_mirror_filter.test.id}"
-	destination_cidr_block   = "%s"
-	rule_action              = "%s"
-	rule_number              = %d
-	source_cidr_block        = "%s"
-	traffic_direction        = "%s"
->>>>>>> fd1c1723b... add arn attribute + disappears
 }
 `, dstCidr, action, num, srcCidr, dir)
 }
@@ -209,7 +197,6 @@ func testAccEc2TrafficMirrorFilterRuleConfigFull(dstCidr, srcCidr, action, dir, 
 	return fmt.Sprintf(`
 resource "aws_ec2_traffic_mirror_filter" "test" {}
 
-<<<<<<< HEAD
 resource "aws_ec2_traffic_mirror_filter_rule" "rule" {
   traffic_mirror_filter_id = aws_ec2_traffic_mirror_filter.filter.id
   destination_cidr_block   = "%s"
@@ -227,27 +214,6 @@ resource "aws_ec2_traffic_mirror_filter_rule" "rule" {
     from_port = %d
     to_port   = %d
   }
-=======
-resource "aws_ec2_traffic_mirror_filter_rule" "test" {
-	traffic_mirror_filter_id = "${aws_ec2_traffic_mirror_filter.test.id}"
-	destination_cidr_block = "%s"
-	rule_action            = "%s"
-	rule_number            = %d
-	source_cidr_block      = "%s"
-	traffic_direction      = "%s"
-	description            = "%s"
-	protocol               = %d
-
-	source_port_range {
-		from_port = %d
-		to_port   = %d
-	}
-
-	destination_port_range {
-		from_port = %d
-		to_port   = %d
-	}
->>>>>>> fd1c1723b... add arn attribute + disappears
 }
 `, dstCidr, action, ruleNum, srcCidr, dir, description, protocol, srcPortFrom, srcPortTo, dstPortFrom, dstPortTo)
 }
