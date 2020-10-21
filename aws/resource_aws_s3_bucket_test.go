@@ -3912,7 +3912,7 @@ resource "aws_s3_bucket" "bucket" {
     }
   }
 }
-	`, randInt, storageClass)
+`, randInt, storageClass)
 }
 
 func testAccAWSS3BucketConfigReplicationWithSseKmsEncryptedObjects(randInt int) string {
