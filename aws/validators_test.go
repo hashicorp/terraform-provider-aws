@@ -2003,6 +2003,8 @@ func TestValidateCognitoIdentityPoolName(t *testing.T) {
 		"foo bar",
 		"foo_bar",
 		"1foo 2bar 3",
+		"foo-bar_123",
+		"foo-bar",
 	}
 
 	for _, s := range validValues {
@@ -2013,11 +2015,10 @@ func TestValidateCognitoIdentityPoolName(t *testing.T) {
 	}
 
 	invalidValues := []string{
-		"1-2-3",
-		"foo!",
-		"foo-bar",
-		"foo-bar",
-		"foo1-bar2",
+		"foo*",
+		"foo:bar",
+		"foo&bar",
+		"foo1^bar2",
 	}
 
 	for _, s := range invalidValues {
