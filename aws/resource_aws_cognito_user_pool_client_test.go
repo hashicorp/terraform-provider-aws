@@ -233,7 +233,11 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSCognitoIdentityProvider(t)
+			testAccPreCheckAWSPinpointApp(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -469,8 +473,9 @@ resource "aws_cognito_user_pool_client" "test" {
 
 func testAccAWSCognitoUserPoolClientConfigAnalyticsConfigBase(userPoolName, clientName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {
-}
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
 
 resource "aws_cognito_user_pool" "test" {
   name = "%[1]s"
@@ -490,7 +495,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "cognito-idp.amazonaws.com"
+        "Service": "cognito-idp.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -514,7 +519,7 @@ resource "aws_iam_role_policy" "test" {
         "mobiletargeting:PutItems"
       ],
       "Effect": "Allow",
-      "Resource": "arn:aws:mobiletargeting:*:${data.aws_caller_identity.current.account_id}:apps/${aws_pinpoint_app.test.application_id}*"
+      "Resource": "arn:${data.aws_partition.current.partition}:mobiletargeting:*:${data.aws_caller_identity.current.account_id}:apps/${aws_pinpoint_app.test.application_id}*"
     }
   ]
 }
