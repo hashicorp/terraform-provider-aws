@@ -463,7 +463,6 @@ func TestAccAWSGlueTrigger_disappears(t *testing.T) {
 	})
 }
 
-
 func testAccCheckAWSGlueTriggerExists(resourceName string, trigger *glue.Trigger) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
