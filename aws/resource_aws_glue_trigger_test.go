@@ -527,28 +527,24 @@ func testAccCheckAWSGlueTriggerDestroy(s *terraform.State) error {
 }
 
 func testAccAWSGlueTriggerConfig_Description(rName, description string) string {
-	return fmt.Sprintf(`
-%s
-
+	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
-  description = "%s"
-  name        = "%s"
+  description = %[1]q
+  name        = %[2]q
   type        = "ON_DEMAND"
 
   actions {
     job_name = aws_glue_job.test.name
   }
 }
-`, testAccAWSGlueJobConfig_Required(rName), description, rName)
+`, description, rName))
 }
 
 func testAccAWSGlueTriggerConfig_Enabled(rName string, enabled bool) string {
-	return fmt.Sprintf(`
-%s
-
+	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
-  enabled  = %t
-  name     = "%s"
+  enabled  = %[1]t
+  name     = %[2]q
   schedule = "cron(15 12 * * ? *)"
   type     = "SCHEDULED"
 
@@ -556,30 +552,26 @@ resource "aws_glue_trigger" "test" {
     job_name = aws_glue_job.test.name
   }
 }
-`, testAccAWSGlueJobConfig_Required(rName), enabled, rName)
+`, enabled, rName))
 }
 
 func testAccAWSGlueTriggerConfig_OnDemand(rName string) string {
-	return fmt.Sprintf(`
-%s
-
+	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
-  name = "%s"
+  name = %[1]q
   type = "ON_DEMAND"
 
   actions {
     job_name = aws_glue_job.test.name
   }
 }
-`, testAccAWSGlueJobConfig_Required(rName), rName)
+`, rName))
 }
 
 func testAccAWSGlueTriggerConfig_Predicate(rName, state string) string {
-	return fmt.Sprintf(`
-%s
-
+	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_job" "test2" {
-  name     = "%s2"
+  name     = "%[1]s2"
   role_arn = aws_iam_role.test.arn
 
   command {
@@ -590,7 +582,7 @@ resource "aws_glue_job" "test2" {
 }
 
 resource "aws_glue_trigger" "test" {
-  name = "%s"
+  name = %[1]q
   type = "CONDITIONAL"
 
   actions {
@@ -600,22 +592,20 @@ resource "aws_glue_trigger" "test" {
   predicate {
     conditions {
       job_name = aws_glue_job.test.name
-      state    = "%s"
+      state    = %[2]q
     }
   }
 }
-`, testAccAWSGlueJobConfig_Required(rName), rName, rName, state)
+`, rName, state))
 }
 
 func testAccAWSGlueTriggerConfig_Crawler(rName, state string) string {
-	return fmt.Sprintf(`
-%s
-
+	return composeConfig(testAccGlueCrawlerConfig_S3Target(rName, "s3://test_bucket"), fmt.Sprintf(`
 resource "aws_glue_crawler" "test2" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
   database_name = aws_glue_catalog_database.test.name
-  name          = "%scrawl2"
+  name          = "%[1]scrawl2"
   role          = aws_iam_role.test.name
 
   s3_target {
@@ -624,7 +614,7 @@ resource "aws_glue_crawler" "test2" {
 }
 
 resource "aws_glue_trigger" "test_trigger" {
-  name = "%strigger"
+  name = %[1]q
   type = "CONDITIONAL"
 
   actions {
@@ -634,31 +624,29 @@ resource "aws_glue_trigger" "test_trigger" {
   predicate {
     conditions {
       crawler_name = aws_glue_crawler.test2.name
-      crawl_state  = "%s"
+      crawl_state  = %[2]q
     }
   }
 }
-`, testAccGlueCrawlerConfig_S3Target(rName, "s3://test_bucket"), rName, rName, state)
+`, rName, state))
 }
 
 func testAccAWSGlueTriggerConfig_Schedule(rName, schedule string) string {
-	return fmt.Sprintf(`
-%s
-
+	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
-  name     = "%s"
-  schedule = "%s"
+  name     = %[1]q
+  schedule = %[2]q
   type     = "SCHEDULED"
 
   actions {
     job_name = aws_glue_job.test.name
   }
 }
-`, testAccAWSGlueJobConfig_Required(rName), rName, schedule)
+`, rName, schedule))
 }
 
 func testAccAWSGlueTriggerConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return testAccAWSGlueJobConfig_Required(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
   name = %[1]q
   type = "ON_DEMAND"
@@ -671,11 +659,11 @@ resource "aws_glue_trigger" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccAWSGlueTriggerConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAWSGlueJobConfig_Required(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
   name = %[1]q
   type = "ON_DEMAND"
@@ -689,19 +677,17 @@ resource "aws_glue_trigger" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccAWSGlueTriggerConfig_WorkflowName(rName string) string {
-	return fmt.Sprintf(`
-%s
-
+	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_workflow" test {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_glue_trigger" "test" {
-  name          = "%s"
+  name          = %[1]q
   type          = "ON_DEMAND"
   workflow_name = aws_glue_workflow.test.name
 
@@ -709,34 +695,30 @@ resource "aws_glue_trigger" "test" {
     job_name = aws_glue_job.test.name
   }
 }
-`, testAccAWSGlueJobConfig_Required(rName), rName, rName)
+`, rName))
 }
 
 func testAccAWSGlueTriggerConfigActionsNotification(rName string, delay int) string {
-	return fmt.Sprintf(`
-%s
-
+	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_trigger" "test" {
-  name = "%s"
+  name = %[1]q
   type = "ON_DEMAND"
 
   actions {
 	job_name = aws_glue_job.test.name
 
 	notification_property {
-	  notify_delay_after = %[3]d
+	  notify_delay_after = %[2]d
 	}
   }
 }
-`, testAccAWSGlueJobConfig_Required(rName), rName, delay)
+`, rName, delay))
 }
 
 func testAccAWSGlueTriggerConfigActionsSecurityConfiguration(rName string) string {
-	return fmt.Sprintf(`
-%s
-
+	return composeConfig(testAccAWSGlueJobConfig_Required(rName), fmt.Sprintf(`
 resource "aws_glue_security_configuration" "test" {
-  name = %q
+  name = %[1]q
   
   encryption_configuration {
     cloudwatch_encryption {
@@ -754,7 +736,7 @@ resource "aws_glue_security_configuration" "test" {
 }
 
 resource "aws_glue_trigger" "test" {
-  name = %[2]q
+  name = %[1]q
   type = "ON_DEMAND"
 
   actions {
@@ -762,5 +744,5 @@ resource "aws_glue_trigger" "test" {
 	security_configuration = aws_glue_security_configuration.test.name
   }
 }
-`, testAccAWSGlueJobConfig_Required(rName), rName)
+`, rName))
 }
