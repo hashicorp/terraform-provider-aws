@@ -71,6 +71,7 @@ func TestAccAWSGlueTrigger_basic(t *testing.T) {
 					testAccCheckAWSGlueTriggerExists(resourceName, &trigger),
 					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", "0"),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("trigger/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -360,6 +361,56 @@ func TestAccAWSGlueTrigger_WorkflowName(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueTrigger_actions_notify(t *testing.T) {
+	var trigger glue.Trigger
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_trigger.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueTriggerConfigActionsNotification(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueTriggerExists(resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.0.notify_delay_after", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSGlueTriggerConfigActionsNotification(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueTriggerExists(resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.0.notify_delay_after", "2"),
+				),
+			},
+			{
+				Config: testAccAWSGlueTriggerConfigActionsNotification(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueTriggerExists(resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.0.notify_delay_after", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSGlueTriggerExists(resourceName string, trigger *glue.Trigger) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -607,4 +658,23 @@ resource "aws_glue_trigger" "test" {
   }
 }
 `, testAccAWSGlueJobConfig_Required(rName), rName, rName)
+}
+
+func testAccAWSGlueTriggerConfigActionsNotification(rName string, delay int) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_glue_trigger" "test" {
+  name = "%s"
+  type = "ON_DEMAND"
+
+  actions {
+	job_name = aws_glue_job.test.name
+
+	notification_property {
+	  notify_delay_after = %[3]d
+	}
+  }
+}
+`, testAccAWSGlueJobConfig_Required(rName), rName, delay)
 }
