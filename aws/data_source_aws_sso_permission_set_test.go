@@ -22,7 +22,7 @@ func TestAccDataSourceAwsSsoPermissionSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "managed_policy_arns.#", "1"),
 					tfawsresource.TestCheckTypeSetElemAttr(datasourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/ReadOnlyAccess"),
-					resource.TestCheckResourceAttr(datasourceName, "name", fmt.Sprintf("%s", rName)),
+					resource.TestCheckResourceAttr(datasourceName, "name", rName),
 					resource.TestCheckResourceAttr(datasourceName, "description", "testing"),
 					resource.TestCheckResourceAttr(datasourceName, "session_duration", "PT1H"),
 					resource.TestCheckResourceAttr(datasourceName, "relay_state", "https://console.aws.amazon.com/console/home"),
