@@ -2,6 +2,7 @@
 
 FEATURES
 
+* **New Data Source:** `aws_rds_certificate` [GH-15789]
 * **New Resource:** `aws_autoscalingplans_scaling_plan` [GH-8965]
 * **New Resource:** `aws_cloudwatch_event_bus` [GH-10256]
 * **New Resource:** `aws_kinesisanalyticsv2_application` [GH-11652]
