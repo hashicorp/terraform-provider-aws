@@ -510,6 +510,12 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"host_resource_group_arn": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"placement.0.host_id"},
+							ValidateFunc:  validateArn,
+						},
 						"spread_domain": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -1183,13 +1189,14 @@ func getPlacement(p *ec2.LaunchTemplatePlacement) []interface{} {
 	var s []interface{}
 	if p != nil {
 		s = append(s, map[string]interface{}{
-			"affinity":          aws.StringValue(p.Affinity),
-			"availability_zone": aws.StringValue(p.AvailabilityZone),
-			"group_name":        aws.StringValue(p.GroupName),
-			"host_id":           aws.StringValue(p.HostId),
-			"spread_domain":     aws.StringValue(p.SpreadDomain),
-			"tenancy":           aws.StringValue(p.Tenancy),
-			"partition_number":  aws.Int64Value(p.PartitionNumber),
+			"affinity":                aws.StringValue(p.Affinity),
+			"availability_zone":       aws.StringValue(p.AvailabilityZone),
+			"group_name":              aws.StringValue(p.GroupName),
+			"host_id":                 aws.StringValue(p.HostId),
+			"host_resource_group_arn": aws.StringValue(p.HostResourceGroupArn),
+			"spread_domain":           aws.StringValue(p.SpreadDomain),
+			"tenancy":                 aws.StringValue(p.Tenancy),
+			"partition_number":        aws.Int64Value(p.PartitionNumber),
 		})
 	}
 	return s
@@ -1757,6 +1764,10 @@ func readPlacementFromConfig(p map[string]interface{}) *ec2.LaunchTemplatePlacem
 
 	if v, ok := p["host_id"].(string); ok && v != "" {
 		placement.HostId = aws.String(v)
+	}
+
+	if v, ok := p["host_resource_group_arn"].(string); ok && v != "" {
+		placement.HostResourceGroupArn = aws.String(v)
 	}
 
 	if v, ok := p["spread_domain"].(string); ok && v != "" {
