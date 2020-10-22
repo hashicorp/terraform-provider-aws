@@ -136,7 +136,7 @@ func resourceAwsApiGatewayUsagePlanCreate(d *schema.ResourceData, meta interface
 		q, ok := settings[0].(map[string]interface{})
 
 		if err := validateApiGatewayUsagePlanQuotaSettings(q); len(err) > 0 {
-			return fmt.Errorf("error validating the quota settings: %v", err)
+			return fmt.Errorf("error validating the quota settings: %w", err)
 		}
 
 		if !ok {
@@ -283,7 +283,7 @@ func resourceAwsApiGatewayUsagePlanUpdate(d *schema.ResourceData, meta interface
 		os := o.(*schema.Set).List()
 		ns := n.(*schema.Set).List()
 
-		// Remove every stages associated. Simpler to remove and add ns ones,
+		// Remove every stages associated. Simpler to remove and add new ones,
 		// since there are no replacings.
 		for _, v := range os {
 			m := v.(map[string]interface{})
