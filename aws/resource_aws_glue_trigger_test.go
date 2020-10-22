@@ -705,11 +705,11 @@ resource "aws_glue_trigger" "test" {
   type = "ON_DEMAND"
 
   actions {
-	job_name = aws_glue_job.test.name
+    job_name = aws_glue_job.test.name
 
-	notification_property {
-	  notify_delay_after = %[2]d
-	}
+    notification_property {
+      notify_delay_after = %[2]d
+    }
   }
 }
 `, rName, delay))
@@ -723,7 +723,7 @@ resource "aws_glue_security_configuration" "test" {
   encryption_configuration {
     cloudwatch_encryption {
       cloudwatch_encryption_mode = "DISABLED"
-	}
+    }
   
     job_bookmarks_encryption {
       job_bookmarks_encryption_mode = "DISABLED"
