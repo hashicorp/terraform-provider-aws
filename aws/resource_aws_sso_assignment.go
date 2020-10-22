@@ -89,11 +89,6 @@ func resourceAwsSsoAssignment() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$`), "must match ([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}"),
 				),
 			},
-
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -147,22 +142,12 @@ func resourceAwsSsoAssignmentCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	status := resp.AccountAssignmentCreationStatus
-
-	if status.CreatedDate != nil {
-		d.Set("created_date", status.CreatedDate.Format(time.RFC3339))
-	}
-
 	waitResp, waitErr := waitForAssignmentCreation(conn, instanceArn, aws.StringValue(status.RequestId), d.Timeout(schema.TimeoutCreate))
 	if waitErr != nil {
 		return waitErr
 	}
 
 	d.SetId(id)
-
-	if waitResp.CreatedDate != nil {
-		d.Set("created_date", waitResp.CreatedDate.Format(time.RFC3339))
-	}
-
 	return resourceAwsSsoAssignmentRead(d, meta)
 }
 
