@@ -134,8 +134,10 @@ resource "aws_securityhub_account" "example" {}
 
 data "aws_region" "current" {}
 
+data "aws_partition" "current" {}
+
 resource "aws_securityhub_product_subscription" "example" {
   depends_on  = [aws_securityhub_account.example]
-  product_arn = "arn:aws:securityhub:${data.aws_region.current.name}::product/aws/guardduty"
+  product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.name}::product/aws/guardduty"
 }
 `

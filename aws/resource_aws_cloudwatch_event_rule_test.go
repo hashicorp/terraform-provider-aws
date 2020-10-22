@@ -8,11 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/lister"
 )
 
 func init() {
@@ -32,43 +34,46 @@ func testSweepCloudWatchEventRules(region string) error {
 	}
 	conn := client.(*AWSClient).cloudwatcheventsconn
 
-	input := &events.ListRulesInput{}
+	var sweeperErrs *multierror.Error
+	var count int
 
-	for {
-		output, err := conn.ListRules(input)
-		if err != nil {
-			if testSweepSkipSweepError(err) {
-				log.Printf("[WARN] Skipping CloudWatch Events Rule sweep for %s: %s", region, err)
-				return nil
-			}
-			return fmt.Errorf("Error retrieving CloudWatch Events Rules: %w", err)
+	rulesInput := &events.ListRulesInput{}
+
+	err = lister.ListRulesPages(conn, rulesInput, func(rulesPage *events.ListRulesOutput, lastRulesPage bool) bool {
+		if rulesPage == nil {
+			return !lastRulesPage
 		}
 
-		if len(output.Rules) == 0 {
-			log.Print("[DEBUG] No CloudWatch Events Rules to sweep")
-			return nil
-		}
-
-		for _, rule := range output.Rules {
+		for _, rule := range rulesPage.Rules {
+			count++
 			name := aws.StringValue(rule.Name)
 
-			log.Printf("[INFO] Deleting CloudWatch Events Rule (%s)", name)
+			log.Printf("[INFO] Deleting CloudWatch Events rule (%s)", name)
 			_, err := conn.DeleteRule(&events.DeleteRuleInput{
 				Name:  aws.String(name),
-				Force: aws.Bool(true),
+				Force: aws.Bool(true), // Required for AWS-managed rules, ignored otherwise
 			})
 			if err != nil {
-				return fmt.Errorf("Error deleting CloudWatch Events Rule (%s): %w", name, err)
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting CloudWatch Events rule (%s): %w", name, err))
+				continue
 			}
 		}
 
-		if output.NextToken == nil {
-			break
-		}
-		input.NextToken = output.NextToken
+		return !lastRulesPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudWatch Events rule sweeper for %q: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
-	return nil
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing CloudWatch Events rules: %w", err))
+	}
+
+	log.Printf("[INFO] Deleted %d CloudWatch Events rules", count)
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
@@ -102,6 +107,12 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCloudWatchEventRuleNoBusNameImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
@@ -534,6 +545,17 @@ func testAccCheckCloudWatchEventRuleNotRecreated(i, j *events.DescribeRuleOutput
 			return fmt.Errorf("CloudWatch Events rule recreated, but expected it to not be")
 		}
 		return nil
+	}
+}
+
+func testAccAWSCloudWatchEventRuleNoBusNameImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes["name"], nil
 	}
 }
 

@@ -2488,3 +2488,37 @@ func validateNestedExactlyOneOf(m map[string]interface{}, valid []string) error 
 	}
 	return nil
 }
+
+func MapMaxItems(max int) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) (warnings []string, errors []error) {
+		m, ok := i.(map[string]interface{})
+		if !ok {
+			errors = append(errors, fmt.Errorf("expected type of %s to be map", k))
+			return warnings, errors
+		}
+
+		if len(m) > max {
+			errors = append(errors, fmt.Errorf("expected number of items in %s to be lesser than or equal to %d, got %d", k, max, len(m)))
+		}
+
+		return warnings, errors
+	}
+}
+
+func MapKeysDoNotMatch(r *regexp.Regexp, message string) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) (warnings []string, errors []error) {
+		m, ok := i.(map[string]interface{})
+		if !ok {
+			errors = append(errors, fmt.Errorf("expected type of %s to be map", k))
+			return warnings, errors
+		}
+
+		for key := range m {
+			if ok := r.MatchString(key); ok {
+				errors = append(errors, fmt.Errorf("%s: %s: %s", k, message, key))
+			}
+		}
+
+		return warnings, errors
+	}
+}

@@ -1122,6 +1122,18 @@ func expandPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddressSpecific
 	return dtos
 }
 
+func expandIP6Addresses(ips []interface{}) []*ec2.InstanceIpv6Address {
+	dtos := make([]*ec2.InstanceIpv6Address, 0, len(ips))
+	for _, v := range ips {
+		ipv6Address := &ec2.InstanceIpv6Address{
+			Ipv6Address: aws.String(v.(string)),
+		}
+
+		dtos = append(dtos, ipv6Address)
+	}
+	return dtos
+}
+
 //Flattens network interface attachment into a map[string]interface
 func flattenAttachment(a *ec2.NetworkInterfaceAttachment) map[string]interface{} {
 	att := make(map[string]interface{})

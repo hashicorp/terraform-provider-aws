@@ -145,7 +145,7 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.IntBetween(0, 35),
+				ValidateFunc: validation.IntBetween(0, 90),
 			},
 			"daily_automatic_backup_start_time": {
 				Type:     schema.TypeString,
@@ -174,6 +174,12 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(fsx.AutoImportPolicyType_Values(), false),
+			},
+			"copy_tags_to_backups": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  false,
 			},
 		},
 	}
@@ -240,6 +246,10 @@ func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface
 
 	if v, ok := d.GetOk("auto_import_policy"); ok {
 		input.LustreConfiguration.AutoImportPolicy = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("copy_tags_to_backups"); ok {
+		input.LustreConfiguration.CopyTagsToBackups = aws.Bool(v.(bool))
 	}
 
 	result, err := conn.CreateFileSystem(input)
@@ -388,6 +398,7 @@ func resourceAwsFsxLustreFileSystemRead(d *schema.ResourceData, meta interface{}
 	d.Set("weekly_maintenance_start_time", lustreConfig.WeeklyMaintenanceStartTime)
 	d.Set("automatic_backup_retention_days", lustreConfig.AutomaticBackupRetentionDays)
 	d.Set("daily_automatic_backup_start_time", lustreConfig.DailyAutomaticBackupStartTime)
+	d.Set("copy_tags_to_backups", filesystem.LustreConfiguration.CopyTagsToBackups)
 
 	return nil
 }
