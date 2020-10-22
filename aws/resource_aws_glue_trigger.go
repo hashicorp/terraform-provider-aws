@@ -8,10 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/waiter"
 )
 
 func resourceAwsGlueTrigger() *schema.Resource {
@@ -205,21 +205,11 @@ func resourceAwsGlueTriggerCreate(d *schema.ResourceData, meta interface{}) erro
 	d.SetId(name)
 
 	log.Printf("[DEBUG] Waiting for Glue Trigger (%s) to create", d.Id())
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			glue.TriggerStateActivating,
-			glue.TriggerStateCreating,
-		},
-		Target: []string{
-			glue.TriggerStateActivated,
-			glue.TriggerStateCreated,
-		},
-		Refresh: resourceAwsGlueTriggerRefreshFunc(conn, d.Id()),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-	}
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("error waiting for Glue Trigger (%s) to create", d.Id())
+	if _, err := waiter.TriggerCreated(conn, d.Id()); err != nil {
+		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+			return nil
+		}
+		return fmt.Errorf("error waiting for Glue Trigger (%s) to be Created: %w", d.Id(), err)
 	}
 
 	return resourceAwsGlueTriggerRead(d, meta)
@@ -374,38 +364,14 @@ func resourceAwsGlueTriggerDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Waiting for Glue Trigger (%s) to delete", d.Id())
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{glue.TriggerStateDeleting},
-		Target:  []string{""},
-		Refresh: resourceAwsGlueTriggerRefreshFunc(conn, d.Id()),
-		Timeout: d.Timeout(schema.TimeoutDelete),
-	}
-	_, err = stateConf.WaitForState()
-	if err != nil {
+	if _, err := waiter.TriggerDeleted(conn, d.Id()); err != nil {
 		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
-		return fmt.Errorf("error waiting for Glue Trigger (%s) to delete", d.Id())
+		return fmt.Errorf("error waiting for Glue Trigger (%s) to be Deleted: %w", d.Id(), err)
 	}
 
 	return nil
-}
-
-func resourceAwsGlueTriggerRefreshFunc(conn *glue.Glue, name string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := conn.GetTrigger(&glue.GetTriggerInput{
-			Name: aws.String(name),
-		})
-		if err != nil {
-			return output, "", err
-		}
-
-		if output.Trigger == nil {
-			return output, "", nil
-		}
-
-		return output, aws.StringValue(output.Trigger.State), nil
-	}
 }
 
 func deleteGlueTrigger(conn *glue.Glue, Name string) error {
