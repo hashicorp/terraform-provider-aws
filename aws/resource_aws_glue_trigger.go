@@ -132,13 +132,10 @@ func resourceAwsGlueTrigger() *schema.Resource {
 							},
 						},
 						"logical": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  glue.LogicalAnd,
-							ValidateFunc: validation.StringInSlice([]string{
-								glue.LogicalAnd,
-								glue.LogicalAny,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      glue.LogicalAnd,
+							ValidateFunc: validation.StringInSlice(glue.Logical_Values(), false),
 						},
 					},
 				},
