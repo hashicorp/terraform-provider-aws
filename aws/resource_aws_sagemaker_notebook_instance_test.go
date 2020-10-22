@@ -87,7 +87,7 @@ func TestAccAWSSagemakerNotebookInstance_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "ml.t3.medium"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "ml.t2.medium"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "root_access", "Enabled"),
@@ -120,7 +120,7 @@ func TestAccAWSSagemakerNotebookInstance_update(t *testing.T) {
 				Config: testAccAWSSagemakerNotebookInstanceBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "ml.t3.medium"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "ml.t2.medium"),
 				),
 			},
 
@@ -519,7 +519,7 @@ func testAccAWSSagemakerNotebookInstanceBasicConfig(rName string) string {
 resource "aws_sagemaker_notebook_instance" "test" {
   name          = %[1]q
   role_arn      = aws_iam_role.test.arn
-  instance_type = "ml.t3.medium"
+  instance_type = "ml.t2.medium"
 }
 `, rName)
 }
@@ -541,7 +541,7 @@ resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "test" {
 }
 
 resource "aws_sagemaker_notebook_instance" "test" {
-  instance_type         = "ml.t3.medium"
+  instance_type         = "ml.t2.medium"
   lifecycle_config_name = aws_sagemaker_notebook_instance_lifecycle_configuration.test.name
   name                  = %[1]q
   role_arn              = aws_iam_role.test.arn
@@ -554,7 +554,7 @@ func testAccAWSSagemakerNotebookInstanceConfigTags1(rName, tagKey1, tagValue1 st
 resource "aws_sagemaker_notebook_instance" "test" {
   name          = %[1]q
   role_arn      = aws_iam_role.test.arn
-  instance_type = "ml.t3.medium"
+  instance_type = "ml.t2.medium"
 
   tags = {
     %[2]q = %[3]q
@@ -568,7 +568,7 @@ func testAccAWSSagemakerNotebookInstanceConfigTags2(rName, tagKey1, tagValue1, t
 resource "aws_sagemaker_notebook_instance" "test" {
   name          = %[1]q
   role_arn      = aws_iam_role.test.arn
-  instance_type = "ml.t3.medium"
+  instance_type = "ml.t2.medium"
 
   tags = {
     %[2]q = %[3]q
@@ -583,7 +583,7 @@ func testAccAWSSagemakerNotebookInstanceConfigRootAccess(rName string, rootAcces
 resource "aws_sagemaker_notebook_instance" "test" {
   name          = %[1]q
   role_arn      = aws_iam_role.test.arn
-  instance_type = "ml.t3.medium"
+  instance_type = "ml.t2.medium"
   root_access   = %[2]q
 }
 `, rName, rootAccess)
@@ -595,7 +595,7 @@ func testAccAWSSagemakerNotebookInstanceConfigDirectInternetAccess(rName string,
 resource "aws_sagemaker_notebook_instance" "test" {
   name                   = %[1]q
   role_arn               = aws_iam_role.test.arn
-  instance_type          = "ml.t3.medium"
+  instance_type          = "ml.t2.medium"
   security_groups        = [aws_security_group.test.id]
   subnet_id              = aws_subnet.test.id
   direct_internet_access = %[2]q
@@ -633,7 +633,7 @@ func testAccAWSSagemakerNotebookInstanceConfigVolume(rName string) string {
 resource "aws_sagemaker_notebook_instance" "test" {
   name          = %[1]q
   role_arn      = aws_iam_role.test.arn
-  instance_type = "ml.t3.medium"
+  instance_type = "ml.t2.medium"
   volume_size   = 8
 }
   `, rName)
@@ -644,7 +644,7 @@ func testAccAWSSagemakerNotebookInstanceConfigDefaultCodeRepository(rName string
 resource "aws_sagemaker_notebook_instance" "test" {
   name                    = %[1]q
   role_arn                = aws_iam_role.test.arn
-  instance_type           = "ml.t3.medium"
+  instance_type           = "ml.t2.medium"
   default_code_repository = %[2]q
 }
 `, rName, defaultCodeRepository)
@@ -677,7 +677,7 @@ POLICY
 resource "aws_sagemaker_notebook_instance" "test" {
   name          = %[1]q
   role_arn      = aws_iam_role.test.arn
-  instance_type = "ml.t3.medium"
+  instance_type = "ml.t2.medium"
   kms_key_id    = aws_kms_key.test.id
 }
 `, rName)
