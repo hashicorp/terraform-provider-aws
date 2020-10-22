@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -186,16 +185,18 @@ func resourceAwsSsoAssignmentRead(d *schema.ResourceData, meta interface{}) erro
 		principalType,
 		principalID,
 	)
-	if err != nil {
-		return err
-	}
-	if accountAssignment == nil {
-		log.Printf("[DEBUG] Account assignment not found for %s", map[string]string{
+
+	if isAWSErr(err, ssoadmin.ErrCodeResourceNotFoundException, "") || accountAssignment == nil {
+		log.Printf("[WARN] AWS SSO Account Assignment (%s) not found, removing from state", map[string]string{
 			"PrincipalType": principalType,
 			"PrincipalId":   principalID,
 		})
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return err
 	}
 
 	id, idErr := resourceAwsSsoAssignmentID(instanceArn, permissionSetArn, targetType, targetID, principalType, principalID)
@@ -228,8 +229,7 @@ func resourceAwsSsoAssignmentDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[INFO] Deleting AWS SSO Assignment")
 	resp, err := conn.DeleteAccountAssignment(req)
 	if err != nil {
-		aerr, ok := err.(awserr.Error)
-		if ok && aerr.Code() == ssoadmin.ErrCodeResourceNotFoundException {
+		if isAWSErr(err, ssoadmin.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[DEBUG] AWS SSO Assignment not found")
 			d.SetId("")
 			return nil

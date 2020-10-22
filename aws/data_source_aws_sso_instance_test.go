@@ -14,12 +14,23 @@ import (
 func testAccPreCheckAWSSSOInstance(t *testing.T) {
 	ssoadminconn := testAccProvider.Meta().(*AWSClient).ssoadminconn
 
-	input := &ssoadmin.ListInstancesInput{}
-
-	_, err := ssoadminconn.ListInstances(input)
-
+	instances := []*ssoadmin.InstanceMetadata{}
+	err := ssoadminconn.ListInstancesPages(&ssoadmin.ListInstancesInput{}, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
+		if page != nil && len(page.Instances) != 0 {
+			instances = append(instances, page.Instances...)
+		}
+		return !lastPage
+	})
 	if testAccPreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if len(instances) == 0 {
+		t.Skip("skipping acceptance testing: No AWS SSO Instance found.")
+	}
+
+	if len(instances) > 1 {
+		t.Skip("skipping acceptance testing: Found multiple AWS SSO Instances. Not sure which one to use.")
 	}
 
 	if err != nil {
@@ -27,7 +38,7 @@ func testAccPreCheckAWSSSOInstance(t *testing.T) {
 	}
 }
 
-func TestAccDataSourceAwsSsoInstanceBasic(t *testing.T) {
+func TestAccDataSourceAwsSsoInstance_basic(t *testing.T) {
 	datasourceName := "data.aws_sso_instance.selected"
 
 	resource.ParallelTest(t, resource.TestCase{
