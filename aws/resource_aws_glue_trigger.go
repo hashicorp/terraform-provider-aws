@@ -199,7 +199,7 @@ func resourceAwsGlueTriggerCreate(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Creating Glue Trigger: %s", input)
 	_, err := conn.CreateTrigger(input)
 	if err != nil {
-		return fmt.Errorf("error creating Glue Trigger (%s): %s", name, err)
+		return fmt.Errorf("error creating Glue Trigger (%s): %w", name, err)
 	}
 
 	d.SetId(name)
@@ -231,7 +231,7 @@ func resourceAwsGlueTriggerRead(d *schema.ResourceData, meta interface{}) error 
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading Glue Trigger (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading Glue Trigger (%s): %w", d.Id(), err)
 	}
 
 	trigger := output.Trigger
@@ -242,7 +242,7 @@ func resourceAwsGlueTriggerRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err := d.Set("actions", flattenGlueActions(trigger.Actions)); err != nil {
-		return fmt.Errorf("error setting actions: %s", err)
+		return fmt.Errorf("error setting actions: %w", err)
 	}
 
 	triggerARN := arn.ARN{
@@ -267,7 +267,7 @@ func resourceAwsGlueTriggerRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("enabled", enabled)
 
 	if err := d.Set("predicate", flattenGluePredicate(trigger.Predicate)); err != nil {
-		return fmt.Errorf("error setting predicate: %s", err)
+		return fmt.Errorf("error setting predicate: %w", err)
 	}
 
 	d.Set("name", trigger.Name)
@@ -276,11 +276,11 @@ func resourceAwsGlueTriggerRead(d *schema.ResourceData, meta interface{}) error 
 	tags, err := keyvaluetags.GlueListTags(conn, triggerARN)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Glue Trigger (%s): %s", triggerARN, err)
+		return fmt.Errorf("error listing tags for Glue Trigger (%s): %w", triggerARN, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	d.Set("type", trigger.Type)
@@ -316,7 +316,7 @@ func resourceAwsGlueTriggerUpdate(d *schema.ResourceData, meta interface{}) erro
 		log.Printf("[DEBUG] Updating Glue Trigger: %s", input)
 		_, err := conn.UpdateTrigger(input)
 		if err != nil {
-			return fmt.Errorf("error updating Glue Trigger (%s): %s", d.Id(), err)
+			return fmt.Errorf("error updating Glue Trigger (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -329,7 +329,7 @@ func resourceAwsGlueTriggerUpdate(d *schema.ResourceData, meta interface{}) erro
 			log.Printf("[DEBUG] Starting Glue Trigger: %s", input)
 			_, err := conn.StartTrigger(input)
 			if err != nil {
-				return fmt.Errorf("error starting Glue Trigger (%s): %s", d.Id(), err)
+				return fmt.Errorf("error starting Glue Trigger (%s): %w", d.Id(), err)
 			}
 		} else {
 			input := &glue.StopTriggerInput{
@@ -339,7 +339,7 @@ func resourceAwsGlueTriggerUpdate(d *schema.ResourceData, meta interface{}) erro
 			log.Printf("[DEBUG] Stopping Glue Trigger: %s", input)
 			_, err := conn.StopTrigger(input)
 			if err != nil {
-				return fmt.Errorf("error stopping Glue Trigger (%s): %s", d.Id(), err)
+				return fmt.Errorf("error stopping Glue Trigger (%s): %w", d.Id(), err)
 			}
 		}
 	}
@@ -347,7 +347,7 @@ func resourceAwsGlueTriggerUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.GlueUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
 
@@ -360,7 +360,7 @@ func resourceAwsGlueTriggerDelete(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Deleting Glue Trigger: %s", d.Id())
 	err := deleteGlueTrigger(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error deleting Glue Trigger (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Glue Trigger (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Waiting for Glue Trigger (%s) to delete", d.Id())
