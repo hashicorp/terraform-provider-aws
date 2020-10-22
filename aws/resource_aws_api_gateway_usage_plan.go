@@ -135,8 +135,8 @@ func resourceAwsApiGatewayUsagePlanCreate(d *schema.ResourceData, meta interface
 		settings := v.([]interface{})
 		q, ok := settings[0].(map[string]interface{})
 
-		if err := validateApiGatewayUsagePlanQuotaSettings(q); len(err) > 0 {
-			return fmt.Errorf("error validating the quota settings: %w", err)
+		if errs := validateApiGatewayUsagePlanQuotaSettings(q); len(errs) > 0 {
+			return fmt.Errorf("error validating the quota settings: %v", errs)
 		}
 
 		if !ok {
