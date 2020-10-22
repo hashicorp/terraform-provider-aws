@@ -21,6 +21,7 @@ ENHANCEMENTS
 
 BUGFIXES
 
+* resource/aws_workspaces_workspace: Fix terminated state resolution [GH-15705]
 * resource/aws_glue_table_catalog_table: Prevent errors on `unset` of `ser_de_info.name` [GH-15127]
 * resource/aws_glue_security_configuration: Don't send empty `kms_arn` if mode is `DISABLED` [GH-13618]
 
