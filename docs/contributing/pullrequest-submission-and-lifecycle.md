@@ -34,7 +34,7 @@ expect:
 
 1. One of Terraform's provider team members will look over your contribution and
    either approve it or provide comments letting you know if there is anything
-   left to do. We do our best to keep up with the volume of PRs waiting for
+   left to do. We'll try give you the opportunity to make the required changes yourself, but in some cases we may perform the changes ourselves if it makes sense to (minor changes, or for urgent issues).  We do our best to keep up with the volume of PRs waiting for
    review, but it may take some time depending on the complexity of the work.
 
 1. Once all outstanding comments and checklist items have been addressed, your
