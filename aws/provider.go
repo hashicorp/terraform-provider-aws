@@ -248,6 +248,7 @@ func Provider() *schema.Provider {
 			"aws_dx_location":                                dataSourceAwsDxLocation(),
 			"aws_dx_locations":                               dataSourceAwsDxLocations(),
 			"aws_dynamodb_table":                             dataSourceAwsDynamoDbTable(),
+			"aws_dedicated_host":                             dataSourceAwsDedicatedHost(),
 			"aws_ebs_default_kms_key":                        dataSourceAwsEbsDefaultKmsKey(),
 			"aws_ebs_encryption_by_default":                  dataSourceAwsEbsEncryptionByDefault(),
 			"aws_ebs_snapshot":                               dataSourceAwsEbsSnapshot(),
