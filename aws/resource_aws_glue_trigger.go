@@ -58,7 +58,7 @@ func resourceAwsGlueTrigger() *schema.Resource {
 						},
 						"notification_property": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -90,7 +90,7 @@ func resourceAwsGlueTrigger() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"predicate": {
 				Type:     schema.TypeList,

@@ -57,7 +57,7 @@ func testSweepGlueTriggers(region string) error {
 func TestAccAWSGlueTrigger_basic(t *testing.T) {
 	var trigger glue.Trigger
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -94,7 +94,7 @@ func TestAccAWSGlueTrigger_basic(t *testing.T) {
 func TestAccAWSGlueTrigger_Crawler(t *testing.T) {
 	var trigger glue.Trigger
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test_trigger"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -140,7 +140,7 @@ func TestAccAWSGlueTrigger_Crawler(t *testing.T) {
 func TestAccAWSGlueTrigger_Description(t *testing.T) {
 	var trigger glue.Trigger
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -174,7 +174,7 @@ func TestAccAWSGlueTrigger_Description(t *testing.T) {
 func TestAccAWSGlueTrigger_Enabled(t *testing.T) {
 	var trigger glue.Trigger
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -215,7 +215,7 @@ func TestAccAWSGlueTrigger_Enabled(t *testing.T) {
 func TestAccAWSGlueTrigger_Predicate(t *testing.T) {
 	var trigger glue.Trigger
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -257,7 +257,7 @@ func TestAccAWSGlueTrigger_Predicate(t *testing.T) {
 func TestAccAWSGlueTrigger_Schedule(t *testing.T) {
 	var trigger glue.Trigger
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -291,7 +291,7 @@ func TestAccAWSGlueTrigger_Schedule(t *testing.T) {
 func TestAccAWSGlueTrigger_Tags(t *testing.T) {
 	var trigger1, trigger2, trigger3 glue.Trigger
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -336,7 +336,7 @@ func TestAccAWSGlueTrigger_Tags(t *testing.T) {
 func TestAccAWSGlueTrigger_WorkflowName(t *testing.T) {
 	var trigger glue.Trigger
 
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_trigger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
