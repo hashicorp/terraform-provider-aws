@@ -1,12 +1,10 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"math"
 	"regexp"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
@@ -15,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/lister"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
 )
 
 func resourceAwsCloudWatchEventTarget() *schema.Resource {
@@ -273,7 +271,7 @@ func resourceAwsCloudWatchEventTargetCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Creating CloudWatch Events Target failed: %s", out.FailedEntries)
 	}
 
-	id := prepareAwsCloudWatchEventTargetResourceId(busName, rule, targetID)
+	id := tfevents.TargetCreateID(busName, rule, targetID)
 	d.SetId(id)
 
 	log.Printf("[INFO] CloudWatch Events Target (%s) created", d.Id())
@@ -284,26 +282,14 @@ func resourceAwsCloudWatchEventTargetCreate(d *schema.ResourceData, meta interfa
 func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
-	var busName string
-	if v, ok := d.GetOk("event_bus_name"); ok {
-		busName = v.(string)
-	}
+	busName := d.Get("event_bus_name").(string)
 
-	t, err := findEventTargetById(conn, d.Get("target_id").(string), d.Get("rule").(string), busName)
+	t, err := finder.Target(conn, busName, d.Get("rule").(string), d.Get("target_id").(string))
 	if err != nil {
-		if regexp.MustCompile(" not found$").MatchString(err.Error()) {
-			log.Printf("[WARN] Removing CloudWatch Events Target (%s) because it's gone.", d.Id())
-			d.SetId("")
-			return nil
-		}
-		if tfawserr.ErrCodeEquals(err, "ValidationException") {
-			log.Printf("[WARN] Removing CloudWatch Events Target (%s) because it never existed.", d.Id())
-			d.SetId("")
-			return nil
-		}
-
-		if tfawserr.ErrCodeEquals(err, events.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] CloudWatch Events Target (%s) not found. Removing it from state.", d.Id())
+		if tfawserr.ErrCodeEquals(err, "ValidationException") ||
+			tfawserr.ErrCodeEquals(err, events.ErrCodeResourceNotFoundException) ||
+			regexp.MustCompile(" not found$").MatchString(err.Error()) {
+			log.Printf("[WARN] CloudWatch Events Target (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -357,42 +343,6 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func findEventTargetById(conn *events.CloudWatchEvents, id, rule, busName string) (*events.Target, error) {
-	if len(busName) == 0 {
-		return nil, errors.New("internal error: bus name is required in findEventTargetById()")
-	}
-	input := &events.ListTargetsByRuleInput{
-		Rule:         aws.String(rule),
-		EventBusName: aws.String(busName),
-		Limit:        aws.Int64(100), // Set limit to allowed maximum to prevent API throttling
-	}
-
-	var result *events.Target
-
-	err := lister.ListTargetsByRulePages(conn, input, func(page *events.ListTargetsByRuleOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, t := range page.Targets {
-			if id == aws.StringValue(t.Id) {
-				result = t
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if result == nil {
-		return nil, fmt.Errorf("CloudWatch Event Target %q (%q) not found", id, rule)
-	}
-	return result, nil
-}
-
 func resourceAwsCloudWatchEventTargetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
@@ -410,7 +360,7 @@ func resourceAwsCloudWatchEventTargetUpdate(d *schema.ResourceData, meta interfa
 func resourceAwsCloudWatchEventTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
-	busName := determineCloudWatchEventBusNameFromEventTargetResourceId(d.Id())
+	busName := d.Get("event_bus_name").(string)
 	input := &events.RemoveTargetsInput{
 		Ids:          []*string{aws.String(d.Get("target_id").(string))},
 		Rule:         aws.String(d.Get("rule").(string)),
@@ -418,8 +368,10 @@ func resourceAwsCloudWatchEventTargetDelete(d *schema.ResourceData, meta interfa
 	}
 
 	output, err := conn.RemoveTargets(input)
-
 	if err != nil {
+		if tfawserr.ErrCodeEquals(err, events.ErrCodeResourceNotFoundException) {
+			return nil
+		}
 		return fmt.Errorf("error deleting CloudWatch Events Target (%s): %w", d.Id(), err)
 	}
 
@@ -482,16 +434,13 @@ func buildPutTargetInputStruct(d *schema.ResourceData) *events.PutTargetsInput {
 }
 
 func expandAwsCloudWatchEventTargetRunParameters(config []interface{}) *events.RunCommandParameters {
-
 	commands := make([]*events.RunCommandTarget, 0)
-
 	for _, c := range config {
 		param := c.(map[string]interface{})
 		command := &events.RunCommandTarget{
 			Key:    aws.String(param["key"].(string)),
 			Values: expandStringList(param["values"].([]interface{})),
 		}
-
 		commands = append(commands, command)
 	}
 
@@ -639,6 +588,7 @@ func flattenAwsCloudWatchEventTargetEcsParameters(ecsParameters *events.EcsParam
 	result := []map[string]interface{}{config}
 	return result
 }
+
 func flattenAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(nc *events.NetworkConfiguration) []interface{} {
 	if nc == nil {
 		return nil
@@ -696,44 +646,17 @@ func flattenAwsCloudWatchInputTransformer(inputTransformer *events.InputTransfor
 	return result
 }
 
-func prepareAwsCloudWatchEventTargetResourceId(busName string, ruleName string, targetName string) string {
-	id := ruleName + "-" + targetName
-	if busName != "" && busName != "default" {
-		id = busName + "/" + id
-	}
-
-	return id
-}
-func determineCloudWatchEventBusNameFromEventTargetResourceId(id string) string {
-	idParts := strings.Split(id, "/")
-	if len(idParts) == 2 {
-		return idParts[0]
-	}
-
-	return "default"
-}
-
 func resourceAwsCloudWatchEventTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	idParts := strings.SplitN(d.Id(), "/", 3)
-	if len(idParts) < 2 || len(idParts) > 3 || idParts[0] == "" || idParts[1] == "" || (len(idParts) == 3 && idParts[2] == "") {
-		return nil, fmt.Errorf("unexpected format (%q), expected <rule-name>/<target-id> or <bus-name>/<rule-name>/<target-id>", d.Id())
+	busName, ruleName, targetID, err := tfevents.TargetParseImportID(d.Id())
+	if err != nil {
+		return []*schema.ResourceData{}, err
 	}
-	busName := "default"
-	var ruleName string
-	var targetName string
-	if len(idParts) == 2 {
-		ruleName = idParts[0]
-		targetName = idParts[1]
-	} else {
-		busName = idParts[0]
-		ruleName = idParts[1]
-		targetName = idParts[2]
-	}
-	d.Set("target_id", targetName)
+
+	id := tfevents.TargetCreateID(busName, ruleName, targetID)
+	d.SetId(id)
+	d.Set("target_id", targetID)
 	d.Set("rule", ruleName)
 	d.Set("event_bus_name", busName)
-	id := prepareAwsCloudWatchEventTargetResourceId(busName, ruleName, targetName)
-	d.SetId(id)
 
 	return []*schema.ResourceData{d}, nil
 }

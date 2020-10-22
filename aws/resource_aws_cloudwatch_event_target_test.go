@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/lister"
 )
 
@@ -172,7 +173,6 @@ func TestAccAWSCloudWatchEventTarget_basic(t *testing.T) {
 
 func TestAccAWSCloudWatchEventTarget_EventBusName(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
-	// snsTopicResourceName := "aws_sns_topic.test"
 
 	var v1, v2 events.Target
 	ruleName := acctest.RandomWithPrefix("tf-acc-test-rule")
@@ -565,7 +565,7 @@ func testAccCheckCloudWatchEventTargetExists(n string, rule *events.Target) reso
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
-		t, err := findEventTargetById(conn, rs.Primary.Attributes["target_id"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["event_bus_name"])
+		t, err := finder.Target(conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
 		if err != nil {
 			return fmt.Errorf("Event Target not found: %w", err)
 		}
@@ -584,7 +584,7 @@ func testAccCheckAWSCloudWatchEventTargetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		t, err := findEventTargetById(conn, rs.Primary.Attributes["target_id"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["event_bus_name"])
+		t, err := finder.Target(conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
 		if err == nil {
 			return fmt.Errorf("CloudWatch Events Target %q still exists: %s",
 				rs.Primary.ID, t)
@@ -1320,13 +1320,9 @@ func testAccAWSCloudWatchEventTargetConfigInputTransformer(rName string, inputPa
 	var inputPaths, inputTemplates strings.Builder
 
 	for _, inputPath := range inputPathKeys { // Do the newlines next
-		fmt.Fprintf(&inputPaths, `
-      %[1]s = "$.%[1]s"`, inputPath)
-
-		fmt.Fprintf(&inputTemplates, `
-  "%[1]s": <%[1]s>,`, inputPath)
+		fmt.Fprintf(&inputPaths, "      %[1]s = \"$.%[1]s\"\n", inputPath)
+		fmt.Fprintf(&inputTemplates, "  \"%[1]s\": <%[1]s>,\n", inputPath)
 	}
-
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_target" "test" {
   arn  = aws_lambda_function.lambda.arn
@@ -1340,7 +1336,8 @@ resource "aws_cloudwatch_event_target" "test" {
     input_template = <<EOF
 {
   "detail-type": "Scheduled Event",
-  "source": "aws.events",%s
+  "source": "aws.events",
+  %s
   "detail": {}
 }
 EOF
@@ -1384,5 +1381,5 @@ resource "aws_cloudwatch_event_rule" "schedule" {
 
   schedule_expression = "rate(5 minutes)"
 }
-`, inputPaths.String(), inputTemplates.String(), rName)
+`, inputPaths.String(), strings.TrimSpace(inputTemplates.String()), rName)
 }
