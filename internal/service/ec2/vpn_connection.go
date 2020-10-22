@@ -37,8 +37,9 @@ func ResourceVPNConnection() *schema.Resource {
 				Computed: true,
 			},
 			"customer_gateway_configuration": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Sensitive: true,
+				Computed:  true,
 			},
 			"customer_gateway_id": {
 				Type:     schema.TypeString,
