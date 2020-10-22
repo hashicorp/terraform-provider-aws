@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -485,30 +486,60 @@ func TestAccAWSCloudWatchEventTarget_input_transformer(t *testing.T) {
 	var v events.Target
 	rName := acctest.RandomWithPrefix("tf_input_transformer")
 
+	tooManyInputPaths := []string{
+		"account",
+		"count",
+		"eventFirstSeen",
+		"eventLastSeen",
+		"Finding_ID",
+		"Finding_Type",
+		"instanceId",
+		"port",
+		"region",
+		"severity",
+		"time",
+	}
+	validInputPaths := []string{
+		"account",
+		"count",
+		"eventFirstSeen",
+		"eventLastSeen",
+		"Finding_ID",
+		"Finding_Type",
+		"instanceId",
+		"region",
+		"severity",
+		"time",
+	}
+	var expectedInputTemplate strings.Builder
+	fmt.Fprintf(&expectedInputTemplate, `{
+  "detail-type": "Scheduled Event",
+  "source": "aws.events",
+`)
+	for _, path := range validInputPaths {
+		fmt.Fprintf(&expectedInputTemplate, "  \"%[1]s\": <%[1]s>,\n", path)
+	}
+	fmt.Fprintf(&expectedInputTemplate, `  "detail": {}
+}
+`)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSCloudWatchEventTargetConfigInputTransformer(rName, 11),
+				Config:      testAccAWSCloudWatchEventTargetConfigInputTransformer(rName, tooManyInputPaths),
 				ExpectError: regexp.MustCompile(`.*expected number of items in.* to be lesser than or equal to.*`),
 			},
 			{
-				Config: testAccAWSCloudWatchEventTargetConfigInputTransformer(rName, 10),
+				Config: testAccAWSCloudWatchEventTargetConfigInputTransformer(rName, validInputPaths),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.%", strconv.Itoa(len(validInputPaths))),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.time", "$.time"),
-					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_template", `{
-  "detail-type": "Scheduled Event",
-  "source": "aws.events",
-  "time": <time>,
-  "region": "eu-west-1",
-  "detail": {}
-}
-`),
+					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_template", expectedInputTemplate.String()),
 				),
 			},
 			{
@@ -1268,36 +1299,37 @@ resource "aws_sqs_queue" "sqs_queue" {
 `, rName)
 }
 
-func testAccAWSCloudWatchEventTargetConfigInputTransformer(rName string, inputPathCount int) string {
-	sampleInputPaths := [...]string{
-		"account",
-		"count",
-		"eventFirstSeen",
-		"eventLastSeen",
-		"Finding_ID",
-		"Finding_Type",
-		"instanceId",
-		"port",
-		"region",
-		"severity",
-		"time",
-	}
-	var inputPaths strings.Builder
-	var inputTemplates strings.Builder
+func testAccAWSCloudWatchEventTargetConfigInputTransformer(rName string, inputPathKeys []string) string {
+	var inputPaths, inputTemplates strings.Builder
 
-	if len(sampleInputPaths) < inputPathCount {
-		inputPathCount = len(sampleInputPaths)
-	}
-
-	for i := 0; i < inputPathCount; i++ {
+	for _, inputPath := range inputPathKeys { // Do the newlines next
 		fmt.Fprintf(&inputPaths, `
-      %s = "$.%s"`, sampleInputPaths[i], sampleInputPaths[i])
+      %[1]s = "$.%[1]s"`, inputPath)
 
 		fmt.Fprintf(&inputTemplates, `
-  "%s": <%s>,`, sampleInputPaths[i], sampleInputPaths[i])
+  "%[1]s": <%[1]s>,`, inputPath)
 	}
 
 	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_target" "test" {
+  arn  = aws_lambda_function.lambda.arn
+  rule = aws_cloudwatch_event_rule.schedule.id
+
+  input_transformer {
+    input_paths = {
+      %s
+    }
+
+    input_template = <<EOF
+{
+  "detail-type": "Scheduled Event",
+  "source": "aws.events",%s
+  "detail": {}
+}
+EOF
+  }
+}
+
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -1335,24 +1367,5 @@ resource "aws_cloudwatch_event_rule" "schedule" {
 
   schedule_expression = "rate(5 minutes)"
 }
-
-resource "aws_cloudwatch_event_target" "test" {
-  arn  = aws_lambda_function.lambda.arn
-  rule = aws_cloudwatch_event_rule.schedule.id
-
-  input_transformer {
-    input_paths = {
-      %s
-    }
-
-    input_template = <<EOF
-{
-  "detail-type": "Scheduled Event",
-  "source": "aws.events",%s
-  "detail": {}
-}
-EOF
-  }
-}
-`, rName, inputPaths.String(), inputTemplates.String())
+`, inputPaths.String(), inputTemplates.String(), rName)
 }
