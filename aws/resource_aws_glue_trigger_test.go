@@ -740,8 +740,8 @@ resource "aws_glue_trigger" "test" {
   type = "ON_DEMAND"
 
   actions {
-	job_name               = aws_glue_job.test.name
-	security_configuration = aws_glue_security_configuration.test.name
+    job_name               = aws_glue_job.test.name
+    security_configuration = aws_glue_security_configuration.test.name
   }
 }
 `, rName))
