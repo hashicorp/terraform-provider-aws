@@ -311,6 +311,7 @@ func Provider() *schema.Provider {
 			"aws_pricing_product":                            dataSourceAwsPricingProduct(),
 			"aws_qldb_ledger":                                dataSourceAwsQLDBLedger(),
 			"aws_ram_resource_share":                         dataSourceAwsRamResourceShare(),
+			"aws_rds_certificate":                            dataSourceAwsRdsCertificate(),
 			"aws_rds_cluster":                                dataSourceAwsRdsCluster(),
 			"aws_rds_engine_version":                         dataSourceAwsRdsEngineVersion(),
 			"aws_rds_orderable_db_instance":                  dataSourceAwsRdsOrderableDbInstance(),
