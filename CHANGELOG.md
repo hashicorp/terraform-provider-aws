@@ -1,3 +1,9 @@
+## 3.13.0 (Unreleased)
+
+FEATURES
+
+* **New Resource:** `aws_glue_resource_policy` [GH-10361]
+
 ## 3.12.0 (October 22, 2020)
 
 FEATURES
