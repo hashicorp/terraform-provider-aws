@@ -440,6 +440,30 @@ func TestAccAWSGlueTrigger_actions_securityConfig(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueTrigger_disappears(t *testing.T) {
+	var trigger glue.Trigger
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_trigger.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueTriggerConfig_OnDemand(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueTriggerExists(resourceName, &trigger),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueTrigger(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+
 func testAccCheckAWSGlueTriggerExists(resourceName string, trigger *glue.Trigger) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
