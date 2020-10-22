@@ -142,7 +142,7 @@ func resourceAwsSsoAssignmentCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	status := resp.AccountAssignmentCreationStatus
-	waitResp, waitErr := waitForAssignmentCreation(conn, instanceArn, aws.StringValue(status.RequestId), d.Timeout(schema.TimeoutCreate))
+	_, waitErr := waitForAssignmentCreation(conn, instanceArn, aws.StringValue(status.RequestId), d.Timeout(schema.TimeoutCreate))
 	if waitErr != nil {
 		return waitErr
 	}
