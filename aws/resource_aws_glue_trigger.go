@@ -56,6 +56,20 @@ func resourceAwsGlueTrigger() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"notification_property": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"notify_delay_after": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -459,10 +473,26 @@ func expandGlueActions(l []interface{}) []*glue.Action {
 			action.SecurityConfiguration = aws.String(v)
 		}
 
+		if v, ok := m["notification_property"].([]interface{}); ok && len(v) > 0 {
+			action.NotificationProperty = expandGlueTriggerNotificationProperty(v)
+		}
+
 		actions = append(actions, action)
 	}
 
 	return actions
+}
+
+func expandGlueTriggerNotificationProperty(l []interface{}) *glue.NotificationProperty {
+	m := l[0].(map[string]interface{})
+
+	property := &glue.NotificationProperty{}
+
+	if v, ok := m["notify_delay_after"]; ok && v.(int) > 0 {
+		property.NotifyDelayAfter = aws.Int64(int64(v.(int)))
+	}
+
+	return property
 }
 
 func expandGlueConditions(l []interface{}) []*glue.Condition {
@@ -532,6 +562,10 @@ func flattenGlueActions(actions []*glue.Action) []interface{} {
 			m["security_configuration"] = v
 		}
 
+		if v := action.NotificationProperty; v != nil {
+			m["notification_property"] = flattenGlueTriggerNotificationProperty(v)
+		}
+
 		l = append(l, m)
 	}
 
@@ -576,6 +610,18 @@ func flattenGluePredicate(predicate *glue.Predicate) []map[string]interface{} {
 	m := map[string]interface{}{
 		"conditions": flattenGlueConditions(predicate.Conditions),
 		"logical":    aws.StringValue(predicate.Logical),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenGlueTriggerNotificationProperty(property *glue.NotificationProperty) []map[string]interface{} {
+	if property == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"notify_delay_after": aws.Int64Value(property.NotifyDelayAfter),
 	}
 
 	return []map[string]interface{}{m}
