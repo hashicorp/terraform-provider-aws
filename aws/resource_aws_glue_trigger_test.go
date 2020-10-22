@@ -411,6 +411,35 @@ func TestAccAWSGlueTrigger_actions_notify(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueTrigger_actions_securityConfig(t *testing.T) {
+	var trigger glue.Trigger
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_trigger.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueTriggerConfigActionsSecurityConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueTriggerExists(resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.security_configuration", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSGlueTriggerExists(resourceName string, trigger *glue.Trigger) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -677,4 +706,38 @@ resource "aws_glue_trigger" "test" {
   }
 }
 `, testAccAWSGlueJobConfig_Required(rName), rName, delay)
+}
+
+func testAccAWSGlueTriggerConfigActionsSecurityConfiguration(rName string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_glue_security_configuration" "test" {
+  name = %q
+  
+  encryption_configuration {
+    cloudwatch_encryption {
+      cloudwatch_encryption_mode = "DISABLED"
+	}
+  
+    job_bookmarks_encryption {
+      job_bookmarks_encryption_mode = "DISABLED"
+    }
+  
+    s3_encryption {
+      s3_encryption_mode = "DISABLED"
+    }
+  }
+}
+
+resource "aws_glue_trigger" "test" {
+  name = %[2]q
+  type = "ON_DEMAND"
+
+  actions {
+	job_name               = aws_glue_job.test.name
+	security_configuration = aws_glue_security_configuration.test.name
+  }
+}
+`, testAccAWSGlueJobConfig_Required(rName), rName)
 }
