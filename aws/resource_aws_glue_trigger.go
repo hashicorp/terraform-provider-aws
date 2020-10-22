@@ -52,6 +52,10 @@ func resourceAwsGlueTrigger() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
+						"security_configuration": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -451,6 +455,10 @@ func expandGlueActions(l []interface{}) []*glue.Action {
 			action.Timeout = aws.Int64(int64(v.(int)))
 		}
 
+		if v, ok := m["security_configuration"].(string); ok && v != "" {
+			action.SecurityConfiguration = aws.String(v)
+		}
+
 		actions = append(actions, action)
 	}
 
@@ -518,6 +526,10 @@ func flattenGlueActions(actions []*glue.Action) []interface{} {
 
 		if v := aws.StringValue(action.JobName); v != "" {
 			m["job_name"] = v
+		}
+
+		if v := aws.StringValue(action.SecurityConfiguration); v != "" {
+			m["security_configuration"] = v
 		}
 
 		l = append(l, m)
