@@ -100,7 +100,7 @@ func resourceAwsIamCredentialReportRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	return resource.Retry(time.Duration(1)*time.Minute, func() *resource.RetryError {
+	return resource.Retry(time.Duration(3)*time.Minute, func() *resource.RetryError {
 		// Prepare a request to actually get the credential report.
 		getReportOutput, err := iamconn.GetCredentialReport(nil)
 		if err != nil {
