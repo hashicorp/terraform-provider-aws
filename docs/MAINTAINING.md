@@ -403,6 +403,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `AWS_COGNITO_USER_POOL_DOMAIN_CERTIFICATE_ARN` | Amazon Resource Name of ACM Certificate in `us-east-1` for Cognito User Pool Domain Name testing. |
 | `AWS_COGNITO_USER_POOL_DOMAIN_ROOT_DOMAIN` | Root domain name to use with Cognito User Pool Domain testing. |
 | `AWS_DEFAULT_REGION` | Primary AWS region for tests. Defaults to `us-west-2`. |
+| `AWS_EC2_CLASSIC_REGION` | AWS region for EC2-Classic testing. Defaults to `us-east-1` in AWS Commercial and `AWS_DEFAULT_REGION` otherwise. |
 | `AWS_EC2_CLIENT_VPN_LIMIT` | Concurrency limit for Client VPN acceptance tests. [Default is 5](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/limits.html) if not specified. |
 | `AWS_EC2_EIP_PUBLIC_IPV4_POOL` | Identifier for EC2 Public IPv4 Pool for EC2 EIP testing. |
 | `AWS_GUARDDUTY_MEMBER_ACCOUNT_ID` | Identifier of AWS Account for GuardDuty Member testing. **DEPRECATED:** Should be replaced with standard alternate account handling for tests. |
