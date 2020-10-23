@@ -68,6 +68,7 @@ func TestAccDataSourceAwsWorkspacesWorkspace_byDirectoryID_userName(t *testing.T
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_properties.0.user_volume_size_gib", resourceName, "workspace_properties.0.user_volume_size_gib"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 				),
+				ExpectNonEmptyPlan: true, // Hack to overcome data source with depends_on refresh
 			},
 		},
 	})
