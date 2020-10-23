@@ -103,7 +103,7 @@ func testAccWorkspacesBundlePreCheck(t *testing.T) {
 
 func testAccDataSourceAwsWorkspaceBundleConfig(bundleID string) string {
 	return fmt.Sprintf(`
-data aws_workspaces_bundle test {
+data "aws_workspaces_bundle" "test" {
   bundle_id = %q
 }
 `, bundleID)
@@ -111,7 +111,7 @@ data aws_workspaces_bundle test {
 
 func testAccDataSourceAwsWorkspaceBundleConfig_byOwnerName(owner, name string) string {
 	return fmt.Sprintf(`
-data aws_workspaces_bundle test {
+data "aws_workspaces_bundle" "test" {
   owner = %q
   name  = %q
 }
@@ -120,7 +120,7 @@ data aws_workspaces_bundle test {
 
 func testAccDataSourceAwsWorkspaceBundleConfig_bundleIDAndOwnerNameConflict(bundleID, owner, name string) string {
 	return fmt.Sprintf(`
-data aws_workspaces_bundle test {
+data "aws_workspaces_bundle" "test" {
   bundle_id = %q
   owner     = %q
   name      = %q
@@ -130,7 +130,7 @@ data aws_workspaces_bundle test {
 
 func testAccDataSourceAwsWorkspaceBundleConfig_privateOwner(name string) string {
 	return fmt.Sprintf(`
-data aws_workspaces_bundle test {
+data "aws_workspaces_bundle" "test" {
   name  = %q
 }
 `, name)
