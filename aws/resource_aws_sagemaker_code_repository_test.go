@@ -246,8 +246,8 @@ resource "aws_sagemaker_code_repository" "test" {
   code_repository_name = %[1]q
 
   git_config {
-	repository_url = "https://github.com/terraform-providers/terraform-provider-aws.git"
-	branch         = "master"
+    repository_url = "https://github.com/terraform-providers/terraform-provider-aws.git"
+    branch         = "master"
   }
 }
 `, rName)
@@ -268,8 +268,8 @@ resource "aws_sagemaker_code_repository" "test" {
   code_repository_name = %[1]q
 
   git_config {
-	repository_url = "https://github.com/terraform-providers/terraform-provider-aws.git"
-	secret_arn     = aws_secretsmanager_secret.test.arn
+    repository_url = "https://github.com/terraform-providers/terraform-provider-aws.git"
+    secret_arn     = aws_secretsmanager_secret.test.arn
   }
 
   depends_on = [aws_secretsmanager_secret_version.test]
@@ -292,8 +292,8 @@ resource "aws_sagemaker_code_repository" "test" {
   code_repository_name = %[1]q
 
   git_config {
-	repository_url = "https://github.com/terraform-providers/terraform-provider-aws.git"
-	secret_arn     = aws_secretsmanager_secret.test2.arn
+    repository_url = "https://github.com/terraform-providers/terraform-provider-aws.git"
+    secret_arn     = aws_secretsmanager_secret.test2.arn
   }
 
   depends_on = [aws_secretsmanager_secret_version.test2]
