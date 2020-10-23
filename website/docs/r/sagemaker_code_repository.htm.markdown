@@ -12,11 +12,39 @@ Provides a Sagemaker Code Repository resource.
 
 ## Example Usage
 
-Basic usage:
+### Basic usage:
 
 ```hcl
-resource "aws_sagemaker_code_repository" "ni" {
+resource "aws_sagemaker_code_repository" "example" {
+  code_repository_name = "example"
 
+  git_config {
+	repository_url = "https://github.com/terraform-providers/terraform-provider-aws.git"
+  }
+}
+```
+
+### Example with Secret:
+
+```hcl
+resource "aws_secretsmanager_secret" "example" {
+  name = "example"
+}
+
+resource "aws_secretsmanager_secret_version" "example" {
+  secret_id     = aws_secretsmanager_secret.example.id
+  secret_string = jsonencode({username = "example", passowrd = "example"})
+}
+	
+resource "aws_sagemaker_code_repository" "example" {
+  code_repository_name = "example"
+
+  git_config {
+	repository_url = "https://github.com/terraform-providers/terraform-provider-aws.git"
+	secret_arn     = aws_secretsmanager_secret.example.arn
+  }
+
+  depends_on = [aws_secretsmanager_secret_version.example]
 }
 ```
 
