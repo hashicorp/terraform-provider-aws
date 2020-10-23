@@ -70,7 +70,7 @@ func TestAccAWSSSOPermissionSet_Disappears(t *testing.T) {
 				Config: testAccSSOPermissionSetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSOPermissionSetExists(resourceName, &permissionSet),
-					testAccCheckAWSSSOPermissionSetDisappears(&permissionSet),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSsoPermissionSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -206,36 +206,6 @@ func testAccCheckAWSSSOPermissionSetDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckAWSSSOPermissionSetDisappears(permissionSet *ssoadmin.PermissionSet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		ssoadminconn := testAccProvider.Meta().(*AWSClient).ssoadminconn
-
-		permissionSetArn, permissionSetErr := arn.Parse(*permissionSet.PermissionSetArn)
-		if permissionSetErr != nil {
-			return permissionSetErr
-		}
-
-		resourceParts := strings.Split(permissionSetArn.Resource, "/")
-
-		// resourceParts = ["permissionSet","ins-123456A", "ps-56789B"]
-		instanceArn := arn.ARN{
-			Partition: permissionSetArn.Partition,
-			Service:   permissionSetArn.Service,
-			Resource:  fmt.Sprintf("instance/%s", resourceParts[1]),
-		}.String()
-
-		input := &ssoadmin.DeletePermissionSetInput{
-			InstanceArn:      aws.String(instanceArn),
-			PermissionSetArn: permissionSet.PermissionSetArn,
-		}
-
-		_, err := ssoadminconn.DeletePermissionSet(input)
-
-		return err
-
-	}
 }
 
 func testAccSSOPermissionSetBasicConfig(rName string) string {
