@@ -85,6 +85,66 @@ func TestAccAWSSagemakerCodeRepository_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSagemakerCodeRepository_gitConfig_branch(t *testing.T) {
+	var notebook sagemaker.DescribeCodeRepositoryOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_code_repository.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerCodeRepositoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerCodeRepositoryGitConfigBranchConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerCodeRepositoryExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "code_repository_name", rName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "git_config.0.repository_url", "https://github.com/terraform-providers/terraform-provider-aws.git"),
+					resource.TestCheckResourceAttr(resourceName, "git_config.0.branch", "master"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerCodeRepository_gitConfig_secret(t *testing.T) {
+	var notebook sagemaker.DescribeCodeRepositoryOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_code_repository.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerCodeRepositoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerCodeRepositoryGitConfigSecretConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerCodeRepositoryExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "code_repository_name", rName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "git_config.0.repository_url", "https://github.com/terraform-providers/terraform-provider-aws.git"),
+					resource.TestCheckResourceAttrPair(resourceName, "git_config.0.secret_arn", "aws_secretsmanager_secret.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSagemakerCodeRepository_disappears(t *testing.T) {
 	var notebook sagemaker.DescribeCodeRepositoryOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -165,6 +225,43 @@ resource "aws_sagemaker_code_repository" "test" {
   git_config {
     repository_url = "https://github.com/terraform-providers/terraform-provider-aws.git"
   }
+}
+`, rName)
+}
+
+func testAccAWSSagemakerCodeRepositoryGitConfigBranchConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_code_repository" "test" {
+  code_repository_name = %[1]q
+
+  git_config {
+	repository_url = "https://github.com/terraform-providers/terraform-provider-aws.git"
+	branch         = "master"
+  }
+}
+`, rName)
+}
+
+func testAccAWSSagemakerCodeRepositoryGitConfigSecretConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = "%[1]s"
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode({username = "test", passowrd = "test"})
+}
+	
+resource "aws_sagemaker_code_repository" "test" {
+  code_repository_name = %[1]q
+
+  git_config {
+	repository_url = "https://github.com/terraform-providers/terraform-provider-aws.git"
+	secret_arn     = aws_secretsmanager_secret.test.arn
+  }
+
+  depends_on = [aws_secretsmanager_secret_version.test]
 }
 `, rName)
 }
