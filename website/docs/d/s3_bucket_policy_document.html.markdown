@@ -16,6 +16,8 @@ This resource is useful for creating any kind of bucket policy document without 
 
 ### Public Bucket Redirect
 
+Creates a public bucket that redirects to another bucket with `redirect_all_requests_to` and a non-heredoc public bucket policy.
+
 ```
 data "aws_iam_policy_document" "public-read" {
   statement {
