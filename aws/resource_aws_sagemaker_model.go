@@ -62,6 +62,7 @@ func resourceAwsSagemakerModel() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
+							Default:      sagemaker.ContainerModeSingleModel,
 							ValidateFunc: validation.StringInSlice(sagemaker.ContainerMode_Values(), false),
 						},
 
@@ -141,6 +142,7 @@ func resourceAwsSagemakerModel() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
+							Default:      sagemaker.ContainerModeSingleModel,
 							ValidateFunc: validation.StringInSlice(sagemaker.ContainerMode_Values(), false),
 						},
 
