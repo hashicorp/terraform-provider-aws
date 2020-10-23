@@ -131,7 +131,7 @@ data "aws_workspaces_bundle" "test" {
 func testAccDataSourceAwsWorkspaceBundleConfig_privateOwner(name string) string {
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
-  name  = %q
+  name = %q
 }
 `, name)
 }
