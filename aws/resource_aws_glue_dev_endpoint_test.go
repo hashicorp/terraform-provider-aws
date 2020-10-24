@@ -569,6 +569,29 @@ func TestAccGlueDevEndpoint_WorkerType(t *testing.T) {
 	})
 }
 
+func TestAccGlueDevEndpoint_disappears(t *testing.T) {
+	var endpoint glue.DevEndpoint
+
+	rName := acctest.RandomWithPrefix(GlueDevEndpointResourcePrefix)
+	resourceName := "aws_glue_dev_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueDevEndpointConfig_Basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueDevEndpoint(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSGlueDevEndpointExists(resourceName string, endpoint *glue.DevEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
