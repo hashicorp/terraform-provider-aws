@@ -24,50 +24,56 @@ func TestDiffArguments(t *testing.T) {
 		{
 			name: "old and new arguments are the same",
 			oldArgs: map[string]interface{}{
-				"foo": "foo-val",
-				"bar": "bar-val",
+				"arg1": "value1",
+				"arg2": "value2",
 			},
 			newArgs: map[string]interface{}{
-				"foo": "foo-val",
-				"bar": "bar-val",
+				"arg1": "value1",
+				"arg2": "value2",
 			},
 			expectedCreate: map[string]string{},
 			expectedRemove: []string{},
 		},
 		{
-			name:    "same argument with new value created",
-			oldArgs: map[string]interface{}{},
+			name: "argument updated",
+			oldArgs: map[string]interface{}{
+				"arg1": "value1",
+				"arg2": "value2",
+			},
 			newArgs: map[string]interface{}{
-				"foo": "foo-val",
+				"arg1": "value1updated",
+				"arg2": "value2",
 			},
 			expectedCreate: map[string]string{
-				"foo": "foo-val",
+				"arg1": "value1updated",
+			},
+			expectedRemove: []string{"arg1"},
+		},
+		{
+			name: "argument added",
+			oldArgs: map[string]interface{}{
+				"arg1": "value1",
+			},
+			newArgs: map[string]interface{}{
+				"arg1": "value1",
+				"arg2": "value2",
+			},
+			expectedCreate: map[string]string{
+				"arg2": "value2",
 			},
 			expectedRemove: []string{},
 		},
 		{
-			name: "old argument deleted",
+			name: "argument deleted",
 			oldArgs: map[string]interface{}{
-				"foo": "foo-val",
-			},
-			newArgs:        map[string]interface{}{},
-			expectedCreate: map[string]string{},
-			expectedRemove: []string{"foo"},
-		},
-		{
-			name: "some old and new arguments overlap",
-			oldArgs: map[string]interface{}{
-				"foo": "foo-val",
-				"bar": "bar-val",
+				"arg1": "value1",
+				"arg2": "value2",
 			},
 			newArgs: map[string]interface{}{
-				"foo": "foo-val",
-				"bar": "baz-val",
+				"arg2": "value2",
 			},
-			expectedCreate: map[string]string{
-				"bar": "baz-val",
-			},
-			expectedRemove: []string{"bar"},
+			expectedCreate: map[string]string{},
+			expectedRemove: []string{"arg1"},
 		},
 	}
 	for i, tc := range tests {
@@ -82,7 +88,6 @@ func TestDiffArguments(t *testing.T) {
 			if !reflect.DeepEqual(rm, tc.expectedRemove) {
 				t.Fatalf("%d: bad remove: %#v", i, rm)
 			}
-
 		})
 	}
 }

@@ -506,8 +506,22 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if hasChanged {
 		log.Printf("[DEBUG] Updating Glue Dev Endpoint: %s", input)
+		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+			_, err := conn.UpdateDevEndpoint(input)
+			if err != nil {
+				if isAWSErr(err, glue.ErrCodeInvalidInputException, "another concurrent update operation") {
+					return resource.RetryableError(err)
+				}
 
-		_, err := conn.UpdateDevEndpoint(input)
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+
+		if isResourceTimeoutError(err) {
+			_, err = conn.UpdateDevEndpoint(input)
+		}
+
 		if err != nil {
 			return fmt.Errorf("error updating Glue Dev Endpoint: %s", err)
 		}
@@ -549,29 +563,23 @@ func diffArguments(oldArgs, newArgs map[string]interface{}) (map[string]*string,
 	var remove []*string
 
 	for oldArgKey, oldArgVal := range oldArgs {
-		found := false
-		for newArgKey, newArgVal := range newArgs {
-			if oldArgKey == newArgKey &&
-				oldArgVal.(string) == newArgVal.(string) {
-				found = true
-				break
+		tmpKey := oldArgKey
+
+		if val, ok := newArgs[oldArgKey]; ok {
+			if val.(string) != oldArgVal.(string) {
+				remove = append(remove, &tmpKey)
 			}
-		}
-		if !found {
-			remove = append(remove, &oldArgKey)
+		} else {
+			remove = append(remove, &tmpKey)
 		}
 	}
 
 	for newArgKey, newArgVal := range newArgs {
-		found := false
-		for oldArgKey, oldArgVal := range oldArgs {
-			if oldArgKey == newArgKey &&
-				oldArgVal.(string) == newArgVal.(string) {
-				found = true
-				break
+		if val, ok := oldArgs[newArgKey]; ok {
+			if val.(string) != newArgVal.(string) {
+				create[newArgKey] = aws.String(newArgVal.(string))
 			}
-		}
-		if !found {
+		} else {
 			create[newArgKey] = aws.String(newArgVal.(string))
 		}
 	}
