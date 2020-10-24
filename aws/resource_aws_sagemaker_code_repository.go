@@ -89,7 +89,7 @@ func resourceAwsSagemakerCodeRepositoryRead(d *schema.ResourceData, meta interfa
 		CodeRepositoryName: aws.String(d.Id()),
 	}
 
-	codeRepository, err := conn.DescribeCodeRepository(describeNotebookInput)
+	codeRepository, err := conn.DescribeCodeRepository(input)
 	if err != nil {
 		if isAWSErr(err, "ValidationException", "Cannot find CodeRepository") {
 			d.SetId("")
@@ -100,10 +100,10 @@ func resourceAwsSagemakerCodeRepositoryRead(d *schema.ResourceData, meta interfa
 
 	}
 
-	d.Set("code_repository_name", CodeRepository.CodeRepositoryName)
-	d.Set("arn", CodeRepository.CodeRepositoryArn)
+	d.Set("code_repository_name", codeRepository.CodeRepositoryName)
+	d.Set("arn", codeRepository.CodeRepositoryArn)
 
-	if err := d.Set("git_config", flattenSagemakerCodeRepositoryGitConfig(CodeRepository.GitConfig)); err != nil {
+	if err := d.Set("git_config", flattenSagemakerCodeRepositoryGitConfig(codeRepository.GitConfig)); err != nil {
 		return fmt.Errorf("error setting git_config for sagemaker code repository (%s): %w", d.Id(), err)
 	}
 
