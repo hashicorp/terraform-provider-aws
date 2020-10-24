@@ -71,13 +71,13 @@ func resourceAwsSagemakerCodeRepositoryCreate(d *schema.ResourceData, meta inter
 
 	name := d.Get("code_repository_name").(string)
 
-	createOpts := &sagemaker.CreateCodeRepositoryInput{
+	input := &sagemaker.CreateCodeRepositoryInput{
 		CodeRepositoryName: aws.String(name),
 		GitConfig:          expandSagemakerCodeRepositoryGitConfig(d.Get("git_config").([]interface{})),
 	}
 
-	log.Printf("[DEBUG] sagemaker code repository create config: %#v", *createOpts)
-	_, err := conn.CreateCodeRepository(createOpts)
+	log.Printf("[DEBUG] sagemaker code repository create config: %#v", *input)
+	_, err := conn.CreateCodeRepository(input)
 	if err != nil {
 		return fmt.Errorf("error creating SageMaker code repository: %w", err)
 	}
