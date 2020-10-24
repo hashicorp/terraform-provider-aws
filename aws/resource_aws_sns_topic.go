@@ -95,6 +95,16 @@ func resourceAwsSnsTopic() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"fifo_topic": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"content_based_deduplication": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"lambda_success_feedback_role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -142,11 +152,28 @@ func resourceAwsSnsTopicCreate(d *schema.ResourceData, meta interface{}) error {
 		name = resource.UniqueId()
 	}
 
+	fifoTopic := d.Get("fifo_topic").(bool)
+	cbd := d.Get("content_based_deduplication").(bool)
+
+	if !fifoTopic && cbd {
+		return fmt.Errorf("Content based deduplication can only be set with FIFO topics")
+	}
+
+	attributes := make(map[string]*string)
+	// If FifoTopic is true, then the attribute must be passed into the call to CreateTopic
+	if fifoTopic {
+		attributes["FifoTopic"] = aws.String(strconv.FormatBool(fifoTopic))
+	}
+
 	log.Printf("[DEBUG] SNS create topic: %s", name)
 
 	req := &sns.CreateTopicInput{
 		Name: aws.String(name),
 		Tags: tags,
+	}
+
+	if len(attributes) > 0 {
+		req.Attributes = attributes
 	}
 
 	output, err := snsconn.CreateTopic(req)
@@ -202,6 +229,12 @@ func resourceAwsSnsTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("kms_master_key_id") {
 		_, v := d.GetChange("kms_master_key_id")
 		if err := updateAwsSnsTopicAttribute(d.Id(), "KmsMasterKeyId", v, snsconn); err != nil {
+			return err
+		}
+	}
+	if d.HasChange("content_based_deduplication") {
+		_, v := d.GetChange("content_based_deduplication")
+		if err := updateAwsSnsTopicAttribute(d.Id(), "ContentBasedDeduplication", v, snsconn); err != nil {
 			return err
 		}
 	}
@@ -315,6 +348,12 @@ func resourceAwsSnsTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
+	if d.HasChange("content_based_deduplication") {
+		_, v := d.GetChange("content_based_deduplication")
+		if err := updateAwsSnsTopicAttribute(d.Id(), "ContentBasedDeduplication", v, snsconn); err != nil {
+			return err
+		}
+	}
 	if d.HasChange("lambda_failure_feedback_role_arn") {
 		_, v := d.GetChange("lambda_failure_feedback_role_arn")
 		if err := updateAwsSnsTopicAttribute(d.Id(), "LambdaFailureFeedbackRoleArn", v, snsconn); err != nil {
@@ -414,6 +453,16 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("policy", attributeOutput.Attributes["Policy"])
 		d.Set("sqs_failure_feedback_role_arn", attributeOutput.Attributes["SQSFailureFeedbackRoleArn"])
 		d.Set("sqs_success_feedback_role_arn", attributeOutput.Attributes["SQSSuccessFeedbackRoleArn"])
+
+		// set the boolean values
+		d.Set("fifo_topic", false)
+		if v, ok := attributeOutput.Attributes["FifoTopic"]; ok && aws.StringValue(v) == "true" {
+			d.Set("fifo_topic", true)
+		}
+		d.Set("content_based_deduplication", false)
+		if v, ok := attributeOutput.Attributes["ContentBasedDeduplication"]; ok && aws.StringValue(v) == "true" {
+			d.Set("content_based_deduplication", true)
+		}
 
 		// set the number values
 		var vStr string
