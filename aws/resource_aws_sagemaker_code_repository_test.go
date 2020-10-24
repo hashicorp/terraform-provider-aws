@@ -258,7 +258,7 @@ resource "aws_secretsmanager_secret_version" "test" {
   secret_id     = aws_secretsmanager_secret.test.id
   secret_string = jsonencode({ username = "example", passowrd = "example" })
 }
-	
+
 resource "aws_sagemaker_code_repository" "test" {
   code_repository_name = %[1]q
 
@@ -282,7 +282,7 @@ resource "aws_secretsmanager_secret_version" "test2" {
   secret_id     = aws_secretsmanager_secret.test2.id
   secret_string = jsonencode({ username = "example", passowrd = "example" })
 }
-	
+
 resource "aws_sagemaker_code_repository" "test" {
   code_repository_name = %[1]q
 
