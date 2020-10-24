@@ -100,13 +100,8 @@ func resourceAwsSagemakerCodeRepositoryRead(d *schema.ResourceData, meta interfa
 
 	}
 
-	if err := d.Set("code_repository_name", CodeRepository.CodeRepositoryName); err != nil {
-		return fmt.Errorf("error setting code_repository_name for sagemaker code repository (%s): %w", d.Id(), err)
-	}
-
-	if err := d.Set("arn", CodeRepository.CodeRepositoryArn); err != nil {
-		return fmt.Errorf("error setting arn for sagemaker code repository (%s): %w", d.Id(), err)
-	}
+	d.Set("code_repository_name", CodeRepository.CodeRepositoryName)
+	d.Set("arn", CodeRepository.CodeRepositoryArn)
 
 	if err := d.Set("git_config", flattenSagemakerCodeRepositoryGitConfig(CodeRepository.GitConfig)); err != nil {
 		return fmt.Errorf("error setting git_config for sagemaker code repository (%s): %w", d.Id(), err)
