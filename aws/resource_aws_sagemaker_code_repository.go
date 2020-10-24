@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sageamker/finder"
 )
 
 func resourceAwsSagemakerCodeRepository() *schema.Resource {
@@ -89,11 +90,7 @@ func resourceAwsSagemakerCodeRepositoryCreate(d *schema.ResourceData, meta inter
 func resourceAwsSagemakerCodeRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
 
-	input := &sagemaker.DescribeCodeRepositoryInput{
-		CodeRepositoryName: aws.String(d.Id()),
-	}
-
-	codeRepository, err := conn.DescribeCodeRepository(input)
+	codeRepository, err := finder.FincCodeRepositoryByName(conn, d.Id())
 	if err != nil {
 		if isAWSErr(err, "ValidationException", "Cannot find CodeRepository") {
 			d.SetId("")

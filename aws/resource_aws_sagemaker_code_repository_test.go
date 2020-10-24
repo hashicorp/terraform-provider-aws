@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sageamker/finder"
 )
 
 func init() {
@@ -186,15 +187,12 @@ func testAccCheckAWSSagemakerCodeRepositoryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		describeNotebookInput := &sagemaker.DescribeCodeRepositoryInput{
-			CodeRepositoryName: aws.String(rs.Primary.ID),
-		}
-		CodeRepository, err := conn.DescribeCodeRepository(describeNotebookInput)
+		codeRepository, err := finder.FincCodeRepositoryByName(conn, d.Id())
 		if err != nil {
 			return nil
 		}
 
-		if aws.StringValue(CodeRepository.CodeRepositoryName) == rs.Primary.ID {
+		if aws.StringValue(codeRepository.CodeRepositoryName) == rs.Primary.ID {
 			return fmt.Errorf("sagemaker Code Repository %q still exists", rs.Primary.ID)
 		}
 	}
@@ -214,15 +212,12 @@ func testAccCheckAWSSagemakerCodeRepositoryExists(n string, notebook *sagemaker.
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
-		opts := &sagemaker.DescribeCodeRepositoryInput{
-			CodeRepositoryName: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.DescribeCodeRepository(opts)
+		codeRepository, err := finder.FincCodeRepositoryByName(conn, d.Id())
 		if err != nil {
 			return err
 		}
 
-		*notebook = *resp
+		*codeRepository = *resp
 
 		return nil
 	}
