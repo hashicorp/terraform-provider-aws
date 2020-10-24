@@ -115,26 +115,34 @@ func TestAccGlueDevEndpoint_Arguments(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGlueDevEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueDevEndpointConfig_Arguments2(rName, "bar", "python"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "arguments.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "arguments.--foo", "bar"),
-					resource.TestCheckResourceAttr(resourceName, "arguments.--job-language", "python"),
-				),
-			},
-			{
-				Config: testAccGlueDevEndpointConfig_Arguments(rName, "baz"),
+				Config: testAccGlueDevEndpointConfig_Arguments(rName, "--arg1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "arguments.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "arguments.--foo", "baz"),
+					resource.TestCheckResourceAttr(resourceName, "arguments.--arg1", "value1"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGlueDevEndpointConfig_Arguments2(rName, "--arg1", "value1updated", "--arg2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
+					resource.TestCheckResourceAttr(resourceName, "arguments.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "arguments.--arg1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "arguments.--arg2", "value2"),
+				),
+			},
+			{
+				Config: testAccGlueDevEndpointConfig_Arguments(rName, "--arg2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
+					resource.TestCheckResourceAttr(resourceName, "arguments.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "arguments.--arg2", "value2"),
+				),
 			},
 		},
 	})
@@ -671,29 +679,29 @@ resource "aws_glue_dev_endpoint" "test" {
 `, rName)
 }
 
-func testAccGlueDevEndpointConfig_Arguments(rName, arguments string) string {
+func testAccGlueDevEndpointConfig_Arguments(rName, argKey, argValue string) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name     = %q
+  name     = %[1]q
   role_arn = aws_iam_role.test.arn
   arguments = {
-    "--foo" = "%s"
+    %[2]q = %[3]q
   }
 }
-`, rName, arguments)
+`, rName, argKey, argValue)
 }
 
-func testAccGlueDevEndpointConfig_Arguments2(rName, arguments1, arguments2 string) string {
+func testAccGlueDevEndpointConfig_Arguments2(rName, argKey1, argValue1, argKey2, argValue2 string) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name     = %q
+  name     = %[1]q
   role_arn = aws_iam_role.test.arn
   arguments = {
-    "--foo"          = "%s"
-    "--job-language" = "%s"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, rName, arguments1, arguments2)
+`, rName, argKey1, argValue1, argKey2, argValue2)
 }
 
 func testAccGlueDevEndpointConfig_ExtraJarsS3Path(rName string, extraJarsS3Path string) string {
