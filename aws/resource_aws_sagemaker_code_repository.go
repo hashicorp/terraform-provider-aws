@@ -74,7 +74,7 @@ func resourceAwsSagemakerCodeRepositoryCreate(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] sagemaker code repository create config: %#v", *createOpts)
 	_, err := conn.CreateCodeRepository(createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating Sagemaker code repository: %w", err)
+		return fmt.Errorf("error creating SageMaker code repository: %w", err)
 	}
 
 	d.SetId(name)
@@ -85,17 +85,18 @@ func resourceAwsSagemakerCodeRepositoryCreate(d *schema.ResourceData, meta inter
 func resourceAwsSagemakerCodeRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
 
-	describeNotebookInput := &sagemaker.DescribeCodeRepositoryInput{
+	input := &sagemaker.DescribeCodeRepositoryInput{
 		CodeRepositoryName: aws.String(d.Id()),
 	}
-	CodeRepository, err := conn.DescribeCodeRepository(describeNotebookInput)
+
+	codeRepository, err := conn.DescribeCodeRepository(describeNotebookInput)
 	if err != nil {
 		if isAWSErr(err, "ValidationException", "Cannot find CodeRepository") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker code repository (%s); removing from state", d.Id())
 			return nil
 		}
-		return fmt.Errorf("error finding sagemaker code repository (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading SageMaker code repository (%s): %w", d.Id(), err)
 
 	}
 
@@ -125,7 +126,7 @@ func resourceAwsSagemakerCodeRepositoryUpdate(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] sagemaker code repository update config: %#v", *input)
 	_, err := conn.UpdateCodeRepository(input)
 	if err != nil {
-		return fmt.Errorf("Error updating Sagemaker code repository: %w", err)
+		return fmt.Errorf("error updating SageMaker code repository: %w", err)
 	}
 
 	return resourceAwsSagemakerCodeRepositoryRead(d, meta)
@@ -142,7 +143,7 @@ func resourceAwsSagemakerCodeRepositoryDelete(d *schema.ResourceData, meta inter
 		if isAWSErr(err, "ValidationException", "Cannot find CodeRepository") {
 			return nil
 		}
-		return fmt.Errorf("error trying to delete sagemaker code repository (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting SageMaker code repository (%s): %w", d.Id(), err)
 	}
 
 	return nil
