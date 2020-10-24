@@ -155,6 +155,16 @@ func resourceAwsSnsTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	fifoTopic := d.Get("fifo_topic").(bool)
 	cbd := d.Get("content_based_deduplication").(bool)
 
+	if fifoTopic {
+		if errors := validateSNSFifoTopicName(name); len(errors) > 0 {
+			return fmt.Errorf("Error validating the SNS FIFO topic name: %v", errors)
+		}
+	} else {
+		if errors := validateSNSNonFifoTopicName(name); len(errors) > 0 {
+			return fmt.Errorf("Error validating SNS topic name: %v", errors)
+		}
+	}
+
 	if !fifoTopic && cbd {
 		return fmt.Errorf("Content based deduplication can only be set with FIFO topics")
 	}

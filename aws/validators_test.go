@@ -1060,6 +1060,83 @@ func TestValidateSQSFifoQueueName(t *testing.T) {
 	}
 }
 
+func TestValidateSNSNonFifoTopicName(t *testing.T) {
+	validNames := []string{
+		"valid-name",
+		"valid02-name",
+		"Valid-Name1",
+		"_",
+		"-",
+		strings.Repeat("W", 250),
+	}
+	for _, v := range validNames {
+		if errors := validateSNSNonFifoTopicName(v); len(errors) > 0 {
+			t.Fatalf("%q should be a valid SNS topic Name", v)
+		}
+	}
+
+	invalidNames := []string{
+		"Here is a name with: colon",
+		"another * invalid name",
+		"also $ invalid",
+		"This . is also %% invalid@!)+(",
+		"*",
+		"",
+		" ",
+		".",
+		strings.Repeat("W", 257), // length > 256
+	}
+	for _, v := range invalidNames {
+		if errors := validateSNSNonFifoTopicName(v); len(errors) == 0 {
+			t.Fatalf("%q should be an invalid SNS topic Name", v)
+		}
+	}
+}
+
+func TestValidateSNSFifoTopicName(t *testing.T) {
+	validNames := []string{
+		"valid-name.fifo",
+		"valid02-name.fifo",
+		"Valid-Name1.fifo",
+		"_.fifo",
+		"a.fifo",
+		"A.fifo",
+		"9.fifo",
+		"-.fifo",
+		fmt.Sprintf("%s.fifo", strings.Repeat("W", 250)),
+	}
+	for _, v := range validNames {
+		if errors := validateSNSNonFifoTopicName(v); len(errors) > 0 {
+			t.Fatalf("%q should be a valid SNS topic Name", v)
+		}
+
+		if errors := validateSNSFifoTopicName(v); len(errors) > 0 {
+			t.Fatalf("%q should be a valid SNS FIFO topic Name: %v", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"Here is a name with: colon",
+		"another * invalid name",
+		"also $ invalid",
+		"This . is also %% invalid@!)+(",
+		".fifo",
+		"*",
+		"",
+		" ",
+		".",
+		strings.Repeat("W", 257), // length > 256
+	}
+	for _, v := range invalidNames {
+		if errors := validateSNSNonFifoTopicName(v); len(errors) == 0 {
+			t.Fatalf("%q should be an invalid SNS topic Name", v)
+		}
+
+		if errors := validateSNSFifoTopicName(v); len(errors) == 0 {
+			t.Fatalf("%q should be an invalid SNS FIFO topic Name: %v", v, errors)
+		}
+	}
+}
 func TestValidateOnceAWeekWindowFormat(t *testing.T) {
 	cases := []struct {
 		Value    string

@@ -1081,6 +1081,42 @@ func validateSQSFifoQueueName(v interface{}) (errors []error) {
 	return
 }
 
+func validateSNSNonFifoTopicName(v interface{}) (errors []error) {
+	k := "name"
+	value := v.(string)
+	if len(value) > 256 {
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 256 characters", k))
+	}
+
+	if !regexp.MustCompile(`^[0-9A-Za-z-_]+(\.fifo)?$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("only alphanumeric characters and hyphens allowed in %q", k))
+	}
+	return
+}
+
+func validateSNSFifoTopicName(v interface{}) (errors []error) {
+	k := "name"
+	value := v.(string)
+
+	if len(value) > 256 {
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 256 characters", k))
+	}
+
+	if !regexp.MustCompile(`^[0-9A-Za-z-_.]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("only alphanumeric characters and hyphens allowed in %q", k))
+	}
+
+	if regexp.MustCompile(`^[^a-zA-Z0-9-_]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("FIFO topic name must start with one of these characters [a-zA-Z0-9-_]: %v", value))
+	}
+
+	if !regexp.MustCompile(`\.fifo$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("FIFO topic name should end with \".fifo\": %v", value))
+	}
+
+	return
+}
+
 func validateOnceAWeekWindowFormat(v interface{}, k string) (ws []string, errors []error) {
 	// valid time format is "ddd:hh24:mi"
 	validTimeFormat := "(sun|mon|tue|wed|thu|fri|sat):([0-1][0-9]|2[0-3]):([0-5][0-9])"
