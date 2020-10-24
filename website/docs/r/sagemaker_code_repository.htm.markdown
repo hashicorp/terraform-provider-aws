@@ -12,7 +12,7 @@ Provides a Sagemaker Code Repository resource.
 
 ## Example Usage
 
-### Basic usage:
+### Basic usage
 
 ```hcl
 resource "aws_sagemaker_code_repository" "example" {
@@ -24,7 +24,7 @@ resource "aws_sagemaker_code_repository" "example" {
 }
 ```
 
-### Example with Secret:
+### Example with Secret
 
 ```hcl
 resource "aws_secretsmanager_secret" "example" {
@@ -35,7 +35,7 @@ resource "aws_secretsmanager_secret_version" "example" {
   secret_id     = aws_secretsmanager_secret.example.id
   secret_string = jsonencode({username = "example", passowrd = "example"})
 }
-	
+
 resource "aws_sagemaker_code_repository" "example" {
   code_repository_name = "example"
 
@@ -56,10 +56,10 @@ The following arguments are supported:
 * `git_config` - (Required) Specifies details about the repository. see [Git Config](#git-config) details below.
 
 ### Git Config
- 
- * `repository_url` - (Required) The URL where the Git repository is located.
- * `branch` - (Optional) The default branch for the Git repository.
- * `secret_arn` - (Optional) The Amazon Resource Name (ARN) of the AWS Secrets Manager secret that contains the credentials used to access the git repository. The secret must have a staging label of AWSCURRENT and must be in the following format: `{"username": UserName, "password": Password}`
+
+* `repository_url` - (Required) The URL where the Git repository is located.
+* `branch` - (Optional) The default branch for the Git repository.
+* `secret_arn` - (Optional) The Amazon Resource Name (ARN) of the AWS Secrets Manager secret that contains the credentials used to access the git repository. The secret must have a staging label of AWSCURRENT and must be in the following format: `{"username": UserName, "password": Password}`
 
 ## Attributes Reference
 
