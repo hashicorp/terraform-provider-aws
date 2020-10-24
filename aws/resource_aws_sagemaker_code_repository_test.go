@@ -200,7 +200,7 @@ func testAccCheckAWSSagemakerCodeRepositoryDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSSagemakerCodeRepositoryExists(n string, notebook *sagemaker.DescribeCodeRepositoryOutput) resource.TestCheckFunc {
+func testAccCheckAWSSagemakerCodeRepositoryExists(n string, codeRepo *sagemaker.DescribeCodeRepositoryOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -212,12 +212,12 @@ func testAccCheckAWSSagemakerCodeRepositoryExists(n string, notebook *sagemaker.
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
-		codeRepository, err := finder.FincCodeRepositoryByName(conn, rs.Primary.ID)
+		resp, err := finder.FincCodeRepositoryByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		*codeRepository = *resp
+		*codeRepo = *resp
 
 		return nil
 	}
