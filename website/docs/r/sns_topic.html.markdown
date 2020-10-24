@@ -22,7 +22,7 @@ resource "aws_sns_topic" "user_updates" {
 
 ```hcl
 resource "aws_sns_topic" "user_updates" {
-  name = "user-updates-topic"
+  name            = "user-updates-topic"
   delivery_policy = <<EOF
 {
   "http": {
