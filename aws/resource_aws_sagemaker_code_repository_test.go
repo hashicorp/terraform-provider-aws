@@ -187,7 +187,7 @@ func testAccCheckAWSSagemakerCodeRepositoryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		codeRepository, err := finder.FincCodeRepositoryByName(conn, rs.Primary.ID)
+		codeRepository, err := finder.CodeRepositoryByName(conn, rs.Primary.ID)
 		if err != nil {
 			return nil
 		}
@@ -212,7 +212,7 @@ func testAccCheckAWSSagemakerCodeRepositoryExists(n string, codeRepo *sagemaker.
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
-		resp, err := finder.FincCodeRepositoryByName(conn, rs.Primary.ID)
+		resp, err := finder.CodeRepositoryByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
