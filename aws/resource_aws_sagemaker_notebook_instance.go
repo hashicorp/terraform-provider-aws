@@ -58,6 +58,7 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 			"additional_code_repositories": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				MaxItems: 3,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
