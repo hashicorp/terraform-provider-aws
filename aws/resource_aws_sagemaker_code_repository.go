@@ -90,7 +90,7 @@ func resourceAwsSagemakerCodeRepositoryCreate(d *schema.ResourceData, meta inter
 func resourceAwsSagemakerCodeRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
 
-	codeRepository, err := finder.FincCodeRepositoryByName(conn, d.Id())
+	codeRepository, err := finder.CodeRepositoryByName(conn, d.Id())
 	if err != nil {
 		if isAWSErr(err, "ValidationException", "Cannot find CodeRepository") {
 			d.SetId("")
