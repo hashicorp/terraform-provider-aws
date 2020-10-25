@@ -5,9 +5,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 )
 
-// FincCodeRepositoryByName returns the code repository corresponding to the specified name.
+// CodeRepositoryByName returns the code repository corresponding to the specified name.
 // Returns nil if no code repository is found.
-func FincCodeRepositoryByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeCodeRepositoryOutput, error) {
+func CodeRepositoryByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeCodeRepositoryOutput, error) {
 	input := &sagemaker.DescribeCodeRepositoryInput{
 		CodeRepositoryName: aws.String(name),
 	}
