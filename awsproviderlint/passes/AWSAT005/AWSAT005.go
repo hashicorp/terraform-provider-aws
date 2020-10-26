@@ -5,8 +5,10 @@ package AWSAT005
 import (
 	"go/ast"
 	"go/token"
+	"regexp"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
@@ -38,6 +40,13 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	nodeFilter := []ast.Node{
 		(*ast.BasicLit)(nil),
 	}
+
+	var partitions []string
+	for _, p := range endpoints.DefaultPartitions() {
+		partitions = append(partitions, p.ID())
+	}
+
+	re := regexp.MustCompile(`arn:(` + strings.Join(partitions, "|") + `):`)
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
 		x := n.(*ast.BasicLit)
 
@@ -49,11 +58,11 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 
-		if !strings.Contains(x.Value, `arn:aws:`) {
+		if !re.MatchString(x.Value) {
 			return
 		}
 
-		pass.Reportf(x.ValuePos, "%s: avoid hardcoding an AWS partition in an ARN, instead use the aws_partition data source", analyzerName)
+		pass.Reportf(x.ValuePos, "%s: avoid hardcoded ARN AWS partitions, use aws_partition data source", analyzerName)
 	})
 	return nil, nil
 }

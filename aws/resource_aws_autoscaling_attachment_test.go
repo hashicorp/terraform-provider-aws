@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAutoscalingAttachment_elb(t *testing.T) {
@@ -178,19 +178,19 @@ func testAccCheckAWSAutocalingAlbAttachmentExists(asgname string, targetGroupCou
 func testAccAWSAutoscalingAttachment_alb(rInt int) string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-	state            = "available"
-	
-	filter {
-		name   = "opt-in-status"
-		values = ["opt-in-not-required"]
-	}
-}	
-	
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_lb_target_group" "test" {
   name     = "test-alb-%d"
   port     = 443
   protocol = "HTTPS"
-  vpc_id   = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
 
@@ -219,7 +219,7 @@ resource "aws_lb_target_group" "another_test" {
   name     = "atest-alb-%d"
   port     = 443
   protocol = "HTTPS"
-  vpc_id   = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
 
@@ -252,7 +252,7 @@ resource "aws_autoscaling_group" "asg" {
   desired_capacity          = 0
   health_check_grace_period = 300
   force_delete              = true
-  launch_configuration      = "${aws_launch_configuration.as_conf.name}"
+  launch_configuration      = aws_launch_configuration.as_conf.name
 
   tag {
     key                 = "Name"
@@ -284,13 +284,13 @@ resource "aws_vpc" "test" {
 func testAccAWSAutoscalingAttachment_elb(rInt int) string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-	state            = "available"
-	
-	filter {
-		name   = "opt-in-status"
-		values = ["opt-in-not-required"]
-	}
-}	
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_elb" "foo" {
   availability_zones = data.aws_availability_zones.available.names
@@ -328,7 +328,7 @@ resource "aws_autoscaling_group" "asg" {
   desired_capacity          = 0
   health_check_grace_period = 300
   force_delete              = true
-  launch_configuration      = "${aws_launch_configuration.as_conf.name}"
+  launch_configuration      = aws_launch_configuration.as_conf.name
 
   tag {
     key                 = "Name"
@@ -346,31 +346,31 @@ resource "aws_autoscaling_group" "asg" {
 func testAccAWSAutoscalingAttachment_elb_associated(rInt int) string {
 	return testAccAWSAutoscalingAttachment_elb(rInt) + `
 resource "aws_autoscaling_attachment" "asg_attachment_foo" {
-  autoscaling_group_name = "${aws_autoscaling_group.asg.id}"
-  elb                    = "${aws_elb.foo.id}"
+  autoscaling_group_name = aws_autoscaling_group.asg.id
+  elb                    = aws_elb.foo.id
 }`
 }
 
 func testAccAWSAutoscalingAttachment_alb_associated(rInt int) string {
 	return testAccAWSAutoscalingAttachment_alb(rInt) + `
 resource "aws_autoscaling_attachment" "asg_attachment_foo" {
-  autoscaling_group_name = "${aws_autoscaling_group.asg.id}"
-  alb_target_group_arn   = "${aws_lb_target_group.test.arn}"
+  autoscaling_group_name = aws_autoscaling_group.asg.id
+  alb_target_group_arn   = aws_lb_target_group.test.arn
 }`
 }
 
 func testAccAWSAutoscalingAttachment_elb_double_associated(rInt int) string {
 	return testAccAWSAutoscalingAttachment_elb_associated(rInt) + `
 resource "aws_autoscaling_attachment" "asg_attachment_bar" {
-  autoscaling_group_name = "${aws_autoscaling_group.asg.id}"
-  elb                    = "${aws_elb.bar.id}"
+  autoscaling_group_name = aws_autoscaling_group.asg.id
+  elb                    = aws_elb.bar.id
 }`
 }
 
 func testAccAWSAutoscalingAttachment_alb_double_associated(rInt int) string {
 	return testAccAWSAutoscalingAttachment_alb_associated(rInt) + `
 resource "aws_autoscaling_attachment" "asg_attachment_bar" {
-  autoscaling_group_name = "${aws_autoscaling_group.asg.id}"
-  alb_target_group_arn   = "${aws_lb_target_group.another_test.arn}"
+  autoscaling_group_name = aws_autoscaling_group.asg.id
+  alb_target_group_arn   = aws_lb_target_group.another_test.arn
 }`
 }

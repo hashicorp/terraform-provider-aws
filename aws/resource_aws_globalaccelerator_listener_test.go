@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -130,7 +130,7 @@ resource "aws_globalaccelerator_accelerator" "example" {
 }
 
 resource "aws_globalaccelerator_listener" "example" {
-  accelerator_arn = "${aws_globalaccelerator_accelerator.example.id}"
+  accelerator_arn = aws_globalaccelerator_accelerator.example.id
   protocol        = "TCP"
 
   port_range {
@@ -150,7 +150,7 @@ resource "aws_globalaccelerator_accelerator" "example" {
 }
 
 resource "aws_globalaccelerator_listener" "example" {
-  accelerator_arn = "${aws_globalaccelerator_accelerator.example.id}"
+  accelerator_arn = aws_globalaccelerator_accelerator.example.id
   client_affinity = "SOURCE_IP"
   protocol        = "UDP"
 

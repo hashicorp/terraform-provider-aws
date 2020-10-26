@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -62,54 +62,41 @@ func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
 	iamRoleDataSourceName := "data.aws_iam_role.workspaces-default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspacesDirectoryConfigA(rName),
+				Config: testAccWorkspacesDirectoryConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "alias", directoryResourceName, "alias"),
+					resource.TestCheckResourceAttrPair(resourceName, "directory_id", directoryResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "directory_name", directoryResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "directory_type", workspaces.WorkspaceDirectoryTypeSimpleAd),
+					resource.TestCheckResourceAttr(resourceName, "dns_ip_addresses.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_role_id", iamRoleDataSourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "registration_code"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.change_compute_type", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.increase_volume_size", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.rebuild_workspace", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.restart_workspace", "true"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.switch_running_mode", "false"),
-					resource.TestCheckResourceAttr(resourceName, "dns_ip_addresses.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "directory_type", "SIMPLE_AD"),
-					resource.TestCheckResourceAttrPair(resourceName, "directory_name", directoryResourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "alias", directoryResourceName, "alias"),
-					resource.TestCheckResourceAttrPair(resourceName, "directory_id", directoryResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_id", iamRoleDataSourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "workspace_security_group_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "registration_code"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-			{
-				Config: testAccWorkspacesDirectoryConfigB(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.change_compute_type", "false"),
-					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.increase_volume_size", "true"),
-					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.rebuild_workspace", "true"),
-					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.restart_workspace", "false"),
-					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.switch_running_mode", "true"),
-				),
-			},
-			{
-				Config: testAccWorkspacesDirectoryConfigC(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.change_compute_type", "true"),
-					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.increase_volume_size", "false"),
-					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.rebuild_workspace", "false"),
-					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.restart_workspace", "true"),
-					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.switch_running_mode", "true"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.custom_security_group_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.default_ou", ""),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.enable_internet_access", "false"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.enable_maintenance_mode", "true"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.user_enabled_as_local_administrator", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "workspace_security_group_id"),
 				),
 			},
 			{
@@ -128,12 +115,17 @@ func TestAccAwsWorkspacesDirectory_disappears(t *testing.T) {
 	resourceName := "aws_workspaces_directory.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspacesDirectoryConfigA(rName),
+				Config: testAccWorkspacesDirectoryConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
 					testAccCheckAwsWorkspacesDirectoryDisappears(&v),
@@ -151,7 +143,12 @@ func TestAccAwsWorkspacesDirectory_subnetIds(t *testing.T) {
 	resourceName := "aws_workspaces_directory.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
@@ -178,7 +175,12 @@ func TestAccAwsWorkspacesDirectory_tags(t *testing.T) {
 	resourceName := "aws_workspaces_directory.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
@@ -210,6 +212,71 @@ func TestAccAwsWorkspacesDirectory_tags(t *testing.T) {
 					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsWorkspacesDirectory_selfServicePermissions(t *testing.T) {
+	var v workspaces.WorkspaceDirectory
+	rName := acctest.RandString(8)
+
+	resourceName := "aws_workspaces_directory.main"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspacesDirectory_selfServicePermissions(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.change_compute_type", "false"),
+					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.increase_volume_size", "true"),
+					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.rebuild_workspace", "true"),
+					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.restart_workspace", "false"),
+					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.switch_running_mode", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsWorkspacesDirectory_workspaceCreationProperties(t *testing.T) {
+	var v workspaces.WorkspaceDirectory
+	rName := acctest.RandString(8)
+
+	resourceName := "aws_workspaces_directory.main"
+	resourceSecurityGroup := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspacesDirectoryConfig_workspaceCreationProperties(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_creation_properties.0.custom_security_group_id", resourceSecurityGroup, "id"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.default_ou", "OU=AWS,DC=Workgroup,DC=Example,DC=com"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.enable_internet_access", "true"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.enable_maintenance_mode", "false"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.user_enabled_as_local_administrator", "false"),
 				),
 			},
 		},
@@ -375,7 +442,22 @@ func TestFlattenSelfServicePermissions(t *testing.T) {
 	}
 }
 
-// Extract common infra
+func testAccPreCheckWorkspacesDirectory(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).workspacesconn
+
+	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
+
+	_, err := conn.DescribeWorkspaceDirectories(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
@@ -406,8 +488,8 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "primary" {
-  vpc_id               = "${aws_vpc.main.id}"
-  availability_zone_id = "${local.workspaces_az_ids[0]}"
+  vpc_id               = aws_vpc.main.id
+  availability_zone_id = local.workspaces_az_ids[0]
   cidr_block           = "10.0.1.0/24"
 
   tags = {
@@ -416,8 +498,8 @@ resource "aws_subnet" "primary" {
 }
 
 resource "aws_subnet" "secondary" {
-  vpc_id               = "${aws_vpc.main.id}"
-  availability_zone_id = "${local.workspaces_az_ids[1]}"
+  vpc_id               = aws_vpc.main.id
+  availability_zone_id = local.workspaces_az_ids[1]
   cidr_block           = "10.0.2.0/24"
 
   tags = {
@@ -431,8 +513,8 @@ resource "aws_directory_service_directory" "main" {
   password = "#S1ncerely"
 
   vpc_settings {
-    vpc_id     = "${aws_vpc.main.id}"
-    subnet_ids = ["${aws_subnet.primary.id}", "${aws_subnet.secondary.id}"]
+    vpc_id     = aws_vpc.main.id
+    subnet_ids = [aws_subnet.primary.id, aws_subnet.secondary.id]
   }
 
   tags = {
@@ -442,22 +524,26 @@ resource "aws_directory_service_directory" "main" {
 `, rName)
 }
 
-func testAccWorkspacesDirectoryConfigA(rName string) string {
-	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + `
+func testAccWorkspacesDirectoryConfig(rName string) string {
+	return composeConfig(
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
+		`
 resource "aws_workspaces_directory" "main" {
-  directory_id = "${aws_directory_service_directory.main.id}"
+  directory_id = aws_directory_service_directory.main.id
 }
 
 data "aws_iam_role" "workspaces-default" {
   name = "workspaces_DefaultRole"
 }
-`
+`)
 }
 
-func testAccWorkspacesDirectoryConfigB(rName string) string {
-	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + `
+func testAccWorkspacesDirectory_selfServicePermissions(rName string) string {
+	return composeConfig(
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
+		`
 resource "aws_workspaces_directory" "main" {
-  directory_id = "${aws_directory_service_directory.main.id}"
+  directory_id = aws_directory_service_directory.main.id
 
   self_service_permissions {
     change_compute_type  = false
@@ -467,52 +553,68 @@ resource "aws_workspaces_directory" "main" {
     switch_running_mode  = true
   }
 }
-`
-}
-
-func testAccWorkspacesDirectoryConfigC(rName string) string {
-	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + `
-resource "aws_workspaces_directory" "main" {
-  directory_id = "${aws_directory_service_directory.main.id}"
-
-  self_service_permissions {
-    change_compute_type = true
-    switch_running_mode = true
-  }
-}
-`
+`)
 }
 
 func testAccWorkspacesDirectoryConfig_subnetIds(rName string) string {
-	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + `
+	return composeConfig(
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
+		`
 resource "aws_workspaces_directory" "main" {
-  directory_id = "${aws_directory_service_directory.main.id}"
-  subnet_ids = ["${aws_subnet.primary.id}","${aws_subnet.secondary.id}"]
+  directory_id = aws_directory_service_directory.main.id
+  subnet_ids   = [aws_subnet.primary.id, aws_subnet.secondary.id]
 }
-`
+`)
 }
 
 func testAccWorkspacesDirectoryConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
+		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
-  directory_id = "${aws_directory_service_directory.main.id}"
+  directory_id = aws_directory_service_directory.main.id
 
   tags = {
     %[1]q = %[2]q
   }
 }
-`, tagKey1, tagValue1)
+`, tagKey1, tagValue1))
 }
 
 func testAccWorkspacesDirectoryConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
+		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
-  directory_id = "${aws_directory_service_directory.main.id}"
+  directory_id = aws_directory_service_directory.main.id
 
   tags = {
     %[1]q = %[2]q
     %[3]q = %[4]q
   }
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2)
+`, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccWorkspacesDirectoryConfig_workspaceCreationProperties(rName string) string {
+	return composeConfig(
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = "tf-acctest-%[1]s"
+  vpc_id = aws_vpc.main.id
+}
+
+resource "aws_workspaces_directory" "main" {
+  directory_id = aws_directory_service_directory.main.id
+
+  workspace_creation_properties {
+    custom_security_group_id            = aws_security_group.test.id
+    default_ou                          = "OU=AWS,DC=Workgroup,DC=Example,DC=com"
+    enable_internet_access              = true
+    enable_maintenance_mode             = false
+    user_enabled_as_local_administrator = false
+  }
+}
+`, rName))
 }

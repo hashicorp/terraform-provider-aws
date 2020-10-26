@@ -3,9 +3,9 @@ package aws
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Filter_sameAccount(t *testing.T) {
@@ -156,7 +156,7 @@ func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigFilter_sameAcco
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   filter {
     name   = "transit-gateway-attachment-id"
-    values = ["${aws_ec2_transit_gateway_peering_attachment.test.id}"]
+    values = [aws_ec2_transit_gateway_peering_attachment.test.id]
   }
 }
 `)
@@ -167,7 +167,7 @@ func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigID_sameAccount(
 		testAccAWSEc2TransitGatewayPeeringAttachmentConfigBasic_sameAccount(rName),
 		`
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
-  id = "${aws_ec2_transit_gateway_peering_attachment.test.id}"
+  id = aws_ec2_transit_gateway_peering_attachment.test.id
 }
 `)
 }
@@ -178,7 +178,7 @@ func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigTags_sameAccoun
 		`
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   tags = {
-    Name = "${aws_ec2_transit_gateway_peering_attachment.test.tags["Name"]}"
+    Name = aws_ec2_transit_gateway_peering_attachment.test.tags["Name"]
   }
 }
 `)
@@ -189,10 +189,11 @@ func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigFilter_differen
 		testAccAWSEc2TransitGatewayPeeringAttachmentConfigBasic_differentAccount(rName),
 		`
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
+
   filter {
     name   = "transit-gateway-attachment-id"
-    values = ["${aws_ec2_transit_gateway_peering_attachment.test.id}"]
+    values = [aws_ec2_transit_gateway_peering_attachment.test.id]
   }
 }
 `)
@@ -203,8 +204,8 @@ func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigID_differentAcc
 		testAccAWSEc2TransitGatewayPeeringAttachmentConfigBasic_differentAccount(rName),
 		`
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
-  provider = "aws.alternate"
-  id = "${aws_ec2_transit_gateway_peering_attachment.test.id}"
+  provider = "awsalternate"
+  id       = aws_ec2_transit_gateway_peering_attachment.test.id
 }
 `)
 }

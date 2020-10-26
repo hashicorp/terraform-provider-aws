@@ -81,7 +81,7 @@ resource "aws_vpc" "example" {
   }
 
   lifecycle {
-    ignore_tags = [tags]
+    ignore_changes = [tags]
   }
 }
 ```
@@ -99,7 +99,7 @@ resource "aws_vpc" "example" {
   }
 
   lifecycle {
-    ignore_tags = [tags["Name"]]
+    ignore_changes = [tags.Name]
   }
 }
 ```
@@ -162,7 +162,7 @@ To manage multiple tags for a resource in this scenario, [`for_each`](/docs/conf
 # ... other configuration ...
 
 resource "aws_ec2_tag" "example" {
-  for_each = {"Name": "MyAttachment", "Owner": "Operations"}
+  for_each = { "Name" : "MyAttachment", "Owner" : "Operations" }
 
   resource_id = aws_vpn_connection.example.transit_gateway_attachment_id
   key         = each.key

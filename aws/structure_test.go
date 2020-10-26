@@ -17,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func TestDiffStringMaps(t *testing.T) {
@@ -505,7 +505,7 @@ func TestFlattenHealthCheck(t *testing.T) {
 func TestFlattenOrganizationsOrganizationalUnits(t *testing.T) {
 	input := []*organizations.OrganizationalUnit{
 		{
-			Arn:  aws.String("arn:aws:organizations::123456789012:ou/o-abcde12345/ou-ab12-abcd1234"),
+			Arn:  aws.String("arn:aws:organizations::123456789012:ou/o-abcde12345/ou-ab12-abcd1234"), //lintignore:AWSAT005
 			Id:   aws.String("ou-ab12-abcd1234"),
 			Name: aws.String("Engineering"),
 		},
@@ -513,7 +513,7 @@ func TestFlattenOrganizationsOrganizationalUnits(t *testing.T) {
 
 	expected_output := []map[string]interface{}{
 		{
-			"arn":  "arn:aws:organizations::123456789012:ou/o-abcde12345/ou-ab12-abcd1234",
+			"arn":  "arn:aws:organizations::123456789012:ou/o-abcde12345/ou-ab12-abcd1234", //lintignore:AWSAT005
 			"id":   "ou-ab12-abcd1234",
 			"name": "Engineering",
 		},
@@ -1266,12 +1266,12 @@ abc:
 	}
 }
 
-func TestNormalizeCloudFormationTemplate(t *testing.T) {
+func TestNormalizeJsonOrYamlString(t *testing.T) {
 	var err error
 	var actual string
 
 	validNormalizedJson := `{"abc":"1"}`
-	actual, err = normalizeCloudFormationTemplate(validNormalizedJson)
+	actual, err = normalizeJsonOrYamlString(validNormalizedJson)
 	if err != nil {
 		t.Fatalf("Expected not to throw an error while parsing template, but got: %s", err)
 	}
@@ -1281,7 +1281,7 @@ func TestNormalizeCloudFormationTemplate(t *testing.T) {
 
 	validNormalizedYaml := `abc: 1
 `
-	actual, err = normalizeCloudFormationTemplate(validNormalizedYaml)
+	actual, err = normalizeJsonOrYamlString(validNormalizedYaml)
 	if err != nil {
 		t.Fatalf("Expected not to throw an error while parsing template, but got: %s", err)
 	}

@@ -2,11 +2,11 @@ package aws
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsWafRegionalRule_basic(t *testing.T) {
@@ -41,7 +41,7 @@ resource "aws_wafregional_rule" "wafrule" {
 }
 
 data "aws_wafregional_rule" "wafrule" {
-  name = "${aws_wafregional_rule.wafrule.name}"
+  name = aws_wafregional_rule.wafrule.name
 }
 `, name)
 }

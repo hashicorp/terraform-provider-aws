@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 // S3 account-level settings must run serialized
@@ -400,7 +400,7 @@ func testAccAWSS3AccountPublicAccessBlockConfigAccountId() string {
 data "aws_caller_identity" "test" {}
 
 resource "aws_s3_account_public_access_block" "test" {
-  account_id = "${data.aws_caller_identity.test.account_id}"
+  account_id = data.aws_caller_identity.test.account_id
 }
 `
 }

@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSSpotDatafeedSubscription_serial(t *testing.T) {
@@ -169,7 +169,7 @@ resource "aws_s3_bucket" "default" {
 }
 
 resource "aws_spot_datafeed_subscription" "default" {
-  bucket = "${aws_s3_bucket.default.bucket}"
+  bucket = aws_s3_bucket.default.bucket
 }
 `, randInt)
 }

@@ -27,7 +27,7 @@ data "aws_autoscaling_groups" "groups" {
 }
 
 resource "aws_autoscaling_notification" "slack_notifications" {
-  group_names = ["${data.aws_autoscaling_groups.groups.names}"]
+  group_names = data.aws_autoscaling_groups.groups.names
 
   notifications = [
     "autoscaling:EC2_INSTANCE_LAUNCH",

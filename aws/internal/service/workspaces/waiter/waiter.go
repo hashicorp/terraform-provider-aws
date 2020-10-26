@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const (
@@ -109,9 +109,7 @@ func WorkspaceTerminated(conn *workspaces.WorkSpaces, workspaceID string) (*work
 			workspaces.WorkspaceStateTerminating,
 			workspaces.WorkspaceStateError,
 		},
-		Target: []string{
-			workspaces.WorkspaceStateTerminated,
-		},
+		Target:  []string{},
 		Refresh: WorkspaceState(conn, workspaceID),
 		Timeout: WorkspaceTerminatedTimeout,
 	}

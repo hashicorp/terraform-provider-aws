@@ -12,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -126,7 +126,6 @@ func testAccAwsSnsPlatformApplicationPlatformFromEnv(t *testing.T) []*testAccAws
 }
 
 func TestDecodeResourceAwsSnsPlatformApplicationID(t *testing.T) {
-
 	var testCases = []struct {
 		Input            string
 		ExpectedArn      string
@@ -135,35 +134,35 @@ func TestDecodeResourceAwsSnsPlatformApplicationID(t *testing.T) {
 		ErrCount         int
 	}{
 		{
-			Input:            "arn:aws:sns:us-east-1:123456789012:app/APNS_SANDBOX/myAppName",
-			ExpectedArn:      "arn:aws:sns:us-east-1:123456789012:app/APNS_SANDBOX/myAppName",
+			Input:            "arn:aws:sns:us-east-1:123456789012:app/APNS_SANDBOX/myAppName", //lintignore:AWSAT003,AWSAT005
+			ExpectedArn:      "arn:aws:sns:us-east-1:123456789012:app/APNS_SANDBOX/myAppName", //lintignore:AWSAT003,AWSAT005
 			ExpectedName:     "myAppName",
 			ExpectedPlatform: "APNS_SANDBOX",
 			ErrCount:         0,
 		},
 		{
-			Input:            "arn:aws:sns:us-east-1:123456789012:app/APNS_SANDBOX/myAppName/extra",
+			Input:            "arn:aws:sns:us-east-1:123456789012:app/APNS_SANDBOX/myAppName/extra", //lintignore:AWSAT003,AWSAT005
 			ExpectedArn:      "",
 			ExpectedName:     "",
 			ExpectedPlatform: "",
 			ErrCount:         1,
 		},
 		{
-			Input:            "arn:aws:sns:us-east-1:123456789012:endpoint/APNS_SANDBOX/myAppName/someID",
+			Input:            "arn:aws:sns:us-east-1:123456789012:endpoint/APNS_SANDBOX/myAppName/someID", //lintignore:AWSAT003,AWSAT005
 			ExpectedArn:      "",
 			ExpectedName:     "",
 			ExpectedPlatform: "",
 			ErrCount:         1,
 		},
 		{
-			Input:            "arn:aws:sns:us-east-1:123456789012:APNS_SANDBOX/myAppName",
+			Input:            "arn:aws:sns:us-east-1:123456789012:APNS_SANDBOX/myAppName", //lintignore:AWSAT003,AWSAT005
 			ExpectedArn:      "",
 			ExpectedName:     "",
 			ExpectedPlatform: "",
 			ErrCount:         1,
 		},
 		{
-			Input:            "arn:aws:sns:us-east-1:123456789012:app",
+			Input:            "arn:aws:sns:us-east-1:123456789012:app", //lintignore:AWSAT003,AWSAT005
 			ExpectedArn:      "",
 			ExpectedName:     "",
 			ExpectedPlatform: "",
@@ -503,13 +502,17 @@ resource "aws_sns_platform_application" "test" {
 
 func testAccAwsSnsPlatformApplicationConfig_iamRoleAttribute(name string, platform *testAccAwsSnsPlatformApplicationPlatform, attributeKey, iamRoleName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": {
     "Effect": "Allow",
-    "Principal": {"Service": "sns.amazonaws.com"},
+    "Principal": {
+      "Service": "sns.${data.aws_partition.current.dns_suffix}"
+    },
     "Action": "sts:AssumeRole"
   }
 }
@@ -519,12 +522,11 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
-  policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
-  role       = "${aws_iam_role.test.id}"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/CloudWatchLogsFullAccess"
+  role       = aws_iam_role.test.id
 }
 
 %s
-
 `, iamRoleName, testAccAwsSnsPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_iam_role.test.arn}"))
 }
 
@@ -535,6 +537,5 @@ resource "aws_sns_topic" "test" {
 }
 
 %s
-
 `, snsTopicName, testAccAwsSnsPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_sns_topic.test.arn}"))
 }

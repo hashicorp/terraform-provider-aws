@@ -8,7 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsGlueCatalogTable() *schema.Resource {
@@ -142,8 +143,9 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringIsNotEmpty,
 									},
 									"parameters": {
 										Type:     schema.TypeMap,
@@ -151,8 +153,9 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"serialization_library": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringIsNotEmpty,
 									},
 								},
 							},
@@ -500,11 +503,11 @@ func expandGlueSerDeInfo(l []interface{}) *glue.SerDeInfo {
 	s := l[0].(map[string]interface{})
 	serDeInfo := &glue.SerDeInfo{}
 
-	if v, ok := s["name"]; ok {
+	if v := s["name"]; len(v.(string)) > 0 {
 		serDeInfo.Name = aws.String(v.(string))
 	}
 
-	if v, ok := s["parameters"]; ok {
+	if v := s["parameters"]; len(v.(map[string]interface{})) > 0 {
 		paramsMap := map[string]string{}
 		for key, value := range v.(map[string]interface{}) {
 			paramsMap[key] = value.(string)
@@ -512,7 +515,7 @@ func expandGlueSerDeInfo(l []interface{}) *glue.SerDeInfo {
 		serDeInfo.Parameters = aws.StringMap(paramsMap)
 	}
 
-	if v, ok := s["serialization_library"]; ok {
+	if v := s["serialization_library"]; len(v.(string)) > 0 {
 		serDeInfo.SerializationLibrary = aws.String(v.(string))
 	}
 
@@ -644,9 +647,15 @@ func flattenGlueSerDeInfo(s *glue.SerDeInfo) []map[string]interface{} {
 	serDeInfos := make([]map[string]interface{}, 1)
 	serDeInfo := make(map[string]interface{})
 
-	serDeInfo["name"] = aws.StringValue(s.Name)
+	if v := aws.StringValue(s.Name); v != "" {
+		serDeInfo["name"] = v
+	}
+
 	serDeInfo["parameters"] = aws.StringValueMap(s.Parameters)
-	serDeInfo["serialization_library"] = aws.StringValue(s.SerializationLibrary)
+
+	if v := aws.StringValue(s.SerializationLibrary); v != "" {
+		serDeInfo["serialization_library"] = v
+	}
 
 	serDeInfos[0] = serDeInfo
 	return serDeInfos

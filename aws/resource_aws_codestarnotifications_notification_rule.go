@@ -8,10 +8,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codestarnotifications"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+)
+
+const (
+	// Maximum amount of time to wait for target subscriptions to propagate
+	codestarNotificationsTargetSubscriptionTimeout = 30 * time.Second
 )
 
 func resourceAwsCodeStarNotificationsNotificationRule() *schema.Resource {
@@ -197,41 +203,47 @@ func cleanupCodeStarNotificationsNotificationRuleTargets(conn *codestarnotificat
 		removedTargets = oldVal.Difference(newVal)
 	}
 
-	targets := removedTargets.List()
+	for _, targetRaw := range removedTargets.List() {
+		target, ok := targetRaw.(map[string]interface{})
 
-	err := resource.Retry(time.Duration(5)*time.Second, func() *resource.RetryError {
-		var (
-			reterr error
-			i      int
-		)
+		if !ok {
+			continue
+		}
 
-		for _, t := range targets {
-			target := t.(map[string]interface{})
-			_, err := conn.DeleteTarget(&codestarnotifications.DeleteTargetInput{
-				ForceUnsubscribeAll: aws.Bool(false),
-				TargetAddress:       aws.String(target["address"].(string)),
-			})
+		input := &codestarnotifications.DeleteTargetInput{
+			ForceUnsubscribeAll: aws.Bool(false),
+			TargetAddress:       aws.String(target["address"].(string)),
+		}
+
+		err := resource.Retry(codestarNotificationsTargetSubscriptionTimeout, func() *resource.RetryError {
+			_, err := conn.DeleteTarget(input)
+
 			if isAWSErr(err, codestarnotifications.ErrCodeValidationException, awsCodeStartNotificationsNotificationRuleErrorSubscribed) {
-				reterr = err
-				targets[i] = target
-				i++
-			} else if err != nil {
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
 				return resource.NonRetryableError(err)
 			}
-		}
-		targets = targets[:i]
 
-		if reterr != nil {
-			return resource.RetryableError(reterr)
-		}
-		return nil
-	})
+			return nil
+		})
 
-	if isAWSErr(err, codestarnotifications.ErrCodeValidationException, awsCodeStartNotificationsNotificationRuleErrorSubscribed) {
-		err = nil
+		if tfresource.TimedOut(err) {
+			_, err = conn.DeleteTarget(input)
+		}
+
+		// Treat target deletion as best effort
+		if isAWSErr(err, codestarnotifications.ErrCodeValidationException, awsCodeStartNotificationsNotificationRuleErrorSubscribed) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
 	}
 
-	return err
+	return nil
 }
 
 func resourceAwsCodeStarNotificationsNotificationRuleUpdate(d *schema.ResourceData, meta interface{}) error {

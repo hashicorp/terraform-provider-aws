@@ -79,7 +79,7 @@ string.
 [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
 
 - `create` - (Default `75 minutes`) Used for creating Clusters.
-- `update` - (Default `40 minutes`) Used for Cluster Argument changes.
+- `update` - (Default `75 minutes`) Used for updating Clusters.
 - `delete` - (Default `40 minutes`) Used for destroying Clusters.
 
 ### Nested Blocks

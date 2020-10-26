@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -257,7 +257,6 @@ func testAccCheckAWSNeptuneClusterParameterGroupDestroy(s *terraform.State) erro
 
 func testAccCheckAWSNeptuneClusterParameterGroupAttributes(v *neptune.DBClusterParameterGroup, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if *v.DBClusterParameterGroupName != name {
 			return fmt.Errorf("bad name: %#v expected: %v", *v.DBClusterParameterGroupName, name)
 		}
@@ -356,6 +355,7 @@ resource "aws_neptune_cluster_parameter_group" "test" {
   name_prefix = "tf-test-"
 }
 `
+
 const testAccAWSNeptuneClusterParameterGroupConfig_generatedName = `
 resource "aws_neptune_cluster_parameter_group" "test" {
   family = "neptune1"

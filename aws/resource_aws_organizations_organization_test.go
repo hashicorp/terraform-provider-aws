@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -109,6 +109,7 @@ func testAccAwsOrganizationsOrganization_EnabledPolicyTypes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeServiceControlPolicy),
 				),
 			},
 			{
@@ -124,10 +125,19 @@ func testAccAwsOrganizationsOrganization_EnabledPolicyTypes(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccAwsOrganizationsOrganizationConfigEnabledPolicyTypes1(organizations.PolicyTypeAiservicesOptOutPolicy),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeAiservicesOptOutPolicy),
+				),
+			},
+			{
 				Config: testAccAwsOrganizationsOrganizationConfigEnabledPolicyTypes1(organizations.PolicyTypeServiceControlPolicy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeServiceControlPolicy),
 				),
 			},
 			{
@@ -135,6 +145,7 @@ func testAccAwsOrganizationsOrganization_EnabledPolicyTypes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeBackupPolicy),
 				),
 			},
 			{
@@ -142,6 +153,7 @@ func testAccAwsOrganizationsOrganization_EnabledPolicyTypes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeTagPolicy),
 				),
 			},
 			{

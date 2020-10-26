@@ -9,10 +9,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
@@ -125,17 +125,11 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										ForceNew: true,
 									},
 									"volume_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											ec2.VolumeTypeStandard,
-											ec2.VolumeTypeIo1,
-											ec2.VolumeTypeGp2,
-											ec2.VolumeTypeSc1,
-											ec2.VolumeTypeSt1,
-										}, false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
 									},
 								},
 							},
@@ -204,17 +198,11 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										ForceNew: true,
 									},
 									"volume_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											ec2.VolumeTypeStandard,
-											ec2.VolumeTypeIo1,
-											ec2.VolumeTypeGp2,
-											ec2.VolumeTypeSc1,
-											ec2.VolumeTypeSt1,
-										}, false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
 									},
 								},
 							},
@@ -883,14 +871,14 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	if v, ok := d.GetOk("allocation_strategy"); ok {
 		spotFleetConfig.AllocationStrategy = aws.String(v.(string))
 	} else {
-		spotFleetConfig.AllocationStrategy = aws.String("lowestPrice")
+		spotFleetConfig.AllocationStrategy = aws.String(ec2.AllocationStrategyLowestPrice)
 	}
 
 	if v, ok := d.GetOk("instance_pools_to_use_count"); ok && v.(int) != 1 {
 		spotFleetConfig.InstancePoolsToUseCount = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("spot_price"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("spot_price"); ok {
 		spotFleetConfig.SpotPrice = aws.String(v.(string))
 	}
 
@@ -956,6 +944,10 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		resp, err = conn.RequestSpotFleet(spotFleetOpts)
 
 		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "Parameter: SpotFleetRequestConfig.IamFleetRole is invalid") {
+			return resource.RetryableError(err)
+		}
+
+		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "The provided SpotFleetRequestConfig.IamFleetRole does not have permission to call") {
 			return resource.RetryableError(err)
 		}
 
@@ -1479,11 +1471,10 @@ func resourceAwsSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{})
 	updateFlag := false
 
 	if d.HasChange("target_capacity") {
-		if val, ok := d.GetOk("target_capacity"); ok {
+		if val, ok := d.GetOkExists("target_capacity"); ok {
 			req.TargetCapacity = aws.Int64(int64(val.(int)))
+			updateFlag = true
 		}
-
-		updateFlag = true
 	}
 
 	if d.HasChange("excess_capacity_termination_policy") {
@@ -1495,8 +1486,24 @@ func resourceAwsSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if updateFlag {
+		log.Printf("[DEBUG] Modifying Spot Fleet Request: %#v", req)
 		if _, err := conn.ModifySpotFleetRequest(req); err != nil {
 			return fmt.Errorf("error updating spot request (%s): %s", d.Id(), err)
+		}
+
+		log.Println("[INFO] Waiting for Spot Fleet Request to be modified")
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{ec2.BatchStateModifying},
+			Target:     []string{ec2.BatchStateActive},
+			Refresh:    resourceAwsSpotFleetRequestStateRefreshFunc(d, meta),
+			Timeout:    10 * time.Minute,
+			MinTimeout: 10 * time.Second,
+			Delay:      30 * time.Second,
+		}
+
+		_, err := stateConf.WaitForState()
+		if err != nil {
+			return err
 		}
 	}
 

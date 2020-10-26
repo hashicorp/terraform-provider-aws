@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sfn"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
@@ -203,7 +203,7 @@ EOF
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
@@ -212,7 +212,7 @@ data "aws_region" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_sfn" {
   name = %[1]q
-  role = "${aws_iam_role.iam_for_sfn.id}"
+  role = aws_iam_role.iam_for_sfn.id
 
   policy = <<EOF
 {
@@ -223,8 +223,8 @@ resource "aws_iam_role_policy" "iam_policy_for_sfn" {
       "Action": [
         "lambda:InvokeFunction"
       ],
-        "Resource": "${aws_lambda_function.test.arn}"
-	}
+      "Resource": "${aws_lambda_function.test.arn}"
+    }
   ]
 }
 EOF
@@ -256,7 +256,7 @@ func testAccAWSSfnStateMachineConfig(rName string, rMaxAttempts int) string {
 	return testAccAWSSfnStateMachineConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %q
-  role_arn = "${aws_iam_role.iam_for_sfn.arn}"
+  role_arn = aws_iam_role.iam_for_sfn.arn
 
   definition = <<EOF
 {
@@ -268,10 +268,12 @@ resource "aws_sfn_state_machine" "test" {
       "Resource": "${aws_lambda_function.test.arn}",
       "Retry": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "IntervalSeconds": 5,
           "MaxAttempts": %d,
-          "BackoffRate": 8.0
+          "BackoffRate": 8
         }
       ],
       "End": true
@@ -287,7 +289,7 @@ func testAccAWSSfnStateMachineConfigTags1(rName, tag1Key, tag1Value string) stri
 	return testAccAWSSfnStateMachineConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
-  role_arn = "${aws_iam_role.iam_for_sfn.arn}"
+  role_arn = aws_iam_role.iam_for_sfn.arn
 
   definition = <<EOF
 {
@@ -299,10 +301,12 @@ resource "aws_sfn_state_machine" "test" {
       "Resource": "${aws_lambda_function.test.arn}",
       "Retry": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "IntervalSeconds": 5,
           "MaxAttempts": 5,
-          "BackoffRate": 8.0
+          "BackoffRate": 8
         }
       ],
       "End": true
@@ -310,8 +314,9 @@ resource "aws_sfn_state_machine" "test" {
   }
 }
 EOF
+
   tags = {
-	%[2]q = %[3]q
+    %[2]q = %[3]q
   }
 }
 `, rName, tag1Key, tag1Value)
@@ -321,7 +326,7 @@ func testAccAWSSfnStateMachineConfigTags2(rName, tag1Key, tag1Value, tag2Key, ta
 	return testAccAWSSfnStateMachineConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
-  role_arn = "${aws_iam_role.iam_for_sfn.arn}"
+  role_arn = aws_iam_role.iam_for_sfn.arn
 
   definition = <<EOF
 {
@@ -333,10 +338,12 @@ resource "aws_sfn_state_machine" "test" {
       "Resource": "${aws_lambda_function.test.arn}",
       "Retry": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "IntervalSeconds": 5,
           "MaxAttempts": 5,
-          "BackoffRate": 8.0
+          "BackoffRate": 8
         }
       ],
       "End": true
@@ -344,9 +351,10 @@ resource "aws_sfn_state_machine" "test" {
   }
 }
 EOF
+
   tags = {
-	%[2]q = %[3]q
-	%[4]q = %[5]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)

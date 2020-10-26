@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -161,6 +161,8 @@ resource "aws_cloudwatch_log_group" "test" {
   retention_in_days = 1
 }
 
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_document" "test" {
   statement {
     actions = [
@@ -168,10 +170,10 @@ data "aws_iam_policy_document" "test" {
       "logs:PutLogEvents",
     ]
 
-    resources = ["arn:aws:logs:*:*:log-group:/aws/route53/*"]
+    resources = ["arn:${data.aws_partition.current.partition}:logs:*:*:log-group:/aws/route53/*"]
 
     principals {
-      identifiers = ["route53.amazonaws.com"]
+      identifiers = ["route53.${data.aws_partition.current.dns_suffix}"]
       type        = "Service"
     }
   }
@@ -179,7 +181,7 @@ data "aws_iam_policy_document" "test" {
 
 resource "aws_cloudwatch_log_resource_policy" "test" {
   policy_name     = "%[1]s"
-  policy_document = "${data.aws_iam_policy_document.test.json}"
+  policy_document = data.aws_iam_policy_document.test.json
 }
 
 resource "aws_route53_zone" "test" {
@@ -187,10 +189,10 @@ resource "aws_route53_zone" "test" {
 }
 
 resource "aws_route53_query_log" "test" {
-  depends_on = ["aws_cloudwatch_log_resource_policy.test"]
+  depends_on = [aws_cloudwatch_log_resource_policy.test]
 
-  cloudwatch_log_group_arn = "${aws_cloudwatch_log_group.test.arn}"
-  zone_id                  = "${aws_route53_zone.test.zone_id}"
+  cloudwatch_log_group_arn = aws_cloudwatch_log_group.test.arn
+  zone_id                  = aws_route53_zone.test.zone_id
 }
 `, rName)
 }

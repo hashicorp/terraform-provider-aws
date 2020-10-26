@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -13,10 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	gversion "github.com/hashicorp/go-version"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -242,7 +243,7 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			func(diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				// Plan time validation for az_mode
 				// InvalidParameterCombination: Must specify at least two cache nodes in order to specify AZ Mode of 'cross-az'.
 				if v, ok := diff.GetOk("az_mode"); !ok || v.(string) != elasticache.AZModeCrossAz {
@@ -253,7 +254,7 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				}
 				return errors.New(`az_mode "cross-az" is not supported with num_cache_nodes = 1`)
 			},
-			func(diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				// Plan time validation for engine_version
 				// InvalidParameterCombination: Cannot modify memcached from 1.4.33 to 1.4.24
 				// InvalidParameterCombination: Cannot modify redis from 3.2.6 to 3.2.4
@@ -274,7 +275,7 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				}
 				return diff.ForceNew("engine_version")
 			},
-			func(diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				// Plan time validation for num_cache_nodes
 				// InvalidParameterValue: Cannot create a Redis cluster with a NumCacheNodes parameter greater than 1.
 				if v, ok := diff.GetOk("engine"); !ok || v.(string) == "memcached" {
@@ -285,7 +286,7 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				}
 				return errors.New(`engine "redis" does not support num_cache_nodes > 1`)
 			},
-			func(diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				// Engine memcached does not currently support vertical scaling
 				// InvalidParameterCombination: Scaling is not supported for engine memcached
 				// https://docs.aws.amazon.com/AmazonElastiCache/latest/UserGuide/Scaling.Memcached.html#Scaling.Memcached.Vertically
