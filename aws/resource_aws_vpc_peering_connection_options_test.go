@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
@@ -26,20 +25,10 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 				Config: testAccVpcPeeringConnectionOptionsConfig_sameRegion_sameAccount(rName, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					// Requester's view:
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"requester.#",
-						"1",
-					),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
-						"allow_remote_vpc_dns_resolution": "false",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
-						"allow_classic_link_to_remote_vpc": "true",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
-						"allow_vpc_to_remote_classic_link": "true",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "requester.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_remote_vpc_dns_resolution", "false"),
+					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_classic_link_to_remote_vpc", "true"),
+					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_vpc_to_remote_classic_link", "true"),
 					testAccCheckAWSVpcPeeringConnectionOptions(
 						pcxResourceName,
 						"requester",
@@ -50,20 +39,10 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 						},
 					),
 					// Accepter's view:
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"accepter.#",
-						"1",
-					),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "accepter.*", map[string]string{
-						"allow_remote_vpc_dns_resolution": "true",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "accepter.*", map[string]string{
-						"allow_classic_link_to_remote_vpc": "false",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "accepter.*", map[string]string{
-						"allow_vpc_to_remote_classic_link": "false",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "accepter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "accepter.0.allow_remote_vpc_dns_resolution", "true"),
+					resource.TestCheckResourceAttr(resourceName, "accepter.0.allow_classic_link_to_remote_vpc", "false"),
+					resource.TestCheckResourceAttr(resourceName, "accepter.0.allow_vpc_to_remote_classic_link", "false"),
 					testAccCheckAWSVpcPeeringConnectionOptions(
 						pcxResourceName,
 						"accepter",
@@ -140,20 +119,10 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 				Config: testAccVpcPeeringConnectionOptionsConfig_differentRegion_sameAccount(rName, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					// Requester's view:
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"requester.#",
-						"1",
-					),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
-						"allow_remote_vpc_dns_resolution": "true",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
-						"allow_classic_link_to_remote_vpc": "false",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
-						"allow_vpc_to_remote_classic_link": "false",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "requester.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_remote_vpc_dns_resolution", "true"),
+					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_classic_link_to_remote_vpc", "false"),
+					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_vpc_to_remote_classic_link", "false"),
 					testAccCheckAWSVpcPeeringConnectionOptions(
 						pcxResourceName,
 						"requester",
@@ -164,20 +133,10 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 						},
 					),
 					// Accepter's view:
-					resource.TestCheckResourceAttr(
-						resourceNamePeer,
-						"accepter.#",
-						"1",
-					),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceNamePeer, "accepter.*", map[string]string{
-						"allow_remote_vpc_dns_resolution": "true",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceNamePeer, "accepter.*", map[string]string{
-						"allow_classic_link_to_remote_vpc": "false",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceNamePeer, "accepter.*", map[string]string{
-						"allow_vpc_to_remote_classic_link": "false",
-					}),
+					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.#", "1"),
+					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.0.allow_remote_vpc_dns_resolution", "true"),
+					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.0.allow_classic_link_to_remote_vpc", "false"),
+					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.0.allow_vpc_to_remote_classic_link", "false"),
 					testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(
 						pcxResourceNamePeer,
 						"accepter",
@@ -255,20 +214,10 @@ func TestAccAWSVpcPeeringConnectionOptions_sameRegionDifferentAccount(t *testing
 				Config: testAccVpcPeeringConnectionOptionsConfig_sameRegion_differentAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// Requester's view:
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"requester.#",
-						"1",
-					),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
-						"allow_remote_vpc_dns_resolution": "true",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
-						"allow_classic_link_to_remote_vpc": "false",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "requester.*", map[string]string{
-						"allow_vpc_to_remote_classic_link": "false",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "requester.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_remote_vpc_dns_resolution", "true"),
+					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_classic_link_to_remote_vpc", "false"),
+					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_vpc_to_remote_classic_link", "false"),
 					testAccCheckAWSVpcPeeringConnectionOptions(
 						pcxResourceName,
 						"requester",
@@ -279,20 +228,10 @@ func TestAccAWSVpcPeeringConnectionOptions_sameRegionDifferentAccount(t *testing
 						},
 					),
 					// Accepter's view:
-					resource.TestCheckResourceAttr(
-						resourceNamePeer,
-						"accepter.#",
-						"1",
-					),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceNamePeer, "accepter.*", map[string]string{
-						"allow_remote_vpc_dns_resolution": "true",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceNamePeer, "accepter.*", map[string]string{
-						"allow_classic_link_to_remote_vpc": "false",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceNamePeer, "accepter.*", map[string]string{
-						"allow_vpc_to_remote_classic_link": "false",
-					}),
+					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.#", "1"),
+					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.0.allow_remote_vpc_dns_resolution", "true"),
+					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.0.allow_classic_link_to_remote_vpc", "false"),
+					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.0.allow_vpc_to_remote_classic_link", "false"),
 				),
 			},
 			{
