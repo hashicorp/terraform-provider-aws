@@ -180,3 +180,6 @@ if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchTagSet) {
 	return nil
 }
 ```
+
+- [ ] __Uses Paginated AWS Go SDK Functions When Iterating Over a Collection of Objects__: When the API for listing a collection of objects provides a paginated function, use it instead of looping until the next page token is not set. For example, with the EC2 API, [`DescribeInstancesPages`](https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#EC2.DescribeInstancesPages) should be used instead of [`DescribeInstances`](https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#EC2.DescribeInstances) when more than one result is expected.
+- [ ] __Adds Paginated Functions Missing from the AWS Go SDK to Internal Service Package__: If the AWS Go SDK does not define a paginated equivalent for a function to list a collection of objects, it should be added to a per-service internal package using the [`listpages` generator](../../aws/internal/generators/listpages/README.md). A support case should also be opened with AWS to have the paginated functions added to the AWS Go SDK.
