@@ -142,75 +142,76 @@ resource "aws_ssm_maintenance_window_task" "example" {
 
 The following arguments are supported:
 
-- `window_id` - (Required) The Id of the maintenance window to register the task with.
-- `max_concurrency` - (Required) The maximum number of targets this task can be run for in parallel.
-- `max_errors` - (Required) The maximum number of errors allowed before this task stops being scheduled.
-- `task_type` - (Required) The type of task being registered. The only allowed value is `RUN_COMMAND`.
-- `task_arn` - (Required) The ARN of the task to execute.
-- `service_role_arn` - (Required) The role that should be assumed when executing the task.
-- `name` - (Optional) The name of the maintenance window task.
-- `description` - (Optional) The description of the maintenance window task.
-- `targets` - (Required) The targets (either instances or window target ids). Instances are specified using Key=InstanceIds,Values=instanceid1,instanceid2. Window target ids are specified using Key=WindowTargetIds,Values=window target id1, window target id2.
-- `priority` - (Optional) The priority of the task in the Maintenance Window, the lower the number the higher the priority. Tasks in a Maintenance Window are scheduled in priority order with tasks that have the same priority scheduled in parallel.
-- `task_invocation_parameters` - (Optional) Configuration block with parameters for task execution.
+* `window_id` - (Required) The Id of the maintenance window to register the task with.
+* `max_concurrency` - (Required) The maximum number of targets this task can be run for in parallel.
+* `max_errors` - (Required) The maximum number of errors allowed before this task stops being scheduled.
+* `task_type` - (Required) The type of task being registered. The only allowed value is `RUN_COMMAND`.
+* `task_arn` - (Required) The ARN of the task to execute.
+* `service_role_arn` - (Required) The role that should be assumed when executing the task.
+* `name` - (Optional) The name of the maintenance window task.
+* `description` - (Optional) The description of the maintenance window task.
+* `targets` - (Required) The targets (either instances or window target ids). Instances are specified using Key=InstanceIds,Values=instanceid1,instanceid2. Window target ids are specified using Key=WindowTargetIds,Values=window target id1, window target id2.
+* `priority` - (Optional) The priority of the task in the Maintenance Window, the lower the number the higher the priority. Tasks in a Maintenance Window are scheduled in priority order with tasks that have the same priority scheduled in parallel.
+* `task_invocation_parameters` - (Optional) Configuration block with parameters for task execution.
 
 `task_invocation_parameters` supports the following:
 
-- `automation_parameters` - (Optional) The parameters for an AUTOMATION task type. Documented below.
-- `lambda_parameters` - (Optional) The parameters for a LAMBDA task type. Documented below.
-- `run_command_parameters` - (Optional) The parameters for a RUN_COMMAND task type. Documented below.
-- `step_functions_parameters` - (Optional) The parameters for a STEP_FUNCTIONS task type. Documented below.
+* `automation_parameters` - (Optional) The parameters for an AUTOMATION task type. Documented below.
+* `lambda_parameters` - (Optional) The parameters for a LAMBDA task type. Documented below.
+* `run_command_parameters` - (Optional) The parameters for a RUN_COMMAND task type. Documented below.
+* `step_functions_parameters` - (Optional) The parameters for a STEP_FUNCTIONS task type. Documented below.
 
 `automation_parameters` supports the following:
 
-- `document_version` - (Optional) The version of an Automation document to use during task execution.
-- `parameter` - (Optional) The parameters for the RUN_COMMAND task execution. Documented below.
+* `document_version` - (Optional) The version of an Automation document to use during task execution.
+* `parameter` - (Optional) The parameters for the RUN_COMMAND task execution. Documented below.
 
 `lambda_parameters` supports the following:
 
-- `client_context` - (Optional) Pass client-specific information to the Lambda function that you are invoking.
-- `payload` - (Optional) JSON to provide to your Lambda function as input.
-- `qualifier` - (Optional) Specify a Lambda function version or alias name.
+* `client_context` - (Optional) Pass client-specific information to the Lambda function that you are invoking.
+* `payload` - (Optional) JSON to provide to your Lambda function as input.
+* `qualifier` - (Optional) Specify a Lambda function version or alias name.
 
 `run_command_parameters` supports the following:
 
-- `comment` - (Optional) Information about the command(s) to execute.
-- `document_hash` - (Optional) The SHA-256 or SHA-1 hash created by the system when the document was created. SHA-1 hashes have been deprecated.
-- `document_hash_type` - (Optional) SHA-256 or SHA-1. SHA-1 hashes have been deprecated. Valid values: `Sha256` and `Sha1`
-- `notification_config` - (Optional) Configurations for sending notifications about command status changes on a per-instance basis. Documented below.
-- `output_s3_bucket` - (Optional) The name of the Amazon S3 bucket.
-- `output_s3_key_prefix` - (Optional) The Amazon S3 bucket subfolder.
-- `parameter` - (Optional) The parameters for the RUN_COMMAND task execution. Documented below.
-- `service_role_arn` - (Optional) The IAM service role to assume during task execution.
-- `timeout_seconds` - (Optional) If this time is reached and the command has not already started executing, it doesn't run.
-- `cloudwatch_output_config` - (Optional) Configuration options for sending command output to CloudWatch Logs. Documented below.
+* `comment` - (Optional) Information about the command(s) to execute.
+* `document_hash` - (Optional) The SHA-256 or SHA-1 hash created by the system when the document was created. SHA-1 hashes have been deprecated.
+* `document_hash_type` - (Optional) SHA-256 or SHA-1. SHA-1 hashes have been deprecated. Valid values: `Sha256` and `Sha1`
+* `notification_config` - (Optional) Configurations for sending notifications about command status changes on a per-instance basis. Documented below.
+* `output_s3_bucket` - (Optional) The name of the Amazon S3 bucket.
+* `output_s3_key_prefix` - (Optional) The Amazon S3 bucket subfolder.
+* `parameter` - (Optional) The parameters for the RUN_COMMAND task execution. Documented below.
+* `service_role_arn` - (Optional) The IAM service role to assume during task execution.
+* `timeout_seconds` - (Optional) If this time is reached and the command has not already started executing, it doesn't run.
+* `cloudwatch_output_config` - (Optional) Configuration options for sending command output to CloudWatch Logs. Documented below.
+
 
 `step_functions_parameters` supports the following:
 
-- `input` - (Optional) The inputs for the STEP_FUNCTION task.
-- `name` - (Optional) The name of the STEP_FUNCTION task.
+* `input` - (Optional) The inputs for the STEP_FUNCTION task.
+* `name` - (Optional) The name of the STEP_FUNCTION task.
 
 `notification_config` supports the following:
 
-- `notification_arn` - (Optional) An Amazon Resource Name (ARN) for a Simple Notification Service (SNS) topic. Run Command pushes notifications about command status changes to this topic.
-- `notification_events` - (Optional) The different events for which you can receive notifications. Valid values: `All`, `InProgress`, `Success`, `TimedOut`, `Cancelled`, and `Failed`
-- `notification_type` - (Optional) When specified with `Command`, receive notification when the status of a command changes. When specified with `Invocation`, for commands sent to multiple instances, receive notification on a per-instance basis when the status of a command changes. Valid values: `Command` and `Invocation`
+* `notification_arn` - (Optional) An Amazon Resource Name (ARN) for a Simple Notification Service (SNS) topic. Run Command pushes notifications about command status changes to this topic.
+* `notification_events` - (Optional) The different events for which you can receive notifications. Valid values: `All`, `InProgress`, `Success`, `TimedOut`, `Cancelled`, and `Failed`
+* `notification_type` - (Optional) When specified with `Command`, receive notification when the status of a command changes. When specified with `Invocation`, for commands sent to multiple instances, receive notification on a per-instance basis when the status of a command changes. Valid values: `Command` and `Invocation`
 
 `cloudwatch_output_config` supports the following:
 
-- `cloudwatch_log_group_name` - (Optional) The name of the CloudWatch log group where you want to send command output. If you don't specify a group name, Systems Manager automatically creates a log group for you. The log group uses the following naming format: _aws/ssm/SystemsManagerDocumentName_.
-- `cloudwatch_output_enabled` - (Required) Enables Systems Manager to send command output to CloudWatch Logs.
+* `cloudwatch_log_group_name` - (Optional) The name of the CloudWatch log group where you want to send command output. If you don't specify a group name, Systems Manager automatically creates a log group for you. The log group uses the following naming format: _aws/ssm/SystemsManagerDocumentName_.
+* `cloudwatch_output_enabled` - (Required) Enables Systems Manager to send command output to CloudWatch Logs.
 
 `parameter` supports the following:
 
-- `name` - (Required) The parameter name.
-- `values` - (Required) The array of strings.
+* `name` - (Required) The parameter name.
+* `values` - (Required) The array of strings.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-- `id` - The ID of the maintenance window task.
+* `id` - The ID of the maintenance window task.
 
 ## Import
 
