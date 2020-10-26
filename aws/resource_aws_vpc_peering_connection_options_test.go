@@ -295,13 +295,12 @@ func TestAccAWSVpcPeeringConnectionOptions_sameRegionDifferentAccount(t *testing
 					}),
 				),
 			},
-			// Comment out until Plugin SDK correctly handles import testing with multiple providers.
-			// {
-			// 	Config:            testAccVpcPeeringConnectionOptionsConfig_sameRegion_differentAccount(rName),
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// },
+			{
+				Config:            testAccVpcPeeringConnectionOptionsConfig_sameRegion_differentAccount(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -421,7 +420,7 @@ resource "aws_vpc_peering_connection_options" "peer" {
 }
 
 func testAccVpcPeeringConnectionOptionsConfig_sameRegion_differentAccount(rName string) string {
-	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+	return composeConfig(testAccAlternateAccountProviderConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
@@ -491,5 +490,5 @@ resource "aws_vpc_peering_connection_options" "peer" {
     allow_remote_vpc_dns_resolution = true
   }
 }
-`, rName)
+`, rName))
 }
