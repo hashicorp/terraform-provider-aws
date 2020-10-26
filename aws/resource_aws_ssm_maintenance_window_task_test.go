@@ -806,7 +806,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 func testAccAWSSSMMaintenanceWindowTaskRunCommandCloudWatchOutputConfig(rName string) string {
-	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName) + `
+	return testAccAWSSSMMaintenanceWindowTaskConfigBase(rName) + fmt.Sprintf(`
 
 resource "aws_cloudwatch_log_group" "test" {
     name = "cw_test"
