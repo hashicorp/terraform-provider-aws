@@ -6,22 +6,22 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAPIGatewayDocumentationVersion_basic(t *testing.T) {
 	var conf apigateway.DocumentationVersion
 
 	rString := acctest.RandString(8)
-	version := fmt.Sprintf("tf_acc_version_%s", rString)
-	apiName := fmt.Sprintf("tf_acc_api_doc_version_basic_%s", rString)
+	version := fmt.Sprintf("tf-acc-test_version_%s", rString)
+	apiName := fmt.Sprintf("tf-acc-test_api_doc_version_basic_%s", rString)
 
 	resourceName := "aws_api_gateway_documentation_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationVersionDestroy,
 		Steps: []resource.TestStep{
@@ -33,6 +33,11 @@ func TestAccAWSAPIGatewayDocumentationVersion_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -41,16 +46,16 @@ func TestAccAWSAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 	var conf apigateway.DocumentationVersion
 
 	rString := acctest.RandString(8)
-	version := fmt.Sprintf("tf_acc_version_%s", rString)
-	apiName := fmt.Sprintf("tf_acc_api_doc_version_method_%s", rString)
-	stageName := fmt.Sprintf("tf_acc_stage_%s", rString)
+	version := fmt.Sprintf("tf-acc-test_version_%s", rString)
+	apiName := fmt.Sprintf("tf-acc-test_api_doc_version_method_%s", rString)
+	stageName := fmt.Sprintf("tf-acc-test_stage_%s", rString)
 	description := fmt.Sprintf("Tf Acc Test description %s", rString)
 	uDescription := fmt.Sprintf("Tf Acc Test description updated %s", rString)
 
 	resourceName := "aws_api_gateway_documentation_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationVersionDestroy,
 		Steps: []resource.TestStep{
@@ -62,6 +67,11 @@ func TestAccAWSAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSAPIGatewayDocumentationVersionAllFieldsConfig(version, apiName, stageName, uDescription),
@@ -76,51 +86,27 @@ func TestAccAWSAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayDocumentationVersion_importBasic(t *testing.T) {
+func TestAccAWSAPIGatewayDocumentationVersion_disappears(t *testing.T) {
+	var conf apigateway.DocumentationVersion
+
 	rString := acctest.RandString(8)
-	version := fmt.Sprintf("tf_acc_version_import_%s", rString)
-	apiName := fmt.Sprintf("tf_acc_api_doc_version_import_%s", rString)
+	version := fmt.Sprintf("tf-acc-test_version_%s", rString)
+	apiName := fmt.Sprintf("tf-acc-test_api_doc_version_basic_%s", rString)
 
 	resourceName := "aws_api_gateway_documentation_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayDocumentationVersionBasicConfig(version, apiName),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSAPIGatewayDocumentationVersion_importAllFields(t *testing.T) {
-	rString := acctest.RandString(8)
-	version := fmt.Sprintf("tf_acc_version_import_af_%s", rString)
-	apiName := fmt.Sprintf("tf_acc_api_doc_version_import_af_%s", rString)
-	stageName := fmt.Sprintf("tf_acc_stage_%s", rString)
-	description := fmt.Sprintf("Tf Acc Test description %s", rString)
-
-	resourceName := "aws_api_gateway_documentation_version.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationVersionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAPIGatewayDocumentationVersionAllFieldsConfig(version, apiName, stageName, description),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayDocumentationVersionExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayDocumentationVersion(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -137,7 +123,7 @@ func testAccCheckAWSAPIGatewayDocumentationVersionExists(n string, res *apigatew
 			return fmt.Errorf("No API Gateway Documentation Version ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigateway
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 		apiId, version, err := decodeApiGatewayDocumentationVersionId(rs.Primary.ID)
 		if err != nil {
@@ -160,7 +146,7 @@ func testAccCheckAWSAPIGatewayDocumentationVersionExists(n string, res *apigatew
 }
 
 func testAccCheckAWSAPIGatewayDocumentationVersionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigateway
+	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_documentation_version" {
@@ -193,8 +179,8 @@ func testAccAWSAPIGatewayDocumentationVersionBasicConfig(version, apiName string
 	return fmt.Sprintf(`
 resource "aws_api_gateway_documentation_version" "test" {
   version     = "%s"
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  depends_on  = ["aws_api_gateway_documentation_part.test"]
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  depends_on  = [aws_api_gateway_documentation_part.test]
 }
 
 resource "aws_api_gateway_documentation_part" "test" {
@@ -203,7 +189,7 @@ resource "aws_api_gateway_documentation_part" "test" {
   }
 
   properties  = "{\"description\":\"Terraform Acceptance Test\"}"
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
 }
 
 resource "aws_api_gateway_rest_api" "test" {
@@ -216,9 +202,9 @@ func testAccAWSAPIGatewayDocumentationVersionAllFieldsConfig(version, apiName, s
 	return fmt.Sprintf(`
 resource "aws_api_gateway_documentation_version" "test" {
   version     = "%s"
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
   description = "%s"
-  depends_on  = ["aws_api_gateway_documentation_part.test"]
+  depends_on  = [aws_api_gateway_documentation_part.test]
 }
 
 resource "aws_api_gateway_documentation_part" "test" {
@@ -227,33 +213,33 @@ resource "aws_api_gateway_documentation_part" "test" {
   }
 
   properties  = "{\"description\":\"Terraform Acceptance Test\"}"
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
-  resource_id   = "${aws_api_gateway_resource.test.id}"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 }
 
 resource "aws_api_gateway_method_response" "error" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
   status_code = "400"
 }
 
 resource "aws_api_gateway_integration" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
 
   type                    = "HTTP"
   uri                     = "https://www.google.co.uk"
@@ -261,23 +247,23 @@ resource "aws_api_gateway_integration" "test" {
 }
 
 resource "aws_api_gateway_integration_response" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_integration.test.http_method}"
-  status_code = "${aws_api_gateway_method_response.error.status_code}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_integration.test.http_method
+  status_code = aws_api_gateway_method_response.error.status_code
 }
 
 resource "aws_api_gateway_deployment" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
   stage_name  = "first"
-  depends_on  = ["aws_api_gateway_integration_response.test"]
+  depends_on  = [aws_api_gateway_integration_response.test]
 }
 
 resource "aws_api_gateway_stage" "test" {
   stage_name            = "%s"
-  rest_api_id           = "${aws_api_gateway_rest_api.test.id}"
-  deployment_id         = "${aws_api_gateway_deployment.test.id}"
-  documentation_version = "${aws_api_gateway_documentation_version.test.version}"
+  rest_api_id           = aws_api_gateway_rest_api.test.id
+  deployment_id         = aws_api_gateway_deployment.test.id
+  documentation_version = aws_api_gateway_documentation_version.test.version
 }
 
 resource "aws_api_gateway_rest_api" "test" {

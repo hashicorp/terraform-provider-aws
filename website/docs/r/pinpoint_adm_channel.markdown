@@ -1,7 +1,7 @@
 ---
+subcategory: "Pinpoint"
 layout: "aws"
 page_title: "AWS: aws_pinpoint_adm_channel"
-sidebar_current: "docs-aws-resource-pinpoint-adm-channel"
 description: |-
   Provides a Pinpoint ADM Channel resource.
 ---
@@ -20,7 +20,7 @@ Provides a Pinpoint ADM (Amazon Device Messaging) Channel resource.
 resource "aws_pinpoint_app" "app" {}
 
 resource "aws_pinpoint_adm_channel" "channel" {
-  application_id = "${aws_pinpoint_app.app.application_id}"
+  application_id = aws_pinpoint_app.app.application_id
   client_id      = ""
   client_secret  = ""
   enabled        = true

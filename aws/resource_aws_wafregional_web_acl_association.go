@@ -8,8 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsWafRegionalWebAclAssociation() *schema.Resource {
@@ -17,6 +17,9 @@ func resourceAwsWafRegionalWebAclAssociation() *schema.Resource {
 		Create: resourceAwsWafRegionalWebAclAssociationCreate,
 		Read:   resourceAwsWafRegionalWebAclAssociationRead,
 		Delete: resourceAwsWafRegionalWebAclAssociationDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"web_acl_id": {
@@ -75,7 +78,7 @@ func resourceAwsWafRegionalWebAclAssociationCreate(d *schema.ResourceData, meta 
 func resourceAwsWafRegionalWebAclAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafregionalconn
 
-	_, resourceArn := resourceAwsWafRegionalWebAclAssociationParseId(d.Id())
+	resourceArn := resourceAwsWafRegionalWebAclAssociationParseId(d.Id())
 
 	input := &wafregional.GetWebACLForResourceInput{
 		ResourceArn: aws.String(resourceArn),
@@ -94,7 +97,9 @@ func resourceAwsWafRegionalWebAclAssociationRead(d *schema.ResourceData, meta in
 	}
 
 	if output == nil || output.WebACLSummary == nil {
-		return fmt.Errorf("error getting WAF Regional Web ACL for resource (%s): empty response", resourceArn)
+		log.Printf("[WARN] WAF Regional Web ACL for resource (%s) not found, removing from state", resourceArn)
+		d.SetId("")
+		return nil
 	}
 
 	d.Set("resource_arn", resourceArn)
@@ -106,7 +111,7 @@ func resourceAwsWafRegionalWebAclAssociationRead(d *schema.ResourceData, meta in
 func resourceAwsWafRegionalWebAclAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafregionalconn
 
-	_, resourceArn := resourceAwsWafRegionalWebAclAssociationParseId(d.Id())
+	resourceArn := resourceAwsWafRegionalWebAclAssociationParseId(d.Id())
 
 	log.Printf("[INFO] Deleting WAF Regional Web ACL association: %s", resourceArn)
 
@@ -119,9 +124,8 @@ func resourceAwsWafRegionalWebAclAssociationDelete(d *schema.ResourceData, meta 
 	return err
 }
 
-func resourceAwsWafRegionalWebAclAssociationParseId(id string) (webAclId, resourceArn string) {
+func resourceAwsWafRegionalWebAclAssociationParseId(id string) (resourceArn string) {
 	parts := strings.SplitN(id, ":", 2)
-	webAclId = parts[0]
 	resourceArn = parts[1]
 	return
 }

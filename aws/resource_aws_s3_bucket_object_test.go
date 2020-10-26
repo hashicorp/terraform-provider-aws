@@ -11,12 +11,14 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func init() {
@@ -32,7 +34,7 @@ func testSweepS3BucketObjects(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).s3conn
+	conn := client.(*AWSClient).s3connUriCleaningDisabled
 	input := &s3.ListBucketsInput{}
 
 	output, err := conn.ListBuckets(input)
@@ -55,7 +57,7 @@ func testSweepS3BucketObjects(region string) error {
 		bucketName := aws.StringValue(bucket.Name)
 
 		hasPrefix := false
-		prefixes := []string{"mybucket.", "mylogs.", "tf-acc", "tf-object-test", "tf-test"}
+		prefixes := []string{"mybucket.", "mylogs.", "tf-acc", "tf-object-test", "tf-test", "tf-emr-bootstrap"}
 
 		for _, prefix := range prefixes {
 			if strings.HasPrefix(bucketName, prefix) {
@@ -81,79 +83,15 @@ func testSweepS3BucketObjects(region string) error {
 			continue
 		}
 
-		input := &s3.ListObjectVersionsInput{
-			Bucket: bucket.Name,
-		}
-
-		err = conn.ListObjectVersionsPages(input, func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
-			}
-
-			for _, objectVersion := range page.Versions {
-				input := &s3.DeleteObjectInput{
-					Bucket:    bucket.Name,
-					Key:       objectVersion.Key,
-					VersionId: objectVersion.VersionId,
-				}
-				objectKey := aws.StringValue(objectVersion.Key)
-				objectVersionID := aws.StringValue(objectVersion.VersionId)
-
-				log.Printf("[INFO] Deleting S3 Bucket (%s) Object (%s) Version: %s", bucketName, objectKey, objectVersionID)
-				_, err := conn.DeleteObject(input)
-
-				if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, s3.ErrCodeNoSuchKey, "") {
-					continue
-				}
-
-				if err != nil {
-					log.Printf("[ERROR] Error deleting S3 Bucket (%s) Object (%s) Version (%s): %s", bucketName, objectKey, objectVersionID, err)
-				}
-			}
-
-			return !lastPage
-		})
-
-		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
-			continue
-		}
+		objectLockEnabled, err := testS3BucketObjectLockEnabled(conn, bucketName)
 
 		if err != nil {
-			return fmt.Errorf("error listing S3 Bucket (%s) Objects: %s", bucketName, err)
-		}
-
-		err = conn.ListObjectVersionsPages(input, func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
-			}
-
-			for _, deleteMarker := range page.DeleteMarkers {
-				input := &s3.DeleteObjectInput{
-					Bucket:    bucket.Name,
-					Key:       deleteMarker.Key,
-					VersionId: deleteMarker.VersionId,
-				}
-				deleteMarkerKey := aws.StringValue(deleteMarker.Key)
-				deleteMarkerVersionID := aws.StringValue(deleteMarker.VersionId)
-
-				log.Printf("[INFO] Deleting S3 Bucket (%s) Object (%s) Delete Marker: %s", bucketName, deleteMarkerKey, deleteMarkerVersionID)
-				_, err := conn.DeleteObject(input)
-
-				if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, s3.ErrCodeNoSuchKey, "") {
-					continue
-				}
-
-				if err != nil {
-					log.Printf("[ERROR] Error deleting S3 Bucket (%s) Object (%s) Version (%s): %s", bucketName, deleteMarkerKey, deleteMarkerVersionID, err)
-				}
-			}
-
-			return !lastPage
-		})
-
-		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+			log.Printf("[ERROR] Error getting S3 Bucket (%s) Object Lock: %s", bucketName, err)
 			continue
 		}
+
+		// Delete everything including locked objects. Ignore any object errors.
+		err = deleteAllS3ObjectVersions(conn, bucketName, "", objectLockEnabled, true)
 
 		if err != nil {
 			return fmt.Errorf("error listing S3 Bucket (%s) Objects: %s", bucketName, err)
@@ -325,6 +263,30 @@ func TestAccAWSS3BucketObject_withContentCharacteristics(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3BucketObject_NonVersioned(t *testing.T) {
+	sourceInitial := testAccAWSS3BucketObjectCreateTempFile(t, "initial object state")
+	defer os.Remove(sourceInitial)
+
+	var originalObj s3.GetObjectOutput
+	resourceName := "aws_s3_bucket_object.object"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccAssumeRoleARNPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketObjectConfig_NonVersioned(acctest.RandInt(), sourceInitial),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &originalObj),
+					testAccCheckAWSS3BucketObjectBody(&originalObj, "initial object state"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSS3BucketObject_updates(t *testing.T) {
 	var originalObj, modifiedObj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
@@ -346,6 +308,9 @@ func TestAccAWSS3BucketObject_updates(t *testing.T) {
 					testAccCheckAWSS3BucketObjectExists(resourceName, &originalObj),
 					testAccCheckAWSS3BucketObjectBody(&originalObj, "initial object state"),
 					resource.TestCheckResourceAttr(resourceName, "etag", "647d1d58e1011c743ec67d5e8af87b53"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
 				),
 			},
 			{
@@ -354,6 +319,9 @@ func TestAccAWSS3BucketObject_updates(t *testing.T) {
 					testAccCheckAWSS3BucketObjectExists(resourceName, &modifiedObj),
 					testAccCheckAWSS3BucketObjectBody(&modifiedObj, "modified object"),
 					resource.TestCheckResourceAttr(resourceName, "etag", "1c7fd13df1515c2a13ad9eb068931f09"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
 				),
 			},
 		},
@@ -431,6 +399,44 @@ func TestAccAWSS3BucketObject_updatesWithVersioning(t *testing.T) {
 			},
 			{
 				Config: testAccAWSS3BucketObjectConfig_updateable(rInt, true, sourceModified),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &modifiedObj),
+					testAccCheckAWSS3BucketObjectBody(&modifiedObj, "modified versioned object"),
+					resource.TestCheckResourceAttr(resourceName, "etag", "00b8c73b1b50e7cc932362c7225b8e29"),
+					testAccCheckAWSS3BucketObjectVersionIdDiffers(&modifiedObj, &originalObj),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3BucketObject_updatesWithVersioningViaAccessPoint(t *testing.T) {
+	var originalObj, modifiedObj s3.GetObjectOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_s3_bucket_object.test"
+	accessPointResourceName := "aws_s3_access_point.test"
+
+	sourceInitial := testAccAWSS3BucketObjectCreateTempFile(t, "initial versioned object state")
+	defer os.Remove(sourceInitial)
+	sourceModified := testAccAWSS3BucketObjectCreateTempFile(t, "modified versioned object")
+	defer os.Remove(sourceInitial)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketObjectConfig_updateableViaAccessPoint(rName, true, sourceInitial),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &originalObj),
+					testAccCheckAWSS3BucketObjectBody(&originalObj, "initial versioned object state"),
+					resource.TestCheckResourceAttrPair(resourceName, "bucket", accessPointResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "etag", "cee4407fa91906284e2a5e5e03e86b1b"),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketObjectConfig_updateableViaAccessPoint(rName, true, sourceModified),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &modifiedObj),
 					testAccCheckAWSS3BucketObjectBody(&modifiedObj, "modified versioned object"),
@@ -663,9 +669,9 @@ func TestAccAWSS3BucketObject_tags(t *testing.T) {
 					testAccCheckAWSS3BucketObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "XXX"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "EEE"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "E:/"),
 				),
 			},
 			{
@@ -727,9 +733,9 @@ func TestAccAWSS3BucketObject_tagsLeadingSlash(t *testing.T) {
 					testAccCheckAWSS3BucketObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "XXX"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "EEE"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "E:/"),
 				),
 			},
 			{
@@ -753,6 +759,267 @@ func TestAccAWSS3BucketObject_tagsLeadingSlash(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3BucketObject_ObjectLockLegalHoldStartWithNone(t *testing.T) {
+	var obj1, obj2, obj3 s3.GetObjectOutput
+	resourceName := "aws_s3_bucket_object.object"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketObjectConfig_noObjectLockLegalHold(rInt, "stuff"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj1),
+					testAccCheckAWSS3BucketObjectBody(&obj1, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketObjectConfig_withObjectLockLegalHold(rInt, "stuff", "ON"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj2),
+					testAccCheckAWSS3BucketObjectVersionIdEquals(&obj2, &obj1),
+					testAccCheckAWSS3BucketObjectBody(&obj2, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
+				),
+			},
+			// Remove legal hold but create a new object version to test force_destroy
+			{
+				Config: testAccAWSS3BucketObjectConfig_withObjectLockLegalHold(rInt, "changed stuff", "OFF"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj3),
+					testAccCheckAWSS3BucketObjectVersionIdDiffers(&obj3, &obj2),
+					testAccCheckAWSS3BucketObjectBody(&obj3, "changed stuff"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", "OFF"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3BucketObject_ObjectLockLegalHoldStartWithOn(t *testing.T) {
+	var obj1, obj2 s3.GetObjectOutput
+	resourceName := "aws_s3_bucket_object.object"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketObjectConfig_withObjectLockLegalHold(rInt, "stuff", "ON"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj1),
+					testAccCheckAWSS3BucketObjectBody(&obj1, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketObjectConfig_withObjectLockLegalHold(rInt, "stuff", "OFF"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj2),
+					testAccCheckAWSS3BucketObjectVersionIdEquals(&obj2, &obj1),
+					testAccCheckAWSS3BucketObjectBody(&obj2, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", "OFF"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3BucketObject_ObjectLockRetentionStartWithNone(t *testing.T) {
+	var obj1, obj2, obj3 s3.GetObjectOutput
+	resourceName := "aws_s3_bucket_object.object"
+	rInt := acctest.RandInt()
+	retainUntilDate := time.Now().UTC().AddDate(0, 0, 10).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketObjectConfig_noObjectLockRetention(rInt, "stuff"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj1),
+					testAccCheckAWSS3BucketObjectBody(&obj1, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketObjectConfig_withObjectLockRetention(rInt, "stuff", retainUntilDate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj2),
+					testAccCheckAWSS3BucketObjectVersionIdEquals(&obj2, &obj1),
+					testAccCheckAWSS3BucketObjectBody(&obj2, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", "GOVERNANCE"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", retainUntilDate),
+				),
+			},
+			// Remove retention period but create a new object version to test force_destroy
+			{
+				Config: testAccAWSS3BucketObjectConfig_noObjectLockRetention(rInt, "changed stuff"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj3),
+					testAccCheckAWSS3BucketObjectVersionIdDiffers(&obj3, &obj2),
+					testAccCheckAWSS3BucketObjectBody(&obj3, "changed stuff"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3BucketObject_ObjectLockRetentionStartWithSet(t *testing.T) {
+	var obj1, obj2, obj3, obj4 s3.GetObjectOutput
+	resourceName := "aws_s3_bucket_object.object"
+	rInt := acctest.RandInt()
+	retainUntilDate1 := time.Now().UTC().AddDate(0, 0, 20).Format(time.RFC3339)
+	retainUntilDate2 := time.Now().UTC().AddDate(0, 0, 30).Format(time.RFC3339)
+	retainUntilDate3 := time.Now().UTC().AddDate(0, 0, 10).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketObjectConfig_withObjectLockRetention(rInt, "stuff", retainUntilDate1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj1),
+					testAccCheckAWSS3BucketObjectBody(&obj1, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", "GOVERNANCE"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", retainUntilDate1),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketObjectConfig_withObjectLockRetention(rInt, "stuff", retainUntilDate2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj2),
+					testAccCheckAWSS3BucketObjectVersionIdEquals(&obj2, &obj1),
+					testAccCheckAWSS3BucketObjectBody(&obj2, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", "GOVERNANCE"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", retainUntilDate2),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketObjectConfig_withObjectLockRetention(rInt, "stuff", retainUntilDate3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj3),
+					testAccCheckAWSS3BucketObjectVersionIdEquals(&obj3, &obj2),
+					testAccCheckAWSS3BucketObjectBody(&obj3, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", "GOVERNANCE"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", retainUntilDate3),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketObjectConfig_noObjectLockRetention(rInt, "stuff"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj4),
+					testAccCheckAWSS3BucketObjectVersionIdEquals(&obj4, &obj3),
+					testAccCheckAWSS3BucketObjectBody(&obj4, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3BucketObject_defaultBucketSSE(t *testing.T) {
+	var obj1 s3.GetObjectOutput
+	resourceName := "aws_s3_bucket_object.object"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketObjectConfig_defaultBucketSSE(rInt, "stuff"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj1),
+					testAccCheckAWSS3BucketObjectBody(&obj1, "stuff"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3BucketObject_ignoreTags(t *testing.T) {
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_bucket_object.object"
+	rInt := acctest.RandInt()
+	key := "test-key"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {},
+				Config: composeConfig(
+					testAccProviderConfigIgnoreTagsKeyPrefixes1("ignorekey"),
+					testAccAWSS3BucketObjectConfig_withNoTags(rInt, key, "stuff")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj),
+					testAccCheckAWSS3BucketObjectBody(&obj, "stuff"),
+					testAccCheckAWSS3BucketObjectUpdateTags(resourceName, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckAWSS3BucketObjectCheckTags(resourceName, map[string]string{
+						"ignorekey1": "ignorevalue1",
+					}),
+				),
+			},
+			{
+				PreConfig: func() {},
+				Config: composeConfig(
+					testAccProviderConfigIgnoreTagsKeyPrefixes1("ignorekey"),
+					testAccAWSS3BucketObjectConfig_withTags(rInt, key, "stuff")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj),
+					testAccCheckAWSS3BucketObjectBody(&obj, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
+					testAccCheckAWSS3BucketObjectCheckTags(resourceName, map[string]string{
+						"ignorekey1": "ignorevalue1",
+						"Key1":       "AAA",
+						"Key2":       "BBB",
+						"Key3":       "CCC",
+					}),
 				),
 			},
 		},
@@ -960,11 +1227,39 @@ func testAccAWSS3BucketObjectCreateTempFile(t *testing.T, data string) string {
 	return filename
 }
 
+func testAccCheckAWSS3BucketObjectUpdateTags(n string, oldTags, newTags map[string]string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		conn := testAccProvider.Meta().(*AWSClient).s3conn
+
+		return keyvaluetags.S3ObjectUpdateTags(conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], oldTags, newTags)
+	}
+}
+
+func testAccCheckAWSS3BucketObjectCheckTags(n string, expectedTags map[string]string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		conn := testAccProvider.Meta().(*AWSClient).s3conn
+
+		got, err := keyvaluetags.S3ObjectListTags(conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"])
+		if err != nil {
+			return err
+		}
+
+		want := keyvaluetags.New(expectedTags)
+		if !reflect.DeepEqual(want, got) {
+			return fmt.Errorf("Incorrect tags, want: %v got: %v", want, got)
+		}
+
+		return nil
+	}
+}
+
 func testAccAWSS3BucketObjectConfigBasic(bucket, key string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket_object" "object" {
-  bucket = "%s"
-  key = "%s"
+  bucket = %q
+  key    = %q
 }
 `, bucket, key)
 }
@@ -976,8 +1271,8 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket = "${aws_s3_bucket.object_bucket.bucket}"
-  key = "test-key"
+  bucket = aws_s3_bucket.object_bucket.bucket
+  key    = "test-key"
 }
 `, randInt)
 }
@@ -989,9 +1284,9 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket       = "${aws_s3_bucket.object_bucket.bucket}"
+  bucket       = aws_s3_bucket.object_bucket.bucket
   key          = "test-key"
-  source       = "%s"
+  source       = %q
   content_type = "binary/octet-stream"
 }
 `, randInt, source)
@@ -1004,9 +1299,9 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket           = "${aws_s3_bucket.object_bucket.bucket}"
+  bucket           = aws_s3_bucket.object_bucket.bucket
   key              = "test-key"
-  source           = "%s"
+  source           = %q
   content_language = "en"
   content_type     = "binary/octet-stream"
   website_redirect = "http://google.com"
@@ -1021,9 +1316,9 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket  = "${aws_s3_bucket.object_bucket.bucket}"
+  bucket  = aws_s3_bucket.object_bucket.bucket
   key     = "test-key"
-  content = "%s"
+  content = %q
 }
 `, randInt, content)
 }
@@ -1031,17 +1326,17 @@ resource "aws_s3_bucket_object" "object" {
 func testAccAWSS3BucketObjectEtagEncryption(randInt int, source string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
-  bucket = "tf-object-test-bucket-%d"
+  bucket = "tf-object-test-bucket-%[1]d"
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket  = "${aws_s3_bucket.object_bucket.bucket}"
-  key     = "test-key"
-  source = "%s"
+  bucket                 = aws_s3_bucket.object_bucket.bucket
+  key                    = "test-key"
   server_side_encryption = "AES256"
-  etag = "${filemd5("%s")}"
+  source                 = %[2]q
+  etag                   = filemd5(%[2]q)
 }
-`, randInt, source, source)
+`, randInt, source)
 }
 
 func testAccAWSS3BucketObjectConfigContentBase64(randInt int, contentBase64 string) string {
@@ -1051,9 +1346,9 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket         = "${aws_s3_bucket.object_bucket.bucket}"
+  bucket         = aws_s3_bucket.object_bucket.bucket
   key            = "test-key"
-  content_base64 = "%s"
+  content_base64 = %q
 }
 `, randInt, contentBase64)
 }
@@ -1069,12 +1364,36 @@ resource "aws_s3_bucket" "object_bucket_3" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket = "${aws_s3_bucket.object_bucket_3.bucket}"
+  bucket = aws_s3_bucket.object_bucket_3.bucket
   key    = "updateable-key"
-  source = "%s"
-  etag   = "${filemd5("%s")}"
+  source = %[3]q
+  etag   = filemd5(%[3]q)
 }
-`, randInt, bucketVersioning, source, source)
+`, randInt, bucketVersioning, source)
+}
+
+func testAccAWSS3BucketObjectConfig_updateableViaAccessPoint(rName string, bucketVersioning bool, source string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  versioning {
+    enabled = %[2]t
+  }
+}
+
+resource "aws_s3_access_point" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  name   = %[1]q
+}
+
+resource "aws_s3_bucket_object" "test" {
+  bucket = aws_s3_access_point.test.arn
+  key    = "updateable-key"
+  source = %[3]q
+  etag   = filemd5(%[3]q)
+}
+`, rName, bucketVersioning, source)
 }
 
 func testAccAWSS3BucketObjectConfig_withKMSId(randInt int, source string) string {
@@ -1086,10 +1405,10 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket     = "${aws_s3_bucket.object_bucket.bucket}"
+  bucket     = aws_s3_bucket.object_bucket.bucket
   key        = "test-key"
-  source     = "%s"
-  kms_key_id = "${aws_kms_key.kms_key_1.arn}"
+  source     = %q
+  kms_key_id = aws_kms_key.kms_key_1.arn
 }
 `, randInt, source)
 }
@@ -1101,9 +1420,9 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket                 = "${aws_s3_bucket.object_bucket.bucket}"
+  bucket                 = aws_s3_bucket.object_bucket.bucket
   key                    = "test-key"
-  source                 = "%s"
+  source                 = %q
   server_side_encryption = "AES256"
 }
 `, randInt, source)
@@ -1120,10 +1439,10 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket  = "${aws_s3_bucket.object_bucket.bucket}"
+  bucket  = aws_s3_bucket.object_bucket.bucket
   key     = "test-key"
-  content = "%s"
-  acl     = "%s"
+  content = %q
+  acl     = %q
 }
 `, randInt, content, acl)
 }
@@ -1135,10 +1454,10 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket        = "${aws_s3_bucket.object_bucket.bucket}"
+  bucket        = aws_s3_bucket.object_bucket.bucket
   key           = "test-key"
   content       = "some_bucket_content"
-  storage_class = "%s"
+  storage_class = %q
 }
 `, randInt, storage_class)
 }
@@ -1154,9 +1473,9 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket  = "${aws_s3_bucket.object_bucket.bucket}"
-  key     = "%s"
-  content = "%s"
+  bucket  = aws_s3_bucket.object_bucket.bucket
+  key     = %q
+  content = %q
 
   tags = {
     Key1 = "AAA"
@@ -1178,15 +1497,15 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket  = "${aws_s3_bucket.object_bucket.bucket}"
-  key     = "%s"
-  content = "%s"
+  bucket  = aws_s3_bucket.object_bucket.bucket
+  key     = %q
+  content = %q
 
   tags = {
     Key2 = "BBB"
-    Key3 = "XXX"
+    Key3 = "X X"
     Key4 = "DDD"
-    Key5 = "EEE"
+    Key5 = "E:/"
   }
 }
 `, randInt, key, content)
@@ -1203,9 +1522,9 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket  = "${aws_s3_bucket.object_bucket.bucket}"
-  key     = "%s"
-  content = "%s"
+  bucket  = aws_s3_bucket.object_bucket.bucket
+  key     = %q
+  content = %q
 }
 `, randInt, key, content)
 }
@@ -1217,8 +1536,8 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket  = "${aws_s3_bucket.object_bucket.bucket}"
-  key     = "test-key"
+  bucket = aws_s3_bucket.object_bucket.bucket
+  key    = "test-key"
 
   metadata = {
     %[2]s = %[3]q
@@ -1226,4 +1545,162 @@ resource "aws_s3_bucket_object" "object" {
   }
 }
 `, randInt, metadataKey1, metadataValue1, metadataKey2, metadataValue2)
+}
+
+func testAccAWSS3BucketObjectConfig_noObjectLockLegalHold(randInt int, content string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "object_bucket" {
+  bucket = "tf-object-test-bucket-%d"
+
+  versioning {
+    enabled = true
+  }
+
+  object_lock_configuration {
+    object_lock_enabled = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_object" "object" {
+  bucket        = aws_s3_bucket.object_bucket.bucket
+  key           = "test-key"
+  content       = %q
+  force_destroy = true
+}
+`, randInt, content)
+}
+
+func testAccAWSS3BucketObjectConfig_withObjectLockLegalHold(randInt int, content, legalHoldStatus string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "object_bucket" {
+  bucket = "tf-object-test-bucket-%d"
+
+  versioning {
+    enabled = true
+  }
+
+  object_lock_configuration {
+    object_lock_enabled = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_object" "object" {
+  bucket                        = aws_s3_bucket.object_bucket.bucket
+  key                           = "test-key"
+  content                       = %q
+  object_lock_legal_hold_status = %q
+  force_destroy                 = true
+}
+`, randInt, content, legalHoldStatus)
+}
+
+func testAccAWSS3BucketObjectConfig_noObjectLockRetention(randInt int, content string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "object_bucket" {
+  bucket = "tf-object-test-bucket-%d"
+
+  versioning {
+    enabled = true
+  }
+
+  object_lock_configuration {
+    object_lock_enabled = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_object" "object" {
+  bucket        = aws_s3_bucket.object_bucket.bucket
+  key           = "test-key"
+  content       = %q
+  force_destroy = true
+}
+`, randInt, content)
+}
+
+func testAccAWSS3BucketObjectConfig_withObjectLockRetention(randInt int, content, retainUntilDate string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "object_bucket" {
+  bucket = "tf-object-test-bucket-%d"
+
+  versioning {
+    enabled = true
+  }
+
+  object_lock_configuration {
+    object_lock_enabled = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_object" "object" {
+  bucket                        = aws_s3_bucket.object_bucket.bucket
+  key                           = "test-key"
+  content                       = %q
+  force_destroy                 = true
+  object_lock_mode              = "GOVERNANCE"
+  object_lock_retain_until_date = %q
+}
+`, randInt, content, retainUntilDate)
+}
+
+func testAccAWSS3BucketObjectConfig_NonVersioned(randInt int, source string) string {
+	policy := `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowYeah",
+      "Effect": "Allow",
+      "Action": "s3:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyStm1",
+      "Effect": "Deny",
+      "Action": [
+        "s3:GetObjectVersion*",
+        "s3:ListBucketVersions"
+      ],
+      "Resource": "*"
+    }
+  ]
+}`
+
+	return testAccProviderConfigAssumeRolePolicy(policy) + fmt.Sprintf(`
+resource "aws_s3_bucket" "object_bucket_3" {
+  bucket = "tf-object-test-bucket-%[1]d"
+}
+
+resource "aws_s3_bucket_object" "object" {
+  bucket = aws_s3_bucket.object_bucket_3.bucket
+  key    = "updateable-key"
+  source = %[2]q
+  etag   = filemd5(%[2]q)
+}
+`, randInt, source)
+}
+
+func testAccAWSS3BucketObjectConfig_defaultBucketSSE(randInt int, content string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = "Encrypts test bucket objects"
+  deletion_window_in_days = 7
+}
+
+resource "aws_s3_bucket" "object_bucket" {
+  bucket = "tf-object-test-bucket-%d"
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = aws_kms_key.test.arn
+        sse_algorithm     = "aws:kms"
+      }
+    }
+  }
+}
+
+resource "aws_s3_bucket_object" "object" {
+  bucket  = aws_s3_bucket.object_bucket.bucket
+  key     = "test-key"
+  content = %q
+}
+`, randInt, content)
 }

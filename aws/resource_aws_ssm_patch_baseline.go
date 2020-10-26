@@ -6,28 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
-
-var ssmPatchComplianceLevels = []string{
-	ssm.PatchComplianceLevelCritical,
-	ssm.PatchComplianceLevelHigh,
-	ssm.PatchComplianceLevelMedium,
-	ssm.PatchComplianceLevelLow,
-	ssm.PatchComplianceLevelInformational,
-	ssm.PatchComplianceLevelUnspecified,
-}
-
-var ssmPatchOSs = []string{
-	ssm.OperatingSystemWindows,
-	ssm.OperatingSystemAmazonLinux,
-	ssm.OperatingSystemUbuntu,
-	ssm.OperatingSystemRedhatEnterpriseLinux,
-	ssm.OperatingSystemCentos,
-	ssm.OperatingSystemAmazonLinux2,
-	ssm.OperatingSystemSuse,
-}
 
 func resourceAwsSsmPatchBaseline() *schema.Resource {
 	return &schema.Resource{
@@ -83,7 +65,7 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      ssm.PatchComplianceLevelUnspecified,
-							ValidateFunc: validation.StringInSlice(ssmPatchComplianceLevels, false),
+							ValidateFunc: validation.StringInSlice(ssm.PatchComplianceLevel_Values(), false),
 						},
 
 						"enable_non_security": {
@@ -133,14 +115,14 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      ssm.OperatingSystemWindows,
-				ValidateFunc: validation.StringInSlice(ssmPatchOSs, false),
+				ValidateFunc: validation.StringInSlice(ssm.OperatingSystem_Values(), false),
 			},
 
 			"approved_patches_compliance_level": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      ssm.PatchComplianceLevelUnspecified,
-				ValidateFunc: validation.StringInSlice(ssmPatchComplianceLevels, false),
+				ValidateFunc: validation.StringInSlice(ssm.PatchComplianceLevel_Values(), false),
 			},
 			"tags": tagsSchema(),
 		},
@@ -157,7 +139,7 @@ func resourceAwsSsmPatchBaselineCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		params.Tags = tagsFromMapSSM(v.(map[string]interface{}))
+		params.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SsmTags()
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -235,8 +217,10 @@ func resourceAwsSsmPatchBaselineUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if d.HasChange("tags") {
-		if err := setTagsSSM(ssmconn, d, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline); err != nil {
-			return fmt.Errorf("error setting tags for SSM Patch Baseline (%s): %s", d.Id(), err)
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.SsmUpdateTags(ssmconn, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline, o, n); err != nil {
+			return fmt.Errorf("error updating SSM Patch Baseline (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -244,6 +228,7 @@ func resourceAwsSsmPatchBaselineUpdate(d *schema.ResourceData, meta interface{})
 }
 func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	params := &ssm.GetPatchBaselineInput{
 		BaselineId: aws.String(d.Id()),
@@ -274,8 +259,14 @@ func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error setting approval rules error: %#v", err)
 	}
 
-	if err := saveTagsSSM(ssmconn, d, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline); err != nil {
-		return fmt.Errorf("error saving tags for SSM Patch Baseline (%s): %s", d.Id(), err)
+	tags, err := keyvaluetags.SsmListTags(ssmconn, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for SSM Patch Baseline (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil

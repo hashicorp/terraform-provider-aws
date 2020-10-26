@@ -22,7 +22,7 @@ resource "aws_cloudformation_stack" "example" {
 
   capabilities = ["CAPABILITY_NAMED_IAM"]
 
-  template_url = "${data.aws_serverlessrepo_application.example.template_url}"
+  template_url = data.aws_serverlessrepo_application.example.template_url
 }
 
 ```

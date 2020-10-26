@@ -1,7 +1,7 @@
 ---
+subcategory: "Storage Gateway"
 layout: "aws"
 page_title: "AWS: aws_storagegateway_cache"
-sidebar_current: "docs-aws-resource-storagegateway-cache-x"
 description: |-
   Manages an AWS Storage Gateway cache
 ---
@@ -16,8 +16,8 @@ Manages an AWS Storage Gateway cache.
 
 ```hcl
 resource "aws_storagegateway_cache" "example" {
-  disk_id     = "${data.aws_storagegateway_local_disk.example.id}"
-  gateway_arn = "${aws_storagegateway_gateway.example.arn}"
+  disk_id     = data.aws_storagegateway_local_disk.example.id
+  gateway_arn = aws_storagegateway_gateway.example.arn
 }
 ```
 

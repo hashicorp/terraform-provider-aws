@@ -1,7 +1,7 @@
 ---
+subcategory: "DynamoDB"
 layout: "aws"
 page_title: "AWS: aws_dynamodb_table_item"
-sidebar_current: "docs-aws-resource-dynamodb-table-item"
 description: |-
   Provides a DynamoDB table item resource
 ---
@@ -17,8 +17,8 @@ Provides a DynamoDB table item resource
 
 ```hcl
 resource "aws_dynamodb_table_item" "example" {
-  table_name = "${aws_dynamodb_table.example.name}"
-  hash_key   = "${aws_dynamodb_table.example.hash_key}"
+  table_name = aws_dynamodb_table.example.name
+  hash_key   = aws_dynamodb_table.example.hash_key
 
   item = <<ITEM
 {

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
-	"github.com/kubernetes-sigs/aws-iam-authenticator/pkg/token"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/eks/token"
 )
 
 func TestAccAWSEksClusterAuthDataSource_basic(t *testing.T) {
@@ -56,6 +56,6 @@ func testAccCheckAwsEksClusterAuthToken(n string) resource.TestCheckFunc {
 
 const testAccCheckAwsEksClusterAuthConfig_basic = `
 data "aws_eks_cluster_auth" "test" {
-	name = "foobar"
+  name = "foobar"
 }
 `

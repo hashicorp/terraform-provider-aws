@@ -1,7 +1,7 @@
 ---
+subcategory: "KMS"
 layout: "aws"
 page_title: "AWS: aws_kms_ciphertext"
-sidebar_current: "docs-aws-datasource-kms-ciphertext"
 description: |-
     Provides ciphertext encrypted using a KMS key
 ---
@@ -25,7 +25,7 @@ resource "aws_kms_key" "oauth_config" {
 }
 
 data "aws_kms_ciphertext" "oauth" {
-  key_id = "${aws_kms_key.oauth_config.key_id}"
+  key_id = aws_kms_key.oauth_config.key_id
 
   plaintext = <<EOF
 {

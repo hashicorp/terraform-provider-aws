@@ -1,7 +1,7 @@
 ---
+subcategory: "Cost and Usage Report"
 layout: "aws"
 page_title: "AWS: aws_cur_report_definition"
-sidebar_current: "docs-aws-datasource-cur-report-definition"
 description: |-
   Get information on an AWS Cost and Usage Report Definition.
 ---
@@ -38,5 +38,5 @@ The following arguments are supported:
 * `s3_prefix` - Preferred report path prefix.
 * `s3_region` - Region of customer S3 bucket.
 * `additional_artifacts` - A list of additional artifacts.
-
-
+* `refresh_closed_reports` - If true reports are updated after they have been finalized.
+* `report_versioning` - Overwrite the previous version of each report or to deliver the report in addition to the previous versions.

@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_policy_attachment"
-sidebar_current: "docs-aws-resource-iam-policy-attachment"
 description: |-
   Attaches a Managed IAM Policy to user(s), role(s), and/or group(s)
 ---
@@ -67,10 +67,10 @@ EOF
 
 resource "aws_iam_policy_attachment" "test-attach" {
   name       = "test-attachment"
-  users      = ["${aws_iam_user.user.name}"]
-  roles      = ["${aws_iam_role.role.name}"]
-  groups     = ["${aws_iam_group.group.name}"]
-  policy_arn = "${aws_iam_policy.policy.arn}"
+  users      = [aws_iam_user.user.name]
+  roles      = [aws_iam_role.role.name]
+  groups     = [aws_iam_group.group.name]
+  policy_arn = aws_iam_policy.policy.arn
 }
 ```
 

@@ -1,7 +1,7 @@
 ---
+subcategory: "Glue"
 layout: "aws"
 page_title: "AWS: aws_glue_script"
-sidebar_current: "docs-aws-datasource-glue-script"
 description: |-
   Generate Glue script from Directed Acyclic Graph
 ---
@@ -110,7 +110,7 @@ data "aws_glue_script" "example" {
 }
 
 output "python_script" {
-  value = "${data.aws_glue_script.example.python_script}"
+  value = data.aws_glue_script.example.python_script
 }
 ```
 
@@ -212,7 +212,7 @@ data "aws_glue_script" "example" {
 }
 
 output "scala_code" {
-  value = "${data.aws_glue_script.example.scala_code}"
+  value = data.aws_glue_script.example.scala_code
 }
 ```
 

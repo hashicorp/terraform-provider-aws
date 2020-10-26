@@ -8,18 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
-
-var eksLogTypes = []string{
-	eks.LogTypeApi,
-	eks.LogTypeAudit,
-	eks.LogTypeAuthenticator,
-	eks.LogTypeControllerManager,
-	eks.LogTypeScheduler,
-}
 
 func resourceAwsEksCluster() *schema.Resource {
 	return &schema.Resource{
@@ -45,7 +38,6 @@ func resourceAwsEksCluster() *schema.Resource {
 			},
 			"certificate_authority": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -60,9 +52,66 @@ func resourceAwsEksCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"encryption_config": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"provider": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Required: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"key_arn": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"resources": {
+							Type:     schema.TypeSet,
+							MinItems: 1,
+							Required: true,
+							ForceNew: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringInSlice([]string{
+									"secrets",
+								}, false),
+							},
+						},
+					},
+				},
+			},
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"identity": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"oidc": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"issuer": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -84,6 +133,7 @@ func resourceAwsEksCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 			"version": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -96,6 +146,10 @@ func resourceAwsEksCluster() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"cluster_security_group_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"endpoint_private_access": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -119,6 +173,15 @@ func resourceAwsEksCluster() *schema.Resource {
 							MinItems: 1,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"public_access_cidrs": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validateCIDRNetworkAddress,
+							},
+						},
 						"vpc_id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -131,7 +194,7 @@ func resourceAwsEksCluster() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(eksLogTypes, true),
+					ValidateFunc: validation.StringInSlice(eks.LogType_Values(), true),
 				},
 				Set: schema.HashString,
 			},
@@ -144,13 +207,18 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 	name := d.Get("name").(string)
 
 	input := &eks.CreateClusterInput{
+		EncryptionConfig:   expandEksEncryptionConfig(d.Get("encryption_config").([]interface{})),
 		Name:               aws.String(name),
 		RoleArn:            aws.String(d.Get("role_arn").(string)),
 		ResourcesVpcConfig: expandEksVpcConfigRequest(d.Get("vpc_config").([]interface{})),
 		Logging:            expandEksLoggingTypes(d.Get("enabled_cluster_log_types").(*schema.Set)),
 	}
 
-	if v, ok := d.GetOk("version"); ok && v.(string) != "" {
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		input.Tags = keyvaluetags.New(v).IgnoreAws().EksTags()
+	}
+
+	if v, ok := d.GetOk("version"); ok {
 		input.Version = aws.String(v.(string))
 	}
 
@@ -162,10 +230,14 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 			if isAWSErr(err, eks.ErrCodeInvalidParameterException, "does not exist") {
 				return resource.RetryableError(err)
 			}
+			// InvalidParameterException: Error in role params
+			if isAWSErr(err, eks.ErrCodeInvalidParameterException, "Error in role params") {
+				return resource.RetryableError(err)
+			}
 			if isAWSErr(err, eks.ErrCodeInvalidParameterException, "Role could not be assumed because the trusted entity is not correct") {
 				return resource.RetryableError(err)
 			}
-			// InvalidParameterException: The provided role doesn't have the Amazon EKS Managed Policies associated with it. Please ensure the following policies [arn:aws:iam::aws:policy/AmazonEKSClusterPolicy, arn:aws:iam::aws:policy/AmazonEKSServicePolicy] are attached
+			// InvalidParameterException: The provided role doesn't have the Amazon EKS Managed Policies associated with it. Please ensure the following policy is attached: arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
 			if isAWSErr(err, eks.ErrCodeInvalidParameterException, "The provided role doesn't have the Amazon EKS Managed Policies associated with it") {
 				return resource.RetryableError(err)
 			}
@@ -202,6 +274,7 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).eksconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &eks.DescribeClusterInput{
 		Name: aws.String(d.Id()),
@@ -232,11 +305,26 @@ func resourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("created_at", aws.TimeValue(cluster.CreatedAt).String())
+
+	if err := d.Set("encryption_config", flattenEksEncryptionConfig(cluster.EncryptionConfig)); err != nil {
+		return fmt.Errorf("error setting encryption_config: %s", err)
+	}
+
 	d.Set("endpoint", cluster.Endpoint)
+
+	if err := d.Set("identity", flattenEksIdentity(cluster.Identity)); err != nil {
+		return fmt.Errorf("error setting identity: %s", err)
+	}
+
 	d.Set("name", cluster.Name)
 	d.Set("platform_version", cluster.PlatformVersion)
 	d.Set("role_arn", cluster.RoleArn)
 	d.Set("status", cluster.Status)
+
+	if err := d.Set("tags", keyvaluetags.EksKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	d.Set("version", cluster.Version)
 	if err := d.Set("enabled_cluster_log_types", flattenEksEnabledLogTypes(cluster.Logging)); err != nil {
 		return fmt.Errorf("error setting enabled_cluster_log_types: %s", err)
@@ -251,6 +339,13 @@ func resourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsEksClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).eksconn
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.EksUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
+	}
 
 	if d.HasChange("version") {
 		input := &eks.UpdateClusterVersionInput{
@@ -303,7 +398,7 @@ func resourceAwsEksClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if d.HasChange("vpc_config.0.endpoint_private_access") || d.HasChange("vpc_config.0.endpoint_public_access") {
+	if d.HasChanges("vpc_config.0.endpoint_private_access", "vpc_config.0.endpoint_public_access", "vpc_config.0.public_access_cidrs") {
 		input := &eks.UpdateClusterConfigInput{
 			Name:               aws.String(d.Id()),
 			ResourcesVpcConfig: expandEksVpcConfigUpdateRequest(d.Get("vpc_config").([]interface{})),
@@ -369,6 +464,50 @@ func deleteEksCluster(conn *eks.EKS, clusterName string) error {
 	return nil
 }
 
+func expandEksEncryptionConfig(tfList []interface{}) []*eks.EncryptionConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*eks.EncryptionConfig
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := &eks.EncryptionConfig{
+			Provider: expandEksProvider(tfMap["provider"].([]interface{})),
+		}
+
+		if v, ok := tfMap["resources"].(*schema.Set); ok && v.Len() > 0 {
+			apiObject.Resources = expandStringSet(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandEksProvider(tfList []interface{}) *eks.Provider {
+	tfMap, ok := tfList[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	apiObject := &eks.Provider{}
+
+	if v, ok := tfMap["key_arn"].(string); ok && v != "" {
+		apiObject.KeyArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func expandEksVpcConfigRequest(l []interface{}) *eks.VpcConfigRequest {
 	if len(l) == 0 {
 		return nil
@@ -376,12 +515,18 @@ func expandEksVpcConfigRequest(l []interface{}) *eks.VpcConfigRequest {
 
 	m := l[0].(map[string]interface{})
 
-	return &eks.VpcConfigRequest{
+	vpcConfigRequest := &eks.VpcConfigRequest{
 		EndpointPrivateAccess: aws.Bool(m["endpoint_private_access"].(bool)),
 		EndpointPublicAccess:  aws.Bool(m["endpoint_public_access"].(bool)),
 		SecurityGroupIds:      expandStringSet(m["security_group_ids"].(*schema.Set)),
 		SubnetIds:             expandStringSet(m["subnet_ids"].(*schema.Set)),
 	}
+
+	if v, ok := m["public_access_cidrs"].(*schema.Set); ok && v.Len() > 0 {
+		vpcConfigRequest.PublicAccessCidrs = expandStringSet(v)
+	}
+
+	return vpcConfigRequest
 }
 
 func expandEksVpcConfigUpdateRequest(l []interface{}) *eks.VpcConfigRequest {
@@ -391,15 +536,21 @@ func expandEksVpcConfigUpdateRequest(l []interface{}) *eks.VpcConfigRequest {
 
 	m := l[0].(map[string]interface{})
 
-	return &eks.VpcConfigRequest{
+	vpcConfigRequest := &eks.VpcConfigRequest{
 		EndpointPrivateAccess: aws.Bool(m["endpoint_private_access"].(bool)),
 		EndpointPublicAccess:  aws.Bool(m["endpoint_public_access"].(bool)),
 	}
+
+	if v, ok := m["public_access_cidrs"].(*schema.Set); ok && v.Len() > 0 {
+		vpcConfigRequest.PublicAccessCidrs = expandStringSet(v)
+	}
+
+	return vpcConfigRequest
 }
 
 func expandEksLoggingTypes(vEnabledLogTypes *schema.Set) *eks.Logging {
 	vEksLogTypes := []interface{}{}
-	for _, eksLogType := range eksLogTypes {
+	for _, eksLogType := range eks.LogType_Values() {
 		vEksLogTypes = append(vEksLogTypes, eksLogType)
 	}
 	vAllLogTypes := schema.NewSet(schema.HashString, vEksLogTypes)
@@ -430,17 +581,74 @@ func flattenEksCertificate(certificate *eks.Certificate) []map[string]interface{
 	return []map[string]interface{}{m}
 }
 
+func flattenEksIdentity(identity *eks.Identity) []map[string]interface{} {
+	if identity == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"oidc": flattenEksOidc(identity.Oidc),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenEksOidc(oidc *eks.OIDC) []map[string]interface{} {
+	if oidc == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"issuer": aws.StringValue(oidc.Issuer),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenEksEncryptionConfig(apiObjects []*eks.EncryptionConfig) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			"provider":  flattenEksProvider(apiObject.Provider),
+			"resources": aws.StringValueSlice(apiObject.Resources),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenEksProvider(apiObject *eks.Provider) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"key_arn": aws.StringValue(apiObject.KeyArn),
+	}
+
+	return []interface{}{tfMap}
+}
+
 func flattenEksVpcConfigResponse(vpcConfig *eks.VpcConfigResponse) []map[string]interface{} {
 	if vpcConfig == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"endpoint_private_access": aws.BoolValue(vpcConfig.EndpointPrivateAccess),
-		"endpoint_public_access":  aws.BoolValue(vpcConfig.EndpointPublicAccess),
-		"security_group_ids":      schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SecurityGroupIds)),
-		"subnet_ids":              schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SubnetIds)),
-		"vpc_id":                  aws.StringValue(vpcConfig.VpcId),
+		"cluster_security_group_id": aws.StringValue(vpcConfig.ClusterSecurityGroupId),
+		"endpoint_private_access":   aws.BoolValue(vpcConfig.EndpointPrivateAccess),
+		"endpoint_public_access":    aws.BoolValue(vpcConfig.EndpointPublicAccess),
+		"security_group_ids":        schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SecurityGroupIds)),
+		"subnet_ids":                schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SubnetIds)),
+		"public_access_cidrs":       schema.NewSet(schema.HashString, flattenStringList(vpcConfig.PublicAccessCidrs)),
+		"vpc_id":                    aws.StringValue(vpcConfig.VpcId),
 	}
 
 	return []map[string]interface{}{m}

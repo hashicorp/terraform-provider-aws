@@ -1,7 +1,7 @@
 ---
+subcategory: "Autoscaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_groups"
-sidebar_current: "docs-aws-datasource-autoscaling-groups"
 description: |-
     Provides a list of Autoscaling Groups within a specific region.
 ---
@@ -27,7 +27,7 @@ data "aws_autoscaling_groups" "groups" {
 }
 
 resource "aws_autoscaling_notification" "slack_notifications" {
-  group_names = ["${data.aws_autoscaling_groups.groups.names}"]
+  group_names = data.aws_autoscaling_groups.groups.names
 
   notifications = [
     "autoscaling:EC2_INSTANCE_LAUNCH",
@@ -43,8 +43,8 @@ resource "aws_autoscaling_notification" "slack_notifications" {
 ## Argument Reference
 
 * `filter` - (Optional) A filter used to scope the list e.g. by tags. See [related docs](http://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_Filter.html).
-  * `name` - (Required) The name of the filter. The valid values are: `auto-scaling-group`, `key`, `value`, and `propagate-at-launch`.
-  * `values` - (Required) The value of the filter.
+    * `name` - (Required) The name of the filter. The valid values are: `auto-scaling-group`, `key`, `value`, and `propagate-at-launch`.
+    * `values` - (Required) The value of the filter.
 
 ## Attributes Reference
 

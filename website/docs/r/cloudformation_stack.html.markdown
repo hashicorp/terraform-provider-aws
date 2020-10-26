@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudFormation"
 layout: "aws"
 page_title: "AWS: aws_cloudformation_stack"
-sidebar_current: "docs-aws-resource-cloudformation-stack"
 description: |-
   Provides a CloudFormation Stack resource.
 ---
@@ -84,8 +84,6 @@ Cloudformation Stacks can be imported using the `name`, e.g.
 $ terraform import aws_cloudformation_stack.stack networking-stack
 ```
 
-
-<a id="timeouts"></a>
 ## Timeouts
 
 `aws_cloudformation_stack` provides the following

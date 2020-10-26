@@ -6,12 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediastore"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSMediaStoreContainer_basic(t *testing.T) {
+	resourceName := "aws_media_store_container.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaStore(t) },
 		Providers:    testAccProviders,
@@ -20,8 +22,13 @@ func TestAccAWSMediaStoreContainer_basic(t *testing.T) {
 			{
 				Config: testAccMediaStoreContainerConfig(acctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMediaStoreContainerExists("aws_media_store_container.test"),
+					testAccCheckAwsMediaStoreContainerExists(resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -67,26 +74,6 @@ func TestAccAWSMediaStoreContainer_tags(t *testing.T) {
 					testAccCheckAwsMediaStoreContainerExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAWSMediaStoreContainer_import(t *testing.T) {
-	resourceName := "aws_media_store_container.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaStore(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsMediaStoreContainerDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccMediaStoreContainerConfig(acctest.RandString(5)),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -168,9 +155,10 @@ resource "aws_media_store_container" "test" {
   name = "tf_mediastore_%[1]s"
 
   tags = {
-	Name  = "tf_mediastore_%[1]s"
-	%[2]s = %[3]q
-	%[4]s = %[5]q
+    Name = "tf_mediastore_%[1]s"
+
+    %[2]s = %[3]q
+    %[4]s = %[5]q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)

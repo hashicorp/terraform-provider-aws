@@ -7,14 +7,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSWafRegionalXssMatchSet_basic(t *testing.T) {
 	var v waf.XssMatchSet
-	xssMatchSet := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafregional_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,30 +24,29 @@ func TestAccAWSWafRegionalXssMatchSet_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSWafRegionalXssMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWafRegionalXssMatchSetConfig(xssMatchSet),
+				Config: testAccAWSWafRegionalXssMatchSetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalXssMatchSetExists("aws_wafregional_xss_match_set.xss_match_set", &v),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "name", xssMatchSet),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.#", "2"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2018581549.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2018581549.field_to_match.2316364334.data", ""),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2018581549.field_to_match.2316364334.type", "QUERY_STRING"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2018581549.text_transformation", "NONE"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2786024938.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2786024938.field_to_match.3756326843.data", ""),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2786024938.field_to_match.3756326843.type", "URI"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2786024938.text_transformation", "NONE"),
+					testAccCheckAWSWafRegionalXssMatchSetExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.#", "2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuple.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "",
+						"field_to_match.0.type": "QUERY_STRING",
+						"text_transformation":   "NONE",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuple.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "",
+						"field_to_match.0.type": "URI",
+						"text_transformation":   "NONE",
+					}),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -53,8 +54,9 @@ func TestAccAWSWafRegionalXssMatchSet_basic(t *testing.T) {
 
 func TestAccAWSWafRegionalXssMatchSet_changeNameForceNew(t *testing.T) {
 	var before, after waf.XssMatchSet
-	xssMatchSet := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
-	xssMatchSetNewName := fmt.Sprintf("xssMatchSetNewName-%s", acctest.RandString(5))
+	rName1 := acctest.RandomWithPrefix("tf-acc-test")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafregional_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -62,23 +64,24 @@ func TestAccAWSWafRegionalXssMatchSet_changeNameForceNew(t *testing.T) {
 		CheckDestroy: testAccCheckAWSWafRegionalXssMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWafRegionalXssMatchSetConfig(xssMatchSet),
+				Config: testAccAWSWafRegionalXssMatchSetConfig(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalXssMatchSetExists("aws_wafregional_xss_match_set.xss_match_set", &before),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "name", xssMatchSet),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.#", "2"),
+					testAccCheckAWSWafRegionalXssMatchSetExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.#", "2"),
 				),
 			},
 			{
-				Config: testAccAWSWafRegionalXssMatchSetConfigChangeName(xssMatchSetNewName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSWafRegionalXssMatchSetConfigChangeName(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalXssMatchSetExists("aws_wafregional_xss_match_set.xss_match_set", &after),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "name", xssMatchSetNewName),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.#", "2"),
+					testAccCheckAWSWafRegionalXssMatchSetExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.#", "2"),
 				),
 			},
 		},
@@ -87,7 +90,8 @@ func TestAccAWSWafRegionalXssMatchSet_changeNameForceNew(t *testing.T) {
 
 func TestAccAWSWafRegionalXssMatchSet_disappears(t *testing.T) {
 	var v waf.XssMatchSet
-	xssMatchSet := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafregional_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -95,10 +99,10 @@ func TestAccAWSWafRegionalXssMatchSet_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSWafRegionalXssMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWafRegionalXssMatchSetConfig(xssMatchSet),
+				Config: testAccAWSWafRegionalXssMatchSetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalXssMatchSetExists("aws_wafregional_xss_match_set.xss_match_set", &v),
-					testAccCheckAWSWafRegionalXssMatchSetDisappears(&v),
+					testAccCheckAWSWafRegionalXssMatchSetExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafRegionalXssMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -108,7 +112,8 @@ func TestAccAWSWafRegionalXssMatchSet_disappears(t *testing.T) {
 
 func TestAccAWSWafRegionalXssMatchSet_changeTuples(t *testing.T) {
 	var before, after waf.XssMatchSet
-	setName := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafregional_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -116,55 +121,48 @@ func TestAccAWSWafRegionalXssMatchSet_changeTuples(t *testing.T) {
 		CheckDestroy: testAccCheckAWSWafRegionalXssMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWafRegionalXssMatchSetConfig(setName),
+				Config: testAccAWSWafRegionalXssMatchSetConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalXssMatchSetExists("aws_wafregional_xss_match_set.xss_match_set", &before),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "name", setName),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.#", "2"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2018581549.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2018581549.field_to_match.2316364334.data", ""),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2018581549.field_to_match.2316364334.type", "QUERY_STRING"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2018581549.text_transformation", "NONE"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2786024938.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2786024938.field_to_match.3756326843.data", ""),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2786024938.field_to_match.3756326843.type", "URI"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2786024938.text_transformation", "NONE"),
+					testAccCheckAWSWafRegionalXssMatchSetExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.#", "2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuple.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "",
+						"field_to_match.0.type": "QUERY_STRING",
+						"text_transformation":   "NONE",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuple.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "",
+						"field_to_match.0.type": "URI",
+						"text_transformation":   "NONE",
+					}),
 				),
 			},
 			{
-				Config: testAccAWSWafRegionalXssMatchSetConfig_changeTuples(setName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSWafRegionalXssMatchSetConfig_changeTuples(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalXssMatchSetExists("aws_wafregional_xss_match_set.xss_match_set", &after),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "name", setName),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.#", "2"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2893682529.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2893682529.field_to_match.4253810390.data", "GET"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2893682529.field_to_match.4253810390.type", "METHOD"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.2893682529.text_transformation", "HTML_ENTITY_DECODE"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.4270311415.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.4270311415.field_to_match.281401076.data", ""),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.4270311415.field_to_match.281401076.type", "BODY"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.4270311415.text_transformation", "CMD_LINE"),
+					testAccCheckAWSWafRegionalXssMatchSetExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.#", "2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuple.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "",
+						"field_to_match.0.type": "METHOD",
+						"text_transformation":   "HTML_ENTITY_DECODE",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuple.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "",
+						"field_to_match.0.type": "BODY",
+						"text_transformation":   "CMD_LINE",
+					}),
 				),
 			},
 		},
@@ -173,7 +171,8 @@ func TestAccAWSWafRegionalXssMatchSet_changeTuples(t *testing.T) {
 
 func TestAccAWSWafRegionalXssMatchSet_noTuples(t *testing.T) {
 	var ipset waf.XssMatchSet
-	setName := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafregional_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -181,59 +180,20 @@ func TestAccAWSWafRegionalXssMatchSet_noTuples(t *testing.T) {
 		CheckDestroy: testAccCheckAWSWafRegionalXssMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWafRegionalXssMatchSetConfig_noTuples(setName),
+				Config: testAccAWSWafRegionalXssMatchSetConfig_noTuples(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalXssMatchSetExists("aws_wafregional_xss_match_set.xss_match_set", &ipset),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "name", setName),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_xss_match_set.xss_match_set", "xss_match_tuple.#", "0"),
+					testAccCheckAWSWafRegionalXssMatchSetExists(resourceName, &ipset),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
-}
-
-func testAccCheckAWSWafRegionalXssMatchSetDisappears(v *waf.XssMatchSet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
-		region := testAccProvider.Meta().(*AWSClient).region
-
-		wr := newWafRegionalRetryer(conn, region)
-		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-			req := &waf.UpdateXssMatchSetInput{
-				ChangeToken:   token,
-				XssMatchSetId: v.XssMatchSetId,
-			}
-
-			for _, xssMatchTuple := range v.XssMatchTuples {
-				xssMatchTupleUpdate := &waf.XssMatchSetUpdate{
-					Action: aws.String("DELETE"),
-					XssMatchTuple: &waf.XssMatchTuple{
-						FieldToMatch:       xssMatchTuple.FieldToMatch,
-						TextTransformation: xssMatchTuple.TextTransformation,
-					},
-				}
-				req.Updates = append(req.Updates, xssMatchTupleUpdate)
-			}
-			return conn.UpdateXssMatchSet(req)
-		})
-		if err != nil {
-			return fmt.Errorf("Error updating regional WAF XSS Match Set: %s", err)
-		}
-
-		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
-			opts := &waf.DeleteXssMatchSetInput{
-				ChangeToken:   token,
-				XssMatchSetId: v.XssMatchSetId,
-			}
-			return conn.DeleteXssMatchSet(opts)
-		})
-		if err != nil {
-			return fmt.Errorf("Error deleting regional WAF XSS Match Set: %s", err)
-		}
-		return nil
-	}
 }
 
 func testAccCheckAWSWafRegionalXssMatchSetExists(n string, v *waf.XssMatchSet) resource.TestCheckFunc {
@@ -294,10 +254,10 @@ func testAccCheckAWSWafRegionalXssMatchSetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSWafRegionalXssMatchSetConfig(name string) string {
+func testAccAWSWafRegionalXssMatchSetConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_wafregional_xss_match_set" "xss_match_set" {
-  name = "%s"
+resource "aws_wafregional_xss_match_set" "test" {
+  name = %[1]q
 
   xss_match_tuple {
     text_transformation = "NONE"
@@ -315,13 +275,13 @@ resource "aws_wafregional_xss_match_set" "xss_match_set" {
     }
   }
 }
-`, name)
+`, rName)
 }
 
-func testAccAWSWafRegionalXssMatchSetConfigChangeName(name string) string {
+func testAccAWSWafRegionalXssMatchSetConfigChangeName(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_wafregional_xss_match_set" "xss_match_set" {
-  name = "%s"
+resource "aws_wafregional_xss_match_set" "test" {
+  name = %[1]q
 
   xss_match_tuple {
     text_transformation = "NONE"
@@ -339,13 +299,13 @@ resource "aws_wafregional_xss_match_set" "xss_match_set" {
     }
   }
 }
-`, name)
+`, rName)
 }
 
-func testAccAWSWafRegionalXssMatchSetConfig_changeTuples(name string) string {
+func testAccAWSWafRegionalXssMatchSetConfig_changeTuples(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_wafregional_xss_match_set" "xss_match_set" {
-  name = "%s"
+resource "aws_wafregional_xss_match_set" "test" {
+  name = %[1]q
 
   xss_match_tuple {
     text_transformation = "CMD_LINE"
@@ -360,17 +320,16 @@ resource "aws_wafregional_xss_match_set" "xss_match_set" {
 
     field_to_match {
       type = "METHOD"
-      data = "GET"
     }
   }
 }
-`, name)
+`, rName)
 }
 
-func testAccAWSWafRegionalXssMatchSetConfig_noTuples(name string) string {
+func testAccAWSWafRegionalXssMatchSetConfig_noTuples(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_wafregional_xss_match_set" "xss_match_set" {
-  name = "%s"
+resource "aws_wafregional_xss_match_set" "test" {
+  name = %[1]q
 }
-`, name)
+`, rName)
 }

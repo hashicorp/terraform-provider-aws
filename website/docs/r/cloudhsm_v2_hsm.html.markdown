@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudHSM v2"
 layout: "aws"
 page_title: "AWS: aws_cloudhsm_v2_hsm"
-sidebar_current: "docs-aws-resource-cloudhsm-v2-hsm"
 description: |-
   Provides a CloudHSM v2 HSM module resource.
 ---
@@ -16,14 +16,15 @@ The following example below creates an HSM module in CloudHSM cluster.
 
 ```hcl
 data "aws_cloudhsm_v2_cluster" "cluster" {
-  cluster_id = "${var.cloudhsm_cluster_id}"
+  cluster_id = var.cloudhsm_cluster_id
 }
 
 resource "aws_cloudhsm_v2_hsm" "cloudhsm_v2_hsm" {
-  subnet_id  = "${data.aws_cloudhsm_v2_cluster.cluster.subnet_ids[0]}"
-  cluster_id = "${data.aws_cloudhsm_v2_cluster.cluster.cluster_id}"
+  subnet_id  = data.aws_cloudhsm_v2_cluster.cluster.subnet_ids[0]
+  cluster_id = data.aws_cloudhsm_v2_cluster.cluster.cluster_id
 }
 ```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -40,3 +41,11 @@ The following attributes are exported:
 * `hsm_id` - The id of the HSM module.
 * `hsm_state` - The state of the HSM module.
 * `hsm_eni_id` - The id of the ENI interface allocated for HSM module.
+
+## Import
+
+HSM modules can be imported using their HSM ID, e.g.
+
+```
+$ terraform import aws_cloudhsm_v2_hsm.bar hsm-quo8dahtaca
+```

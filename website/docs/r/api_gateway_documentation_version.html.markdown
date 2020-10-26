@@ -1,7 +1,7 @@
 ---
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_documentation_version"
-sidebar_current: "docs-aws-resource-api-gateway-documentation-version"
 description: |-
   Provides a resource to manage an API Gateway Documentation Version.
 ---
@@ -15,9 +15,9 @@ Provides a resource to manage an API Gateway Documentation Version.
 ```hcl
 resource "aws_api_gateway_documentation_version" "example" {
   version     = "example_version"
-  rest_api_id = "${aws_api_gateway_rest_api.example.id}"
+  rest_api_id = aws_api_gateway_rest_api.example.id
   description = "Example description"
-  depends_on  = ["aws_api_gateway_documentation_part.example"]
+  depends_on  = [aws_api_gateway_documentation_part.example]
 }
 
 resource "aws_api_gateway_rest_api" "example" {
@@ -30,7 +30,7 @@ resource "aws_api_gateway_documentation_part" "example" {
   }
 
   properties  = "{\"description\":\"Example\"}"
-  rest_api_id = "${aws_api_gateway_rest_api.example.id}"
+  rest_api_id = aws_api_gateway_rest_api.example.id
 }
 ```
 

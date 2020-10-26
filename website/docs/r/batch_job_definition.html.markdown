@@ -1,7 +1,7 @@
 ---
+subcategory: "Batch"
 layout: "aws"
 page_title: "AWS: aws_batch_job_definition"
-sidebar_current: "docs-aws-resource-batch-job-definition"
 description: |-
   Provides a Batch Job Definition resource.
 ---
@@ -63,6 +63,7 @@ The following arguments are supported:
 * `parameters` - (Optional) Specifies the parameter substitution placeholders to set in the job definition.
 * `retry_strategy` - (Optional) Specifies the retry strategy to use for failed jobs that are submitted with this job definition.
     Maximum number of `retry_strategy` is `1`.  Defined below.
+* `tags` - (Optional) Key-value map of resource tags
 * `timeout` - (Optional) Specifies the timeout for jobs so that if a job runs longer, AWS Batch terminates the job. Maximum number of `timeout` is `1`. Defined below.
 * `type` - (Required) The type of job definition.  Must be `container`
 
@@ -84,3 +85,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name of the job definition.
 * `revision` - The revision of the job definition.
+
+## Import
+
+Batch Job Definition can be imported using the `arn`, e.g.
+
+```
+$ terraform import aws_batch_job_definition.test arn:aws:batch:us-east-1:123456789012:job-definition/sample
+```

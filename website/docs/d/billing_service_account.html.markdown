@@ -1,14 +1,14 @@
 ---
+subcategory: ""
 layout: "aws"
 page_title: "AWS: aws_billing_service_account"
-sidebar_current: "docs-aws-datasource-billing-service-account"
 description: |-
   Get AWS Billing Service Account
 ---
 
 # Data Source: aws_billing_service_account
 
-Use this data source to get the Account ID of the [AWS Billing and Cost Management Service Account](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-getting-started.html#step-2) for the purpose of whitelisting in S3 bucket policy.
+Use this data source to get the Account ID of the [AWS Billing and Cost Management Service Account](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-getting-started.html#step-2) for the purpose of permitting in S3 bucket policy.
 
 ## Example Usage
 

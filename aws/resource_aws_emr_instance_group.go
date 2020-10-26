@@ -9,9 +9,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+)
+
+const (
+	emrInstanceGroupCreateTimeout = 30 * time.Minute
+	emrInstanceGroupUpdateTimeout = 30 * time.Minute
 )
 
 func resourceAwsEMRInstanceGroup() *schema.Resource {
@@ -38,7 +44,7 @@ func resourceAwsEMRInstanceGroup() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 			},
 			"bid_price": {
 				Type:     schema.TypeString,
@@ -49,6 +55,17 @@ func resourceAwsEMRInstanceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"configurations_json": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         false,
+				ValidateFunc:     validation.StringIsJSON,
+				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"ebs_optimized": {
 				Type:     schema.TypeBool,
@@ -136,6 +153,17 @@ func resourceAwsEMRInstanceGroupCreate(d *schema.ResourceData, meta interface{})
 		groupConfig.AutoScalingPolicy = autoScalingPolicy
 	}
 
+	if v, ok := d.GetOk("configurations_json"); ok {
+		info, err := structure.NormalizeJsonString(v)
+		if err != nil {
+			return fmt.Errorf("configurations_json contains an invalid JSON: %s", err)
+		}
+		groupConfig.Configurations, err = expandConfigurationJson(info)
+		if err != nil {
+			return fmt.Errorf("Error reading EMR configurations_json: %s", err)
+		}
+	}
+
 	groupConfig.Market = aws.String(emr.MarketTypeOnDemand)
 	if v, ok := d.GetOk("bid_price"); ok {
 		groupConfig.BidPrice = aws.String(v.(string))
@@ -159,6 +187,10 @@ func resourceAwsEMRInstanceGroupCreate(d *schema.ResourceData, meta interface{})
 	}
 	d.SetId(*resp.InstanceGroupIds[0])
 
+	if err := waitForEmrInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), emrInstanceGroupCreateTimeout); err != nil {
+		return fmt.Errorf("error waiting for EMR Instance Group (%s) creation: %s", d.Id(), err)
+	}
+
 	return resourceAwsEMRInstanceGroupRead(d, meta)
 }
 
@@ -175,6 +207,30 @@ func resourceAwsEMRInstanceGroupRead(d *schema.ResourceData, meta interface{}) e
 
 	if err != nil {
 		return fmt.Errorf("error reading EMR Instance Group (%s): %s", d.Id(), err)
+	}
+
+	if ig.Status != nil {
+		switch aws.StringValue(ig.Status.State) {
+		case emr.InstanceGroupStateTerminating:
+			fallthrough
+		case emr.InstanceGroupStateTerminated:
+			log.Printf("[DEBUG] EMR Instance Group (%s) terminated, removing", d.Id())
+			d.SetId("")
+			return nil
+		}
+	}
+
+	switch {
+	case len(ig.Configurations) > 0:
+		configOut, err := flattenConfigurationJson(ig.Configurations)
+		if err != nil {
+			return fmt.Errorf("Error reading EMR instance group configurations: %s", err)
+		}
+		if err := d.Set("configurations_json", configOut); err != nil {
+			return fmt.Errorf("Error setting EMR configurations_json for instance group (%s): %s", d.Id(), err)
+		}
+	default:
+		d.Set("configurations_json", "")
 	}
 
 	var autoscalingPolicyString string
@@ -214,7 +270,6 @@ func resourceAwsEMRInstanceGroupRead(d *schema.ResourceData, meta interface{}) e
 	}
 	d.Set("ebs_optimized", ig.EbsOptimized)
 	d.Set("instance_count", ig.RequestedInstanceCount)
-	d.Set("instance_role", ig.InstanceGroupType)
 	d.Set("instance_type", ig.InstanceType)
 	d.Set("name", ig.Name)
 	d.Set("running_instance_count", ig.RunningInstanceCount)
@@ -230,15 +285,30 @@ func resourceAwsEMRInstanceGroupUpdate(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).emrconn
 
 	log.Printf("[DEBUG] Modify EMR task group")
-	if d.HasChange("instance_count") {
-		instanceCount := d.Get("instance_count").(int)
+	if d.HasChanges("instance_count", "configurations_json") {
+		instanceGroupModifyConfig := emr.InstanceGroupModifyConfig{
+			InstanceGroupId: aws.String(d.Id()),
+		}
 
+		if d.HasChange("instance_count") {
+			instanceCount := d.Get("instance_count").(int)
+			instanceGroupModifyConfig.InstanceCount = aws.Int64(int64(instanceCount))
+		}
+		if d.HasChange("configurations_json") {
+			if v, ok := d.GetOk("configurations_json"); ok {
+				info, err := structure.NormalizeJsonString(v)
+				if err != nil {
+					return fmt.Errorf("configurations_json contains an invalid JSON: %s", err)
+				}
+				instanceGroupModifyConfig.Configurations, err = expandConfigurationJson(info)
+				if err != nil {
+					return fmt.Errorf("Error reading EMR configurations_json: %s", err)
+				}
+			}
+		}
 		params := &emr.ModifyInstanceGroupsInput{
 			InstanceGroups: []*emr.InstanceGroupModifyConfig{
-				{
-					InstanceGroupId: aws.String(d.Id()),
-					InstanceCount:   aws.Int64(int64(instanceCount)),
-				},
+				&instanceGroupModifyConfig,
 			},
 		}
 
@@ -247,20 +317,7 @@ func resourceAwsEMRInstanceGroupUpdate(d *schema.ResourceData, meta interface{})
 			return fmt.Errorf("error modifying EMR Instance Group (%s): %s", d.Id(), err)
 		}
 
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{
-				emr.InstanceGroupStateBootstrapping,
-				emr.InstanceGroupStateProvisioning,
-				emr.InstanceGroupStateResizing,
-			},
-			Target:     []string{emr.InstanceGroupStateRunning},
-			Refresh:    instanceGroupStateRefresh(conn, d.Get("cluster_id").(string), d.Id()),
-			Timeout:    10 * time.Minute,
-			Delay:      10 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-
-		if _, err := stateConf.WaitForState(); err != nil {
+		if err := waitForEmrInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), emrInstanceGroupUpdateTimeout); err != nil {
 			return fmt.Errorf("error waiting for EMR Instance Group (%s) modification: %s", d.Id(), err)
 		}
 	}
@@ -423,4 +480,24 @@ func marshalWithoutNil(v interface{}) ([]byte, error) {
 	}
 
 	return json.Marshal(cleanRules)
+}
+
+func waitForEmrInstanceGroupStateRunning(conn *emr.EMR, clusterID string, instanceGroupID string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			emr.InstanceGroupStateBootstrapping,
+			emr.InstanceGroupStateProvisioning,
+			emr.InstanceGroupStateReconfiguring,
+			emr.InstanceGroupStateResizing,
+		},
+		Target:     []string{emr.InstanceGroupStateRunning},
+		Refresh:    instanceGroupStateRefresh(conn, clusterID, instanceGroupID),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }

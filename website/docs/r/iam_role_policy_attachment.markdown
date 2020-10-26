@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_role_policy_attachment"
-sidebar_current: "docs-aws-resource-iam-role-policy-attachment"
 description: |-
   Attaches a Managed IAM Policy to an IAM role
 ---
@@ -56,8 +56,8 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "test-attach" {
-  role       = "${aws_iam_role.role.name}"
-  policy_arn = "${aws_iam_policy.policy.arn}"
+  role       = aws_iam_role.role.name
+  policy_arn = aws_iam_policy.policy.arn
 }
 ```
 

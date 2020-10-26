@@ -1,7 +1,7 @@
 ---
+subcategory: "Service Quotas"
 layout: "aws"
 page_title: "AWS: aws_servicequotas_service"
-sidebar_current: "docs-aws-datasource-servicequotas-service"
 description: |-
   Retrieve information about a Service Quotas Service
 ---

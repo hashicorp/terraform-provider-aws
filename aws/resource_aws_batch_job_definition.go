@@ -6,17 +6,28 @@ import (
 	"encoding/json"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/batch"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/structure"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/batch/equivalency"
 )
 
 func resourceAwsBatchJobDefinition() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsBatchJobDefinitionCreate,
 		Read:   resourceAwsBatchJobDefinitionRead,
+		Update: resourceAwsBatchJobDefinitionUpdate,
 		Delete: resourceAwsBatchJobDefinitionDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("arn", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -33,8 +44,12 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
-				DiffSuppressFunc: suppressEquivalentJsonDiffs,
-				ValidateFunc:     validateAwsBatchJobContainerProperties,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					equal, _ := equivalency.EquivalentBatchContainerPropertiesJSON(old, new)
+
+					return equal
+				},
+				ValidateFunc: validateAwsBatchJobContainerProperties,
 			},
 			"parameters": {
 				Type:     schema.TypeMap,
@@ -58,6 +73,7 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 			"timeout": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -117,6 +133,10 @@ func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{
 		input.RetryStrategy = expandJobDefinitionRetryStrategy(v.([]interface{}))
 	}
 
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		input.Tags = keyvaluetags.New(v).IgnoreAws().BatchTags()
+	}
+
 	if v, ok := d.GetOk("timeout"); ok {
 		input.Timeout = expandJobDefinitionTimeout(v.([]interface{}))
 	}
@@ -132,6 +152,8 @@ func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{
 
 func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).batchconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	arn := d.Get("arn").(string)
 	job, err := getJobDefinition(conn, arn)
 	if err != nil {
@@ -142,11 +164,27 @@ func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{})
 		return nil
 	}
 	d.Set("arn", job.JobDefinitionArn)
-	d.Set("container_properties", job.ContainerProperties)
+
+	containerProperties, err := flattenBatchContainerProperties(job.ContainerProperties)
+
+	if err != nil {
+		return fmt.Errorf("error converting Batch Container Properties to JSON: %s", err)
+	}
+
+	if err := d.Set("container_properties", containerProperties); err != nil {
+		return fmt.Errorf("error setting container_properties: %s", err)
+	}
+
+	d.Set("name", job.JobDefinitionName)
+
 	d.Set("parameters", aws.StringValueMap(job.Parameters))
 
 	if err := d.Set("retry_strategy", flattenBatchRetryStrategy(job.RetryStrategy)); err != nil {
 		return fmt.Errorf("error setting retry_strategy: %s", err)
+	}
+
+	if err := d.Set("tags", keyvaluetags.BatchKeyValueTags(job.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	if err := d.Set("timeout", flattenBatchJobTimeout(job.Timeout)); err != nil {
@@ -155,6 +193,20 @@ func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{})
 
 	d.Set("revision", job.Revision)
 	d.Set("type", job.Type)
+	return nil
+}
+
+func resourceAwsBatchJobDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).batchconn
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.BatchUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
+	}
+
 	return nil
 }
 
@@ -213,6 +265,17 @@ func expandBatchJobContainerProperties(rawProps string) (*batch.ContainerPropert
 	}
 
 	return props, nil
+}
+
+// Convert batch.ContainerProperties object into its JSON representation
+func flattenBatchContainerProperties(containerProperties *batch.ContainerProperties) (string, error) {
+	b, err := jsonutil.BuildJSON(containerProperties)
+
+	if err != nil {
+		return "", err
+	}
+
+	return string(b), nil
 }
 
 func expandJobDefinitionParameters(params map[string]interface{}) map[string]*string {

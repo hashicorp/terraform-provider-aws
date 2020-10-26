@@ -1,7 +1,7 @@
 ---
+subcategory: "KMS"
 layout: "aws"
 page_title: "AWS: aws_kms_external_key"
-sidebar_current: "docs-aws-resource-kms-external-key"
 description: |-
   Manages a KMS Customer Master Key that uses external key material
 ---

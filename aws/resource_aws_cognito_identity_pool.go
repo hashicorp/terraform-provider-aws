@@ -8,7 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCognitoIdentityPool() *schema.Resource {
@@ -72,7 +73,7 @@ func resourceAwsCognitoIdentityPool() *schema.Resource {
 			},
 
 			"openid_connect_provider_arns": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
@@ -129,11 +130,11 @@ func resourceAwsCognitoIdentityPoolCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("openid_connect_provider_arns"); ok {
-		params.OpenIdConnectProviderARNs = expandStringList(v.([]interface{}))
+		params.OpenIdConnectProviderARNs = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		params.IdentityPoolTags = tagsFromMapGeneric(v.(map[string]interface{}))
+		params.IdentityPoolTags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CognitoidentityTags()
 	}
 
 	entity, err := conn.CreateIdentityPool(params)
@@ -148,13 +149,15 @@ func resourceAwsCognitoIdentityPoolCreate(d *schema.ResourceData, meta interface
 
 func resourceAwsCognitoIdentityPoolRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cognitoconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	log.Printf("[DEBUG] Reading Cognito Identity Pool: %s", d.Id())
 
 	ip, err := conn.DescribeIdentityPool(&cognitoidentity.DescribeIdentityPoolInput{
 		IdentityPoolId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == cognitoidentity.ErrCodeResourceNotFoundException {
 			d.SetId("")
 			return nil
 		}
@@ -172,8 +175,8 @@ func resourceAwsCognitoIdentityPoolRead(d *schema.ResourceData, meta interface{}
 	d.Set("identity_pool_name", ip.IdentityPoolName)
 	d.Set("allow_unauthenticated_identities", ip.AllowUnauthenticatedIdentities)
 	d.Set("developer_provider_name", ip.DeveloperProviderName)
-	if err := d.Set("tags", tagsToMapGeneric(ip.IdentityPoolTags)); err != nil {
-		return fmt.Errorf("Error setting tags: %s", err)
+	if err := d.Set("tags", keyvaluetags.CognitoidentityKeyValueTags(ip.IdentityPoolTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	if err := d.Set("cognito_identity_providers", flattenCognitoIdentityProviders(ip.CognitoIdentityProviders)); err != nil {
@@ -218,7 +221,7 @@ func resourceAwsCognitoIdentityPoolUpdate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("openid_connect_provider_arns"); ok {
-		params.OpenIdConnectProviderARNs = expandStringList(v.([]interface{}))
+		params.OpenIdConnectProviderARNs = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("saml_provider_arns"); ok {
@@ -232,8 +235,13 @@ func resourceAwsCognitoIdentityPoolUpdate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Error updating Cognito Identity Pool: %s", err)
 	}
 
-	if err := setTagsCognito(conn, d); err != nil {
-		return err
+	arn := d.Get("arn").(string)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.CognitoidentityUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating Cognito Identity Pool (%s) tags: %s", arn, err)
+		}
 	}
 
 	return resourceAwsCognitoIdentityPoolRead(d, meta)

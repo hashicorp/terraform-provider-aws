@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
 layout: "aws"
 page_title: "AWS: aws_lb_listener_certificate"
-sidebar_current: "docs-aws-resource-elbv2-listener-rule"
 description: |-
   Provides a Load Balancer Listener Certificate resource.
 ---
@@ -30,8 +30,8 @@ resource "aws_lb_listener" "front_end" {
 }
 
 resource "aws_lb_listener_certificate" "example" {
-  listener_arn    = "${aws_lb_listener.front_end.arn}"
-  certificate_arn = "${aws_acm_certificate.example.arn}"
+  listener_arn    = aws_lb_listener.front_end.arn
+  certificate_arn = aws_acm_certificate.example.arn
 }
 ```
 

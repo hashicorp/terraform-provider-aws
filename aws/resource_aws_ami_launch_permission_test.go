@@ -6,12 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSAMILaunchPermission_Basic(t *testing.T) {
+func TestAccAWSAMILaunchPermission_basic(t *testing.T) {
 	resourceName := "aws_ami_launch_permission.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -25,6 +25,12 @@ func TestAccAWSAMILaunchPermission_Basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAMILaunchPermissionExists(resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAMILaunchPermissionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -183,10 +189,10 @@ func testAccCheckAWSAMILaunchPermissionAddPublic(resourceName string) resource.T
 
 		input := &ec2.ModifyImageAttributeInput{
 			ImageId:   aws.String(imageID),
-			Attribute: aws.String("launchPermission"),
+			Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
 			LaunchPermission: &ec2.LaunchPermissionModifications{
 				Add: []*ec2.LaunchPermission{
-					{Group: aws.String("all")},
+					{Group: aws.String(ec2.PermissionGroupAll)},
 				},
 			},
 		}
@@ -214,7 +220,7 @@ func testAccCheckAWSAMILaunchPermissionDisappears(resourceName string) resource.
 
 		input := &ec2.ModifyImageAttributeInput{
 			ImageId:   aws.String(imageID),
-			Attribute: aws.String("launchPermission"),
+			Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
 			LaunchPermission: &ec2.LaunchPermissionModifications{
 				Remove: []*ec2.LaunchPermission{
 					{UserId: aws.String(accountID)},
@@ -274,13 +280,24 @@ data "aws_region" "current" {}
 resource "aws_ami_copy" "test" {
   description       = %q
   name              = %q
-  source_ami_id     = "${data.aws_ami.amzn-ami-minimal-hvm.id}"
-  source_ami_region = "${data.aws_region.current.name}"
+  source_ami_id     = data.aws_ami.amzn-ami-minimal-hvm.id
+  source_ami_region = data.aws_region.current.name
 }
 
 resource "aws_ami_launch_permission" "test" {
-  account_id = "${data.aws_caller_identity.current.account_id}"
-  image_id   = "${aws_ami_copy.test.id}"
+  account_id = data.aws_caller_identity.current.account_id
+  image_id   = aws_ami_copy.test.id
 }
 `, rName, rName)
+}
+
+func testAccAWSAMILaunchPermissionImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["account_id"], rs.Primary.Attributes["image_id"]), nil
+	}
 }

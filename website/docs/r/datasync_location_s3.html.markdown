@@ -1,7 +1,7 @@
 ---
+subcategory: "DataSync"
 layout: "aws"
 page_title: "AWS: aws_datasync_location_s3"
-sidebar_current: "docs-aws-resource-datasync-location-s3"
 description: |-
   Manages an AWS DataSync S3 Location
 ---
@@ -14,11 +14,11 @@ Manages an S3 Location within AWS DataSync.
 
 ```hcl
 resource "aws_datasync_location_s3" "example" {
-  s3_bucket_arn = "${aws_s3_bucket.example.arn}"
+  s3_bucket_arn = aws_s3_bucket.example.arn
   subdirectory  = "/example/prefix"
 
   s3_config {
-    bucket_access_role_arn = "${aws_iam_role.example.arn}"
+    bucket_access_role_arn = aws_iam_role.example.arn
   }
 }
 ```

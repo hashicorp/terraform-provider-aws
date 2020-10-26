@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const organizationsPolicyTypeStatusDisabled = "DISABLED"
@@ -67,6 +67,10 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -88,6 +92,10 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 							Computed: true,
 						},
 						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"status": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -136,7 +144,10 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
+						organizations.PolicyTypeAiservicesOptOutPolicy,
+						organizations.PolicyTypeBackupPolicy,
 						organizations.PolicyTypeServiceControlPolicy,
+						organizations.PolicyTypeTagPolicy,
 					}, false),
 				},
 			},
@@ -412,10 +423,11 @@ func flattenOrganizationsAccounts(accounts []*organizations.Account) []map[strin
 	var result []map[string]interface{}
 	for _, account := range accounts {
 		result = append(result, map[string]interface{}{
-			"arn":   aws.StringValue(account.Arn),
-			"email": aws.StringValue(account.Email),
-			"id":    aws.StringValue(account.Id),
-			"name":  aws.StringValue(account.Name),
+			"arn":    aws.StringValue(account.Arn),
+			"email":  aws.StringValue(account.Email),
+			"id":     aws.StringValue(account.Id),
+			"name":   aws.StringValue(account.Name),
+			"status": aws.StringValue(account.Status),
 		})
 	}
 	return result

@@ -1,7 +1,7 @@
 ---
+subcategory: "CodeDeploy"
 layout: "aws"
 page_title: "AWS: aws_codedeploy_deployment_config"
-sidebar_current: "docs-aws-resource-codedeploy-deployment-config"
 description: |-
   Provides a CodeDeploy deployment config.
 ---
@@ -25,10 +25,10 @@ resource "aws_codedeploy_deployment_config" "foo" {
 }
 
 resource "aws_codedeploy_deployment_group" "foo" {
-  app_name               = "${aws_codedeploy_app.foo_app.name}"
+  app_name               = aws_codedeploy_app.foo_app.name
   deployment_group_name  = "bar"
-  service_role_arn       = "${aws_iam_role.foo_role.arn}"
-  deployment_config_name = "${aws_codedeploy_deployment_config.foo.id}"
+  service_role_arn       = aws_iam_role.foo_role.arn
+  deployment_config_name = aws_codedeploy_deployment_config.foo.id
 
   ec2_tag_filter {
     key   = "filterkey"
@@ -72,10 +72,10 @@ resource "aws_codedeploy_deployment_config" "foo" {
 }
 
 resource "aws_codedeploy_deployment_group" "foo" {
-  app_name               = "${aws_codedeploy_app.foo_app.name}"
+  app_name               = aws_codedeploy_app.foo_app.name
   deployment_group_name  = "bar"
-  service_role_arn       = "${aws_iam_role.foo_role.arn}"
-  deployment_config_name = "${aws_codedeploy_deployment_config.foo.id}"
+  service_role_arn       = aws_iam_role.foo_role.arn
+  deployment_config_name = aws_codedeploy_deployment_config.foo.id
 
   auto_rollback_configuration {
     enabled = true
@@ -95,7 +95,7 @@ The following arguments are supported:
 
 * `deployment_config_name` - (Required) The name of the deployment config.
 * `compute_platform` - (Optional) The compute platform can be `Server`, `Lambda`, or `ECS`. Default is `Server`.
-* `minimum_healthy_hosts` - (Optional) A minimum_healthy_hosts block. Minimum Healthy Hosts are documented below.
+* `minimum_healthy_hosts` - (Optional) A minimum_healthy_hosts block. Required for `Server` compute platform. Minimum Healthy Hosts are documented below.
 * `traffic_routing_config` - (Optional) A traffic_routing_config block. Traffic Routing Config is documented below.
 
 The `minimum_healthy_hosts` block supports the following:

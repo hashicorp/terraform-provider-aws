@@ -1,7 +1,7 @@
 ---
+subcategory: "ECR"
 layout: "aws"
 page_title: "AWS: aws_ecr_image"
-sidebar_current: "docs-aws-datasource-ecr-image"
 description: |-
     Provides details about an ECR Image
 ---
@@ -32,6 +32,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - SHA256 digest of the image manifest.
 * `image_pushed_at` - The date and time, expressed as a unix timestamp, at which the current image was pushed to the repository.
 * `image_size_in_bytes` - The size, in bytes, of the image in the repository.
 * `image_tags` - The list of tags associated with this image.

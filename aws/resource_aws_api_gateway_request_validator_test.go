@@ -7,47 +7,72 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAPIGatewayRequestValidator_basic(t *testing.T) {
 	var conf apigateway.UpdateRequestValidatorOutput
+	rName := fmt.Sprintf("tf-test-acc-%s", acctest.RandString(8))
+	resourceName := "aws_api_gateway_request_validator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRequestValidatorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayRequestValidatorConfig,
+				Config: testAccAWSAPIGatewayRequestValidatorConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayRequestValidatorExists("aws_api_gateway_request_validator.test", &conf),
+					testAccCheckAWSAPIGatewayRequestValidatorExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayRequestValidatorName(&conf, "tf-acc-test-request-validator"),
-					resource.TestCheckResourceAttr("aws_api_gateway_request_validator.test", "name", "tf-acc-test-request-validator"),
+					resource.TestCheckResourceAttr(resourceName, "name", "tf-acc-test-request-validator"),
 					testAccCheckAWSAPIGatewayRequestValidatorValidateRequestBody(&conf, false),
-					resource.TestCheckResourceAttr("aws_api_gateway_request_validator.test", "validate_request_body", "false"),
+					resource.TestCheckResourceAttr(resourceName, "validate_request_body", "false"),
 					testAccCheckAWSAPIGatewayRequestValidatorValidateRequestParameters(&conf, false),
-					resource.TestCheckResourceAttr("aws_api_gateway_request_validator.test", "validate_request_parameters", "false"),
+					resource.TestCheckResourceAttr(resourceName, "validate_request_parameters", "false"),
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayRequestValidatorUpdatedConfig,
+				Config: testAccAWSAPIGatewayRequestValidatorUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayRequestValidatorExists("aws_api_gateway_request_validator.test", &conf),
+					testAccCheckAWSAPIGatewayRequestValidatorExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayRequestValidatorName(&conf, "tf-acc-test-request-validator_modified"),
-					resource.TestCheckResourceAttr("aws_api_gateway_request_validator.test", "name", "tf-acc-test-request-validator_modified"),
+					resource.TestCheckResourceAttr(resourceName, "name", "tf-acc-test-request-validator_modified"),
 					testAccCheckAWSAPIGatewayRequestValidatorValidateRequestBody(&conf, true),
-					resource.TestCheckResourceAttr("aws_api_gateway_request_validator.test", "validate_request_body", "true"),
+					resource.TestCheckResourceAttr(resourceName, "validate_request_body", "true"),
 					testAccCheckAWSAPIGatewayRequestValidatorValidateRequestParameters(&conf, true),
-					resource.TestCheckResourceAttr("aws_api_gateway_request_validator.test", "validate_request_parameters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "validate_request_parameters", "true"),
 				),
 			},
 			{
-				ResourceName:      "aws_api_gateway_request_validator.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayRequestValidatorImportStateIdFunc("aws_api_gateway_request_validator.test"),
+				ImportStateIdFunc: testAccAWSAPIGatewayRequestValidatorImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayRequestValidator_disappears(t *testing.T) {
+	var conf apigateway.UpdateRequestValidatorOutput
+	rName := fmt.Sprintf("tf-test-acc-%s", acctest.RandString(8))
+	resourceName := "aws_api_gateway_request_validator.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRequestValidatorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayRequestValidatorConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRequestValidatorExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayRequestValidator(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -100,7 +125,7 @@ func testAccCheckAWSAPIGatewayRequestValidatorExists(n string, res *apigateway.U
 			return fmt.Errorf("No API Request Validator ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigateway
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetRequestValidatorInput{
 			RequestValidatorId: aws.String(rs.Primary.ID),
@@ -118,7 +143,7 @@ func testAccCheckAWSAPIGatewayRequestValidatorExists(n string, res *apigateway.U
 }
 
 func testAccCheckAWSAPIGatewayRequestValidatorDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigateway
+	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_request_validator" {
@@ -160,24 +185,30 @@ func testAccAWSAPIGatewayRequestValidatorImportStateIdFunc(resourceName string) 
 	}
 }
 
-const testAccAWSAPIGatewayRequestValidatorConfig_base = `
+func testAccAWSAPIGatewayRequestValidatorConfig_base(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "tf-request-validator-test"
+  name = "%s"
 }
-`
-
-const testAccAWSAPIGatewayRequestValidatorConfig = testAccAWSAPIGatewayRequestValidatorConfig_base + `
-resource "aws_api_gateway_request_validator" "test" {
-  name = "tf-acc-test-request-validator"
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+`, rName)
 }
-`
 
-const testAccAWSAPIGatewayRequestValidatorUpdatedConfig = testAccAWSAPIGatewayRequestValidatorConfig_base + `
+func testAccAWSAPIGatewayRequestValidatorConfig(rName string) string {
+	return fmt.Sprintf(testAccAWSAPIGatewayRequestValidatorConfig_base(rName) + `
 resource "aws_api_gateway_request_validator" "test" {
-  name = "tf-acc-test-request-validator_modified"
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  validate_request_body = true
+  name        = "tf-acc-test-request-validator"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+}
+`)
+}
+
+func testAccAWSAPIGatewayRequestValidatorUpdatedConfig(rName string) string {
+	return fmt.Sprintf(testAccAWSAPIGatewayRequestValidatorConfig_base(rName) + `
+resource "aws_api_gateway_request_validator" "test" {
+  name                        = "tf-acc-test-request-validator_modified"
+  rest_api_id                 = aws_api_gateway_rest_api.test.id
+  validate_request_body       = true
   validate_request_parameters = true
 }
-`
+`)
+}

@@ -5,9 +5,11 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsVpcEndpoint() *schema.Resource {
@@ -15,6 +17,10 @@ func dataSourceAwsVpcEndpoint() *schema.Resource {
 		Read: dataSourceAwsVpcEndpointRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cidr_blocks": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -36,6 +42,7 @@ func dataSourceAwsVpcEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"filter": ec2CustomFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -111,6 +118,7 @@ func dataSourceAwsVpcEndpoint() *schema.Resource {
 
 func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeVpcEndpointsInput{}
 
@@ -125,6 +133,12 @@ func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) erro
 			"service-name":       d.Get("service_name").(string),
 		},
 	)
+	req.Filters = append(req.Filters, buildEC2TagFilterList(
+		keyvaluetags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
+	)...)
+	req.Filters = append(req.Filters, buildEC2CustomFilterList(
+		d.Get("filter").(*schema.Set),
+	)...)
 	if len(req.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
 		req.Filters = nil
@@ -144,6 +158,15 @@ func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) erro
 
 	vpce := respVpce.VpcEndpoints[0]
 	d.SetId(aws.StringValue(vpce.VpcEndpointId))
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "ec2",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("vpc-endpoint/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 
 	serviceName := aws.StringValue(vpce.ServiceName)
 	d.Set("service_name", serviceName)
@@ -200,7 +223,7 @@ func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return fmt.Errorf("error setting subnet_ids: %s", err)
 	}
-	err = d.Set("tags", tagsToMap(vpce.Tags))
+	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(vpce.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 	if err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}

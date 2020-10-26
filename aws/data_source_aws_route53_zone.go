@@ -3,11 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsRoute53Zone() *schema.Resource {
@@ -68,11 +68,14 @@ func dataSourceAwsRoute53Zone() *schema.Resource {
 
 func dataSourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).r53conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	name, nameExists := d.GetOk("name")
-	name = hostedZoneName(name.(string))
+	name = name.(string)
 	id, idExists := d.GetOk("zone_id")
 	vpcId, vpcIdExists := d.GetOk("vpc_id")
-	tags := tagsFromMap(d.Get("tags").(map[string]interface{}))
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws()
+
 	if nameExists && idExists {
 		return fmt.Errorf("zone_id and name arguments can't be used together")
 	}
@@ -97,12 +100,12 @@ func dataSourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) erro
 			return fmt.Errorf("Error finding Route 53 Hosted Zone: %v", err)
 		}
 		for _, hostedZone := range resp.HostedZones {
-			hostedZoneId := cleanZoneID(*hostedZone.Id)
+			hostedZoneId := cleanZoneID(aws.StringValue(hostedZone.Id))
 			if idExists && hostedZoneId == id.(string) {
 				hostedZoneFound = hostedZone
 				break
 				// we check if the name is the same as requested and if private zone field is the same as requested or if there is a vpc_id
-			} else if *hostedZone.Name == name && (*hostedZone.Config.PrivateZone == d.Get("private_zone").(bool) || (*hostedZone.Config.PrivateZone && vpcIdExists)) {
+			} else if (trimTrailingPeriod(aws.StringValue(hostedZone.Name)) == trimTrailingPeriod(name)) && (aws.BoolValue(hostedZone.Config.PrivateZone) == d.Get("private_zone").(bool) || (aws.BoolValue(hostedZone.Config.PrivateZone) && vpcIdExists)) {
 				matchingVPC := false
 				if vpcIdExists {
 					reqHostedZone := &route53.GetHostedZoneInput{}
@@ -114,7 +117,7 @@ func dataSourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) erro
 					}
 					// we go through all VPCs
 					for _, vpc := range respHostedZone.VPCs {
-						if *vpc.VPCId == vpcId.(string) {
+						if aws.StringValue(vpc.VPCId) == vpcId.(string) {
 							matchingVPC = true
 							break
 						}
@@ -125,27 +128,12 @@ func dataSourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) erro
 				// we check if tags match
 				matchingTags := true
 				if len(tags) > 0 {
-					reqListTags := &route53.ListTagsForResourceInput{}
-					reqListTags.ResourceId = aws.String(hostedZoneId)
-					reqListTags.ResourceType = aws.String("hostedzone")
-					respListTags, errListTags := conn.ListTagsForResource(reqListTags)
+					listTags, err := keyvaluetags.Route53ListTags(conn, hostedZoneId, route53.TagResourceTypeHostedzone)
 
-					if errListTags != nil {
-						return fmt.Errorf("Error finding Route 53 Hosted Zone: %v", errListTags)
+					if err != nil {
+						return fmt.Errorf("Error finding Route 53 Hosted Zone: %w", err)
 					}
-					for _, tag := range tags {
-						found := false
-						for _, tagRequested := range respListTags.ResourceTagSet.Tags {
-							if *tag.Key == *tagRequested.Key && *tag.Value == *tagRequested.Value {
-								found = true
-							}
-						}
-
-						if !found {
-							matchingTags = false
-							break
-						}
-					}
+					matchingTags = listTags.ContainsAll(tags)
 				}
 
 				if matchingTags && matchingVPC {
@@ -167,10 +155,12 @@ func dataSourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("no matching Route53Zone found")
 	}
 
-	idHostedZone := cleanZoneID(*hostedZoneFound.Id)
+	idHostedZone := cleanZoneID(aws.StringValue(hostedZoneFound.Id))
 	d.SetId(idHostedZone)
 	d.Set("zone_id", idHostedZone)
-	d.Set("name", hostedZoneFound.Name)
+	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
+	// we remove the suffix from the Hosted Zone Name returned from the API
+	d.Set("name", trimTrailingPeriod(aws.StringValue(hostedZoneFound.Name)))
 	d.Set("comment", hostedZoneFound.Config.Comment)
 	d.Set("private_zone", hostedZoneFound.Config.PrivateZone)
 	d.Set("caller_reference", hostedZoneFound.CallerReference)
@@ -184,18 +174,21 @@ func dataSourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return fmt.Errorf("Error finding Route 53 Hosted Zone: %v", err)
 	}
-	d.Set("name_servers", nameServers)
-
-	return nil
-}
-
-// used to manage trailing .
-func hostedZoneName(name string) string {
-	if strings.HasSuffix(name, ".") {
-		return name
+	if err := d.Set("name_servers", nameServers); err != nil {
+		return fmt.Errorf("error setting name_servers: %w", err)
 	}
 
-	return name + "."
+	tags, err = keyvaluetags.Route53ListTags(conn, idHostedZone, route53.TagResourceTypeHostedzone)
+
+	if err != nil {
+		return fmt.Errorf("Error finding Route 53 Hosted Zone: %v", err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	return nil
 }
 
 // used to retrieve name servers
@@ -215,7 +208,7 @@ func hostedZoneNameServers(id string, conn *route53.Route53) ([]string, error) {
 	servers := []string{}
 	for _, server := range resp.DelegationSet.NameServers {
 		if server != nil {
-			servers = append(servers, *server)
+			servers = append(servers, aws.StringValue(server))
 		}
 	}
 	return servers, nil

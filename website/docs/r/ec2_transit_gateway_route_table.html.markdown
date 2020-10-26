@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_route_table"
-sidebar_current: "docs-aws-resource-ec2-transit-gateway-route-table-x"
 description: |-
   Manages an EC2 Transit Gateway Route Table
 ---
@@ -14,7 +14,7 @@ Manages an EC2 Transit Gateway Route Table.
 
 ```hcl
 resource "aws_ec2_transit_gateway_route_table" "example" {
-  transit_gateway_id = "${aws_ec2_transit_gateway.example.id}"
+  transit_gateway_id = aws_ec2_transit_gateway.example.id
 }
 ```
 

@@ -1,7 +1,7 @@
 ---
+subcategory: "ElastiCache"
 layout: "aws"
 page_title: "AWS: aws_elasticache_replication_group"
-sidebar_current: "docs-aws-datasource-elasticache-replication-group"
 description: |-
   Get information on an ElastiCache Replication Group resource.
 ---

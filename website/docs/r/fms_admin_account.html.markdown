@@ -1,7 +1,7 @@
 ---
+subcategory: "Firewall Manager (FMS)"
 layout: "aws"
 page_title: "AWS: aws_fms_admin_account"
-sidebar_current: "docs-aws-resource-fms-admin-account"
 description: |-
   Provides a resource to associate/disassociate an AWS Firewall Manager administrator account
 ---

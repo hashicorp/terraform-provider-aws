@@ -1,7 +1,7 @@
 ---
+subcategory: "Storage Gateway"
 layout: "aws"
 page_title: "AWS: aws_storagegateway_working_storage"
-sidebar_current: "docs-aws-resource-storagegateway-working-storage"
 description: |-
   Manages an AWS Storage Gateway working storage
 ---
@@ -16,8 +16,8 @@ Manages an AWS Storage Gateway working storage.
 
 ```hcl
 resource "aws_storagegateway_working_storage" "example" {
-  disk_id     = "${data.aws_storagegateway_local_disk.example.id}"
-  gateway_arn = "${aws_storagegateway_gateway.example.arn}"
+  disk_id     = data.aws_storagegateway_local_disk.example.id
+  gateway_arn = aws_storagegateway_gateway.example.arn
 }
 ```
 

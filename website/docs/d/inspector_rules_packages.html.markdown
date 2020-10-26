@@ -1,7 +1,7 @@
 ---
+subcategory: "Inspector"
 layout: "aws"
 page_title: "AWS: aws_inspector_rules_packages"
-sidebar_current: "docs-aws-datasource-inspector-rules-packages"
 description: |-
     Provides a list of AWS Inspector Rules packages which can be used by AWS Inspector.
 ---
@@ -27,15 +27,15 @@ resource "aws_inspector_resource_group" "group" {
 
 resource "aws_inspector_assessment_target" "assessment" {
   name               = "test"
-  resource_group_arn = "${aws_inspector_resource_group.group.arn}"
+  resource_group_arn = aws_inspector_resource_group.group.arn
 }
 
 resource "aws_inspector_assessment_template" "assessment" {
   name       = "Test"
-  target_arn = "${aws_inspector_assessment_target.assessment.arn}"
+  target_arn = aws_inspector_assessment_target.assessment.arn
   duration   = "60"
 
-  rules_package_arns = ["${data.aws_inspector_rules_packages.rules.arns}"]
+  rules_package_arns = data.aws_inspector_rules_packages.rules.arns
 }
 ```
 

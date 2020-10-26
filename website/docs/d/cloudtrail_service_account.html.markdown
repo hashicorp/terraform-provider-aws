@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudTrail"
 layout: "aws"
 page_title: "AWS: aws_cloudtrail_service_account"
-sidebar_current: "docs-aws-datasource-cloudtrail-service-account"
 description: |-
   Get AWS CloudTrail Service Account ID for storing trail data in S3.
 ---

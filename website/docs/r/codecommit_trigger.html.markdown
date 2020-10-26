@@ -1,7 +1,7 @@
 ---
+subcategory: "CodeCommit"
 layout: "aws"
 page_title: "AWS: aws_codecommit_trigger"
-sidebar_current: "docs-aws-resource-codecommit-trigger"
 description: |-
   Provides a CodeCommit Trigger Resource.
 ---
@@ -9,10 +9,6 @@ description: |-
 # Resource: aws_codecommit_trigger
 
 Provides a CodeCommit Trigger Resource.
-
-~> **NOTE on CodeCommit**: The CodeCommit is not yet rolled out
-in all regions - available regions are listed
-[the AWS Docs](https://docs.aws.amazon.com/general/latest/gr/rande.html#codecommit_region).
 
 ## Example Usage
 
@@ -22,12 +18,12 @@ resource "aws_codecommit_repository" "test" {
 }
 
 resource "aws_codecommit_trigger" "test" {
-  repository_name = "${aws_codecommit_repository.test.repository_name}"
+  repository_name = aws_codecommit_repository.test.repository_name
 
   trigger {
     name            = "all"
     events          = ["all"]
-    destination_arn = "${aws_sns_topic.test.arn}"
+    destination_arn = aws_sns_topic.test.arn
   }
 }
 ```

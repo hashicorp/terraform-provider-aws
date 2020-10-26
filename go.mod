@@ -1,30 +1,23 @@
 module github.com/terraform-providers/terraform-provider-aws
 
+go 1.14
+
 require (
-	github.com/aws/aws-sdk-go v1.23.13
+	github.com/aws/aws-sdk-go v1.35.9
 	github.com/beevik/etree v1.1.0
-	github.com/bflad/tfproviderlint v0.4.0
-	github.com/client9/misspell v0.3.4
-	github.com/golangci/go-tools v0.0.0-20190124090046-35a9f45a5db0 // indirect
-	github.com/golangci/golangci-lint v1.17.1
-	github.com/golangci/gosec v0.0.0-20180901114220-8afd9cbb6cfb // indirect
-	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
-	github.com/hashicorp/aws-sdk-go-base v0.3.0
+	github.com/fatih/color v1.9.0 // indirect
+	github.com/hashicorp/aws-sdk-go-base v0.7.0
 	github.com/hashicorp/go-cleanhttp v0.5.1
-	github.com/hashicorp/go-multierror v1.0.0
-	github.com/hashicorp/go-version v1.2.0
-	github.com/hashicorp/terraform v0.12.7
-	github.com/hashicorp/vault v0.10.4
-	github.com/jen20/awspolicyequivalence v1.0.0
-	github.com/kubernetes-sigs/aws-iam-authenticator v0.3.1-0.20181019024009-82544ec86140
+	github.com/hashicorp/go-hclog v0.10.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.0
+	github.com/hashicorp/go-version v1.2.1
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.0.4
+	github.com/jen20/awspolicyequivalence v1.1.0
+	github.com/keybase/go-crypto v0.0.0-20161004153544-93f5b35093ba
+	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mitchellh/copystructure v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pquerna/otp v1.2.0
-	github.com/terraform-providers/terraform-provider-template v2.1.2+incompatible
-	github.com/terraform-providers/terraform-provider-tls v2.1.0+incompatible
-	gopkg.in/yaml.v2 v2.2.2
-	k8s.io/apimachinery v0.0.0-20190204010555-a98ff070d70e // indirect
-	k8s.io/client-go v10.0.0+incompatible // indirect
-	k8s.io/klog v0.1.0 // indirect
-	sigs.k8s.io/yaml v1.1.0 // indirect
+	github.com/stretchr/testify v1.6.1 // indirect
+	gopkg.in/yaml.v2 v2.3.0
 )

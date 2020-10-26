@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_route_table_propagation_table_propagation"
-sidebar_current: "docs-aws-resource-ec2-transit-gateway-route-table-propagation"
 description: |-
   Manages an EC2 Transit Gateway Route Table propagation
 ---
@@ -14,8 +14,8 @@ Manages an EC2 Transit Gateway Route Table propagation.
 
 ```hcl
 resource "aws_ec2_transit_gateway_route_table_propagation" "example" {
-  transit_gateway_attachment_id  = "${aws_ec2_transit_gateway_vpc_attachment.example.id}"
-  transit_gateway_route_table_id = "${aws_ec2_transit_gateway_route_table.example.id}"
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.example.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.example.id
 }
 ```
 

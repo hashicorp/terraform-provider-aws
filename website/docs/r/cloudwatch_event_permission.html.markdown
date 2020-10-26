@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudWatch"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_permission"
-sidebar_current: "docs-aws-resource-cloudwatch-event-permission"
 description: |-
   Provides a resource to create a CloudWatch Events permission to support cross-account events in the current account default event bus.
 ---
@@ -31,7 +31,7 @@ resource "aws_cloudwatch_event_permission" "OrganizationAccess" {
   condition {
     key   = "aws:PrincipalOrgID"
     type  = "StringEquals"
-    value = "${aws_organizations_organization.example.id}"
+    value = aws_organizations_organization.example.id
   }
 }
 ```

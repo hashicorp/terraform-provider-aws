@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsServerlessRepositoryApplication() *schema.Resource {
@@ -41,7 +41,7 @@ func dataSourceAwsServerlessRepositoryApplication() *schema.Resource {
 }
 
 func dataSourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).serverlessapplicationrepositoryconn
+	conn := meta.(*AWSClient).serverlessapprepositoryconn
 
 	applicationID := d.Get("application_id").(string)
 
@@ -57,22 +57,14 @@ func dataSourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, me
 
 	output, err := conn.GetApplication(input)
 	if err != nil {
-		return fmt.Errorf("error reading application: %s", err)
+		return fmt.Errorf("error reading application: %w", err)
 	}
 
 	d.SetId(applicationID)
-	if err := d.Set("name", output.Name); err != nil {
-		return err
-	}
-	if err := d.Set("semantic_version", output.Version.SemanticVersion); err != nil {
-		return err
-	}
-	if err := d.Set("source_code_url", output.Version.SourceCodeUrl); err != nil {
-		return err
-	}
-	if err := d.Set("template_url", output.Version.TemplateUrl); err != nil {
-		return err
-	}
+	d.Set("name", output.Name)
+	d.Set("semantic_version", output.Version.SemanticVersion)
+	d.Set("source_code_url", output.Version.SourceCodeUrl)
+	d.Set("template_url", output.Version.TemplateUrl)
 
 	return nil
 }

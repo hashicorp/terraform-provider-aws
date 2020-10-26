@@ -1,7 +1,7 @@
 ---
+subcategory: "IoT"
 layout: "aws"
 page_title: "AWS: aws_iot_endpoint"
-sidebar_current: "docs-aws-datasource-iot-endpoint"
 description: |-
   Get the unique IoT endpoint
 ---
@@ -25,12 +25,10 @@ resource "kubernetes_pod" "agent" {
       image = "gcr.io/my-project/image-name"
       name  = "image-name"
 
-      env = [
-        {
-          name  = "IOT_ENDPOINT"
-          value = "${data.aws_iot_endpoint.example.endpoint_address}"
-        },
-      ]
+      env {
+        name  = "IOT_ENDPOINT"
+        value = data.aws_iot_endpoint.example.endpoint_address
+      }
     }
   }
 }
@@ -43,8 +41,8 @@ resource "kubernetes_pod" "agent" {
 ## Attributes Reference
 
 * `endpoint_address` - The endpoint based on `endpoint_type`:
-  * No `endpoint_type`: Either `iot:Data` or `iot:Data-ATS` [depending on region](https://aws.amazon.com/blogs/iot/aws-iot-core-ats-endpoints/)
-  * `iot:CredentialsProvider`: `IDENTIFIER.credentials.iot.REGION.amazonaws.com`
-  * `iot:Data`: `IDENTIFIER.iot.REGION.amazonaws.com`
-  * `iot:Data-ATS`: `IDENTIFIER-ats.iot.REGION.amazonaws.com`
-  * `iot:Job`: `IDENTIFIER.jobs.iot.REGION.amazonaws.com`
+    * No `endpoint_type`: Either `iot:Data` or `iot:Data-ATS` [depending on region](https://aws.amazon.com/blogs/iot/aws-iot-core-ats-endpoints/)
+    * `iot:CredentialsProvider`: `IDENTIFIER.credentials.iot.REGION.amazonaws.com`
+    * `iot:Data`: `IDENTIFIER.iot.REGION.amazonaws.com`
+    * `iot:Data-ATS`: `IDENTIFIER-ats.iot.REGION.amazonaws.com`
+    * `iot:Job`: `IDENTIFIER.jobs.iot.REGION.amazonaws.com`

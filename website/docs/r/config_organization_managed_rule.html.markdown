@@ -1,7 +1,7 @@
 ---
+subcategory: "Config"
 layout: "aws"
 page_title: "AWS: aws_config_organization_managed_rule"
-sidebar_current: "docs-aws-resource-config-organization-managed-rule"
 description: |-
   Manages a Config Organization Managed Rule
 ---
@@ -23,7 +23,7 @@ resource "aws_organizations_organization" "example" {
 }
 
 resource "aws_config_organization_managed_rule" "example" {
-  depends_on = ["aws_organizations_organization.example"]
+  depends_on = [aws_organizations_organization.example]
 
   name            = "example"
   rule_identifier = "IAM_PASSWORD_POLICY"

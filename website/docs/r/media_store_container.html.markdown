@@ -1,7 +1,7 @@
 ---
+subcategory: "MediaStore"
 layout: "aws"
 page_title: "AWS: aws_media_store_container"
-sidebar_current: "docs-aws-resource-media-store-container"
 description: |-
   Provides a MediaStore Container.
 ---
@@ -23,7 +23,7 @@ resource "aws_media_store_container" "example" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the container. Must contain alphanumeric characters or underscores.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference
 

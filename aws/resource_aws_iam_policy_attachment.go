@@ -3,13 +3,12 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsIamPolicyAttachment() *schema.Resource {
@@ -214,29 +213,6 @@ func attachPolicyToRoles(conn *iam.IAM, roles []*string, arn string) error {
 		if err != nil {
 			return err
 		}
-
-		input := iam.ListRolePoliciesInput{
-			RoleName: r,
-		}
-		attachedPolicies, err := conn.ListRolePolicies(&input)
-		if err != nil {
-			return fmt.Errorf("Error listing role policies: %s", err)
-		}
-
-		if len(attachedPolicies.PolicyNames) > 0 {
-			var foundPolicy bool
-			for _, policyName := range attachedPolicies.PolicyNames {
-				if strings.HasSuffix(arn, *policyName) {
-					foundPolicy = true
-					break
-				}
-			}
-
-			if !foundPolicy {
-				return fmt.Errorf("Error: Attached policy not found")
-			}
-		}
-
 	}
 	return nil
 }

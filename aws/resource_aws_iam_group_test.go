@@ -3,80 +3,103 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestValidateIamGroupName(t *testing.T) {
-	validNames := []string{
-		"test-group",
-		"test_group",
-		"testgroup123",
-		"TestGroup",
-		"Test-Group",
-		"test.group",
-		"test.123,group",
-		"testgroup@hashicorp",
-		"test+group@hashicorp.com",
-	}
-	for _, v := range validNames {
-		_, errs := validateAwsIamGroupName(v, "name")
-		if len(errs) != 0 {
-			t.Fatalf("%q should be a valid IAM Group name: %q", v, errs)
-		}
-	}
-
-	invalidNames := []string{
-		"!",
-		"/",
-		" ",
-		":",
-		";",
-		"test name",
-		"/slash-at-the-beginning",
-		"slash-at-the-end/",
-	}
-	for _, v := range invalidNames {
-		_, errs := validateAwsIamGroupName(v, "name")
-		if len(errs) == 0 {
-			t.Fatalf("%q should be an invalid IAM Group name", v)
-		}
-	}
-}
-
-func TestAccAWSIAMGroup_importBasic(t *testing.T) {
-	resourceName := "aws_iam_group.group"
-
-	rString := acctest.RandString(8)
-	groupName := fmt.Sprintf("tf-acc-group-import-%s", rString)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSGroupConfig(groupName),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+func init() {
+	resource.AddTestSweepers("aws_iam_group", &resource.Sweeper{
+		Name: "aws_iam_group",
+		F:    testSweepIamGroups,
+		Dependencies: []string{
+			"aws_iam_user",
 		},
 	})
 }
 
+func testSweepIamGroups(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*AWSClient).iamconn
+	input := &iam.ListGroupsInput{}
+	var sweeperErrs *multierror.Error
+
+	err = conn.ListGroupsPages(input, func(page *iam.ListGroupsOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, group := range page.Groups {
+			input := &iam.DeleteGroupInput{
+				GroupName: group.GroupName,
+			}
+			name := aws.StringValue(group.GroupName)
+
+			if name == "Admin" || name == "TerraformAccTests" {
+				continue
+			}
+
+			log.Printf("[INFO] Deleting IAM Group: %s", name)
+
+			if err := deleteAwsIamGroupPolicyAttachments(conn, name); err != nil {
+				sweeperErr := fmt.Errorf("error deleting IAM Group (%s) policy attachments: %w", name, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+
+			if err := deleteAwsIamGroupPolicies(conn, name); err != nil {
+				sweeperErr := fmt.Errorf("error deleting IAM Group (%s) policies: %w", name, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+
+			_, err := conn.DeleteGroup(input)
+
+			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+				continue
+			}
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting IAM Group (%s): %w", name, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !isLast
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping IAM Group sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving IAM Groups: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
 func TestAccAWSIAMGroup_basic(t *testing.T) {
 	var conf iam.GetGroupOutput
-
+	resourceName := "aws_iam_group.test"
+	resourceName2 := "aws_iam_group.test2"
 	rString := acctest.RandString(8)
 	groupName := fmt.Sprintf("tf-acc-group-basic-%s", rString)
 	groupName2 := fmt.Sprintf("tf-acc-group-basic-2-%s", rString)
@@ -89,14 +112,19 @@ func TestAccAWSIAMGroup_basic(t *testing.T) {
 			{
 				Config: testAccAWSGroupConfig(groupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGroupExists("aws_iam_group.group", &conf),
+					testAccCheckAWSGroupExists(resourceName, &conf),
 					testAccCheckAWSGroupAttributes(&conf, groupName, "/"),
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSGroupConfig2(groupName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGroupExists("aws_iam_group.group2", &conf),
+					testAccCheckAWSGroupExists(resourceName2, &conf),
 					testAccCheckAWSGroupAttributes(&conf, groupName2, "/funnypath/"),
 				),
 			},
@@ -106,7 +134,7 @@ func TestAccAWSIAMGroup_basic(t *testing.T) {
 
 func TestAccAWSIAMGroup_nameChange(t *testing.T) {
 	var conf iam.GetGroupOutput
-
+	resourceName := "aws_iam_group.test"
 	rString := acctest.RandString(8)
 	groupName := fmt.Sprintf("tf-acc-group-basic-%s", rString)
 	groupName2 := fmt.Sprintf("tf-acc-group-basic-2-%s", rString)
@@ -119,14 +147,14 @@ func TestAccAWSIAMGroup_nameChange(t *testing.T) {
 			{
 				Config: testAccAWSGroupConfig(groupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGroupExists("aws_iam_group.group", &conf),
+					testAccCheckAWSGroupExists(resourceName, &conf),
 					testAccCheckAWSGroupAttributes(&conf, groupName, "/"),
 				),
 			},
 			{
 				Config: testAccAWSGroupConfig(groupName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGroupExists("aws_iam_group.group", &conf),
+					testAccCheckAWSGroupExists(resourceName, &conf),
 					testAccCheckAWSGroupAttributes(&conf, groupName2, "/"),
 				),
 			},
@@ -205,7 +233,7 @@ func testAccCheckAWSGroupAttributes(group *iam.GetGroupOutput, name string, path
 
 func testAccAWSGroupConfig(groupName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_group" "group" {
+resource "aws_iam_group" "test" {
   name = "%s"
   path = "/"
 }
@@ -214,7 +242,7 @@ resource "aws_iam_group" "group" {
 
 func testAccAWSGroupConfig2(groupName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_group" "group2" {
+resource "aws_iam_group" "test2" {
   name = "%s"
   path = "/funnypath/"
 }
