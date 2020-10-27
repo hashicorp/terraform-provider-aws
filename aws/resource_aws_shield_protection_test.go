@@ -255,9 +255,11 @@ resource "aws_route53_zone" "acctest" {
   }
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_shield_protection" "acctest" {
   name         = var.name
-  resource_arn = "arn:aws:route53:::hostedzone/${aws_route53_zone.acctest.zone_id}"
+  resource_arn = "arn:${data.aws_partition.current.partition}:route53:::hostedzone/${aws_route53_zone.acctest.zone_id}"
 }
 `, rName)
 }
@@ -307,7 +309,6 @@ resource "aws_subnet" "acctest" {
 resource "aws_elb" "acctest" {
   name = var.name
 
-  #availability_zones = ["us-east-1a", "us-east-1b", "us-east-1c"]
   subnets  = aws_subnet.acctest[*].id
   internal = true
 
@@ -511,7 +512,10 @@ data "aws_availability_zones" "available" {
 }
 
 data "aws_region" "current" {}
+
 data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
 
 resource "aws_eip" "acctest" {
   vpc = true
@@ -524,7 +528,7 @@ resource "aws_eip" "acctest" {
 
 resource "aws_shield_protection" "acctest" {
   name         = var.name
-  resource_arn = "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.acctest.id}"
+  resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.acctest.id}"
 }
 `, rName)
 }
@@ -541,7 +545,6 @@ resource "aws_shield_protection" "acctest" {
 }
 
 resource "aws_globalaccelerator_accelerator" "acctest" {
-  # provider        = "aws.us-west-2"
   name            = var.name
   ip_address_type = "IPV4"
   enabled         = true

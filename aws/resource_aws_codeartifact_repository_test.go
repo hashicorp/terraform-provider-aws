@@ -207,6 +207,50 @@ func TestAccAWSCodeArtifactRepository_upstreams(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodeArtifactRepository_externalConnection(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codeartifact_repository.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("codeartifact", t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeArtifactRepositoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeArtifactRepositoryExternalConnectionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeArtifactRepositoryExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "external_connections.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "external_connections.0.external_connection_name", "public:npmjs"),
+					resource.TestCheckResourceAttr(resourceName, "external_connections.0.package_format", "npm"),
+					resource.TestCheckResourceAttr(resourceName, "external_connections.0.status", "AVAILABLE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodeArtifactRepositoryBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeArtifactRepositoryExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "external_connections.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSCodeArtifactRepositoryExternalConnectionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeArtifactRepositoryExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "external_connections.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "external_connections.0.external_connection_name", "public:npmjs"),
+					resource.TestCheckResourceAttr(resourceName, "external_connections.0.package_format", "npm"),
+					resource.TestCheckResourceAttr(resourceName, "external_connections.0.status", "AVAILABLE"),
+				),
+			},
+		},
+	})
+}
 func TestAccAWSCodeArtifactRepository_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codeartifact_repository.test"
@@ -289,7 +333,7 @@ func testAccCheckAWSCodeArtifactRepositoryDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSCodeArtifactRepositoryBasicConfig(rName string) string {
+func testAccAWSCodeArtifactRepositoryBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -300,7 +344,11 @@ resource "aws_codeartifact_domain" "test" {
   domain         = %[1]q
   encryption_key = aws_kms_key.test.arn
 }
+`, rName)
+}
 
+func testAccAWSCodeArtifactRepositoryBasicConfig(rName string) string {
+	return testAccAWSCodeArtifactRepositoryBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_codeartifact_repository" "test" {
   repository = %[1]q
   domain     = aws_codeartifact_domain.test.domain
@@ -309,17 +357,7 @@ resource "aws_codeartifact_repository" "test" {
 }
 
 func testAccAWSCodeArtifactRepositoryOwnerConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
-resource "aws_codeartifact_domain" "test" {
-  domain         = %[1]q
-  encryption_key = aws_kms_key.test.arn
-}
-
+	return testAccAWSCodeArtifactRepositoryBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_codeartifact_repository" "test" {
   repository   = %[1]q
   domain       = aws_codeartifact_domain.test.domain
@@ -329,17 +367,7 @@ resource "aws_codeartifact_repository" "test" {
 }
 
 func testAccAWSCodeArtifactRepositoryDescConfig(rName, desc string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
-resource "aws_codeartifact_domain" "test" {
-  domain         = %[1]q
-  encryption_key = aws_kms_key.test.arn
-}
-
+	return testAccAWSCodeArtifactRepositoryBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_codeartifact_repository" "test" {
   repository  = %[1]q
   domain      = aws_codeartifact_domain.test.domain
@@ -349,17 +377,7 @@ resource "aws_codeartifact_repository" "test" {
 }
 
 func testAccAWSCodeArtifactRepositoryUpstreamsConfig1(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
-resource "aws_codeartifact_domain" "test" {
-  domain         = %[1]q
-  encryption_key = aws_kms_key.test.arn
-}
-
+	return testAccAWSCodeArtifactRepositoryBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_codeartifact_repository" "upstream1" {
   repository = "%[1]s-upstream1"
   domain     = aws_codeartifact_domain.test.domain
@@ -377,17 +395,7 @@ resource "aws_codeartifact_repository" "test" {
 }
 
 func testAccAWSCodeArtifactRepositoryUpstreamsConfig2(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
-resource "aws_codeartifact_domain" "test" {
-  domain         = %[1]q
-  encryption_key = aws_kms_key.test.arn
-}
-
+	return testAccAWSCodeArtifactRepositoryBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_codeartifact_repository" "upstream1" {
   repository = "%[1]s-upstream1"
   domain     = aws_codeartifact_domain.test.domain
@@ -408,6 +416,19 @@ resource "aws_codeartifact_repository" "test" {
 
   upstream {
     repository_name = aws_codeartifact_repository.upstream2.repository
+  }
+}
+`, rName)
+}
+
+func testAccAWSCodeArtifactRepositoryExternalConnectionConfig(rName string) string {
+	return testAccAWSCodeArtifactRepositoryBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_codeartifact_repository" "test" {
+  repository = %[1]q
+  domain     = aws_codeartifact_domain.test.domain
+
+  external_connections {
+    external_connection_name = "public:npmjs"
   }
 }
 `, rName)
