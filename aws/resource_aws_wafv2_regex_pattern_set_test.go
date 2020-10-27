@@ -85,7 +85,7 @@ func TestAccAwsWafv2RegexPatternSet_basic(t *testing.T) {
 	resourceName := "aws_wafv2_regex_pattern_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafv2RegexPatternSetDestroy,
 		Steps: []resource.TestStep{
@@ -144,7 +144,7 @@ func TestAccAwsWafv2RegexPatternSet_Disappears(t *testing.T) {
 	resourceName := "aws_wafv2_regex_pattern_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafv2RegexPatternSetDestroy,
 		Steps: []resource.TestStep{
@@ -166,7 +166,7 @@ func TestAccAwsWafv2RegexPatternSet_Minimal(t *testing.T) {
 	resourceName := "aws_wafv2_regex_pattern_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafv2RegexPatternSetDestroy,
 		Steps: []resource.TestStep{
@@ -192,7 +192,7 @@ func TestAccAwsWafv2RegexPatternSet_ChangeNameForceNew(t *testing.T) {
 	resourceName := "aws_wafv2_regex_pattern_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafv2RegexPatternSetDestroy,
 		Steps: []resource.TestStep{
@@ -228,7 +228,7 @@ func TestAccAwsWafv2RegexPatternSet_Tags(t *testing.T) {
 	resourceName := "aws_wafv2_regex_pattern_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafv2RegexPatternSetDestroy,
 		Steps: []resource.TestStep{
