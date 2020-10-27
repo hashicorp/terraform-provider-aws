@@ -265,6 +265,11 @@ func resourceAwsVPCPeeringDelete(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 
+	// "InvalidStateTransition: Invalid state transition for pcx-0000000000000000, attempted to transition from failed to deleting"
+	if isAWSErr(err, "InvalidStateTransition", "to deleting") {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error deleting VPC Peering Connection (%s): %s", d.Id(), err)
 	}

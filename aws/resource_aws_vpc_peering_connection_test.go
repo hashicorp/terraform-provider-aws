@@ -432,7 +432,7 @@ func testAccCheckAWSVpcPeeringConnectionDestroy(s *terraform.State) error {
 		}
 
 		if pc.Status != nil {
-			if *pc.Status.Code == "deleted" || *pc.Status.Code == "rejected" {
+			if *pc.Status.Code == "deleted" || *pc.Status.Code == "rejected" || *pc.Status.Code == "failed" {
 				return nil
 			}
 			return fmt.Errorf("Found the VPC Peering Connection in an unexpected state: %s", pc)
