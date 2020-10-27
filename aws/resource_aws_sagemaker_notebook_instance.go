@@ -108,7 +108,14 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
+			"url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"network_interface_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -234,6 +241,14 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 
 	if err := d.Set("default_code_repository", notebookInstance.DefaultCodeRepository); err != nil {
 		return fmt.Errorf("error setting default_code_repository for sagemaker notebook instance (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("url", notebookInstance.Url); err != nil {
+		return fmt.Errorf("error setting url for sagemaker notebook instance (%s): %w", d.Id(), err)
+	}
+
+	if err := d.Set("network_interface_id", notebookInstance.NetworkInterfaceId); err != nil {
+		return fmt.Errorf("error setting network_interface_id for sagemaker notebook instance (%s): %w", d.Id(), err)
 	}
 
 	tags, err := keyvaluetags.SagemakerListTags(conn, aws.StringValue(notebookInstance.NotebookInstanceArn))

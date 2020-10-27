@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -95,6 +96,7 @@ func TestAccAWSSagemakerNotebookInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_code_repository", ""),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "url"),
 				),
 			},
 			{
@@ -434,6 +436,7 @@ func TestAccAWSSagemakerNotebookInstance_direct_internet_access(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Disabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "network_interface_id", regexp.MustCompile("eni-.*")),
 				),
 			},
 			{
@@ -448,6 +451,7 @@ func TestAccAWSSagemakerNotebookInstance_direct_internet_access(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "network_interface_id", regexp.MustCompile("eni-.*")),
 				),
 			},
 		},
