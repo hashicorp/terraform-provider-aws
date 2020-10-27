@@ -400,7 +400,7 @@ resource "aws_storagegateway_cached_iscsi_volume" "test" {
 
 func testAccAWSStorageGatewayCachedIscsiVolumeConfigKMSEncrypted(rName string) string {
 	return testAccAWSStorageGatewayCachedIscsiVolumeConfigBase(rName) + fmt.Sprintf(`
- resource "aws_kms_key" "test" {
+resource "aws_kms_key" "test" {
   description = "Terraform acc test %[1]s"
   policy      = <<POLICY
  {

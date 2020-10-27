@@ -41,6 +41,7 @@ func testAccDataSourceAwsArn(name string) resource.TestCheckFunc {
 	}
 }
 
+//lintignore:AWSAT003,AWSAT005
 const testAccDataSourceAwsArnConfig = `
 data "aws_arn" "test" {
   arn = "arn:aws:rds:eu-west-1:123456789012:db:mysql-db"

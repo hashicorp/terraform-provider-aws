@@ -609,7 +609,6 @@ behavior "pull_request_path_labeler" "service_labels" {
       "GNUmakefile",
       "infrastructure/**/*",
       "main.go",
-      "renovate.json",
       "website/docs/index.html.markdown",
       "website/**/arn*",
       "website/**/ip_ranges*",
@@ -618,7 +617,6 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "dependencies" = [
       ".github/dependabot.yml",
-      "renovate.json",
     ]
     "documentation" = [
       "docs/**/*",

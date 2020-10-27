@@ -109,9 +109,7 @@ func WorkspaceTerminated(conn *workspaces.WorkSpaces, workspaceID string) (*work
 			workspaces.WorkspaceStateTerminating,
 			workspaces.WorkspaceStateError,
 		},
-		Target: []string{
-			workspaces.WorkspaceStateTerminated,
-		},
+		Target:  []string{},
 		Refresh: WorkspaceState(conn, workspaceID),
 		Timeout: WorkspaceTerminatedTimeout,
 	}
