@@ -6,7 +6,7 @@ description: |-
   Provides a workspaces in AWS Workspaces Service.
 ---
 
-# Resource: aws_workspace
+# Resource: aws_workspaces_workspace
 
 Provides a workspace in [AWS Workspaces](https://docs.aws.amazon.com/workspaces/latest/adminguide/amazon-workspaces.html) Service
 
