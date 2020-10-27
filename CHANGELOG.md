@@ -7,6 +7,7 @@ FEATURES
 ENHANCEMENTS
 
 * resource/aws_sagemaker_model: Add `container` configuration block `mode` argument [GH-15371]
+* resource/aws_sagemaker_notebook_instance: Add `url` and `network_interface_id` attributes [GH-15802]
 
 ## 3.12.0 (October 22, 2020)
 
