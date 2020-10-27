@@ -595,7 +595,7 @@ PATTERN
 
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[3]q
-}  
+}
 `, name, description, eventBusName)
 }
 
