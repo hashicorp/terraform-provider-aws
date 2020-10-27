@@ -975,9 +975,9 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("domain", "")
 	d.Set("domain_iam_role_name", "")
-	if len(v.DomainMemberships) > 0 && v.DomainMemberships[0] != nil {
-		d.Set("domain", v.DomainMemberships[0].Domain)
-		d.Set("domain_iam_role_name", v.DomainMemberships[0].IAMRoleName)
+	if len(dbc.DomainMemberships) > 0 && dbc.DomainMemberships[0] != nil {
+		d.Set("domain", dbc.DomainMemberships[0].Domain)
+		d.Set("domain_iam_role_name", dbc.DomainMemberships[0].IAMRoleName)
 	}
 
 	var vpcg []string
