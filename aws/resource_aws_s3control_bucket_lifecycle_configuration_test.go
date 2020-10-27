@@ -427,15 +427,15 @@ func testAccCheckAWSS3ControlBucketLifecycleConfigurationDestroy(s *terraform.St
 		_, err = conn.GetBucketLifecycleConfiguration(input)
 
 		if tfawserr.ErrCodeEquals(err, "NoSuchBucket") {
-			return nil
+			continue
 		}
 
 		if tfawserr.ErrCodeEquals(err, "NoSuchLifecycleConfiguration") {
-			return nil
+			continue
 		}
 
 		if tfawserr.ErrCodeEquals(err, "NoSuchOutpost") {
-			return nil
+			continue
 		}
 
 		if err != nil {

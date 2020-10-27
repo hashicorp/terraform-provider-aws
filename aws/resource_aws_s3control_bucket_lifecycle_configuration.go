@@ -473,7 +473,6 @@ func flattenS3controlLifecycleRule(apiObject *s3control.LifecycleRule) map[strin
 		return nil
 	}
 
-	log.Printf("[BFLAD] flattenS3controlLifecycleRule() apiObject: %+v", apiObject)
 
 	tfMap := map[string]interface{}{}
 
