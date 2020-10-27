@@ -539,7 +539,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_s3_access_point" "test" {
-  bucket = aws_s3_bucket.test.arn
+  bucket = aws_s3control_bucket.test.arn
   name   = %[1]q
 
   vpc_configuration {
