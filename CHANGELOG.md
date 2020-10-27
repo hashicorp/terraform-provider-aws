@@ -4,6 +4,10 @@ FEATURES
 
 * **New Resource:** `aws_glue_resource_policy` [GH-10361]
 
+ENHANCEMENTS
+
+* resource/aws_sagemaker_model: Add `container` configuration block `mode` argument [GH-15371]
+
 ## 3.12.0 (October 22, 2020)
 
 FEATURES
