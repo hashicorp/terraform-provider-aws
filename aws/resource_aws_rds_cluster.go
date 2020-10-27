@@ -540,11 +540,11 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr, ok := d.GetOkExists("domain"); ok {
-			createOpts.Domain = aws.String(attr.(string))
+			opts.Domain = aws.String(attr.(string))
 		}
 
 		if attr, ok := d.GetOkExists("domain_iam_role_name"); ok {
-			createOpts.DomainIAMRoleName = aws.String(attr.(string))
+			opts.DomainIAMRoleName = aws.String(attr.(string))
 		}
 
 		log.Printf("[DEBUG] RDS Cluster restore from snapshot configuration: %s", opts)
