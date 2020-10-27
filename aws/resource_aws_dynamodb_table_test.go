@@ -2344,7 +2344,7 @@ resource "aws_dynamodb_table" "test" {
 
   local_secondary_index {
     name            = "%s"
-    range_key        = "staticLSIRangeKey"
+    range_key       = "staticLSIRangeKey"
     projection_type = "KEYS_ONLY"
   }
 }
