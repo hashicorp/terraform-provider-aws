@@ -1204,7 +1204,7 @@ const testAccAWSEIPConfigNetworkBorderGroup = `
 data "aws_region" current {}
 
 resource "aws_eip" "test" {
-  vpc  				   = "true"
+  vpc                  = true
   network_border_group = data.aws_region.current.name
 }
 `
