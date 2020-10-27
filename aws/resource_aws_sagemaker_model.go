@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -55,6 +56,14 @@ func resourceAwsSagemakerModel() *schema.Resource {
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validateSagemakerImage,
+						},
+
+						"mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							Default:      sagemaker.ContainerModeSingleModel,
+							ValidateFunc: validation.StringInSlice(sagemaker.ContainerMode_Values(), false),
 						},
 
 						"model_data_url": {
@@ -127,6 +136,14 @@ func resourceAwsSagemakerModel() *schema.Resource {
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validateSagemakerImage,
+						},
+
+						"mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							Default:      sagemaker.ContainerModeSingleModel,
+							ValidateFunc: validation.StringInSlice(sagemaker.ContainerMode_Values(), false),
 						},
 
 						"model_data_url": {
@@ -328,6 +345,10 @@ func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {
 		Image: aws.String(m["image"].(string)),
 	}
 
+	if v, ok := m["mode"]; ok && v.(string) != "" {
+		container.Mode = aws.String(v.(string))
+	}
+
 	if v, ok := m["container_hostname"]; ok && v.(string) != "" {
 		container.ContainerHostname = aws.String(v.(string))
 	}
@@ -359,6 +380,10 @@ func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 	cfg := make(map[string]interface{})
 
 	cfg["image"] = *container.Image
+
+	if container.Mode != nil {
+		cfg["mode"] = *container.Mode
+	}
 
 	if container.ContainerHostname != nil {
 		cfg["container_hostname"] = *container.ContainerHostname
