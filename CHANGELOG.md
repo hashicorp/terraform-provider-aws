@@ -3,6 +3,7 @@
 FEATURES
 
 * **New Resource:** `aws_glue_resource_policy` [GH-10361]
+* **New Resource:** `aws_s3control_bucket` [GH-15510]
 
 ENHANCEMENTS
 
