@@ -30,7 +30,7 @@ The following arguments are supported:
 * `ip_address` - (Optional) DataSync Agent IP address to retrieve activation key during resource creation. Conflicts with `activation_key`. DataSync Agent must be accessible on port 80 from where Terraform is running.
 * `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Agent.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

@@ -68,7 +68,7 @@ The following arguments are supported:
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Peering Attachment.
 * `transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

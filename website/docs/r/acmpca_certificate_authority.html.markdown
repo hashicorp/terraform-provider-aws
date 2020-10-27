@@ -133,7 +133,7 @@ Contains information about the certificate subject. Identifies the entity that o
 * `expiration_in_days` - (Required) Number of days until a certificate expires. Must be between 1 and 5000.
 * `s3_bucket_name` - (Optional) Name of the S3 bucket that contains the CRL. If you do not provide a value for the `custom_cname` argument, the name of your S3 bucket is placed into the CRL Distribution Points extension of the issued certificate. You must specify a bucket policy that allows ACM PCA to write the CRL to your bucket.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

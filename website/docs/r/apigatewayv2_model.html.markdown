@@ -43,7 +43,7 @@ The following arguments are supported:
 * `schema` - (Required) The schema for the model. This should be a [JSON schema draft 4](https://tools.ietf.org/html/draft-zyp-json-schema-04) model.
 * `description` - (Optional) The description of the model.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
