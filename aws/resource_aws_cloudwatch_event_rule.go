@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -300,12 +299,7 @@ func buildPutRuleInputStruct(d *schema.ResourceData, name string) (*events.PutRu
 		input.RoleArn = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("schedule_expression"); ok {
-		scheduleExpression := v.(string)
-		if eventBusName == tfevents.DefaultEventBusName {
-			input.ScheduleExpression = aws.String(scheduleExpression)
-		} else {
-			return nil, errors.New("schedule_expression can only be set on the default event bus")
-		}
+		input.ScheduleExpression = aws.String(v.(string))
 	}
 
 	input.State = aws.String(getStringStateFromBoolean(d.Get("is_enabled").(bool)))
