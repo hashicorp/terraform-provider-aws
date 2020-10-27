@@ -2,6 +2,7 @@ variable "workflow_labels" {
   default = {
     "examples"                       = "fef2c0",
     "hacktoberfest"                  = "2c0fad",
+    "linter"                         = "cccccc",
     "needs-triage"                   = "e236d7",
     "terraform-plugin-sdk-migration" = "fad8c7",
     "terraform-plugin-sdk-v1"        = "fad8c7",
