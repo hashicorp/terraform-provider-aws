@@ -871,6 +871,9 @@ func testAccPreCheckSkipError(err error) bool {
 	if isAWSErr(err, "InvalidInputException", "Unknown operation") {
 		return true
 	}
+	if isAWSErr(err, "InvalidAction", "Unavailable Operation") {
+		return true
+	}
 	return false
 }
 
