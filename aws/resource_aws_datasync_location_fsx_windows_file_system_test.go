@@ -83,7 +83,11 @@ func TestAccAWSDataSyncLocationFsxWindows_basic(t *testing.T) {
 	fsResourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck("fsx", t)
+			testAccPreCheckAWSDataSync(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
@@ -115,7 +119,11 @@ func TestAccAWSDataSyncLocationFsxWindows_disappears(t *testing.T) {
 	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck("fsx", t)
+			testAccPreCheckAWSDataSync(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
@@ -136,7 +144,11 @@ func TestAccAWSDataSyncLocationFsxWindows_subdirectory(t *testing.T) {
 	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck("fsx", t)
+			testAccPreCheckAWSDataSync(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
@@ -163,7 +175,11 @@ func TestAccAWSDataSyncLocationFsxWindows_tags(t *testing.T) {
 	resourceName := "aws_datasync_location_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck("fsx", t)
+			testAccPreCheckAWSDataSync(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
