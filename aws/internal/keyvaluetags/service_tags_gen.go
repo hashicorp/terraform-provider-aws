@@ -69,6 +69,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
@@ -2313,6 +2314,33 @@ func (tags KeyValueTags) S3Tags() []*s3.Tag {
 
 // S3KeyValueTags creates KeyValueTags from s3 service tags.
 func S3KeyValueTags(tags []*s3.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// S3controlTags returns s3control service tags.
+func (tags KeyValueTags) S3controlTags() []*s3control.S3Tag {
+	result := make([]*s3control.S3Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &s3control.S3Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// S3controlKeyValueTags creates KeyValueTags from s3control service tags.
+func S3controlKeyValueTags(tags []*s3control.S3Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
