@@ -518,7 +518,7 @@ func TestAccAWSEcsService_withDeploymentValues(t *testing.T) {
 	})
 }
 
-// Regression for https://github.com/terraform-providers/terraform-provider-aws/issues/6315
+// Regression for https://github.com/hashicorp/terraform-provider-aws/issues/6315
 func TestAccAWSEcsService_withDeploymentMinimumZeroMaximumOneHundred(t *testing.T) {
 	var service ecs.Service
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -742,7 +742,7 @@ func TestAccAWSEcsService_withPlacementStrategy(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13146
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13146
 func TestAccAWSEcsService_withPlacementStrategy_Type_Missing(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 

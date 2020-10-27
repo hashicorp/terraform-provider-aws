@@ -86,7 +86,7 @@ func TestAccAWSElasticacheParameterGroup_addParameter(t *testing.T) {
 	})
 }
 
-// Regression for https://github.com/terraform-providers/terraform-provider-aws/issues/116
+// Regression for https://github.com/hashicorp/terraform-provider-aws/issues/116
 func TestAccAWSElasticacheParameterGroup_removeAllParameters(t *testing.T) {
 	var v elasticache.CacheParameterGroup
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())

@@ -148,7 +148,7 @@ func TestAccAWSDefaultSecurityGroup_Classic_empty(t *testing.T) {
 
 	TestAccSkip(t, "This resource does not currently clear tags when adopting the resource")
 	// Additional references:
-	//  * https://github.com/terraform-providers/terraform-provider-aws/issues/14631
+	//  * https://github.com/hashicorp/terraform-provider-aws/issues/14631
 
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")

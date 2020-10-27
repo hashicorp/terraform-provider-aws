@@ -58,7 +58,7 @@ func TestAccAWSElasticTranscoderPreset_disappears(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/14087
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14087
 func TestAccAWSElasticTranscoderPreset_AudioCodecOptions_empty(t *testing.T) {
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
@@ -160,7 +160,7 @@ func TestAccAWSElasticTranscoderPreset_Full(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/695
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/695
 func TestAccAWSElasticTranscoderPreset_Video_FrameRate(t *testing.T) {
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"

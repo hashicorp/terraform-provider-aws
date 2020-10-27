@@ -275,7 +275,7 @@ func TestAccAWSEIP_associated_user_private_ip(t *testing.T) {
 }
 
 // Regression test for https://github.com/hashicorp/terraform/issues/3429 (now
-// https://github.com/terraform-providers/terraform-provider-aws/issues/42)
+// https://github.com/hashicorp/terraform-provider-aws/issues/42)
 func TestAccAWSEIP_Instance_Reassociate(t *testing.T) {
 	instanceResourceName := "aws_instance.test"
 	resourceName := "aws_eip.test"

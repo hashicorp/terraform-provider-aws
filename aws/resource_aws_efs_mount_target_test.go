@@ -177,7 +177,7 @@ func TestAccAWSEFSMountTarget_IpAddress(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13845
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13845
 func TestAccAWSEFSMountTarget_IpAddress_EmptyString(t *testing.T) {
 	var mount efs.MountTargetDescription
 	resourceName := "aws_efs_mount_target.test"
