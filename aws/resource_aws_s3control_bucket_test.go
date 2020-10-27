@@ -132,7 +132,7 @@ func testAccCheckAWSS3ControlBucketDestroy(s *terraform.State) error {
 		_, err = conn.GetBucket(input)
 
 		if tfawserr.ErrCodeEquals(err, "NoSuchBucket") {
-			return nil
+			continue
 		}
 
 		if err != nil {
