@@ -115,15 +115,15 @@ func testAccCheckAWSS3ControlBucketPolicyDestroy(s *terraform.State) error {
 		_, err = conn.GetBucketPolicy(input)
 
 		if tfawserr.ErrCodeEquals(err, "NoSuchBucket") {
-			return nil
+			continue
 		}
 
 		if tfawserr.ErrCodeEquals(err, "NoSuchBucketPolicy") {
-			return nil
+			continue
 		}
 
 		if tfawserr.ErrCodeEquals(err, "NoSuchOutpost") {
-			return nil
+			continue
 		}
 
 		if err != nil {
