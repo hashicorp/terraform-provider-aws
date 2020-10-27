@@ -21,7 +21,7 @@ sweep:
 	go test $(SWEEP_DIR) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
 
 test: fmtcheck
-	go test $(TEST) $(TESTARGS) -timeout=120s -parallel=4
+	go test $(TEST) $(TESTARGS) -timeout=5m -parallel=4
 
 testacc: fmtcheck
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
