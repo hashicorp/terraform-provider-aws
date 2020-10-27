@@ -171,9 +171,9 @@ func TestValidateCloudWatchEventRuleName(t *testing.T) {
 
 func TestValidateLambdaFunctionName(t *testing.T) {
 	validNames := []string{
-		"arn:aws:lambda:us-west-2:123456789012:function:ThumbNail",
-		"arn:aws-us-gov:lambda:us-west-2:123456789012:function:ThumbNail",
-		"arn:aws-us-gov:lambda:us-gov-west-1:123456789012:function:ThumbNail",
+		"arn:aws:lambda:us-west-2:123456789012:function:ThumbNail",            //lintignore:AWSAT003,AWSAT005
+		"arn:aws-us-gov:lambda:us-west-2:123456789012:function:ThumbNail",     //lintignore:AWSAT003,AWSAT005
+		"arn:aws-us-gov:lambda:us-gov-west-1:123456789012:function:ThumbNail", //lintignore:AWSAT003,AWSAT005
 		"FunctionName",
 		"function-name",
 	}
@@ -188,7 +188,7 @@ func TestValidateLambdaFunctionName(t *testing.T) {
 		"/FunctionNameWithSlash",
 		"function.name.with.dots",
 		// length > 140
-		"arn:aws:lambda:us-west-2:123456789012:function:TooLoooooo" +
+		"arn:aws:lambda:us-west-2:123456789012:function:TooLoooooo" + //lintignore:AWSAT003,AWSAT005
 			"ooooooooooooooooooooooooooooooooooooooooooooooooooooooo" +
 			"ooooooooooooooooongFunctionName",
 	}
@@ -219,7 +219,7 @@ func TestValidateLambdaQualifier(t *testing.T) {
 
 	invalidNames := []string{
 		// No ARNs allowed
-		"arn:aws:lambda:us-west-2:123456789012:function:prod",
+		"arn:aws:lambda:us-west-2:123456789012:function:prod", //lintignore:AWSAT003,AWSAT005
 		// length > 128
 		"TooLooooooooooooooooooooooooooooooooooooooooooooooooooo" +
 			"ooooooooooooooooooooooooooooooooooooooooooooooooooo" +
@@ -320,22 +320,22 @@ func TestValidateArn(t *testing.T) {
 	}
 
 	validNames := []string{
-		"arn:aws:elasticbeanstalk:us-east-1:123456789012:environment/My App/MyEnvironment", // Beanstalk
-		"arn:aws:iam::123456789012:user/David",                                             // IAM User
-		"arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess",                                 // Managed IAM policy
-		"arn:aws:rds:eu-west-1:123456789012:db:mysql-db",                                   // RDS
-		"arn:aws:s3:::my_corporate_bucket/exampleobject.png",                               // S3 object
-		"arn:aws:events:us-east-1:319201112229:rule/rule_name",                             // CloudWatch Rule
-		"arn:aws:lambda:eu-west-1:319201112229:function:myCustomFunction",                  // Lambda function
-		"arn:aws:lambda:eu-west-1:319201112229:function:myCustomFunction:Qualifier",        // Lambda func qualifier
-		"arn:aws-cn:ec2:cn-north-1:123456789012:instance/i-12345678",                       // China EC2 ARN
-		"arn:aws-cn:s3:::bucket/object",                                                    // China S3 ARN
-		"arn:aws-iso:ec2:us-iso-east-1:123456789012:instance/i-12345678",                   // C2S EC2 ARN
-		"arn:aws-iso:s3:::bucket/object",                                                   // C2S S3 ARN
-		"arn:aws-iso-b:ec2:us-isob-east-1:123456789012:instance/i-12345678",                // SC2S EC2 ARN
-		"arn:aws-iso-b:s3:::bucket/object",                                                 // SC2S S3 ARN
-		"arn:aws-us-gov:ec2:us-gov-west-1:123456789012:instance/i-12345678",                // GovCloud EC2 ARN
-		"arn:aws-us-gov:s3:::bucket/object",                                                // GovCloud S3 ARN
+		"arn:aws:elasticbeanstalk:us-east-1:123456789012:environment/My App/MyEnvironment", // lintignore:AWSAT003,AWSAT005 // Beanstalk
+		"arn:aws:iam::123456789012:user/David",                                             // lintignore:AWSAT005          // IAM User
+		"arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess",                                 // lintignore:AWSAT005          // Managed IAM policy
+		"arn:aws:rds:eu-west-1:123456789012:db:mysql-db",                                   // lintignore:AWSAT003,AWSAT005 // RDS
+		"arn:aws:s3:::my_corporate_bucket/exampleobject.png",                               // lintignore:AWSAT005          // S3 object
+		"arn:aws:events:us-east-1:319201112229:rule/rule_name",                             // lintignore:AWSAT003,AWSAT005 // CloudWatch Rule
+		"arn:aws:lambda:eu-west-1:319201112229:function:myCustomFunction",                  // lintignore:AWSAT003,AWSAT005 // Lambda function
+		"arn:aws:lambda:eu-west-1:319201112229:function:myCustomFunction:Qualifier",        // lintignore:AWSAT003,AWSAT005 // Lambda func qualifier
+		"arn:aws-cn:ec2:cn-north-1:123456789012:instance/i-12345678",                       // lintignore:AWSAT003,AWSAT005 // China EC2 ARN
+		"arn:aws-cn:s3:::bucket/object",                                                    // lintignore:AWSAT005          // China S3 ARN
+		"arn:aws-iso:ec2:us-iso-east-1:123456789012:instance/i-12345678",                   // lintignore:AWSAT003,AWSAT005 // C2S EC2 ARN
+		"arn:aws-iso:s3:::bucket/object",                                                   // lintignore:AWSAT005          // C2S S3 ARN
+		"arn:aws-iso-b:ec2:us-isob-east-1:123456789012:instance/i-12345678",                // lintignore:AWSAT003,AWSAT005 // SC2S EC2 ARN
+		"arn:aws-iso-b:s3:::bucket/object",                                                 // lintignore:AWSAT005          // SC2S S3 ARN
+		"arn:aws-us-gov:ec2:us-gov-west-1:123456789012:instance/i-12345678",                // lintignore:AWSAT003,AWSAT005 // GovCloud EC2 ARN
+		"arn:aws-us-gov:s3:::bucket/object",                                                // lintignore:AWSAT005          // GovCloud S3 ARN
 	}
 	for _, v := range validNames {
 		_, errors := validateArn(v, "arn")
@@ -348,8 +348,8 @@ func TestValidateArn(t *testing.T) {
 		"arn",
 		"123456789012",
 		"arn:aws",
-		"arn:aws:logs",
-		"arn:aws:logs:region:*:*",
+		"arn:aws:logs",            //lintignore:AWSAT005
+		"arn:aws:logs:region:*:*", //lintignore:AWSAT005
 	}
 	for _, v := range invalidNames {
 		_, errors := validateArn(v, "arn")
@@ -361,10 +361,10 @@ func TestValidateArn(t *testing.T) {
 
 func TestValidateEC2AutomateARN(t *testing.T) {
 	validNames := []string{
-		"arn:aws:automate:us-east-1:ec2:reboot",
-		"arn:aws:automate:us-east-1:ec2:recover",
-		"arn:aws:automate:us-east-1:ec2:stop",
-		"arn:aws:automate:us-east-1:ec2:terminate",
+		"arn:aws:automate:us-east-1:ec2:reboot",    //lintignore:AWSAT003,AWSAT005
+		"arn:aws:automate:us-east-1:ec2:recover",   //lintignore:AWSAT003,AWSAT005
+		"arn:aws:automate:us-east-1:ec2:stop",      //lintignore:AWSAT003,AWSAT005
+		"arn:aws:automate:us-east-1:ec2:terminate", //lintignore:AWSAT003,AWSAT005
 	}
 	for _, v := range validNames {
 		_, errors := validateEC2AutomateARN(v, "test_property")
@@ -375,15 +375,15 @@ func TestValidateEC2AutomateARN(t *testing.T) {
 
 	invalidNames := []string{
 		"",
-		"arn:aws:elasticbeanstalk:us-east-1:123456789012:environment/My App/MyEnvironment", // Beanstalk
-		"arn:aws:iam::123456789012:user/David",                                             // IAM User
-		"arn:aws:rds:eu-west-1:123456789012:db:mysql-db",                                   // RDS
-		"arn:aws:s3:::my_corporate_bucket/exampleobject.png",                               // S3 object
-		"arn:aws:events:us-east-1:319201112229:rule/rule_name",                             // CloudWatch Rule
-		"arn:aws:lambda:eu-west-1:319201112229:function:myCustomFunction",                  // Lambda function
-		"arn:aws:lambda:eu-west-1:319201112229:function:myCustomFunction:Qualifier",        // Lambda func qualifier
-		"arn:aws-us-gov:s3:::corp_bucket/object.png",                                       // GovCloud ARN
-		"arn:aws-us-gov:kms:us-gov-west-1:123456789012:key/some-uuid-abc123",               // GovCloud KMS ARN
+		"arn:aws:elasticbeanstalk:us-east-1:123456789012:environment/My App/MyEnvironment", // lintignore:AWSAT003,AWSAT005 // Beanstalk
+		"arn:aws:iam::123456789012:user/David",                                             // lintignore:AWSAT005          // IAM User
+		"arn:aws:rds:eu-west-1:123456789012:db:mysql-db",                                   // lintignore:AWSAT003,AWSAT005 // RDS
+		"arn:aws:s3:::my_corporate_bucket/exampleobject.png",                               // lintignore:AWSAT005          // S3 object
+		"arn:aws:events:us-east-1:319201112229:rule/rule_name",                             // lintignore:AWSAT003,AWSAT005 // CloudWatch Rule
+		"arn:aws:lambda:eu-west-1:319201112229:function:myCustomFunction",                  // lintignore:AWSAT003,AWSAT005 // Lambda function
+		"arn:aws:lambda:eu-west-1:319201112229:function:myCustomFunction:Qualifier",        // lintignore:AWSAT003,AWSAT005 // Lambda func qualifier
+		"arn:aws-us-gov:s3:::corp_bucket/object.png",                                       // lintignore:AWSAT005          // GovCloud ARN
+		"arn:aws-us-gov:kms:us-gov-west-1:123456789012:key/some-uuid-abc123",               // lintignore:AWSAT003,AWSAT005 // GovCloud KMS ARN
 	}
 	for _, v := range invalidNames {
 		_, errors := validateEC2AutomateARN(v, "test_property")
@@ -2543,7 +2543,7 @@ func TestValidateKmsKey(t *testing.T) {
 			ErrCount: 0,
 		},
 		{
-			Value:    "arn:aws:kms:us-west-2:111122223333:key/arbitrary-uuid-1234",
+			Value:    "arn:aws:kms:us-west-2:111122223333:key/arbitrary-uuid-1234", //lintignore:AWSAT003,AWSAT005
 			ErrCount: 0,
 		},
 		{
@@ -2555,11 +2555,11 @@ func TestValidateKmsKey(t *testing.T) {
 			ErrCount: 0,
 		},
 		{
-			Value:    "arn:aws:kms:us-west-2:111122223333:alias/arbitrary-key",
+			Value:    "arn:aws:kms:us-west-2:111122223333:alias/arbitrary-key", //lintignore:AWSAT003,AWSAT005
 			ErrCount: 0,
 		},
 		{
-			Value:    "arn:aws:kms:us-west-2:111122223333:alias/arbitrary/key",
+			Value:    "arn:aws:kms:us-west-2:111122223333:alias/arbitrary/key", //lintignore:AWSAT003,AWSAT005
 			ErrCount: 0,
 		},
 		{
@@ -2567,7 +2567,7 @@ func TestValidateKmsKey(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    "arn:aws:lamda:foo:bar:key/xyz",
+			Value:    "arn:aws:lamda:foo:bar:key/xyz", //lintignore:AWSAT003,AWSAT005
 			ErrCount: 1,
 		},
 	}
@@ -3139,6 +3139,51 @@ func TestValidateRoute53ResolverName(t *testing.T) {
 		_, errors := validateRoute53ResolverName(tc.Value, "aws_route53_resolver_endpoint")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected the AWS Route 53 Resolver Endpoint Name to not trigger a validation error for %q", tc.Value)
+		}
+	}
+}
+
+func TestCloudWatchEventCustomEventBusName(t *testing.T) {
+	cases := []struct {
+		Value   string
+		IsValid bool
+	}{
+		{
+			Value:   "",
+			IsValid: false,
+		},
+		{
+			Value:   "default",
+			IsValid: false,
+		},
+		{
+			Value:   acctest.RandStringFromCharSet(256, acctest.CharSetAlpha),
+			IsValid: true,
+		},
+		{
+			Value:   acctest.RandStringFromCharSet(257, acctest.CharSetAlpha),
+			IsValid: false,
+		},
+		{
+			Value:   "aws.partner/test/test",
+			IsValid: false,
+		},
+		{
+			Value:   "/test0._1-",
+			IsValid: false,
+		},
+		{
+			Value:   "test0._1-",
+			IsValid: true,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateCloudWatchEventCustomEventBusName(tc.Value, "aws_cloudwatch_event_bus")
+		isValid := len(errors) == 0
+		if tc.IsValid && !isValid {
+			t.Errorf("expected %q to return valid, but did not", tc.Value)
+		} else if !tc.IsValid && isValid {
+			t.Errorf("expected %q to not return valid, but did", tc.Value)
 		}
 	}
 }

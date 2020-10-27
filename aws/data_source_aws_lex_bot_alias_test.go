@@ -14,7 +14,7 @@ func testAccDataSourceAwsLexBotAlias_basic(t *testing.T) {
 
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("models.lex", t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

@@ -9,6 +9,7 @@ AppSync
 Application Autoscaling
 Athena
 Autoscaling
+Autoscaling Plans
 Backup
 Batch
 Budgets
@@ -62,7 +63,8 @@ Inspector
 IoT
 KMS
 Kinesis
-Kinesis Data Analytics v2 (SQL and Java Applications)
+Kinesis Data Analytics (SQL Applications)
+Kinesis Data Analytics v2 (SQL and Flink Applications)
 Kinesis Firehose
 Kinesis Video
 Lambda

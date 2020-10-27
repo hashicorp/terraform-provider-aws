@@ -13,7 +13,7 @@ func TestAccDataSourceAwsLexSlotType_basic(t *testing.T) {
 	resourceName := "aws_lex_slot_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("models.lex", t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -42,7 +42,7 @@ func TestAccDataSourceAwsLexSlotType_withVersion(t *testing.T) {
 	resourceName := "aws_lex_slot_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("models.lex", t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

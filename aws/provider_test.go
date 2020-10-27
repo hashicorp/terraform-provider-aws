@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -617,6 +618,36 @@ func testAccOrganizationsEnabledPreCheck(t *testing.T) {
 	}
 }
 
+func testAccPreCheckIamServiceLinkedRole(t *testing.T, pathPrefix string) {
+	conn := testAccProvider.Meta().(*AWSClient).iamconn
+
+	input := &iam.ListRolesInput{
+		PathPrefix: aws.String(pathPrefix),
+	}
+
+	var role *iam.Role
+	err := conn.ListRolesPages(input, func(page *iam.ListRolesOutput, lastPage bool) bool {
+		for _, r := range page.Roles {
+			role = r
+			break
+		}
+
+		return !lastPage
+	})
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping tests: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("error listing IAM roles: %s", err)
+	}
+
+	if role == nil {
+		t.Skipf("skipping tests; missing IAM service-linked role %s. Please create the role and retry", pathPrefix)
+	}
+}
+
 func testAccAlternateAccountProviderConfig() string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
@@ -835,6 +866,9 @@ func testAccPreCheckSkipError(err error) bool {
 		return true
 	}
 	if isAWSErr(err, "UnsupportedOperation", "") {
+		return true
+	}
+	if isAWSErr(err, "InvalidInputException", "Unknown operation") {
 		return true
 	}
 	return false
@@ -1420,9 +1454,11 @@ provider "aws" {
   }
 }
 
+data "aws_partition" "provider_test" {}
+
 # Required to initialize the provider
 data "aws_arn" "test" {
-  arn = "arn:aws:s3:::test"
+  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
 }
 `, endpoints)
 }
@@ -1439,9 +1475,11 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
+data "aws_partition" "provider_test" {}
+
 # Required to initialize the provider
 data "aws_arn" "test" {
-  arn = "arn:aws:s3:::test"
+  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
 }
 `
 }
@@ -1456,9 +1494,11 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
+data "aws_partition" "provider_test" {}
+
 # Required to initialize the provider
 data "aws_arn" "test" {
-  arn = "arn:aws:s3:::test"
+  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
 }
 `
 }
@@ -1477,9 +1517,11 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
+data "aws_partition" "provider_test" {}
+
 # Required to initialize the provider
 data "aws_arn" "test" {
-  arn = "arn:aws:s3:::test"
+  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
 }
 `, tagPrefix1)
 }
@@ -1498,9 +1540,11 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
+data "aws_partition" "provider_test" {}
+
 # Required to initialize the provider
 data "aws_arn" "test" {
-  arn = "arn:aws:s3:::test"
+  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
 }
 `, tagPrefix1, tagPrefix2)
 }
@@ -1515,9 +1559,11 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
+data "aws_partition" "provider_test" {}
+
 # Required to initialize the provider
 data "aws_arn" "test" {
-  arn = "arn:aws:s3:::test"
+  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
 }
 `
 }
@@ -1536,9 +1582,11 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
+data "aws_partition" "provider_test" {}
+
 # Required to initialize the provider
 data "aws_arn" "test" {
-  arn = "arn:aws:s3:::test"
+  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
 }
 `, tag1)
 }
@@ -1557,9 +1605,11 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
+data "aws_partition" "provider_test" {}
+
 # Required to initialize the provider
 data "aws_arn" "test" {
-  arn = "arn:aws:s3:::test"
+  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
 }
 `, tag1, tag2)
 }
@@ -1575,9 +1625,11 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
+data "aws_partition" "provider_test" {}
+
 # Required to initialize the provider
 data "aws_arn" "test" {
-  arn = "arn:aws:s3:::test"
+  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
 }
 `, region)
 }

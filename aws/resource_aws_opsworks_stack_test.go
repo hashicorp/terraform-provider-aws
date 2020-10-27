@@ -23,7 +23,11 @@ func TestAccAWSOpsworksStack_noVpcBasic(t *testing.T) {
 	var opsstack opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOpsWorksStacks(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck("opsworks", t)
+			testAccPreCheckAWSOpsWorksStacks(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
 		Steps: []resource.TestStep{
@@ -49,7 +53,11 @@ func TestAccAWSOpsworksStack_noVpcChangeServiceRoleForceNew(t *testing.T) {
 	var before, after opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOpsWorksStacks(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck("opsworks", t)
+			testAccPreCheckAWSOpsWorksStacks(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
 		Steps: []resource.TestStep{
@@ -81,7 +89,11 @@ func TestAccAWSOpsworksStack_vpc(t *testing.T) {
 	var opsstack opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOpsWorksStacks(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck("opsworks", t)
+			testAccPreCheckAWSOpsWorksStacks(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
 		Steps: []resource.TestStep{
@@ -125,7 +137,11 @@ func TestAccAWSOpsworksStack_noVpcCreateTags(t *testing.T) {
 	var opsstack opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOpsWorksStacks(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck("opsworks", t)
+			testAccPreCheckAWSOpsWorksStacks(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
 		Steps: []resource.TestStep{
@@ -164,7 +180,11 @@ func TestAccAWSOpsworksStack_CustomCookbooks_SetPrivateProperties(t *testing.T) 
 	var opsstack opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOpsWorksStacks(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck("opsworks", t)
+			testAccPreCheckAWSOpsWorksStacks(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
 		Steps: []resource.TestStep{

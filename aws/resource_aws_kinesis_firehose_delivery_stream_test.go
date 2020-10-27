@@ -118,7 +118,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_basic(t *testing.T) {
 			{
 				ResourceName:  resourceName,
 				ImportState:   true,
-				ImportStateId: "arn:aws:firehose:us-east-1:123456789012:missing-slash",
+				ImportStateId: "arn:aws:firehose:us-east-1:123456789012:missing-slash", //lintignore:AWSAT003,AWSAT005
 				ExpectError:   regexp.MustCompile(`Expected ID in format`),
 			},
 		},

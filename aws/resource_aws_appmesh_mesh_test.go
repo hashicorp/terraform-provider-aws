@@ -21,6 +21,7 @@ func init() {
 			"aws_appmesh_virtual_service",
 			"aws_appmesh_virtual_router",
 			"aws_appmesh_virtual_node",
+			"aws_appmesh_virtual_gateway",
 		},
 	})
 }

@@ -13,7 +13,7 @@ func TestAccDataSourceAwsLexIntent_basic(t *testing.T) {
 	resourceName := "aws_lex_intent.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("models.lex", t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -41,7 +41,7 @@ func TestAccDataSourceAwsLexIntent_withVersion(t *testing.T) {
 	resourceName := "aws_lex_intent.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("models.lex", t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
