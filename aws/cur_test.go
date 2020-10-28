@@ -5,8 +5,11 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -40,12 +43,32 @@ func testAccPreCheckCur(t *testing.T) {
 			"region": testAccGetCurRegion(),
 		}
 
-		err := testAccProviderCur.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
+		diags := testAccProviderCur.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
 
-		if err != nil {
-			t.Fatal(err)
+		if diags != nil && diags.HasError() {
+			for _, d := range diags {
+				if d.Severity == diag.Error {
+					t.Fatalf("error configuring CUR provider: %s", d.Summary)
+				}
+			}
 		}
 	})
+
+	conn := testAccProviderCur.Meta().(*AWSClient).costandusagereportconn
+
+	input := &costandusagereportservice.DescribeReportDefinitionsInput{
+		MaxResults: aws.Int64(5),
+	}
+
+	_, err := conn.DescribeReportDefinitions(input)
+
+	if testAccPreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "AccessDeniedException", "linked account is not allowed to modify report preference") {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 
 // testAccCurRegionProviderConfig is the Terraform provider configuration for Cost and Usage Reporting region testing
