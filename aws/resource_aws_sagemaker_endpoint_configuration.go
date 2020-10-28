@@ -242,7 +242,7 @@ func resourceAwsSagemakerEndpointConfigurationRead(d *schema.ResourceData, meta 
 
 	endpointConfig, err := conn.DescribeEndpointConfig(request)
 	if err != nil {
-		if isAWSErr(err, "ValidationException", "") {
+		if isAWSErr(err, "ValidationException", "Could not find endpoint configuration") {
 			log.Printf("[INFO] unable to find the SageMaker Endpoint Configuration resource and therefore it is removed from the state: %s", d.Id())
 			d.SetId("")
 			return nil
@@ -396,12 +396,9 @@ func flattenSagemakerDataCaptureConfig(dataCaptureConfig *sagemaker.DataCaptureC
 	}
 
 	cfg := map[string]interface{}{
-		//"enable_capture":              aws.BoolValue(dataCaptureConfig.EnableCapture),
 		"initial_sampling_percentage": aws.Int64Value(dataCaptureConfig.InitialSamplingPercentage),
 		"destination_s3_uri":          aws.StringValue(dataCaptureConfig.DestinationS3Uri),
-		//"kms_key_id":                  aws.StringValue(dataCaptureConfig.KmsKeyId),
-		"capture_options": flattenSagemakerCaptureOptions(dataCaptureConfig.CaptureOptions),
-		//"capture_content_type_header": flattenSagemakerCaptureContentTypeHeader(dataCaptureConfig.CaptureContentTypeHeader),
+		"capture_options":             flattenSagemakerCaptureOptions(dataCaptureConfig.CaptureOptions),
 	}
 
 	if dataCaptureConfig.EnableCapture != nil {

@@ -88,7 +88,7 @@ func TestAccAWSSagemakerEndpointConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerEndpointConfiguration_ProductionVariants_InitialVariantWeight(t *testing.T) {
+func TestAccAWSSagemakerEndpointConfiguration_productionVariants_InitialVariantWeight(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_endpoint_configuration.foo"
 
@@ -114,7 +114,7 @@ func TestAccAWSSagemakerEndpointConfiguration_ProductionVariants_InitialVariantW
 	})
 }
 
-func TestAccAWSSagemakerEndpointConfiguration_ProductionVariants_AcceleratorType(t *testing.T) {
+func TestAccAWSSagemakerEndpointConfiguration_productionVariants_AcceleratorType(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_endpoint_configuration.foo"
 
@@ -139,7 +139,7 @@ func TestAccAWSSagemakerEndpointConfiguration_ProductionVariants_AcceleratorType
 	})
 }
 
-func TestAccAWSSagemakerEndpointConfiguration_KmsKeyId(t *testing.T) {
+func TestAccAWSSagemakerEndpointConfiguration_kmsKeyId(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_endpoint_configuration.foo"
 
@@ -152,7 +152,7 @@ func TestAccAWSSagemakerEndpointConfiguration_KmsKeyId(t *testing.T) {
 				Config: testAccSagemakerEndpointConfiguration_Config_KmsKeyId(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerEndpointConfigurationExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.foo", "arn"),
 				),
 			},
 			{
@@ -164,7 +164,7 @@ func TestAccAWSSagemakerEndpointConfiguration_KmsKeyId(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerEndpointConfiguration_Tags(t *testing.T) {
+func TestAccAWSSagemakerEndpointConfiguration_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_endpoint_configuration.foo"
 
@@ -224,6 +224,27 @@ func TestAccAWSSagemakerEndpointConfiguration_dataCaptureConfig(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerEndpointConfiguration_disappears(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_endpoint_configuration.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSagemakerEndpointConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSagemakerEndpointConfigurationConfig_Basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSagemakerEndpointConfigurationExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerEndpointConfiguration(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
