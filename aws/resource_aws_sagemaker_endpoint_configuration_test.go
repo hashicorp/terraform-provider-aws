@@ -59,7 +59,7 @@ func testSweepSagemakerEndpointConfigurations(region string) error {
 
 func TestAccAWSSagemakerEndpointConfiguration_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_sagemaker_endpoint_configuration.foo"
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -90,7 +90,7 @@ func TestAccAWSSagemakerEndpointConfiguration_basic(t *testing.T) {
 
 func TestAccAWSSagemakerEndpointConfiguration_productionVariants_InitialVariantWeight(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_sagemaker_endpoint_configuration.foo"
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -116,7 +116,7 @@ func TestAccAWSSagemakerEndpointConfiguration_productionVariants_InitialVariantW
 
 func TestAccAWSSagemakerEndpointConfiguration_productionVariants_AcceleratorType(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_sagemaker_endpoint_configuration.foo"
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -141,7 +141,7 @@ func TestAccAWSSagemakerEndpointConfiguration_productionVariants_AcceleratorType
 
 func TestAccAWSSagemakerEndpointConfiguration_kmsKeyId(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_sagemaker_endpoint_configuration.foo"
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -152,7 +152,7 @@ func TestAccAWSSagemakerEndpointConfiguration_kmsKeyId(t *testing.T) {
 				Config: testAccSagemakerEndpointConfiguration_Config_KmsKeyId(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerEndpointConfigurationExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.foo", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
 				),
 			},
 			{
@@ -166,7 +166,7 @@ func TestAccAWSSagemakerEndpointConfiguration_kmsKeyId(t *testing.T) {
 
 func TestAccAWSSagemakerEndpointConfiguration_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_sagemaker_endpoint_configuration.foo"
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -240,7 +240,7 @@ func TestAccAWSSagemakerEndpointConfiguration_dataCaptureConfig(t *testing.T) {
 
 func TestAccAWSSagemakerEndpointConfiguration_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_sagemaker_endpoint_configuration.foo"
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -313,17 +313,17 @@ func testAccCheckSagemakerEndpointConfigurationExists(n string) resource.TestChe
 
 func testAccSagemakerEndpointConfigurationConfig_Base(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_sagemaker_model" "foo" {
-  name               = %q
-  execution_role_arn = aws_iam_role.foo.arn
+resource "aws_sagemaker_model" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
 
   primary_container {
     image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
   }
 }
 
-resource "aws_iam_role" "foo" {
-  name               = %q
+resource "aws_iam_role" "test" {
+  name               = %[1]q
   path               = "/"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
@@ -338,17 +338,17 @@ data "aws_iam_policy_document" "assume_role" {
     }
   }
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccSagemakerEndpointConfigurationConfig_Basic(rName string) string {
 	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
-resource "aws_sagemaker_endpoint_configuration" "foo" {
+resource "aws_sagemaker_endpoint_configuration" "test" {
   name = %q
 
   production_variants {
     variant_name           = "variant-1"
-    model_name             = aws_sagemaker_model.foo.name
+    model_name             = aws_sagemaker_model.test.name
     initial_instance_count = 2
     instance_type          = "ml.t2.medium"
     initial_variant_weight = 1
@@ -359,19 +359,19 @@ resource "aws_sagemaker_endpoint_configuration" "foo" {
 
 func testAccSagemakerEndpointConfigurationConfig_ProductionVariants_InitialVariantWeight(rName string) string {
 	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
-resource "aws_sagemaker_endpoint_configuration" "foo" {
+resource "aws_sagemaker_endpoint_configuration" "test" {
   name = %q
 
   production_variants {
     variant_name           = "variant-1"
-    model_name             = aws_sagemaker_model.foo.name
+    model_name             = aws_sagemaker_model.test.name
     initial_instance_count = 1
     instance_type          = "ml.t2.medium"
   }
 
   production_variants {
     variant_name           = "variant-2"
-    model_name             = aws_sagemaker_model.foo.name
+    model_name             = aws_sagemaker_model.test.name
     initial_instance_count = 1
     instance_type          = "ml.t2.medium"
     initial_variant_weight = 0.5
@@ -382,12 +382,12 @@ resource "aws_sagemaker_endpoint_configuration" "foo" {
 
 func testAccSagemakerEndpointConfigurationConfig_ProductionVariant_AcceleratorType(rName string) string {
 	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
-resource "aws_sagemaker_endpoint_configuration" "foo" {
+resource "aws_sagemaker_endpoint_configuration" "test" {
   name = %q
 
   production_variants {
     variant_name           = "variant-1"
-    model_name             = aws_sagemaker_model.foo.name
+    model_name             = aws_sagemaker_model.test.name
     initial_instance_count = 2
     instance_type          = "ml.t2.medium"
     accelerator_type       = "ml.eia1.medium"
@@ -399,20 +399,20 @@ resource "aws_sagemaker_endpoint_configuration" "foo" {
 
 func testAccSagemakerEndpointConfiguration_Config_KmsKeyId(rName string) string {
 	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
-resource "aws_sagemaker_endpoint_configuration" "foo" {
+resource "aws_sagemaker_endpoint_configuration" "test" {
   name        = %q
-  kms_key_arn = aws_kms_key.foo.arn
+  kms_key_arn = aws_kms_key.test.arn
 
   production_variants {
     variant_name           = "variant-1"
-    model_name             = aws_sagemaker_model.foo.name
+    model_name             = aws_sagemaker_model.test.name
     initial_instance_count = 1
     instance_type          = "ml.t2.medium"
     initial_variant_weight = 1
   }
 }
 
-resource "aws_kms_key" "foo" {
+resource "aws_kms_key" "test" {
   description             = %q
   deletion_window_in_days = 10
 }
@@ -426,7 +426,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 
   production_variants {
     variant_name           = "variant-1"
-    model_name             = aws_sagemaker_model.foo.name
+    model_name             = aws_sagemaker_model.test.name
     initial_instance_count = 1
     instance_type          = "ml.t2.medium"
     initial_variant_weight = 1
@@ -446,7 +446,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 
   production_variants {
     variant_name           = "variant-1"
-    model_name             = aws_sagemaker_model.foo.name
+    model_name             = aws_sagemaker_model.test.name
     initial_instance_count = 1
     instance_type          = "ml.t2.medium"
     initial_variant_weight = 1
@@ -473,7 +473,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 
   production_variants {
     variant_name           = "variant-1"
-    model_name             = aws_sagemaker_model.foo.name
+    model_name             = aws_sagemaker_model.test.name
     initial_instance_count = 2
     instance_type          = "ml.t2.medium"
     initial_variant_weight = 1
