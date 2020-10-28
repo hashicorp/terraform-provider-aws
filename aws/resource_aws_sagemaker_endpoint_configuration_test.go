@@ -451,7 +451,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
   data_capture_config {
     enable_capture              = true
     initial_sampling_percentage = 50
-	destination_s3_uri          = "s3://${aws_s3_bucket.foo.bucket}/"
+	destination_s3_uri          = "s3://${aws_s3_bucket.test.bucket}/"
 	
     capture_options {
       capture_mode = "Input"
