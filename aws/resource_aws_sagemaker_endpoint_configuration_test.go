@@ -174,25 +174,34 @@ func TestAccAWSSagemakerEndpointConfiguration_tags(t *testing.T) {
 		CheckDestroy: testAccCheckSagemakerEndpointConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerEndpointConfigurationConfig_Tags(rName),
+				Config: testAccSagemakerEndpointConfigurationConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerEndpointConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
-				),
-			},
-			{
-				Config: testAccSagemakerEndpointConfigurationConfig_Tags_Update(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerEndpointConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.bar", "baz"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSagemakerEndpointConfigurationConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSagemakerEndpointConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccSagemakerEndpointConfigurationConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSagemakerEndpointConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -410,10 +419,10 @@ resource "aws_kms_key" "foo" {
 `, rName, rName)
 }
 
-func testAccSagemakerEndpointConfigurationConfig_Tags(rName string) string {
+func testAccSagemakerEndpointConfigurationConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
-resource "aws_sagemaker_endpoint_configuration" "foo" {
-  name = %q
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
 
   production_variants {
     variant_name           = "variant-1"
@@ -424,16 +433,16 @@ resource "aws_sagemaker_endpoint_configuration" "foo" {
   }
 
   tags = {
-    foo = "bar"
+    %[2]q = %[3]q
   }
 }
-`, rName)
+`, rName, tagKey1, tagValue1)
 }
 
-func testAccSagemakerEndpointConfigurationConfig_Tags_Update(rName string) string {
+func testAccSagemakerEndpointConfigurationConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
-resource "aws_sagemaker_endpoint_configuration" "foo" {
-  name = %q
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
 
   production_variants {
     variant_name           = "variant-1"
@@ -444,10 +453,11 @@ resource "aws_sagemaker_endpoint_configuration" "foo" {
   }
 
   tags = {
-    bar = "baz"
+	%[2]q = %[3]q
+	%[4]q = %[5]q
   }
 }
-`, rName)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccSagemakerEndpointConfigurationDataCaptureConfig(rName string) string {
