@@ -213,7 +213,7 @@ func TestAccAWSSagemakerEndpointConfiguration_DataCaptureConfig(t *testing.T) {
 					testAccCheckSagemakerEndpointConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.enable_capture", "true"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.initial_sampling_percentage", "50"),
-					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.destination_s3_uri", fmt.Sprintf("s3://%s/", dataDestinationBucketName)),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.destination_s3_uri", fmt.Sprintf("s3://%s/", rName)),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.0.capture_mode", "Input"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.1.capture_mode", "Output"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_content_type_header.0.json_content_types.#", "1"),
