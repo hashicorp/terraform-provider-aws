@@ -63,9 +63,10 @@ func resourceAwsSagemakerEndpointConfiguration() *schema.Resource {
 						},
 
 						"instance_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(sagemaker.ProductionVariantInstanceType_Values(), false),
 						},
 
 						"initial_variant_weight": {
@@ -77,9 +78,10 @@ func resourceAwsSagemakerEndpointConfiguration() *schema.Resource {
 						},
 
 						"accelerator_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(sagemaker.ProductionVariantAcceleratorType_Values(), false),
 						},
 					},
 				},
