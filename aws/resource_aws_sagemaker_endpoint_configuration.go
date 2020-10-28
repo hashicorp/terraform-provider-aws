@@ -119,7 +119,7 @@ func resourceAwsSagemakerEndpointConfiguration() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(` ^(https|s3)://([^/])/?(.*)$`), ""),
+								validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 								validation.StringLenBetween(1, 512),
 							)},
 
