@@ -77,6 +77,7 @@ func TestAccAWSSagemakerEndpointConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_instance_count", "2"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.instance_type", "ml.t2.medium"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_variant_weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", "0"),
 				),
 			},
 			{
@@ -220,6 +221,7 @@ func TestAccAWSSagemakerEndpointConfiguration_dataCaptureConfig(t *testing.T) {
 				Config: testAccSagemakerEndpointConfigurationDataCaptureConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerEndpointConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.enable_capture", "true"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.initial_sampling_percentage", "50"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.destination_s3_uri", fmt.Sprintf("s3://%s/", rName)),
@@ -453,8 +455,8 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
   }
 
   tags = {
-	%[2]q = %[3]q
-	%[4]q = %[5]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
@@ -482,16 +484,16 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
   data_capture_config {
     enable_capture              = true
     initial_sampling_percentage = 50
-	destination_s3_uri          = "s3://${aws_s3_bucket.test.bucket}/"
-	
+    destination_s3_uri          = "s3://${aws_s3_bucket.test.bucket}/"
+
     capture_options {
       capture_mode = "Input"
-	}
-	
+    }
+
     capture_options {
       capture_mode = "Output"
-	}
-	
+    }
+
     capture_content_type_header {
       json_content_types = ["application/json"]
     }
