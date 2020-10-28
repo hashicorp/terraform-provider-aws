@@ -2,11 +2,12 @@ package aws
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
-	"testing"
 )
 
 func CreateTablePolicy(action string) string {
