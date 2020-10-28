@@ -48,4 +48,5 @@ The following arguments are supported:
 
 All of the argument attributes are also exported as result attributes.
 
+* `id` - AWS Region.
 * `ciphertext_blob` - Base64 encoded ciphertext

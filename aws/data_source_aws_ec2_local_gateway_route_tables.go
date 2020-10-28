@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -62,7 +61,8 @@ func dataSourceAwsEc2LocalGatewayRouteTablesRead(d *schema.ResourceData, meta in
 		localgatewayroutetables = append(localgatewayroutetables, aws.StringValue(localgatewayroutetable.LocalGatewayRouteTableId))
 	}
 
-	d.SetId(time.Now().UTC().String())
+	d.SetId(meta.(*AWSClient).region)
+
 	if err := d.Set("ids", localgatewayroutetables); err != nil {
 		return fmt.Errorf("Error setting local gateway route table ids: %s", err)
 	}
