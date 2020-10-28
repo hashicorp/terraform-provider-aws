@@ -113,7 +113,7 @@ func resourceAwsSagemakerEndpointConfiguration() *schema.Resource {
 							ValidateFunc: validation.IntBetween(0, 100),
 						},
 
-						"destination_url": {
+						"destination_s3_uri": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -139,7 +139,7 @@ func resourceAwsSagemakerEndpointConfiguration() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
-										ValidateFunc: validation.StringInSlice([]string{"Input", "Output"}, false),
+										ValidateFunc: validation.StringInSlice(sagemaker.CaptureMode_Values(), false),
 									},
 								},
 							},
@@ -153,36 +153,23 @@ func resourceAwsSagemakerEndpointConfiguration() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"csv_content_types": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										MinItems: 1,
 										MaxItems: 10,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"content_type": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validateSagemakerCsvContentType,
-												},
-											},
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validateSagemakerCsvContentType,
 										},
 										Optional: true,
 										ForceNew: true,
 									},
-
 									"json_content_types": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										MinItems: 1,
 										MaxItems: 10,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"content_type": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ForceNew:     true,
-													ValidateFunc: validateSagemakerJsonContentType,
-												},
-											},
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validateSagemakerJsonContentType,
 										},
 										Optional: true,
 										ForceNew: true,
@@ -373,7 +360,7 @@ func expandSagemakerDataCaptureConfig(configured []interface{}) *sagemaker.DataC
 
 	c := &sagemaker.DataCaptureConfig{
 		InitialSamplingPercentage: aws.Int64(int64(m["initial_sampling_percentage"].(int))),
-		DestinationS3Uri:          aws.String(m["destination_url"].(string)),
+		DestinationS3Uri:          aws.String(m["destination_s3_uri"].(string)),
 		CaptureOptions:            expandSagemakerCaptureOptions(m["capture_options"].([]interface{})),
 	}
 
@@ -400,7 +387,7 @@ func flattenSagemakerDataCaptureConfig(dataCaptureConfig *sagemaker.DataCaptureC
 	cfg := map[string]interface{}{
 		//"enable_capture":              aws.BoolValue(dataCaptureConfig.EnableCapture),
 		"initial_sampling_percentage": aws.Int64Value(dataCaptureConfig.InitialSamplingPercentage),
-		"destination_url":             aws.StringValue(dataCaptureConfig.DestinationS3Uri),
+		"destination_s3_uri":          aws.StringValue(dataCaptureConfig.DestinationS3Uri),
 		//"kms_key_id":                  aws.StringValue(dataCaptureConfig.KmsKeyId),
 		"capture_options": flattenSagemakerCaptureOptions(dataCaptureConfig.CaptureOptions),
 		//"capture_content_type_header": flattenSagemakerCaptureContentTypeHeader(dataCaptureConfig.CaptureContentTypeHeader),
@@ -451,26 +438,12 @@ func flattenSagemakerCaptureOptions(list []*sagemaker.CaptureOption) []map[strin
 func expandSagemakerCaptureContentTypeHeader(m map[string]interface{}) *sagemaker.CaptureContentTypeHeader {
 	c := &sagemaker.CaptureContentTypeHeader{}
 
-	if v, ok := m["csv_content_types"]; ok && len(v.([]interface{})) > 0 {
-		contentTypes := make([]*string, 0, len(v.([]interface{})))
-
-		for _, raw := range v.([]interface{}) {
-			sRaw := raw.(map[string]interface{})["content_type"]
-			contentTypes = append(contentTypes, aws.String(sRaw.(string)))
-		}
-
-		c.CsvContentTypes = contentTypes
+	if v, ok := m["csv_content_types"].(*schema.Set); ok && v.Len() > 0 {
+		c.CsvContentTypes = expandStringSet(v)
 	}
 
-	if v, ok := m["json_content_types"]; ok && len(v.([]interface{})) > 0 {
-		contentTypes := make([]*string, 0, len(v.([]interface{})))
-
-		for _, raw := range v.([]interface{}) {
-			sRaw := raw.(map[string]interface{})["content_type"]
-			contentTypes = append(contentTypes, aws.String(sRaw.(string)))
-		}
-
-		c.JsonContentTypes = contentTypes
+	if v, ok := m["json_content_types"].(*schema.Set); ok && v.Len() > 0 {
+		c.JsonContentTypes = expandStringSet(v)
 	}
 
 	return c
@@ -484,29 +457,11 @@ func flattenSagemakerCaptureContentTypeHeader(contentTypeHeader *sagemaker.Captu
 	l := make(map[string]interface{})
 
 	if contentTypeHeader.CsvContentTypes != nil {
-		csvTypes := make([]map[string]interface{}, 0, len(contentTypeHeader.CsvContentTypes))
-
-		for _, csvType := range contentTypeHeader.CsvContentTypes {
-			m := map[string]interface{}{
-				"content_type": aws.StringValue(csvType),
-			}
-			csvTypes = append(csvTypes, m)
-		}
-
-		l["csv_content_types"] = csvTypes
+		l["csv_content_types"] = flattenStringSet(contentTypeHeader.CsvContentTypes)
 	}
 
 	if contentTypeHeader.JsonContentTypes != nil {
-		jsonTypes := make([]map[string]interface{}, 0, len(contentTypeHeader.JsonContentTypes))
-
-		for _, jsonType := range contentTypeHeader.JsonContentTypes {
-			m := map[string]interface{}{
-				"content_type": aws.StringValue(jsonType),
-			}
-			jsonTypes = append(jsonTypes, m)
-		}
-
-		l["json_content_types"] = jsonTypes
+		l["json_content_types"] = flattenStringSet(contentTypeHeader.JsonContentTypes)
 	}
 
 	return []map[string]interface{}{l}
