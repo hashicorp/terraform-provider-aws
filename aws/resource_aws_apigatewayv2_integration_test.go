@@ -407,6 +407,8 @@ func TestAccAWSAPIGatewayV2Integration_AwsServiceIntegration(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
+	sqsQueue1ResourceName := "aws_sqs_queue.test.0"
+	sqsQueue2ResourceName := "aws_sqs_queue.test.1"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -415,7 +417,7 @@ func TestAccAWSAPIGatewayV2Integration_AwsServiceIntegration(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2IntegrationConfig_sqsIntegration(rName),
+				Config: testAccAWSAPIGatewayV2IntegrationConfig_sqsIntegration(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
@@ -428,9 +430,34 @@ func TestAccAWSAPIGatewayV2Integration_AwsServiceIntegration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "integration_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", ""),
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.QueueUrl", "$request.header.queueUrl"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.MessageBody", "$request.body.message"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.MessageBody", "$request.body"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.MessageGroupId", "$request.body.authentication_key"),
+					resource.TestCheckResourceAttrPair(resourceName, "request_parameters.QueueUrl", sqsQueue1ResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
+					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29000"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayV2IntegrationConfig_sqsIntegration(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
+					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
+					resource.TestCheckResourceAttr(resourceName, "description", "Test SQS send"),
+					resource.TestCheckResourceAttr(resourceName, "integration_method", ""),
+					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
+					resource.TestCheckResourceAttr(resourceName, "integration_subtype", "SQS-SendMessage"),
+					resource.TestCheckResourceAttr(resourceName, "integration_type", "AWS_PROXY"),
+					resource.TestCheckResourceAttr(resourceName, "integration_uri", ""),
+					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", ""),
+					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.MessageBody", "$request.body"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.MessageGroupId", "$request.body.authentication_key"),
+					resource.TestCheckResourceAttrPair(resourceName, "request_parameters.QueueUrl", sqsQueue2ResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29000"),
@@ -830,7 +857,7 @@ resource "aws_apigatewayv2_integration" "test" {
 `, rName))
 }
 
-func testAccAWSAPIGatewayV2IntegrationConfig_sqsIntegration(rName string) string {
+func testAccAWSAPIGatewayV2IntegrationConfig_sqsIntegration(rName string, queueIndex int) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2IntegrationConfig_apiHttp(rName),
 		fmt.Sprintf(`
@@ -865,6 +892,12 @@ resource "aws_iam_role_policy" "test" {
 EOF
 }
 
+resource "aws_sqs_queue" "test" {
+  count = 2
+
+  name = "%[1]s-${count.index}"
+}
+
 resource "aws_apigatewayv2_integration" "test" {
   api_id              = aws_apigatewayv2_api.test.id
   credentials_arn     = aws_iam_role.test.arn
@@ -873,11 +906,12 @@ resource "aws_apigatewayv2_integration" "test" {
   integration_subtype = "SQS-SendMessage"
 
   request_parameters = {
-    "QueueUrl"    = "$request.header.queueUrl"
-    "MessageBody" = "$request.body.message"
+    "QueueUrl"       = aws_sqs_queue.test.%[2]d.id
+    "MessageGroupId" = "$request.body.authentication_key"
+    "MessageBody"    = "$request.body"
   }
 
   depends_on = [aws_iam_role_policy.test]
 }
-`, rName))
+`, rName, queueIndex))
 }
