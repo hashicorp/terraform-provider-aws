@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsRoute53ResolverEndpoint() *schema.Resource {
@@ -92,11 +92,11 @@ func dataSourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta inter
 		}
 
 		if len(resp.ResolverEndpoints) == 0 && filtersOk {
-			return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
+			return fmt.Errorf("Your query returned no results. Please change your search criteria and try again")
 		}
 
 		if len(resp.ResolverEndpoints) > 1 && !rIDOk {
-			return fmt.Errorf("Your query returned more than one resolver. Please change your search criteria and try again.")
+			return fmt.Errorf("your query returned more than one resolver. Please change your search criteria and try again")
 		}
 
 		if rIDOk {

@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsRoute53ResolverEndpoint_Basic(t *testing.T) {
@@ -22,7 +22,7 @@ func TestAccDataSourceAwsRoute53ResolverEndpoint_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsRoute53ResolverEndpointConfig_NonExistent,
-				ExpectError: regexp.MustCompile("The ID provided could not be found"),
+				ExpectError: regexp.MustCompile(`The ID provided could not be found`),
 			},
 			{
 				Config: testAccDataSourceRoute53ResolverEndpointConfig_initial(rInt, direction, name),
@@ -49,7 +49,7 @@ func TestAccDataSourceAwsRoute53ResolverEndpoint_Filter(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsRoute53ResolverEndpointConfig_NonExistentFilter,
-				ExpectError: regexp.MustCompile("Your query returned no results. Please change your search criteria and try again."),
+				ExpectError: regexp.MustCompile("Your query returned no results. Please change your search criteria and try again"),
 			},
 			{
 				Config: testAccDataSourceRoute53ResolverEndpointConfig_filter(rInt, direction, name),
@@ -78,9 +78,9 @@ resource "aws_vpc" "foo" {
 data "aws_availability_zones" "available" {}
 
 resource "aws_subnet" "sn1" {
-  vpc_id            = "${aws_vpc.foo.id}"
-  cidr_block        = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 0)}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  vpc_id            = aws_vpc.foo.id
+  cidr_block        = cidrsubnet(aws_vpc.foo.cidr_block, 2, 0)
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-r53-resolver-sn1-%d"
@@ -88,10 +88,10 @@ resource "aws_subnet" "sn1" {
 }
 
 resource "aws_subnet" "sn2" {
-  vpc_id            = "${aws_vpc.foo.id}"
+  vpc_id            = aws_vpc.foo.id
 
-  cidr_block        = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 1)}"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  cidr_block        = cidrsubnet(aws_vpc.foo.cidr_block, 2, 1)
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
     Name = "tf-acc-r53-resolver-sn2-%d"
@@ -99,9 +99,9 @@ resource "aws_subnet" "sn2" {
 }
 
 resource "aws_subnet" "sn3" {
-  vpc_id            = "${aws_vpc.foo.id}"
-  cidr_block        = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 2)}"
-  availability_zone = "${data.aws_availability_zones.available.names[2]}"
+  vpc_id            = aws_vpc.foo.id
+  cidr_block        = cidrsubnet(aws_vpc.foo.cidr_block, 2, 2)
+  availability_zone = data.aws_availability_zones.available.names[2]
 
   tags = {
     Name = "tf-acc-r53-resolver-sn3-%d"
@@ -109,7 +109,7 @@ resource "aws_subnet" "sn3" {
 }
 
 resource "aws_security_group" "sg1" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
   name   = "tf-acc-r53-resolver-sg1-%d"
 
   tags = {
@@ -118,7 +118,7 @@ resource "aws_security_group" "sg1" {
 }
 
 resource "aws_security_group" "sg2" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
   name   = "tf-acc-r53-resolver-sg2-%d"
 
   tags = {
@@ -137,17 +137,17 @@ resource "aws_route53_resolver_endpoint" "foo" {
   name      = "%s"
 
   security_group_ids = [
-    "${aws_security_group.sg1.id}",
-    "${aws_security_group.sg2.id}",
+    aws_security_group.sg1.id,
+    aws_security_group.sg2.id,
   ]
 
   ip_address {
-    subnet_id = "${aws_subnet.sn1.id}"
+    subnet_id = aws_subnet.sn1.id
   }
 
   ip_address {
-    subnet_id = "${aws_subnet.sn2.id}"
-    ip        = "${cidrhost(aws_subnet.sn2.cidr_block, 8)}"
+    subnet_id = aws_subnet.sn2.id
+    ip        = cidrhost(aws_subnet.sn2.cidr_block, 8)
   }
 
   tags = {
@@ -157,7 +157,7 @@ resource "aws_route53_resolver_endpoint" "foo" {
 }
 
 data "aws_route53_resolver_endpoint" "foo" {
-	id = "${aws_route53_resolver_endpoint.foo.id}"
+	id = aws_route53_resolver_endpoint.foo.id
 }
 `, testAccDataSourceRoute53ResolverEndpointConfig_base(rInt), direction, name)
 }
@@ -171,17 +171,17 @@ resource "aws_route53_resolver_endpoint" "foo" {
   name      = "%s"
 
   security_group_ids = [
-    "${aws_security_group.sg1.id}",
-    "${aws_security_group.sg2.id}",
+    aws_security_group.sg1.id,
+    aws_security_group.sg2.id,
   ]
 
   ip_address {
-    subnet_id = "${aws_subnet.sn1.id}"
+    subnet_id = aws_subnet.sn1.id
   }
 
   ip_address {
-    subnet_id = "${aws_subnet.sn2.id}"
-    ip        = "${cidrhost(aws_subnet.sn2.cidr_block, 8)}"
+    subnet_id = aws_subnet.sn2.id
+    ip        = cidrhost(aws_subnet.sn2.cidr_block, 8)
   }
 
   tags = {
@@ -192,9 +192,11 @@ resource "aws_route53_resolver_endpoint" "foo" {
 
 data "aws_route53_resolver_endpoint" "foo" {
 	filter {
-		name = "NAME"
-		values = ["${aws_route53_resolver_endpoint.foo.name}"]
+		name = "Name"
+		values = [aws_route53_resolver_endpoint.foo.name]
 	}
+
+   depends_on = [aws_route53_resolver_endpoint.foo]
 }
 `, testAccDataSourceRoute53ResolverEndpointConfig_base(rInt), direction, name)
 }
@@ -208,7 +210,7 @@ data "aws_route53_resolver_endpoint" "foo" {
 const testAccDataSourceAwsRoute53ResolverEndpointConfig_NonExistentFilter = `
 data "aws_route53_resolver_endpoint" "foo" {
 	filter {
-		name = "NAME"
+		name = "Name"
 		values = ["None-Existent-Resource"]
 	}
 }
