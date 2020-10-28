@@ -192,7 +192,7 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 												"launch_template_specification": {
 													Type:     schema.TypeList,
 													Optional: true,
-													MinItems: 1,
+													MinItems: 0,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
