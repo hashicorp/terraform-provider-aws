@@ -54,7 +54,7 @@ The `production_variants` block supports:
 The `data_capture_config` block supports:
 
 * `initial_sampling_percentage` - (Required) Portion of data to capture. Should be between 0 and 100.
-* `destination_url` - (Required) The URL for S3 location where the captured data is stored.
+* `destination_s3_uri` - (Required) The URL for S3 location where the captured data is stored.
 * `capture_options` - (Required) Specifies what data to capture. Fields are documented below.
 * `kms_key_id` - (Optional) Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon SageMaker uses to encrypt the captured data on Amazon S3.
 * `enable_capture` - (Optional) Flag to enable data capture. Defaults to `false`.
@@ -66,12 +66,8 @@ The `capture_options` block supports:
 
 The `capture_content_type_header` block supports:
 
-* `csv_content_types` - (Optional) The CSV content type headers to capture. Fields are documented below.
-* `json_content_types` - (Optional) The JSON content type headers to capture. Fields are documented below.
-
-The `csv_content_types` and `json_content_types` block both support:
-
-* `content_type` - (Required) The value of the content type header.
+* `csv_content_types` - (Optional) The CSV content type headers to capture.
+* `json_content_types` - (Optional) The JSON content type headers to capture.
 
 ## Attributes Reference
 
