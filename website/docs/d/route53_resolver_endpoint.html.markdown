@@ -1,7 +1,7 @@
 ---
+subcategory: "Route53 Resolver"
 layout: "aws"
 page_title: "AWS: aws_route53_resolver_endpoint"
-sidebar_current: "docs-aws-datasource-route53-resolver-endpoint"
 description: |-
     Provides details about a specific Route 53 Resolver Endpoint
 ---
