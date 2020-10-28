@@ -5,12 +5,12 @@ import (
 	"log"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -200,7 +200,6 @@ func TestAccAWSSagemakerEndpointConfiguration_Tags(t *testing.T) {
 
 func TestAccAWSSagemakerEndpointConfiguration_DataCaptureConfig(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	dataDestinationBucketName := fmt.Sprintf("bucket-%s", rName)
 	resourceName := "aws_sagemaker_endpoint_configuration.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -209,15 +208,16 @@ func TestAccAWSSagemakerEndpointConfiguration_DataCaptureConfig(t *testing.T) {
 		CheckDestroy: testAccCheckSagemakerEndpointConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerEndpointConfigurationConfig_DataCaptureConfig(rName, dataDestinationBucketName),
+				Config: testAccSagemakerEndpointConfigurationDataCaptureConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerEndpointConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.enable_capture", "true"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.initial_sampling_percentage", "50"),
-					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.destination_url", fmt.Sprintf("s3://%s/", dataDestinationBucketName)),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.destination_s3_uri", fmt.Sprintf("s3://%s/", dataDestinationBucketName)),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.0.capture_mode", "Input"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.1.capture_mode", "Output"),
-					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_content_type_header.0.json_content_types.0.content_type", "application/json"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_content_type_header.0.json_content_types.#", "1"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "data_capture_config.0.capture_content_type_header.0.json_content_types.*", "application/json"),
 				),
 			},
 			{
@@ -429,41 +429,42 @@ resource "aws_sagemaker_endpoint_configuration" "foo" {
 `, rName)
 }
 
-func testAccSagemakerEndpointConfigurationConfig_DataCaptureConfig(rName string, bucket string) string {
+func testAccSagemakerEndpointConfigurationDataCaptureConfig(rName string) string {
 	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
-resource "aws_s3_bucket" "foo" {
-  bucket        = %q
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
   acl           = "private"
   force_destroy = true
 }
 
-resource "aws_sagemaker_endpoint_configuration" "foo" {
-	name = %q
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
 
-	production_variants {
-		variant_name = "variant-1"
-		model_name = "${aws_sagemaker_model.foo.name}"
-		initial_instance_count = 2
-		instance_type = "ml.t2.medium"
-		initial_variant_weight = 1
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.foo.name
+    initial_instance_count = 2
+    instance_type          = "ml.t2.medium"
+    initial_variant_weight = 1
+  }
+
+  data_capture_config {
+    enable_capture              = true
+    initial_sampling_percentage = 50
+	destination_s3_uri          = "s3://${aws_s3_bucket.foo.bucket}/"
+	
+    capture_options {
+      capture_mode = "Input"
 	}
-
-    data_capture_config {
-    	enable_capture = true
-		initial_sampling_percentage = 50
-		destination_url = "s3://${aws_s3_bucket.foo.bucket}/"
-		capture_options {
-	  		capture_mode = "Input"
-		}
-		capture_options {
-	  		capture_mode = "Output"
-		}
-		capture_content_type_header {
-	  		json_content_types {
-				content_type = "application/json"
-	  		}
-		}
+	
+    capture_options {
+      capture_mode = "Output"
+	}
+	
+    capture_content_type_header {
+      json_content_types = ["application/json"]
     }
+  }
 }
-`, bucket, rName)
+`, rName)
 }
