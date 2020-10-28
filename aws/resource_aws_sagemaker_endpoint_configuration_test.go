@@ -198,9 +198,9 @@ func TestAccAWSSagemakerEndpointConfiguration_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerEndpointConfiguration_DataCaptureConfig(t *testing.T) {
+func TestAccAWSSagemakerEndpointConfiguration_dataCaptureConfig(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_sagemaker_endpoint_configuration.foo"
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
