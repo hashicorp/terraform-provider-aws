@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
@@ -114,11 +115,13 @@ func resourceAwsSagemakerEndpointConfiguration() *schema.Resource {
 						},
 
 						"destination_s3_uri": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validateSagemakerDataCaptureDestinationUrl,
-						},
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+							ValidateFunc: validation.All(
+								validation.StringMatch(regexp.MustCompile(` ^(https|s3)://([^/])/?(.*)$`), ""),
+								validation.StringLenBetween(1, 512),
+							)},
 
 						"kms_key_id": {
 							Type:         schema.TypeString,
@@ -157,8 +160,11 @@ func resourceAwsSagemakerEndpointConfiguration() *schema.Resource {
 										MinItems: 1,
 										MaxItems: 10,
 										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validateSagemakerCsvContentType,
+											Type: schema.TypeString,
+											ValidateFunc: validation.All(
+												validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*\/[a-zA-Z0-9](-*[a-zA-Z0-9.])*`), ""),
+												validation.StringLenBetween(1, 256),
+											),
 										},
 										Optional: true,
 										ForceNew: true,
@@ -168,8 +174,11 @@ func resourceAwsSagemakerEndpointConfiguration() *schema.Resource {
 										MinItems: 1,
 										MaxItems: 10,
 										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validateSagemakerJsonContentType,
+											Type: schema.TypeString,
+											ValidateFunc: validation.All(
+												validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*\/[a-zA-Z0-9](-*[a-zA-Z0-9.])*`), ""),
+												validation.StringLenBetween(1, 256),
+											),
 										},
 										Optional: true,
 										ForceNew: true,
