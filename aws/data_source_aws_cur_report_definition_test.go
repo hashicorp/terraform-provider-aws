@@ -91,6 +91,8 @@ func testAccDataSourceAwsCurReportDefinitionConfig_basic(reportName string, buck
 		fmt.Sprintf(`
 data "aws_billing_service_account" "test" {}
 
+data "aws_partition" "current" {}
+
 resource "aws_s3_bucket" "test" {
   bucket        = "%[2]s"
   acl           = "private"
@@ -121,10 +123,10 @@ resource "aws_s3_bucket_policy" "test" {
       "Sid": "AllowCURPutObject",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::386209384616:root"
+        "AWS": "${data.aws_billing_service_account.test.arn}"
       },
       "Action": "s3:PutObject",
-      "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}/*"
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
     }
   ]
 }
@@ -157,6 +159,8 @@ func testAccDataSourceAwsCurReportDefinitionConfig_additional(reportName string,
 		fmt.Sprintf(`
 data "aws_billing_service_account" "test" {}
 
+data "aws_partition" "current" {}
+
 resource "aws_s3_bucket" "test" {
   bucket        = "%[2]s"
   acl           = "private"
@@ -187,10 +191,10 @@ resource "aws_s3_bucket_policy" "test" {
       "Sid": "AllowCURPutObject",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::386209384616:root"
+        "AWS": "${data.aws_billing_service_account.test.arn}"
       },
       "Action": "s3:PutObject",
-      "Resource": "arn:aws:s3:::${aws_s3_bucket.test.id}/*"
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*"
     }
   ]
 }
