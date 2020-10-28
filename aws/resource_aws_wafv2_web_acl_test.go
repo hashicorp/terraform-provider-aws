@@ -81,7 +81,7 @@ func TestAccAwsWafv2WebACL_basic(t *testing.T) {
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -122,7 +122,7 @@ func TestAccAwsWafv2WebACL_updateRule(t *testing.T) {
 	ruleName2 := fmt.Sprintf("%s-2", webACLName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -252,7 +252,7 @@ func TestAccAwsWafv2WebACL_UpdateRuleProperties(t *testing.T) {
 	ruleName2 := fmt.Sprintf("%s-2", webACLName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -456,7 +456,7 @@ func TestAccAwsWafv2WebACL_ChangeNameForceNew(t *testing.T) {
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -506,7 +506,7 @@ func TestAccAwsWafv2WebACL_Disappears(t *testing.T) {
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -528,7 +528,7 @@ func TestAccAwsWafv2WebACL_ManagedRuleGroupStatement(t *testing.T) {
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -592,7 +592,7 @@ func TestAccAwsWafv2WebACL_Minimal(t *testing.T) {
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -624,7 +624,7 @@ func TestAccAwsWafv2WebACL_RateBasedStatement(t *testing.T) {
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -694,7 +694,7 @@ func TestAccAwsWafv2WebACL_GeoMatchStatement(t *testing.T) {
 	countryCodes := fmt.Sprintf("%s, %q", countryCode, "CA")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -783,7 +783,7 @@ func TestAccAwsWafv2WebACL_GeoMatchStatement_ForwardedIPConfig(t *testing.T) {
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -847,7 +847,7 @@ func TestAccAwsWafv2WebACL_IPSetReferenceStatement(t *testing.T) {
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -892,7 +892,7 @@ func TestAccAwsWafv2WebACL_IPSetReferenceStatement_IPSetForwardedIPConfig(t *tes
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -995,7 +995,7 @@ func TestAccAwsWafv2WebACL_RateBasedStatement_ForwardedIPConfig(t *testing.T) {
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -1063,7 +1063,7 @@ func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -1127,7 +1127,7 @@ func TestAccAwsWafv2WebACL_Tags(t *testing.T) {
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -1176,7 +1176,7 @@ func TestAccAwsWafv2WebACL_MaxNestedRateBasedStatements(t *testing.T) {
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
@@ -1218,7 +1218,7 @@ func TestAccAwsWafv2WebACL_MaxNestedOperatorStatements(t *testing.T) {
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
