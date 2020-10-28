@@ -473,7 +473,6 @@ func flattenS3controlLifecycleRule(apiObject *s3control.LifecycleRule) map[strin
 		return nil
 	}
 
-
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AbortIncompleteMultipartUpload; v != nil {
