@@ -4,6 +4,7 @@ FEATURES
 
 * **New Resource:** `aws_glue_resource_policy` [GH-10361]
 * **New Resource:** `aws_s3control_bucket` [GH-15510]
+* **New Resource:** `aws_s3control_bucket_lifecycle_configuration` [GH-15604]
 * **New Resource:** `aws_s3control_bucket_policy` [GH-15575]
 * **New Resource:** `aws_s3outposts_endpoint` [GH-15585]
 
