@@ -18,7 +18,7 @@ func TestAccAWSOpsworksInstance_basic(t *testing.T) {
 	resourceName := "aws_opsworks_instance.tf-acc"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("opsworks", t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -67,7 +67,7 @@ func TestAccAWSOpsworksInstance_UpdateHostNameForceNew(t *testing.T) {
 	var before, after opsworks.Instance
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("opsworks", t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksInstanceDestroy,
 		Steps: []resource.TestStep{

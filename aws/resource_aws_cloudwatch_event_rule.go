@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -31,7 +30,7 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 		Update: resourceAwsCloudWatchEventRuleUpdate,
 		Delete: resourceAwsCloudWatchEventRuleDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsCloudWatchEventRuleImport,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -300,12 +299,7 @@ func buildPutRuleInputStruct(d *schema.ResourceData, name string) (*events.PutRu
 		input.RoleArn = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("schedule_expression"); ok {
-		scheduleExpression := v.(string)
-		if eventBusName == tfevents.DefaultEventBusName {
-			input.ScheduleExpression = aws.String(scheduleExpression)
-		} else {
-			return nil, errors.New("schedule_expression can only be set on the default event bus")
-		}
+		input.ScheduleExpression = aws.String(v.(string))
 	}
 
 	input.State = aws.String(getStringStateFromBoolean(d.Get("is_enabled").(bool)))
@@ -351,17 +345,4 @@ func validateEventPatternValue() schema.SchemaValidateFunc {
 		}
 		return
 	}
-}
-
-func resourceAwsCloudWatchEventRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	busName, ruleName, err := tfevents.RuleParseID(d.Id())
-	if err != nil {
-		return []*schema.ResourceData{}, err
-	}
-	if busName != tfevents.DefaultEventBusName {
-		d.Set("event_bus_name", busName)
-	}
-	d.Set("name", ruleName)
-
-	return []*schema.ResourceData{d}, nil
 }

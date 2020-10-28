@@ -777,22 +777,6 @@ resource "aws_example" "test" {
 }
 ```
 
-#### Please Note
-
-When adding a new provider to the codebase for the purposes of cross-account/cross-region testing, please ensure the provider name in the config matches an entry in the list of factories in `provider_test.go`
-
-```hcl
-# provider block, ensure name does not include periods '.'
-provider "awsnewalternate" {
-  region = "us-west-3"
-}
-```
-
-```go
-// provider_testo.go in init()
-var providerNames = []string{"aws", "awseast", "awswest", "awsalternate", /* ... */ "awsnewalternate"}
-```
-
 Searching for usage of `testAccMultipleRegionPreCheck` in the codebase will yield real world examples of this setup in action.
 
 ### Data Source Acceptance Testing

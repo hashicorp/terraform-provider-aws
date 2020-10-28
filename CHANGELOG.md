@@ -1,26 +1,47 @@
-## 3.12.0 (Unreleased)
+## 3.13.0 (Unreleased)
 
 FEATURES
 
-* **New Resource:** `aws_autoscalingplans_scaling_plan` [GH-8965]
-* **New Resource:** `aws_cloudwatch_event_bus` [GH-10256]
-* **New Resource:** `aws_kinesisanalyticsv2_application` [GH-11652]
-* **New Resource:** `aws_storagegateway_stored_iscsi_volume` [GH-12027]
+* **New Resource:** `aws_glue_resource_policy` [GH-10361]
+* **New Resource:** `aws_s3control_bucket` [GH-15510]
+* **New Resource:** `aws_s3control_bucket_lifecycle_configuration` [GH-15604]
+* **New Resource:** `aws_s3control_bucket_policy` [GH-15575]
+* **New Resource:** `aws_s3outposts_endpoint` [GH-15585]
 
 ENHANCEMENTS
 
-* resource/aws_cloudwatch_event_target: Add validation to `input_transformer.input_paths` map [GH-15669]
-* resource/aws_codeartifact_repository - support external connections [GH-15569]
-* resource/aws_fsx_lustre_file_system: Add `copy_tags_to_backups` support [GH-15687]
-* resource/aws_fsx_lustre_file_system: Increased maximum `automatic_backup_retention_days` from 35 to 90 [GH-15641]
-* resource/aws_fsx_windows_file_system: Increased maximum `automatic_backup_retention_days` from 35 to 90 [GH-15641]
-* resource/aws_glue_catalog_table: add validation checks for resource properties [GH-12523]
-* resource/aws_network_interface: Add `ipv6_addresses` and `ipv6_address_count` arguments [GH-12281]
+* resource/aws_cloudwatch_event_rule: Add `event_bus_name` [GH-15727]
+* resource/aws_s3_access_point: Support S3 on Outposts [GH-15621]
+* resource/aws_sagemaker_model: Add `container` configuration block `mode` argument [GH-15371]
+* resource/aws_sagemaker_notebook_instance: Add `url` and `network_interface_id` attributes [GH-15802]
+
+## 3.12.0 (October 22, 2020)
+
+FEATURES
+
+* **New Data Source:** `aws_rds_certificate` ([#15789](https://github.com/terraform-providers/terraform-provider-aws/issues/15789))
+* **New Resource:** `aws_autoscalingplans_scaling_plan` ([#8965](https://github.com/terraform-providers/terraform-provider-aws/issues/8965))
+* **New Resource:** `aws_cloudwatch_event_bus` ([#10256](https://github.com/terraform-providers/terraform-provider-aws/issues/10256))
+* **New Resource:** `aws_kinesisanalyticsv2_application` ([#11652](https://github.com/terraform-providers/terraform-provider-aws/issues/11652))
+* **New Resource:** `aws_storagegateway_stored_iscsi_volume` ([#12027](https://github.com/terraform-providers/terraform-provider-aws/issues/12027))
+
+ENHANCEMENTS
+
+* resource/aws_cloudwatch_event_target: Add validation to `input_transformer.input_paths` map ([#15669](https://github.com/terraform-providers/terraform-provider-aws/issues/15669))
+* resource/aws_codeartifact_repository - support external connections ([#15569](https://github.com/terraform-providers/terraform-provider-aws/issues/15569))
+* resource/aws_fsx_lustre_file_system: Add `copy_tags_to_backups` support ([#15687](https://github.com/terraform-providers/terraform-provider-aws/issues/15687))
+* resource/aws_fsx_lustre_file_system: Increased maximum `automatic_backup_retention_days` from 35 to 90 ([#15641](https://github.com/terraform-providers/terraform-provider-aws/issues/15641))
+* resource/aws_fsx_windows_file_system: Increased maximum `automatic_backup_retention_days` from 35 to 90 ([#15641](https://github.com/terraform-providers/terraform-provider-aws/issues/15641))
+* resource/aws_glue_catalog_table: add validation checks for resource properties ([#12523](https://github.com/terraform-providers/terraform-provider-aws/issues/12523))
+* resource/aws_network_interface: Add `ipv6_addresses` and `ipv6_address_count` arguments ([#12281](https://github.com/terraform-providers/terraform-provider-aws/issues/12281))
+* resource/aws_sagemaker_notebook_instance: `lifecycle_config_name` and `root_access`  are updateable. ([#15385](https://github.com/terraform-providers/terraform-provider-aws/issues/15385))
+* resource/aws_sagemaker_notebook_instance: plan time validation for `role_arn`, `instance_type`. ([#15385](https://github.com/terraform-providers/terraform-provider-aws/issues/15385))
 
 BUGFIXES
 
-* resource/aws_glue_table_catalog_table: Prevent errors on `unset` of `ser_de_info.name` [GH-15127]
-* resource/aws_glue_security_configuration: Don't send empty `kms_arn` if mode is `DISABLED` [GH-13618]
+* resource/aws_workspaces_workspace: Fix terminated state resolution ([#15705](https://github.com/terraform-providers/terraform-provider-aws/issues/15705))
+* resource/aws_glue_table_catalog_table: Prevent errors on `unset` of `ser_de_info.name` ([#15127](https://github.com/terraform-providers/terraform-provider-aws/issues/15127))
+* resource/aws_glue_security_configuration: Don't send empty `kms_arn` if mode is `DISABLED` ([#13618](https://github.com/terraform-providers/terraform-provider-aws/issues/13618))
 
 ## 3.11.0 (October 15, 2020)
 

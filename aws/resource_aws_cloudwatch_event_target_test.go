@@ -683,7 +683,7 @@ PATTERN
 
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[4]q
-}  
+}
 `, targetID, snsTopicName, ruleName, eventBusName)
 }
 
