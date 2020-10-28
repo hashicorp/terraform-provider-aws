@@ -2538,10 +2538,8 @@ func testAccAWSCloudFrontDistributionConfigViewerCertificateAcmCertificateArnBas
 	key := tlsRsaPrivateKeyPem(2048)
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, commonName)
 
-	return testAccUsEast1RegionProviderConfig() + fmt.Sprintf(`
+	return testAccCloudfrontRegionProviderConfig() + fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
-  provider = "awsus-east-1"
-
   certificate_body = "%[1]s"
   private_key      = "%[2]s"
 }
