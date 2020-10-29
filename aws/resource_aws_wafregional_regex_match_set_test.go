@@ -120,7 +120,7 @@ func testAccAWSWafRegionalRegexMatchSet_basic(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("waf-regional", t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -159,7 +159,7 @@ func testAccAWSWafRegionalRegexMatchSet_changePatterns(t *testing.T) {
 	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("waf-regional", t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -210,7 +210,7 @@ func testAccAWSWafRegionalRegexMatchSet_noPatterns(t *testing.T) {
 	matchSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("waf-regional", t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -238,7 +238,7 @@ func testAccAWSWafRegionalRegexMatchSet_disappears(t *testing.T) {
 	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("waf-regional", t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
