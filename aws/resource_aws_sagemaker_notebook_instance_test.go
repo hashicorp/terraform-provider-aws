@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -94,6 +95,7 @@ func TestAccAWSSagemakerNotebookInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_access", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "volume_size", "5"),
 					resource.TestCheckResourceAttr(resourceName, "default_code_repository", ""),
+					resource.TestCheckResourceAttr(resourceName, "additional_code_repositories.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
@@ -497,6 +499,56 @@ func TestAccAWSSagemakerNotebookInstance_default_code_repository(t *testing.T) {
 	})
 }
 
+func TestAccAWSSagemakerNotebookInstance_additional_code_repositories(t *testing.T) {
+	var notebook sagemaker.DescribeNotebookInstanceOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	var resourceName = "aws_sagemaker_notebook_instance.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigAdditionalCodeRepository1(rName, "https://github.com/terraform-providers/terraform-provider-aws.git"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "additional_code_repositories.#", "1"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "additional_code_repositories.*", "https://github.com/terraform-providers/terraform-provider-aws.git"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSagemakerNotebookInstanceBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "additional_code_repositories.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigAdditionalCodeRepository2(rName, "https://github.com/terraform-providers/terraform-provider-aws.git", "https://github.com/hashicorp/terraform.git"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "additional_code_repositories.#", "2"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "additional_code_repositories.*", "https://github.com/terraform-providers/terraform-provider-aws.git"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "additional_code_repositories.*", "https://github.com/hashicorp/terraform.git"),
+				),
+			},
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigAdditionalCodeRepository1(rName, "https://github.com/terraform-providers/terraform-provider-aws.git"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "additional_code_repositories.#", "1"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "additional_code_repositories.*", "https://github.com/terraform-providers/terraform-provider-aws.git"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAWSSagemakerNotebookInstanceBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
@@ -652,6 +704,28 @@ resource "aws_sagemaker_notebook_instance" "test" {
   default_code_repository = %[2]q
 }
 `, rName, defaultCodeRepository)
+}
+
+func testAccAWSSagemakerNotebookInstanceConfigAdditionalCodeRepository1(rName, repo1 string) string {
+	return testAccAWSSagemakerNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_notebook_instance" "test" {
+  name                         = %[1]q
+  role_arn                     = aws_iam_role.test.arn
+  instance_type                = "ml.t2.medium"
+  additional_code_repositories = ["%[2]s"]
+}
+`, rName, repo1)
+}
+
+func testAccAWSSagemakerNotebookInstanceConfigAdditionalCodeRepository2(rName, repo1, repo2 string) string {
+	return testAccAWSSagemakerNotebookInstanceBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_notebook_instance" "test" {
+  name                         = %[1]q
+  role_arn                     = aws_iam_role.test.arn
+  instance_type                = "ml.t2.medium"
+  additional_code_repositories = ["%[2]s", "%[3]s"]
+}
+`, rName, repo1, repo2)
 }
 
 func testAccAWSSagemakerNotebookInstanceKMSConfig(rName string) string {
