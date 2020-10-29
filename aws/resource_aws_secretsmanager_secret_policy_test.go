@@ -312,7 +312,7 @@ resource "aws_secretsmanager_secret" "test" {
 
 resource "aws_secretsmanager_secret_policy" "test" {
   secret_arn = aws_secretsmanager_secret.test.arn
-  
+
   policy = <<POLICY
 {
   "Version": "2012-10-17",
