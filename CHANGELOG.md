@@ -25,6 +25,7 @@ ENHANCEMENTS
 BUG FIXES
 
 * data-source/aws_kms_secrets: Prevent plan differences with the `id` attribute [GH-15725]
+* resource/aws_apigatewayv2_integration: Correctly handle update of AWS service integrations [GH-15894]
 * resource/aws_vpc_peering_connection_options: Only modify options that have changed [GH-12126]
 
 ## 3.12.0 (October 22, 2020)
