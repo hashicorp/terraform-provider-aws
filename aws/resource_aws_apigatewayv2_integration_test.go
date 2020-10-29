@@ -197,7 +197,6 @@ func TestAccAWSAPIGatewayV2Integration_LambdaWebSocket(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
-	callerIdentityDatasourceName := "data.aws_caller_identity.current"
 	lambdaResourceName := "aws_lambda_function.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -212,7 +211,7 @@ func TestAccAWSAPIGatewayV2Integration_LambdaWebSocket(t *testing.T) {
 					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
-					resource.TestCheckResourceAttrPair(resourceName, "credentials_arn", callerIdentityDatasourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test Lambda"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "POST"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", "${integration.response.body.errorMessage}"),
@@ -242,7 +241,6 @@ func TestAccAWSAPIGatewayV2Integration_LambdaHttp(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
-	callerIdentityDatasourceName := "data.aws_caller_identity.current"
 	lambdaResourceName := "aws_lambda_function.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -257,7 +255,7 @@ func TestAccAWSAPIGatewayV2Integration_LambdaHttp(t *testing.T) {
 					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "credentials_arn", callerIdentityDatasourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test Lambda"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", "POST"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
@@ -407,6 +405,7 @@ func TestAccAWSAPIGatewayV2Integration_AwsServiceIntegration(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
+	iamRoleResourceName := "aws_iam_role.test"
 	sqsQueue1ResourceName := "aws_sqs_queue.test.0"
 	sqsQueue2ResourceName := "aws_sqs_queue.test.1"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -422,6 +421,7 @@ func TestAccAWSAPIGatewayV2Integration_AwsServiceIntegration(t *testing.T) {
 					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "credentials_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test SQS send"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
@@ -446,6 +446,7 @@ func TestAccAWSAPIGatewayV2Integration_AwsServiceIntegration(t *testing.T) {
 					testAccCheckAWSAPIGatewayV2IntegrationExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "credentials_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test SQS send"),
 					resource.TestCheckResourceAttr(resourceName, "integration_method", ""),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_selection_expression", ""),
@@ -571,6 +572,60 @@ resource "aws_apigatewayv2_api" "test" {
 `, rName)
 }
 
+func testAccAWSAPIGatewayV2IntegrationConfig_lambdaBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": ["sts:AssumeRole"],
+    "Principal": {"Service": "lambda.amazonaws.com"}
+  }]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ],
+    "Resource": ["*"]
+  }]
+}
+EOF
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.test.arn
+  handler       = "index.handler"
+  runtime       = "nodejs10.x"
+
+  depends_on = [aws_iam_role_policy.test]
+}
+
+resource "aws_lambda_permission" "test" {
+  action        = "lambda:*"
+  function_name = aws_lambda_function.test.arn
+  principal     = "apigateway.amazonaws.com"
+}
+`, rName)
+}
+
 func testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkHttpBase(rName string) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2IntegrationConfig_apiHttp(rName),
@@ -683,59 +738,41 @@ resource "aws_apigatewayv2_integration" "test" {
 func testAccAWSAPIGatewayV2IntegrationConfig_lambdaWebSocket(rName string) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2IntegrationConfig_apiWebSocket(rName),
-		baseAccAWSLambdaConfig(rName, rName, rName),
-		fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "index.handler"
-  runtime       = "nodejs10.x"
-}
-
+		testAccAWSAPIGatewayV2IntegrationConfig_lambdaBase(rName),
+		`
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "AWS"
 
   connection_type           = "INTERNET"
   content_handling_strategy = "CONVERT_TO_TEXT"
-  credentials_arn           = data.aws_caller_identity.current.arn
   description               = "Test Lambda"
   integration_uri           = aws_lambda_function.test.invoke_arn
   passthrough_behavior      = "WHEN_NO_MATCH"
+
+  depends_on = [aws_lambda_permission.test]
 }
-`, rName))
+`)
 }
 
 func testAccAWSAPIGatewayV2IntegrationConfig_lambdaHttp(rName string) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2IntegrationConfig_apiHttp(rName),
-		baseAccAWSLambdaConfig(rName, rName, rName),
-		fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "index.handler"
-  runtime       = "nodejs10.x"
-}
-
+		testAccAWSAPIGatewayV2IntegrationConfig_lambdaBase(rName),
+		`
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "AWS_PROXY"
 
   connection_type = "INTERNET"
-  credentials_arn = data.aws_caller_identity.current.arn
   description     = "Test Lambda"
   integration_uri = aws_lambda_function.test.invoke_arn
 
   payload_format_version = "2.0"
+
+  depends_on = [aws_lambda_permission.test]
 }
-`, rName))
+`)
 }
 
 func testAccAWSAPIGatewayV2IntegrationConfig_httpProxy(rName string) string {
