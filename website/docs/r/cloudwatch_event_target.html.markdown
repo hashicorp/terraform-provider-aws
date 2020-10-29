@@ -1,5 +1,5 @@
 ---
-subcategory: "EventBridge (fka CloudWatch Events)"
+subcategory: "EventBridge (CloudWatch Events)"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_target"
 description: |-
