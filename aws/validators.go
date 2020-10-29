@@ -2111,7 +2111,7 @@ func validateAmazonSideAsn(v interface{}, k string) (ws []string, errors []error
 		return
 	}
 
-	// https://github.com/terraform-providers/terraform-provider-aws/issues/5263
+	// https://github.com/hashicorp/terraform-provider-aws/issues/5263
 	isLegacyAsn := func(a int64) bool {
 		return a == 7224 || a == 9059 || a == 10124 || a == 17493
 	}

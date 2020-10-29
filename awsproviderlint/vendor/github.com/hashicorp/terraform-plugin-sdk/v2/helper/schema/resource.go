@@ -719,7 +719,7 @@ func isReservedDataSourceFieldName(name string) bool {
 
 func isReservedResourceFieldName(name string, s *Schema) bool {
 	// Allow phasing out "id"
-	// See https://github.com/terraform-providers/terraform-provider-aws/pull/1626#issuecomment-328881415
+	// See https://github.com/hashicorp/terraform-provider-aws/pull/1626#issuecomment-328881415
 	if name == "id" && s.Deprecated != "" {
 		return false
 	}

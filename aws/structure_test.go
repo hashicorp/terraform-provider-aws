@@ -1628,7 +1628,7 @@ const testExampleXML_from_msdn_flawed = `
 // TestExpandRdsClusterScalingConfiguration_serverless removed in v3.0.0
 // as all engine_modes are treated equal when expanding scaling_configuration
 // and an override of min_capacity is no longer needed
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/11698
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11698
 
 func TestExpandRdsClusterScalingConfiguration_basic(t *testing.T) {
 	type testCase struct {

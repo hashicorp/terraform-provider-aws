@@ -2143,7 +2143,7 @@ resource "aws_lb" "lb_test" {
   }
 }
 
-# See https://github.com/terraform-providers/terraform-provider-aws/issues/2498
+# See https://github.com/hashicorp/terraform-provider-aws/issues/2498
 output "lb_name" {
   value = aws_lb.lb_test.name
 }
