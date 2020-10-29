@@ -432,7 +432,7 @@ func testAccCheckAWSVpcPeeringConnectionDestroy(s *terraform.State) error {
 		}
 
 		if pc.Status != nil {
-			if *pc.Status.Code == "deleted" || *pc.Status.Code == "rejected" {
+			if *pc.Status.Code == "deleted" || *pc.Status.Code == "rejected" || *pc.Status.Code == "failed" {
 				return nil
 			}
 			return fmt.Errorf("Found the VPC Peering Connection in an unexpected state: %s", pc)
@@ -520,6 +520,7 @@ func testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(n, block string, opt
 }
 
 func TestAccAWSVPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
+	var providers []*schema.Provider
 	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -528,10 +529,9 @@ func TestAccAWSVPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
 			testAccMultipleRegionsPreCheck(t)
 			testAccAlternateRegionPreCheck(t)
 		},
-		IDRefreshIgnore: []string{"auto_accept"},
-
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
+		IDRefreshIgnore:   []string{"auto_accept"},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVpcPeeringConfig_region_autoAccept(rName, true),
