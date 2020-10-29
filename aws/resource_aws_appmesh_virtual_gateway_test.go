@@ -94,7 +94,7 @@ func testAccAwsAppmeshVirtualGateway_basic(t *testing.T) {
 	vgName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appmesh", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -137,7 +137,7 @@ func testAccAwsAppmeshVirtualGateway_disappears(t *testing.T) {
 	vgName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appmesh", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -160,7 +160,7 @@ func testAccAwsAppmeshVirtualGateway_BackendDefaults(t *testing.T) {
 	vgName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appmesh", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -246,7 +246,7 @@ func testAccAwsAppmeshVirtualGateway_ListenerHealthChecks(t *testing.T) {
 	vgName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appmesh", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -325,7 +325,7 @@ func testAccAwsAppmeshVirtualGateway_Logging(t *testing.T) {
 	vgName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appmesh", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -395,7 +395,7 @@ func testAccAwsAppmeshVirtualGateway_Tags(t *testing.T) {
 	vgName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appmesh", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -444,7 +444,7 @@ func testAccAwsAppmeshVirtualGateway_TLS(t *testing.T) {
 	vgName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appmesh", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{

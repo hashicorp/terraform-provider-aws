@@ -108,7 +108,7 @@ func testAccAwsAppmeshGatewayRoute_basic(t *testing.T) {
 	grName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appmesh", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -154,7 +154,7 @@ func testAccAwsAppmeshGatewayRoute_disappears(t *testing.T) {
 	grName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appmesh", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -180,7 +180,7 @@ func testAccAwsAppmeshGatewayRoute_GrpcRoute(t *testing.T) {
 	grName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appmesh", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -252,7 +252,7 @@ func testAccAwsAppmeshGatewayRoute_HttpRoute(t *testing.T) {
 	grName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appmesh", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -324,7 +324,7 @@ func testAccAwsAppmeshGatewayRoute_Http2Route(t *testing.T) {
 	grName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appmesh", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
@@ -394,7 +394,7 @@ func testAccAwsAppmeshGatewayRoute_Tags(t *testing.T) {
 	grName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("appmesh", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshGatewayRouteDestroy,
 		Steps: []resource.TestStep{
