@@ -66,7 +66,7 @@ Valid values: `ERROR`, `INFO`, `OFF`. Defaults to `OFF`. Supported only for WebS
 * `throttling_burst_limit` - (Optional) The throttling burst limit for the route.
 * `throttling_rate_limit` - (Optional) The throttling rate limit for the route.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

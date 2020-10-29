@@ -118,7 +118,7 @@ The following arguments are supported:
 * `format` - (Required) The formatting and values recorded in the logs.
 For more information on configuring the log format rules visit the AWS [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html)
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

@@ -227,7 +227,7 @@ The `target_tracking_scaling_policy_configuration` `predefined_metric_specificat
 * `predefined_metric_type` - (Required) The metric type.
 * `resource_label` - (Optional) Reserved for future use.
 
-## Attribute Reference
+## Attributes Reference
 
 * `arn` - The ARN assigned by AWS to the scaling policy.
 * `name` - The scaling policy's name.

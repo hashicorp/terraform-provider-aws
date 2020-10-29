@@ -39,7 +39,7 @@ The following arguments are supported:
 * `transit_gateway_default_route_table_propagation` - (Optional) Boolean whether the VPC Attachment should propagate routes with the EC2 Transit Gateway propagation default route table. Default value: `true`.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway VPC Attachment.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

@@ -39,7 +39,7 @@ The following arguments are supported:
 * `type` - (Optional) The type of policy to create. Valid values are `AISERVICES_OPT_OUT_POLICY`, `BACKUP_POLICY`, `SERVICE_CONTROL_POLICY` (SCP), and `TAG_POLICY`. Defaults to `SERVICE_CONTROL_POLICY`.
 * `tags` - (Optional) Key-value map of resource tags.
 
-## Attribute Reference
+## Attributes Reference
 
 * `id` - The unique identifier (ID) of the policy.
 * `arn` - Amazon Resource Name (ARN) of the policy.

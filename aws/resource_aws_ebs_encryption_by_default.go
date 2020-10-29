@@ -35,6 +35,7 @@ func resourceAwsEbsEncryptionByDefaultCreate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error creating EBS encryption by default (%t): %s", enabled, err)
 	}
 
+	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
 	d.SetId(resource.UniqueId())
 
 	return resourceAwsEbsEncryptionByDefaultRead(d, meta)

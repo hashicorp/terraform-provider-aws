@@ -47,6 +47,7 @@ func resourceAwsIamUserGroupMembershipCreate(d *schema.ResourceData, meta interf
 		return err
 	}
 
+	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
 	d.SetId(resource.UniqueId())
 
 	return resourceAwsIamUserGroupMembershipRead(d, meta)
@@ -178,6 +179,8 @@ func resourceAwsIamUserGroupMembershipImport(d *schema.ResourceData, meta interf
 
 	d.Set("user", userName)
 	d.Set("groups", groupList)
+
+	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
 	d.SetId(resource.UniqueId())
 
 	return []*schema.ResourceData{d}, nil

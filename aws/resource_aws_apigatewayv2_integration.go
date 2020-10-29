@@ -262,6 +262,8 @@ func resourceAwsApiGatewayV2IntegrationUpdate(d *schema.ResourceData, meta inter
 	req := &apigatewayv2.UpdateIntegrationInput{
 		ApiId:         aws.String(d.Get("api_id").(string)),
 		IntegrationId: aws.String(d.Id()),
+		// Always specify the integration type.
+		IntegrationType: aws.String(d.Get("integration_type").(string)),
 	}
 	if d.HasChange("connection_id") {
 		req.ConnectionId = aws.String(d.Get("connection_id").(string))
@@ -281,6 +283,10 @@ func resourceAwsApiGatewayV2IntegrationUpdate(d *schema.ResourceData, meta inter
 	if d.HasChange("integration_method") {
 		req.IntegrationMethod = aws.String(d.Get("integration_method").(string))
 	}
+	// Always specify any integration subtype.
+	if v, ok := d.GetOk("integration_subtype"); ok {
+		req.IntegrationSubtype = aws.String(v.(string))
+	}
 	if d.HasChange("integration_uri") {
 		req.IntegrationUri = aws.String(d.Get("integration_uri").(string))
 	}
@@ -292,13 +298,18 @@ func resourceAwsApiGatewayV2IntegrationUpdate(d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("request_parameters") {
 		o, n := d.GetChange("request_parameters")
-		add, del := diffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
+		add, del, nop := diffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
 		// Parameters are removed by setting the associated value to "".
 		for k := range del {
 			del[k] = aws.String("")
 		}
 		variables := del
 		for k, v := range add {
+			variables[k] = v
+		}
+		// Also specify any request parameters that are unchanged as for AWS service integrations some parameters are always required:
+		// https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-aws-services-reference.html
+		for k, v := range nop {
 			variables[k] = v
 		}
 		req.RequestParameters = variables

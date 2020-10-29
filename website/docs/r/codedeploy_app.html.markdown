@@ -46,7 +46,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the application.
 * `compute_platform` - (Optional) The compute platform can either be `ECS`, `Lambda`, or `Server`. Default is `Server`.
 
-## Attribute Reference
+## Attributes Reference
 
 The following arguments are exported:
 
