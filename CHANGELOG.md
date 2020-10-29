@@ -79,6 +79,7 @@ BUG FIXES
 * data-source/aws_vpc_peering_connections: Prevent plan differences with the `id` attribute [GH-15896]
 * data-source/aws_vpcs: Prevent plan differences with the `id` attribute [GH-15896]
 * resource/aws_apigatewayv2_integration: Correctly handle update of AWS service integrations [GH-15894]
+* resource/aws_lambda_function: Update published `version` and `qualified_arn` on config changes [GH-15121]
 * resource/aws_rds_global_cluster: Prevent recreation when using encrypted `source_db_cluster_identifier` without `storage_encrypted` [GH-15916]
 * resource/aws_vpc_peering_connection_options: Only modify options that have changed [GH-12126]
 
