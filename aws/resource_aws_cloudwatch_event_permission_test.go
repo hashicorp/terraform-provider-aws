@@ -307,26 +307,6 @@ func TestAccAWSCloudWatchEventPermission_Disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudWatchEventPermissionDisappears(resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No resource ID is set")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
-		input := events.RemovePermissionInput{
-			StatementId: aws.String(rs.Primary.ID),
-		}
-		_, err := conn.RemovePermission(&input)
-		return err
-	}
-}
-
 func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
@@ -413,17 +393,6 @@ func testAccCheckCloudWatchEventPermissionDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccAWSCloudWatchEventPermissionDefaultBusNameImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return tfevents.DefaultEventBusName + tfevents.PermissionIDSeparator + rs.Primary.Attributes["statement_id"], nil
-	}
 }
 
 func testAccCheckAwsCloudWatchEventPermissionResourceConfigBasic(principal, statementID string) string {
