@@ -166,6 +166,8 @@ func TestAccAWSEcsService_basicImport(t *testing.T) {
 				ImportStateId:     importInput,
 				ImportState:       true,
 				ImportStateVerify: true,
+				// wait_for_steady_state is not read from API
+				ImportStateVerifyIgnore: []string{"wait_for_steady_state"},
 			},
 			// Test non-existent resource import
 			{
@@ -452,7 +454,8 @@ func TestAccAWSEcsService_withDeploymentController_Type_CodeDeploy(t *testing.T)
 				ImportState:       true,
 				ImportStateVerify: true,
 				// Resource currently defaults to importing task_definition as family:revision
-				ImportStateVerifyIgnore: []string{"task_definition"},
+				// and wait_for_steady_state is not read from API
+				ImportStateVerifyIgnore: []string{"task_definition", "wait_for_steady_state"},
 			},
 		},
 	})
@@ -481,6 +484,8 @@ func TestAccAWSEcsService_withDeploymentController_Type_External(t *testing.T) {
 				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
 				ImportState:       true,
 				ImportStateVerify: true,
+				// wait_for_steady_state is not read from API
+				ImportStateVerifyIgnore: []string{"wait_for_steady_state"},
 			},
 		},
 	})
@@ -919,6 +924,9 @@ func TestAccAWSEcsService_withLaunchTypeFargateAndWaitForSteadyState(t *testing.
 				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
 				ImportState:       true,
 				ImportStateVerify: true,
+				// Resource currently defaults to importing task_definition as family:revision
+				// and wait_for_steady_state is not read from API
+				ImportStateVerifyIgnore: []string{"task_definition", "wait_for_steady_state"},
 			},
 		},
 	})
@@ -1147,7 +1155,8 @@ func TestAccAWSEcsService_Tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// Resource currently defaults to importing task_definition as family:revision
-				ImportStateVerifyIgnore: []string{"task_definition"},
+				// and wait_for_steady_state is not read from API
+				ImportStateVerifyIgnore: []string{"task_definition", "wait_for_steady_state"},
 			},
 			{
 				Config: testAccAWSEcsServiceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
