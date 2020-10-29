@@ -307,6 +307,10 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/emr" = [
       "aws_emr_",
     ],
+    "service/eventbridge" = [
+      # EventBridge is rebranded CloudWatch Events
+      "aws_cloudwatch_event_",
+    ],
     "service/firehose" = [
       "aws_kinesis_firehose_",
     ],
