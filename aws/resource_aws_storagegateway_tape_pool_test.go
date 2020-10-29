@@ -185,7 +185,7 @@ func testAccCheckAWSStorageGatewayTapePoolDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if output == nil || len(output.PoolInfos) == 0 || output.PoolInfos[0] == nil || aws.StringValue(output.PoolInfos[0].PoolARN) != rs.Primary.ID {
+		if len(output.PoolInfos) != 0 {
 			return fmt.Errorf("Storage Gateway Tape Pool %q not found", rs.Primary.ID)
 		}
 	}
