@@ -2,11 +2,11 @@
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
-We select items for inclusion in the roadmap from the Top 10 Community Issues, [core services](docs/CORE_SERVICES.md), and internal priorities. Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist, or the original contributors are not available we will create the resources and implementation ourselves.
+We select items for inclusion in the roadmap from the Top 10 Community Issues, [core services](docs/CORE_SERVICES.md), and internal priorities. Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist or the original contributors, are not available we will create the resources and implementation ourselves.
 
 Each weekly release will include necessary tasks that lead to the completion of the stated goals as well as community pull requests, enhancements, and features that are not highlighted in the roadmap. To view all the items we've prioritized for this quarter, please see the [Roadmap milestone](https://github.com/terraform-providers/terraform-provider-aws/milestone/138).
 
-This roadmap does not describe all the work that will be included within this timeframe, we will include other work as events occur but it does describe our focus.
+This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur .
 
 From [August through October](docs/roadmaps/2020_August_to_October.md), we committed to adding support for EventBridge, ImageBuilder , LakeFormation and Serverless Application Repository as new service offerings. We were able to deliver EventBridge within that time frame. Unfortunately for a number of reasons we weren’t able to release ImageBuilder, LakeFormation and Serverless Application Repository. That said, they are in progress and on track for release in early November.
 
