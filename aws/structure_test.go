@@ -22,8 +22,8 @@ import (
 
 func TestDiffStringMaps(t *testing.T) {
 	cases := []struct {
-		Old, New       map[string]interface{}
-		Create, Remove map[string]interface{}
+		Old, New                  map[string]interface{}
+		Create, Remove, Unchanged map[string]interface{}
 	}{
 		// Add
 		{
@@ -38,6 +38,9 @@ func TestDiffStringMaps(t *testing.T) {
 				"bar": "baz",
 			},
 			Remove: map[string]interface{}{},
+			Unchanged: map[string]interface{}{
+				"foo": "bar",
+			},
 		},
 
 		// Modify
@@ -54,6 +57,7 @@ func TestDiffStringMaps(t *testing.T) {
 			Remove: map[string]interface{}{
 				"foo": "bar",
 			},
+			Unchanged: map[string]interface{}{},
 		},
 
 		// Overlap
@@ -72,6 +76,9 @@ func TestDiffStringMaps(t *testing.T) {
 			Remove: map[string]interface{}{
 				"foo": "bar",
 			},
+			Unchanged: map[string]interface{}{
+				"hello": "world",
+			},
 		},
 
 		// Remove
@@ -87,18 +94,25 @@ func TestDiffStringMaps(t *testing.T) {
 			Remove: map[string]interface{}{
 				"bar": "baz",
 			},
+			Unchanged: map[string]interface{}{
+				"foo": "bar",
+			},
 		},
 	}
 
 	for i, tc := range cases {
-		c, r := diffStringMaps(tc.Old, tc.New)
+		c, r, u := diffStringMaps(tc.Old, tc.New)
 		cm := pointersMapToStringList(c)
 		rm := pointersMapToStringList(r)
+		um := pointersMapToStringList(u)
 		if !reflect.DeepEqual(cm, tc.Create) {
 			t.Fatalf("%d: bad create: %#v", i, cm)
 		}
 		if !reflect.DeepEqual(rm, tc.Remove) {
 			t.Fatalf("%d: bad remove: %#v", i, rm)
+		}
+		if !reflect.DeepEqual(um, tc.Unchanged) {
+			t.Fatalf("%d: bad unchanged: %#v", i, rm)
 		}
 	}
 }
