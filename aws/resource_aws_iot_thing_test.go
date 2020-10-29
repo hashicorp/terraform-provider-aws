@@ -177,7 +177,7 @@ resource "aws_iot_thing" "test" {
     Answer = "%s"
   }
 
-  thing_type_name = "${aws_iot_thing_type.test.name}"
+  thing_type_name = aws_iot_thing_type.test.name
 }
 
 resource "aws_iot_thing_type" "test" {

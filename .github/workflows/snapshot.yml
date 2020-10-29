@@ -1,6 +1,6 @@
 name: Snapshot
 
-on: 
+on:
   schedule:
     - cron: '15 5 * * *'
   workflow_dispatch:

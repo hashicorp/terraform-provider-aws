@@ -106,7 +106,7 @@ for additional read replica contraints.
 * `deletion_protection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
 * `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the instance in.
 * `domain_iam_role_name` - (Optional, but required if domain is provided) The name of the IAM role to be used when making API calls to the Directory Service.
-* `enabled_cloudwatch_logs_exports` - (Optional) List of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. Valid values (depending on `engine`). MySQL and MariaDB: `audit`, `error`, `general`, `slowquery`. PostgreSQL: `postgresql`, `upgrade`. MSSQL: `agent` , `error`. Oracle: `alert`, `audit`, `listener`, `trace`.
+* `enabled_cloudwatch_logs_exports` - (Optional) Set of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. Valid values (depending on `engine`). MySQL and MariaDB: `audit`, `error`, `general`, `slowquery`. PostgreSQL: `postgresql`, `upgrade`. MSSQL: `agent` , `error`. Oracle: `alert`, `audit`, `listener`, `trace`.
 * `engine` - (Required unless a `snapshot_identifier` or `replicate_source_db`
 is provided) The database engine to use.  For supported values, see the Engine parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 Note that for Amazon Aurora instances the engine must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine'.
@@ -209,7 +209,7 @@ standalone database.
 
 ### S3 Import Options
 
-Full details on the core parameters and impacts are in the API Docs: [RestoreDBInstanceFromS3](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromS3.html).  Sample 
+Full details on the core parameters and impacts are in the API Docs: [RestoreDBInstanceFromS3](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromS3.html).  Sample
 
 ```hcl
 resource "aws_db_instance" "db" {
@@ -239,7 +239,7 @@ This will not recreate the resource if the S3 object changes in some way.  It's 
 - `create` - (Default `40 minutes`) Used for Creating Instances, Replicas, and
 restoring from Snapshots.
 - `update` - (Default `80 minutes`) Used for Database modifications.
-- `delete` - (Default `40 minutes`) Used for destroying databases. This includes
+- `delete` - (Default `60 minutes`) Used for destroying databases. This includes
 the time required to take snapshots.
 
 [1]:

@@ -191,9 +191,7 @@ resource "aws_lightsail_key_pair" "lightsail_key_pair_test" {
 
   pgp_key = <<EOF
 %s
-
 EOF
-
 }
 `, lightsailName, key)
 }

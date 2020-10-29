@@ -109,7 +109,6 @@ resource "aws_iam_role" "codepipeline_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "codepipeline_policy" {

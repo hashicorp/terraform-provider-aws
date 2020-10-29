@@ -191,7 +191,7 @@ func TestAccAWSIAMRole_basicWithDescription(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "description", "This 1s a D3scr!pti0n with weird content: &@90ë“‘{«¡Çø}"),
+					resource.TestCheckResourceAttr(resourceName, "description", "This 1s a D3scr!pti0n with weird content: &@90ë\"'{«¡Çø}"),
 				),
 			},
 			{
@@ -204,7 +204,7 @@ func TestAccAWSIAMRole_basicWithDescription(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "description", "This 1s an Upd@ted D3scr!pti0n with weird content: &90ë“‘{«¡Çø}"),
+					resource.TestCheckResourceAttr(resourceName, "description", "This 1s an Upd@ted D3scr!pti0n with weird content: &90ë\"'{«¡Çø}"),
 				),
 			},
 			{
@@ -659,7 +659,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 `, rName, maxSessionDuration)
 }
@@ -717,7 +716,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 `, rName)
 }
@@ -726,7 +724,7 @@ func testAccAWSIAMRoleConfigWithDescription(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name        = "test-role-%s"
-  description = "This 1s a D3scr!pti0n with weird content: &@90ë“‘{«¡Çø}"
+  description = "This 1s a D3scr!pti0n with weird content: &@90ë\"'{«¡Çø}"
   path        = "/"
 
   assume_role_policy = <<EOF
@@ -747,7 +745,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 `, rName)
 }
@@ -756,7 +753,7 @@ func testAccAWSIAMRoleConfigWithUpdatedDescription(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name        = "test-role-%s"
-  description = "This 1s an Upd@ted D3scr!pti0n with weird content: &90ë“‘{«¡Çø}"
+  description = "This 1s an Upd@ted D3scr!pti0n with weird content: &90ë\"'{«¡Çø}"
   path        = "/"
 
   assume_role_policy = <<EOF
@@ -777,7 +774,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 `, rName)
 }
@@ -806,7 +802,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 `, rName)
 }
@@ -834,7 +829,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "role_update_test" {
@@ -856,7 +850,6 @@ resource "aws_iam_role_policy" "role_update_test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_instance_profile" "role_update_test" {
@@ -890,7 +883,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "role_update_test" {
@@ -912,7 +904,6 @@ resource "aws_iam_role_policy" "role_update_test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_instance_profile" "role_update_test" {
@@ -943,7 +934,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
-
 }
 `, rName)
 }
@@ -968,7 +958,6 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy" "test" {
@@ -989,7 +978,6 @@ resource "aws_iam_policy" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -1016,7 +1004,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 `, rName, rName, rName)
 }

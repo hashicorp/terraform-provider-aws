@@ -45,11 +45,12 @@ func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
 			"health_check_path": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "/",
+				Computed: true,
 			},
 			"health_check_port": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"health_check_protocol": {
 				Type:     schema.TypeString,
@@ -86,6 +87,11 @@ func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
 						"weight": {
 							Type:     schema.TypeInt,
 							Optional: true,
+						},
+						"client_ip_preservation_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -213,6 +219,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupExpandEndpointConfigurations(confi
 
 		m.EndpointId = aws.String(configuration["endpoint_id"].(string))
 		m.Weight = aws.Int64(int64(configuration["weight"].(int)))
+		m.ClientIPPreservationEnabled = aws.Bool(configuration["client_ip_preservation_enabled"].(bool))
 
 		out[i] = &m
 	}
@@ -229,6 +236,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupFlattenEndpointDescriptions(config
 
 		m["endpoint_id"] = aws.StringValue(configuration.EndpointId)
 		m["weight"] = aws.Int64Value(configuration.Weight)
+		m["client_ip_preservation_enabled"] = aws.BoolValue(configuration.ClientIPPreservationEnabled)
 
 		out[i] = m
 	}

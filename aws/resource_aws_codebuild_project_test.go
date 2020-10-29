@@ -2281,7 +2281,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -2325,7 +2324,6 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 POLICY
-
 }
 `, rName)
 }
@@ -3424,7 +3422,8 @@ resource "aws_codebuild_project" "test" {
 
   tags = {
     tag1 = "tag1value"
-    %s   = "%s"
+
+    %s = "%s"
   }
 }
 `, rName, tagKey, tagValue)

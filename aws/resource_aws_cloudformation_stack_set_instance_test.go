@@ -557,7 +557,6 @@ Outputs:
   TestVpcID:
     Value: !Ref TestVpc
 TEMPLATE
-
 }
 `, rName)
 }

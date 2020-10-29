@@ -219,7 +219,6 @@ resource "aws_cloudwatch_dashboard" "test" {
   dashboard_body = <<EOF
   %s
 EOF
-
 }
 `, rInt, basicWidget)
 }
@@ -232,7 +231,6 @@ resource "aws_cloudwatch_dashboard" "test" {
   dashboard_body = <<EOF
   %s
 EOF
-
 }
 `, rInt, updatedWidget)
 }

@@ -311,7 +311,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy" "policy_for_role" {
@@ -333,7 +332,6 @@ resource "aws_iam_policy" "policy_for_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {

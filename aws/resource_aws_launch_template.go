@@ -139,16 +139,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 										Computed: true,
 									},
 									"volume_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											ec2.VolumeTypeStandard,
-											ec2.VolumeTypeGp2,
-											ec2.VolumeTypeIo1,
-											ec2.VolumeTypeSc1,
-											ec2.VolumeTypeSt1,
-										}, false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
 									},
 								},
 							},
@@ -567,6 +561,8 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{
 								ec2.ResourceTypeInstance,
 								ec2.ResourceTypeVolume,
+								ec2.ResourceTypeSpotInstancesRequest,
+								ec2.ResourceTypeElasticGpu,
 							}, false),
 						},
 						"tags": tagsSchema(),
@@ -648,7 +644,7 @@ func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) e
 		TagSpecifications:  ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeLaunchTemplate),
 	}
 
-	if v, ok := d.GetOk("description"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("description"); ok {
 		launchTemplateOpts.VersionDescription = aws.String(v.(string))
 	}
 

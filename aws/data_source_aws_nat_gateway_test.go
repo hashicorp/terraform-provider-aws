@@ -42,9 +42,9 @@ func TestAccDataSourceAwsNatGateway_basic(t *testing.T) {
 }
 
 func testAccDataSourceAwsNatGatewayConfig(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "172.%d.0.0/16"
+  cidr_block = "172.%[1]d.0.0/16"
 
   tags = {
     Name = "terraform-testacc-nat-gw-data-source"
@@ -53,8 +53,8 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
-  cidr_block        = "172.%d.123.0/24"
-  availability_zone = "us-west-2a"
+  cidr_block        = "172.%[1]d.123.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-nat-gw-data-source"
@@ -71,7 +71,7 @@ resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "terraform-testacc-nat-gateway-data-source-%d"
+    Name = "terraform-testacc-nat-gateway-data-source-%[1]d"
   }
 }
 
@@ -80,7 +80,7 @@ resource "aws_nat_gateway" "test" {
   allocation_id = aws_eip.test.id
 
   tags = {
-    Name     = "terraform-testacc-nat-gw-data-source-%d"
+    Name     = "terraform-testacc-nat-gw-data-source-%[1]d"
     OtherTag = "some-value"
   }
 
@@ -100,5 +100,5 @@ data "aws_nat_gateway" "test_by_tags" {
     Name = aws_nat_gateway.test.tags["Name"]
   }
 }
-`, rInt, rInt, rInt, rInt)
+`, rInt))
 }

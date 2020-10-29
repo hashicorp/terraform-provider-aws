@@ -152,21 +152,23 @@ func resourceAwsMqConfigurationRead(d *schema.ResourceData, meta interface{}) er
 func resourceAwsMqConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).mqconn
 
-	rawData := d.Get("data").(string)
-	data := base64.StdEncoding.EncodeToString([]byte(rawData))
+	if d.HasChanges("data", "description") {
+		rawData := d.Get("data").(string)
+		data := base64.StdEncoding.EncodeToString([]byte(rawData))
 
-	input := mq.UpdateConfigurationRequest{
-		ConfigurationId: aws.String(d.Id()),
-		Data:            aws.String(data),
-	}
-	if v, ok := d.GetOk("description"); ok {
-		input.Description = aws.String(v.(string))
-	}
+		input := mq.UpdateConfigurationRequest{
+			ConfigurationId: aws.String(d.Id()),
+			Data:            aws.String(data),
+		}
+		if v, ok := d.GetOk("description"); ok {
+			input.Description = aws.String(v.(string))
+		}
 
-	log.Printf("[INFO] Updating MQ Configuration %s: %s", d.Id(), input)
-	_, err := conn.UpdateConfiguration(&input)
-	if err != nil {
-		return err
+		log.Printf("[INFO] Updating MQ Configuration %s: %s", d.Id(), input)
+		_, err := conn.UpdateConfiguration(&input)
+		if err != nil {
+			return err
+		}
 	}
 
 	if d.HasChange("tags") {

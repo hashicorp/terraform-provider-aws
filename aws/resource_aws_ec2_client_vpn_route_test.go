@@ -18,7 +18,7 @@ func testAccAwsEc2ClientVpnRoute_basic(t *testing.T) {
 
 	resourceName := "aws_ec2_client_vpn_route.test"
 	endpointResourceName := "aws_ec2_client_vpn_endpoint.test"
-	subnetResourceName := "aws_subnet.test"
+	subnetResourceName := "aws_subnet.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
@@ -52,7 +52,7 @@ func testAccAwsEc2ClientVpnRoute_description(t *testing.T) {
 
 	resourceName := "aws_ec2_client_vpn_route.test"
 	endpointResourceName := "aws_ec2_client_vpn_endpoint.test"
-	subnetResourceName := "aws_subnet.test"
+	subnetResourceName := "aws_subnet.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
@@ -172,12 +172,12 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
-	type                       = "certificate-authentication"
-	root_certificate_chain_arn = aws_acm_certificate.test.arn
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
   }
 
   connection_log_options {
-	enabled = false
+    enabled = false
   }
 }
 `, rName))
@@ -195,7 +195,7 @@ resource "aws_ec2_client_vpn_route" "test" {
   description            = "test client VPN route"
 
   depends_on = [
-	aws_ec2_client_vpn_network_association.test,
+    aws_ec2_client_vpn_network_association.test,
   ]
 }
 
@@ -210,12 +210,12 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
-	type                       = "certificate-authentication"
-	root_certificate_chain_arn = aws_acm_certificate.test.arn
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
   }
 
   connection_log_options {
-	enabled = false
+    enabled = false
   }
 }
 `, rName))

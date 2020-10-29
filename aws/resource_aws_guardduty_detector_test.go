@@ -15,8 +15,9 @@ import (
 
 func init() {
 	resource.AddTestSweepers("aws_guardduty_detector", &resource.Sweeper{
-		Name: "aws_guardduty_detector",
-		F:    testSweepGuarddutyDetectors,
+		Name:         "aws_guardduty_detector",
+		F:            testSweepGuarddutyDetectors,
+		Dependencies: []string{"aws_guardduty_publishing_destination"},
 	})
 }
 

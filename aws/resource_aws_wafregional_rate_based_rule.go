@@ -52,7 +52,7 @@ func resourceAwsWafRegionalRateBasedRule() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateWafPredicatesType(),
+							ValidateFunc: validation.StringInSlice(wafregional.PredicateType_Values(), false),
 						},
 					},
 				},

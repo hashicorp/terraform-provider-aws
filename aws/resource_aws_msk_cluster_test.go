@@ -802,7 +802,6 @@ resource "aws_msk_configuration" "test" {
   server_properties = <<PROPERTIES
 log.cleaner.delete.retention.ms = 86400000
 PROPERTIES
-
 }
 
 resource "aws_msk_cluster" "test" {
@@ -834,7 +833,6 @@ resource "aws_msk_configuration" "test" {
   server_properties = <<PROPERTIES
 log.cleaner.delete.retention.ms = 86400001
 PROPERTIES
-
 }
 
 resource "aws_msk_cluster" "test" {
@@ -1048,7 +1046,6 @@ resource "aws_iam_role" "firehose_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {

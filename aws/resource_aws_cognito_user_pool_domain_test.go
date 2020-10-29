@@ -151,6 +151,28 @@ func TestAccAWSCognitoUserPoolDomain_custom(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPoolDomain_disappears(t *testing.T) {
+	domainName := fmt.Sprintf("tf-acc-test-domain-%d", acctest.RandInt())
+	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	resourceName := "aws_cognito_user_pool_domain.main"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolDomainConfig_basic(domainName, poolName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolDomainExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCognitoUserPoolDomain(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSCognitoUserPoolDomainExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -185,7 +207,7 @@ func testAccCheckAWSCognitoUserPoolDomainDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if isAWSErr(err, "ResourceNotFoundException", "") {
+			if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return err

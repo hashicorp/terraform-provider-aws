@@ -35,22 +35,33 @@ func TestAccAWSSNSTopicPolicy_basic(t *testing.T) {
 
 const testAccAWSSNSTopicConfig_withPolicy = `
 resource "aws_sns_topic" "test" {
-    name = "tf-acc-test-topic-with-policy"
+  name = "tf-acc-test-topic-with-policy"
 }
 
 resource "aws_sns_topic_policy" "custom" {
-	arn = "${aws_sns_topic.test.arn}"
-	policy = <<POLICY
+  arn = aws_sns_topic.test.arn
+
+  policy = <<POLICY
 {
-   "Version":"2012-10-17",
-   "Id": "default",
-   "Statement":[{
-   	"Sid":"default",
-   	"Effect":"Allow",
-   	"Principal":{"AWS":"*"},
-   	"Action":["SNS:GetTopicAttributes","SNS:SetTopicAttributes","SNS:AddPermission","SNS:RemovePermission","SNS:DeleteTopic"],
-   	"Resource":"${aws_sns_topic.test.arn}"
-  }]
+  "Version": "2012-10-17",
+  "Id": "default",
+  "Statement": [
+    {
+      "Sid": "default",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": [
+        "SNS:GetTopicAttributes",
+        "SNS:SetTopicAttributes",
+        "SNS:AddPermission",
+        "SNS:RemovePermission",
+        "SNS:DeleteTopic"
+      ],
+      "Resource": "${aws_sns_topic.test.arn}"
+    }
+  ]
 }
 POLICY
 }

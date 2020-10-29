@@ -1385,8 +1385,8 @@ resource "aws_launch_template" "test2" {
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${%s.id}"
-      version            = "${%s.latest_version}"
+      launch_template_id = %s.id
+      version            = %s.latest_version
     }
   }
 
@@ -1425,8 +1425,8 @@ resource "aws_launch_template" "test2" {
 resource "aws_ec2_fleet" "test" {
   launch_template_config {
     launch_template_specification {
-      launch_template_name = "${%s.name}"
-      version              = "${%s.latest_version}"
+      launch_template_name = %s.name
+      version              = %s.latest_version
     }
   }
 
@@ -1491,7 +1491,7 @@ resource "aws_ec2_fleet" "test" {
     }
 
     override {
-      availability_zone = "${data.aws_availability_zones.available.names[%d]}"
+      availability_zone = data.aws_availability_zones.available.names[%d]
     }
   }
 
@@ -1615,7 +1615,7 @@ resource "aws_subnet" "test" {
   count = 2
 
   cidr_block = "10.1.${count.index}.0/24"
-  vpc_id     = "${aws_vpc.test.id}"
+  vpc_id     = aws_vpc.test.id
 
   tags = {
     Name = var.TestAccNameTag
@@ -1630,7 +1630,7 @@ resource "aws_ec2_fleet" "test" {
     }
 
     override {
-      subnet_id = "${aws_subnet.test.*.id[%d]}"
+      subnet_id = aws_subnet.test.*.id[%d]
     }
   }
 

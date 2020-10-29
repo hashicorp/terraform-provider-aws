@@ -184,7 +184,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_instance_profile" "test" {
@@ -225,7 +224,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_instance_profile" "test" {

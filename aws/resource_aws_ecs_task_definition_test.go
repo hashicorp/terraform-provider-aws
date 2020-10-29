@@ -831,7 +831,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
-
 }
 `, rName, rName, proxyType, containerName, ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs, containerName)
 }
@@ -995,7 +994,7 @@ func testAccCheckAWSTaskDefinitionDockerVolumeConfigurationAutoprovisionNil(def 
 }
 
 func testAccAWSEcsTaskDefinition_constraint(tdName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = "%s"
 
@@ -1046,10 +1045,10 @@ TASK_DEFINITION
 
   placement_constraints {
     type       = "memberOf"
-    expression = "attribute:ecs.availability-zone in [us-west-2a, us-west-2b]"
+    expression = "attribute:ecs.availability-zone in [${data.aws_availability_zones.available.names[0]}, ${data.aws_availability_zones.available.names[1]}]"
   }
 }
-`, tdName)
+`, tdName))
 }
 
 func testAccAWSEcsTaskDefinition(tdName string) string {
@@ -1317,7 +1316,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy" "test" {
@@ -1343,7 +1341,6 @@ resource "aws_iam_policy" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -1675,8 +1672,9 @@ resource "aws_iam_role" "test" {
 	]
 }
 EOF
-
 }
+
+data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "test" {
   name = %[2]q
@@ -1692,12 +1690,11 @@ resource "aws_iam_role_policy" "test" {
 				"s3:GetBucketLocation",
 				"s3:ListAllMyBuckets"
 			],
-			"Resource": "arn:aws:s3:::*"
+			"Resource": "arn:${data.aws_partition.current.partition}:s3:::*"
 		}
 	]
 }
 EOF
-
 }
 
 resource "aws_ecs_task_definition" "test" {
@@ -1746,8 +1743,9 @@ resource "aws_iam_role" "test" {
  ]
 }
 EOF
-
 }
+
+data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "test" {
   name = %[2]q
@@ -1763,13 +1761,12 @@ resource "aws_iam_role_policy" "test" {
 			 "s3:GetBucketLocation",
 			 "s3:ListAllMyBuckets"
 		 ],
-		 "Resource": "arn:aws:s3:::*"
+		 "Resource": "arn:${data.aws_partition.current.partition}:s3:::*"
 	 }
  ]
 }
  
 EOF
-
 }
 
 resource "aws_ecs_task_definition" "test" {
@@ -1820,8 +1817,9 @@ resource "aws_iam_role" "test" {
  ]
 }
 EOF
-
 }
+
+data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "test" {
   name = %[2]q
@@ -1837,13 +1835,12 @@ resource "aws_iam_role_policy" "test" {
 			 "s3:GetBucketLocation",
 			 "s3:ListAllMyBuckets"
 		 ],
-		 "Resource": "arn:aws:s3:::*"
+		 "Resource": "arn:${data.aws_partition.current.partition}:s3:::*"
 	 }
  ]
 }
  
 EOF
-
 }
 
 resource "aws_ecs_task_definition" "test" {
@@ -1894,8 +1891,9 @@ resource "aws_iam_role" "test" {
  ]
 }
 EOF
-
 }
+
+data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "test" {
   name = %[2]q
@@ -1911,13 +1909,12 @@ resource "aws_iam_role_policy" "test" {
 			 "s3:GetBucketLocation",
 			 "s3:ListAllMyBuckets"
 		 ],
-		 "Resource": "arn:aws:s3:::*"
+		 "Resource": "arn:${data.aws_partition.current.partition}:s3:::*"
 	 }
  ]
 }
  
 EOF
-
 }
 
 resource "aws_ecs_task_definition" "test" {

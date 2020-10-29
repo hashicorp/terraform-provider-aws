@@ -224,10 +224,10 @@ func testAccAWSAPIGatewayV2DeploymentImportStateIdFunc(resourceName string) reso
 func testAccAWSAPIGatewayV2DeploymentConfig_basic(rName, description string) string {
 	return testAccAWSAPIGatewayV2RouteConfig_target(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_deployment" "test" {
-  api_id      = "${aws_apigatewayv2_api.test.id}"
+  api_id      = aws_apigatewayv2_api.test.id
   description = %[1]q
 
-  depends_on  = [aws_apigatewayv2_route.test]
+  depends_on = [aws_apigatewayv2_route.test]
 }
 `, description)
 }
@@ -241,7 +241,7 @@ resource "aws_apigatewayv2_api" "test" {
 }
 
 resource "aws_apigatewayv2_integration" "test" {
-  api_id           = "${aws_apigatewayv2_api.test.id}"
+  api_id           = aws_apigatewayv2_api.test.id
   integration_type = "MOCK"
 }
 
@@ -253,7 +253,7 @@ resource "aws_apigatewayv2_route" "test" {
 }
 
 resource "aws_apigatewayv2_deployment" "test" {
-  api_id      = aws_apigatewayv2_api.test.id
+  api_id = aws_apigatewayv2_api.test.id
 
   triggers = {
     redeployment = sha1(join(",", list(

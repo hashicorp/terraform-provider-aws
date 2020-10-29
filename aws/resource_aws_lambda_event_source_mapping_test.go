@@ -631,7 +631,7 @@ func testAccCheckAWSLambdaEventSourceMappingIsBeingDisabled(conf *lambda.EventSo
 				}
 
 				return resource.NonRetryableError(
-					fmt.Errorf("Error updating Lambda Event Source Mapping: %s", err))
+					fmt.Errorf("Error updating Lambda Event Source Mapping: %w", err))
 			}
 
 			return nil
@@ -797,7 +797,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -833,7 +832,6 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_kinesis_stream" "test" {
@@ -868,7 +866,7 @@ func testAccAWSLambdaEventSourceMappingConfigKinesisBatchWindow(rName string, ba
 	return testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size                         = 100
-  maximum_batching_window_in_seconds = %v
+  maximum_batching_window_in_seconds = %d
   enabled                            = true
   event_source_arn                   = aws_kinesis_stream.test.arn
   function_name                      = aws_lambda_function.test.arn
@@ -881,7 +879,7 @@ func testAccAWSLambdaEventSourceMappingConfigKinesisParallelizationFactor(rName 
 	return testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size             = 100
-  parallelization_factor = %v
+  parallelization_factor = %d
   enabled                = true
   event_source_arn       = aws_kinesis_stream.test.arn
   function_name          = aws_lambda_function.test.arn
@@ -894,7 +892,7 @@ func testAccAWSLambdaEventSourceMappingConfigKinesisMaximumRetryAttempts(rName s
 	return testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size             = 100
-  maximum_retry_attempts = %v
+  maximum_retry_attempts = %d
   enabled                = true
   event_source_arn       = aws_kinesis_stream.test.arn
   function_name          = aws_lambda_function.test.arn
@@ -920,7 +918,7 @@ func testAccAWSLambdaEventSourceMappingConfigKinesisMaximumRecordAgeInSeconds(rN
 	return testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size                    = 100
-  maximum_record_age_in_seconds = %v
+  maximum_record_age_in_seconds = %d
   enabled                       = true
   event_source_arn              = aws_kinesis_stream.test.arn
   function_name                 = aws_lambda_function.test.arn
@@ -934,6 +932,7 @@ func testAccAWSLambdaEventSourceMappingConfigKinesisDestinationConfig(rName stri
 resource "aws_sqs_queue" "sqs_queue_test" {
   name = "%s"
 }
+
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = 100
   enabled           = true
@@ -971,7 +970,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy" "policy_for_role" {
@@ -1002,7 +1000,6 @@ resource "aws_iam_policy" "policy_for_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
@@ -1064,7 +1061,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy" "policy_for_role" {
@@ -1095,7 +1091,6 @@ resource "aws_iam_policy" "policy_for_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
@@ -1156,7 +1151,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy" "policy_for_role" {
@@ -1187,7 +1181,6 @@ resource "aws_iam_policy" "policy_for_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
@@ -1249,7 +1242,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy" "policy_for_role" {
@@ -1271,7 +1263,6 @@ resource "aws_iam_policy" "policy_for_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
@@ -1331,7 +1322,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy" "policy_for_role" {
@@ -1353,7 +1343,6 @@ resource "aws_iam_policy" "policy_for_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
@@ -1412,7 +1401,6 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy" "policy_for_role" {
@@ -1434,7 +1422,6 @@ resource "aws_iam_policy" "policy_for_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {

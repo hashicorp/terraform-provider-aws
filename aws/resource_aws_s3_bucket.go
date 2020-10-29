@@ -2260,7 +2260,8 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 		// we explicitly pass a default ExpiredObjectDeleteMarker value to be able to create
 		// the rule while keeping the policy unaffected if the conditions are not met.
 		if rule.Expiration == nil && rule.NoncurrentVersionExpiration == nil &&
-			rule.Transitions == nil && rule.NoncurrentVersionTransitions == nil {
+			rule.Transitions == nil && rule.NoncurrentVersionTransitions == nil &&
+			rule.AbortIncompleteMultipartUpload == nil {
 			rule.Expiration = &s3.LifecycleExpiration{ExpiredObjectDeleteMarker: aws.Bool(false)}
 		}
 

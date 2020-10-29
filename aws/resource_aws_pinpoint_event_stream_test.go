@@ -104,7 +104,6 @@ resource "aws_iam_role" "test_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "test_role_policy" {
@@ -126,7 +125,6 @@ resource "aws_iam_role_policy" "test_role_policy" {
   }
 }
 EOF
-
 }
 `, rName)
 }

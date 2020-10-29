@@ -623,7 +623,7 @@ resource "aws_athena_workgroup" "test" {
 
 func testAccAthenaWorkGroupConfigConfigurationResultConfigurationOutputLocation(rName string, bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test"{
+resource "aws_s3_bucket" "test" {
   bucket        = %[2]q
   force_destroy = true
 }
@@ -642,14 +642,14 @@ resource "aws_athena_workgroup" "test" {
 
 func testAccAthenaWorkGroupConfigConfigurationResultConfigurationOutputLocationForceDestroy(rName string, bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test"{
+resource "aws_s3_bucket" "test" {
   bucket        = %[2]q
   force_destroy = true
 }
 
 resource "aws_athena_workgroup" "test" {
   name = %[1]q
-  
+
   force_destroy = true
 
   configuration {
@@ -691,7 +691,7 @@ resource "aws_athena_workgroup" "test" {
     result_configuration {
       encryption_configuration {
         encryption_option = %[2]q
-        kms_key_arn       = "${aws_kms_key.test.arn}"
+        kms_key_arn       = aws_kms_key.test.arn
       }
     }
   }
@@ -739,6 +739,7 @@ resource "aws_athena_workgroup" "test" {
   name          = %[1]q
   force_destroy = true
 }
+
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -746,7 +747,7 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_athena_database" "test" {
   name          = %[2]q
-  bucket        = "${aws_s3_bucket.test.bucket}"
+  bucket        = aws_s3_bucket.test.bucket
   force_destroy = true
 }
 `, rName, dbName)

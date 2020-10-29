@@ -14,14 +14,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-var eksLogTypes = []string{
-	eks.LogTypeApi,
-	eks.LogTypeAudit,
-	eks.LogTypeAuthenticator,
-	eks.LogTypeControllerManager,
-	eks.LogTypeScheduler,
-}
-
 func resourceAwsEksCluster() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsEksClusterCreate,
@@ -202,7 +194,7 @@ func resourceAwsEksCluster() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(eksLogTypes, true),
+					ValidateFunc: validation.StringInSlice(eks.LogType_Values(), true),
 				},
 				Set: schema.HashString,
 			},
@@ -226,7 +218,7 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 		input.Tags = keyvaluetags.New(v).IgnoreAws().EksTags()
 	}
 
-	if v, ok := d.GetOk("version"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("version"); ok {
 		input.Version = aws.String(v.(string))
 	}
 
@@ -558,7 +550,7 @@ func expandEksVpcConfigUpdateRequest(l []interface{}) *eks.VpcConfigRequest {
 
 func expandEksLoggingTypes(vEnabledLogTypes *schema.Set) *eks.Logging {
 	vEksLogTypes := []interface{}{}
-	for _, eksLogType := range eksLogTypes {
+	for _, eksLogType := range eks.LogType_Values() {
 		vEksLogTypes = append(vEksLogTypes, eksLogType)
 	}
 	vAllLogTypes := schema.NewSet(schema.HashString, vEksLogTypes)

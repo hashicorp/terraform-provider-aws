@@ -79,7 +79,7 @@ func TestAccAWSElasticTranscoderPreset_AudioCodecOptions_empty(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"audio_codec_options.#"}, // Due to incorrect schema (should be nested under audio)
+				ImportStateVerifyIgnore: []string{"audio_codec_options"}, // Due to incorrect schema (should be nested under audio)
 			},
 		},
 	})

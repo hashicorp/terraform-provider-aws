@@ -397,17 +397,23 @@ func cleanZoneID(ID string) string {
 
 // trimTrailingPeriod is used to remove the trailing period
 // of "name" or "domain name" attributes often returned from
-// the Route53 API or provided as user input
+// the Route53 API or provided as user input.
+// The single dot (".") domain name is returned as-is.
 func trimTrailingPeriod(v interface{}) string {
 	var str string
 	switch value := v.(type) {
 	case *string:
-		str = *value
+		str = aws.StringValue(value)
 	case string:
 		str = value
 	default:
 		return ""
 	}
+
+	if str == "." {
+		return str
+	}
+
 	return strings.TrimSuffix(str, ".")
 }
 

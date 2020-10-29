@@ -214,19 +214,25 @@ func route53GetZoneAssociation(conn *route53.Route53, zoneID, vpcID, vpcRegion s
 		VPCRegion: aws.String(vpcRegion),
 	}
 
-	output, err := conn.ListHostedZonesByVPC(input)
+	for {
+		output, err := conn.ListHostedZonesByVPC(input)
 
-	if err != nil {
-		return nil, err
-	}
+		if err != nil {
+			return nil, err
+		}
 
-	var associatedHostedZoneSummary *route53.HostedZoneSummary
-	for _, hostedZoneSummary := range output.HostedZoneSummaries {
-		if zoneID == aws.StringValue(hostedZoneSummary.HostedZoneId) {
-			associatedHostedZoneSummary = hostedZoneSummary
+		var associatedHostedZoneSummary *route53.HostedZoneSummary
+		for _, hostedZoneSummary := range output.HostedZoneSummaries {
+			if zoneID == aws.StringValue(hostedZoneSummary.HostedZoneId) {
+				associatedHostedZoneSummary = hostedZoneSummary
+				return associatedHostedZoneSummary, nil
+			}
+		}
+		if output.NextToken == nil {
 			break
 		}
+		input.NextToken = output.NextToken
 	}
 
-	return associatedHostedZoneSummary, nil
+	return nil, nil
 }

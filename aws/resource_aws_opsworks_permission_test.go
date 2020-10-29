@@ -16,7 +16,7 @@ func TestAccAWSOpsworksPermission_basic(t *testing.T) {
 	sName := fmt.Sprintf("tf-ops-perm-%d", acctest.RandInt())
 	var opsperm opsworks.Permission
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("opsworks", t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksPermissionDestroy,
 		Steps: []resource.TestStep{
@@ -99,7 +99,7 @@ func TestAccAWSOpsworksPermission_Self(t *testing.T) {
 	resourceName := "aws_opsworks_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("opsworks", t) },
 		Providers:    testAccProviders,
 		CheckDestroy: nil, // Cannot delete own OpsWorks Permission
 		Steps: []resource.TestStep{
@@ -263,7 +263,6 @@ resource "aws_iam_role" "service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role_policy" "service" {
@@ -289,7 +288,6 @@ resource "aws_iam_role_policy" "service" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_role" "instance" {
@@ -310,7 +308,6 @@ resource "aws_iam_role" "instance" {
   ]
 }
 EOT
-
 }
 
 resource "aws_iam_instance_profile" "test" {

@@ -245,7 +245,7 @@ func TestAccAWSFlowLog_LogDestinationType_S3_Invalid(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFlowLogConfig_LogDestinationType_S3_Invalid(rName),
-				ExpectError: regexp.MustCompile(`Access Denied for LogDestination`),
+				ExpectError: regexp.MustCompile(`(Access Denied for LogDestination|does not exist)`),
 			},
 		},
 	})
@@ -414,6 +414,8 @@ resource "aws_vpc" "test" {
 
 func testAccFlowLogConfig_LogDestinationType_CloudWatchLogs(rName string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -425,7 +427,7 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "ec2.amazonaws.com"
+          "ec2.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": [
@@ -435,7 +437,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -470,8 +471,10 @@ resource "aws_flow_log" "test" {
 
 func testAccFlowLogConfig_LogDestinationType_S3_Invalid(rName string) string {
 	return testAccFlowLogConfigBase(rName) + `
+data "aws_partition" "current" {}
+
 resource "aws_flow_log" "test" {
-  log_destination      = "arn:aws:s3:::does-not-exist"
+  log_destination      = "arn:${data.aws_partition.current.partition}:s3:::does-not-exist"
   log_destination_type = "s3"
   traffic_type         = "ALL"
   vpc_id               = aws_vpc.test.id
@@ -490,6 +493,8 @@ resource "aws_subnet" "test" {
   }
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -501,7 +506,7 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "ec2.amazonaws.com"
+          "ec2.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": [
@@ -511,7 +516,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -529,6 +533,8 @@ resource "aws_flow_log" "test" {
 
 func testAccFlowLogConfig_VPCID(rName string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -540,7 +546,7 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "ec2.amazonaws.com"
+          "ec2.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": [
@@ -550,7 +556,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -568,6 +573,8 @@ resource "aws_flow_log" "test" {
 
 func testAccFlowLogConfig_LogFormat(rName string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -579,7 +586,7 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "ec2.amazonaws.com"
+          "ec2.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": [
@@ -589,12 +596,12 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
+
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -612,6 +619,8 @@ resource "aws_flow_log" "test" {
 
 func testAccFlowLogConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -623,7 +632,7 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "ec2.amazonaws.com"
+          "ec2.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": [
@@ -633,7 +642,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -655,6 +663,8 @@ resource "aws_flow_log" "test" {
 
 func testAccFlowLogConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -666,7 +676,7 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "ec2.amazonaws.com"
+          "ec2.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": [
@@ -676,7 +686,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -699,6 +708,8 @@ resource "aws_flow_log" "test" {
 
 func testAccFlowLogConfig_MaxAggregationInterval(rName string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -710,7 +721,7 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "ec2.amazonaws.com"
+          "ec2.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": [
@@ -720,7 +731,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cloudwatch_log_group" "test" {

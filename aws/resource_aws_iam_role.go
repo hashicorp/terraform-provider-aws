@@ -74,9 +74,13 @@ func resourceAwsIamRole() *schema.Resource {
 			},
 
 			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateIamRoleDescription,
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(0, 1000),
+					validation.StringDoesNotMatch(regexp.MustCompile("[“‘]"), "cannot contain specially formatted single or double quotes: [“‘]"),
+					validation.StringMatch(regexp.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`),
+				),
 			},
 
 			"assume_role_policy": {

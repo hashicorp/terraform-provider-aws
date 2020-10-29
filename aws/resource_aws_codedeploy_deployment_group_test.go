@@ -289,7 +289,7 @@ func TestAccAWSCodeDeployDeploymentGroup_triggerConfiguration_multiple(t *testin
 						"InstanceFailure",
 					}),
 					testAccCheckCodeDeployDeploymentGroupTriggerTargetArn(&group, "test-trigger-2",
-						regexp.MustCompile("^arn:aws:sns:[^:]+:[0-9]{12}:tf-acc-test-2-"+rName+"$")),
+						regexp.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:tf-acc-test-2-%s$", testAccGetPartition(), rName))),
 				),
 			},
 			{
@@ -310,7 +310,7 @@ func TestAccAWSCodeDeployDeploymentGroup_triggerConfiguration_multiple(t *testin
 						"InstanceFailure",
 					}),
 					testAccCheckCodeDeployDeploymentGroupTriggerTargetArn(&group, "test-trigger-2",
-						regexp.MustCompile("^arn:aws:sns:[^:]+:[0-9]{12}:tf-acc-test-3-"+rName+"$")),
+						regexp.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:tf-acc-test-3-%s$", testAccGetPartition(), rName))),
 				),
 			},
 			{
@@ -1626,7 +1626,7 @@ func TestAWSCodeDeployDeploymentGroup_buildTriggerConfigs(t *testing.T) {
 				"DeploymentFailure",
 			}),
 			"trigger_name":       "test-trigger",
-			"trigger_target_arn": "arn:aws:sns:us-west-2:123456789012:test-topic",
+			"trigger_target_arn": "arn:aws:sns:us-west-2:123456789012:test-topic", // lintignore:AWSAT003,AWSAT005 // unit test
 		},
 	}
 
@@ -1636,7 +1636,7 @@ func TestAWSCodeDeployDeploymentGroup_buildTriggerConfigs(t *testing.T) {
 				aws.String("DeploymentFailure"),
 			},
 			TriggerName:      aws.String("test-trigger"),
-			TriggerTargetArn: aws.String("arn:aws:sns:us-west-2:123456789012:test-topic"),
+			TriggerTargetArn: aws.String("arn:aws:sns:us-west-2:123456789012:test-topic"), // lintignore:AWSAT003,AWSAT005 // unit test
 		},
 	}
 
@@ -1656,7 +1656,7 @@ func TestAWSCodeDeployDeploymentGroup_triggerConfigsToMap(t *testing.T) {
 				aws.String("InstanceFailure"),
 			},
 			TriggerName:      aws.String("test-trigger-2"),
-			TriggerTargetArn: aws.String("arn:aws:sns:us-west-2:123456789012:test-topic-2"),
+			TriggerTargetArn: aws.String("arn:aws:sns:us-west-2:123456789012:test-topic-2"), // lintignore:AWSAT003,AWSAT005 // unit test
 		},
 	}
 
@@ -1666,7 +1666,7 @@ func TestAWSCodeDeployDeploymentGroup_triggerConfigsToMap(t *testing.T) {
 			"InstanceFailure",
 		}),
 		"trigger_name":       "test-trigger-2",
-		"trigger_target_arn": "arn:aws:sns:us-west-2:123456789012:test-topic-2",
+		"trigger_target_arn": "arn:aws:sns:us-west-2:123456789012:test-topic-2", // lintignore:AWSAT003,AWSAT005 // unit test
 	}
 
 	actual := triggerConfigsToMap(input)[0]
@@ -2297,8 +2297,9 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
-
 }
+
+data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
   name = "tf-acc-test-%[1]s"
@@ -2312,7 +2313,7 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "codedeploy.amazonaws.com"
+          "codedeploy.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": "sts:AssumeRole"
@@ -2320,7 +2321,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 `, rName, tagGroupOrFilter)
 }
@@ -2388,8 +2388,9 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
-
 }
+
+data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test_updated" {
   name = "tf-acc-test-updated-%[1]s"
@@ -2403,7 +2404,7 @@ resource "aws_iam_role" "test_updated" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "codedeploy.amazonaws.com"
+          "codedeploy.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": "sts:AssumeRole"
@@ -2411,7 +2412,6 @@ resource "aws_iam_role" "test_updated" {
   ]
 }
 EOF
-
 }
 `, rName, tagGroupOrFilter)
 }
@@ -2449,8 +2449,9 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
-
 }
+
+data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
   name = "tf-acc-test-%[1]s"
@@ -2464,7 +2465,7 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "codedeploy.amazonaws.com"
+          "codedeploy.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": "sts:AssumeRole"
@@ -2472,7 +2473,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_codedeploy_deployment_group" "test" {
@@ -2524,8 +2524,9 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
-
 }
+
+data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
   name = "tf-acc-test-%[1]s"
@@ -2538,14 +2539,13 @@ resource "aws_iam_role" "test" {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "Service": "codedeploy.amazonaws.com"
+        "Service": "codedeploy.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
   ]
 }
 EOF
-
 }
 
 resource "aws_sns_topic" "test" {
@@ -3339,7 +3339,7 @@ resource "aws_lb_target_group" "green" {
 resource "aws_lb" "test" {
   internal = true
   name     = %[1]q
-  subnets  = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnets  = aws_subnet.test[*].id
 }
 
 resource "aws_lb_listener" "test" {
@@ -3382,7 +3382,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "test" {
@@ -3405,7 +3404,7 @@ resource "aws_ecs_service" "test" {
   network_configuration {
     assign_public_ip = true
     security_groups  = [aws_security_group.test.id]
-    subnets          = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+    subnets          = aws_subnet.test[*].id
   }
 }
 
@@ -3413,6 +3412,8 @@ resource "aws_codedeploy_app" "test" {
   compute_platform = "ECS"
   name             = %[1]q
 }
+
+data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -3427,14 +3428,13 @@ resource "aws_iam_role" "test" {
       "Action": "sts:AssumeRole",
       "Principal": {
         "Service": [
-          "codedeploy.amazonaws.com"
+          "codedeploy.${data.aws_partition.current.dns_suffix}"
         ]
       }
     }
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -3468,7 +3468,6 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 POLICY
-
 }
 `, rName)
 }

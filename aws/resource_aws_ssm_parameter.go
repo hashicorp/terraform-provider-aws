@@ -5,14 +5,21 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+)
+
+const (
+	// Maximum amount of time to wait for asynchronous validation on SSM Parameter creation.
+	ssmParameterCreationValidationTimeout = 2 * time.Minute
 )
 
 func resourceAwsSsmParameter() *schema.Resource {
@@ -108,13 +115,29 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] Reading SSM Parameter: %s", d.Id())
 
-	resp, err := ssmconn.GetParameter(&ssm.GetParameterInput{
+	input := &ssm.GetParameterInput{
 		Name:           aws.String(d.Id()),
 		WithDecryption: aws.Bool(true),
+	}
+
+	var resp *ssm.GetParameterOutput
+	err := resource.Retry(ssmParameterCreationValidationTimeout, func() *resource.RetryError {
+		var err error
+		resp, err = ssmconn.GetParameter(input)
+
+		if isAWSErr(err, ssm.ErrCodeParameterNotFound, "") && d.IsNewResource() && d.Get("data_type").(string) == "aws:ec2:image" {
+			return resource.RetryableError(fmt.Errorf("error reading SSM Parameter (%s) after creation: this can indicate that the provided parameter value could not be validated by SSM", d.Id()))
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
 	})
 
-	if isAWSErr(err, ssm.ErrCodeParameterNotFound, "") && d.IsNewResource() && d.Get("data_type").(string) == "aws:ec2:image" {
-		return fmt.Errorf("error reading SSM Parameter (%s) after creation: this can indicate that the provided parameter value could not be validated by SSM", d.Id())
+	if isResourceTimeoutError(err) {
+		resp, err = ssmconn.GetParameter(input)
 	}
 
 	if isAWSErr(err, ssm.ErrCodeParameterNotFound, "") && !d.IsNewResource() {

@@ -426,11 +426,11 @@ resource "aws_ecs_cluster" "test" {
 func testAccAWSEcsClusterCapacityProviderConfig(rName string) string {
 	return testAccAWSEcsCapacityProviderConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
-	name = %q
+  name = %q
 
-	auto_scaling_group_provider {
-		auto_scaling_group_arn = aws_autoscaling_group.test.arn
-	}
+  auto_scaling_group_provider {
+    auto_scaling_group_arn = aws_autoscaling_group.test.arn
+  }
 }
 `, rName)
 }
@@ -438,15 +438,15 @@ resource "aws_ecs_capacity_provider" "test" {
 func testAccAWSEcsClusterSingleCapacityProvider(rName, providerName string) string {
 	return testAccAWSEcsClusterCapacityProviderConfig(providerName) + fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	capacity_providers = [aws_ecs_capacity_provider.test.name]
+  capacity_providers = [aws_ecs_capacity_provider.test.name]
 
-	default_capacity_provider_strategy {
-		base = 1
-		capacity_provider = aws_ecs_capacity_provider.test.name
-		weight = 1
-	}
+  default_capacity_provider_strategy {
+    base              = 1
+    capacity_provider = aws_ecs_capacity_provider.test.name
+    weight            = 1
+  }
 }
 `, rName)
 }

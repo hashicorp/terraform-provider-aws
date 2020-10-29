@@ -14,7 +14,7 @@
         - [Randomized Naming](#randomized-naming)
         - [Other Recommended Variables](#other-recommended-variables)
         - [Basic Acceptance Tests](#basic-acceptance-tests)
-        - [Service Availability PreCheck](#service-availability-precheck)
+        - [PreChecks](#prechecks)
         - [Disappears Acceptance Tests](#disappears-acceptance-tests)
         - [Per Attribute Acceptance Tests](#per-attribute-acceptance-tests)
         - [Cross-Account Acceptance Tests](#cross-account-acceptance-tests)
@@ -502,11 +502,34 @@ resource "aws_example_thing" "test" {
 }
 ```
 
-#### Service Availability PreCheck
+#### PreChecks
 
-When new AWS services are added to the provider, a simple read-only request (e.g. list all X service things) should be implemented in an acceptance test PreCheck function that helps the acceptance testing determine if the service exists for the particular environment it runs in. Note: This was not common practice in the past so many existing tests will not include this step.
+Acceptance test cases have a PreCheck. The PreCheck ensures that the testing environment meets certain preconditions. If the environment does not meet the preconditions, Go skips the test. Skipping a test avoids reporting a failure and wasting resources where the test cannot succeed.
 
-For example:
+Here is an example of the default PreCheck:
+
+```go
+func TestAccAwsExampleThing_basic(t *testing.T) {
+  rName := acctest.RandomWithPrefix("tf-acc-test")
+  resourceName := "aws_example_thing.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck:     func() { testAccPreCheck(t) },
+    // ... additional checks follow ...
+  })
+}
+```
+
+Extend the default PreCheck by adding calls to functions in the anonymous PreCheck function. The functions can be existing functions in the provider or custom functions you add for new capabilities.
+
+These are some of the existing functions:
+
+* `testAccPartitionHasServicePreCheck(serviceId string, t *testing.T)` checks whether the current partition lists the service as part of its offerings. Note: AWS may not add new or public preview services to the service list immediately. This function will return a false positive in that case.
+* `testAccOrganizationsAccountPreCheck(t *testing.T)` checks whether the current account can perform AWS Organizations tests.
+* `testAccAlternateAccountPreCheck(t *testing.T)` checks whether the environment is set up for tests across accounts.
+* `testAccMultipleRegionPreCheck(t *testing.T, regions int)` checks whether the environment is set up for tests across regions.
+
+Below is an example of adding a custom PreCheck function. For a new or preview service that AWS does not include in the partition service list yet, you can verify the existence of the service with a simple read-only request (e.g., list all X service things). (For acceptance tests of established services, use `testAccPartitionHasServicePreCheck()` instead.)
 
 ```go
 func TestAccAwsExampleThing_basic(t *testing.T) {
@@ -636,8 +659,8 @@ When testing requires AWS infrastructure in a second AWS account, the below chan
 
 - In the `PreCheck` function, include `testAccAlternateAccountPreCheck(t)` to ensure a standardized set of information is required for cross-account testing credentials
 - Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
-- Switch usage of `Providers: testAccProviders` to `ProviderFactories: testAccProviderFactories(&providers)`
-- Add `testAccAlternateAccountProviderConfig()` to the test configuration and use `provider = "awsalternate"` for cross-account resources. The resource that is the focus of the acceptance test should _not_ use the alternate provider identification to simplify the testing setup.
+- Switch usage of `Providers: testAccProviders` to `ProviderFactories: testAccProviderFactoriesAlternate(&providers)`
+- Add `testAccAlternateAccountProviderConfig()` to the test configuration and use `provider = awsalternate` for cross-account resources. The resource that is the focus of the acceptance test should _not_ use the alternate provider identification to simplify the testing setup.
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
 An example acceptance test implementation can be seen below:
@@ -652,7 +675,7 @@ func TestAccAwsExample_basic(t *testing.T) {
       testAccPreCheck(t)
       testAccAlternateAccountPreCheck(t)
     },
-    ProviderFactories: testAccProviderFactories(&providers),
+    ProviderFactories: testAccProviderFactoriesAlternate(&providers),
     CheckDestroy:      testAccCheckAwsExampleDestroy,
     Steps: []resource.TestStep{
       {
@@ -677,7 +700,7 @@ func testAccAwsExampleConfig() string {
 # Cross account resources should be handled by the cross account provider.
 # The standardized provider block to use is awsalternate as seen below.
 resource "aws_cross_account_example" "test" {
-  provider = "awsalternate"
+  provider = awsalternate
 
   # ... configuration ...
 }
@@ -699,8 +722,8 @@ When testing requires AWS infrastructure in a second or third AWS region, the be
 
 - In the `PreCheck` function, include `testAccMultipleRegionPreCheck(t, ###)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `testAccAlternateAccountPreCheck(t)`
 - Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
-- Switch usage of `Providers: testAccProviders` to `ProviderFactories: testAccProviderFactories(&providers)`
-- Add `testAccMultipleRegionProviderConfig(###)` to the test configuration and use `provider = "awsalternate"` (and/or `provider = "awsthird"`) for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the alternative providers to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` instead
+- Switch usage of `Providers: testAccProviders` to `ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 2)` (where the last parameter is number of regions)
+- Add `testAccMultipleRegionProviderConfig(###)` to the test configuration and use `provider = awsalternate` (and potentially `provider = awsthird`) for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the alternative providers to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` instead
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
 An example acceptance test implementation can be seen below:
@@ -715,7 +738,7 @@ func TestAccAwsExample_basic(t *testing.T) {
       testAccPreCheck(t)
       testAccMultipleRegionPreCheck(t, 2)
     },
-    ProviderFactories: testAccProviderFactories(&providers),
+    ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 2),
     CheckDestroy:      testAccCheckAwsExampleDestroy,
     Steps: []resource.TestStep{
       {
@@ -740,7 +763,7 @@ func testAccAwsExampleConfig() string {
 # Cross region resources should be handled by the cross region provider.
 # The standardized provider is awsalternate as seen below.
 resource "aws_cross_region_example" "test" {
-  provider = "awsalternate"
+  provider = awsalternate
 
   # ... configuration ...
 }
@@ -752,22 +775,6 @@ resource "aws_example" "test" {
 }
 `)
 }
-```
-
-#### Please Note
-
-When adding a new provider to the codebase for the purposes of cross-account/cross-region testing, please ensure the provider name in the config matches an entry in the list of factories in `provider_test.go`
-
-```hcl
-# provider block, ensure name does not include periods '.'
-provider "awsnewalternate" {
-  region = "us-west-3"
-}
-```
-
-```go
-// provider_testo.go in init()
-var providerNames = []string{"aws", "awseast", "awswest", "awsalternate", /* ... */ "awsnewalternate"}
 ```
 
 Searching for usage of `testAccMultipleRegionPreCheck` in the codebase will yield real world examples of this setup in action.

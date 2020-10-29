@@ -778,7 +778,7 @@ func TestTestCheckTypeSetElemAttrPair(t *testing.T) {
 				},
 			},
 			ExpectedError: func(err error) bool {
-				return strings.Contains(err.Error(), "does not end with the special value")
+				return strings.Contains(err.Error(), `no TypeSet element "az.34812", with value "uswst3" in state`)
 			},
 		},
 		{
@@ -937,6 +937,56 @@ func TestTestCheckTypeSetElemAttrPair(t *testing.T) {
 										"names.0": "uswst3",
 										"names.1": "uswst2",
 										"names.2": "uswst1",
+									},
+								},
+							},
+						},
+						Dependencies: []string{},
+					},
+				},
+			},
+		},
+		{
+			Description:             "single nested TypeSet argument and root TypeSet argument",
+			FirstResourceAddress:    "spot_fleet_request.bar",
+			FirstResourceAttribute:  "launch_specification.*.instance_type",
+			SecondResourceAddress:   "data.ec2_instances.available",
+			SecondResourceAttribute: "instance_type",
+			TerraformState: &terraform.State{
+				Version: 3,
+				Modules: []*terraform.ModuleState{
+					{
+						Path:    []string{"root"},
+						Outputs: map[string]*terraform.OutputState{},
+						Resources: map[string]*terraform.ResourceState{
+							"spot_fleet_request.bar": {
+								Type:     "spot_fleet_request",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "11111",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":                      "1",
+										"id":                     "11111",
+										"launch_specification.#": "1",
+										"launch_specification.12345.instance_type": "t2.micro",
+									},
+								},
+							},
+							"data.ec2_instances.available": {
+								Type:     "data.ec2_instances",
+								Provider: "example",
+								Primary: &terraform.InstanceState{
+									ID: "3579",
+									Meta: map[string]interface{}{
+										"schema_version": 0,
+									},
+									Attributes: map[string]string{
+										"%":             "1",
+										"id":            "3579",
+										"instance_type": "t2.micro",
 									},
 								},
 							},

@@ -345,7 +345,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -368,7 +367,6 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_s3_bucket" "test" {

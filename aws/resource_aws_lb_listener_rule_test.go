@@ -22,17 +22,17 @@ func TestLBListenerARNFromRuleARN(t *testing.T) {
 	}{
 		{
 			name:     "valid listener rule arn",
-			arn:      "arn:aws:elasticloadbalancing:us-east-1:012345678912:listener-rule/app/name/0123456789abcdef/abcdef0123456789/456789abcedf1234",
-			expected: "arn:aws:elasticloadbalancing:us-east-1:012345678912:listener/app/name/0123456789abcdef/abcdef0123456789",
+			arn:      "arn:aws:elasticloadbalancing:us-east-1:012345678912:listener-rule/app/name/0123456789abcdef/abcdef0123456789/456789abcedf1234", //lintignore:AWSAT003,AWSAT005
+			expected: "arn:aws:elasticloadbalancing:us-east-1:012345678912:listener/app/name/0123456789abcdef/abcdef0123456789",                       //lintignore:AWSAT003,AWSAT005
 		},
 		{
 			name:     "listener arn",
-			arn:      "arn:aws:elasticloadbalancing:us-east-1:012345678912:listener/app/name/0123456789abcdef/abcdef0123456789",
+			arn:      "arn:aws:elasticloadbalancing:us-east-1:012345678912:listener/app/name/0123456789abcdef/abcdef0123456789", //lintignore:AWSAT003,AWSAT005
 			expected: "",
 		},
 		{
 			name:     "some other arn",
-			arn:      "arn:aws:elasticloadbalancing:us-east-1:123456:targetgroup/my-targets/73e2d6bc24d8a067",
+			arn:      "arn:aws:elasticloadbalancing:us-east-1:123456:targetgroup/my-targets/73e2d6bc24d8a067", //lintignore:AWSAT003,AWSAT005
 			expected: "",
 		},
 		{
@@ -1297,7 +1297,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = [aws_subnet.alb_test[0].id, aws_subnet.alb_test[1].id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1429,7 +1429,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = [aws_subnet.alb_test[0].id, aws_subnet.alb_test[1].id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1584,7 +1584,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = [aws_subnet.alb_test[0].id, aws_subnet.alb_test[1].id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1723,7 +1723,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = [aws_subnet.alb_test[0].id, aws_subnet.alb_test[1].id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1862,7 +1862,7 @@ resource "aws_alb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = [aws_subnet.alb_test[0].id, aws_subnet.alb_test[1].id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1993,7 +1993,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = [aws_subnet.alb_test[0].id, aws_subnet.alb_test[1].id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2106,7 +2106,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = [aws_subnet.alb_test[0].id, aws_subnet.alb_test[1].id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2209,7 +2209,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = [aws_subnet.alb_test[0].id, aws_subnet.alb_test[1].id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2341,7 +2341,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = [aws_subnet.alb_test[0].id, aws_subnet.alb_test[1].id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2446,7 +2446,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = [aws_subnet.alb_test[0].id, aws_subnet.alb_test[1].id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2746,7 +2746,7 @@ resource "aws_lb" "alb_test" {
   name            = "%[1]s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = [aws_subnet.alb_test[0].id, aws_subnet.alb_test[1].id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2913,7 +2913,7 @@ resource "aws_lb" "alb_test" {
   name            = "%[1]s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = [aws_subnet.alb_test[0].id, aws_subnet.alb_test[1].id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -3073,7 +3073,7 @@ resource "aws_lb" "test" {
   internal        = true
   name            = var.rName
   security_groups = [aws_security_group.test.id]
-  subnets         = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnets         = aws_subnet.test[*].id
 }
 
 resource "aws_lb_target_group" "test" {
@@ -3142,8 +3142,12 @@ resource "aws_security_group" "test" {
 
 func testAccAWSLBListenerRuleConfig_condition_error(condition string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
 resource "aws_lb_listener_rule" "error" {
-  listener_arn = "arn:aws:elasticloadbalancing:us-west-2:111111111111:listener/app/example/1234567890abcdef/1234567890abcdef"
+  listener_arn = "arn:${data.aws_partition.current.partition}:elasticloadbalancing:${data.aws_region.current.name}:111111111111:listener/app/example/1234567890abcdef/1234567890abcdef"
   priority     = 100
 
   action {
@@ -3272,7 +3276,7 @@ resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = [aws_subnet.alb_test[0].id, aws_subnet.alb_test[1].id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -3372,8 +3376,12 @@ condition {
 
 func testAccAWSLBListenerRuleConfig_conditionHttpHeader_invalid() string {
 	return `
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
 resource "aws_lb_listener_rule" "static" {
-  listener_arn = "arn:aws:elasticloadbalancing:us-west-2:111111111111:listener/app/test/xxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxx"
+  listener_arn = "arn:${data.aws_partition.current.partition}:elasticloadbalancing:${data.aws_region.current.name}:111111111111:listener/app/test/xxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxx"
   priority     = 100
 
   action {

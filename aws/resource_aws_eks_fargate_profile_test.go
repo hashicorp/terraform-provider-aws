@@ -366,8 +366,8 @@ resource "aws_iam_role" "cluster" {
 
   assume_role_policy = jsonencode({
     Statement = [{
-      Action    = "sts:AssumeRole"
-      Effect    = "Allow"
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
       Principal = {
         Service = "eks.${data.aws_partition.current.dns_suffix}"
       }
@@ -383,11 +383,11 @@ resource "aws_iam_role_policy_attachment" "cluster-AmazonEKSClusterPolicy" {
 
 resource "aws_iam_role" "pod" {
   name = "%[1]s-pod"
-  
+
   assume_role_policy = jsonencode({
     Statement = [{
-      Action    = "sts:AssumeRole"
-      Effect    = "Allow"
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
       Principal = {
         Service = "eks-fargate-pods.${data.aws_partition.current.dns_suffix}"
       }
@@ -434,7 +434,7 @@ resource "aws_subnet" "private" {
   count = 2
 
   availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index+2)
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index + 2)
   vpc_id            = aws_vpc.test.id
 
   tags = {

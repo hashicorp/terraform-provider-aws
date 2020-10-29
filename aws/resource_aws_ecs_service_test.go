@@ -1308,7 +1308,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1340,7 +1339,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1372,7 +1370,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1427,8 +1424,8 @@ resource "aws_ecs_service" "mongo" {
 
   capacity_provider_strategy {
     capacity_provider = aws_ecs_capacity_provider.test.name
-    weight = %d
-    base   = %d
+    weight            = %d
+    base              = %d
   }
 }
 `, providerName, clusterName, tdName, svcName, weight, base)
@@ -1441,7 +1438,7 @@ resource "aws_ecs_service" "mongo" {
   cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.mongo.arn
   desired_count   = 1
-  
+
   network_configuration {
     security_groups  = [aws_security_group.allow_all.id]
     subnets          = [aws_subnet.main.id]
@@ -1493,8 +1490,8 @@ resource "aws_security_group" "allow_all" {
 }
 
 resource "aws_subnet" "main" {
-  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 8, 1)
-  vpc_id            = aws_vpc.main.id
+  cidr_block = cidrsubnet(aws_vpc.main.cidr_block, 8, 1)
+  vpc_id     = aws_vpc.main.id
 
   tags = {
     Name = "tf-acc-ecs-service-with-multiple-capacity-providers"
@@ -1531,7 +1528,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1569,7 +1565,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1641,7 +1636,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1677,7 +1671,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1728,7 +1721,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1765,7 +1757,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1860,7 +1851,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "main" {
@@ -1872,7 +1862,7 @@ resource "aws_ecs_service" "main" {
 
   network_configuration {
     security_groups  = [aws_security_group.allow_all_a.id, aws_security_group.allow_all_b.id]
-    subnets          = [aws_subnet.main[0].id, aws_subnet.main[1].id]
+    subnets          = aws_subnet.main[*].id
     assign_public_ip = %s
   }
 }
@@ -1958,7 +1948,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "main" {
@@ -1971,7 +1960,7 @@ resource "aws_ecs_service" "main" {
 
   network_configuration {
     security_groups  = [aws_security_group.allow_all_a.id, aws_security_group.allow_all_b.id]
-    subnets          = [aws_subnet.main[0].id, aws_subnet.main[1].id]
+    subnets          = aws_subnet.main[*].id
     assign_public_ip = false
   }
 }
@@ -2033,7 +2022,6 @@ resource "aws_ecs_task_definition" "with_lb_changes" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_iam_role" "ecs_service" {
@@ -2054,7 +2042,6 @@ resource "aws_iam_role" "ecs_service" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "ecs_service" {
@@ -2080,7 +2067,6 @@ resource "aws_iam_role_policy" "ecs_service" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lb_target_group" "test" {
@@ -2093,7 +2079,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_lb" "main" {
   name     = "%s"
   internal = true
-  subnets  = [aws_subnet.main[0].id, aws_subnet.main[1].id]
+  subnets  = aws_subnet.main[*].id
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -2182,7 +2168,6 @@ resource "aws_ecs_task_definition" "ghost" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_iam_role" "ecs_service" {
@@ -2201,7 +2186,6 @@ resource "aws_iam_role" "ecs_service" {
     ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "ecs_service" {
@@ -2226,12 +2210,11 @@ resource "aws_iam_role_policy" "ecs_service" {
   ]
 }
 EOF
-
 }
 
 resource "aws_elb" "main" {
   internal = true
-  subnets  = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = 8080
@@ -2279,7 +2262,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -2348,7 +2330,6 @@ resource "aws_ecs_task_definition" "with_lb_changes" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_iam_role" "ecs_service" {
@@ -2367,7 +2348,6 @@ resource "aws_iam_role" "ecs_service" {
     ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "ecs_service" {
@@ -2392,12 +2372,11 @@ resource "aws_iam_role_policy" "ecs_service" {
   ]
 }
 EOF
-
 }
 
 resource "aws_elb" "main" {
   internal = true
-  subnets  = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = %[6]d
@@ -2455,7 +2434,6 @@ resource "aws_ecs_task_definition" "jenkins" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "jenkins" {
@@ -2487,7 +2465,6 @@ resource "aws_ecs_task_definition" "jenkins" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "jenkins" {
@@ -2519,7 +2496,6 @@ resource "aws_ecs_task_definition" "ghost" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "ghost" {
@@ -2551,7 +2527,6 @@ resource "aws_ecs_task_definition" "jenkins" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "jenkins" {
@@ -2617,7 +2592,6 @@ resource "aws_ecs_task_definition" "with_lb_changes" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_iam_role" "ecs_service" {
@@ -2638,7 +2612,6 @@ resource "aws_iam_role" "ecs_service" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "ecs_service" {
@@ -2664,7 +2637,6 @@ resource "aws_iam_role_policy" "ecs_service" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lb_target_group" "test" {
@@ -2677,7 +2649,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_lb" "main" {
   name     = "%s"
   internal = true
-  subnets  = [aws_subnet.main[0].id, aws_subnet.main[1].id]
+  subnets  = aws_subnet.main[*].id
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -2767,7 +2739,6 @@ resource "aws_ecs_task_definition" "with_lb_changes" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_lb_target_group" "test" {
@@ -2787,7 +2758,7 @@ resource "aws_lb_target_group" "static" {
 resource "aws_lb" "main" {
   name     = "%s"
   internal = true
-  subnets  = [aws_subnet.main[0].id, aws_subnet.main[1].id]
+  subnets  = aws_subnet.main[*].id
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -2923,7 +2894,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "main" {
@@ -2933,7 +2903,7 @@ resource "aws_ecs_service" "main" {
   desired_count   = 1
   network_configuration {
     security_groups = [%s]
-    subnets         = [aws_subnet.main[0].id, aws_subnet.main[1].id]
+    subnets         = aws_subnet.main[*].id
   }
 }
 `, sg1Name, sg2Name, clusterName, tdName, svcName, securityGroups)
@@ -3019,7 +2989,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "test" {
@@ -3035,7 +3004,7 @@ resource "aws_ecs_service" "test" {
 
   network_configuration {
     security_groups = [aws_security_group.test.id]
-    subnets         = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+    subnets         = aws_subnet.test[*].id
   }
 }
 `, rName, rName, rName, clusterName, tdName, svcName)
@@ -3128,7 +3097,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "test" {
@@ -3166,7 +3134,6 @@ resource "aws_ecs_task_definition" "ghost" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "ghost" {
@@ -3198,7 +3165,6 @@ resource "aws_ecs_task_definition" "ghost" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "ghost" {
@@ -3245,7 +3211,7 @@ resource "aws_subnet" "test" {
 resource "aws_lb" "test" {
   internal = true
   name     = %[1]q
-  subnets  = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnets  = aws_subnet.test[*].id
 }
 
 resource "aws_lb_listener" "test" {
@@ -3290,7 +3256,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "test" {
@@ -3350,7 +3315,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "test" {
@@ -3455,7 +3419,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "test" {
@@ -3534,7 +3497,6 @@ resource "aws_ecs_task_definition" "ghost" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "ghost" {

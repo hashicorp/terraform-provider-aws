@@ -372,7 +372,7 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "ram_disk_id"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tag_specifications.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tag_specifications.#", "4"),
 				),
 			},
 			{
@@ -1327,7 +1327,7 @@ resource "aws_launch_template" "test" {
 func testAccAWSLaunchTemplateConfig_EbsOptimized(rName, ebsOptimized string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  ebs_optimized = %s # allows "", false, true, "false", "true" values
+  ebs_optimized = %s
   name          = %q
 }
 `, ebsOptimized, rName)
@@ -1346,7 +1346,7 @@ resource "aws_launch_template" "test" {
 }
 
 func testAccAWSLaunchTemplateConfig_data(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name = %q
 
@@ -1390,7 +1390,7 @@ resource "aws_launch_template" "test" {
   }
 
   placement {
-    availability_zone = "us-west-2b"
+    availability_zone = data.aws_availability_zones.available.names[0]
   }
 
   ram_disk_id = "ari-a12bc3de"
@@ -1404,8 +1404,32 @@ resource "aws_launch_template" "test" {
       Name = "test"
     }
   }
+
+  tag_specifications {
+    resource_type = "volume"
+
+    tags = {
+      Name = "test"
+    }
+  }
+
+  tag_specifications {
+    resource_type = "spot-instances-request"
+
+    tags = {
+      Name = "test"
+    }
+  }
+
+  tag_specifications {
+    resource_type = "elastic-gpu"
+
+    tags = {
+      Name = "test"
+    }
+  }
 }
-`, rName) //lintignore:AWSAT002
+`, rName)) //lintignore:AWSAT002
 }
 
 func testAccAWSLaunchTemplateConfig_tagsUpdate(rName string) string {
@@ -1859,7 +1883,7 @@ func testAccAWSLaunchTemplateconfig_descriptionUpdateDefaultVersion(rName, descr
 resource "aws_launch_template" "test" {
   name                   = %q
   description            = %q
-  update_default_version = %v
+  update_default_version = %t
 
   tags = {
     test = "baz"

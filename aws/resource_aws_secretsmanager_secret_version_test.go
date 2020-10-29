@@ -215,7 +215,7 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = "${aws_secretsmanager_secret.test.id}"
+  secret_id     = aws_secretsmanager_secret.test.id
   secret_string = "test-string"
 }
 `, rName)
@@ -228,8 +228,8 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = "${aws_secretsmanager_secret.test.id}"
-  secret_binary = "${base64encode("test-binary")}"
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_binary = base64encode("test-binary")
 }
 `, rName)
 }
@@ -241,7 +241,7 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = "${aws_secretsmanager_secret.test.id}"
+  secret_id     = aws_secretsmanager_secret.test.id
   secret_string = "test-string"
 
   version_stages = ["one", "AWSCURRENT"]
@@ -256,7 +256,7 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = "${aws_secretsmanager_secret.test.id}"
+  secret_id     = aws_secretsmanager_secret.test.id
   secret_string = "test-string"
 
   version_stages = ["two", "AWSCURRENT"]
@@ -271,7 +271,7 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = "${aws_secretsmanager_secret.test.id}"
+  secret_id     = aws_secretsmanager_secret.test.id
   secret_string = "test-string"
 
   version_stages = ["one", "two", "AWSCURRENT"]

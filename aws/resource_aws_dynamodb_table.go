@@ -158,18 +158,22 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"range_key": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"projection_type": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"non_key_attributes": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
@@ -211,7 +215,7 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 							Required: true,
 						},
 						"non_key_attributes": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},

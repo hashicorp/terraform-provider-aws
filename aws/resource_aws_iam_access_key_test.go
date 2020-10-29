@@ -216,9 +216,7 @@ resource "aws_iam_access_key" "a_key" {
 
   pgp_key = <<EOF
 %s
-
 EOF
-
 }
 `, rName, key)
 }

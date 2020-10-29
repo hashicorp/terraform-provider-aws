@@ -166,7 +166,7 @@ resource "aws_vpc_dhcp_options" "test" {
 }
 
 resource "aws_vpc_dhcp_options_association" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  dhcp_options_id = "${aws_vpc_dhcp_options.test.id}"
+  vpc_id          = aws_vpc.test.id
+  dhcp_options_id = aws_vpc_dhcp_options.test.id
 }
 `

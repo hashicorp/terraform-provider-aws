@@ -17,7 +17,7 @@ func testAccAwsEc2ClientVpnAuthorizationRule_basic(t *testing.T) {
 	var v ec2.AuthorizationRule
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_authorization_rule.test"
-	subnetResourceName := "aws_subnet.test"
+	subnetResourceName := "aws_subnet.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
@@ -47,7 +47,7 @@ func testAccAwsEc2ClientVpnAuthorizationRule_groups(t *testing.T) {
 	rStr := acctest.RandString(5)
 	resource1Name := "aws_ec2_client_vpn_authorization_rule.test1"
 	resource2Name := "aws_ec2_client_vpn_authorization_rule.test2"
-	subnetResourceName := "aws_subnet.test"
+	subnetResourceName := "aws_subnet.test.0"
 
 	group1Name := "group_one"
 	group2Name := "group_two"
@@ -324,12 +324,12 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
-	type                       = "certificate-authentication"
-	root_certificate_chain_arn = aws_acm_certificate.test.arn
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
   }
 
   connection_log_options {
-	enabled = false
+    enabled = false
   }
 }`, rName))
 }

@@ -400,7 +400,7 @@ func testAccAWSS3AccountPublicAccessBlockConfigAccountId() string {
 data "aws_caller_identity" "test" {}
 
 resource "aws_s3_account_public_access_block" "test" {
-  account_id = "${data.aws_caller_identity.test.account_id}"
+  account_id = data.aws_caller_identity.test.account_id
 }
 `
 }

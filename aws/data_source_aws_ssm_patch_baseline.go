@@ -31,7 +31,7 @@ func dataSourceAwsSsmPatchBaseline() *schema.Resource {
 			"operating_system": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice(ssmPatchOSs, false),
+				ValidateFunc: validation.StringInSlice(ssm.OperatingSystem_Values(), false),
 			},
 			// Computed values
 			"description": {

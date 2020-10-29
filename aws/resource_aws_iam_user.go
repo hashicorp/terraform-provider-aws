@@ -81,7 +81,7 @@ func resourceAwsIamUserCreate(d *schema.ResourceData, meta interface{}) error {
 		UserName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("permissions_boundary"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("permissions_boundary"); ok {
 		request.PermissionsBoundary = aws.String(v.(string))
 	}
 

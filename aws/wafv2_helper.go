@@ -143,6 +143,7 @@ func wafv2GeoMatchStatementSchema() *schema.Schema {
 					MinItems: 1,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
+				"forwarded_ip_config": wafv2ForwardedIPConfig(),
 			},
 		},
 	}
@@ -159,6 +160,33 @@ func wafv2IpSetReferenceStatementSchema() *schema.Schema {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validateArn,
+				},
+				"ip_set_forwarded_ip_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"fallback_behavior": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(wafv2.FallbackBehavior_Values(), false),
+							},
+							"header_name": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 255),
+									validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]+$`), "must contain only alphanumeric and hyphen characters"),
+								),
+							},
+							"position": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(wafv2.ForwardedIPPosition_Values(), false),
+							},
+						},
+					},
 				},
 			},
 		},
@@ -298,6 +326,27 @@ func wafv2FieldToMatchSchema() *schema.Schema {
 		Optional: true,
 		MaxItems: 1,
 		Elem:     wafv2FieldToMatchBaseSchema(),
+	}
+}
+
+func wafv2ForwardedIPConfig() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"fallback_behavior": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.FallbackBehavior_Values(), false),
+				},
+				"header_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			},
+		},
 	}
 }
 
@@ -577,6 +626,33 @@ func expandWafv2FieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 	return f
 }
 
+func expandWafv2ForwardedIPConfig(l []interface{}) *wafv2.ForwardedIPConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.ForwardedIPConfig{
+		FallbackBehavior: aws.String(m["fallback_behavior"].(string)),
+		HeaderName:       aws.String(m["header_name"].(string)),
+	}
+}
+
+func expandWafv2IPSetForwardedIPConfig(l []interface{}) *wafv2.IPSetForwardedIPConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.IPSetForwardedIPConfig{
+		FallbackBehavior: aws.String(m["fallback_behavior"].(string)),
+		HeaderName:       aws.String(m["header_name"].(string)),
+		Position:         aws.String(m["position"].(string)),
+	}
+}
+
 func expandWafv2SingleHeader(l []interface{}) *wafv2.SingleHeader {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -636,9 +712,15 @@ func expandWafv2IpSetReferenceStatement(l []interface{}) *wafv2.IPSetReferenceSt
 
 	m := l[0].(map[string]interface{})
 
-	return &wafv2.IPSetReferenceStatement{
+	statement := &wafv2.IPSetReferenceStatement{
 		ARN: aws.String(m["arn"].(string)),
 	}
+
+	if v, ok := m["ip_set_forwarded_ip_config"]; ok {
+		statement.IPSetForwardedIPConfig = expandWafv2IPSetForwardedIPConfig(v.([]interface{}))
+	}
+
+	return statement
 }
 
 func expandWafv2GeoMatchStatement(l []interface{}) *wafv2.GeoMatchStatement {
@@ -648,9 +730,15 @@ func expandWafv2GeoMatchStatement(l []interface{}) *wafv2.GeoMatchStatement {
 
 	m := l[0].(map[string]interface{})
 
-	return &wafv2.GeoMatchStatement{
+	statement := &wafv2.GeoMatchStatement{
 		CountryCodes: expandStringList(m["country_codes"].([]interface{})),
 	}
+
+	if v, ok := m["forwarded_ip_config"]; ok {
+		statement.ForwardedIPConfig = expandWafv2ForwardedIPConfig(v.([]interface{}))
+	}
+
+	return statement
 }
 
 func expandWafv2NotStatement(l []interface{}) *wafv2.NotStatement {
@@ -908,6 +996,33 @@ func flattenWafv2FieldToMatch(f *wafv2.FieldToMatch) interface{} {
 	return []interface{}{m}
 }
 
+func flattenWafv2ForwardedIPConfig(f *wafv2.ForwardedIPConfig) interface{} {
+	if f == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"fallback_behavior": aws.StringValue(f.FallbackBehavior),
+		"header_name":       aws.StringValue(f.HeaderName),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2IPSetForwardedIPConfig(i *wafv2.IPSetForwardedIPConfig) interface{} {
+	if i == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"fallback_behavior": aws.StringValue(i.FallbackBehavior),
+		"header_name":       aws.StringValue(i.HeaderName),
+		"position":          aws.StringValue(i.Position),
+	}
+
+	return []interface{}{m}
+}
+
 func flattenWafv2SingleHeader(s *wafv2.SingleHeader) interface{} {
 	if s == nil {
 		return []interface{}{}
@@ -949,7 +1064,8 @@ func flattenWafv2IpSetReferenceStatement(i *wafv2.IPSetReferenceStatement) inter
 	}
 
 	m := map[string]interface{}{
-		"arn": aws.StringValue(i.ARN),
+		"arn":                        aws.StringValue(i.ARN),
+		"ip_set_forwarded_ip_config": flattenWafv2IPSetForwardedIPConfig(i.IPSetForwardedIPConfig),
 	}
 
 	return []interface{}{m}
@@ -961,7 +1077,8 @@ func flattenWafv2GeoMatchStatement(g *wafv2.GeoMatchStatement) interface{} {
 	}
 
 	m := map[string]interface{}{
-		"country_codes": flattenStringList(g.CountryCodes),
+		"country_codes":       flattenStringList(g.CountryCodes),
+		"forwarded_ip_config": flattenWafv2ForwardedIPConfig(g.ForwardedIPConfig),
 	}
 
 	return []interface{}{m}

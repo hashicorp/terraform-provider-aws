@@ -79,7 +79,7 @@ resource "aws_lambda_function" "example" {
 
 ### Lambda File Systems
 
-Lambda File Systems allow you to connect an Amazon Elastic File System (EFS) file system to a Lambda function to share data across function invocations, access existing data including large files, and save function state. 
+Lambda File Systems allow you to connect an Amazon Elastic File System (EFS) file system to a Lambda function to share data across function invocations, access existing data including large files, and save function state.
 
 ```hcl
 # A lambda function connected to an EFS file system
@@ -100,7 +100,7 @@ resource "aws_lambda_function" "example" {
     security_group_ids = [aws_security_group.sg_for_lambda.id]
   }
 
-  # Explicitly declare dependency on EFS mount target. 
+  # Explicitly declare dependency on EFS mount target.
   # When creating or updating Lambda functions, mount target must be in 'available' lifecycle state.
   depends_on = [aws_efs_mount_target.alpha]
 }

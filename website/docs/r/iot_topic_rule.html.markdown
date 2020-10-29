@@ -154,7 +154,7 @@ The `republish` object takes the following arguments:
 
 * `role_arn` - (Required) The ARN of the IAM role that grants access.
 * `topic` - (Required) The name of the MQTT topic the message should be republished to.
-* `qos` - (Optional) The Quality of Service (QoS) level to use when republishing messages. Valid values are 0 or 1. The default value is 0. 
+* `qos` - (Optional) The Quality of Service (QoS) level to use when republishing messages. Valid values are 0 or 1. The default value is 0.
 
 The `s3` object takes the following arguments:
 
@@ -189,7 +189,7 @@ The `iot_events` object takes the following arguments:
 
 * `input_name` - (Required) The name of the AWS IoT Events input.
 * `role_arn` - (Required) The ARN of the IAM role that grants access.
-* `message_id` - (Optional) Use this to ensure that only one input (message) with a given messageId is processed by an AWS IoT Events detector. 
+* `message_id` - (Optional) Use this to ensure that only one input (message) with a given messageId is processed by an AWS IoT Events detector.
 
 ## Attributes Reference
 

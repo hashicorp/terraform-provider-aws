@@ -13,6 +13,10 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 	prefix := "tf-acc-test-d-mq-broker"
 	brokerName := fmt.Sprintf("%s-%s", prefix, rString)
 
+	dataSourceByIdName := "data.aws_mq_broker.by_id"
+	dataSourceByNameName := "data.aws_mq_broker.by_name"
+	resourceName := "aws_mq_broker.acctest"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -20,71 +24,31 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAWSMqBrokerConfig_byId(brokerName, prefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_id", "arn",
-						"aws_mq_broker.acctest", "arn"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_id", "broker_name",
-						"aws_mq_broker.acctest", "broker_name"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_id", "auto_minor_version_upgrade",
-						"aws_mq_broker.acctest", "auto_minor_version_upgrade"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_id", "deployment_mode",
-						"aws_mq_broker.acctest", "deployment_mode"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_id", "configuration.#",
-						"aws_mq_broker.acctest", "configuration.#"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_id", "encryption_options.#",
-						"aws_mq_broker.acctest", "encryption_options.#"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_id", "encryption_options.0.use_aws_owned_key",
-						"aws_mq_broker.acctest", "encryption_options.0.use_aws_owned_key"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_id", "engine_type",
-						"aws_mq_broker.acctest", "engine_type"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_id", "engine_version",
-						"aws_mq_broker.acctest", "engine_version"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_id", "host_instance_type",
-						"aws_mq_broker.acctest", "host_instance_type"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_id", "instances.#",
-						"aws_mq_broker.acctest", "instances.#"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_id", "logs.#",
-						"aws_mq_broker.acctest", "logs.#"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_id", "maintenance_window_start_time.#",
-						"aws_mq_broker.acctest", "maintenance_window_start_time.#"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_id", "publicly_accessible",
-						"aws_mq_broker.acctest", "publicly_accessible"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_id", "security_groups.#",
-						"aws_mq_broker.acctest", "security_groups.#"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_id", "subnet_ids.#",
-						"aws_mq_broker.acctest", "subnet_ids.#"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_id", "tags.%",
-						"aws_mq_broker.acctest", "tags.%"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_id", "user.#",
-						"aws_mq_broker.acctest", "user.#"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, "broker_name", resourceName, "broker_name"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, "auto_minor_version_upgrade", resourceName, "auto_minor_version_upgrade"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, "deployment_mode", resourceName, "deployment_mode"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, "configuration.#", resourceName, "configuration.#"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, "encryption_options.#", resourceName, "encryption_options.#"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, "encryption_options.0.use_aws_owned_key", resourceName, "encryption_options.0.use_aws_owned_key"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, "engine_type", resourceName, "engine_type"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, "engine_version", resourceName, "engine_version"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, "host_instance_type", resourceName, "host_instance_type"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, "instances.#", resourceName, "instances.#"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, "logs.#", resourceName, "logs.#"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, "maintenance_window_start_time.#", resourceName, "maintenance_window_start_time.#"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, "publicly_accessible", resourceName, "publicly_accessible"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, "security_groups.#", resourceName, "security_groups.#"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, "subnet_ids.#", resourceName, "subnet_ids.#"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, "user.#", resourceName, "user.#"),
 				),
 			},
 			{
 				Config: testAccDataSourceAWSMqBrokerConfig_byName(brokerName, prefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_name", "broker_id",
-						"aws_mq_broker.acctest", "id"),
-					resource.TestCheckResourceAttrPair(
-						"data.aws_mq_broker.by_name", "broker_name",
-						"aws_mq_broker.acctest", "broker_name"),
+					resource.TestCheckResourceAttrPair(dataSourceByNameName, "broker_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceByNameName, "broker_name", resourceName, "broker_name"),
 				),
 			},
 		},
@@ -184,8 +148,8 @@ resource "aws_mq_broker" "acctest" {
   }
 
   publicly_accessible = true
-  security_groups     = [aws_security_group.acctest.0.id, aws_security_group.acctest.1.id]
-  subnet_ids          = [aws_subnet.acctest.0.id, aws_subnet.acctest.1.id]
+  security_groups     = aws_security_group.acctest[*].id
+  subnet_ids          = aws_subnet.acctest[*].id
 
   user {
     username = "Ender"

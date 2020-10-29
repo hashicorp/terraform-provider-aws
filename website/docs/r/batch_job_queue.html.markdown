@@ -36,6 +36,7 @@ The following arguments are supported:
 * `priority` - (Required) The priority of the job queue. Job queues with a higher priority
     are evaluated first when associated with the same compute environment.
 * `state` - (Required) The state of the job queue. Must be one of: `ENABLED` or `DISABLED`
+* `tags` - (Optional) Key-value map of resource tags
 
 ## Attribute Reference
 

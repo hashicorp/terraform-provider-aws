@@ -50,11 +50,19 @@ func TestCleanChangeID(t *testing.T) {
 
 func TestTrimTrailingPeriod(t *testing.T) {
 	cases := []struct {
-		Input, Output string
+		Input  interface{}
+		Output string
 	}{
 		{"example.com", "example.com"},
 		{"example.com.", "example.com"},
 		{"www.example.com.", "www.example.com"},
+		{"", ""},
+		{".", "."},
+		{aws.String("example.com"), "example.com"},
+		{aws.String("example.com."), "example.com"},
+		{(*string)(nil), ""},
+		{42, ""},
+		{nil, ""},
 	}
 
 	for _, tc := range cases {

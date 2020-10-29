@@ -10,7 +10,7 @@ description: |-
 
 Provides an SSM Patch Baseline resource
 
-~> **NOTE on Patch Baselines:** The `approved_patches` and `approval_rule` are 
+~> **NOTE on Patch Baselines:** The `approved_patches` and `approval_rule` are
 both marked as optional fields, but the Patch Baseline requires that at least one
 of them is specified.
 
@@ -110,7 +110,7 @@ resource "aws_ssm_patch_baseline" "windows_os_apps" {
       values = ["APPLICATION"]
     }
 
-    # Filter on Microsoft product if necessary 
+    # Filter on Microsoft product if necessary
     patch_filter {
       key    = "PRODUCT"
       values = ["Office 2013", "Office 2016"]

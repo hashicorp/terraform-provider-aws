@@ -13,11 +13,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -78,8 +80,11 @@ func resourceAwsAcmCertificate() *schema.Resource {
 					// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
 					// trailing period, no longer requiring a custom StateFunc
 					// to prevent ACM API error
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+					Type: schema.TypeString,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 253),
+						validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+					),
 				},
 				Set:           schema.HashString,
 				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
@@ -219,13 +224,28 @@ func resourceAwsAcmCertificateCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interface{}) error {
-	acmconn := meta.(*AWSClient).acmconn
-	resp, err := resourceAwsAcmCertificateImport(acmconn, d, false)
-	if err != nil {
-		return fmt.Errorf("Error importing certificate: %s", err)
+	conn := meta.(*AWSClient).acmconn
+
+	input := &acm.ImportCertificateInput{
+		Certificate: []byte(d.Get("certificate_body").(string)),
+		PrivateKey:  []byte(d.Get("private_key").(string)),
 	}
 
-	d.SetId(*resp.CertificateArn)
+	if v, ok := d.GetOk("certificate_chain"); ok {
+		input.CertificateChain = []byte(v.(string))
+	}
+
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		input.Tags = keyvaluetags.New(v).IgnoreAws().AcmTags()
+	}
+
+	output, err := conn.ImportCertificate(input)
+
+	if err != nil {
+		return fmt.Errorf("error importing ACM Certificate: %w", err)
+	}
+
+	d.SetId(aws.StringValue(output.CertificateArn))
 
 	return resourceAwsAcmCertificateRead(d, meta)
 }
@@ -344,7 +364,7 @@ func resourceAwsAcmCertificateValidationMethod(certificate *acm.CertificateDetai
 }
 
 func resourceAwsAcmCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	acmconn := meta.(*AWSClient).acmconn
+	conn := meta.(*AWSClient).acmconn
 
 	if d.HasChanges("private_key", "certificate_body", "certificate_chain") {
 		// Prior to version 3.0.0 of the Terraform AWS Provider, these attributes were stored in state as hashes.
@@ -354,16 +374,27 @@ func resourceAwsAcmCertificateUpdate(d *schema.ResourceData, meta interface{}) e
 		oPKRaw, nPKRaw := d.GetChange("private_key")
 
 		if !isChangeNormalizeCertRemoval(oCBRaw, nCBRaw) || !isChangeNormalizeCertRemoval(oCCRaw, nCCRaw) || !isChangeNormalizeCertRemoval(oPKRaw, nPKRaw) {
-			_, err := resourceAwsAcmCertificateImport(acmconn, d, true)
+			input := &acm.ImportCertificateInput{
+				Certificate:    []byte(d.Get("certificate_body").(string)),
+				CertificateArn: aws.String(d.Get("arn").(string)),
+				PrivateKey:     []byte(d.Get("private_key").(string)),
+			}
+
+			if chain, ok := d.GetOk("certificate_chain"); ok {
+				input.CertificateChain = []byte(chain.(string))
+			}
+
+			_, err := conn.ImportCertificate(input)
+
 			if err != nil {
-				return fmt.Errorf("Error updating certificate: %s", err)
+				return fmt.Errorf("error re-importing ACM Certificate (%s): %w", d.Id(), err)
 			}
 		}
 	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
-		if err := keyvaluetags.AcmUpdateTags(acmconn, d.Id(), o, n); err != nil {
+		if err := keyvaluetags.AcmUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
@@ -432,40 +463,31 @@ func resourceAwsAcmCertificateDelete(d *schema.ResourceData, meta interface{}) e
 
 	err := resource.Retry(AcmCertificateCrossServicePropagationTimeout, func() *resource.RetryError {
 		_, err := acmconn.DeleteCertificate(params)
+
+		if tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceInUseException) {
+			return resource.RetryableError(err)
+		}
+
 		if err != nil {
-			if isAWSErr(err, acm.ErrCodeResourceInUseException, "") {
-				log.Printf("[WARN] Conflict deleting certificate in use: %s, retrying", err.Error())
-				return resource.RetryableError(err)
-			}
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
 
-	if err != nil && !isAWSErr(err, acm.ErrCodeResourceNotFoundException, "") {
-		return fmt.Errorf("Error deleting certificate: %s", err)
+	if tfresource.TimedOut(err) {
+		_, err = acmconn.DeleteCertificate(params)
+	}
+
+	if tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting ACM Certificate (%s): %w", d.Id(), err)
 	}
 
 	return nil
-}
-
-func resourceAwsAcmCertificateImport(conn *acm.ACM, d *schema.ResourceData, update bool) (*acm.ImportCertificateOutput, error) {
-	params := &acm.ImportCertificateInput{
-		PrivateKey:  []byte(d.Get("private_key").(string)),
-		Certificate: []byte(d.Get("certificate_body").(string)),
-	}
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		params.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AcmTags()
-	}
-	if chain, ok := d.GetOk("certificate_chain"); ok {
-		params.CertificateChain = []byte(chain.(string))
-	}
-	if update {
-		params.CertificateArn = aws.String(d.Get("arn").(string))
-	}
-
-	log.Printf("[DEBUG] ACM Certificate Import: %#v", params)
-	return conn.ImportCertificate(params)
 }
 
 func acmDomainValidationOptionsHash(v interface{}) int {

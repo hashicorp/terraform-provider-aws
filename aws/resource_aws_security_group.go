@@ -243,6 +243,10 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 		securityGroupOpts.VpcId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("tags"); ok {
+		securityGroupOpts.TagSpecifications = ec2TagSpecificationsFromMap(v.(map[string]interface{}), ec2.ResourceTypeSecurityGroup)
+	}
+
 	if v := d.Get("description"); v != nil {
 		securityGroupOpts.Description = aws.String(v.(string))
 	}
@@ -268,12 +272,6 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf(
 			"Error waiting for Security Group (%s) to become available: %s",
 			d.Id(), err)
-	}
-
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
-			return fmt.Errorf("error adding EC2 Security Group (%s) tags: %s", d.Id(), err)
-		}
 	}
 
 	// AWS defaults all Security Groups to have an ALLOW ALL egress rule. Here we

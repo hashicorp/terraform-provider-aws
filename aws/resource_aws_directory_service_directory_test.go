@@ -505,6 +505,7 @@ resource "aws_subnet" "test1" {
     Name = "tf-acc-directory-service-directory-foo"
   }
 }
+
 resource "aws_subnet" "test2" {
   vpc_id            = aws_vpc.test.id
   availability_zone = data.aws_availability_zones.available.names[1]
@@ -530,9 +531,9 @@ resource "aws_directory_service_directory" "test" {
 
 const testAccDirectoryServiceDirectoryTagsConfig = testAccDirectoryServiceDirectoryConfigBase + `
 resource "aws_directory_service_directory" "test" {
-  name = "corp.notexample.com"
+  name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
-  size = "Small"
+  size     = "Small"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
@@ -567,12 +568,12 @@ resource "aws_directory_service_directory" "test" {
 
 const testAccDirectoryServiceDirectoryRemoveTagsConfig = testAccDirectoryServiceDirectoryConfigBase + `
 resource "aws_directory_service_directory" "test" {
-  name = "corp.notexample.com"
+  name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
-  size = "Small"
+  size     = "Small"
 
   vpc_settings {
-    vpc_id = aws_vpc.test.id
+    vpc_id     = aws_vpc.test.id
     subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
   }
 
@@ -584,9 +585,9 @@ resource "aws_directory_service_directory" "test" {
 
 const testAccDirectoryServiceDirectoryConfig_connector = testAccDirectoryServiceDirectoryConfigBase + `
 resource "aws_directory_service_directory" "base" {
-  name = "corp.notexample.com"
+  name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
-  size = "Small"
+  size     = "Small"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id

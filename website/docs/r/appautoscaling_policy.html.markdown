@@ -215,7 +215,7 @@ The `target_tracking_scaling_policy_configuration` `customized_metric_specificat
 
 ### target_tracking_scaling_policy_configuration customized_metric_specification dimensions
 
-The `target_tracking_scaling_policy_configration` `customized_metric_specification` `dimensions` configuration block supports the following arguments:
+The `target_tracking_scaling_policy_configuration` `customized_metric_specification` `dimensions` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the dimension.
 * `value` - (Required) Value of the dimension.

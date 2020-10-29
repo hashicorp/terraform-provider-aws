@@ -78,6 +78,7 @@ Each route supports the following:
 * `egress_only_gateway_id` - The ID of the Egress Only Internet Gateway.
 * `gateway_id` - The Internet Gateway ID.
 * `nat_gateway_id` - The NAT Gateway ID.
+* `local_gateway_id` - The Local Gateway ID.
 * `instance_id` - The EC2 instance ID.
 * `transit_gateway_id` - The EC2 Transit Gateway ID.
 * `vpc_peering_connection_id` - The VPC Peering ID.

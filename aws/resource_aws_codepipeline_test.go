@@ -594,7 +594,6 @@ resource "aws_iam_role" "codepipeline_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "codepipeline_policy" {
@@ -628,7 +627,6 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
   ]
 }
 EOF
-
 }
 `, rName)
 }
@@ -652,7 +650,6 @@ resource "aws_iam_role" "codepipeline_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "codepipeline_policy" {
@@ -688,12 +685,11 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
       "Action": [
         "sts:AssumeRole"
       ],
-      "Resource": aws_iam_role.codepipeline_action_role.arn
+      "Resource": "${aws_iam_role.codepipeline_action_role.arn}"
     }
   ]
 }
 EOF
-
 }
 `, rName)
 }
@@ -894,7 +890,6 @@ resource "aws_iam_role" "codepipeline_action_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "codepipeline_action_policy" {
@@ -920,7 +915,6 @@ resource "aws_iam_role_policy" "codepipeline_action_policy" {
   ]
 }
 EOF
-
 }
 `, rName)
 }
@@ -1371,7 +1365,7 @@ func TestResourceAWSCodePipelineExpandArtifactStoresValidation(t *testing.T) {
 					"location":       "",
 					"type":           "",
 					"encryption_key": []interface{}{},
-					"region":         "us-west-2",
+					"region":         "us-west-2", //lintignore:AWSAT003
 				},
 			},
 			ExpectedError: "region cannot be set for a single-region CodePipeline",
@@ -1383,13 +1377,13 @@ func TestResourceAWSCodePipelineExpandArtifactStoresValidation(t *testing.T) {
 					"location":       "",
 					"type":           "",
 					"encryption_key": []interface{}{},
-					"region":         "us-west-2",
+					"region":         "us-west-2", //lintignore:AWSAT003
 				},
 				map[string]interface{}{
 					"location":       "",
 					"type":           "",
 					"encryption_key": []interface{}{},
-					"region":         "us-east-1",
+					"region":         "us-east-1", //lintignore:AWSAT003
 				},
 			},
 		},
@@ -1418,7 +1412,7 @@ func TestResourceAWSCodePipelineExpandArtifactStoresValidation(t *testing.T) {
 					"location":       "",
 					"type":           "",
 					"encryption_key": []interface{}{},
-					"region":         "us-west-2",
+					"region":         "us-west-2", //lintignore:AWSAT003
 				},
 				map[string]interface{}{
 					"location":       "",
@@ -1436,13 +1430,13 @@ func TestResourceAWSCodePipelineExpandArtifactStoresValidation(t *testing.T) {
 					"location":       "",
 					"type":           "",
 					"encryption_key": []interface{}{},
-					"region":         "us-west-2",
+					"region":         "us-west-2", //lintignore:AWSAT003
 				},
 				map[string]interface{}{
 					"location":       "",
 					"type":           "",
 					"encryption_key": []interface{}{},
-					"region":         "us-west-2",
+					"region":         "us-west-2", //lintignore:AWSAT003
 				},
 			},
 			ExpectedError: "only one Artifact Store can be defined per region for a cross-region CodePipeline",
@@ -1450,6 +1444,7 @@ func TestResourceAWSCodePipelineExpandArtifactStoresValidation(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		tc := tc
 		_, err := expandAwsCodePipelineArtifactStores(tc.Input)
 		if tc.ExpectedError == "" {
 			if err != nil {
