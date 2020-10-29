@@ -33,9 +33,9 @@ The following arguments are supported:
 
 * `name` - (Required) The name for this canary.
 * `runtime_version` - (Required) Specifies the runtime version to use for the canary. Currently, the only valid values are `syn-nodejs-2.0`, `syn-nodejs-2.0-beta`, and `syn-1.0`. For more information about runtime versions, see [Canary Runtime Versions](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_Library.html).
-* `artifact_s3_location` - (Required) The location on Amazon S3 where Synthetics stores artifacts from the test runs of this canary.
+* `artifact_s3_location` - (Required) The location in Amazon S3 where Synthetics stores artifacts from the test runs of this canary.
 * `schedule` -  (Required) Information about how often the canary is to run and when these test runs are to stop. See [Schedule](#schedule) below.
-* `handler` - (Required) The domain description.
+* `handler` - (Required) The entry point to use for the source code when running the canary. This value must end with the string `.handler` .
 * `execution_role_arn` - (Required) The ARN of the IAM role to be used to run the canary. see [AWS Docs](https://docs.aws.amazon.com/AmazonSynthetics/latest/APIReference/API_CreateCanary.html#API_CreateCanary_RequestSyntax) for permissions needs for IAM Role.
 * `start_canary` - (Optional) Whether to run or stop the canary.
 * `s3_bucket` - (Optional) If your canary script is located in S3, specify the full bucket name here. The bucket must already exist. Specify the full bucket name, including s3:// as the start of the bucket name. **Conflicts with `zip_file`**
