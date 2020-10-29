@@ -99,6 +99,7 @@ func resourceAwsRDSGlobalCluster() *schema.Resource {
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 		},
