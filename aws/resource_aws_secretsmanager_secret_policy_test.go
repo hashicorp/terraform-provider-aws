@@ -259,8 +259,8 @@ func testAccCheckAwsSecretsManagerSecretPolicyExists(resourceName string, policy
 func testAccAwsSecretsManagerSecretPolicyBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = %[1]q 
-  assume_role_policy   = <<EOF
+  name               = %[1]q
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -283,7 +283,7 @@ resource "aws_secretsmanager_secret" "test" {
 
 resource "aws_secretsmanager_secret_policy" "test" {
   secret_arn = aws_secretsmanager_secret.test.arn
-  
+
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -336,8 +336,8 @@ POLICY
 func testAccAwsSecretsManagerSecretPolicyBlockConfig(rName string, block bool) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = %[1]q 
-  assume_role_policy   = <<EOF
+  name               = %[1]q
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -361,7 +361,7 @@ resource "aws_secretsmanager_secret" "test" {
 resource "aws_secretsmanager_secret_policy" "test" {
   secret_arn          = aws_secretsmanager_secret.test.arn
   block_public_policy = %[2]t
-  
+
   policy = <<POLICY
 {
   "Version": "2012-10-17",
