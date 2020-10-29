@@ -1,14 +1,16 @@
 ---
-subcategory: "CloudWatch"
+subcategory: "EventBridge (CloudWatch Events)"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_permission"
 description: |-
-  Provides a resource to create a CloudWatch Events permission to support cross-account events in the current account default event bus.
+  Provides a resource to create an EventBridge permission to support cross-account events in the current account default event bus.
 ---
 
 # Resource: aws_cloudwatch_event_permission
 
-Provides a resource to create a CloudWatch Events permission to support cross-account events in the current account default event bus.
+Provides a resource to create an EventBridge permission to support cross-account events in the current account default event bus.
+
+~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
 ## Example Usage
 
@@ -55,11 +57,11 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The statement ID of the CloudWatch Events permission.
+* `id` - The statement ID of the EventBridge permission.
 
 ## Import
 
-CloudWatch Events permissions can be imported using the statement ID, e.g.
+EventBridge permissions can be imported using the statement ID, e.g.
 
 ```shell
 $ terraform import aws_cloudwatch_event_permission.DevAccountAccess DevAccountAccess

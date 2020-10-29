@@ -50,6 +50,7 @@ Elastic Load Balancing v2 (ALB/NLB)
 Elastic Map Reduce (EMR)
 Elastic Transcoder
 ElasticSearch
+EventBridge (CloudWatch Events)
 File System (FSx)
 Firewall Manager (FMS)
 Gamelift
