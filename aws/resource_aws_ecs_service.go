@@ -353,6 +353,12 @@ func resourceAwsEcsService() *schema.Resource {
 				},
 			},
 			"tags": tagsSchema(),
+
+			"wait_for_steady_state": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -528,6 +534,12 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] ECS service created: %s", aws.StringValue(service.ServiceArn))
 	d.SetId(aws.StringValue(service.ServiceArn))
 
+	if d.Get("wait_for_steady_state").(bool) {
+		if err := waitForSteadyState(conn, d); err != nil {
+			return err
+		}
+	}
+
 	return resourceAwsEcsServiceRead(d, meta)
 }
 
@@ -547,6 +559,9 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		out, err = conn.DescribeServices(&input)
 		if err != nil {
+			if d.IsNewResource() && isAWSErr(err, ecs.ErrCodeServiceNotFoundException, "") {
+				return resource.RetryableError(err)
+			}
 			return resource.NonRetryableError(err)
 		}
 
@@ -1032,6 +1047,12 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
+	if d.Get("wait_for_steady_state").(bool) {
+		if err := waitForSteadyState(conn, d); err != nil {
+			return err
+		}
+	}
+
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
@@ -1160,4 +1181,18 @@ func buildFamilyAndRevisionFromARN(arn string) string {
 // arn:aws:ecs:us-west-2:0123456789:cluster/radek-cluster
 func getNameFromARN(arn string) string {
 	return strings.Split(arn, "/")[1]
+}
+
+func waitForSteadyState(conn *ecs.ECS, d *schema.ResourceData) error {
+	input := &ecs.DescribeServicesInput{
+		Services: aws.StringSlice([]string{d.Id()}),
+	}
+	if v, ok := d.GetOk("cluster"); ok {
+		input.Cluster = aws.String(v.(string))
+	}
+
+	if err := conn.WaitUntilServicesStable(input); err != nil {
+		return fmt.Errorf("error waiting for service (%s) to reach a steady state: %w", d.Id(), err)
+	}
+	return nil
 }
