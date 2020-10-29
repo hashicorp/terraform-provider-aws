@@ -1,88 +1,88 @@
-## 3.13.0 (Unreleased)
+## 3.13.0 (October 29, 2020)
 
 NOTES
 
-* data-source/aws_autoscaling_groups: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_caller_identity: The `id` attribute has changed to the ID of the AWS Account. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_ebs_snapshot_ids: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_ebs_volumes: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_ec2_coip_pools: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_ec2_instance_type_offerings: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_ec2_local_gateway_route_tables: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_ec2_local_gateway_virtual_interface_groups: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_ec2_local_gateways: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_ec2_spot_price: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_efs_access_points: The `id` attribute has changed to the EFS File System identifier. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_glue_script: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_inspector_rules_packages: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_instances: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_kms_ciphertext: The `id` attribute has changed to the KMS Key. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_kms_secrets: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15725]
-* data-source/aws_network_acls: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_network_interfaces: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_organizations_organizational_units: The `id` attribute has changed to the parent identifier. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_outposts_outposts: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_outposts_sites: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_route_tables: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_route53_resolver_rules: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_s3_bucket_objects: The `id` attribute has changed to the name of the S3 Bucket. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_security_groups: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_vpc_peering_connections: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
-* data-source/aws_vpcs: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. [GH-15896]
+* data-source/aws_autoscaling_groups: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_caller_identity: The `id` attribute has changed to the ID of the AWS Account. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_ebs_snapshot_ids: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_ebs_volumes: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_ec2_coip_pools: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_ec2_instance_type_offerings: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_ec2_local_gateway_route_tables: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_ec2_local_gateway_virtual_interface_groups: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_ec2_local_gateways: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_ec2_spot_price: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_efs_access_points: The `id` attribute has changed to the EFS File System identifier. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_glue_script: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_inspector_rules_packages: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_instances: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_kms_ciphertext: The `id` attribute has changed to the KMS Key. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_kms_secrets: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15725](https://github.com/terraform-providers/terraform-provider-aws/issues/15725))
+* data-source/aws_network_acls: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_network_interfaces: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_organizations_organizational_units: The `id` attribute has changed to the parent identifier. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_outposts_outposts: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_outposts_sites: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_route_tables: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_route53_resolver_rules: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_s3_bucket_objects: The `id` attribute has changed to the name of the S3 Bucket. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_security_groups: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_vpc_peering_connections: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_vpcs: The `id` attribute has changed to the name of the AWS Region. The first apply of this updated data source may show this difference. ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
 
 FEATURES
 
-* **New Resource:** `aws_glue_resource_policy` [GH-10361]
-* **New Resource:** `aws_s3control_bucket` [GH-15510]
-* **New Resource:** `aws_s3control_bucket_lifecycle_configuration` [GH-15604]
-* **New Resource:** `aws_s3control_bucket_policy` [GH-15575]
-* **New Resource:** `aws_s3outposts_endpoint` [GH-15585]
-* **New Resource:** `aws_sagemaker_code_repository` [GH-15809]
-* **New Resource:** `aws_storagegateway_tape_pool` [GH-15370]
+* **New Resource:** `aws_glue_resource_policy` ([#10361](https://github.com/terraform-providers/terraform-provider-aws/issues/10361))
+* **New Resource:** `aws_s3control_bucket` ([#15510](https://github.com/terraform-providers/terraform-provider-aws/issues/15510))
+* **New Resource:** `aws_s3control_bucket_lifecycle_configuration` ([#15604](https://github.com/terraform-providers/terraform-provider-aws/issues/15604))
+* **New Resource:** `aws_s3control_bucket_policy` ([#15575](https://github.com/terraform-providers/terraform-provider-aws/issues/15575))
+* **New Resource:** `aws_s3outposts_endpoint` ([#15585](https://github.com/terraform-providers/terraform-provider-aws/issues/15585))
+* **New Resource:** `aws_sagemaker_code_repository` ([#15809](https://github.com/terraform-providers/terraform-provider-aws/issues/15809))
+* **New Resource:** `aws_storagegateway_tape_pool` ([#15370](https://github.com/terraform-providers/terraform-provider-aws/issues/15370))
 
 ENHANCEMENTS
 
-* resource/aws_cloudwatch_event_rule: Add `event_bus_name` [GH-15727]
-* resource/aws_ecs_service: Add `wait_for_steady_state` argument [GH-3485]
-* resource/aws_s3_access_point: Support S3 on Outposts [GH-15621]
-* resource/aws_sagemaker_model: Add `container` configuration block `mode` argument [GH-15371]
-* resource/aws_sagemaker_notebook_instance: Add support for `additional_code_repositories` [GH-15830]
-* resource/aws_sagemaker_notebook_instance: Add `url` and `network_interface_id` attributes [GH-15802]
+* resource/aws_cloudwatch_event_rule: Add `event_bus_name` ([#15727](https://github.com/terraform-providers/terraform-provider-aws/issues/15727))
+* resource/aws_ecs_service: Add `wait_for_steady_state` argument ([#3485](https://github.com/terraform-providers/terraform-provider-aws/issues/3485))
+* resource/aws_s3_access_point: Support S3 on Outposts ([#15621](https://github.com/terraform-providers/terraform-provider-aws/issues/15621))
+* resource/aws_sagemaker_model: Add `container` configuration block `mode` argument ([#15371](https://github.com/terraform-providers/terraform-provider-aws/issues/15371))
+* resource/aws_sagemaker_notebook_instance: Add support for `additional_code_repositories` ([#15830](https://github.com/terraform-providers/terraform-provider-aws/issues/15830))
+* resource/aws_sagemaker_notebook_instance: Add `url` and `network_interface_id` attributes ([#15802](https://github.com/terraform-providers/terraform-provider-aws/issues/15802))
 
 BUG FIXES
 
-* data-source/aws_autoscaling_groups: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_caller_identity: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_ebs_snapshot_ids: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_ebs_volumes: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_ec2_coip_pools: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_ec2_instance_type_offerings: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_ec2_local_gateway_route_tables: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_ec2_local_gateway_virtual_interface_groups: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_ec2_local_gateways: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_ec2_spot_price: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_efs_access_points: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_glue_script: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_inspector_rules_packages: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_instances: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_kms_ciphertext: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_kms_secrets: Prevent plan differences with the `id` attribute [GH-15725]
-* data-source/aws_network_acls: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_network_interfaces: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_organizations_organizational_units: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_outposts_outposts: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_outposts_sites: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_route_tables: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_route53_resolver_rules: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_s3_bucket_objects: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_security_groups: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_vpc_peering_connections: Prevent plan differences with the `id` attribute [GH-15896]
-* data-source/aws_vpcs: Prevent plan differences with the `id` attribute [GH-15896]
-* resource/aws_apigatewayv2_integration: Correctly handle update of AWS service integrations [GH-15894]
-* resource/aws_api_gateway_usage_plan: Change `api_stages` to from List to Set [GH-14345]
-* resource/aws_lambda_function: Update published `version` and `qualified_arn` on config changes [GH-15121]
-* resource/aws_rds_global_cluster: Prevent recreation when using encrypted `source_db_cluster_identifier` without `storage_encrypted` [GH-15916]
-* resource/aws_vpc_peering_connection_options: Only modify options that have changed [GH-12126]
+* data-source/aws_autoscaling_groups: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_caller_identity: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_ebs_snapshot_ids: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_ebs_volumes: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_ec2_coip_pools: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_ec2_instance_type_offerings: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_ec2_local_gateway_route_tables: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_ec2_local_gateway_virtual_interface_groups: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_ec2_local_gateways: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_ec2_spot_price: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_efs_access_points: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_glue_script: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_inspector_rules_packages: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_instances: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_kms_ciphertext: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_kms_secrets: Prevent plan differences with the `id` attribute ([#15725](https://github.com/terraform-providers/terraform-provider-aws/issues/15725))
+* data-source/aws_network_acls: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_network_interfaces: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_organizations_organizational_units: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_outposts_outposts: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_outposts_sites: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_route_tables: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_route53_resolver_rules: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_s3_bucket_objects: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_security_groups: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_vpc_peering_connections: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* data-source/aws_vpcs: Prevent plan differences with the `id` attribute ([#15896](https://github.com/terraform-providers/terraform-provider-aws/issues/15896))
+* resource/aws_apigatewayv2_integration: Correctly handle update of AWS service integrations ([#15894](https://github.com/terraform-providers/terraform-provider-aws/issues/15894))
+* resource/aws_api_gateway_usage_plan: Change `api_stages` to from List to Set ([#14345](https://github.com/terraform-providers/terraform-provider-aws/issues/14345))
+* resource/aws_lambda_function: Update published `version` and `qualified_arn` on config changes ([#15121](https://github.com/terraform-providers/terraform-provider-aws/issues/15121))
+* resource/aws_rds_global_cluster: Prevent recreation when using encrypted `source_db_cluster_identifier` without `storage_encrypted` ([#15916](https://github.com/terraform-providers/terraform-provider-aws/issues/15916))
+* resource/aws_vpc_peering_connection_options: Only modify options that have changed ([#12126](https://github.com/terraform-providers/terraform-provider-aws/issues/12126))
 
 ## 3.12.0 (October 22, 2020)
 
