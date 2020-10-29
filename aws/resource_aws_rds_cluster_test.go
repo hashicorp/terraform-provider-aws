@@ -762,7 +762,7 @@ func TestAccAWSRDSCluster_ReplicationSourceIdentifier_KmsKeyId(t *testing.T) {
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSClusterDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
@@ -1353,8 +1353,12 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *te
 	resourceNameSecondary := "aws_rds_cluster.secondary"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
+			testAccPreCheckAWSRdsGlobalCluster(t)
+		},
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1383,7 +1387,7 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_ReplicationSourceIdentifier(t 
 			testAccMultipleRegionPreCheck(t, 2)
 			testAccPreCheckAWSRdsGlobalCluster(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{

@@ -218,7 +218,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachment_SharedTransitGateway(t *testing.T)
 			testAccAlternateAccountPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{

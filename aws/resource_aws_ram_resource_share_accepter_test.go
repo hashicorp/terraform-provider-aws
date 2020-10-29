@@ -26,7 +26,7 @@ func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsRamResourceShareAccepterDestroy,
 		Steps: []resource.TestStep{
 			{

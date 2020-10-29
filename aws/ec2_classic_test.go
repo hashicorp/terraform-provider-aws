@@ -75,10 +75,3 @@ func testAccGetEc2ClassicRegion() string {
 
 	return testAccGetRegion()
 }
-
-// testAccProviderFactoriesEc2Classic initializes providers for EC2-Classic testing.
-//
-// Deprecated: This will be replaced with testAccProviderFactories when it only returns the "aws" provider
-func testAccProviderFactoriesEc2Classic() map[string]func() (*schema.Provider, error) {
-	return testAccProviderFactoriesInit(nil, []string{ProviderNameAws})
-}

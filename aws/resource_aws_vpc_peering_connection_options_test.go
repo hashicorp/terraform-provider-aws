@@ -109,10 +109,9 @@ func TestAccAWSVpcPeeringConnectionOptions_differentRegionSameAccount(t *testing
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccMultipleRegionsPreCheck(t)
-			testAccAlternateRegionPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -207,7 +206,7 @@ func TestAccAWSVpcPeeringConnectionOptions_sameRegionDifferentAccount(t *testing
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
