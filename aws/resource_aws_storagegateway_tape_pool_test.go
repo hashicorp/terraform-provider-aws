@@ -29,7 +29,7 @@ func TestAccAWSStorageGatewayTapePool_basic(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`tapepool/pool-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "storage_class", "GLACIER"),
-					resource.TestCheckResourceAttr(resourceName, "retention_look_type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "retention_lock_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "retention_lock_time_in_days", "0"),
 				),
 			},
@@ -59,7 +59,7 @@ func TestAccAWSStorageGatewayTapePool_retention(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`tapepool/pool-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "storage_class", "GLACIER"),
-					resource.TestCheckResourceAttr(resourceName, "retention_look_type", "GOVERNANCE"),
+					resource.TestCheckResourceAttr(resourceName, "retention_lock_type", "GOVERNANCE"),
 					resource.TestCheckResourceAttr(resourceName, "retention_lock_time_in_days", "1"),
 				),
 			},
@@ -207,7 +207,7 @@ func testAccAWSStorageGatewayTapePoolRetentionConfig(rName string) string {
 resource "aws_storagegateway_tape_pool" "test" {
   pool_name                   = %[1]q
   storage_class               = "GLACIER"
-  retention_look_type         = "GOVERNANCE"
+  retention_lock_type         = "GOVERNANCE"
   retention_lock_time_in_days = 1
 }
 `, rName)

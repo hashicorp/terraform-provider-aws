@@ -38,7 +38,7 @@ func resourceAwsStorageGatewayTapePool() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(storagegateway.TapeStorageClass_Values(), false),
 			},
-			"retention_look_type": {
+			"retention_lock_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      storagegateway.RetentionLockTypeNone,
@@ -63,7 +63,7 @@ func resourceAwsStorageGatewayTapePoolCreate(d *schema.ResourceData, meta interf
 	input := &storagegateway.CreateTapePoolInput{
 		PoolName:                aws.String(d.Get("pool_name").(string)),
 		StorageClass:            aws.String(d.Get("storage_class").(string)),
-		RetentionLockType:       aws.String(d.Get("retention_look_type").(string)),
+		RetentionLockType:       aws.String(d.Get("retention_lock_type").(string)),
 		RetentionLockTimeInDays: aws.Int64(int64(d.Get("retention_lock_time_in_days").(int))),
 		Tags:                    keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().StoragegatewayTags(),
 	}
@@ -119,7 +119,7 @@ func resourceAwsStorageGatewayTapePoolRead(d *schema.ResourceData, meta interfac
 	d.Set("arn", poolArn)
 	d.Set("pool_name", aws.StringValue(pool.PoolName))
 	d.Set("retention_lock_time_in_days", aws.Int64Value(pool.RetentionLockTimeInDays))
-	d.Set("retention_look_type", aws.StringValue(pool.RetentionLockType))
+	d.Set("retention_lock_type", aws.StringValue(pool.RetentionLockType))
 	d.Set("storage_class", aws.StringValue(pool.StorageClass))
 
 	tags, err := keyvaluetags.StoragegatewayListTags(conn, poolArn)
