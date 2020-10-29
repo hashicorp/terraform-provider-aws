@@ -57,7 +57,7 @@ func dataSourceAwsKmsCiphertextRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	d.SetId(d.Get("key_id").(string))
+	d.SetId(aws.StringValue(resp.KeyId))
 
 	d.Set("ciphertext_blob", base64.StdEncoding.EncodeToString(resp.CiphertextBlob))
 
