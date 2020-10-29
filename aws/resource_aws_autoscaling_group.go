@@ -1602,8 +1602,8 @@ func expandAutoScalingLaunchTemplateOverride(m map[string]interface{}) *autoscal
 		launchTemplateOverrides.InstanceType = aws.String(v.(string))
 	}
 
-	if v, ok := m["launch_template_specification"]; ok && v.(string) != "" {
-		launchTemplateOverrides.LaunchTemplateSpecification = expandAutoScalingLaunchTemplateSpecification(v.([]interface{}))
+	if v, ok := m["launch_template_specification"]; ok && v.([]interface{}) != nil {
+		launchTemplateOverrides.LaunchTemplateSpecification = expandAutoScalingLaunchTemplateSpecification(m["launch_template_specification"].([]interface{}))
 	}
 
 	if v, ok := m["weighted_capacity"]; ok && v.(string) != "" {
