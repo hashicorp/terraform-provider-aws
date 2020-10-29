@@ -1817,6 +1817,46 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_EngineVersion_Equal(t *testing.T) {
 	})
 }
 
+func TestAccAWSRDSCluster_SnapshotIdentifier_KmsKeyId(t *testing.T) {
+	var dbCluster, sourceDbCluster rds.DBCluster
+	var dbClusterSnapshot rds.DBClusterSnapshot
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	kmsKeyResourceName := "aws_kms_key.test"
+	sourceDbResourceName := "aws_rds_cluster.source"
+	snapshotResourceName := "aws_db_cluster_snapshot.test"
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRDSClusterConfig_SnapshotIdentifier_KmsKeyId(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(sourceDbResourceName, &sourceDbCluster),
+					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckAWSClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"master_password",
+					"skip_final_snapshot",
+					"snapshot_identifier",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSRDSCluster_SnapshotIdentifier_MasterPassword(t *testing.T) {
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
@@ -3630,6 +3670,33 @@ resource "aws_rds_cluster" "test" {
   snapshot_identifier = aws_db_cluster_snapshot.test.id
 }
 `, rName, engine, engineVersionSource, rName, rName, engine, engineVersion)
+}
+
+func testAccAWSRDSClusterConfig_SnapshotIdentifier_KmsKeyId(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_rds_cluster" "source" {
+  cluster_identifier  = "%[1]s-source"
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
+}
+
+resource "aws_db_cluster_snapshot" "test" {
+  db_cluster_identifier          = aws_rds_cluster.source.id
+  db_cluster_snapshot_identifier = %[1]q
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  kms_key_id          = aws_kms_key.test.arn
+  skip_final_snapshot = true
+  snapshot_identifier = aws_db_cluster_snapshot.test.id
+}
+`, rName)
 }
 
 func testAccAWSRDSClusterConfig_SnapshotIdentifier_MasterPassword(rName, masterPassword string) string {

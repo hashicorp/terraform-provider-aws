@@ -212,18 +212,8 @@ func resourceAwsRDSCluster() *schema.Resource {
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Allow configuration to be unset when using engine_mode serverless, as its required to be true
-					// InvalidParameterCombination: Aurora Serverless DB clusters are always encrypted at rest. Encryption can't be disabled.
-					if d.Get("engine_mode").(string) != "serverless" {
-						return false
-					}
-					if new != "false" {
-						return false
-					}
-					return true
-				},
 			},
 
 			"s3_import": {
