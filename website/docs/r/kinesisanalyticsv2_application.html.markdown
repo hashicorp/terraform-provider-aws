@@ -447,7 +447,7 @@ The `cloudwatch_logging_options` object supports the following:
 
 * `log_stream_arn` - (Required) The ARN of the CloudWatch log stream to receive application messages.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
