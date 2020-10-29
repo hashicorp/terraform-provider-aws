@@ -15,6 +15,7 @@ FEATURES
 ENHANCEMENTS
 
 * resource/aws_cloudwatch_event_rule: Add `event_bus_name` [GH-15727]
+* resource/aws_ecs_service: Add `wait_for_steady_state` argument [GH-3485]
 * resource/aws_s3_access_point: Support S3 on Outposts [GH-15621]
 * resource/aws_sagemaker_model: Add `container` configuration block `mode` argument [GH-15371]
 * resource/aws_sagemaker_notebook_instance: Add `url` and `network_interface_id` attributes [GH-15802]
