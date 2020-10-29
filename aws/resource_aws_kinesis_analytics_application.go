@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalytics/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalytics/waiter"
 )
 
 func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
@@ -633,55 +635,52 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 	conn := meta.(*AWSClient).kinesisanalyticsconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	name := d.Get("name").(string)
+	application, err := finder.ApplicationByName(conn, d.Get("name").(string))
 
-	describeOpts := &kinesisanalytics.DescribeApplicationInput{
-		ApplicationName: aws.String(name),
-	}
-	resp, err := conn.DescribeApplication(describeOpts)
 	if isAWSErr(err, kinesisanalytics.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Kinesis Analytics Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("error reading Kinesis Analytics Application (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading Kinesis Analytics Application (%s): %w", d.Id(), err)
 	}
 
-	arn := aws.StringValue(resp.ApplicationDetail.ApplicationARN)
-	d.Set("name", aws.StringValue(resp.ApplicationDetail.ApplicationName))
+	arn := aws.StringValue(application.ApplicationARN)
 	d.Set("arn", arn)
-	d.Set("code", aws.StringValue(resp.ApplicationDetail.ApplicationCode))
-	d.Set("create_timestamp", aws.TimeValue(resp.ApplicationDetail.CreateTimestamp).Format(time.RFC3339))
-	d.Set("description", aws.StringValue(resp.ApplicationDetail.ApplicationDescription))
-	d.Set("last_update_timestamp", aws.TimeValue(resp.ApplicationDetail.LastUpdateTimestamp).Format(time.RFC3339))
-	d.Set("status", aws.StringValue(resp.ApplicationDetail.ApplicationStatus))
-	d.Set("version", int(aws.Int64Value(resp.ApplicationDetail.ApplicationVersionId)))
+	d.Set("code", application.ApplicationCode)
+	d.Set("create_timestamp", aws.TimeValue(application.CreateTimestamp).Format(time.RFC3339))
+	d.Set("description", application.ApplicationDescription)
+	d.Set("last_update_timestamp", aws.TimeValue(application.LastUpdateTimestamp).Format(time.RFC3339))
+	d.Set("name", application.ApplicationName)
+	d.Set("status", application.ApplicationStatus)
+	d.Set("version", int(aws.Int64Value(application.ApplicationVersionId)))
 
-	if err := d.Set("cloudwatch_logging_options", flattenKinesisAnalyticsCloudwatchLoggingOptions(resp.ApplicationDetail.CloudWatchLoggingOptionDescriptions)); err != nil {
-		return fmt.Errorf("error setting cloudwatch_logging_options: %s", err)
+	if err := d.Set("cloudwatch_logging_options", flattenKinesisAnalyticsCloudwatchLoggingOptions(application.CloudWatchLoggingOptionDescriptions)); err != nil {
+		return fmt.Errorf("error setting cloudwatch_logging_options: %w", err)
 	}
 
-	if err := d.Set("inputs", flattenKinesisAnalyticsInputs(resp.ApplicationDetail.InputDescriptions)); err != nil {
-		return fmt.Errorf("error setting inputs: %s", err)
+	if err := d.Set("inputs", flattenKinesisAnalyticsInputs(application.InputDescriptions)); err != nil {
+		return fmt.Errorf("error setting inputs: %w", err)
 	}
 
-	if err := d.Set("outputs", flattenKinesisAnalyticsOutputs(resp.ApplicationDetail.OutputDescriptions)); err != nil {
-		return fmt.Errorf("error setting outputs: %s", err)
+	if err := d.Set("outputs", flattenKinesisAnalyticsOutputs(application.OutputDescriptions)); err != nil {
+		return fmt.Errorf("error setting outputs: %w", err)
 	}
 
-	if err := d.Set("reference_data_sources", flattenKinesisAnalyticsReferenceDataSources(resp.ApplicationDetail.ReferenceDataSourceDescriptions)); err != nil {
-		return fmt.Errorf("error setting reference_data_sources: %s", err)
+	if err := d.Set("reference_data_sources", flattenKinesisAnalyticsReferenceDataSources(application.ReferenceDataSourceDescriptions)); err != nil {
+		return fmt.Errorf("error setting reference_data_sources: %w", err)
 	}
 
 	tags, err := keyvaluetags.KinesisanalyticsListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Kinesis Analytics Application (%s): %s", arn, err)
+		return fmt.Errorf("error listing tags for Kinesis Analytics Application (%s): %w", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -866,27 +865,34 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 
 func resourceAwsKinesisAnalyticsApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kinesisanalyticsconn
-	name := d.Get("name").(string)
-	createTimestamp, parseErr := time.Parse(time.RFC3339, d.Get("create_timestamp").(string))
-	if parseErr != nil {
-		return parseErr
+
+	createTimestamp, err := time.Parse(time.RFC3339, d.Get("create_timestamp").(string))
+	if err != nil {
+		return fmt.Errorf("error parsing create_timestamp: %w", err)
 	}
 
-	log.Printf("[DEBUG] Kinesis Analytics Application destroy: %v", d.Id())
-	deleteOpts := &kinesisanalytics.DeleteApplicationInput{
-		ApplicationName: aws.String(name),
+	applicationName := d.Get("name").(string)
+
+	log.Printf("[DEBUG] Deleting Kinesis Analytics Application (%s)", d.Id())
+	_, err = conn.DeleteApplication(&kinesisanalytics.DeleteApplicationInput{
+		ApplicationName: aws.String(applicationName),
 		CreateTimestamp: aws.Time(createTimestamp),
-	}
-	_, deleteErr := conn.DeleteApplication(deleteOpts)
-	if isAWSErr(deleteErr, kinesisanalytics.ErrCodeResourceNotFoundException, "") {
+	})
+
+	if isAWSErr(err, kinesisanalytics.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
-	deleteErr = waitForDeleteKinesisAnalyticsApplication(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-	if deleteErr != nil {
-		return fmt.Errorf("error waiting for deletion of Kinesis Analytics Application (%s): %s", d.Id(), deleteErr)
+
+	if err != nil {
+		return fmt.Errorf("error deleting Kinesis Analytics Application (%s): %w", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Kinesis Analytics Application deleted: %v", d.Id())
+	_, err = waiter.ApplicationDeleted(conn, applicationName, d.Timeout(schema.TimeoutDelete))
+
+	if err != nil {
+		return fmt.Errorf("error waiting for Kinesis Analytics Application (%s) deletion: %w", d.Id(), err)
+	}
+
 	return nil
 }
 
@@ -1596,42 +1602,4 @@ func flattenKinesisAnalyticsReferenceDataSources(dataSources []*kinesisanalytics
 	}
 
 	return s
-}
-
-func waitForDeleteKinesisAnalyticsApplication(conn *kinesisanalytics.KinesisAnalytics, applicationId string, timeout time.Duration) error {
-	stateConf := resource.StateChangeConf{
-		Pending: []string{
-			kinesisanalytics.ApplicationStatusRunning,
-			kinesisanalytics.ApplicationStatusDeleting,
-		},
-		Target:  []string{""},
-		Timeout: timeout,
-		Refresh: refreshKinesisAnalyticsApplicationStatus(conn, applicationId),
-	}
-	application, err := stateConf.WaitForState()
-	if err != nil {
-		if isAWSErr(err, kinesisanalytics.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
-	}
-	if application == nil {
-		return nil
-	}
-	return err
-}
-
-func refreshKinesisAnalyticsApplicationStatus(conn *kinesisanalytics.KinesisAnalytics, applicationId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := conn.DescribeApplication(&kinesisanalytics.DescribeApplicationInput{
-			ApplicationName: aws.String(applicationId),
-		})
-		if err != nil {
-			return nil, "", err
-		}
-		application := output.ApplicationDetail
-		if application == nil {
-			return application, "", fmt.Errorf("Kinesis Analytics Application (%s) could not be found.", applicationId)
-		}
-		return application, aws.StringValue(application.ApplicationStatus), nil
-	}
 }

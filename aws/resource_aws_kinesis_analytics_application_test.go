@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
@@ -11,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalytics/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalytics/finder"
 )
 
 func init() {
@@ -43,48 +44,28 @@ func testSweepKinesisAnalyticsApplications(region string) error {
 
 		var name string
 		for _, applicationSummary := range output.ApplicationSummaries {
+			arn := aws.StringValue(applicationSummary.ApplicationARN)
 			name = aws.StringValue(applicationSummary.ApplicationName)
 
-			output, err := conn.DescribeApplication(&kinesisanalytics.DescribeApplicationInput{
-				ApplicationName: aws.String(name),
-			})
-			if isAWSErr(err, kinesisanalytics.ErrCodeResourceNotFoundException, "") {
-				continue
-			}
+			application, err := finder.ApplicationByName(conn, name)
+
 			if err != nil {
-				sweeperErr := fmt.Errorf("error describing Kinesis Analytics Application (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErr := fmt.Errorf("error reading Kinesis Analytics Application (%s): %w", arn, err)
+				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 				continue
 			}
 
-			if output.ApplicationDetail == nil {
-				continue
-			}
+			r := resourceAwsKinesisAnalyticsApplication()
+			d := r.Data(nil)
+			d.SetId(arn)
+			d.Set("create_timestamp", aws.TimeValue(application.CreateTimestamp).Format(time.RFC3339))
+			d.Set("name", name)
+			err = r.Delete(d, client)
 
-			log.Printf("[INFO] Deleting Kinesis Analytics Application: %s", name)
-			_, err = conn.DeleteApplication(&kinesisanalytics.DeleteApplicationInput{
-				ApplicationName: aws.String(name),
-				CreateTimestamp: output.ApplicationDetail.CreateTimestamp,
-			})
-			if isAWSErr(err, kinesisanalytics.ErrCodeResourceNotFoundException, "") {
-				continue
-			}
 			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Kinesis Analytics Application (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-
-			_, err = waiter.ApplicationDeleted(conn, name)
-			if isAWSErr(err, kinesisanalytics.ErrCodeResourceNotFoundException, "") {
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error waiting for Kinesis Analytics Application (%s) to be deleted: %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
 		}
@@ -727,25 +708,27 @@ func TestAccAWSKinesisAnalyticsApplication_tags(t *testing.T) {
 }
 
 func testAccCheckKinesisAnalyticsApplicationDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).kinesisanalyticsconn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kinesis_analytics_application" {
 			continue
 		}
-		conn := testAccProvider.Meta().(*AWSClient).kinesisanalyticsconn
-		describeOpts := &kinesisanalytics.DescribeApplicationInput{
-			ApplicationName: aws.String(rs.Primary.Attributes["name"]),
+
+		_, err := finder.ApplicationByName(conn, rs.Primary.Attributes["name"])
+		if isAWSErr(err, kinesisanalytics.ErrCodeResourceNotFoundException, "") {
+			continue
 		}
-		resp, err := conn.DescribeApplication(describeOpts)
-		if err == nil {
-			if resp.ApplicationDetail != nil && *resp.ApplicationDetail.ApplicationStatus != kinesisanalytics.ApplicationStatusDeleting {
-				return fmt.Errorf("Error: Application still exists")
-			}
+		if err != nil {
+			return err
 		}
+
+		return fmt.Errorf("Kinesis Analytics Application %s still exists", rs.Primary.ID)
 	}
 	return nil
 }
 
-func testAccCheckKinesisAnalyticsApplicationExists(n string, application *kinesisanalytics.ApplicationDetail) resource.TestCheckFunc {
+func testAccCheckKinesisAnalyticsApplicationExists(n string, v *kinesisanalytics.ApplicationDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -757,15 +740,13 @@ func testAccCheckKinesisAnalyticsApplicationExists(n string, application *kinesi
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).kinesisanalyticsconn
-		describeOpts := &kinesisanalytics.DescribeApplicationInput{
-			ApplicationName: aws.String(rs.Primary.Attributes["name"]),
-		}
-		resp, err := conn.DescribeApplication(describeOpts)
+
+		application, err := finder.ApplicationByName(conn, rs.Primary.Attributes["name"])
 		if err != nil {
 			return err
 		}
 
-		*application = *resp.ApplicationDetail
+		*v = *application
 
 		return nil
 	}
