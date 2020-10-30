@@ -537,7 +537,7 @@ func resourceAwsGlueCrawlerUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if d.HasChanges(
 		"catalog_target", "classifiers", "configuration", "description", "dynamodb_target", "jdbc_target", "role",
-		"s3_target", "schedule", "schema_change_policy", "security_configuration", "table_prefix") {
+		"s3_target", "schedule", "schema_change_policy", "security_configuration", "table_prefix", "mongodb_target") {
 		updateCrawlerInput, err := updateCrawlerInput(name, d)
 		if err != nil {
 			return err
