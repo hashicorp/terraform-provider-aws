@@ -1038,6 +1038,12 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_emr_*",
       "**/emr_*"
     ]
+    "service/eventbridge" = [
+      # EventBridge is rebranded CloudWatch Events
+      "aws/internal/service/cloudwatchevents/**/*",
+      "**/*_cloudwatch_event_*",
+      "**/cloudwatch_event_*"
+    ]
     "service/firehose" = [
       "aws/internal/service/firehose/**/*",
       "**/*_firehose_*",
