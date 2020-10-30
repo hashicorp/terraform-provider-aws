@@ -298,7 +298,7 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 		resp, err = conn.CreateDBInstance(createOpts)
 	}
 	if err != nil {
-		return fmt.Errorf("error creating RDS DB Instance: %s", err)
+		return fmt.Errorf("error creating RDS Cluster (%s) Instance: %w", d.Get("cluster_identifier").(string), err)
 	}
 
 	d.SetId(*resp.DBInstance.DBInstanceIdentifier)
