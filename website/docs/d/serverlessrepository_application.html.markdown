@@ -20,11 +20,10 @@ data "aws_serverlessrepository_application" "example" {
 resource "aws_cloudformation_stack" "example" {
   name = "Example"
 
-  capabilities = ["CAPABILITY_NAMED_IAM"]
+  capabilities = data.aws_serverlessrepository_application.example.required_capabilities
 
   template_url = data.aws_serverlessrepository_application.example.template_url
 }
-
 ```
 
 ## Argument Reference
@@ -37,5 +36,6 @@ resource "aws_cloudformation_stack" "example" {
 * `application_id` - The ARN of the application.
 * `semantic_version` - The version of the application retrieved.
 * `name` - The name of the application.
+* `required_capabilities` - A list of capabilities describing the permissions needed to deploy the application.
 * `source_code_url` - A URL pointing to the source code of the application version.
 * `template_url` - A URL pointing to the Cloud Formation template for the application version.

@@ -28,6 +28,12 @@ func dataSourceAwsServerlessRepositoryApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"required_capabilities": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
 			"source_code_url": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -53,11 +59,11 @@ func dataSourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, me
 		version := v.(string)
 		input.SemanticVersion = aws.String(version)
 	}
-	log.Printf("[DEBUG] Reading Serverless Repo Application with request: %s", input)
+	log.Printf("[DEBUG] Reading Serverless Application Repository application with request: %s", input)
 
 	output, err := conn.GetApplication(input)
 	if err != nil {
-		return fmt.Errorf("error reading application: %w", err)
+		return fmt.Errorf("error reading Serverless Application Repository application (%s): %w", applicationID, err)
 	}
 
 	d.SetId(applicationID)
@@ -65,6 +71,9 @@ func dataSourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, me
 	d.Set("semantic_version", output.Version.SemanticVersion)
 	d.Set("source_code_url", output.Version.SourceCodeUrl)
 	d.Set("template_url", output.Version.TemplateUrl)
+	if err = d.Set("required_capabilities", flattenStringSet(output.Version.RequiredCapabilities)); err != nil {
+		return fmt.Errorf("failed to set required_capabilities: %w", err)
+	}
 
 	return nil
 }
