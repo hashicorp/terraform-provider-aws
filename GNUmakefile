@@ -79,7 +79,7 @@ docscheck:
 		-require-resource-subcategory
 	@misspell -error -source text CHANGELOG.md
 
-lint: golangci-lint awsproviderlint
+lint: golangci-lint awsproviderlint importlint
 
 golangci-lint:
 	@golangci-lint run ./$(PKG_NAME)/...
@@ -161,6 +161,9 @@ awsproviderlint:
 		-V008 \
 		./$(PKG_NAME)
 
+importlint:
+	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
+
 tools:
 	cd awsproviderlint && GO111MODULE=on go install .
 	cd tools && GO111MODULE=on go install github.com/bflad/tfproviderdocs
@@ -168,6 +171,7 @@ tools:
 	cd tools && GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
 	cd tools && GO111MODULE=on go install github.com/katbyte/terrafmt
 	cd tools && GO111MODULE=on go install github.com/terraform-linters/tflint
+	cd tools && GO111MODULE=on go install github.com/pavius/impi/cmd/impi
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
