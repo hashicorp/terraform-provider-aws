@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/lister"
@@ -45,8 +44,9 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 			},
 
 			"arn": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"input": {
@@ -64,8 +64,9 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 			},
 
 			"role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"run_command_targets": {
@@ -100,9 +101,10 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
 						"launch_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "EC2",
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      events.LaunchTypeEc2,
+							ValidateFunc: validation.StringInSlice(events.LaunchType_Values(), false),
 						},
 						"network_configuration": {
 							Type:     schema.TypeList,
@@ -114,13 +116,11 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
-										Set:      schema.HashString,
 									},
 									"subnets": {
 										Type:     schema.TypeSet,
 										Required: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
-										Set:      schema.HashString,
 									},
 									"assign_public_ip": {
 										Type:     schema.TypeBool,
@@ -144,7 +144,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 						"task_definition_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1600),
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -278,22 +278,20 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 			d.SetId("")
 			return nil
 		}
-		if awsErr, ok := err.(awserr.Error); ok {
-			// This should never happen, but it's useful
-			// for recovering from https://github.com/hashicorp/terraform/issues/5389
-			if awsErr.Code() == "ValidationException" {
-				log.Printf("[WARN] Removing CloudWatch Event Target %q because it never existed.", d.Id())
-				d.SetId("")
-				return nil
-			}
-
-			if awsErr.Code() == "ResourceNotFoundException" {
-				log.Printf("[WARN] CloudWatch Event Target (%q) not found. Removing it from state.", d.Id())
-				d.SetId("")
-				return nil
-			}
-
+		// This should never happen, but it's useful
+		// for recovering from https://github.com/hashicorp/terraform/issues/5389
+		if isAWSErr(err, "ValidationException", "") {
+			log.Printf("[WARN] Removing CloudWatch Event Target %q because it never existed.", d.Id())
+			d.SetId("")
+			return nil
 		}
+
+		if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+			log.Printf("[WARN] CloudWatch Event Target (%q) not found. Removing it from state.", d.Id())
+			d.SetId("")
+			return nil
+		}
+
 		return err
 	}
 	log.Printf("[DEBUG] Found Event Target: %s", t)
@@ -590,7 +588,7 @@ func flattenAwsCloudWatchEventTargetRunParameters(runCommand *events.RunCommandP
 	for _, x := range runCommand.RunCommandTargets {
 		config := make(map[string]interface{})
 
-		config["key"] = *x.Key
+		config["key"] = aws.StringValue(x.Key)
 		config["values"] = flattenStringList(x.Values)
 
 		result = append(result, config)
@@ -601,17 +599,17 @@ func flattenAwsCloudWatchEventTargetRunParameters(runCommand *events.RunCommandP
 func flattenAwsCloudWatchEventTargetEcsParameters(ecsParameters *events.EcsParameters) []map[string]interface{} {
 	config := make(map[string]interface{})
 	if ecsParameters.Group != nil {
-		config["group"] = *ecsParameters.Group
+		config["group"] = aws.StringValue(ecsParameters.Group)
 	}
 	if ecsParameters.LaunchType != nil {
-		config["launch_type"] = *ecsParameters.LaunchType
+		config["launch_type"] = aws.StringValue(ecsParameters.LaunchType)
 	}
 	config["network_configuration"] = flattenAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(ecsParameters.NetworkConfiguration)
 	if ecsParameters.PlatformVersion != nil {
-		config["platform_version"] = *ecsParameters.PlatformVersion
+		config["platform_version"] = aws.StringValue(ecsParameters.PlatformVersion)
 	}
-	config["task_count"] = *ecsParameters.TaskCount
-	config["task_definition_arn"] = *ecsParameters.TaskDefinitionArn
+	config["task_count"] = aws.Int64Value(ecsParameters.TaskCount)
+	config["task_definition_arn"] = aws.StringValue(ecsParameters.TaskDefinitionArn)
 	result := []map[string]interface{}{config}
 	return result
 }
@@ -621,11 +619,11 @@ func flattenAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(nc *events
 	}
 
 	result := make(map[string]interface{})
-	result["security_groups"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.SecurityGroups))
-	result["subnets"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.Subnets))
+	result["security_groups"] = flattenStringSet(nc.AwsvpcConfiguration.SecurityGroups)
+	result["subnets"] = flattenStringSet(nc.AwsvpcConfiguration.Subnets)
 
 	if nc.AwsvpcConfiguration.AssignPublicIp != nil {
-		result["assign_public_ip"] = *nc.AwsvpcConfiguration.AssignPublicIp == events.AssignPublicIpEnabled
+		result["assign_public_ip"] = aws.StringValue(nc.AwsvpcConfiguration.AssignPublicIp) == events.AssignPublicIpEnabled
 	}
 
 	return []interface{}{result}
@@ -647,14 +645,14 @@ func flattenAwsCloudWatchEventTargetBatchParameters(batchParameters *events.Batc
 
 func flattenAwsCloudWatchEventTargetKinesisParameters(kinesisParameters *events.KinesisParameters) []map[string]interface{} {
 	config := make(map[string]interface{})
-	config["partition_key_path"] = *kinesisParameters.PartitionKeyPath
+	config["partition_key_path"] = aws.StringValue(kinesisParameters.PartitionKeyPath)
 	result := []map[string]interface{}{config}
 	return result
 }
 
 func flattenAwsCloudWatchEventTargetSqsParameters(sqsParameters *events.SqsParameters) []map[string]interface{} {
 	config := make(map[string]interface{})
-	config["message_group_id"] = *sqsParameters.MessageGroupId
+	config["message_group_id"] = aws.StringValue(sqsParameters.MessageGroupId)
 	result := []map[string]interface{}{config}
 	return result
 }
@@ -663,9 +661,9 @@ func flattenAwsCloudWatchInputTransformer(inputTransformer *events.InputTransfor
 	config := make(map[string]interface{})
 	inputPathsMap := make(map[string]string)
 	for k, v := range inputTransformer.InputPathsMap {
-		inputPathsMap[k] = *v
+		inputPathsMap[k] = aws.StringValue(v)
 	}
-	config["input_template"] = *inputTransformer.InputTemplate
+	config["input_template"] = aws.StringValue(inputTransformer.InputTemplate)
 	config["input_paths"] = inputPathsMap
 
 	result := []map[string]interface{}{config}
