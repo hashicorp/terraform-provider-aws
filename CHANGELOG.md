@@ -1,3 +1,9 @@
+## 3.14.0 (Unreleased)
+
+ENHANCEMENTS
+
+* resource/aws_cloudwatch_event_target: add plan time validation to `arn`, `role_arn`, `launch_type`, `task_definition_arn` [GH-11685]
+
 ## 3.13.0 (October 29, 2020)
 
 NOTES
