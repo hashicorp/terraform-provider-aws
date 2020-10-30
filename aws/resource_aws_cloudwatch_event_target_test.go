@@ -415,9 +415,32 @@ func TestAccAWSCloudWatchEventTarget_disappears(t *testing.T) {
 				Config: testAccAWSCloudWatchEventTargetConfig(ruleName, snsTopicName1, targetID1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventTargetExists(resourceName, &target),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventTarget(), resourceName),
 				),
-				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudWatchEventTarget_inputTransformerJsonString(t *testing.T) {
+	var target events.Target
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resourceName := "aws_cloudwatch_event_target.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchEventTargetConfigInputTransformerJsonString(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventTargetExists(resourceName, &target),
+					resource.TestCheckResourceAttr(resourceName, "input_transformer.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.instance", "$.detail.instance"),
+					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_template", "\"<instance> is in state <status>\""),
+				),
 			},
 		},
 	})
@@ -1150,9 +1173,76 @@ func testAccAWSCloudWatchEventTargetConfigInputTransformer(rName string, inputPa
   "%s": <%s>,`, sampleInputPaths[i], sampleInputPaths[i])
 	}
 
+	return composeConfig(
+		testAccAWSCloudWatchEventTargetConfigLambdaBase(rName),
+		fmt.Sprintf(`
+resource "aws_cloudwatch_event_target" "test" {
+  arn  = aws_lambda_function.test.arn
+  rule = aws_cloudwatch_event_rule.schedule.id
+
+  input_transformer {
+    input_paths = {
+      %[2]s
+    }
+
+    input_template = <<EOF
+{
+  "detail-type": "Scheduled Event",
+  "source": "aws.events",%[3]s
+  "detail": {}
+}
+EOF
+  }
+}
+
+resource "aws_cloudwatch_event_rule" "schedule" {
+  name        = "%[1]s"
+  description = "test_input_transformer"
+
+  schedule_expression = "rate(5 minutes)"
+}
+`, rName, inputPaths.String(), inputTemplates.String()))
+}
+
+func testAccAWSCloudWatchEventTargetConfigInputTransformerJsonString(name string) string {
+	return composeConfig(
+		testAccAWSCloudWatchEventTargetConfigLambdaBase(name),
+		fmt.Sprintf(`
+resource "aws_cloudwatch_event_target" "test" {
+  arn  = aws_lambda_function.test.arn
+  rule = aws_cloudwatch_event_rule.test.id
+
+  input_transformer {
+    input_paths = {
+      instance = "$.detail.instance",
+      status   = "$.detail.status",
+    }
+    input_template = "\"<instance> is in state <status>\""
+  }
+}
+
+resource "aws_cloudwatch_event_rule" "test" {
+  name        = %[1]q
+  description = "test_input_transformer"
+
+  schedule_expression = "rate(5 minutes)"
+}
+`, name))
+}
+
+func testAccAWSCloudWatchEventTargetConfigLambdaBase(name string) string {
 	return fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  function_name    = %[1]q
+  filename         = "test-fixtures/lambdatest.zip"
+  source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
+  role             = aws_iam_role.test.arn
+  handler          = "exports.example"
+  runtime          = "nodejs12.x"
+}
+
 resource "aws_iam_role" "test" {
-  name = "tf_acc_input_transformer"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -1171,42 +1261,6 @@ resource "aws_iam_role" "test" {
 EOF
 }
 
-resource "aws_lambda_function" "test" {
-  function_name    = "tf_acc_input_transformer"
-  filename         = "test-fixtures/lambdatest.zip"
-  source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
-  role             = aws_iam_role.test.arn
-  handler          = "exports.example"
-  runtime          = "nodejs12.x"
-}
-
-resource "aws_cloudwatch_event_rule" "test" {
-  name        = "%s"
-  description = "test_input_transformer"
-
-  schedule_expression = "rate(5 minutes)"
-}
-
-resource "aws_cloudwatch_event_target" "test" {
-  arn  = aws_lambda_function.test.arn
-  rule = aws_cloudwatch_event_rule.test.id
-
-  input_transformer {
-    input_paths = {
-      %s
-    }
-
-    input_template = <<EOF
-{
-  "detail-type": "Scheduled Event",
-  "source": "aws.events",%s
-  "detail": {}
-}
-EOF
-
-  }
-}
-
 data "aws_partition" "current" {}
-`, rName, inputPaths.String(), inputTemplates.String())
+`, name)
 }
