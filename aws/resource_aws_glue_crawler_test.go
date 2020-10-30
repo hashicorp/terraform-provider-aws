@@ -2279,7 +2279,7 @@ resource "aws_glue_catalog_database" "test" {
 resource "aws_glue_connection" "test" {
   name            = %[1]q
   connection_type = "MONGODB"
-
+  
   connection_properties = {
     CONNECTION_URL = "mongodb://testdb.com:27017/databasename"
     PASSWORD       = "testpassword"
@@ -2312,7 +2312,7 @@ resource "aws_glue_catalog_database" "test" {
 resource "aws_glue_connection" "test" {
   name            = %[1]q
   connection_type = "MONGODB"
-  
+
   connection_properties = {
     CONNECTION_URL = "mongodb://testdb.com:27017/databasename"
     PASSWORD       = "testpassword"
