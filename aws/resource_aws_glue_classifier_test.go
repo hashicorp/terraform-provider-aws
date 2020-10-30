@@ -519,7 +519,7 @@ resource "aws_glue_classifier" "test" {
     contains_header     = "PRESENT"
     delimiter           = ","
 	header              = ["header_column1", "header_column2"]
-	quote_symbol        = %[2]q
+    quote_symbol        = %[2]q
   }
 }
 `, rName, symbol)
