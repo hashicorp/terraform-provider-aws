@@ -2296,7 +2296,7 @@ resource "aws_glue_crawler" "test" {
 
   mongodb_target {
     connection_name = aws_glue_connection.test.name
-	path            = "database-name/table-name"
+    path            = "database-name/table-name"
 	scan_all        = %[2]t
   }
 }
@@ -2310,15 +2310,15 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_connection" "test" {
-	name            = %[1]q
-	connection_type = "MONGODB"
+  name            = %[1]q
+  connection_type = "MONGODB"
   
-	connection_properties = {
-	  CONNECTION_URL = "mongodb://testdb.com:27017/databasename"
-	  PASSWORD       = "testpassword"
-	  USERNAME       = "testusername"
-	}
+  connection_properties = {
+    CONNECTION_URL = "mongodb://testdb.com:27017/databasename"
+    PASSWORD       = "testpassword"
+    USERNAME       = "testusername"
   }
+}
 
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
