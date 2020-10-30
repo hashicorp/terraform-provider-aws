@@ -325,7 +325,7 @@ func testAccSagemakerEndpointConfigurationConfig_Base(rName string) string {
 	case "us-gov-west-1":
 		imageID = "226302683700"
 	}
-	registryPath = fmt.Sprintf("%s.dkr.ecr.%s.%s/kmeans:1", imageID, testAccGetRegion(), testAccGetPartitionDNSSuffix())
+	registryPath := fmt.Sprintf("%s.dkr.ecr.%s.%s/kmeans:1", imageID, testAccGetRegion(), testAccGetPartitionDNSSuffix())
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
