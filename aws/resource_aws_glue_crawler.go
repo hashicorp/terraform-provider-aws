@@ -267,16 +267,12 @@ func resourceAwsGlueCrawlerCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func createCrawlerInput(crawlerName string, d *schema.ResourceData) (*glue.CreateCrawlerInput, error) {
-	crawlerTargets, err := expandGlueCrawlerTargets(d)
-	if err != nil {
-		return nil, err
-	}
 	crawlerInput := &glue.CreateCrawlerInput{
 		Name:         aws.String(crawlerName),
 		DatabaseName: aws.String(d.Get("database_name").(string)),
 		Role:         aws.String(d.Get("role").(string)),
 		Tags:         keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().GlueTags(),
-		Targets:      crawlerTargets,
+		Targets:      expandGlueCrawlerTargets(d),
 	}
 	if description, ok := d.GetOk("description"); ok {
 		crawlerInput.Description = aws.String(description.(string))
@@ -313,15 +309,11 @@ func createCrawlerInput(crawlerName string, d *schema.ResourceData) (*glue.Creat
 }
 
 func updateCrawlerInput(crawlerName string, d *schema.ResourceData) (*glue.UpdateCrawlerInput, error) {
-	crawlerTargets, err := expandGlueCrawlerTargets(d)
-	if err != nil {
-		return nil, err
-	}
 	crawlerInput := &glue.UpdateCrawlerInput{
 		Name:         aws.String(crawlerName),
 		DatabaseName: aws.String(d.Get("database_name").(string)),
 		Role:         aws.String(d.Get("role").(string)),
-		Targets:      crawlerTargets,
+		Targets:      expandGlueCrawlerTargets(d),
 	}
 	if description, ok := d.GetOk("description"); ok {
 		crawlerInput.Description = aws.String(description.(string))
@@ -379,7 +371,7 @@ func expandGlueSchemaChangePolicy(v []interface{}) *glue.SchemaChangePolicy {
 	return schemaPolicy
 }
 
-func expandGlueCrawlerTargets(d *schema.ResourceData) (*glue.CrawlerTargets, error) {
+func expandGlueCrawlerTargets(d *schema.ResourceData) *glue.CrawlerTargets {
 	crawlerTargets := &glue.CrawlerTargets{}
 
 	log.Print("[DEBUG] Creating crawler target")
@@ -404,7 +396,7 @@ func expandGlueCrawlerTargets(d *schema.ResourceData) (*glue.CrawlerTargets, err
 		crawlerTargets.MongoDBTargets = expandGlueMongoDBTargets(v.([]interface{}))
 	}
 
-	return crawlerTargets, nil
+	return crawlerTargets
 }
 
 func expandGlueDynamoDBTargets(targets []interface{}) []*glue.DynamoDBTarget {
