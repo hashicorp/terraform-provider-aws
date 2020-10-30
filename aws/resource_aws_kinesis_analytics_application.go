@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -25,53 +27,12 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 		Delete: resourceAwsKinesisAnalyticsApplicationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				arns := strings.Split(d.Id(), ":")
-				name := strings.Replace(arns[len(arns)-1], "application/", "", 1)
-				d.Set("name", name)
-				return []*schema.ResourceData{d}, nil
-			},
+			State: resourceAwsKinesisAnalyticsApplicationImport,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
 			"arn": {
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"code": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"create_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"last_update_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"version": {
-				Type:     schema.TypeInt,
 				Computed: true,
 			},
 
@@ -99,6 +60,37 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 						},
 					},
 				},
+			},
+
+			"code": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			"create_timestamp": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			"last_update_timestamp": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"inputs": {
@@ -157,6 +149,10 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 						"name_prefix": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 32),
+								validation.StringMatch(regexp.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
+							),
 						},
 
 						"parallelism": {
@@ -166,8 +162,9 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"count": {
-										Type:     schema.TypeInt,
-										Required: true,
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntBetween(1, 64),
 									},
 								},
 							},
@@ -220,8 +217,9 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 												},
 
 												"name": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
 												},
 
 												"sql_type": {
@@ -266,6 +264,10 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 																		},
 																	},
 																},
+																ExactlyOneOf: []string{
+																	"inputs.0.schema.0.record_format.0.mapping_parameters.0.csv",
+																	"inputs.0.schema.0.record_format.0.mapping_parameters.0.json",
+																},
 															},
 
 															"json": {
@@ -279,6 +281,10 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 																			Required: true,
 																		},
 																	},
+																},
+																ExactlyOneOf: []string{
+																	"inputs.0.schema.0.record_format.0.mapping_parameters.0.csv",
+																	"inputs.0.schema.0.record_format.0.mapping_parameters.0.json",
 																},
 															},
 														},
@@ -395,6 +401,10 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 32),
+								validation.StringMatch(regexp.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
+							),
 						},
 
 						"schema": {
@@ -404,12 +414,9 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"record_format_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											kinesisanalytics.RecordFormatTypeCsv,
-											kinesisanalytics.RecordFormatTypeJson,
-										}, false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(kinesisanalytics.RecordFormatType_Values(), false),
 									},
 								},
 							},
@@ -472,8 +479,9 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 												},
 
 												"name": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
 												},
 
 												"sql_type": {
@@ -518,6 +526,10 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 																		},
 																	},
 																},
+																ExactlyOneOf: []string{
+																	"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv",
+																	"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json",
+																},
 															},
 
 															"json": {
@@ -531,6 +543,10 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 																			Required: true,
 																		},
 																	},
+																},
+																ExactlyOneOf: []string{
+																	"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.csv",
+																	"reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json",
 																},
 															},
 														},
@@ -549,13 +565,20 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 						},
 
 						"table_name": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 32),
 						},
 					},
 				},
 			},
+
 			"tags": tagsSchema(),
+
+			"version": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -894,6 +917,23 @@ func resourceAwsKinesisAnalyticsApplicationDelete(d *schema.ResourceData, meta i
 	}
 
 	return nil
+}
+
+func resourceAwsKinesisAnalyticsApplicationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	arn, err := arn.Parse(d.Id())
+	if err != nil {
+		return []*schema.ResourceData{}, fmt.Errorf("Error parsing ARN %q: %w", d.Id(), err)
+	}
+
+	// application/<name>
+	parts := strings.Split(arn.Resource, "/")
+	if len(parts) != 2 {
+		return []*schema.ResourceData{}, fmt.Errorf("Unexpected ARN format: %q", d.Id())
+	}
+
+	d.Set("name", parts[1])
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func expandKinesisAnalyticsCloudwatchLoggingOption(clo map[string]interface{}) *kinesisanalytics.CloudWatchLoggingOption {
