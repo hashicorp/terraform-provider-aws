@@ -68,7 +68,7 @@ func resourceAwsGlueClassifier() *schema.Resource {
 						"contains_header": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validateHeaderOptions(),
+							ValidateFunc: validation.StringInSlice(glue.CsvHeaderOption_Values(), false),
 						},
 						"delimiter": {
 							Type:     schema.TypeString,
@@ -77,6 +77,7 @@ func resourceAwsGlueClassifier() *schema.Resource {
 						"disable_value_trimming": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  true,
 						},
 						"header": {
 							Type:     schema.TypeList,
@@ -316,15 +317,14 @@ func expandGlueCsvClassifierCreate(name string, m map[string]interface{}) *glue.
 		Delimiter:            aws.String(m["delimiter"].(string)),
 		DisableValueTrimming: aws.Bool(m["disable_value_trimming"].(bool)),
 		Name:                 aws.String(name),
-		QuoteSymbol:          aws.String(m["quote_symbol"].(string)),
 	}
 
-	if v, ok := m["header"]; ok {
-		header := make([]string, len(v.([]interface{})))
-		for i, item := range v.([]interface{}) {
-			header[i] = fmt.Sprint(item)
-		}
-		csvClassifier.Header = aws.StringSlice(header)
+	if v, ok := m["quote_symbol"].(string); ok && v != "" {
+		csvClassifier.QuoteSymbol = aws.String(v)
+	}
+
+	if v, ok := m["header"].([]interface{}); ok {
+		csvClassifier.Header = expandStringList(v)
 	}
 
 	return csvClassifier
@@ -337,15 +337,14 @@ func expandGlueCsvClassifierUpdate(name string, m map[string]interface{}) *glue.
 		Delimiter:            aws.String(m["delimiter"].(string)),
 		DisableValueTrimming: aws.Bool(m["disable_value_trimming"].(bool)),
 		Name:                 aws.String(name),
-		QuoteSymbol:          aws.String(m["quote_symbol"].(string)),
 	}
 
-	if v, ok := m["header"]; ok {
-		header := make([]string, len(v.([]interface{})))
-		for i, item := range v.([]interface{}) {
-			header[i] = fmt.Sprint(item)
-		}
-		csvClassifier.Header = aws.StringSlice(header)
+	if v, ok := m["quote_symbol"].(string); ok && v != "" {
+		csvClassifier.QuoteSymbol = aws.String(v)
+	}
+
+	if v, ok := m["header"].([]interface{}); ok {
+		csvClassifier.Header = expandStringList(v)
 	}
 
 	return csvClassifier
