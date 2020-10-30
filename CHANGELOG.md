@@ -1,5 +1,9 @@
 ## 3.14.0 (Unreleased)
 
+FEATURES
+
+* **New Data Source:** `aws_sagemaker_prebuilt_ecr_image` ([#15924](https://github.com/terraform-providers/terraform-provider-aws/pull/15924))
+
 ENHANCEMENTS
 
 * resource/aws_cloudwatch_event_target: add plan time validation to `arn`, `role_arn`, `launch_type`, `task_definition_arn` [GH-11685]
