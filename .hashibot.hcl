@@ -307,6 +307,10 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/emr" = [
       "aws_emr_",
     ],
+    "service/eventbridge" = [
+      # EventBridge is rebranded CloudWatch Events
+      "aws_cloudwatch_event_",
+    ],
     "service/firehose" = [
       "aws_kinesis_firehose_",
     ],
@@ -1033,6 +1037,12 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/emr/**/*",
       "**/*_emr_*",
       "**/emr_*"
+    ]
+    "service/eventbridge" = [
+      # EventBridge is rebranded CloudWatch Events
+      "aws/internal/service/cloudwatchevents/**/*",
+      "**/*_cloudwatch_event_*",
+      "**/cloudwatch_event_*"
     ]
     "service/firehose" = [
       "aws/internal/service/firehose/**/*",
