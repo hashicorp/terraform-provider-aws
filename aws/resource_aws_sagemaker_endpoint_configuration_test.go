@@ -314,25 +314,17 @@ func testAccCheckSagemakerEndpointConfigurationExists(n string) resource.TestChe
 }
 
 func testAccSagemakerEndpointConfigurationConfig_Base(rName string) string {
-	imageID := ""
-	switch testAccGetRegion() {
-	case "us-west-2":
-		imageID = "174872318107"
-	case "us-west-1":
-		imageID = "632365934929"
-	case "us-east-1":
-		imageID = "382416733822"
-	case "us-gov-west-1":
-		imageID = "226302683700"
-	}
-	registryPath := fmt.Sprintf("%s.dkr.ecr.%s.%s/kmeans:1", imageID, testAccGetRegion(), testAccGetPartitionDNSSuffix())
 	return fmt.Sprintf(`
+data "aws_sagemaker_prebuilt_ecr_image" "test" {
+  repository_name = "kmeans"
+}
+
 resource "aws_sagemaker_model" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
 
   primary_container {
-    image = %[2]q
+    image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
   }
 }
 
@@ -352,7 +344,7 @@ data "aws_iam_policy_document" "assume_role" {
     }
   }
 }
-`, rName, registryPath)
+`, rName)
 }
 
 func testAccSagemakerEndpointConfigurationConfig_Basic(rName string) string {
