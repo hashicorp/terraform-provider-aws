@@ -286,14 +286,6 @@ func resourceAwsGlueClassifierDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func validateHeaderOptions() schema.SchemaValidateFunc {
-	return validation.StringInSlice([]string{
-		"UNKNOWN",
-		"PRESENT",
-		"ABSENT",
-	}, true)
-}
-
 func deleteGlueClassifier(conn *glue.Glue, name string) error {
 	input := &glue.DeleteClassifierInput{
 		Name: aws.String(name),
