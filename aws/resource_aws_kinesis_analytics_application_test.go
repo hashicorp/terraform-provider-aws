@@ -139,6 +139,53 @@ func TestAccAWSKinesisAnalyticsApplication_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSKinesisAnalyticsApplication_Tags(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSKinesisAnalyticsApplication_Code_Update(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
@@ -741,62 +788,6 @@ func TestAccAWSKinesisAnalyticsApplication_referenceDataSourceUpdate(t *testing.
 	})
 }
 
-func TestAccAWSKinesisAnalyticsApplication_tags(t *testing.T) {
-	var application kinesisanalytics.ApplicationDetail
-	resName := "aws_kinesis_analytics_application.test"
-	rInt := acctest.RandInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKinesisAnalyticsApplicationWithTags(rInt, "test1", "test2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
-					resource.TestCheckResourceAttr(resName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resName, "tags.firstTag", "test1"),
-					resource.TestCheckResourceAttr(resName, "tags.secondTag", "test2"),
-				),
-			},
-			{
-				Config: testAccKinesisAnalyticsApplicationWithAddTags(rInt, "test1", "test2", "test3"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
-					resource.TestCheckResourceAttr(resName, "tags.%", "3"),
-					resource.TestCheckResourceAttr(resName, "tags.firstTag", "test1"),
-					resource.TestCheckResourceAttr(resName, "tags.secondTag", "test2"),
-					resource.TestCheckResourceAttr(resName, "tags.thirdTag", "test3"),
-				),
-			},
-			{
-				Config: testAccKinesisAnalyticsApplicationWithTags(rInt, "test1", "test2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
-					resource.TestCheckResourceAttr(resName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resName, "tags.firstTag", "test1"),
-					resource.TestCheckResourceAttr(resName, "tags.secondTag", "test2"),
-				),
-			},
-			{
-				Config: testAccKinesisAnalyticsApplicationWithTags(rInt, "test1", "update_test2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
-					resource.TestCheckResourceAttr(resName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resName, "tags.firstTag", "test1"),
-					resource.TestCheckResourceAttr(resName, "tags.secondTag", "update_test2"),
-				),
-			},
-			{
-				ResourceName:      resName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func testAccCheckKinesisAnalyticsApplicationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).kinesisanalyticsconn
 
@@ -864,6 +855,31 @@ resource "aws_kinesis_analytics_application" "test" {
   name = %[1]q
 }
 `, rName)
+}
+
+func testAccKinesisAnalyticsApplicationConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_analytics_application" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccKinesisAnalyticsApplicationConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_analytics_application" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccKinesisAnalyticsApplicationConfigCode(rName, code string) string {
@@ -1396,33 +1412,4 @@ resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = aws_iam_policy.test.arn
 }
 `, rInt, rInt)
-}
-
-func testAccKinesisAnalyticsApplicationWithTags(rInt int, tag1, tag2 string) string {
-	return fmt.Sprintf(`
-resource "aws_kinesis_analytics_application" "test" {
-  name = "testAcc-%d"
-  code = "testCode\n"
-
-  tags = {
-    firstTag  = "%s"
-    secondTag = "%s"
-  }
-}
-`, rInt, tag1, tag2)
-}
-
-func testAccKinesisAnalyticsApplicationWithAddTags(rInt int, tag1, tag2, tag3 string) string {
-	return fmt.Sprintf(`
-resource "aws_kinesis_analytics_application" "test" {
-  name = "testAcc-%d"
-  code = "testCode\n"
-
-  tags = {
-    firstTag  = "%s"
-    secondTag = "%s"
-    thirdTag  = "%s"
-  }
-}
-`, rInt, tag1, tag2, tag3)
 }
