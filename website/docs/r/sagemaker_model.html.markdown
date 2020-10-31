@@ -15,16 +15,16 @@ Provides a SageMaker model resource.
 Basic usage:
 
 ```hcl
-resource "aws_sagemaker_model" "m" {
+resource "aws_sagemaker_model" "example" {
   name               = "my-model"
-  execution_role_arn = aws_iam_role.foo.arn
+  execution_role_arn = aws_iam_role.example.arn
 
   primary_container {
     image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
   }
 }
 
-resource "aws_iam_role" "r" {
+resource "aws_iam_role" "example" {
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
@@ -60,6 +60,11 @@ The `primary_container` and `container` block both support:
 * `container_hostname` - (Optional) The DNS host name for the container.
 * `environment` - (Optional) Environment variables for the Docker container.
    A list of key value pairs.
+* `image_config` - (Optional) Specifies whether the model container is in Amazon ECR or a private Docker registry accessible from your Amazon Virtual Private Cloud (VPC). For more information see [Using a Private Docker Registry for Real-Time Inference Containers](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-containers-inference-private.html). see [Image Config](#image-config).
+
+### Image Config
+
+* `repository_access_mode` - (Required) Specifies whether the model container is in Amazon ECR or a private Docker registry accessible from your Amazon Virtual Private Cloud (VPC). Allowed values are: `Platform` and `Vpc`.
 
 ## Attributes Reference
 
