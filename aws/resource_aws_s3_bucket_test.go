@@ -647,7 +647,12 @@ func TestAccAWSS3Bucket_UpdateGrant(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "grant.#", "1"),
-					testAccCheckAWSS3BucketUpdateGrantSingle(resourceName),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
+						"permissions.#": "2",
+						"type":          "CanonicalUser",
+					}),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "grant.*.permissions.*", "FULL_CONTROL"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "grant.*.permissions.*", "WRITE"),
 				),
 			},
 			{
@@ -661,7 +666,17 @@ func TestAccAWSS3Bucket_UpdateGrant(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "grant.#", "2"),
-					testAccCheckAWSS3BucketUpdateGrantMulti(resourceName),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
+						"permissions.#": "1",
+						"type":          "CanonicalUser",
+					}),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "grant.*.permissions.*", "READ"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
+						"permissions.#": "1",
+						"type":          "Group",
+						"uri":           "http://acs.amazonaws.com/groups/s3/LogDelivery",
+					}),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "grant.*.permissions.*", "READ_ACP"),
 				),
 			},
 			{
@@ -2942,70 +2957,6 @@ func testAccCheckAWSS3BucketReplicationRules(n string, providerF func() *schema.
 			return fmt.Errorf("bad replication rules, expected: %v, got %v", rules, out.ReplicationConfiguration.Rules)
 		}
 
-		return nil
-	}
-}
-
-func testAccCheckAWSS3BucketUpdateGrantSingle(resourceName string) func(s *terraform.State) error {
-	return func(s *terraform.State) error {
-		for _, t := range []resource.TestCheckFunc{
-			tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
-				"permissions.#": "2",
-			}),
-			tfawsresource.TestCheckTypeSetElemAttr(resourceName, "grant.*.permissions.*", "FULL_CONTROL"),
-			tfawsresource.TestCheckTypeSetElemAttr(resourceName, "grant.*.permissions.*", "WRITE"),
-			tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
-				"type": "CanonicalUser",
-			}),
-		} {
-			if err := t(s); err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-}
-
-func testAccCheckAWSS3BucketUpdateGrantMulti(resourceName string) func(s *terraform.State) error {
-	return func(s *terraform.State) error {
-		id := s.RootModule().Resources["data.aws_canonical_user_id.current"].Primary.ID
-		gh1 := fmt.Sprintf("grant.%v", grantHash(map[string]interface{}{
-			"id":   id,
-			"type": "CanonicalUser",
-			"uri":  "",
-			"permissions": schema.NewSet(
-				schema.HashString,
-				[]interface{}{"READ"},
-			),
-		}))
-		gh2 := fmt.Sprintf("grant.%v", grantHash(map[string]interface{}{
-			"id":   "",
-			"type": "Group",
-			"uri":  "http://acs.amazonaws.com/groups/s3/LogDelivery",
-			"permissions": schema.NewSet(
-				schema.HashString,
-				[]interface{}{"READ_ACP"},
-			),
-		}))
-		for _, t := range []resource.TestCheckFunc{
-			// TODO TypeSet Check to differentiate between sets
-			resource.TestCheckResourceAttr(resourceName, gh1+".permissions.#", "1"),
-			tfawsresource.TestCheckTypeSetElemAttr(resourceName, "grant.*.permissions.*", "READ"),
-			tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
-				"type": "CanonicalUser",
-			}),
-			// TODO TypeSet Check to differentiate between sets
-			resource.TestCheckResourceAttr(resourceName, gh2+".permissions.#", "1"),
-			tfawsresource.TestCheckTypeSetElemAttr(resourceName, "grant.*.permissions.*", "READ_ACP"),
-			tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
-				"type": "Group",
-				"uri":  "http://acs.amazonaws.com/groups/s3/LogDelivery",
-			}),
-		} {
-			if err := t(s); err != nil {
-				return err
-			}
-		}
 		return nil
 	}
 }
