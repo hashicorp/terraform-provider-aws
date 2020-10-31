@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -270,7 +269,7 @@ func resourceAwsSagemakerModelRead(d *schema.ResourceData, meta interface{}) err
 
 	model, err := conn.DescribeModel(request)
 	if err != nil {
-		if sagemakerErr, ok := err.(awserr.Error); ok && sagemakerErr.Code() == "ValidationException" {
+		if isAWSErr(err, "ValidationException", "") {
 			log.Printf("[INFO] unable to find the sagemaker model resource and therefore it is removed from the state: %s", d.Id())
 			d.SetId("")
 			return nil

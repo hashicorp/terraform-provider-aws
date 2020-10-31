@@ -268,8 +268,8 @@ func TestAccAWSSagemakerModel_containers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerModelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "primary_container.0.image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
-					resource.TestCheckResourceAttrPair(resourceName, "primary_container.0.image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
+					resource.TestCheckResourceAttrPair(resourceName, "container.0.image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
+					resource.TestCheckResourceAttrPair(resourceName, "container.1.image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
 				),
 			},
 			{
@@ -328,6 +328,27 @@ func TestAccAWSSagemakerModel_networkIsolation(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerModel_disappears(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSagemakerModelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSagemakerModelConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSagemakerModelExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerModel(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
