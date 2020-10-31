@@ -66,9 +66,13 @@ func TestAccAWSSagemakerModel_basic(t *testing.T) {
 					testAccCheckSagemakerModelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.#", "1"),
-					// resource.TestCheckResourceAttr(resourceName, "primary_container.0.image", image),
-					resource.TestCheckResourceAttrSet(resourceName, "execution_role_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "primary_container.0.image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.mode", "SingleModel"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("model/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_isolation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -136,7 +140,7 @@ func TestAccAWSSagemakerModel_primaryContainerModelDataUrl(t *testing.T) {
 				Config: testAccSagemakerPrimaryContainerModelDataUrlConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerModelExists(resourceName),
-					// resource.TestCheckResourceAttr(resourceName, "primary_container.0.model_data_url", modelDataUrl),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_container.0.model_data_url"),
 				),
 			},
 			{
@@ -162,6 +166,32 @@ func TestAccAWSSagemakerModel_primaryContainerHostname(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerModelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.container_hostname", "test"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerModel_primaryContainerImageConfig(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSagemakerModelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSagemakerPrimaryContainerImageConfigConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSagemakerModelExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image_config.0.repository_access_mode", "Platform"),
 				),
 			},
 			{
@@ -238,8 +268,8 @@ func TestAccAWSSagemakerModel_containers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSagemakerModelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "container.#", "2"),
-					// resource.TestCheckResourceAttr( resourceName, "container.0.image", image),
-					// resource.TestCheckResourceAttr(resourceName, "container.1.image", image),
+					resource.TestCheckResourceAttrPair(resourceName, "primary_container.0.image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
+					resource.TestCheckResourceAttrPair(resourceName, "primary_container.0.image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
 				),
 			},
 			{
@@ -516,6 +546,23 @@ resource "aws_sagemaker_model" "test" {
 `, rName)
 }
 
+func testAccSagemakerPrimaryContainerImageConfigConfig(rName string) string {
+	return testAccSagemakerModelConfigBase(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_model" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  primary_container {
+	image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+	
+	image_config {
+	  repository_access_mode = "Platform"
+	}
+  }
+}
+`, rName)
+}
+
 func testAccSagemakerPrimaryContainerEnvironmentConfig(rName string) string {
 	return testAccSagemakerModelConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
@@ -579,7 +626,9 @@ resource "aws_sagemaker_model" "test" {
 }
 
 func testAccSagemakerModelVpcConfig(rName string) string {
-	return testAccSagemakerModelConfigBase(rName) + fmt.Sprintf(`
+	return testAccSagemakerModelConfigBase(rName) +
+		testAccAvailableAZsNoOptInConfig() +
+		fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
   name                     = %[1]q
   execution_role_arn       = aws_iam_role.test.arn
@@ -605,7 +654,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   vpc_id            = aws_vpc.test.id
 
   tags = {
@@ -615,7 +664,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_subnet" "bar" {
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[0]
   vpc_id            = aws_vpc.test.id
 
   tags = {
