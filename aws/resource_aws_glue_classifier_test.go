@@ -518,7 +518,7 @@ resource "aws_glue_classifier" "test" {
     allow_single_column = false
     contains_header     = "PRESENT"
     delimiter           = ","
-	header              = ["header_column1", "header_column2"]
+    header              = ["header_column1", "header_column2"]
     quote_symbol        = %[2]q
   }
 }
