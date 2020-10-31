@@ -139,6 +139,63 @@ func TestAccAWSKinesisAnalyticsApplication_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSKinesisAnalyticsApplication_Code_Update(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigCode(rName, "SELECT 1;\n"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", "SELECT 1;\n"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigCode(rName, "SELECT 2;\n"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", "SELECT 2;\n"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSKinesisAnalyticsApplication_update(t *testing.T) {
 	var application kinesisanalytics.ApplicationDetail
 	resName := "aws_kinesis_analytics_application.test"
@@ -807,6 +864,16 @@ resource "aws_kinesis_analytics_application" "test" {
   name = %[1]q
 }
 `, rName)
+}
+
+func testAccKinesisAnalyticsApplicationConfigCode(rName, code string) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_analytics_application" "test" {
+  name        = %[1]q
+  description = "test"
+  code        = %[2]q
+}
+`, rName, code)
 }
 
 func testAccKinesisAnalyticsApplication_basic(rInt int) string {

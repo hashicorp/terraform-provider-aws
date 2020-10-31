@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"reflect"
@@ -11,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -25,6 +27,13 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 		Read:   resourceAwsKinesisAnalyticsApplicationRead,
 		Update: resourceAwsKinesisAnalyticsApplicationUpdate,
 		Delete: resourceAwsKinesisAnalyticsApplicationDelete,
+
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ForceNewIfChange("inputs", func(_ context.Context, old, new, meta interface{}) bool {
+				// An existing input configuration cannot be deleted.
+				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
+			}),
+		),
 
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsKinesisAnalyticsApplicationImport,
@@ -700,6 +709,51 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).kinesisanalyticsconn
+
+	if d.HasChanges("cloudwatch_logging_options", "code", "inputs", "outputs", "reference_data_sources") {
+		applicationName := d.Get("name").(string)
+		currentApplicationVersionId := int64(d.Get("version").(int))
+		updateApplication := false
+
+		input := &kinesisanalytics.UpdateApplicationInput{
+			ApplicationName:   aws.String(applicationName),
+			ApplicationUpdate: &kinesisanalytics.ApplicationUpdate{},
+		}
+
+		if d.HasChange("code") {
+			input.ApplicationUpdate.ApplicationCodeUpdate = aws.String(d.Get("code").(string))
+
+			updateApplication = true
+		}
+
+		if updateApplication {
+			input.CurrentApplicationVersionId = aws.Int64(currentApplicationVersionId)
+
+			log.Printf("[DEBUG] Updating Kinesis Analytics Application (%s): %s", d.Id(), input)
+
+			_, err := waiter.IAMPropagation(func() (interface{}, error) {
+				return conn.UpdateApplication(input)
+			})
+
+			if err != nil {
+				return fmt.Errorf("error updating Kinesis Analytics Application (%s): %w", d.Id(), err)
+			}
+		}
+	}
+
+	if d.HasChange("tags") {
+		arn := d.Get("arn").(string)
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.KinesisanalyticsUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating Kinesis Analytics Application (%s) tags: %s", arn, err)
+		}
+	}
+
+	return resourceAwsKinesisAnalyticsApplicationRead(d, meta)
+}
+
+func resourceAwsKinesisAnalyticsApplicationUpdateOld(d *schema.ResourceData, meta interface{}) error {
 	var version int
 	conn := meta.(*AWSClient).kinesisanalyticsconn
 	name := d.Get("name").(string)
