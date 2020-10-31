@@ -574,11 +574,11 @@ resource "aws_sagemaker_model" "test" {
   execution_role_arn = aws_iam_role.test.arn
 
   primary_container {
-	image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    image = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
 	
-	image_config {
-	  repository_access_mode = "Platform"
-	}
+    image_config {
+      repository_access_mode = "Platform"
+    }
   }
 }
 `, rName)
