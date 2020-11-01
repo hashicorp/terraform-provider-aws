@@ -721,6 +721,71 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 			ApplicationUpdate: &kinesisanalytics.ApplicationUpdate{},
 		}
 
+		if d.HasChange("cloudwatch_logging_options") {
+			o, n := d.GetChange("cloudwatch_logging_options")
+
+			if len(o.([]interface{})) == 0 {
+				// Add new CloudWatch logging options.
+				mNewCloudWatchLoggingOption := n.([]interface{})[0].(map[string]interface{})
+
+				input := &kinesisanalytics.AddApplicationCloudWatchLoggingOptionInput{
+					ApplicationName: aws.String(applicationName),
+					CloudWatchLoggingOption: &kinesisanalytics.CloudWatchLoggingOption{
+						LogStreamARN: aws.String(mNewCloudWatchLoggingOption["log_stream_arn"].(string)),
+						RoleARN:      aws.String(mNewCloudWatchLoggingOption["role_arn"].(string)),
+					},
+					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+				}
+
+				log.Printf("[DEBUG] Adding Kinesis Analytics Application (%s) CloudWatch logging option: %s", d.Id(), input)
+
+				_, err := waiter.IAMPropagation(func() (interface{}, error) {
+					return conn.AddApplicationCloudWatchLoggingOption(input)
+				})
+
+				if err != nil {
+					return fmt.Errorf("error adding Kinesis Analytics Application (%s) CloudWatch logging option: %w", d.Id(), err)
+				}
+
+				currentApplicationVersionId += 1
+			} else if len(n.([]interface{})) == 0 {
+				// Delete existing CloudWatch logging options.
+				mOldCloudWatchLoggingOption := o.([]interface{})[0].(map[string]interface{})
+
+				input := &kinesisanalytics.DeleteApplicationCloudWatchLoggingOptionInput{
+					ApplicationName:             aws.String(applicationName),
+					CloudWatchLoggingOptionId:   aws.String(mOldCloudWatchLoggingOption["id"].(string)),
+					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+				}
+
+				log.Printf("[DEBUG] Deleting Kinesis Analytics Application (%s) CloudWatch logging option: %s", d.Id(), input)
+
+				_, err := waiter.IAMPropagation(func() (interface{}, error) {
+					return conn.DeleteApplicationCloudWatchLoggingOption(input)
+				})
+
+				if err != nil {
+					return fmt.Errorf("error deleting Kinesis Analytics Application (%s) CloudWatch logging option: %w", d.Id(), err)
+				}
+
+				currentApplicationVersionId += 1
+			} else {
+				// Update existing CloudWatch logging options.
+				mOldCloudWatchLoggingOption := o.([]interface{})[0].(map[string]interface{})
+				mNewCloudWatchLoggingOption := n.([]interface{})[0].(map[string]interface{})
+
+				input.ApplicationUpdate.CloudWatchLoggingOptionUpdates = []*kinesisanalytics.CloudWatchLoggingOptionUpdate{
+					{
+						CloudWatchLoggingOptionId: aws.String(mOldCloudWatchLoggingOption["id"].(string)),
+						LogStreamARNUpdate:        aws.String(mNewCloudWatchLoggingOption["log_stream_arn"].(string)),
+						RoleARNUpdate:             aws.String(mNewCloudWatchLoggingOption["role_arn"].(string)),
+					},
+				}
+
+				updateApplication = true
+			}
+		}
+
 		if d.HasChange("code") {
 			input.ApplicationUpdate.ApplicationCodeUpdate = aws.String(d.Get("code").(string))
 
