@@ -239,7 +239,6 @@ func TestAccGlueDevEndpoint_GlueVersion(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_GlueVersion(rName, "1.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "1.0"),
 				),
 			},
@@ -247,7 +246,6 @@ func TestAccGlueDevEndpoint_GlueVersion(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_GlueVersion(rName, "0.9"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "0.9"),
 				),
 			},
@@ -279,7 +277,6 @@ func TestAccGlueDevEndpoint_NumberOfNodes(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_NumberOfNodes(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "2"),
 				),
 			},
@@ -287,7 +284,6 @@ func TestAccGlueDevEndpoint_NumberOfNodes(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_NumberOfNodes(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "5"),
 				),
 			},
@@ -319,7 +315,6 @@ func TestAccGlueDevEndpoint_NumberOfWorkers(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_NumberOfWorkers(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "number_of_workers", "2"),
 				),
 			},
@@ -327,7 +322,6 @@ func TestAccGlueDevEndpoint_NumberOfWorkers(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_NumberOfWorkers(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "number_of_workers", "5"),
 				),
 			},
@@ -355,7 +349,6 @@ func TestAccGlueDevEndpoint_PublicKey(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_PublicKey(rName, publicKey1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "public_key", publicKey1),
 				),
 			},
@@ -363,7 +356,6 @@ func TestAccGlueDevEndpoint_PublicKey(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_PublicKey(rName, publicKey2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "public_key", publicKey2),
 				),
 			},
@@ -391,7 +383,6 @@ func TestAccGlueDevEndpoint_PublicKeys(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_PublicKeys2(rName, publicKey1, publicKey2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "public_keys.#", "2"),
 				),
 			},
@@ -399,7 +390,6 @@ func TestAccGlueDevEndpoint_PublicKeys(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_PublicKeys3(rName, publicKey1, publicKey3, publicKey4),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "public_keys.#", "3"),
 				),
 			},
@@ -407,7 +397,6 @@ func TestAccGlueDevEndpoint_PublicKeys(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_PublicKeys4(rName, publicKey1, publicKey1, publicKey3, publicKey4),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "public_keys.#", "3"),
 				),
 			},
@@ -435,7 +424,6 @@ func TestAccGlueDevEndpoint_SecurityConfiguration(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_SecurityConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "security_configuration", rName),
 				),
 			},
@@ -464,7 +452,6 @@ func TestAccGlueDevEndpoint_SubnetID_SecurityGroupIDs(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_SubnetID_SecurityGroupIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
@@ -540,7 +527,6 @@ func TestAccGlueDevEndpoint_WorkerType(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_WorkerType_Standard(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "worker_type", glue.WorkerTypeStandard),
 				),
 			},
@@ -548,7 +534,6 @@ func TestAccGlueDevEndpoint_WorkerType(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_WorkerType(rName, glue.WorkerTypeG1x),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "worker_type", glue.WorkerTypeG1x),
 				),
 			},
@@ -556,7 +541,6 @@ func TestAccGlueDevEndpoint_WorkerType(t *testing.T) {
 				Config: testAccGlueDevEndpointConfig_WorkerType(rName, glue.WorkerTypeG2x),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
-
 					resource.TestCheckResourceAttr(resourceName, "worker_type", glue.WorkerTypeG2x),
 				),
 			},
@@ -654,7 +638,7 @@ func testAccCheckAWSGlueDevEndpointDestroy(s *terraform.State) error {
 func testAccGlueDevEndpointConfig_Base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name               = "AWSGlueServiceRole-%s"
+  name               = "AWSGlueServiceRole-%[1]s"
   assume_role_policy = data.aws_iam_policy_document.service.json
 }
 
@@ -670,7 +654,7 @@ data "aws_iam_policy_document" "service" {
 }
 
 resource "aws_iam_policy" "test" {
-  name   = %q
+  name   = %[1]q
   policy = data.aws_iam_policy_document.test.json
 }
 
@@ -687,10 +671,12 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_iam_role_policy_attachment" "glue_service_role" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
   role       = aws_iam_role.test.name
 }
-`, rName, rName)
+
+data "aws_partition" "current" {}
+`, rName)
 }
 
 func testAccGlueDevEndpointConfig_Basic(rName string) string {
@@ -821,13 +807,13 @@ resource "aws_glue_dev_endpoint" "test" {
 func testAccGlueDevEndpointConfig_SecurityConfiguration(rName string) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name                   = %q
+  name                   = %[1]q
   role_arn               = aws_iam_role.test.arn
   security_configuration = aws_glue_security_configuration.test.name
 }
 
 resource "aws_glue_security_configuration" "test" {
-  name = %q
+  name = %[1]q
 
   encryption_configuration {
     cloudwatch_encryption {
@@ -843,13 +829,13 @@ resource "aws_glue_security_configuration" "test" {
     }
   }
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccGlueDevEndpointConfig_SubnetID_SecurityGroupIDs(rName string) string {
 	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
-  name               = %q
+  name               = %[1]q
   role_arn           = aws_iam_role.test.arn
   subnet_id          = aws_subnet.test.id
   security_group_ids = [aws_security_group.test.id]
@@ -873,7 +859,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
@@ -883,7 +869,7 @@ resource "aws_subnet" "test" {
   availability_zone = "us-west-2a"
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 
   timeouts {
@@ -893,7 +879,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name   = %q
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
 
   ingress {
@@ -915,7 +901,7 @@ resource "aws_security_group" "test" {
   }
   depends_on = [aws_iam_role_policy_attachment.glue_service_role]
 }
-`, rName, rName, rName, rName)
+`, rName)
 }
 
 func testAccAWSGlueDevEndpointConfig_Tags1(rName, tagKey1, tagValue1 string) string {
@@ -961,8 +947,8 @@ func testAccGlueDevEndpointConfig_WorkerType_Standard(rName string) string {
 resource "aws_glue_dev_endpoint" "test" {
   name              = %[1]q
   role_arn          = aws_iam_role.test.arn
-  worker_type       = %[2]q
+  worker_type       = "Standard"
   number_of_workers = 2
 }
-`, rName, glue.WorkerTypeStandard)
+`, rName)
 }

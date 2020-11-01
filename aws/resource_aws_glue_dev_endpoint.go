@@ -33,44 +33,30 @@ func resourceAwsGlueDevEndpoint() *schema.Resource {
 				Optional: true,
 				Elem:     schema.TypeString,
 			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"extra_jars_s3_path": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"extra_python_libs_s3_path": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"glue_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if !regexp.MustCompile(`^\w+\.\w+$`).MatchString(value) {
-						errors = append(errors, fmt.Errorf(
-							"attribute %s must match version pattern X.X: %s",
-							k, value))
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^\w+\.\w+$`), "must match version pattern X.X"),
 			},
-
 			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.NoZeroValues,
 			},
-
 			"number_of_nodes": {
 				Type:          schema.TypeInt,
 				Optional:      true,
@@ -81,7 +67,6 @@ func resourceAwsGlueDevEndpoint() *schema.Resource {
 				},
 				ValidateFunc: validation.IntAtLeast(2),
 			},
-
 			"number_of_workers": {
 				Type:          schema.TypeInt,
 				Optional:      true,
@@ -89,13 +74,11 @@ func resourceAwsGlueDevEndpoint() *schema.Resource {
 				ValidateFunc:  validation.IntAtLeast(2),
 				ConflictsWith: []string{"number_of_nodes"},
 			},
-
 			"public_key": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"public_keys"},
 			},
-
 			"public_keys": {
 				Type:          schema.TypeSet,
 				Optional:      true,
@@ -104,20 +87,17 @@ func resourceAwsGlueDevEndpoint() *schema.Resource {
 				ConflictsWith: []string{"public_key"},
 				MaxItems:      5,
 			},
-
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
-
 			"security_configuration": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-
 			"security_group_ids": {
 				Type:         schema.TypeSet,
 				Optional:     true,
@@ -126,36 +106,29 @@ func resourceAwsGlueDevEndpoint() *schema.Resource {
 				Set:          schema.HashString,
 				RequiredWith: []string{"subnet_id"},
 			},
-
 			"subnet_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				RequiredWith: []string{"security_group_ids"},
 			},
-
 			"tags": tagsSchema(),
-
 			"private_address": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"public_address": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"yarn_endpoint_address": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"zeppelin_remote_spark_interpreter_port": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"worker_type": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -163,22 +136,18 @@ func resourceAwsGlueDevEndpoint() *schema.Resource {
 				ConflictsWith: []string{"number_of_nodes"},
 				ForceNew:      true,
 			},
-
 			"availability_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"failure_reason": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -189,13 +158,7 @@ func resourceAwsGlueDevEndpoint() *schema.Resource {
 
 func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
-
-	var name string
-	if v, ok := d.GetOk("name"); ok {
-		name = v.(string)
-	} else {
-		name = resource.UniqueId()
-	}
+	name := d.Get("name").(string)
 
 	input := &glue.CreateDevEndpointInput{
 		EndpointName: aws.String(name),
@@ -285,15 +248,7 @@ func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) 
 	d.SetId(name)
 
 	log.Printf("[DEBUG] Waiting for Glue Dev Endpoint (%s) to become available", d.Id())
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			"PROVISIONING",
-		},
-		Target:  []string{"READY"},
-		Refresh: waiter.GlueDevEndpointStatus(conn, d.Id()),
-		Timeout: 15 * time.Minute,
-	}
-	if _, err := stateConf.WaitForState(); err != nil {
+	if _, err := waiter.GlueDevEndpointCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error while waiting for Glue Dev Endpoint (%s) to become available: %s", d.Id(), err)
 	}
 
@@ -453,9 +408,15 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 		oldRaw, newRaw := d.GetChange("arguments")
 		old := oldRaw.(map[string]interface{})
 		new := newRaw.(map[string]interface{})
-		create, remove := diffArguments(old, new)
+		create, remove := diffStringMaps(old, new)
+
+		removeKeys := make([]*string, 0)
+		for k := range remove {
+			removeKeys = append(removeKeys, &k)
+		}
+
 		input.AddArguments = create
-		input.DeleteArguments = remove
+		input.DeleteArguments = removeKeys
 
 		hasChanged = true
 	}
@@ -552,37 +513,17 @@ func resourceAwsDevEndpointDelete(d *schema.ResourceData, meta interface{}) erro
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("error deleting Glue Dev Endpoint (%s): %s", d.Id(), err)
+	}
+
+	log.Printf("[DEBUG] Waiting for Glue Dev Endpoint (%s) to become terminated", d.Id())
+	if _, err := waiter.GlueDevEndpointDeleted(conn, d.Id()); err != nil {
+		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+			return nil
+		}
+
+		return fmt.Errorf("error while waiting for Glue Dev Endpoint (%s) to become terminated: %s", d.Id(), err)
 	}
 
 	return nil
-}
-
-func diffArguments(oldArgs, newArgs map[string]interface{}) (map[string]*string, []*string) {
-	var create = make(map[string]*string)
-	var remove []*string
-
-	for oldArgKey, oldArgVal := range oldArgs {
-		tmpKey := oldArgKey
-
-		if val, ok := newArgs[oldArgKey]; ok {
-			if val.(string) != oldArgVal.(string) {
-				remove = append(remove, &tmpKey)
-			}
-		} else {
-			remove = append(remove, &tmpKey)
-		}
-	}
-
-	for newArgKey, newArgVal := range newArgs {
-		if val, ok := oldArgs[newArgKey]; ok {
-			if val.(string) != newArgVal.(string) {
-				create[newArgKey] = aws.String(newArgVal.(string))
-			}
-		} else {
-			create[newArgKey] = aws.String(newArgVal.(string))
-		}
-	}
-
-	return create, remove
 }

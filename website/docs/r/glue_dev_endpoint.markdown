@@ -15,17 +15,17 @@ Provides a Glue Development Endpoint resource.
 Basic usage:
 
 ```hcl
-resource "aws_glue_dev_endpoint" "de" {
+resource "aws_glue_dev_endpoint" "example" {
   name     = "foo"
-  role_arn = aws_iam_role.de.arn
+  role_arn = aws_iam_role.example.arn
 }
 
-resource "aws_iam_role" "de" {
+resource "aws_iam_role" "example" {
   name               = "AWSGlueServiceRole-foo"
-  assume_role_policy = data.aws_iam_policy_document.de.json
+  assume_role_policy = data.aws_iam_policy_document.example.json
 }
 
-data "aws_iam_policy_document" "de" {
+data "aws_iam_policy_document" "example" {
   statement {
     actions = ["sts:AssumeRole"]
 
@@ -36,9 +36,9 @@ data "aws_iam_policy_document" "de" {
   }
 }
 
-resource "aws_iam_role_policy_attachment" "foo-AWSGlueServiceRole" {
+resource "aws_iam_role_policy_attachment" "example-AWSGlueServiceRole" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
-  role       = aws_iam_role.de.name
+  role       = aws_iam_role.example.name
 }
 ```
 
@@ -50,7 +50,7 @@ The following arguments are supported:
 * `extra_jars_s3_path` - (Optional) Path to one or more Java Jars in an S3 bucket that should be loaded in this endpoint.
 * `extra_python_libs_s3_path` - (Optional) Path(s) to one or more Python libraries in an S3 bucket that should be loaded in this endpoint. Multiple values must be complete paths separated by a comma.
 * `glue_version` - (Optional) -  Specifies the versions of Python and Apache Spark to use. Defaults to AWS Glue version 0.9.
-* `name` - (Optional) The name of this endpoint (must be unique). If omitted, Terraform will assign a random, unique name.
+* `name` - (Required) The name of this endpoint. It must be unique in your account.
 * `number_of_nodes` - (Optional) The number of AWS Glue Data Processing Units (DPUs) to allocate to this endpoint. Conflicts with `worker_type`.
 * `number_of_workers` - (Optional) The number of workers of a defined worker type that are allocated to this endpoint. This field is available only when you choose worker type G.1X or G.2X.
 * `public_key` - (Optional) The public key to be used by this endpoint for authentication.
@@ -82,5 +82,5 @@ The following attributes are exported:
 A Glue Development Endpoint can be imported using the `name`, e.g.
 
 ```
-$ terraform import aws_glue_dev_endpoint.de foo
+$ terraform import aws_glue_dev_endpoint.example foo
 ```
