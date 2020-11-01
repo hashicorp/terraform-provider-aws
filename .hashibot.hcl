@@ -202,6 +202,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/codestar" = [
       "aws_codestar_",
     ],
+    "service/codestarconnections" = [
+      "aws_codestarconnections_",
+    ],
     "service/codestarnotifications" = [
       "aws_codestarnotifications_",
     ],
@@ -817,6 +820,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/codestar/**/*",
       "**/*_codestar_*",
       "**/codestar_*"
+    ]
+    "service/codestarconnections" = [
+      "aws/internal/service/codestarconnections_/**/*",
+      "**/*_codestarconnections_*",
+      "**/codestarconnections_*"
     ]
     "service/codestarnotifications" = [
       "aws/internal/service/codestarnotifications/**/*",

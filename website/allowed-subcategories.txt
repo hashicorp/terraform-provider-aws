@@ -24,6 +24,7 @@ CodeBuild
 CodeCommit
 CodeDeploy
 CodePipeline
+CodeStar Connections
 CodeStar Notifications
 Cognito
 Config
