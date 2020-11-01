@@ -101,7 +101,7 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 										Default:      sagemaker.NotebookOutputOptionDisabled,
 										ValidateFunc: validation.StringInSlice(sagemaker.NotebookOutputOption_Values(), false),
 									},
-									"s3_kms_Key_id": {
+									"s3_kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validateArn,
