@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
 )
 
 func resourceAwsSagemakerDomain() *schema.Resource {
@@ -246,6 +247,10 @@ func resourceAwsSagemakerDomainCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(domainID)
 
+	if _, err := waiter.DomainInService(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for sagemaker domain (%s) to create: %w", d.Id(), err)
+	}
+
 	return resourceAwsSagemakerDomainRead(d, meta)
 }
 
@@ -312,6 +317,13 @@ func resourceAwsSagemakerDomainDelete(d *schema.ResourceData, meta interface{}) 
 			return nil
 		}
 		return fmt.Errorf("error deleting SageMaker domain (%s): %w", d.Id(), err)
+	}
+
+	if _, err := waiter.DomainDeleted(conn, d.Id()); err != nil {
+		if isAWSErr(err, "ValidationException", "RecordNotFound") {
+			return nil
+		}
+		return fmt.Errorf("error waiting for sagemaker domain (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil

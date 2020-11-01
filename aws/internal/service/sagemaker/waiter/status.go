@@ -13,6 +13,7 @@ const (
 	SagemakerNotebookInstanceStatusNotFound = "NotFound"
 	SagemakerImageStatusNotFound            = "NotFound"
 	SagemakerImageStatusFailed              = "Failed"
+	SagemakerDomainStatusNotFound           = "NotFound"
 )
 
 // NotebookInstanceStatus fetches the NotebookInstance and its Status
@@ -66,5 +67,30 @@ func ImageStatus(conn *sagemaker.SageMaker, name string) resource.StateRefreshFu
 		}
 
 		return output, aws.StringValue(output.ImageStatus), nil
+	}
+}
+
+// DomainStatus fetches the Domain and its Status
+func DomainStatus(conn *sagemaker.SageMaker, domainID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &sagemaker.DescribeDomainInput{
+			DomainId: aws.String(domainID),
+		}
+
+		output, err := conn.DescribeDomain(input)
+
+		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
+			return nil, SagemakerDomainStatusNotFound, nil
+		}
+
+		if err != nil {
+			return nil, sagemaker.DomainStatusFailed, err
+		}
+
+		if output == nil {
+			return nil, SagemakerDomainStatusNotFound, nil
+		}
+
+		return output, aws.StringValue(output.Status), nil
 	}
 }
