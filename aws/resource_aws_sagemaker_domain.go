@@ -30,7 +30,6 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"domain_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -71,7 +70,6 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validateArn,
 			},
-
 			"default_user_settings": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -86,7 +84,7 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 						},
 						"execution_role": {
 							Type:         schema.TypeString,
-							Optional:     true,
+							Required:     true,
 							ValidateFunc: validateArn,
 						},
 						"sharing_settings": {
