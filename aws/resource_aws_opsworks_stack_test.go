@@ -25,7 +25,7 @@ func TestAccAWSOpsworksStack_noVpcBasic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck("opsworks", t)
+			testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t)
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
 		Providers:    testAccProviders,
@@ -55,7 +55,7 @@ func TestAccAWSOpsworksStack_noVpcChangeServiceRoleForceNew(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck("opsworks", t)
+			testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t)
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
 		Providers:    testAccProviders,
@@ -91,7 +91,7 @@ func TestAccAWSOpsworksStack_vpc(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck("opsworks", t)
+			testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t)
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
 		Providers:    testAccProviders,
@@ -139,7 +139,7 @@ func TestAccAWSOpsworksStack_noVpcCreateTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck("opsworks", t)
+			testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t)
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
 		Providers:    testAccProviders,
@@ -182,7 +182,7 @@ func TestAccAWSOpsworksStack_CustomCookbooks_SetPrivateProperties(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck("opsworks", t)
+			testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t)
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
 		Providers:    testAccProviders,
