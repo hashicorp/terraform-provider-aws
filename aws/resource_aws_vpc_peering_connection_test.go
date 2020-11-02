@@ -447,7 +447,7 @@ func testAccCheckAWSVpcPeeringConnectionDestroy(s *terraform.State) error {
 }
 
 func testAccCheckAWSVpcPeeringConnectionExists(n string, connection *ec2.VpcPeeringConnection) resource.TestCheckFunc {
-	return testAccCheckAWSVpcPeeringConnectionExistsWithProvider(n, connection, testAccProviderFunc)
+	return testAccCheckAWSVpcPeeringConnectionExistsWithProvider(n, connection, func() *schema.Provider { return testAccProvider })
 }
 
 func testAccCheckAWSVpcPeeringConnectionExistsWithProvider(n string, connection *ec2.VpcPeeringConnection, providerF func() *schema.Provider) resource.TestCheckFunc {
@@ -480,7 +480,7 @@ func testAccCheckAWSVpcPeeringConnectionExistsWithProvider(n string, connection 
 }
 
 func testAccCheckAWSVpcPeeringConnectionOptions(n, block string, options *ec2.VpcPeeringConnectionOptionsDescription) resource.TestCheckFunc {
-	return testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(n, block, options, testAccProviderFunc)
+	return testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(n, block, options, func() *schema.Provider { return testAccProvider })
 }
 
 func testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(n, block string, options *ec2.VpcPeeringConnectionOptionsDescription, providerF func() *schema.Provider) resource.TestCheckFunc {
@@ -526,11 +526,10 @@ func TestAccAWSVPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccMultipleRegionsPreCheck(t)
-			testAccAlternateRegionPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
 		},
 		IDRefreshIgnore:   []string{"auto_accept"},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -550,13 +549,12 @@ func TestAccAWSVPCPeeringConnection_region(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccMultipleRegionsPreCheck(t)
-			testAccAlternateRegionPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
 		},
 		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"auto_accept"},
 
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{

@@ -54,7 +54,7 @@ var TestAccSkip = func(t *testing.T, message string) {
 	t.Skip(message)
 }
 
-// testAccProviders is a static map of provider types and their associated provider instance.
+// testAccProviders is a static map containing only the main provider instance.
 //
 // Deprecated: Terraform Plugin SDK version 2 uses TestCase.ProviderFactories
 // but supports this value in TestCase.Providers for backwards compatibility.
@@ -62,14 +62,11 @@ var TestAccSkip = func(t *testing.T, message string) {
 // ProviderFactories: testAccProviderFactories
 var testAccProviders map[string]*schema.Provider
 
-// testAccProviderFactories initializes and returns Provider slice elements of a provider type and function that returns the provider instance
+// testAccProviderFactories is a static map containing only the main provider instance
 //
-// Using this function will initialize all listed provider types as gRPC
-// plugins for every test, which is inefficient and can cause ulimit issues.
-//
-// Deprecated: Use specific ProviderFactories functions such as testAccProviderFactoriesEc2Classic instead.
-// In the future this will be changed to return only the aws provider and not accept a parameter.
-var testAccProviderFactories func(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error)
+// Use other testAccProviderFactories functions, such as testAccProviderFactoriesAlternate,
+// for tests requiring special provider configurations.
+var testAccProviderFactories map[string]func() (*schema.Provider, error)
 
 // testAccProvider is the "main" provider instance
 //
@@ -79,24 +76,15 @@ var testAccProviderFactories func(providers *[]*schema.Provider) map[string]func
 // testAccPreCheck(t) must be called before using this provider instance.
 var testAccProvider *schema.Provider
 
-// testAccProviderFunc is a function that returns the "main" provider instance
-//
-// Deprecated: Use testAccAwsRegionProviderFunc instead.
-// In the future this will be changed to be compatible with ProviderFactories.
-var testAccProviderFunc func() *schema.Provider
-
 func init() {
 	testAccProvider = Provider()
+
 	testAccProviders = map[string]*schema.Provider{
 		ProviderNameAws: testAccProvider,
 	}
-	testAccProviderFactories = func(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
-		return testAccProviderFactoriesInit(providers, []string{
-			ProviderNameAws,
-			ProviderNameAwsAlternate,
-		})
+	testAccProviderFactories = map[string]func() (*schema.Provider, error){
+		ProviderNameAws: func() (*schema.Provider, error) { return testAccProvider, nil },
 	}
-	testAccProviderFunc = func() *schema.Provider { return testAccProvider }
 }
 
 // testAccProviderFactoriesInit creates ProviderFactories for the provider under testing.
@@ -615,17 +603,6 @@ func testAccAlternateAccountPreCheck(t *testing.T) {
 	}
 }
 
-// Deprecated: Use testAccMultipleRegionPreCheck instead
-func testAccAlternateRegionPreCheck(t *testing.T) {
-	if testAccGetRegion() == testAccGetAlternateRegion() {
-		t.Fatal("AWS_DEFAULT_REGION and AWS_ALTERNATE_REGION must be set to different values for acceptance tests")
-	}
-
-	if testAccGetPartition() != testAccGetAlternateRegionPartition() {
-		t.Fatalf("AWS_ALTERNATE_REGION partition (%s) does not match AWS_DEFAULT_REGION partition (%s)", testAccGetAlternateRegionPartition(), testAccGetPartition())
-	}
-}
-
 func testAccEC2VPCOnlyPreCheck(t *testing.T) {
 	client := testAccProvider.Meta().(*AWSClient)
 	platforms := client.supportedplatforms
@@ -670,15 +647,6 @@ func testAccMultipleRegionPreCheck(t *testing.T, regions int) {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
 		if len(partition.Regions()) < regions {
 			t.Skipf("skipping tests; partition includes %d regions, %d expected", len(partition.Regions()), regions)
-		}
-	}
-}
-
-// Deprecated: Use testAccMultipleRegionPreCheck instead.
-func testAccMultipleRegionsPreCheck(t *testing.T) {
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
-		if len(partition.Regions()) < 2 {
-			t.Skip("skipping tests; partition only includes a single region")
 		}
 	}
 }

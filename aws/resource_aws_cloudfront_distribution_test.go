@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
@@ -757,13 +756,12 @@ func TestAccAWSCloudFrontDistribution_OrderedCacheBehavior_ForwardedValues_Heade
 
 func TestAccAWSCloudFrontDistribution_ViewerCertificate_AcmCertificateArn(t *testing.T) {
 	var distribution cloudfront.Distribution
-	var providers []*schema.Provider
 	resourceName := "aws_cloudfront_distribution.test"
 	retainOnDelete := testAccAWSCloudFrontDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("cloudfront", t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -789,13 +787,12 @@ func TestAccAWSCloudFrontDistribution_ViewerCertificate_AcmCertificateArn(t *tes
 // Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/7773
 func TestAccAWSCloudFrontDistribution_ViewerCertificate_AcmCertificateArn_ConflictsWithCloudFrontDefaultCertificate(t *testing.T) {
 	var distribution cloudfront.Distribution
-	var providers []*schema.Provider
 	resourceName := "aws_cloudfront_distribution.test"
 	retainOnDelete := testAccAWSCloudFrontDistributionRetainOnDeleteFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("cloudfront", t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
