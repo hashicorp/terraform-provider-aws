@@ -822,7 +822,7 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/codestar_*"
     ]
     "service/codestarconnections" = [
-      "aws/internal/service/codestarconnections_/**/*",
+      "aws/internal/service/codestarconnections/**/*",
       "**/*_codestarconnections_*",
       "**/codestarconnections_*"
     ]
