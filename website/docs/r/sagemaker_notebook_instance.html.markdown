@@ -33,7 +33,7 @@ resource "aws_sagemaker_code_repository" "example" {
   code_repository_name = "my-notebook-instance-code-repo"
 
   git_config {
-    repository_url = "https://github.com/terraform-providers/terraform-provider-aws.git"
+    repository_url = "https://github.com/hashicorp/terraform-provider-aws.git"
   }
 }
 
