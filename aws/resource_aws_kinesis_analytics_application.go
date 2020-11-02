@@ -169,12 +169,14 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 						"parallelism": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"count": {
 										Type:         schema.TypeInt,
-										Required:     true,
+										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.IntBetween(1, 64),
 									},
 								},
@@ -328,7 +330,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 						},
 
 						"stream_names": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -793,6 +795,86 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 		}
 
 		if d.HasChange("inputs") {
+			o, n := d.GetChange("inputs")
+
+			if len(o.([]interface{})) == 0 {
+				// Add new input.
+				input := &kinesisanalytics.AddApplicationInputInput{
+					ApplicationName:             aws.String(applicationName),
+					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+					Input:                       expandKinesisAnalyticsV1Input(n.([]interface{})),
+				}
+
+				log.Printf("[DEBUG] Adding Kinesis Analytics Application (%s) input: %s", d.Id(), input)
+
+				_, err := waiter.IAMPropagation(func() (interface{}, error) {
+					return conn.AddApplicationInput(input)
+				})
+
+				if err != nil {
+					return fmt.Errorf("error adding Kinesis Analytics Application (%s) input: %w", d.Id(), err)
+				}
+
+				currentApplicationVersionId += 1
+			} else if len(n.([]interface{})) == 0 {
+				// The existing input cannot be deleted.
+				// This should be handled by the CustomizeDiff function above.
+				return fmt.Errorf("error deleting Kinesis Analytics Application (%s) input", d.Id())
+			} else {
+				// Update existing input.
+				inputUpdate := expandKinesisAnalyticsV1InputUpdate(n.([]interface{}))
+
+				if d.HasChange("inputs.0.processing_configuration") {
+					o, n := d.GetChange("inputs.0.processing_configurationn")
+
+					// Update of existing input processing configuration is handled via the updating of the existing input.
+
+					if len(o.([]interface{})) == 0 {
+						// Add new input processing configuration.
+						input := &kinesisanalytics.AddApplicationInputProcessingConfigurationInput{
+							ApplicationName:              aws.String(applicationName),
+							CurrentApplicationVersionId:  aws.Int64(currentApplicationVersionId),
+							InputId:                      inputUpdate.InputId,
+							InputProcessingConfiguration: expandKinesisAnalyticsV1InputProcessingConfiguration(n.([]interface{})),
+						}
+
+						log.Printf("[DEBUG] Adding Kinesis Analytics Application (%s) input processing configuration: %s", d.Id(), input)
+
+						_, err := waiter.IAMPropagation(func() (interface{}, error) {
+							return conn.AddApplicationInputProcessingConfiguration(input)
+						})
+
+						if err != nil {
+							return fmt.Errorf("error adding Kinesis Analytics Application (%s) input processing configuration: %w", d.Id(), err)
+						}
+
+						currentApplicationVersionId += 1
+					} else if len(n.([]interface{})) == 0 {
+						// Delete existing input processing configuration.
+						input := &kinesisanalytics.DeleteApplicationInputProcessingConfigurationInput{
+							ApplicationName:             aws.String(applicationName),
+							CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+							InputId:                     inputUpdate.InputId,
+						}
+
+						log.Printf("[DEBUG] Deleting Kinesis Analytics Application (%s) input processing configuration: %s", d.Id(), input)
+
+						_, err := waiter.IAMPropagation(func() (interface{}, error) {
+							return conn.DeleteApplicationInputProcessingConfiguration(input)
+						})
+
+						if err != nil {
+							return fmt.Errorf("error deleting Kinesis Analytics Application (%s) input processing configuration: %w", d.Id(), err)
+						}
+
+						currentApplicationVersionId += 1
+					}
+				}
+
+				input.ApplicationUpdate.InputUpdates = []*kinesisanalytics.InputUpdate{inputUpdate}
+
+				updateApplication = true
+			}
 		}
 
 		if d.HasChange("outputs") {
@@ -1624,15 +1706,10 @@ func flattenKinesisAnalyticsInputs(inputs []*kinesisanalytics.InputDescription) 
 		id := inputs[0]
 
 		input := map[string]interface{}{
-			"id":          aws.StringValue(id.InputId),
-			"name_prefix": aws.StringValue(id.NamePrefix),
+			"id":           aws.StringValue(id.InputId),
+			"name_prefix":  aws.StringValue(id.NamePrefix),
+			"stream_names": flattenStringList(id.InAppStreamNames),
 		}
-
-		list := schema.NewSet(schema.HashString, nil)
-		for _, sn := range id.InAppStreamNames {
-			list.Add(aws.StringValue(sn))
-		}
-		input["stream_names"] = list
 
 		if id.InputParallelism != nil {
 			input["parallelism"] = []interface{}{
@@ -2004,6 +2081,111 @@ func expandKinesisAnalyticsV1InputProcessingConfiguration(vInputProcessingConfig
 	}
 
 	return inputProcessingConfiguration
+}
+
+func expandKinesisAnalyticsV1InputUpdate(vInput []interface{}) *kinesisanalytics.InputUpdate {
+	if len(vInput) == 0 || vInput[0] == nil {
+		return nil
+	}
+
+	inputUpdate := &kinesisanalytics.InputUpdate{}
+
+	mInput := vInput[0].(map[string]interface{})
+
+	if vInputId, ok := mInput["id"].(string); ok && vInputId != "" {
+		inputUpdate.InputId = aws.String(vInputId)
+	}
+
+	if vInputParallelism, ok := mInput["parallelism"].([]interface{}); ok && len(vInputParallelism) > 0 && vInputParallelism[0] != nil {
+		inputParallelismUpdate := &kinesisanalytics.InputParallelismUpdate{}
+
+		mInputParallelism := vInputParallelism[0].(map[string]interface{})
+
+		if vCount, ok := mInputParallelism["count"].(int); ok {
+			inputParallelismUpdate.CountUpdate = aws.Int64(int64(vCount))
+		}
+
+		inputUpdate.InputParallelismUpdate = inputParallelismUpdate
+	}
+
+	if vInputProcessingConfiguration, ok := mInput["processing_configuration"].([]interface{}); ok && len(vInputProcessingConfiguration) > 0 && vInputProcessingConfiguration[0] != nil {
+		inputProcessingConfigurationUpdate := &kinesisanalytics.InputProcessingConfigurationUpdate{}
+
+		mInputProcessingConfiguration := vInputProcessingConfiguration[0].(map[string]interface{})
+
+		if vInputLambdaProcessor, ok := mInputProcessingConfiguration["lambda"].([]interface{}); ok && len(vInputLambdaProcessor) > 0 && vInputLambdaProcessor[0] != nil {
+			inputLambdaProcessorUpdate := &kinesisanalytics.InputLambdaProcessorUpdate{}
+
+			mInputLambdaProcessor := vInputLambdaProcessor[0].(map[string]interface{})
+
+			if vResourceArn, ok := mInputLambdaProcessor["resource_arn"].(string); ok && vResourceArn != "" {
+				inputLambdaProcessorUpdate.ResourceARNUpdate = aws.String(vResourceArn)
+			}
+			if vRoleArn, ok := mInputLambdaProcessor["role_arn"].(string); ok && vRoleArn != "" {
+				inputLambdaProcessorUpdate.RoleARNUpdate = aws.String(vRoleArn)
+			}
+
+			inputProcessingConfigurationUpdate.InputLambdaProcessorUpdate = inputLambdaProcessorUpdate
+		}
+
+		inputUpdate.InputProcessingConfigurationUpdate = inputProcessingConfigurationUpdate
+	}
+
+	if vInputSchema, ok := mInput["schema"].([]interface{}); ok && len(vInputSchema) > 0 && vInputSchema[0] != nil {
+		inputSchemaUpdate := &kinesisanalytics.InputSchemaUpdate{}
+
+		mInputSchema := vInputSchema[0].(map[string]interface{})
+
+		if vRecordColumns, ok := mInputSchema["record_columns"].(*schema.Set); ok && vRecordColumns.Len() > 0 {
+			inputSchemaUpdate.RecordColumnUpdates = expandKinesisAnalyticsV1RecordColumns(vRecordColumns.List())
+		}
+
+		if vRecordEncoding, ok := mInputSchema["record_encoding"].(string); ok && vRecordEncoding != "" {
+			inputSchemaUpdate.RecordEncodingUpdate = aws.String(vRecordEncoding)
+		}
+
+		if vRecordFormat, ok := mInputSchema["record_format"].([]interface{}); ok {
+			inputSchemaUpdate.RecordFormatUpdate = expandKinesisAnalyticsV1RecordFormat(vRecordFormat)
+		}
+
+		inputUpdate.InputSchemaUpdate = inputSchemaUpdate
+	}
+
+	if vKinesisFirehoseInput, ok := mInput["kinesis_firehose"].([]interface{}); ok && len(vKinesisFirehoseInput) > 0 && vKinesisFirehoseInput[0] != nil {
+		kinesisFirehoseInputUpdate := &kinesisanalytics.KinesisFirehoseInputUpdate{}
+
+		mKinesisFirehoseInput := vKinesisFirehoseInput[0].(map[string]interface{})
+
+		if vResourceArn, ok := mKinesisFirehoseInput["resource_arn"].(string); ok && vResourceArn != "" {
+			kinesisFirehoseInputUpdate.ResourceARNUpdate = aws.String(vResourceArn)
+		}
+		if vRoleArn, ok := mKinesisFirehoseInput["role_arn"].(string); ok && vRoleArn != "" {
+			kinesisFirehoseInputUpdate.RoleARNUpdate = aws.String(vRoleArn)
+		}
+
+		inputUpdate.KinesisFirehoseInputUpdate = kinesisFirehoseInputUpdate
+	}
+
+	if vKinesisStreamsInput, ok := mInput["kinesis_stream"].([]interface{}); ok && len(vKinesisStreamsInput) > 0 && vKinesisStreamsInput[0] != nil {
+		kinesisStreamsInputUpdate := &kinesisanalytics.KinesisStreamsInputUpdate{}
+
+		mKinesisStreamsInput := vKinesisStreamsInput[0].(map[string]interface{})
+
+		if vResourceArn, ok := mKinesisStreamsInput["resource_arn"].(string); ok && vResourceArn != "" {
+			kinesisStreamsInputUpdate.ResourceARNUpdate = aws.String(vResourceArn)
+		}
+		if vRoleArn, ok := mKinesisStreamsInput["role_arn"].(string); ok && vRoleArn != "" {
+			kinesisStreamsInputUpdate.RoleARNUpdate = aws.String(vRoleArn)
+		}
+
+		inputUpdate.KinesisStreamsInputUpdate = kinesisStreamsInputUpdate
+	}
+
+	if vNamePrefix, ok := mInput["name_prefix"].(string); ok && vNamePrefix != "" {
+		inputUpdate.NamePrefixUpdate = aws.String(vNamePrefix)
+	}
+
+	return inputUpdate
 }
 
 func expandKinesisAnalyticsV1Output(vOutput interface{}) *kinesisanalytics.Output {
