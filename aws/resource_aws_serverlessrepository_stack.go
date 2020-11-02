@@ -50,11 +50,8 @@ func resourceAwsServerlessRepositoryStack() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					// Use the CloudFormation values, since the Serverless Application Repo set includes
-					// one additional value that will only be useable on creation and does not cause problems
-					// if set at all times
-					ValidateFunc: validation.StringInSlice(cloudformation.Capability_Values(), false),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(serverlessrepository.Capability_Values(), false),
 				},
 				Set: schema.HashString,
 			},
@@ -88,12 +85,8 @@ func resourceAwsServerlessRepositoryStackCreate(d *schema.ResourceData, meta int
 	changeSetRequest := serverlessrepository.CreateCloudFormationChangeSetRequest{
 		StackName:     aws.String(stackName),
 		ApplicationId: aws.String(d.Get("application_id").(string)),
-		// Always add "CAPABILITY_RESOURCE_POLICY" here
-		Capabilities: append(
-			expandStringSet(d.Get("capabilities").(*schema.Set)),
-			aws.String(serverlessrepository.CapabilityCapabilityResourcePolicy),
-		),
-		Tags: keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreServerlessApplicationRepository().ServerlessapplicationrepositoryTags(),
+		Capabilities:  expandStringSet(d.Get("capabilities").(*schema.Set)),
+		Tags:          keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreServerlessApplicationRepository().ServerlessapplicationrepositoryTags(),
 	}
 	if v, ok := d.GetOk("semantic_version"); ok {
 		version := v.(string)
@@ -183,7 +176,7 @@ func resourceAwsServerlessRepositoryStackCreate(d *schema.ResourceData, meta int
 			return fmt.Errorf("Failed getting rollback reasons: %w", err)
 		}
 
-		return fmt.Errorf("%s: %q", lastStatus, reasons)
+		return fmt.Errorf("Error creating %s: %q", lastStatus, reasons)
 	}
 	if lastStatus == "DELETE_COMPLETE" || lastStatus == "DELETE_FAILED" {
 		reasons, err := getCloudFormationDeletionReasons(d.Id(), cfConn)
@@ -192,14 +185,14 @@ func resourceAwsServerlessRepositoryStackCreate(d *schema.ResourceData, meta int
 		}
 
 		d.SetId("")
-		return fmt.Errorf("%s: %q", lastStatus, reasons)
+		return fmt.Errorf("Error creating %s: %q", lastStatus, reasons)
 	}
 	if lastStatus == "CREATE_FAILED" {
 		reasons, err := getCloudFormationFailures(d.Id(), cfConn)
 		if err != nil {
 			return fmt.Errorf("Failed getting failure reasons: %w", err)
 		}
-		return fmt.Errorf("%s: %q", lastStatus, reasons)
+		return fmt.Errorf("Error creating %s: %q", lastStatus, reasons)
 	}
 
 	log.Printf("[INFO] CloudFormation Stack %q created", d.Id())
@@ -266,21 +259,19 @@ func resourceAwsServerlessRepositoryStackRead(d *schema.ResourceData, meta inter
 
 	originalParams := d.Get("parameters").(map[string]interface{})
 	if err = d.Set("parameters", flattenCloudFormationParameters(stack.Parameters, originalParams)); err != nil {
-		return err
+		return fmt.Errorf("failed to set parameters: %w", err)
 	}
 
 	if err = d.Set("tags", keyvaluetags.CloudformationKeyValueTags(stack.Tags).IgnoreServerlessApplicationRepository().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return err
+		return fmt.Errorf("failed to set tags: %w", err)
 	}
 
 	if err = d.Set("outputs", flattenCloudFormationOutputs(stack.Outputs)); err != nil {
-		return err
+		return fmt.Errorf("failed to set outputs: %w", err)
 	}
 
-	if len(stack.Capabilities) > 0 {
-		if err = d.Set("capabilities", flattenStringSet(stack.Capabilities)); err != nil {
-			return err
-		}
+	if err = d.Set("capabilities", flattenServerlessRepositoryStackCapabilities(d, stack.Capabilities)); err != nil {
+		return fmt.Errorf("failed to set capabilities: %w", err)
 	}
 
 	return nil
@@ -295,21 +286,20 @@ func resourceAwsServerlessRepositoryStackUpdate(d *schema.ResourceData, meta int
 		ChangeSetType:       aws.String("UPDATE"),
 	}
 
-	input.ChangeSetName = aws.String(fmt.Sprintf("%s-%s",
-		d.Get("name").(string),
-		time.Now().UTC().Format("20060102150405999999999")))
+	input.ChangeSetName = aws.String(resource.PrefixedUniqueId(d.Get("name").(string)))
 
 	// Parameters must be present whether they are changed or not
 	if v, ok := d.GetOk("parameters"); ok {
 		input.Parameters = expandCloudFormationParameters(v.(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreServerlessApplicationRepository().CloudformationTags()
+	if d.HasChange("tags") {
+		if v, ok := d.GetOk("tags"); ok {
+			input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreServerlessApplicationRepository().CloudformationTags()
+		}
 	}
 
-	capabilities := d.Get("capabilities")
-	input.Capabilities = expandStringSet(capabilities.(*schema.Set))
+	input.Capabilities = expandServerlessRepositoryStackChangeSetCapabilities(d.Get("capabilities").(*schema.Set))
 
 	log.Printf("[DEBUG] Creating CloudFormation change set: %s", input)
 	changeSetResponse, err := conn.CreateChangeSet(input)
@@ -383,7 +373,7 @@ func resourceAwsServerlessRepositoryStackUpdate(d *schema.ResourceData, meta int
 			return fmt.Errorf("Failed getting details about rollback: %w", err)
 		}
 
-		return fmt.Errorf("%s: %q", lastStatus, reasons)
+		return fmt.Errorf("Error updating %s: %q", lastStatus, reasons)
 	}
 
 	log.Printf("[DEBUG] CloudFormation stack %q has been updated", stackID)
@@ -467,7 +457,7 @@ func resourceAwsServerlessRepositoryStackDelete(d *schema.ResourceData, meta int
 			return fmt.Errorf("Failed getting reasons of failure: %w", err)
 		}
 
-		return fmt.Errorf("%s: %q", lastStatus, reasons)
+		return fmt.Errorf("Error deleting %s: %q", lastStatus, reasons)
 	}
 
 	log.Printf("[DEBUG] CloudFormation stack %q has been deleted", d.Id())
@@ -511,7 +501,7 @@ func waitForCreateChangeSet(d *schema.ResourceData, conn *cloudformation.CloudFo
 		if err != nil {
 			return fmt.Errorf("Failed getting failure reasons: %w", err)
 		}
-		return fmt.Errorf("%s: %q", lastChangeSetStatus, reasons)
+		return fmt.Errorf("Error waiting %s: %q", lastChangeSetStatus, reasons)
 	}
 	return err
 }
@@ -525,4 +515,27 @@ func expandServerlessRepositoryChangeSetParameters(params map[string]interface{}
 		})
 	}
 	return appParams
+}
+
+func flattenServerlessRepositoryStackCapabilities(d *schema.ResourceData, c []*string) *schema.Set {
+	// We need to preserve "CAPABILITY_RESOURCE_POLICY" if it has been set. It is not
+	// returned by the CloudFormation APIs.
+	existingCapabilities := d.Get("capabilities").(*schema.Set)
+	capabilities := flattenStringSet(c)
+	if existingCapabilities.Contains(serverlessrepository.CapabilityCapabilityResourcePolicy) {
+		capabilities.Add(serverlessrepository.CapabilityCapabilityResourcePolicy)
+	}
+	return capabilities
+}
+
+func expandServerlessRepositoryStackChangeSetCapabilities(capabilities *schema.Set) []*string {
+	// Filter the capabilities for the CloudFormation Change Set. CloudFormation supports a
+	// subset of the capabilities supported by Serverless Application Repository.
+	result := make([]*string, 0, capabilities.Len())
+	for _, c := range cloudformation.Capability_Values() {
+		if capabilities.Contains(c) {
+			result = append(result, aws.String(c))
+		}
+	}
+	return result
 }

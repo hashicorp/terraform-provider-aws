@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
+	serverlessrepository "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -51,7 +51,7 @@ func dataSourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, me
 
 	applicationID := d.Get("application_id").(string)
 
-	input := &serverlessapplicationrepository.GetApplicationInput{
+	input := &serverlessrepository.GetApplicationInput{
 		ApplicationId: aws.String(applicationID),
 	}
 
