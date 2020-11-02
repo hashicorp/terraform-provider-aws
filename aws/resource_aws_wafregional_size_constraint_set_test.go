@@ -19,7 +19,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_basic(t *testing.T) {
 	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("waf-regional", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
@@ -59,7 +59,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_changeNameForceNew(t *testing.T) {
 	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("waf-regional", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
@@ -98,7 +98,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_disappears(t *testing.T) {
 	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("waf-regional", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
@@ -120,7 +120,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("waf-regional", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
@@ -179,7 +179,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_noConstraints(t *testing.T) {
 	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("waf-regional", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
