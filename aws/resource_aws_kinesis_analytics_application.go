@@ -796,6 +796,74 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 		}
 
 		if d.HasChange("outputs") {
+			o, n := d.GetChange("outputs")
+			os := o.(*schema.Set)
+			ns := n.(*schema.Set)
+
+			additions := []interface{}{}
+			deletions := []string{}
+
+			// Additions.
+			for _, vOutput := range ns.Difference(os).List() {
+				if outputId, ok := vOutput.(map[string]interface{})["id"].(string); ok && outputId != "" {
+					// Shouldn't be attempting to add an output with an ID.
+					log.Printf("[WARN] Attempting to add invalid Kinesis Analytics Application (%s) output: %#v", d.Id(), vOutput)
+				} else {
+					additions = append(additions, vOutput)
+				}
+			}
+
+			// Deletions.
+			for _, vOutput := range os.Difference(ns).List() {
+				if outputId, ok := vOutput.(map[string]interface{})["id"].(string); ok && outputId != "" {
+					deletions = append(deletions, outputId)
+				} else {
+					// Shouldn't be attempting to delete an output without an ID.
+					log.Printf("[WARN] Attempting to delete invalid Kinesis Analytics Application (%s) output: %#v", d.Id(), vOutput)
+				}
+			}
+
+			// Delete existing outputs.
+			for _, outputId := range deletions {
+				input := &kinesisanalytics.DeleteApplicationOutputInput{
+					ApplicationName:             aws.String(applicationName),
+					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+					OutputId:                    aws.String(outputId),
+				}
+
+				log.Printf("[DEBUG] Deleting Kinesis Analytics Application (%s) output: %s", d.Id(), input)
+
+				_, err := waiter.IAMPropagation(func() (interface{}, error) {
+					return conn.DeleteApplicationOutput(input)
+				})
+
+				if err != nil {
+					return fmt.Errorf("error deleting Kinesis Analytics Application (%s) output: %w", d.Id(), err)
+				}
+
+				currentApplicationVersionId += 1
+			}
+
+			// Add new outputs.
+			for _, vOutput := range additions {
+				input := &kinesisanalytics.AddApplicationOutputInput{
+					ApplicationName:             aws.String(applicationName),
+					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+					Output:                      expandKinesisAnalyticsV1Output(vOutput),
+				}
+
+				log.Printf("[DEBUG] Adding Kinesis Analytics Application (%s) output: %s", d.Id(), input)
+
+				_, err := waiter.IAMPropagation(func() (interface{}, error) {
+					return conn.AddApplicationOutput(input)
+				})
+
+				if err != nil {
+					return fmt.Errorf("error adding Kinesis Analytics Application (%s) output: %w", d.Id(), err)
+				}
+
+				currentApplicationVersionId += 1
+			}
 		}
 
 		if d.HasChange("reference_data_sources") {
@@ -1947,7 +2015,7 @@ func expandKinesisAnalyticsV1Output(vOutput interface{}) *kinesisanalytics.Outpu
 
 	mOutput := vOutput.(map[string]interface{})
 
-	if vDestinationSchema, ok := mOutput["destination_schema"].([]interface{}); ok {
+	if vDestinationSchema, ok := mOutput["schema"].([]interface{}); ok {
 		destinationSchema := &kinesisanalytics.DestinationSchema{}
 
 		mDestinationSchema := vDestinationSchema[0].(map[string]interface{})

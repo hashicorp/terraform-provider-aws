@@ -431,6 +431,117 @@ func TestAccAWSKinesisAnalyticsApplication_CloudWatchLoggingOptions_Update(t *te
 	})
 }
 
+func TestAccAWSKinesisAnalyticsApplication_Output_Update(t *testing.T) {
+	var v kinesisanalytics.ApplicationDetail
+	resourceName := "aws_kinesis_analytics_application.test"
+	iamRole1ResourceName := "aws_iam_role.test.0"
+	iamRole2ResourceName := "aws_iam_role.test.1"
+	lambdaResourceName := "aws_lambda_function.test.0"
+	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	streamsResourceName := "aws_kinesis_stream.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplicationOutput(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+						"name":                        "OUTPUT_1",
+						"schema.#":                    "1",
+						"schema.0.record_format_type": "CSV",
+						"kinesis_firehose.#":          "1",
+						"kinesis_stream.#":            "0",
+						"lambda.#":                    "0",
+					}),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationOutputUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+						"name":                        "OUTPUT_2",
+						"schema.#":                    "1",
+						"schema.0.record_format_type": "JSON",
+						"kinesis_firehose.#":          "0",
+						"kinesis_stream.#":            "1",
+						"lambda.#":                    "0",
+					}),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+						"name":                        "OUTPUT_3",
+						"schema.#":                    "1",
+						"schema.0.record_format_type": "CSV",
+						"kinesis_firehose.#":          "0",
+						"kinesis_stream.#":            "0",
+						"lambda.#":                    "1",
+					}),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.resource_arn", lambdaResourceName, "arn"),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "4"), // 1 * output deletion + 2 * output addition.
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccKinesisAnalyticsApplicationConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kinesisanalytics", fmt.Sprintf("application/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logging_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "code", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "6"), // 2 * output deletion.
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Add(t *testing.T) {
 	var v kinesisanalytics.ApplicationDetail
 	resourceName := "aws_kinesis_analytics_application.test"
@@ -1375,6 +1486,39 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, rName)
 }
 
+func testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_lambda_function" "test" {
+  count = 2
+
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%[1]s_${count.index}"
+  handler       = "exports.example"
+  role          = aws_iam_role.test[0].arn
+  runtime       = "nodejs12.x"
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  name        = %[1]q
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    bucket_arn = aws_s3_bucket.test.arn
+    role_arn   = aws_iam_role.test[0].arn
+  }
+}
+
+resource "aws_kinesis_stream" "test" {
+  name        = %[1]q
+  shard_count = 1
+}
+`, rName)
+}
+
 func testAccKinesisAnalyticsApplicationConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_analytics_application" "test" {
@@ -1442,6 +1586,67 @@ resource "aws_kinesis_analytics_application" "test" {
   }
 }
 `, rName, streamIndex))
+}
+
+func testAccKinesisAnalyticsApplicationOutput(rName string) string {
+	return composeConfig(
+		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
+		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_analytics_application" "test" {
+  name = %[1]q
+
+  outputs {
+    name = "OUTPUT_1"
+
+    schema {
+      record_format_type = "CSV"
+    }
+
+    kinesis_firehose {
+      resource_arn = aws_kinesis_firehose_delivery_stream.test.arn
+      role_arn     = aws_iam_role.test[0].arn
+    }
+  }
+}
+`, rName))
+}
+
+func testAccKinesisAnalyticsApplicationOutputUpdated(rName string) string {
+	return composeConfig(
+		testAccKinesisAnalyticsApplicationConfigBaseIamRole(rName),
+		testAccKinesisAnalyticsApplicationConfigBaseInputOutput(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_analytics_application" "test" {
+  name = %[1]q
+
+  outputs {
+    name = "OUTPUT_2"
+
+    schema {
+      record_format_type = "JSON"
+    }
+
+    kinesis_stream {
+      resource_arn = aws_kinesis_stream.test.arn
+      role_arn     = aws_iam_role.test[1].arn
+    }
+  }
+
+  outputs {
+    name = "OUTPUT_3"
+
+    schema {
+      record_format_type = "CSV"
+    }
+
+    lambda {
+      resource_arn = aws_lambda_function.test[0].arn
+      role_arn     = aws_iam_role.test[0].arn
+    }
+  }
+}
+`, rName))
 }
 
 func testAccKinesisAnalyticsApplicationReferenceDataSource(rName string) string {
