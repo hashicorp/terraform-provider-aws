@@ -307,7 +307,7 @@ github.com/hashicorp/terraform-exec/tfexec
 github.com/hashicorp/terraform-exec/tfinstall
 # github.com/hashicorp/terraform-json v0.5.0
 github.com/hashicorp/terraform-json
-# github.com/hashicorp/terraform-plugin-sdk/v2 v2.0.4
+# github.com/hashicorp/terraform-plugin-sdk/v2 v2.1.0
 ## explicit
 github.com/hashicorp/terraform-plugin-sdk/v2/diag
 github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging
