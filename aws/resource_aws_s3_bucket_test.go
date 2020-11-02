@@ -197,7 +197,7 @@ func TestAccAWSS3Bucket_basic(t *testing.T) {
 }
 
 // Support for common Terraform 0.11 pattern
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/7868
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7868
 func TestAccAWSS3Bucket_Bucket_EmptyString(t *testing.T) {
 	resourceName := "aws_s3_bucket.test"
 
@@ -1366,7 +1366,7 @@ func TestAccAWSS3Bucket_LifecycleExpireMarkerOnly(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/11420
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11420
 func TestAccAWSS3Bucket_LifecycleRule_Expiration_EmptyConfigurationBlock(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3_bucket.bucket"
@@ -1386,7 +1386,7 @@ func TestAccAWSS3Bucket_LifecycleRule_Expiration_EmptyConfigurationBlock(t *test
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/15138
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/15138
 func TestAccAWSS3Bucket_LifecycleRule_AbortIncompleteMultipartUploadDays_NoExpiration(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3_bucket.bucket"
@@ -1620,7 +1620,7 @@ func TestAccAWSS3Bucket_ReplicationConfiguration_Rule_Destination_AccessControlT
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/12480
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12480
 func TestAccAWSS3Bucket_ReplicationConfiguration_Rule_Destination_AddAccessControlTranslation(t *testing.T) {
 	rInt := acctest.RandInt()
 	region := testAccGetRegion()
@@ -1759,7 +1759,7 @@ func TestAccAWSS3Bucket_ReplicationExpectVersioningValidationError(t *testing.T)
 	})
 }
 
-// Prefix issue: https://github.com/terraform-providers/terraform-provider-aws/issues/6340
+// Prefix issue: https://github.com/hashicorp/terraform-provider-aws/issues/6340
 func TestAccAWSS3Bucket_ReplicationWithoutPrefix(t *testing.T) {
 	rInt := acctest.RandInt()
 	alternateRegion := testAccGetAlternateRegion()

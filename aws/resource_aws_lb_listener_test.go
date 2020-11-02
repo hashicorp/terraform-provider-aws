@@ -407,7 +407,7 @@ func TestAccAWSLBListener_DefaultAction_Order(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6171
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6171
 func TestAccAWSLBListener_DefaultAction_Order_Recreates(t *testing.T) {
 	var listener elbv2.Listener
 	key := tlsRsaPrivateKeyPem(2048)

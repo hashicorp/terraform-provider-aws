@@ -77,7 +77,7 @@ TF_ACC=1 go test ./aws -v -run=TestAccAWSCloudWatchDashboard_update -timeout 120
 === RUN   TestAccAWSCloudWatchDashboard_update
 --- PASS: TestAccAWSCloudWatchDashboard_update (26.56s)
 PASS
-ok  	github.com/terraform-providers/terraform-provider-aws/aws	26.607s
+ok  	github.com/hashicorp/terraform-provider-aws/aws	26.607s
 ```
 
 Entire resource test suites can be targeted by using the naming convention to
@@ -96,7 +96,7 @@ TF_ACC=1 go test ./aws -v -run=TestAccAWSCloudWatchDashboard -timeout 120m
 === RUN   TestAccAWSCloudWatchDashboard_update
 --- PASS: TestAccAWSCloudWatchDashboard_update (27.81s)
 PASS
-ok  	github.com/terraform-providers/terraform-provider-aws/aws	55.619s
+ok  	github.com/hashicorp/terraform-provider-aws/aws	55.619s
 ```
 
 Running acceptance tests requires version 0.12.26 or higher of the Terraform CLI to be installed.
@@ -115,7 +115,7 @@ $ make testacc TEST=./aws TESTARGS='-run=TestAccAWSDBInstance_DbSubnetGroupName_
     TestAccAWSDBInstance_DbSubnetGroupName_RamShared: provider_test.go:386: AWS_ALTERNATE_ACCESS_KEY_ID or AWS_ALTERNATE_PROFILE must be set for acceptance tests
 --- FAIL: TestAccAWSDBInstance_DbSubnetGroupName_RamShared (2.22s)
 FAIL
-FAIL	github.com/terraform-providers/terraform-provider-aws/aws	4.305s
+FAIL	github.com/hashicorp/terraform-provider-aws/aws	4.305s
 FAIL
 ```
 

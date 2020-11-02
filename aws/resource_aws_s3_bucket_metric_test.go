@@ -293,7 +293,7 @@ func TestAccAWSS3BucketMetric_basic(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/11813
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11813
 // Disallow Empty filter block
 func TestAccAWSS3BucketMetric_WithEmptyFilter(t *testing.T) {
 	var conf s3.MetricsConfiguration

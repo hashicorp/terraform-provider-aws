@@ -92,7 +92,7 @@ func TestAccAWSOpsworksPermission_basic(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/4804
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/4804
 func TestAccAWSOpsworksPermission_Self(t *testing.T) {
 	var opsperm opsworks.Permission
 	rName := acctest.RandomWithPrefix("tf-acc-test")

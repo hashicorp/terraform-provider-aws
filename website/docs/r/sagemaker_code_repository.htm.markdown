@@ -19,7 +19,7 @@ resource "aws_sagemaker_code_repository" "example" {
   code_repository_name = "example"
 
   git_config {
-    repository_url = "https://github.com/terraform-providers/terraform-provider-aws.git"
+    repository_url = "https://github.com/hashicorp/terraform-provider-aws.git"
   }
 }
 ```
@@ -40,7 +40,7 @@ resource "aws_sagemaker_code_repository" "example" {
   code_repository_name = "example"
 
   git_config {
-    repository_url = "https://github.com/terraform-providers/terraform-provider-aws.git"
+    repository_url = "https://github.com/hashicorp/terraform-provider-aws.git"
     secret_arn     = aws_secretsmanager_secret.example.arn
   }
 

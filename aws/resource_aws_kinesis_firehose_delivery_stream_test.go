@@ -831,7 +831,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_ErrorOutputPrefix(t *tes
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/12600
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12600
 func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_ProcessingConfiguration_Empty(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rInt := acctest.RandInt()
@@ -1326,7 +1326,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchWithVpcConfigUpdates(t
 	})
 }
 
-// Regression test for https://github.com/terraform-providers/terraform-provider-aws/issues/1657
+// Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1657
 func TestAccAWSKinesisFirehoseDeliveryStream_missingProcessingConfiguration(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	ri := acctest.RandInt()

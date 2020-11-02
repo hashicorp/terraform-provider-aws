@@ -1770,7 +1770,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_Tags(t *testing.T) {
 }
 
 func TestAccAWSDBInstance_SnapshotIdentifier_Tags_Unset(t *testing.T) {
-	TestAccSkip(t, "To be fixed: https://github.com/terraform-providers/terraform-provider-aws/issues/5959")
+	TestAccSkip(t, "To be fixed: https://github.com/hashicorp/terraform-provider-aws/issues/5959")
 	// --- FAIL: TestAccAWSDBInstance_SnapshotIdentifier_Tags_Unset (1086.15s)
 	//     testing.go:527: Step 0 error: Check failed: Check 4/4 error: aws_db_instance.test: Attribute 'tags.%' expected "0", got "1"
 
@@ -1826,7 +1826,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_VpcSecurityGroupIds(t *testing.T) {
 	})
 }
 
-// Regression reference: https://github.com/terraform-providers/terraform-provider-aws/issues/5360
+// Regression reference: https://github.com/hashicorp/terraform-provider-aws/issues/5360
 // This acceptance test explicitly tests when snapshot_identifier is set,
 // vpc_security_group_ids is set (which triggered the resource update function),
 // and tags is set which was missing its ARN used for tagging
@@ -2744,7 +2744,7 @@ func testAccCheckAWSDBInstanceExists(n string, v *rds.DBInstance) resource.TestC
 	}
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/8792
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8792
 func TestAccAWSDBInstance_PerformanceInsightsEnabled_DisabledToEnabled(t *testing.T) {
 	var dbInstance rds.DBInstance
 	rName := acctest.RandomWithPrefix("tf-acc-test")

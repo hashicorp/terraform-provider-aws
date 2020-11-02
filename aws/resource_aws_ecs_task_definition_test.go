@@ -546,7 +546,7 @@ func TestAccAWSEcsTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 	})
 }
 
-// Regression for https://github.com/terraform-providers/terraform-provider-aws/issues/2336
+// Regression for https://github.com/hashicorp/terraform-provider-aws/issues/2336
 func TestAccAWSEcsTaskDefinition_arrays(t *testing.T) {
 	var conf ecs.TaskDefinition
 	resourceName := "aws_ecs_task_definition.test"

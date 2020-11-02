@@ -117,7 +117,7 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 	// IOPs are only valid, and required for, storage type io1 and io2. The current minimum
 	// is 100. Hard validation in place to return an error if IOPs are provided
 	// for an unsupported storage type.
-	// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/12667
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
 	var t string
 	if value, ok := d.GetOk("type"); ok {
 		t = value.(string)

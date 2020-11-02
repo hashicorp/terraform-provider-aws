@@ -146,7 +146,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_duplicateSid(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/10777
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10777
 func TestAccAWSDataSourceIAMPolicyDocument_Statement_Principal_Identifiers_StringAndSlice(t *testing.T) {
 	dataSourceName := "data.aws_iam_policy_document.test"
 
@@ -164,8 +164,8 @@ func TestAccAWSDataSourceIAMPolicyDocument_Statement_Principal_Identifiers_Strin
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/10777
-func TestAccAWSDataSourceIAMPolicyDocument_Statement_Principal_Identifiers_MultiplePrincipalsAWS(t *testing.T) {
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10777
+func TestAccAWSDataSourceIAMPolicyDocument_Statement_Principal_Identifiers_MultiplePrincipals(t *testing.T) {
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{

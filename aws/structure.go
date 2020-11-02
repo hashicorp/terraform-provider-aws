@@ -4147,7 +4147,7 @@ func expandDynamoDbLocalSecondaryIndexes(cfg []interface{}, keySchemaM map[strin
 		m := lsi.(map[string]interface{})
 		idxName := m["name"].(string)
 
-		// TODO: See https://github.com/terraform-providers/terraform-provider-aws/issues/3176
+		// TODO: See https://github.com/hashicorp/terraform-provider-aws/issues/3176
 		if _, ok := m["hash_key"]; !ok {
 			m["hash_key"] = keySchemaM["hash_key"]
 		}

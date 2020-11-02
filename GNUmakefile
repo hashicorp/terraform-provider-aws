@@ -31,7 +31,7 @@ testacc: fmtcheck
 		echo "For example if updating aws/resource_aws_acm_certificate.go, use the test names in aws/resource_aws_acm_certificate_test.go starting with TestAcc and up to the underscore:"; \
 		echo "make testacc TESTARGS='-run=TestAccAWSAcmCertificate_'"; \
 		echo ""; \
-		echo "See the contributing guide for more information: https://github.com/terraform-providers/terraform-provider-aws/blob/master/docs/contributing/running-and-writing-acceptance-tests.md"; \
+		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-aws/blob/master/docs/contributing/running-and-writing-acceptance-tests.md"; \
 		exit 1; \
 	fi
 	TF_ACC=1 go test ./$(PKG_NAME) -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)

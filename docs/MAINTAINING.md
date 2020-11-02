@@ -48,11 +48,11 @@ Notes for each type of pull request are (or will be) available in subsections be
 This pull request appears to be related to/solve #1234, so I have edited the pull request description to denote the issue reference.
 ```
 
-- Review the contents of the pull request and ensure the change follows the relevant section of the [Contributing Guide](https://github.com/terraform-providers/terraform-provider-aws/blob/master/docs/contributing/contribution-checklists.md)
+- Review the contents of the pull request and ensure the change follows the relevant section of the [Contributing Guide](https://github.com/hashicorp/terraform-provider-aws/blob/master/docs/contributing/contribution-checklists.md)
 - If the change is not acceptable, leave a long form comment about the reasoning and close the pull request
 - If the change is acceptable with modifications, leave a pull request review marked using the `Request Changes` option (for maintainer pull requests with minor modification requests, giving feedback with the `Approve` option is recommended so they do not need to wait for another round of review)
 - If the author is unresponsive for changes (by default we give two weeks), determine importance and level of effort to finish the pull request yourself including their commits or close the pull request
-- Run relevant acceptance testing ([locally](https://github.com/terraform-providers/terraform-provider-aws/blob/master/docs/contributing/running-and-writing-acceptance-tests.md) or in TeamCity) against AWS Commercial and AWS GovCloud (US) to ensure no new failures are being introduced
+- Run relevant acceptance testing ([locally](https://github.com/hashicorp/terraform-provider-aws/blob/master/docs/contributing/running-and-writing-acceptance-tests.md) or in TeamCity) against AWS Commercial and AWS GovCloud (US) to ensure no new failures are being introduced
 - Approve the pull request with a comment outlining what steps you took that ensure the change is acceptable, e.g. acceptance testing output
 
 ``````markdown
@@ -92,7 +92,7 @@ Ensure that the following steps are tracked within the issue and completed withi
 - Update `.go-version`
 - Update `CHANGELOG.md` detailing the update and mention any notes practitioners need to be aware of.
 
-See [#9992](https://github.com/terraform-providers/terraform-provider-aws/issues/9992) / [#10206](https://github.com/terraform-providers/terraform-provider-aws/pull/10206)  for a recent example.
+See [#9992](https://github.com/hashicorp/terraform-provider-aws/issues/9992) / [#10206](https://github.com/hashicorp/terraform-provider-aws/pull/10206)  for a recent example.
 
 ##### AWS Go SDK Updates
 
@@ -102,19 +102,19 @@ Authentication changes:
 
 Occasionally, there will be changes listed in the authentication pieces of the AWS Go SDK codebase, e.g. changes to `aws/session`. The AWS Go SDK `CHANGELOG` should include a relevant description of these changes under a heading such as `SDK Enhancements` or `SDK Bug Fixes`. If they seem worthy of a callout in the Terraform AWS Provider `CHANGELOG`, then upon merging we should include a similar message prefixed with the `provider` subsystem, e.g. `* provider: ...`.
 
-Additionally, if a `CHANGELOG` addition seemed appropriate, this dependency and version should also be updated in the Terraform S3 Backend, which currently lives in Terraform Core. An example of this can be found with https://github.com/terraform-providers/terraform-provider-aws/pull/9305 and https://github.com/hashicorp/terraform/pull/22055.
+Additionally, if a `CHANGELOG` addition seemed appropriate, this dependency and version should also be updated in the Terraform S3 Backend, which currently lives in Terraform Core. An example of this can be found with https://github.com/hashicorp/terraform-provider-aws/pull/9305 and https://github.com/hashicorp/terraform/pull/22055.
 
 CloudFront changes:
 
-CloudFront service client updates have previously caused an issue when a new field introduced in the SDK was not included with Terraform and caused all requests to error (https://github.com/terraform-providers/terraform-provider-aws/issues/4091). As a precaution, if you see CloudFront updates, run all the CloudFront resource acceptance testing before merging (`TestAccAWSCloudFront`).
+CloudFront service client updates have previously caused an issue when a new field introduced in the SDK was not included with Terraform and caused all requests to error (https://github.com/hashicorp/terraform-provider-aws/issues/4091). As a precaution, if you see CloudFront updates, run all the CloudFront resource acceptance testing before merging (`TestAccAWSCloudFront`).
 
 New Regions:
 
 These are added to the AWS Go SDK `aws/endpoints/defaults.go` file and generally noted in the AWS Go SDK `CHANGELOG` as `aws/endpoints: Updated Regions`. Since April 2019, new regions added to AWS now require being explicitly enabled before they can be used. Examples of this can be found when `me-south-1` was announced:
 
-- [Terraform AWS Provider issue](https://github.com/terraform-providers/terraform-provider-aws/issues/9545)
-- [Terraform AWS Provider AWS Go SDK update pull request](https://github.com/terraform-providers/terraform-provider-aws/pull/9538)
-- [Terraform AWS Provider data source update pull request](https://github.com/terraform-providers/terraform-provider-aws/pull/9547)
+- [Terraform AWS Provider issue](https://github.com/hashicorp/terraform-provider-aws/issues/9545)
+- [Terraform AWS Provider AWS Go SDK update pull request](https://github.com/hashicorp/terraform-provider-aws/pull/9538)
+- [Terraform AWS Provider data source update pull request](https://github.com/hashicorp/terraform-provider-aws/pull/9547)
 - [Terraform S3 Backend issue](https://github.com/hashicorp/terraform/issues/22254)
 - [Terraform S3 Backend pull request](https://github.com/hashicorp/terraform/pull/22253)
 
@@ -461,59 +461,59 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | [![waiting-response][waiting-response-badge]][waiting-response] | Maintainers are waiting on response from community or contributor. | None |
 
 [breaking-change-badge]: https://img.shields.io/badge/breaking--change-d93f0b
-[breaking-change]: https://github.com/terraform-providers/terraform-provider-aws/labels/breaking-change
+[breaking-change]: https://github.com/hashicorp/terraform-provider-aws/labels/breaking-change
 [bug-badge]: https://img.shields.io/badge/bug-f7c6c7
-[bug]: https://github.com/terraform-providers/terraform-provider-aws/labels/bug
+[bug]: https://github.com/hashicorp/terraform-provider-aws/labels/bug
 [crash-badge]: https://img.shields.io/badge/crash-e11d21
-[crash]: https://github.com/terraform-providers/terraform-provider-aws/labels/crash
+[crash]: https://github.com/hashicorp/terraform-provider-aws/labels/crash
 [dependencies-badge]: https://img.shields.io/badge/dependencies-fad8c7
-[dependencies]: https://github.com/terraform-providers/terraform-provider-aws/labels/dependencies
+[dependencies]: https://github.com/hashicorp/terraform-provider-aws/labels/dependencies
 [documentation-badge]: https://img.shields.io/badge/documentation-fef2c0
-[documentation]: https://github.com/terraform-providers/terraform-provider-aws/labels/documentation
+[documentation]: https://github.com/hashicorp/terraform-provider-aws/labels/documentation
 [enhancement-badge]: https://img.shields.io/badge/enhancement-d4c5f9
-[enhancement]: https://github.com/terraform-providers/terraform-provider-aws/labels/enhancement
+[enhancement]: https://github.com/hashicorp/terraform-provider-aws/labels/enhancement
 [examples-badge]: https://img.shields.io/badge/examples-fef2c0
-[examples]: https://github.com/terraform-providers/terraform-provider-aws/labels/examples
+[examples]: https://github.com/hashicorp/terraform-provider-aws/labels/examples
 [good-first-issue-badge]: https://img.shields.io/badge/good%20first%20issue-128A0C
-[good-first-issue]: https://github.com/terraform-providers/terraform-provider-aws/labels/good%20first%20issue
+[good-first-issue]: https://github.com/hashicorp/terraform-provider-aws/labels/good%20first%20issue
 [hacktoberfest-badge]: https://img.shields.io/badge/hacktoberfest-2c0fad
-[hacktoberfest]: https://github.com/terraform-providers/terraform-provider-aws/labels/hacktoberfest
+[hacktoberfest]: https://github.com/hashicorp/terraform-provider-aws/labels/hacktoberfest
 [hashibot-ignore-badge]: https://img.shields.io/badge/hashibot%2Fignore-2c0fad
-[hashibot-ignore]: https://github.com/terraform-providers/terraform-provider-aws/labels/hashibot-ignore
+[hashibot-ignore]: https://github.com/hashicorp/terraform-provider-aws/labels/hashibot-ignore
 [help-wanted-badge]: https://img.shields.io/badge/help%20wanted-128A0C
-[help-wanted]: https://github.com/terraform-providers/terraform-provider-aws/labels/help-wanted
+[help-wanted]: https://github.com/hashicorp/terraform-provider-aws/labels/help-wanted
 [needs-triage-badge]: https://img.shields.io/badge/needs--triage-e236d7
-[needs-triage]: https://github.com/terraform-providers/terraform-provider-aws/labels/needs-triage
+[needs-triage]: https://github.com/hashicorp/terraform-provider-aws/labels/needs-triage
 [new-data-source-badge]: https://img.shields.io/badge/new--data--source-d4c5f9
-[new-data-source]: https://github.com/terraform-providers/terraform-provider-aws/labels/new-data-source
+[new-data-source]: https://github.com/hashicorp/terraform-provider-aws/labels/new-data-source
 [new-resource-badge]: https://img.shields.io/badge/new--resource-d4c5f9
-[new-resource]: https://github.com/terraform-providers/terraform-provider-aws/labels/new-resource
+[new-resource]: https://github.com/hashicorp/terraform-provider-aws/labels/new-resource
 [proposal-badge]: https://img.shields.io/badge/proposal-fbca04
-[proposal]: https://github.com/terraform-providers/terraform-provider-aws/labels/proposal
+[proposal]: https://github.com/hashicorp/terraform-provider-aws/labels/proposal
 [provider-badge]: https://img.shields.io/badge/provider-bfd4f2
-[provider]: https://github.com/terraform-providers/terraform-provider-aws/labels/provider
+[provider]: https://github.com/hashicorp/terraform-provider-aws/labels/provider
 [question-badge]: https://img.shields.io/badge/question-d4c5f9
-[question]: https://github.com/terraform-providers/terraform-provider-aws/labels/question
+[question]: https://github.com/hashicorp/terraform-provider-aws/labels/question
 [regression-badge]: https://img.shields.io/badge/regression-e11d21
-[regression]: https://github.com/terraform-providers/terraform-provider-aws/labels/regression
+[regression]: https://github.com/hashicorp/terraform-provider-aws/labels/regression
 [reinvent-badge]: https://img.shields.io/badge/reinvent-c5def5
-[reinvent]: https://github.com/terraform-providers/terraform-provider-aws/labels/reinvent
+[reinvent]: https://github.com/hashicorp/terraform-provider-aws/labels/reinvent
 [service-badge]: https://img.shields.io/badge/service%2F<*>-bfd4f2
 [size-badge]: https://img.shields.io/badge/size%2F<*>-ffffff
 [stale-badge]: https://img.shields.io/badge/stale-e11d21
-[stale]: https://github.com/terraform-providers/terraform-provider-aws/labels/stale
+[stale]: https://github.com/hashicorp/terraform-provider-aws/labels/stale
 [technical-debt-badge]: https://img.shields.io/badge/technical--debt-1d76db
-[technical-debt]: https://github.com/terraform-providers/terraform-provider-aws/labels/technical-debt
+[technical-debt]: https://github.com/hashicorp/terraform-provider-aws/labels/technical-debt
 [tests-badge]: https://img.shields.io/badge/tests-DDDDDD
-[tests]: https://github.com/terraform-providers/terraform-provider-aws/labels/tests
+[tests]: https://github.com/hashicorp/terraform-provider-aws/labels/tests
 [thinking-badge]: https://img.shields.io/badge/thinking-bfd4f2
-[thinking]: https://github.com/terraform-providers/terraform-provider-aws/labels/thinking
+[thinking]: https://github.com/hashicorp/terraform-provider-aws/labels/thinking
 [upstream-terraform-badge]: https://img.shields.io/badge/upstream--terraform-CCCCCC
-[upstream-terraform]: https://github.com/terraform-providers/terraform-provider-aws/labels/upstream-terraform
+[upstream-terraform]: https://github.com/hashicorp/terraform-provider-aws/labels/upstream-terraform
 [upstream-badge]: https://img.shields.io/badge/upstream-fad8c7
-[upstream]: https://github.com/terraform-providers/terraform-provider-aws/labels/upstream
+[upstream]: https://github.com/hashicorp/terraform-provider-aws/labels/upstream
 [waiting-response-badge]: https://img.shields.io/badge/waiting--response-5319e7
-[waiting-response]: https://github.com/terraform-providers/terraform-provider-aws/labels/waiting-response
+[waiting-response]: https://github.com/hashicorp/terraform-provider-aws/labels/waiting-response
 
 ## Release Process
 

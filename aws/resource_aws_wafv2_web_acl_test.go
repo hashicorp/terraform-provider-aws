@@ -1169,7 +1169,7 @@ func TestAccAwsWafv2WebACL_Tags(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13862
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13862
 func TestAccAwsWafv2WebACL_MaxNestedRateBasedStatements(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")

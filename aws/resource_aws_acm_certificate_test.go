@@ -250,7 +250,7 @@ func TestAccAWSAcmCertificate_privateCert(t *testing.T) {
 }
 
 // TestAccAWSAcmCertificate_root_TrailingPeriod updated in 3.0 to account for domain_name plan-time validation
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13510
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13510
 func TestAccAWSAcmCertificate_root_TrailingPeriod(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 	domain := fmt.Sprintf("%s.", rootDomain)
@@ -667,7 +667,7 @@ func TestAccAWSAcmCertificate_imported_DomainName(t *testing.T) {
 }
 
 //lintignore:AT002
-func TestAccAWSAcmCertificate_imported_IpAddress(t *testing.T) { // Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/7103
+func TestAccAWSAcmCertificate_imported_IpAddress(t *testing.T) { // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7103
 	resourceName := "aws_acm_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -694,7 +694,7 @@ func TestAccAWSAcmCertificate_imported_IpAddress(t *testing.T) { // Reference: h
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/15055
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/15055
 func TestAccAWSAcmCertificate_PrivateKey_Tags(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 

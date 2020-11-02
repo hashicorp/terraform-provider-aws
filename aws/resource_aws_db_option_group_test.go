@@ -392,7 +392,7 @@ func TestAccAWSDBOptionGroup_OracleOptionsUpdate(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/1876
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/1876
 func TestAccAWSDBOptionGroup_Option_OptionSettings_MultipleNonDefault(t *testing.T) {
 	var optionGroup1, optionGroup2 rds.OptionGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -501,7 +501,7 @@ func TestAccAWSDBOptionGroup_Tags(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/7114
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7114
 func TestAccAWSDBOptionGroup_Tags_WithOptions(t *testing.T) {
 	var optionGroup1, optionGroup2, optionGroup3 rds.OptionGroup
 	resourceName := "aws_db_option_group.test"
