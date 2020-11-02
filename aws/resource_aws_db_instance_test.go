@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"os"
 	"regexp"
 	"testing"
 	"time"
@@ -2232,17 +2231,12 @@ func TestAccAWSDBInstance_MinorVersion(t *testing.T) {
 
 func TestAccAWSDBInstance_ec2Classic(t *testing.T) {
 	var v rds.DBInstance
-
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBInstanceConfig_Ec2Classic(rInt),
@@ -4723,7 +4717,16 @@ resource "aws_db_instance" "bar" {
 }
 
 func testAccAWSDBInstanceConfig_Ec2Classic(rInt int) string {
-	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMysql(), fmt.Sprintf(`
+	return composeConfig(
+		testAccEc2ClassicRegionProviderConfig(),
+		fmt.Sprintf(`
+# EC2-Classic specific
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = "mysql"
+  engine_version             = "5.6.41"
+  preferred_instance_classes = ["db.m3.medium", "db.m3.large", "db.r3.large"]
+}
+
 resource "aws_db_instance" "bar" {
   identifier           = "foobarbaz-test-terraform-%[1]d"
   allocated_storage    = 10

@@ -2,8 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"os"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,25 +15,20 @@ import (
 
 func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
 	var v rds.DBSecurityGroup
-
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
 	resourceName := "aws_db_security_group.test"
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBSecurityGroupDestroy,
+		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSDBSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBSecurityGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBSecurityGroupExists(resourceName, &v),
 					testAccCheckAWSDBSecurityGroupAttributes(&v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("secgrp:%s$", rName))),
+					testAccCheckResourceAttrRegionalARNEc2Classic(resourceName, "arn", "rds", fmt.Sprintf("secgrp:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
@@ -146,7 +139,9 @@ func testAccCheckAWSDBSecurityGroupExists(n string, v *rds.DBSecurityGroup) reso
 }
 
 func testAccAWSDBSecurityGroupConfig(name string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccEc2ClassicRegionProviderConfig(),
+		fmt.Sprintf(`
 resource "aws_db_security_group" "test" {
   name = "%s"
 
@@ -158,5 +153,5 @@ resource "aws_db_security_group" "test" {
     foo = "test"
   }
 }
-`, name)
+`, name))
 }
