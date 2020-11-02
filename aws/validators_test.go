@@ -3247,3 +3247,29 @@ func TestValidateUTCTimestamp(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateUTCTimestamp(t *testing.T) {
+	validT := []string{
+		"2006-01-02T15:04:05Z",
+	}
+
+	invalidT := []string{
+		"2015-03-07 23:45:00",
+		"27-03-2019 23:45:00",
+		"Mon, 02 Jan 2006 15:04:05 -0700",
+	}
+
+	for _, f := range validT {
+		_, errors := validateUTCTimestamp(f, "UTC timestamp")
+		if len(errors) > 0 {
+			t.Fatalf("Expected the time %q to be in valid format, got error %q", f, errors)
+		}
+	}
+
+	for _, f := range invalidT {
+		_, errors := validateUTCTimestamp(f, "invalid UTC timestamp")
+		if len(errors) == 0 {
+			t.Fatalf("Expected the time %q to fail validation", f)
+		}
+	}
+}
