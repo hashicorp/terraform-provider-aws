@@ -608,7 +608,7 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 		ApplicationCode:          aws.String(d.Get("code").(string)),
 		ApplicationDescription:   aws.String(d.Get("description").(string)),
 		ApplicationName:          aws.String(d.Get("name").(string)),
-		CloudWatchLoggingOptions: expandKinesisAnalyticsCloudWatchLoggingOptions(d.Get("cloudwatch_logging_options").([]interface{})),
+		CloudWatchLoggingOptions: expandKinesisAnalyticsV1CloudWatchLoggingOptions(d.Get("cloudwatch_logging_options").([]interface{})),
 		Inputs:                   expandKinesisAnalyticsV1Inputs(d.Get("inputs").([]interface{})),
 		Outputs:                  expandKinesisAnalyticsV1Outputs(d.Get("outputs").(*schema.Set).List()),
 	}
@@ -790,6 +790,65 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 			input.ApplicationUpdate.ApplicationCodeUpdate = aws.String(d.Get("code").(string))
 
 			updateApplication = true
+		}
+
+		if d.HasChange("inputs") {
+		}
+
+		if d.HasChange("outputs") {
+		}
+
+		if d.HasChange("reference_data_sources") {
+			o, n := d.GetChange("reference_data_sources")
+
+			if len(o.([]interface{})) == 0 {
+				// Add new reference data source.
+				input := &kinesisanalytics.AddApplicationReferenceDataSourceInput{
+					ApplicationName:             aws.String(applicationName),
+					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+					ReferenceDataSource:         expandKinesisAnalyticsV1ReferenceDataSource(n.([]interface{})),
+				}
+
+				log.Printf("[DEBUG] Adding Kinesis Analytics Application (%s) reference data source: %s", d.Id(), input)
+
+				_, err := waiter.IAMPropagation(func() (interface{}, error) {
+					return conn.AddApplicationReferenceDataSource(input)
+				})
+
+				if err != nil {
+					return fmt.Errorf("error adding Kinesis Analytics Application (%s) reference data source: %w", d.Id(), err)
+				}
+
+				currentApplicationVersionId += 1
+			} else if len(n.([]interface{})) == 0 {
+				// Delete existing reference data source.
+				mOldReferenceDataSource := o.([]interface{})[0].(map[string]interface{})
+
+				input := &kinesisanalytics.DeleteApplicationReferenceDataSourceInput{
+					ApplicationName:             aws.String(applicationName),
+					CurrentApplicationVersionId: aws.Int64(currentApplicationVersionId),
+					ReferenceId:                 aws.String(mOldReferenceDataSource["id"].(string)),
+				}
+
+				log.Printf("[DEBUG] Deleting Kinesis Analytics Application (%s) reference data source: %s", d.Id(), input)
+
+				_, err := waiter.IAMPropagation(func() (interface{}, error) {
+					return conn.DeleteApplicationReferenceDataSource(input)
+				})
+
+				if err != nil {
+					return fmt.Errorf("error deleting Kinesis Analytics Application (%s) reference data source: %w", d.Id(), err)
+				}
+
+				currentApplicationVersionId += 1
+			} else {
+				// Update existing reference data source.
+				referenceDataSourceUpdate := expandKinesisAnalyticsV1ReferenceDataSourceUpdate(n.([]interface{}))
+
+				input.ApplicationUpdate.ReferenceDataSourceUpdates = []*kinesisanalytics.ReferenceDataSourceUpdate{referenceDataSourceUpdate}
+
+				updateApplication = true
+			}
 		}
 
 		if updateApplication {
@@ -1759,7 +1818,7 @@ func flattenKinesisAnalyticsReferenceDataSources(dataSources []*kinesisanalytics
 // TODO Remove 'V1'.
 //
 
-func expandKinesisAnalyticsCloudWatchLoggingOptions(vCloudWatchLoggingOptions []interface{}) []*kinesisanalytics.CloudWatchLoggingOption {
+func expandKinesisAnalyticsV1CloudWatchLoggingOptions(vCloudWatchLoggingOptions []interface{}) []*kinesisanalytics.CloudWatchLoggingOption {
 	if len(vCloudWatchLoggingOptions) == 0 || vCloudWatchLoggingOptions[0] == nil {
 		return nil
 	}
@@ -1808,7 +1867,7 @@ func expandKinesisAnalyticsV1Input(vInput []interface{}) *kinesisanalytics.Input
 	}
 
 	if vInputProcessingConfiguration, ok := mInput["processing_configuration"].([]interface{}); ok {
-		input.InputProcessingConfiguration = expandKinesisAnalyticsInputProcessingConfiguration(vInputProcessingConfiguration)
+		input.InputProcessingConfiguration = expandKinesisAnalyticsV1InputProcessingConfiguration(vInputProcessingConfiguration)
 	}
 
 	if vInputSchema, ok := mInput["schema"].([]interface{}); ok {
@@ -1852,7 +1911,7 @@ func expandKinesisAnalyticsV1Input(vInput []interface{}) *kinesisanalytics.Input
 	return input
 }
 
-func expandKinesisAnalyticsInputProcessingConfiguration(vInputProcessingConfiguration []interface{}) *kinesisanalytics.InputProcessingConfiguration {
+func expandKinesisAnalyticsV1InputProcessingConfiguration(vInputProcessingConfiguration []interface{}) *kinesisanalytics.InputProcessingConfiguration {
 	if len(vInputProcessingConfiguration) == 0 || vInputProcessingConfiguration[0] == nil {
 		return nil
 	}
@@ -2025,7 +2084,7 @@ func expandKinesisAnalyticsV1RecordFormat(vRecordFormat []interface{}) *kinesisa
 			recordFormat.RecordFormatType = aws.String(kinesisanalytics.RecordFormatTypeCsv)
 		}
 
-		if vJsonMappingParameters, ok := mMappingParameters["json_mapping_parameters"].([]interface{}); ok && len(vJsonMappingParameters) > 0 && vJsonMappingParameters[0] != nil {
+		if vJsonMappingParameters, ok := mMappingParameters["json"].([]interface{}); ok && len(vJsonMappingParameters) > 0 && vJsonMappingParameters[0] != nil {
 			jsonMappingParameters := &kinesisanalytics.JSONMappingParameters{}
 
 			mJsonMappingParameters := vJsonMappingParameters[0].(map[string]interface{})
@@ -2054,7 +2113,7 @@ func expandKinesisAnalyticsV1ReferenceDataSource(vReferenceDataSource []interfac
 
 	mReferenceDataSource := vReferenceDataSource[0].(map[string]interface{})
 
-	if vReferenceSchema, ok := mReferenceDataSource["reference_schema"].([]interface{}); ok {
+	if vReferenceSchema, ok := mReferenceDataSource["schema"].([]interface{}); ok {
 		referenceDataSource.ReferenceSchema = expandKinesisAnalyticsV1SourceSchema(vReferenceSchema)
 	}
 
@@ -2081,6 +2140,48 @@ func expandKinesisAnalyticsV1ReferenceDataSource(vReferenceDataSource []interfac
 	}
 
 	return referenceDataSource
+}
+
+func expandKinesisAnalyticsV1ReferenceDataSourceUpdate(vReferenceDataSource []interface{}) *kinesisanalytics.ReferenceDataSourceUpdate {
+	if len(vReferenceDataSource) == 0 || vReferenceDataSource[0] == nil {
+		return nil
+	}
+
+	referenceDataSourceUpdate := &kinesisanalytics.ReferenceDataSourceUpdate{}
+
+	mReferenceDataSource := vReferenceDataSource[0].(map[string]interface{})
+
+	if vReferenceId, ok := mReferenceDataSource["id"].(string); ok && vReferenceId != "" {
+		referenceDataSourceUpdate.ReferenceId = aws.String(vReferenceId)
+	}
+
+	if vReferenceSchema, ok := mReferenceDataSource["schema"].([]interface{}); ok {
+		referenceDataSourceUpdate.ReferenceSchemaUpdate = expandKinesisAnalyticsV1SourceSchema(vReferenceSchema)
+	}
+
+	if vS3ReferenceDataSource, ok := mReferenceDataSource["s3"].([]interface{}); ok && len(vS3ReferenceDataSource) > 0 && vS3ReferenceDataSource[0] != nil {
+		s3ReferenceDataSourceUpdate := &kinesisanalytics.S3ReferenceDataSourceUpdate{}
+
+		mS3ReferenceDataSource := vS3ReferenceDataSource[0].(map[string]interface{})
+
+		if vBucketArn, ok := mS3ReferenceDataSource["bucket_arn"].(string); ok && vBucketArn != "" {
+			s3ReferenceDataSourceUpdate.BucketARNUpdate = aws.String(vBucketArn)
+		}
+		if vFileKey, ok := mS3ReferenceDataSource["file_key"].(string); ok && vFileKey != "" {
+			s3ReferenceDataSourceUpdate.FileKeyUpdate = aws.String(vFileKey)
+		}
+		if vReferenceRoleArn, ok := mS3ReferenceDataSource["role_arn"].(string); ok && vReferenceRoleArn != "" {
+			s3ReferenceDataSourceUpdate.ReferenceRoleARNUpdate = aws.String(vReferenceRoleArn)
+		}
+
+		referenceDataSourceUpdate.S3ReferenceDataSourceUpdate = s3ReferenceDataSourceUpdate
+	}
+
+	if vTableName, ok := mReferenceDataSource["table_name"].(string); ok && vTableName != "" {
+		referenceDataSourceUpdate.TableNameUpdate = aws.String(vTableName)
+	}
+
+	return referenceDataSourceUpdate
 }
 
 func expandKinesisAnalyticsV1SourceSchema(vSourceSchema []interface{}) *kinesisanalytics.SourceSchema {
