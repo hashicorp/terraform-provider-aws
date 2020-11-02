@@ -1114,6 +1114,7 @@ func init() {
 		"codecommit",
 		"codedeploy",
 		"codepipeline",
+		"codestarconnections",
 		"cognitoidentity",
 		"cognitoidp",
 		"configservice",
