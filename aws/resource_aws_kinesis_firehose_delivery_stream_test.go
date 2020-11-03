@@ -1150,10 +1150,10 @@ func TestAccAWSKinesisFirehoseDeliveryStream_HTTPEndpointConfigUpdates(t *testin
 
 	updatedHTTPEndpointConfig := &firehose.HttpEndpointDestinationDescription{
 		EndpointConfiguration: &firehose.HttpEndpointDescription{
-			Url:          aws.String("https://input-test.com:443"),
-			Name:         aws.String("HTTP_test"),
+			Url:  aws.String("https://input-test.com:443"),
+			Name: aws.String("HTTP_test"),
 		},
-		RoleARN:     aws.String("valueNotTested"),
+		RoleARN:      aws.String("valueNotTested"),
 		S3BackupMode: aws.String("FailedEventsOnly"),
 		ProcessingConfiguration: &firehose.ProcessingConfiguration{
 			Enabled: aws.Bool(true),
@@ -1318,7 +1318,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigEndpointUpdates(
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticSearchConfig, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticSearchConfig, nil, nil),
 				),
 			},
 		},
@@ -1386,7 +1386,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchWithVpcConfigUpdates(t
 				Config: postConfigWithVpc,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticSearchConfig, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticSearchConfig, nil, nil),
 					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.vpc_id", "aws_vpc.elasticsearch_in_vpc", "id"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.security_group_ids.#", "2"),
@@ -1591,7 +1591,7 @@ func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.Del
 			if httpEndpointConfig != nil {
 				s := httpEndpointConfig.(*firehose.HttpEndpointDestinationDescription)
 				// Range over the Stream Destinations, looking for the matching HttpEndpoint destination
-				var matchRoleARN, matchS3BackupMode, EndpointConfigurationMatch, BufferingHintsMatch, RequestConfigurationMatch bool
+				var matchRoleARN, matchS3BackupMode, matchUrl, matchName, processingConfigMatch bool
 				for _, d := range stream.Destinations {
 					if d.HttpEndpointDestinationDescription != nil {
 						if *d.HttpEndpointDestinationDescription.RoleARN == *s.RoleARN {
@@ -1600,21 +1600,18 @@ func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.Del
 						if *d.HttpEndpointDestinationDescription.S3BackupMode == *s.S3BackupMode {
 							matchS3BackupMode = true
 						}
-						if s.EndpointConfiguration != nil && d.HttpEndpointDestinationDescription.EndpointConfiguration != nil {
-							EndpointConfigurationMatch = len(s.EndpointConfiguration.Processors) == len(d.HttpEndpointDestinationDescription.EndpointConfiguration.Processors)
+						if *d.HttpEndpointDestinationDescription.EndpointConfiguration.Url == *s.EndpointConfiguration.Url {
+							matchUrl = true
 						}
-						if s.BufferingHints != nil && d.HttpEndpointDestinationDescription.BufferingHints != nil {
-							BufferingHintsMatch = len(s.BufferingHints.Processors) == len(d.HttpEndpointDestinationDescription.BufferingHints.Processors)
-						}
-						if s.RequestConfiguration != nil && d.HttpEndpointDestinationDescription.RequestConfiguration != nil {
-							RequestConfigurationMatch = len(s.RequestConfiguration.Processors) == len(d.HttpEndpointDestinationDescription.RequestConfiguration.Processors)
+						if *d.HttpEndpointDestinationDescription.EndpointConfiguration.Name == *s.EndpointConfiguration.Name {
+							matchName = true
 						}
 						if s.ProcessingConfiguration != nil && d.HttpEndpointDestinationDescription.ProcessingConfiguration != nil {
 							processingConfigMatch = len(s.ProcessingConfiguration.Processors) == len(d.HttpEndpointDestinationDescription.ProcessingConfiguration.Processors)
 						}
 					}
 				}
-				if !matchRoleARN || !EndpointConfigurationMatch {
+				if !matchRoleARN || !matchUrl || !matchName || !matchS3BackupMode {
 					return fmt.Errorf("Mismatch HTTP Endpoint roleARN or EndpointConfiguration, expected: %s, got: %s", s, stream.Destinations)
 				}
 				if !processingConfigMatch {
