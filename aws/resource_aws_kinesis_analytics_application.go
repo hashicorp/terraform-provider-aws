@@ -825,7 +825,7 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 				inputUpdate := expandKinesisAnalyticsV1InputUpdate(n.([]interface{}))
 
 				if d.HasChange("inputs.0.processing_configuration") {
-					o, n := d.GetChange("inputs.0.processing_configurationn")
+					o, n := d.GetChange("inputs.0.processing_configuration")
 
 					// Update of existing input processing configuration is handled via the updating of the existing input.
 
