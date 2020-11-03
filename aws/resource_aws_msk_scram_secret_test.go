@@ -167,7 +167,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 resource "aws_kms_key" "test" {
-  description             = "%s-kms-key-msk"
+  description = "%s-kms-key-msk"
 }
 
 resource "aws_secretsmanager_secret" "test_basic" {
@@ -187,7 +187,7 @@ resource "aws_msk_sasl_scram_secret" "test" {
 
 resource "aws_secretsmanager_secret_policy" "test" {
   secret_arn = aws_secretsmanager_secret.test_basic.arn
-  policy = <<POLICY
+  policy     = <<POLICY
 {
   "Version" : "2012-10-17",
   "Statement" : [ {
@@ -202,7 +202,6 @@ resource "aws_secretsmanager_secret_policy" "test" {
 }
 POLICY
 }
-
 `, rName, rName, rName, rName)
 }
 
@@ -228,7 +227,7 @@ resource "aws_msk_cluster" "test" {
 }
 
 resource "aws_kms_key" "test" {
-  description             = "%s-kms-key-msk"
+  description = "%s-kms-key-msk"
 }
 
 resource "aws_secretsmanager_secret" "test_update" {
@@ -268,7 +267,7 @@ resource "aws_msk_sasl_scram_secret" "test" {
 
 resource "aws_secretsmanager_secret_policy" "test" {
   secret_arn = aws_secretsmanager_secret.test_update.arn
-  policy = <<POLICY
+  policy     = <<POLICY
 {
   "Version" : "2012-10-17",
   "Statement" : [ {
@@ -286,7 +285,7 @@ POLICY
 
 resource "aws_secretsmanager_secret_policy" "test2" {
   secret_arn = aws_secretsmanager_secret.test2.arn
-  policy = <<POLICY
+  policy     = <<POLICY
 {
   "Version" : "2012-10-17",
   "Statement" : [ {
@@ -304,7 +303,7 @@ POLICY
 
 resource "aws_secretsmanager_secret_policy" "test3" {
   secret_arn = aws_secretsmanager_secret.test3.arn
-  policy = <<POLICY
+  policy     = <<POLICY
 {
   "Version" : "2012-10-17",
   "Statement" : [ {
@@ -319,14 +318,13 @@ resource "aws_secretsmanager_secret_policy" "test3" {
 }
 POLICY
 }
-
 `, rName, rName, rName, rName, rName, rName, rName, rName)
 }
 
 func testAccMskSaslScramSecretDelete(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "%s-kms-key-msk"
+  description = "%s-kms-key-msk"
 }
 
 resource "aws_secretsmanager_secret" "test" {
@@ -341,7 +339,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 
 resource "aws_secretsmanager_secret_policy" "test" {
   secret_arn = aws_secretsmanager_secret.test.arn
-  policy = <<POLICY
+  policy     = <<POLICY
 {
   "Version" : "2012-10-17",
   "Statement" : [ {
