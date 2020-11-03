@@ -16,7 +16,7 @@ This data source allows to find a list of IPaddresses associated with a specific
 
 ```hcl
 data "aws_route53_resolver_endpoint" "example" {
-  id = "rslvr-in-1abc2345ef678g91h"
+  resolver_endpoint_id = "rslvr-in-1abc2345ef678g91h"
 }
 ```
 
