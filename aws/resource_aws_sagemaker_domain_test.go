@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,6 +18,9 @@ func init() {
 	resource.AddTestSweepers("aws_sagemaker_domain", &resource.Sweeper{
 		Name: "aws_sagemaker_domain",
 		F:    testSweepSagemakerDomains,
+		Dependencies: []string{
+			"aws_efs_file_system",
+		},
 	})
 }
 
@@ -75,7 +79,15 @@ func TestAccAWSSagemakerDomain_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("domain/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "auth_mode", "IAM"),
+					resource.TestCheckResourceAttr(resourceName, "app_network_access_type", "PublicInternetOnly"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", "arn"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`domain/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "url"),
 				),
 			},
 			{
@@ -233,6 +245,7 @@ func testAccCheckAWSSagemakerDomainExists(n string, codeRepo *sagemaker.Describe
 func testAccAWSSagemakerDomainConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
+	
   cidr_block = "10.0.0.0/16"
 
   tags = {
