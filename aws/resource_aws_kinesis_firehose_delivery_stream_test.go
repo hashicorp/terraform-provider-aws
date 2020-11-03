@@ -2721,143 +2721,143 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 var testAccKinesisFirehoseDeliveryStreamConfig_SplunkBasic = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = [aws_iam_role_policy.firehose]
-  name        = "terraform-kinesis-firehose-basicsplunktest-%d"
-  destination = "splunk"
-
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
-
-  splunk_configuration {
-    hec_endpoint = "https://input-test.com:443"
-    hec_token    = "51D4DA16-C61B-4F5F-8EC7-ED4301342A4A"
-  }
-}
+	depends_on  = [aws_iam_role_policy.firehose]
+	name        = "terraform-kinesis-firehose-basicsplunktest-%d"
+	destination = "splunk"
+  
+	s3_configuration {
+	  role_arn   = aws_iam_role.firehose.arn
+	  bucket_arn = aws_s3_bucket.bucket.arn
+	}
+  
+	splunk_configuration {
+	  hec_endpoint = "https://input-test.com:443"
+	  hec_token    = "51D4DA16-C61B-4F5F-8EC7-ED4301342A4A"
+	}
+}  
 `
 
 var testAccKinesisFirehoseDeliveryStreamConfig_SplunkUpdates = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = [aws_iam_role_policy.firehose]
-  name        = "terraform-kinesis-firehose-basicsplunktest-%d"
-  destination = "splunk"
-
-  s3_configuration {
-    role_arn           = aws_iam_role.firehose.arn
-    bucket_arn         = aws_s3_bucket.bucket.arn
-    buffer_size        = 10
-    buffer_interval    = 400
-    compression_format = "GZIP"
-  }
-
-  splunk_configuration {
-    hec_endpoint               = "https://input-test.com:443"
-    hec_token                  = "51D4DA16-C61B-4F5F-8EC7-ED4301342A4A"
-    hec_acknowledgment_timeout = 600
-    hec_endpoint_type          = "Event"
-    s3_backup_mode             = "FailedEventsOnly"
-
-    processing_configuration {
-      enabled = true
-
-      processors {
-        type = "Lambda"
-
-        parameters {
-          parameter_name  = "LambdaArn"
-          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-        }
-
-        parameters {
-          parameter_name  = "RoleArn"
-          parameter_value = aws_iam_role.firehose.arn
-        }
-
-        parameters {
-          parameter_name  = "BufferSizeInMBs"
-          parameter_value = 1
-        }
-
-        parameters {
-          parameter_name  = "BufferIntervalInSeconds"
-          parameter_value = 120
-        }
-      }
-    }
-  }
-}
+	depends_on  = [aws_iam_role_policy.firehose]
+	name        = "terraform-kinesis-firehose-basicsplunktest-%d"
+	destination = "splunk"
+  
+	s3_configuration {
+	  role_arn           = aws_iam_role.firehose.arn
+	  bucket_arn         = aws_s3_bucket.bucket.arn
+	  buffer_size        = 10
+	  buffer_interval    = 400
+	  compression_format = "GZIP"
+	}
+  
+	splunk_configuration {
+	  hec_endpoint               = "https://input-test.com:443"
+	  hec_token                  = "51D4DA16-C61B-4F5F-8EC7-ED4301342A4A"
+	  hec_acknowledgment_timeout = 600
+	  hec_endpoint_type          = "Event"
+	  s3_backup_mode             = "FailedEventsOnly"
+  
+	  processing_configuration {
+		enabled = true
+  
+		processors {
+		  type = "Lambda"
+  
+		  parameters {
+			parameter_name  = "LambdaArn"
+			parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+		  }
+  
+		  parameters {
+			parameter_name  = "RoleArn"
+			parameter_value = aws_iam_role.firehose.arn
+		  }
+  
+		  parameters {
+			parameter_name  = "BufferSizeInMBs"
+			parameter_value = 1
+		  }
+  
+		  parameters {
+			parameter_name  = "BufferIntervalInSeconds"
+			parameter_value = 120
+		  }
+		}
+	  }
+	}
+}  
 `
 
 var testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpointBasic = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = [aws_iam_role_policy.firehose]
-  name        = "terraform-kinesis-firehose-basichttpendpointtest-%d"
-  destination = "http_endpoint"
-
-  s3_configuration {
-    role_arn   = aws_iam_role.firehose.arn
-    bucket_arn = aws_s3_bucket.bucket.arn
-  }
-
-  http_endpoint_configuration {
-    url      = "https://input-test.com:443"
-	name     = "HTTP_test"
-	role_arn = aws_iam_role.firehose.arn
-  }
+	depends_on  = [aws_iam_role_policy.firehose]
+	name        = "terraform-kinesis-firehose-basichttpendpointtest-%d"
+	destination = "http_endpoint"
+  
+	s3_configuration {
+	  role_arn   = aws_iam_role.firehose.arn
+	  bucket_arn = aws_s3_bucket.bucket.arn
+	}
+  
+	http_endpoint_configuration {
+	  url      = "https://input-test.com:443"
+	  name     = "HTTP_test"
+	  role_arn = aws_iam_role.firehose.arn
+	}
 }
 `
 
 var testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpointUpdates = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = [aws_iam_role_policy.firehose]
-  name        = "terraform-kinesis-firehose-basichttpendpointtest-%d"
-  destination = "http_endpoint"
-
-  s3_configuration {
-    role_arn           = aws_iam_role.firehose.arn
-    bucket_arn         = aws_s3_bucket.bucket.arn
-    buffer_size        = 10
-    buffer_interval    = 400
-    compression_format = "GZIP"
-  }
-
-  http_endpoint_configuration {
-    url            = "https://input-test.com:443"
-	name           = "HTTP_test"
-	access_key     = "test_key"
-	role_arn       = aws_iam_role.firehose.arn
-    s3_backup_mode = "FailedEventsOnly"
-
-    processing_configuration {
-      enabled = true
-
-      processors {
-        type = "Lambda"
-
-        parameters {
-          parameter_name  = "LambdaArn"
-          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-        }
-
-        parameters {
-          parameter_name  = "RoleArn"
-          parameter_value = aws_iam_role.firehose.arn
-        }
-
-        parameters {
-          parameter_name  = "BufferSizeInMBs"
-          parameter_value = 1
-        }
-
-        parameters {
-          parameter_name  = "BufferIntervalInSeconds"
-          parameter_value = 120
-        }
-      }
-    }
-  }
-}
+	depends_on  = [aws_iam_role_policy.firehose]
+	name        = "terraform-kinesis-firehose-basichttpendpointtest-%d"
+	destination = "http_endpoint"
+  
+	s3_configuration {
+	  role_arn           = aws_iam_role.firehose.arn
+	  bucket_arn         = aws_s3_bucket.bucket.arn
+	  buffer_size        = 10
+	  buffer_interval    = 400
+	  compression_format = "GZIP"
+	}
+  
+	http_endpoint_configuration {
+	  url            = "https://input-test.com:443"
+	  name           = "HTTP_test"
+	  access_key     = "test_key"
+	  role_arn       = aws_iam_role.firehose.arn
+	  s3_backup_mode = "FailedEventsOnly"
+  
+	  processing_configuration {
+		enabled = true
+  
+		processors {
+		  type = "Lambda"
+  
+		  parameters {
+			parameter_name  = "LambdaArn"
+			parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+		  }
+  
+		  parameters {
+			parameter_name  = "RoleArn"
+			parameter_value = aws_iam_role.firehose.arn
+		  }
+  
+		  parameters {
+			parameter_name  = "BufferSizeInMBs"
+			parameter_value = 1
+		  }
+  
+		  parameters {
+			parameter_name  = "BufferIntervalInSeconds"
+			parameter_value = 120
+		  }
+		}
+	  }
+	}
+}  
 `
 
 var testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
