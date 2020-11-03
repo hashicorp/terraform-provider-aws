@@ -22,13 +22,14 @@ func TestAccDataSourceAwsRoute53ResolverEndpoint_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsRoute53ResolverEndpointConfig_NonExistent,
-				ExpectError: regexp.MustCompile(`The ID provided could not be found`),
+				ExpectError: regexp.MustCompile("The ID provided could not be found"),
 			},
 			{
 				Config: testAccDataSourceRoute53ResolverEndpointConfig_initial(rInt, direction, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "resolver_endpoint_id", resourceName, "id"),
 					resource.TestCheckResourceAttr(datasourceName, "ip_addresses.#", "2"),
 				),
 			},
@@ -56,6 +57,7 @@ func TestAccDataSourceAwsRoute53ResolverEndpoint_Filter(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "resolver_endpoint_id", resourceName, "id"),
 					resource.TestCheckResourceAttr(datasourceName, "ip_addresses.#", "2"),
 				),
 			},
@@ -64,7 +66,7 @@ func TestAccDataSourceAwsRoute53ResolverEndpoint_Filter(t *testing.T) {
 }
 
 func testAccDataSourceRoute53ResolverEndpointConfig_base(rInt int) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -75,21 +77,18 @@ resource "aws_vpc" "foo" {
   }
 }
 
-data "aws_availability_zones" "available" {}
-
 resource "aws_subnet" "sn1" {
   vpc_id            = aws_vpc.foo.id
   cidr_block        = cidrsubnet(aws_vpc.foo.cidr_block, 2, 0)
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name = "tf-acc-r53-resolver-sn1-%d"
+      Name = "tf-acc-r53-resolver-sn1-%d"
   }
 }
 
 resource "aws_subnet" "sn2" {
   vpc_id            = aws_vpc.foo.id
-
   cidr_block        = cidrsubnet(aws_vpc.foo.cidr_block, 2, 1)
   availability_zone = data.aws_availability_zones.available.names[1]
 
@@ -104,7 +103,7 @@ resource "aws_subnet" "sn3" {
   availability_zone = data.aws_availability_zones.available.names[2]
 
   tags = {
-    Name = "tf-acc-r53-resolver-sn3-%d"
+      Name = "tf-acc-r53-resolver-sn3-%d"
   }
 }
 
@@ -113,7 +112,7 @@ resource "aws_security_group" "sg1" {
   name   = "tf-acc-r53-resolver-sg1-%d"
 
   tags = {
-    Name = "tf-acc-r53-resolver-sg1-%d"
+       Name = "tf-acc-r53-resolver-sg1-%d"
   }
 }
 
@@ -122,16 +121,14 @@ resource "aws_security_group" "sg2" {
   name   = "tf-acc-r53-resolver-sg2-%d"
 
   tags = {
-    Name = "tf-acc-r53-resolver-sg2-%d"
+      Name = "tf-acc-r53-resolver-sg2-%d"
   }
 }
 `, rInt, rInt, rInt, rInt, rInt, rInt, rInt, rInt)
 }
 
 func testAccDataSourceRoute53ResolverEndpointConfig_initial(rInt int, direction, name string) string {
-	return fmt.Sprintf(`
-%s
-
+	return composeConfig(testAccDataSourceRoute53ResolverEndpointConfig_base(rInt), fmt.Sprintf(`
 resource "aws_route53_resolver_endpoint" "foo" {
   direction = "%s"
   name      = "%s"
@@ -152,20 +149,18 @@ resource "aws_route53_resolver_endpoint" "foo" {
 
   tags = {
     Environment = "production"
-    Usage = "original"
+    Usage       = "original"
   }
 }
 
 data "aws_route53_resolver_endpoint" "foo" {
-	id = aws_route53_resolver_endpoint.foo.id
+    resolver_endpoint_id = aws_route53_resolver_endpoint.foo.id
 }
-`, testAccDataSourceRoute53ResolverEndpointConfig_base(rInt), direction, name)
+`, direction, name))
 }
 
 func testAccDataSourceRoute53ResolverEndpointConfig_filter(rInt int, direction, name string) string {
-	return fmt.Sprintf(`
-%s
-
+	return composeConfig(testAccDataSourceRoute53ResolverEndpointConfig_base(rInt), fmt.Sprintf(`
 resource "aws_route53_resolver_endpoint" "foo" {
   direction = "%s"
   name      = "%s"
@@ -186,32 +181,32 @@ resource "aws_route53_resolver_endpoint" "foo" {
 
   tags = {
     Environment = "production"
-    Usage = "original"
+    Usage       = "original"
   }
 }
 
 data "aws_route53_resolver_endpoint" "foo" {
-	filter {
-		name = "Name"
-		values = [aws_route53_resolver_endpoint.foo.name]
-	}
+    filter {
+           name   = "Name"
+           values = [aws_route53_resolver_endpoint.foo.name]
+    }
 
    depends_on = [aws_route53_resolver_endpoint.foo]
 }
-`, testAccDataSourceRoute53ResolverEndpointConfig_base(rInt), direction, name)
+`, direction, name))
 }
 
 const testAccDataSourceAwsRoute53ResolverEndpointConfig_NonExistent = `
 data "aws_route53_resolver_endpoint" "foo" {
-	id = "rslvr-in-8g85830108dd4c82b"
+  resolver_endpoint_id = "rslvr-in-8g85830108dd4c82b"
 }
 `
 
 const testAccDataSourceAwsRoute53ResolverEndpointConfig_NonExistentFilter = `
 data "aws_route53_resolver_endpoint" "foo" {
-	filter {
-		name = "Name"
-		values = ["None-Existent-Resource"]
-	}
+    filter {
+           name = "Name"
+           values = ["None-Existent-Resource"]
+    }
 }
 `

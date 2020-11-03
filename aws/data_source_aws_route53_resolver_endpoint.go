@@ -48,7 +48,7 @@ func dataSourceAwsRoute53ResolverEndpoint() *schema.Resource {
 				Computed: true,
 			},
 
-			"id": {
+			"resolver_endpoint_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -77,7 +77,7 @@ func dataSourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta inter
 
 	resolvers := make([]*route53resolver.ResolverEndpoint, 0)
 
-	rID, rIDOk := d.GetOk("id")
+	rID, rIDOk := d.GetOk("resolver_endpoint_id")
 	filters, filtersOk := d.GetOk("filter")
 
 	if filtersOk {
@@ -96,7 +96,7 @@ func dataSourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta inter
 		}
 
 		if len(resp.ResolverEndpoints) > 1 && !rIDOk {
-			return fmt.Errorf("your query returned more than one resolver. Please change your search criteria and try again")
+			return fmt.Errorf("Your query returned more than one resolver. Please change your search criteria and try again")
 		}
 
 		if rIDOk {
@@ -117,6 +117,7 @@ func dataSourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta inter
 		resolver := resolvers[0]
 
 		d.SetId(aws.StringValue(resolver.Id))
+		d.Set("resolver_endpoint_id", resolver.Id)
 		d.Set("arn", aws.StringValue(resolver.Arn))
 		d.Set("status", aws.StringValue(resolver.Status))
 		d.Set("name", aws.StringValue(resolver.Name))
