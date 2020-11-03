@@ -2216,7 +2216,7 @@ func testAccALB_protocol_version(name string, protocolVersion string) string {
 resource "aws_lb_target_group" "test" {
   name             = "%s"
   port             = 443
-  protocol 		   = "HTTP"
+  protocol         = "HTTP"
   protocol_version = "%s"
   vpc_id           = aws_vpc.test.id
 
