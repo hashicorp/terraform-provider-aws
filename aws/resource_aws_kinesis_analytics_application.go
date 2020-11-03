@@ -679,19 +679,19 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 	d.Set("status", application.ApplicationStatus)
 	d.Set("version", int(aws.Int64Value(application.ApplicationVersionId)))
 
-	if err := d.Set("cloudwatch_logging_options", flattenKinesisAnalyticsCloudwatchLoggingOptions(application.CloudWatchLoggingOptionDescriptions)); err != nil {
+	if err := d.Set("cloudwatch_logging_options", flattenKinesisAnalyticsCloudWatchLoggingOptionDescriptions(application.CloudWatchLoggingOptionDescriptions)); err != nil {
 		return fmt.Errorf("error setting cloudwatch_logging_options: %w", err)
 	}
 
-	if err := d.Set("inputs", flattenKinesisAnalyticsInputs(application.InputDescriptions)); err != nil {
+	if err := d.Set("inputs", flattenKinesisAnalyticsInputDescriptions(application.InputDescriptions)); err != nil {
 		return fmt.Errorf("error setting inputs: %w", err)
 	}
 
-	if err := d.Set("outputs", flattenKinesisAnalyticsOutputs(application.OutputDescriptions)); err != nil {
+	if err := d.Set("outputs", flattenKinesisAnalyticsOutputDescriptions(application.OutputDescriptions)); err != nil {
 		return fmt.Errorf("error setting outputs: %w", err)
 	}
 
-	if err := d.Set("reference_data_sources", flattenKinesisAnalyticsReferenceDataSources(application.ReferenceDataSourceDescriptions)); err != nil {
+	if err := d.Set("reference_data_sources", flattenKinesisAnalyticsReferenceDataSourceDescriptions(application.ReferenceDataSourceDescriptions)); err != nil {
 		return fmt.Errorf("error setting reference_data_sources: %w", err)
 	}
 
@@ -1075,283 +1075,6 @@ func resourceAwsKinesisAnalyticsApplicationImport(d *schema.ResourceData, meta i
 	return []*schema.ResourceData{d}, nil
 }
 
-func flattenKinesisAnalyticsCloudwatchLoggingOptions(options []*kinesisanalytics.CloudWatchLoggingOptionDescription) []interface{} {
-	s := []interface{}{}
-	for _, v := range options {
-		option := map[string]interface{}{
-			"id":             aws.StringValue(v.CloudWatchLoggingOptionId),
-			"log_stream_arn": aws.StringValue(v.LogStreamARN),
-			"role_arn":       aws.StringValue(v.RoleARN),
-		}
-		s = append(s, option)
-	}
-	return s
-}
-
-func flattenKinesisAnalyticsInputs(inputs []*kinesisanalytics.InputDescription) []interface{} {
-	s := []interface{}{}
-
-	if len(inputs) > 0 {
-		id := inputs[0]
-
-		input := map[string]interface{}{
-			"id":           aws.StringValue(id.InputId),
-			"name_prefix":  aws.StringValue(id.NamePrefix),
-			"stream_names": flattenStringList(id.InAppStreamNames),
-		}
-
-		if id.InputParallelism != nil {
-			input["parallelism"] = []interface{}{
-				map[string]interface{}{
-					"count": int(aws.Int64Value(id.InputParallelism.Count)),
-				},
-			}
-		}
-
-		if id.InputProcessingConfigurationDescription != nil {
-			ipcd := id.InputProcessingConfigurationDescription
-
-			if ipcd.InputLambdaProcessorDescription != nil {
-				input["processing_configuration"] = []interface{}{
-					map[string]interface{}{
-						"lambda": []interface{}{
-							map[string]interface{}{
-								"resource_arn": aws.StringValue(ipcd.InputLambdaProcessorDescription.ResourceARN),
-								"role_arn":     aws.StringValue(ipcd.InputLambdaProcessorDescription.RoleARN),
-							},
-						},
-					},
-				}
-			}
-		}
-
-		if id.InputSchema != nil {
-			inputSchema := id.InputSchema
-			is := []interface{}{}
-			rcs := []interface{}{}
-			ss := map[string]interface{}{
-				"record_encoding": aws.StringValue(inputSchema.RecordEncoding),
-			}
-
-			for _, rc := range inputSchema.RecordColumns {
-				rcM := map[string]interface{}{
-					"mapping":  aws.StringValue(rc.Mapping),
-					"name":     aws.StringValue(rc.Name),
-					"sql_type": aws.StringValue(rc.SqlType),
-				}
-				rcs = append(rcs, rcM)
-			}
-			ss["record_columns"] = rcs
-
-			if inputSchema.RecordFormat != nil {
-				rf := inputSchema.RecordFormat
-				rfM := map[string]interface{}{
-					"record_format_type": aws.StringValue(rf.RecordFormatType),
-				}
-
-				if rf.MappingParameters != nil {
-					mps := []interface{}{}
-					if rf.MappingParameters.CSVMappingParameters != nil {
-						cmp := map[string]interface{}{
-							"csv": []interface{}{
-								map[string]interface{}{
-									"record_column_delimiter": aws.StringValue(rf.MappingParameters.CSVMappingParameters.RecordColumnDelimiter),
-									"record_row_delimiter":    aws.StringValue(rf.MappingParameters.CSVMappingParameters.RecordRowDelimiter),
-								},
-							},
-						}
-						mps = append(mps, cmp)
-					}
-
-					if rf.MappingParameters.JSONMappingParameters != nil {
-						jmp := map[string]interface{}{
-							"json": []interface{}{
-								map[string]interface{}{
-									"record_row_path": aws.StringValue(rf.MappingParameters.JSONMappingParameters.RecordRowPath),
-								},
-							},
-						}
-						mps = append(mps, jmp)
-					}
-
-					rfM["mapping_parameters"] = mps
-				}
-				ss["record_format"] = []interface{}{rfM}
-			}
-
-			is = append(is, ss)
-			input["schema"] = is
-		}
-
-		if id.InputStartingPositionConfiguration != nil && id.InputStartingPositionConfiguration.InputStartingPosition != nil {
-			input["starting_position_configuration"] = []interface{}{
-				map[string]interface{}{
-					"starting_position": aws.StringValue(id.InputStartingPositionConfiguration.InputStartingPosition),
-				},
-			}
-		}
-
-		if id.KinesisFirehoseInputDescription != nil {
-			input["kinesis_firehose"] = []interface{}{
-				map[string]interface{}{
-					"resource_arn": aws.StringValue(id.KinesisFirehoseInputDescription.ResourceARN),
-					"role_arn":     aws.StringValue(id.KinesisFirehoseInputDescription.RoleARN),
-				},
-			}
-		}
-
-		if id.KinesisStreamsInputDescription != nil {
-			input["kinesis_stream"] = []interface{}{
-				map[string]interface{}{
-					"resource_arn": aws.StringValue(id.KinesisStreamsInputDescription.ResourceARN),
-					"role_arn":     aws.StringValue(id.KinesisStreamsInputDescription.RoleARN),
-				},
-			}
-		}
-
-		s = append(s, input)
-	}
-	return s
-}
-
-func flattenKinesisAnalyticsOutputs(outputs []*kinesisanalytics.OutputDescription) []interface{} {
-	s := []interface{}{}
-
-	for _, o := range outputs {
-		output := map[string]interface{}{
-			"id":   aws.StringValue(o.OutputId),
-			"name": aws.StringValue(o.Name),
-		}
-
-		if o.KinesisFirehoseOutputDescription != nil {
-			output["kinesis_firehose"] = []interface{}{
-				map[string]interface{}{
-					"resource_arn": aws.StringValue(o.KinesisFirehoseOutputDescription.ResourceARN),
-					"role_arn":     aws.StringValue(o.KinesisFirehoseOutputDescription.RoleARN),
-				},
-			}
-		}
-
-		if o.KinesisStreamsOutputDescription != nil {
-			output["kinesis_stream"] = []interface{}{
-				map[string]interface{}{
-					"resource_arn": aws.StringValue(o.KinesisStreamsOutputDescription.ResourceARN),
-					"role_arn":     aws.StringValue(o.KinesisStreamsOutputDescription.RoleARN),
-				},
-			}
-		}
-
-		if o.LambdaOutputDescription != nil {
-			output["lambda"] = []interface{}{
-				map[string]interface{}{
-					"resource_arn": aws.StringValue(o.LambdaOutputDescription.ResourceARN),
-					"role_arn":     aws.StringValue(o.LambdaOutputDescription.RoleARN),
-				},
-			}
-		}
-
-		if o.DestinationSchema != nil {
-			output["schema"] = []interface{}{
-				map[string]interface{}{
-					"record_format_type": aws.StringValue(o.DestinationSchema.RecordFormatType),
-				},
-			}
-		}
-
-		s = append(s, output)
-	}
-
-	return s
-}
-
-func flattenKinesisAnalyticsReferenceDataSources(dataSources []*kinesisanalytics.ReferenceDataSourceDescription) []interface{} {
-	s := []interface{}{}
-
-	if len(dataSources) > 0 {
-		for _, ds := range dataSources {
-			dataSource := map[string]interface{}{
-				"id":         aws.StringValue(ds.ReferenceId),
-				"table_name": aws.StringValue(ds.TableName),
-			}
-
-			if ds.S3ReferenceDataSourceDescription != nil {
-				dataSource["s3"] = []interface{}{
-					map[string]interface{}{
-						"bucket_arn": aws.StringValue(ds.S3ReferenceDataSourceDescription.BucketARN),
-						"file_key":   aws.StringValue(ds.S3ReferenceDataSourceDescription.FileKey),
-						"role_arn":   aws.StringValue(ds.S3ReferenceDataSourceDescription.ReferenceRoleARN),
-					},
-				}
-			}
-
-			if ds.ReferenceSchema != nil {
-				rs := ds.ReferenceSchema
-				rcs := []interface{}{}
-				ss := map[string]interface{}{
-					"record_encoding": aws.StringValue(rs.RecordEncoding),
-				}
-
-				for _, rc := range rs.RecordColumns {
-					rcM := map[string]interface{}{
-						"mapping":  aws.StringValue(rc.Mapping),
-						"name":     aws.StringValue(rc.Name),
-						"sql_type": aws.StringValue(rc.SqlType),
-					}
-					rcs = append(rcs, rcM)
-				}
-				ss["record_columns"] = rcs
-
-				if rs.RecordFormat != nil {
-					rf := rs.RecordFormat
-					rfM := map[string]interface{}{
-						"record_format_type": aws.StringValue(rf.RecordFormatType),
-					}
-
-					if rf.MappingParameters != nil {
-						mps := []interface{}{}
-						if rf.MappingParameters.CSVMappingParameters != nil {
-							cmp := map[string]interface{}{
-								"csv": []interface{}{
-									map[string]interface{}{
-										"record_column_delimiter": aws.StringValue(rf.MappingParameters.CSVMappingParameters.RecordColumnDelimiter),
-										"record_row_delimiter":    aws.StringValue(rf.MappingParameters.CSVMappingParameters.RecordRowDelimiter),
-									},
-								},
-							}
-							mps = append(mps, cmp)
-						}
-
-						if rf.MappingParameters.JSONMappingParameters != nil {
-							jmp := map[string]interface{}{
-								"json": []interface{}{
-									map[string]interface{}{
-										"record_row_path": aws.StringValue(rf.MappingParameters.JSONMappingParameters.RecordRowPath),
-									},
-								},
-							}
-							mps = append(mps, jmp)
-						}
-
-						rfM["mapping_parameters"] = mps
-					}
-					ss["record_format"] = []interface{}{rfM}
-				}
-
-				dataSource["schema"] = []interface{}{ss}
-			}
-
-			s = append(s, dataSource)
-		}
-	}
-
-	return s
-}
-
-//
-// New expand/flatten functions.
-// TODO Remove 'V1'.
-//
-
 func expandKinesisAnalyticsCloudWatchLoggingOptions(vCloudWatchLoggingOptions []interface{}) []*kinesisanalytics.CloudWatchLoggingOption {
 	if len(vCloudWatchLoggingOptions) == 0 || vCloudWatchLoggingOptions[0] == nil {
 		return nil
@@ -1369,6 +1092,22 @@ func expandKinesisAnalyticsCloudWatchLoggingOptions(vCloudWatchLoggingOptions []
 	}
 
 	return []*kinesisanalytics.CloudWatchLoggingOption{cloudWatchLoggingOption}
+}
+
+func flattenKinesisAnalyticsCloudWatchLoggingOptionDescriptions(cloudWatchLoggingOptionDescriptions []*kinesisanalytics.CloudWatchLoggingOptionDescription) []interface{} {
+	if len(cloudWatchLoggingOptionDescriptions) == 0 || cloudWatchLoggingOptionDescriptions[0] == nil {
+		return []interface{}{}
+	}
+
+	cloudWatchLoggingOptionDescription := cloudWatchLoggingOptionDescriptions[0]
+
+	mCloudWatchLoggingOption := map[string]interface{}{
+		"id":             aws.StringValue(cloudWatchLoggingOptionDescription.CloudWatchLoggingOptionId),
+		"log_stream_arn": aws.StringValue(cloudWatchLoggingOptionDescription.LogStreamARN),
+		"role_arn":       aws.StringValue(cloudWatchLoggingOptionDescription.RoleARN),
+	}
+
+	return []interface{}{mCloudWatchLoggingOption}
 }
 
 func expandKinesisAnalyticsInputs(vInputs []interface{}) []*kinesisanalytics.Input {
@@ -1577,6 +1316,75 @@ func expandKinesisAnalyticsInputUpdate(vInput []interface{}) *kinesisanalytics.I
 	return inputUpdate
 }
 
+func flattenKinesisAnalyticsInputDescriptions(inputDescriptions []*kinesisanalytics.InputDescription) []interface{} {
+	if len(inputDescriptions) == 0 || inputDescriptions[0] == nil {
+		return []interface{}{}
+	}
+
+	inputDescription := inputDescriptions[0]
+
+	mInput := map[string]interface{}{
+		"id":           aws.StringValue(inputDescription.InputId),
+		"name_prefix":  aws.StringValue(inputDescription.NamePrefix),
+		"stream_names": flattenStringList(inputDescription.InAppStreamNames),
+	}
+
+	if inputParallelism := inputDescription.InputParallelism; inputParallelism != nil {
+		mInputParallelism := map[string]interface{}{
+			"count": int(aws.Int64Value(inputParallelism.Count)),
+		}
+
+		mInput["parallelism"] = []interface{}{mInputParallelism}
+	}
+
+	if inputSchema := inputDescription.InputSchema; inputSchema != nil {
+		mInput["schema"] = flattenKinesisAnalyticsSourceSchema(inputSchema)
+	}
+
+	if inputProcessingConfigurationDescription := inputDescription.InputProcessingConfigurationDescription; inputProcessingConfigurationDescription != nil {
+		mInputProcessingConfiguration := map[string]interface{}{}
+
+		if inputLambdaProcessorDescription := inputProcessingConfigurationDescription.InputLambdaProcessorDescription; inputLambdaProcessorDescription != nil {
+			mInputLambdaProcessor := map[string]interface{}{
+				"resource_arn": aws.StringValue(inputLambdaProcessorDescription.ResourceARN),
+				"role_arn":     aws.StringValue(inputLambdaProcessorDescription.RoleARN),
+			}
+
+			mInputProcessingConfiguration["lambda"] = []interface{}{mInputLambdaProcessor}
+		}
+
+		mInput["processing_configuration"] = []interface{}{mInputProcessingConfiguration}
+	}
+
+	if inputStartingPositionConfiguration := inputDescription.InputStartingPositionConfiguration; inputStartingPositionConfiguration != nil {
+		mInputStartingPositionConfiguration := map[string]interface{}{
+			"starting_position": aws.StringValue(inputStartingPositionConfiguration.InputStartingPosition),
+		}
+
+		mInput["starting_position_configuration"] = []interface{}{mInputStartingPositionConfiguration}
+	}
+
+	if kinesisFirehoseInputDescription := inputDescription.KinesisFirehoseInputDescription; kinesisFirehoseInputDescription != nil {
+		mKinesisFirehoseInput := map[string]interface{}{
+			"resource_arn": aws.StringValue(kinesisFirehoseInputDescription.ResourceARN),
+			"role_arn":     aws.StringValue(kinesisFirehoseInputDescription.RoleARN),
+		}
+
+		mInput["kinesis_firehose"] = []interface{}{mKinesisFirehoseInput}
+	}
+
+	if kinesisStreamsInputDescription := inputDescription.KinesisStreamsInputDescription; kinesisStreamsInputDescription != nil {
+		mKinesisStreamsInput := map[string]interface{}{
+			"resource_arn": aws.StringValue(kinesisStreamsInputDescription.ResourceARN),
+			"role_arn":     aws.StringValue(kinesisStreamsInputDescription.RoleARN),
+		}
+
+		mInput["kinesis_stream"] = []interface{}{mKinesisStreamsInput}
+	}
+
+	return []interface{}{mInput}
+}
+
 func expandKinesisAnalyticsOutput(vOutput interface{}) *kinesisanalytics.Output {
 	if vOutput == nil {
 		return nil
@@ -1666,6 +1474,62 @@ func expandKinesisAnalyticsOutputs(vOutputs []interface{}) []*kinesisanalytics.O
 	}
 
 	return outputs
+}
+
+func flattenKinesisAnalyticsOutputDescriptions(outputDescriptions []*kinesisanalytics.OutputDescription) []interface{} {
+	if len(outputDescriptions) == 0 {
+		return []interface{}{}
+	}
+
+	vOutputs := []interface{}{}
+
+	for _, outputDescription := range outputDescriptions {
+		if outputDescription != nil {
+			mOutput := map[string]interface{}{
+				"id":   aws.StringValue(outputDescription.OutputId),
+				"name": aws.StringValue(outputDescription.Name),
+			}
+
+			if destinationSchema := outputDescription.DestinationSchema; destinationSchema != nil {
+				mDestinationSchema := map[string]interface{}{
+					"record_format_type": aws.StringValue(destinationSchema.RecordFormatType),
+				}
+
+				mOutput["schema"] = []interface{}{mDestinationSchema}
+			}
+
+			if kinesisFirehoseOutputDescription := outputDescription.KinesisFirehoseOutputDescription; kinesisFirehoseOutputDescription != nil {
+				mKinesisFirehoseOutput := map[string]interface{}{
+					"resource_arn": aws.StringValue(kinesisFirehoseOutputDescription.ResourceARN),
+					"role_arn":     aws.StringValue(kinesisFirehoseOutputDescription.RoleARN),
+				}
+
+				mOutput["kinesis_firehose"] = []interface{}{mKinesisFirehoseOutput}
+			}
+
+			if kinesisStreamsOutputDescription := outputDescription.KinesisStreamsOutputDescription; kinesisStreamsOutputDescription != nil {
+				mKinesisStreamsOutput := map[string]interface{}{
+					"resource_arn": aws.StringValue(kinesisStreamsOutputDescription.ResourceARN),
+					"role_arn":     aws.StringValue(kinesisStreamsOutputDescription.RoleARN),
+				}
+
+				mOutput["kinesis_stream"] = []interface{}{mKinesisStreamsOutput}
+			}
+
+			if lambdaOutputDescription := outputDescription.LambdaOutputDescription; lambdaOutputDescription != nil {
+				mLambdaOutput := map[string]interface{}{
+					"resource_arn": aws.StringValue(lambdaOutputDescription.ResourceARN),
+					"role_arn":     aws.StringValue(lambdaOutputDescription.RoleARN),
+				}
+
+				mOutput["lambda"] = []interface{}{mLambdaOutput}
+			}
+
+			vOutputs = append(vOutputs, mOutput)
+		}
+	}
+
+	return vOutputs
 }
 
 func expandKinesisAnalyticsRecordColumns(vRecordColumns []interface{}) []*kinesisanalytics.RecordColumn {
@@ -1823,6 +1687,35 @@ func expandKinesisAnalyticsReferenceDataSourceUpdate(vReferenceDataSource []inte
 	return referenceDataSourceUpdate
 }
 
+func flattenKinesisAnalyticsReferenceDataSourceDescriptions(referenceDataSourceDescriptions []*kinesisanalytics.ReferenceDataSourceDescription) []interface{} {
+	if len(referenceDataSourceDescriptions) == 0 || referenceDataSourceDescriptions[0] == nil {
+		return []interface{}{}
+	}
+
+	referenceDataSourceDescription := referenceDataSourceDescriptions[0]
+
+	mReferenceDataSource := map[string]interface{}{
+		"id":         aws.StringValue(referenceDataSourceDescription.ReferenceId),
+		"table_name": aws.StringValue(referenceDataSourceDescription.TableName),
+	}
+
+	if referenceSchema := referenceDataSourceDescription.ReferenceSchema; referenceSchema != nil {
+		mReferenceDataSource["schema"] = flattenKinesisAnalyticsSourceSchema(referenceSchema)
+	}
+
+	if s3ReferenceDataSource := referenceDataSourceDescription.S3ReferenceDataSourceDescription; s3ReferenceDataSource != nil {
+		mS3ReferenceDataSource := map[string]interface{}{
+			"bucket_arn": aws.StringValue(s3ReferenceDataSource.BucketARN),
+			"file_key":   aws.StringValue(s3ReferenceDataSource.FileKey),
+			"role_arn":   aws.StringValue(s3ReferenceDataSource.ReferenceRoleARN),
+		}
+
+		mReferenceDataSource["s3"] = []interface{}{mS3ReferenceDataSource}
+	}
+
+	return []interface{}{mReferenceDataSource}
+}
+
 func expandKinesisAnalyticsSourceSchema(vSourceSchema []interface{}) *kinesisanalytics.SourceSchema {
 	if len(vSourceSchema) == 0 || vSourceSchema[0] == nil {
 		return nil
@@ -1845,4 +1738,65 @@ func expandKinesisAnalyticsSourceSchema(vSourceSchema []interface{}) *kinesisana
 	}
 
 	return sourceSchema
+}
+
+func flattenKinesisAnalyticsSourceSchema(sourceSchema *kinesisanalytics.SourceSchema) []interface{} {
+	if sourceSchema == nil {
+		return []interface{}{}
+	}
+
+	mSourceSchema := map[string]interface{}{
+		"record_encoding": aws.StringValue(sourceSchema.RecordEncoding),
+	}
+
+	if len(sourceSchema.RecordColumns) > 0 {
+		vRecordColumns := []interface{}{}
+
+		for _, recordColumn := range sourceSchema.RecordColumns {
+			if recordColumn != nil {
+				mRecordColumn := map[string]interface{}{
+					"mapping":  aws.StringValue(recordColumn.Mapping),
+					"name":     aws.StringValue(recordColumn.Name),
+					"sql_type": aws.StringValue(recordColumn.SqlType),
+				}
+
+				vRecordColumns = append(vRecordColumns, mRecordColumn)
+			}
+		}
+
+		mSourceSchema["record_columns"] = vRecordColumns
+	}
+
+	if recordFormat := sourceSchema.RecordFormat; recordFormat != nil {
+		mRecordFormat := map[string]interface{}{
+			"record_format_type": aws.StringValue(recordFormat.RecordFormatType),
+		}
+
+		if mappingParameters := recordFormat.MappingParameters; mappingParameters != nil {
+			mMappingParameters := map[string]interface{}{}
+
+			if csvMappingParameters := mappingParameters.CSVMappingParameters; csvMappingParameters != nil {
+				mCsvMappingParameters := map[string]interface{}{
+					"record_column_delimiter": aws.StringValue(csvMappingParameters.RecordColumnDelimiter),
+					"record_row_delimiter":    aws.StringValue(csvMappingParameters.RecordRowDelimiter),
+				}
+
+				mMappingParameters["csv"] = []interface{}{mCsvMappingParameters}
+			}
+
+			if jsonMappingParameters := mappingParameters.JSONMappingParameters; jsonMappingParameters != nil {
+				mJsonMappingParameters := map[string]interface{}{
+					"record_row_path": aws.StringValue(jsonMappingParameters.RecordRowPath),
+				}
+
+				mMappingParameters["json"] = []interface{}{mJsonMappingParameters}
+			}
+
+			mRecordFormat["mapping_parameters"] = []interface{}{mMappingParameters}
+		}
+
+		mSourceSchema["record_format"] = []interface{}{mRecordFormat}
+	}
+
+	return []interface{}{mSourceSchema}
 }
