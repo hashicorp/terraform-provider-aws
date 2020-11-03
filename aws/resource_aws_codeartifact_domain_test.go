@@ -108,7 +108,7 @@ func TestAccAWSCodeArtifactDomain_tags(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeArtifactDomainBasicConfigTags1(rName, "key1", "value1"),
+				Config: testAccAWSCodeArtifactDomainConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactDomainExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -121,7 +121,7 @@ func TestAccAWSCodeArtifactDomain_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCodeArtifactDomainBasicConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAWSCodeArtifactDomainConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactDomainExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -130,7 +130,7 @@ func TestAccAWSCodeArtifactDomain_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCodeArtifactDomainBasicConfigTags1(rName, "key2", "value2"),
+				Config: testAccAWSCodeArtifactDomainConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactDomainExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -236,7 +236,7 @@ resource "aws_codeartifact_domain" "test" {
 `, rName)
 }
 
-func testAccAWSCodeArtifactDomainBasicConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccAWSCodeArtifactDomainConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -254,7 +254,7 @@ resource "aws_codeartifact_domain" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSCodeArtifactDomainBasicConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAWSCodeArtifactDomainConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
