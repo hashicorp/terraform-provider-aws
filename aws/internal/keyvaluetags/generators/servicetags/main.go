@@ -30,6 +30,7 @@ var sliceServiceNames = []string{
 	"cloudtrail",
 	"cloudwatch",
 	"cloudwatchevents",
+	"codeartifact",
 	"codebuild",
 	"codedeploy",
 	"codepipeline",

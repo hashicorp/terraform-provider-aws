@@ -23,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
@@ -432,6 +433,23 @@ func CloudwatchlogsListTags(conn *cloudwatchlogs.CloudWatchLogs, identifier stri
 	}
 
 	return CloudwatchlogsKeyValueTags(output.Tags), nil
+}
+
+// CodeartifactListTags lists codeartifact service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CodeartifactListTags(conn *codeartifact.CodeArtifact, identifier string) (KeyValueTags, error) {
+	input := &codeartifact.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return CodeartifactKeyValueTags(output.Tags), nil
 }
 
 // CodecommitListTags lists codecommit service tags.
