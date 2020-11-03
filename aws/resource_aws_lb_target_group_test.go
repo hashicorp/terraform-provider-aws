@@ -2214,11 +2214,11 @@ resource "aws_vpc" "test" {
 func testAccALB_protocol_version(name string, protocolVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name     = "%s"
-  port     = 443
-  protocol = "HTTP"
+  name             = "%s"
+  port             = 443
+  protocol 		   = "HTTP"
   protocol_version = "%s"
-  vpc_id   = aws_vpc.test.id
+  vpc_id           = aws_vpc.test.id
 
   deregistration_delay = 200
   slow_start           = 0
