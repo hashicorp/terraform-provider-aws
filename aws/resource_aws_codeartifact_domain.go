@@ -116,7 +116,7 @@ func resourceAwsCodeArtifactDomainRead(d *schema.ResourceData, meta interface{})
 	tags, err := keyvaluetags.CodeartifactListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Codeartifact Domain (%s): %w", arn, err)
+		return fmt.Errorf("error listing tags for CodeArtifact Domain (%s): %w", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
@@ -132,7 +132,7 @@ func resourceAwsCodeArtifactDomainUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.CodeartifactUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Codeartifact Domain (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("error updating CodeArtifact Domain (%s) tags: %w", d.Id(), err)
 		}
 	}
 

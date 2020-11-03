@@ -205,7 +205,7 @@ func resourceAwsCodeArtifactRepositoryUpdate(d *schema.ResourceData, meta interf
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.CodeartifactUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Codeartifact Repository (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("error updating CodeArtifact Repository (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -259,7 +259,7 @@ func resourceAwsCodeArtifactRepositoryRead(d *schema.ResourceData, meta interfac
 	tags, err := keyvaluetags.CodeartifactListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Codeartifact Repository (%s): %w", arn, err)
+		return fmt.Errorf("error listing tags for CodeArtifact Repository (%s): %w", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
