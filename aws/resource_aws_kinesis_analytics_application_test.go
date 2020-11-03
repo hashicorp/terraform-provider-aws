@@ -1721,8 +1721,8 @@ resource "aws_kinesis_analytics_application" "test" {
   name = %[1]q
 
   cloudwatch_logging_options {
-    log_stream_arn = aws_cloudwatch_log_stream.test[%[2]d].arn
-    role_arn       = aws_iam_role.test[%[2]d].arn
+    log_stream_arn = aws_cloudwatch_log_stream.test.%[2]d.arn
+    role_arn       = aws_iam_role.test.%[2]d.arn
   }
 }
 `, rName, streamIndex))
@@ -1784,7 +1784,7 @@ resource "aws_kinesis_analytics_application" "test" {
         name     = "COLUMN_2"
         sql_type = "VARCHAR(8)"
         mapping  = "MAPPING-2"
-	  }
+      }
 
       record_columns {
         name     = "COLUMN_3"
@@ -1841,8 +1841,8 @@ resource "aws_kinesis_analytics_application" "test" {
 
     processing_configuration {
       lambda {
-        resource_arn = aws_lambda_function.test[%[2]d].arn
-        role_arn     = aws_iam_role.test[%[2]d].arn
+        resource_arn = aws_lambda_function.test.%[2]d.arn
+        role_arn     = aws_iam_role.test.%[2]d.arn
       }
     }
 
