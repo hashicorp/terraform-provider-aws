@@ -1241,7 +1241,7 @@ func testAccCheckAWSLBTargetGroupProtocolVersion(n string, expectedProtocol stri
 
 		actual := *describe.TargetGroups[0].ProtocolVersion
 		if actual != expectedProtocol {
-			return errors.New(fmt.Sprintf("Target Group Protocol Version %s is not %s", actual, expectedProtocol))
+			return fmt.Errorf("Target Group Protocol Version %s is not %s", actual, expectedProtocol)
 		}
 
 		return nil
