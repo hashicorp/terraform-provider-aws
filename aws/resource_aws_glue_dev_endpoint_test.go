@@ -833,7 +833,7 @@ resource "aws_glue_security_configuration" "test" {
 }
 
 func testAccGlueDevEndpointConfig_SubnetID_SecurityGroupIDs(rName string) string {
-	return testAccGlueDevEndpointConfig_Base(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), testAccGlueDevEndpointConfig_Base(rName), fmt.Sprintf(`
 resource "aws_glue_dev_endpoint" "test" {
   name               = %[1]q
   role_arn           = aws_iam_role.test.arn
@@ -866,7 +866,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
@@ -901,7 +901,7 @@ resource "aws_security_group" "test" {
   }
   depends_on = [aws_iam_role_policy_attachment.glue_service_role]
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSGlueDevEndpointConfig_Tags1(rName, tagKey1, tagValue1 string) string {

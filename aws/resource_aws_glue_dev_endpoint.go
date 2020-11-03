@@ -6,8 +6,6 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/waiter"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -15,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/waiter"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsGlueDevEndpoint() *schema.Resource {
@@ -166,12 +166,8 @@ func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) 
 		Tags:         keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().GlueTags(),
 	}
 
-	if kv, ok := d.GetOk("arguments"); ok {
-		arguments := make(map[string]string)
-		for k, v := range kv.(map[string]interface{}) {
-			arguments[k] = v.(string)
-		}
-		input.Arguments = aws.StringMap(arguments)
+	if v, ok := d.GetOk("arguments"); ok {
+		input.Arguments = stringMapToPointers(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("extra_jars_s3_path"); ok {
@@ -221,7 +217,7 @@ func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[DEBUG] Creating Glue Dev Endpoint: %#v", *input)
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateDevEndpoint(input)
 		if err != nil {
 			// Retry for IAM eventual consistency
@@ -408,7 +404,7 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 		oldRaw, newRaw := d.GetChange("arguments")
 		old := oldRaw.(map[string]interface{})
 		new := newRaw.(map[string]interface{})
-		create, remove := diffStringMaps(old, new)
+		create, remove, _ := diffStringMaps(old, new)
 
 		removeKeys := make([]*string, 0)
 		for k := range remove {
@@ -453,13 +449,13 @@ func resourceAwsDevEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
-		remove := os.Difference(ns).List()
-		create := ns.Difference(os).List()
+		remove := os.Difference(ns)
+		create := ns.Difference(os)
 
-		input.AddPublicKeys = expandStringList(create)
+		input.AddPublicKeys = expandStringSet(create)
 		log.Printf("[DEBUG] expectedCreate public keys: %v", create)
 
-		input.DeletePublicKeys = expandStringList(remove)
+		input.DeletePublicKeys = expandStringSet(remove)
 		log.Printf("[DEBUG] remove public keys: %v", remove)
 
 		hasChanged = true
