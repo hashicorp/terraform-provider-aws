@@ -570,7 +570,7 @@ resource "aws_sagemaker_model" "test" {
 func testAccSagemakerPrimaryContainerImageConfigConfig(rName string) string {
 	return testAccSagemakerModelConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_model" "test" {
-  name               = "%[1]q"
+  name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
 
   primary_container {
