@@ -79,6 +79,21 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				}, true),
 			},
 
+			"protocol_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "HTTP1",
+				StateFunc: func(v interface{}) string {
+					return strings.ToUpper(v.(string))
+				},
+				ValidateFunc: validation.StringInSlice([]string{
+					"HTTP1",
+					"HTTP2",
+					"GRPC",
+				}, true),
+				DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
+			},
+
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -292,6 +307,7 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 		params.Port = aws.Int64(int64(d.Get("port").(int)))
 		params.Protocol = aws.String(d.Get("protocol").(string))
 		params.VpcId = aws.String(d.Get("vpc_id").(string))
+		params.ProtocolVersion = aws.String(d.Get("protocol_version").(string))
 	}
 
 	if healthChecks := d.Get("health_check").([]interface{}); len(healthChecks) == 1 {

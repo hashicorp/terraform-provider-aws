@@ -874,6 +874,7 @@ func TestAccAWSLBTargetGroup_defaults_application(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", targetGroupName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP1"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
@@ -1164,6 +1165,87 @@ func TestAccAWSLBTargetGroup_stickinessInvalidALB(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAWSLBTargetGroup_protocol_version(t *testing.T) {
+	var conf elbv2.TargetGroup
+	gRPCTargetGroupName := fmt.Sprintf("grpc-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	http2TargetGroupName := fmt.Sprintf("http2-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccALB_protocol_version(gRPCTargetGroupName, "GRPC"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					testAccCheckAWSLBTargetGroupProtocolVersion(resourceName, "GRPC"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", gRPCTargetGroupName),
+					resource.TestCheckResourceAttr(resourceName, "port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_version", "GRPC"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "TestAccAWSLBTargetGroup_application_LB_protocol_version_GRPC"),
+				),
+			},
+			{
+				Config: testAccALB_protocol_version(http2TargetGroupName, "HTTP2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					testAccCheckAWSLBTargetGroupProtocolVersion(resourceName, "HTTP2"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", http2TargetGroupName),
+					resource.TestCheckResourceAttr(resourceName, "port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP2"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "TestAccAWSLBTargetGroup_application_LB_protocol_version_HTTP2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckAWSLBTargetGroupProtocolVersion(n string, expectedProtocol string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return errors.New("No Target Group ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+
+		describe, err := conn.DescribeTargetGroups(&elbv2.DescribeTargetGroupsInput{
+			TargetGroupArns: []*string{aws.String(rs.Primary.ID)},
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if len(describe.TargetGroups) != 1 ||
+			*describe.TargetGroups[0].TargetGroupArn != rs.Primary.ID {
+			return errors.New("Target Group not found")
+		}
+
+		actual := *describe.TargetGroups[0].ProtocolVersion
+		if actual != expectedProtocol {
+			return errors.New(fmt.Sprintf("Target Group Protocol Version %s is not %s", actual, expectedProtocol))
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckAWSLBTargetGroupExists(n string, res *elbv2.TargetGroup) resource.TestCheckFunc {
@@ -2127,4 +2209,31 @@ resource "aws_vpc" "test" {
   }
 }
 `, protocol, stickyType, enabled)
+}
+
+func testAccALB_protocol_version(name string, protocolVersion string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = "%s"
+  port     = 443
+  protocol = "HTTP"
+  protocol_version = "%s"
+  vpc_id   = aws_vpc.test.id
+
+  deregistration_delay = 200
+  slow_start           = 0
+
+  tags = {
+    Name = "TestAccAWSLBTargetGroup_application_LB_protocol_version_%s"
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-lb-target-group-alb-protocol-version"
+  }
+}
+`, name, protocolVersion, protocolVersion)
 }
