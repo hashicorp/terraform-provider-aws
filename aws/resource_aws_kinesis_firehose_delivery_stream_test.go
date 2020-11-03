@@ -1132,6 +1132,71 @@ func TestAccAWSKinesisFirehoseDeliveryStream_SplunkConfigUpdates(t *testing.T) {
 	})
 }
 
+func TestAccAWSKinesisFirehoseDeliveryStream_HTTPEndpointConfigUpdates(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+
+	ri := acctest.RandInt()
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
+
+	preConfig := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpointBasic,
+		ri, ri, ri, ri)
+	postConfig := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
+		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpointUpdates,
+			ri, ri, ri, ri)
+
+	updatedHTTPEndpointConfig := &firehose.HttpEndpointDestinationDescription{
+		url:          aws.String("https://input-test.com:443"),
+		name:         aws.String("HTTP_test"),
+		role_arn:     aws.String("valueNotTested"),
+		S3BackupMode: aws.String("FailedEventsOnly"),
+		ProcessingConfiguration: &firehose.ProcessingConfiguration{
+			Enabled: aws.Bool(true),
+			Processors: []*firehose.Processor{
+				{
+					Type: aws.String("Lambda"),
+					Parameters: []*firehose.ProcessorParameter{
+						{
+							ParameterName:  aws.String("LambdaArn"),
+							ParameterValue: aws.String("valueNotTested"),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: preConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: postConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, updatedHTTPEndpointConfig),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigUpdates(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 
@@ -1384,7 +1449,7 @@ func testAccCheckKinesisFirehoseDeliveryStreamExists(n string, stream *firehose.
 	}
 }
 
-func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.DeliveryStreamDescription, s3config interface{}, extendedS3config interface{}, redshiftConfig interface{}, elasticsearchConfig interface{}, splunkConfig interface{}) resource.TestCheckFunc {
+func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.DeliveryStreamDescription, s3config interface{}, extendedS3config interface{}, redshiftConfig interface{}, elasticsearchConfig interface{}, splunkConfig interface{}, httpEndpointConfig interface{}) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !strings.HasPrefix(*stream.DeliveryStreamName, "terraform-kinesis-firehose") && !strings.HasPrefix(*stream.DeliveryStreamName, "tf-acc-test") {
 			return fmt.Errorf("Bad Stream name: %s", *stream.DeliveryStreamName)
@@ -1520,6 +1585,41 @@ func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.Del
 					return fmt.Errorf("Mismatch extended splunk ProcessingConfiguration.Processors count, expected: %s, got: %s", s, stream.Destinations)
 				}
 			}
+
+			if httpEndpointConfig != nil {
+				s := httpEndpointConfig.(*firehose.HttpEndpointDestinationDescription)
+				// Range over the Stream Destinations, looking for the matching HttpEndpoint destination
+				var matchRoleARN, matchS3BackupMode, EndpointConfigurationMatch, BufferingHintsMatch, RequestConfigurationMatch bool
+				for _, d := range stream.Destinations {
+					if d.HttpEndpointDestinationDescription != nil {
+						if *d.HttpEndpointDestinationDescription.RoleARN == *s.RoleARN {
+							matchRoleARN = true
+						}
+						if *d.HttpEndpointDestinationDescription.S3BackupMode == *s.S3BackupMode {
+							matchS3BackupMode = true
+						}
+						if s.EndpointConfiguration != nil && d.HttpEndpointDestinationDescription.EndpointConfiguration != nil {
+							EndpointConfigurationMatch = len(s.EndpointConfiguration.Processors) == len(d.HttpEndpointDestinationDescription.EndpointConfiguration.Processors)
+						}
+						if s.BufferingHints != nil && d.HttpEndpointDestinationDescription.BufferingHints != nil {
+							BufferingHintsMatch = len(s.BufferingHints.Processors) == len(d.HttpEndpointDestinationDescription.BufferingHints.Processors)
+						}
+						if s.RequestConfiguration != nil && d.HttpEndpointDestinationDescription.RequestConfiguration != nil {
+							RequestConfigurationMatch = len(s.RequestConfiguration.Processors) == len(d.HttpEndpointDestinationDescription.RequestConfiguration.Processors)
+						}
+						if s.ProcessingConfiguration != nil && d.HttpEndpointDestinationDescription.ProcessingConfiguration != nil {
+							processingConfigMatch = len(s.ProcessingConfiguration.Processors) == len(d.HttpEndpointDestinationDescription.ProcessingConfiguration.Processors)
+						}
+					}
+				}
+				if !matchRoleARN || !EndpointConfigurationMatch {
+					return fmt.Errorf("Mismatch HTTP Endpoint roleARN or EndpointConfiguration, expected: %s, got: %s", s, stream.Destinations)
+				}
+				if !processingConfigMatch {
+					return fmt.Errorf("Mismatch HTTP Endpoint ProcessingConfiguration.Processors count, expected: %s, got: %s", s, stream.Destinations)
+				}
+			}
+
 		}
 		return nil
 	}
@@ -2657,6 +2757,77 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     hec_acknowledgment_timeout = 600
     hec_endpoint_type          = "Event"
     s3_backup_mode             = "FailedEventsOnly"
+
+    processing_configuration {
+      enabled = true
+
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+
+        parameters {
+          parameter_name  = "RoleArn"
+          parameter_value = aws_iam_role.firehose.arn
+        }
+
+        parameters {
+          parameter_name  = "BufferSizeInMBs"
+          parameter_value = 1
+        }
+
+        parameters {
+          parameter_name  = "BufferIntervalInSeconds"
+          parameter_value = 120
+        }
+      }
+    }
+  }
+}
+`
+
+var testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpointBasic = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = "terraform-kinesis-firehose-basichttpendpointtest-%d"
+  destination = "http_endpoint"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  http_endpoint_configuration {
+    url      = "https://input-test.com:443"
+	name     = "HTTP_test"
+	role_arn = aws_iam_role.firehose.arn
+  }
+}
+`
+
+var testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpointUpdates = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = "terraform-kinesis-firehose-basichttpendpointtest-%d"
+  destination = "http_endpoint"
+
+  s3_configuration {
+    role_arn           = aws_iam_role.firehose.arn
+    bucket_arn         = aws_s3_bucket.bucket.arn
+    buffer_size        = 10
+    buffer_interval    = 400
+    compression_format = "GZIP"
+  }
+
+  http_endpoint_configuration {
+    url            = "https://input-test.com:443"
+	name           = "HTTP_test"
+	access_key     = "test_key"
+	role_arn       = aws_iam_role.firehose.arn
+    s3_backup_mode = "FailedEventsOnly"
 
     processing_configuration {
       enabled = true
