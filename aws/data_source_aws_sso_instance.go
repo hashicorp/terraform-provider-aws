@@ -3,8 +3,10 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
+	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -55,9 +57,33 @@ func dataSourceAwsSsoInstanceRead(d *schema.ResourceData, meta interface{}) erro
 	instance := instances[0]
 	log.Printf("[DEBUG] Received AWS SSO Instance: %s", instance)
 
-	d.SetId(time.Now().UTC().String())
+	id, idErr := dataSourceAwsSsoInstanceID(aws.StringValue(instance.InstanceArn), aws.StringValue(instance.IdentityStoreId))
+	if idErr != nil {
+		return idErr
+	}
+	d.SetId(id)
+
 	d.Set("arn", instance.InstanceArn)
 	d.Set("identity_store_id", instance.IdentityStoreId)
 
 	return nil
+}
+
+func dataSourceAwsSsoInstanceID(instanceArn string, identityStoreId string) (string, error) {
+	// arn:${Partition}:sso:::instance/${InstanceId}
+	iArn, err := arn.Parse(instanceArn)
+	if err != nil {
+		return "", err
+	}
+	iArnResourceParts := strings.Split(iArn.Resource, "/")
+	if len(iArnResourceParts) != 2 || iArnResourceParts[0] != "instance" || iArnResourceParts[1] == "" {
+		return "", fmt.Errorf("Unexpected format of ARN (%s), expected arn:${Partition}:sso:::instance/${InstanceId}", instanceArn)
+	}
+	instanceID := iArnResourceParts[1]
+
+	vars := []string{
+		instanceID,
+		identityStoreId,
+	}
+	return strings.Join(vars, "/"), nil
 }
