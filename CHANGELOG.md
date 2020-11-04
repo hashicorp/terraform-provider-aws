@@ -10,6 +10,11 @@ ENHANCEMENTS
 * resource/aws_cloudwatch_event_target: add plan time validation to `arn`, `role_arn`, `launch_type`, `task_definition_arn` [GH-11685]
 * resource/aws_glue_crawler - Support MongoDB target [GH-15934]
 
+BUG FIXES
+
+* resource/aws_rds_cluster: Prevent error removing cluster from global cluster when not found [GH-15938]
+* resource/aws_rds_global_cluster: Prevent error removing cluster from global cluster when not found [GH-15938]
+
 ## 3.13.0 (October 29, 2020)
 
 NOTES
