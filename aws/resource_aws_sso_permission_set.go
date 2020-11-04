@@ -75,7 +75,7 @@ func resourceAwsSsoPermissionSet() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(10, 1224),
-					validation.StringMatch(regexp.MustCompile(`^arn:aws:sso:::instance/(sso)?ins-[a-zA-Z0-9-.]{16}$`), "must match arn:aws:sso:::instance/(sso)?ins-[a-zA-Z0-9-.]{16}"),
+					validation.StringMatch(regexp.MustCompile(`^arn:aws(-[a-z]+)*:sso:::instance/(sso)?ins-[a-zA-Z0-9-.]{16}$`), "must match arn:aws(-[a-z]+)*:sso:::instance/(sso)?ins-[a-zA-Z0-9-.]{16}"),
 				),
 			},
 

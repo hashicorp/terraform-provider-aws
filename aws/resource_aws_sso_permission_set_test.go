@@ -29,7 +29,7 @@ func TestAccAWSSSOPermissionSet_Basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSOPermissionSetExists(resourceName, &permissionSet),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/ReadOnlyAccess"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/ReadOnlyAccess"), // lintignore:AWSAT005
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Just a test"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -45,8 +45,8 @@ func TestAccAWSSSOPermissionSet_Basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSOPermissionSetExists(resourceName, &updatedPermissionSet),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/ReadOnlyAccess"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/job-function/ViewOnlyAccess"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/ReadOnlyAccess"),              // lintignore:AWSAT005
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/job-function/ViewOnlyAccess"), // lintignore:AWSAT005
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Just a test update"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -218,7 +218,7 @@ resource "aws_sso_permission_set" "example" {
   instance_arn        = data.aws_sso_instance.selected.arn
   managed_policy_arns = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
 }
-`, rName)
+`, rName) // lintignore:AWSAT005
 }
 
 func testAccSSOPermissionSetBasicConfigUpdated(rName string) string {
@@ -234,7 +234,7 @@ resource "aws_sso_permission_set" "example" {
     "arn:aws:iam::aws:policy/job-function/ViewOnlyAccess"
   ]
 }
-`, rName)
+`, rName) // lintignore:AWSAT005
 }
 
 func testAccSSOPermissionSetConfigTagsSingle(rName, tagKey1, tagValue1 string) string {
@@ -251,7 +251,7 @@ resource "aws_sso_permission_set" "example" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1) // lintignore:AWSAT005
 }
 
 func testAccSSOPermissionSetConfigTagsMultiple(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
@@ -269,5 +269,5 @@ resource "aws_sso_permission_set" "example" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2) // lintignore:AWSAT005
 }

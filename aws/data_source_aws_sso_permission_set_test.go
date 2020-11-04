@@ -21,7 +21,7 @@ func TestAccDataSourceAwsSsoPermissionSet_Basic(t *testing.T) {
 				Config: testAccDataSourceAwsSsoPermissionSetConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "managed_policy_arns.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(datasourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/ReadOnlyAccess"),
+					tfawsresource.TestCheckTypeSetElemAttr(datasourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/ReadOnlyAccess"), // lintignore:AWSAT005
 					resource.TestCheckResourceAttr(datasourceName, "name", rName),
 					resource.TestCheckResourceAttr(datasourceName, "description", "testing"),
 					resource.TestCheckResourceAttr(datasourceName, "session_duration", "PT1H"),
@@ -45,7 +45,7 @@ func TestAccDataSourceAwsSsoPermissionSet_Tags(t *testing.T) {
 				Config: testAccDataSourceAwsSsoPermissionSetConfigByTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "managed_policy_arns.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(datasourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/ReadOnlyAccess"),
+					tfawsresource.TestCheckTypeSetElemAttr(datasourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/ReadOnlyAccess"), // lintignore:AWSAT005
 					resource.TestCheckResourceAttr(datasourceName, "name", rName),
 					resource.TestCheckResourceAttr(datasourceName, "description", "testing"),
 					resource.TestCheckResourceAttr(datasourceName, "session_duration", "PT1H"),
@@ -74,7 +74,7 @@ data "aws_sso_permission_set" "test" {
   instance_arn = data.aws_sso_instance.selected.arn
   name         = aws_sso_permission_set.test.name
 }
-`, rName)
+`, rName) // lintignore:AWSAT005
 }
 
 func testAccDataSourceAwsSsoPermissionSetConfigByTags(rName string) string {
@@ -106,5 +106,5 @@ data "aws_sso_permission_set" "test" {
     Key3 = "Value3"
   }
 }
-`, rName)
+`, rName) // lintignore:AWSAT005
 }
