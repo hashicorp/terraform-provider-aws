@@ -20,9 +20,11 @@ func dataSourceAwsWorkspacesWorkspace() *schema.Resource {
 				Computed: true,
 			},
 			"directory_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"user_name"},
+				Type:          schema.TypeString,
+				Computed:      true,
+				Optional:      true,
+				RequiredWith:  []string{"user_name"},
+				ConflictsWith: []string{"workspace_id"},
 			},
 			"ip_address": {
 				Type:     schema.TypeString,
@@ -41,10 +43,11 @@ func dataSourceAwsWorkspacesWorkspace() *schema.Resource {
 				Computed: true,
 			},
 			"user_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				RequiredWith: []string{"directory_id"},
+				Type:          schema.TypeString,
+				Computed:      true,
+				Optional:      true,
+				RequiredWith:  []string{"directory_id"},
+				ConflictsWith: []string{"workspace_id"},
 			},
 			"user_volume_encryption_enabled": {
 				Type:     schema.TypeBool,
@@ -56,6 +59,7 @@ func dataSourceAwsWorkspacesWorkspace() *schema.Resource {
 			},
 			"workspace_id": {
 				Type:          schema.TypeString,
+				Computed:      true,
 				Optional:      true,
 				ConflictsWith: []string{"directory_id", "user_name"},
 			},
@@ -87,7 +91,7 @@ func dataSourceAwsWorkspacesWorkspace() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchema(),
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
