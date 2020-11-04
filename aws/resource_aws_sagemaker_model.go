@@ -82,6 +82,7 @@ func resourceAwsSagemakerModel() *schema.Resource {
 						"image_config": {
 							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"repository_access_mode": {
@@ -175,6 +176,7 @@ func resourceAwsSagemakerModel() *schema.Resource {
 						"image_config": {
 							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"repository_access_mode": {
