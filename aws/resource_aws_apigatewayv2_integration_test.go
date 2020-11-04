@@ -84,7 +84,7 @@ func TestAccAWSAPIGatewayV2Integration_basicHttp(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29000"),
+					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "30000"),
 				),
 			},
 			{
@@ -267,7 +267,7 @@ func TestAccAWSAPIGatewayV2Integration_LambdaHttp(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29000"),
+					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "30000"),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
 				),
 			},
@@ -357,7 +357,7 @@ func TestAccAWSAPIGatewayV2Integration_VpcLinkHttp(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "5001"),
+					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29001"),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.0.server_name_to_verify", "www.example.com"),
 				),
@@ -386,7 +386,7 @@ func TestAccAWSAPIGatewayV2Integration_VpcLinkHttp(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "payload_format_version", "1.0"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "4999"),
+					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29001"),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.0.server_name_to_verify", "www.example.org"),
 				),
@@ -436,7 +436,7 @@ func TestAccAWSAPIGatewayV2Integration_AwsServiceIntegration(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "request_parameters.QueueUrl", sqsQueue1ResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29000"),
+					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "30000"),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
 				),
 			},
@@ -461,7 +461,7 @@ func TestAccAWSAPIGatewayV2Integration_AwsServiceIntegration(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "request_parameters.QueueUrl", sqsQueue2ResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "29000"),
+					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "30000"),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "0"),
 				),
 			},
@@ -800,7 +800,7 @@ resource "aws_apigatewayv2_integration" "test" {
   description          = "Test private integration"
   integration_method   = "GET"
   integration_uri      = aws_lb_listener.test.arn
-  timeout_milliseconds = 5001
+  timeout_milliseconds = 29001
 
   tls_config {
     server_name_to_verify = "www.example.com"
@@ -817,12 +817,11 @@ resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP_PROXY"
 
-  connection_type      = "VPC_LINK"
-  connection_id        = aws_apigatewayv2_vpc_link.test.id
-  description          = "Test private integration updated"
-  integration_method   = "POST"
-  integration_uri      = aws_lb_listener.test.arn
-  timeout_milliseconds = 4999
+  connection_type    = "VPC_LINK"
+  connection_id      = aws_apigatewayv2_vpc_link.test.id
+  description        = "Test private integration updated"
+  integration_method = "POST"
+  integration_uri    = aws_lb_listener.test.arn
 
   tls_config {
     server_name_to_verify = "www.example.org"
