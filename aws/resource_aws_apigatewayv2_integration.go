@@ -124,10 +124,9 @@ func resourceAwsApiGatewayV2Integration() *schema.Resource {
 				Optional: true,
 			},
 			"timeout_milliseconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      29000,
-				ValidateFunc: validation.IntBetween(50, 29000),
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
 			},
 			"tls_config": {
 				Type:     schema.TypeList,
