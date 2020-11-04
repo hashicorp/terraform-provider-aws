@@ -106,6 +106,39 @@ func TestAccAWSStorageGatewayNfsFileShare_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSStorageGatewayNfsFileShare_fileShareName(t *testing.T) {
+	var nfsFileShare storagegateway.NFSFileShareInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_nfs_file_share.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayNfsFileShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayNfsFileShareConfigFileShareName(rName, "test_1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName, &nfsFileShare),
+					resource.TestCheckResourceAttr(resourceName, "file_share_name", "test_1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSStorageGatewayNfsFileShareConfigFileShareName(rName, "test_2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName, &nfsFileShare),
+					resource.TestCheckResourceAttr(resourceName, "file_share_name", "test_2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSStorageGatewayNfsFileShare_ClientList(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -653,6 +686,18 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   role_arn     = aws_iam_role.test.arn
 }
 `
+}
+
+func testAccAWSStorageGatewayNfsFileShareConfigFileShareName(rName, fsName string) string {
+	return testAccAWSStorageGateway_S3FileShareBase(rName) + fmt.Sprintf(`
+resource "aws_storagegateway_nfs_file_share" "test" {
+  client_list     = ["0.0.0.0/0"]
+  gateway_arn     = aws_storagegateway_gateway.test.arn
+  location_arn    = aws_s3_bucket.test.arn
+  role_arn        = aws_iam_role.test.arn
+  file_share_name = %[1]q
+}
+`, fsName)
 }
 
 func testAccAWSStorageGatewayNfsFileShareConfigTags1(rName, tagKey1, tagValue1 string) string {
