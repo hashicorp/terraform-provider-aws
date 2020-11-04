@@ -53,9 +53,11 @@ const testAccDataSourceAwsSnsTopicConfig = `
 resource "aws_sns_topic" "tf_wrong1" {
   name = "wrong1"
 }
+
 resource "aws_sns_topic" "tf_test" {
   name = "tf_test"
 }
+
 resource "aws_sns_topic" "tf_wrong2" {
   name = "wrong2"
 }

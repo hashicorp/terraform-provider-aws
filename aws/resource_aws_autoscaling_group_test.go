@@ -866,7 +866,7 @@ func TestAccAWSAutoScalingGroup_ALB_TargetGroups(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/256
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/256
 func TestAccAWSAutoScalingGroup_TargetGroupArns(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
@@ -1435,7 +1435,7 @@ func TestAccAWSAutoScalingGroup_LaunchTemplate_IAMInstanceProfile(t *testing.T) 
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/256
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/256
 func TestAccAWSAutoScalingGroup_LoadBalancers(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
@@ -3725,7 +3725,7 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_elb" "test" {
-  count = %[2]d
+  count      = %[2]d
   depends_on = [aws_internet_gateway.test]
 
   subnets = [aws_subnet.test.id]
@@ -3790,11 +3790,11 @@ resource "aws_autoscaling_group" "test" {
       }
 
       override {
-        instance_type   = "t2.micro"
+        instance_type     = "t2.micro"
         weighted_capacity = "1"
       }
       override {
-        instance_type   = "t3.small"
+        instance_type     = "t3.small"
         weighted_capacity = "2"
       }
     }
@@ -4097,11 +4097,11 @@ resource "aws_autoscaling_group" "test" {
       }
 
       override {
-        instance_type = "t2.micro"
+        instance_type     = "t2.micro"
         weighted_capacity = "2"
       }
       override {
-        instance_type = "t3.small"
+        instance_type     = "t3.small"
         weighted_capacity = "4"
       }
     }

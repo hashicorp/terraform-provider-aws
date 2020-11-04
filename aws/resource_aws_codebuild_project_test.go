@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -3422,7 +3421,8 @@ resource "aws_codebuild_project" "test" {
 
   tags = {
     tag1 = "tag1value"
-    %s   = "%s"
+
+    %s = "%s"
   }
 }
 `, rName, tagKey, tagValue)

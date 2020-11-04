@@ -338,7 +338,7 @@ func testAccPreCheckAWSEksFargateProfile(t *testing.T) {
 The allowed regions are hardcoded in the acceptance testing since dynamically determining the
 functionality requires creating and destroying a real EKS Cluster, which is a lengthy process.
 If this check is out of date, please create an issue in the Terraform AWS Provider
-repository (https://github.com/terraform-providers/terraform-provider-aws) or submit a PR to update the
+repository (https://github.com/hashicorp/terraform-provider-aws) or submit a PR to update the
 check itself (testAccPreCheckAWSEksFargateProfile).
 
 For the most up to date supported region information, see the EKS User Guide:
@@ -366,8 +366,8 @@ resource "aws_iam_role" "cluster" {
 
   assume_role_policy = jsonencode({
     Statement = [{
-      Action    = "sts:AssumeRole"
-      Effect    = "Allow"
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
       Principal = {
         Service = "eks.${data.aws_partition.current.dns_suffix}"
       }
@@ -383,11 +383,11 @@ resource "aws_iam_role_policy_attachment" "cluster-AmazonEKSClusterPolicy" {
 
 resource "aws_iam_role" "pod" {
   name = "%[1]s-pod"
-  
+
   assume_role_policy = jsonencode({
     Statement = [{
-      Action    = "sts:AssumeRole"
-      Effect    = "Allow"
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
       Principal = {
         Service = "eks-fargate-pods.${data.aws_partition.current.dns_suffix}"
       }
@@ -434,7 +434,7 @@ resource "aws_subnet" "private" {
   count = 2
 
   availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index+2)
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index + 2)
   vpc_id            = aws_vpc.test.id
 
   tags = {

@@ -307,7 +307,7 @@ resource "aws_ec2_client_vpn_network_association" "test" {
   subnet_id              = aws_subnet.test.id
   security_groups        = [aws_security_group.test1.id, aws_security_group.test2.id]
 }
-    
+
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%[1]s"
   server_certificate_arn = aws_acm_certificate.test.arn

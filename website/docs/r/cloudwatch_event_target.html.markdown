@@ -1,14 +1,16 @@
 ---
-subcategory: "CloudWatch"
+subcategory: "EventBridge (CloudWatch Events)"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_target"
 description: |-
-  Provides a CloudWatch Event Target resource.
+  Provides an EventBridge Target resource.
 ---
 
 # Resource: aws_cloudwatch_event_target
 
-Provides a CloudWatch Event Target resource.
+Provides an EventBridge Target resource.
+
+~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
 ## Example Usage
 
@@ -240,7 +242,7 @@ DOC
 -> **Note:** `input` and `input_path` are mutually exclusive options.
 
 -> **Note:** In order to be able to have your AWS Lambda function or
-   SNS topic invoked by a CloudWatch Events rule, you must setup the right permissions
+   SNS topic invoked by an EventBridge rule, you must setup the right permissions
    using [`aws_lambda_permission`](https://www.terraform.io/docs/providers/aws/r/lambda_permission.html)
    or [`aws_sns_topic.policy`](https://www.terraform.io/docs/providers/aws/r/sns_topic.html#policy).
    More info [here](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/resource-based-policies-cwe.html).
@@ -269,7 +271,7 @@ The following arguments are supported:
 `ecs_target` support the following:
 
 * `group` - (Optional) Specifies an ECS task group for the task. The maximum length is 255 characters.
-* `launch_type` - (Optional) Specifies the launch type on which your task is running. The launch type that you specify here must match one of the launch type (compatibilities) of the target task. Valid values are EC2 or FARGATE.
+* `launch_type` - (Optional) Specifies the launch type on which your task is running. The launch type that you specify here must match one of the launch type (compatibilities) of the target task. Valid values are `EC2` or `FARGATE`.
 * `network_configuration` - (Optional) Use this if the ECS task uses the awsvpc network mode. This specifies the VPC subnets and security groups associated with the task, and whether a public IP address is to be used. Required if launch_type is FARGATE because the awsvpc mode is required for Fargate tasks.
 * `platform_version` - (Optional) Specifies the platform version for the task. Specify only the numeric portion of the platform version, such as 1.1.0. This is used only if LaunchType is FARGATE. For more information about valid platform versions, see [AWS Fargate Platform Versions](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
 * `task_count` - (Optional) The number of tasks to create based on the TaskDefinition. The default is 1.
@@ -301,11 +303,15 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 `input_transformer` support the following:
 
 * `input_paths` - (Optional) Key value pairs specified in the form of JSONPath (for example, time = $.time)
+    * You can have as many as 10 key-value pairs.
+    * You must use JSON dot notation, not bracket notation.
+    * The keys can't start with "AWS".
+
 * `input_template` - (Required) Structure containing the template body.
 
 ## Import
 
-Cloud Watch Event Target can be imported using the role event_rule and target_id separated by `/`.
+EventBridge Targets can be imported using the role event_rule and target_id separated by `/`.
 
  ```
 $ terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id

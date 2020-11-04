@@ -1,7 +1,6 @@
 SWEEP?=us-east-1,us-west-2
 TEST?=./...
 SWEEP_DIR?=./aws
-GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 PKG_NAME=aws
 TEST_COUNT?=1
 ACCTEST_TIMEOUT?=120m
@@ -14,6 +13,7 @@ build: fmtcheck
 
 gen:
 	rm -f aws/internal/keyvaluetags/*_gen.go
+	rm -f aws/internal/service/**/lister/*_gen.go
 	go generate ./...
 
 sweep:
@@ -21,7 +21,7 @@ sweep:
 	go test $(SWEEP_DIR) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
 
 test: fmtcheck
-	go test $(TEST) $(TESTARGS) -timeout=120s -parallel=4
+	go test $(TEST) $(TESTARGS) -timeout=5m -parallel=4
 
 testacc: fmtcheck
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
@@ -31,14 +31,14 @@ testacc: fmtcheck
 		echo "For example if updating aws/resource_aws_acm_certificate.go, use the test names in aws/resource_aws_acm_certificate_test.go starting with TestAcc and up to the underscore:"; \
 		echo "make testacc TESTARGS='-run=TestAccAWSAcmCertificate_'"; \
 		echo ""; \
-		echo "See the contributing guide for more information: https://github.com/terraform-providers/terraform-provider-aws/blob/master/docs/contributing/running-and-writing-acceptance-tests.md"; \
+		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-aws/blob/master/docs/contributing/running-and-writing-acceptance-tests.md"; \
 		exit 1; \
 	fi
 	TF_ACC=1 go test ./$(PKG_NAME) -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME) ./awsproviderlint
+	gofmt -s -w ./$(PKG_NAME) $(filter-out ./awsproviderlint/go% ./awsproviderlint/README.md ./awsproviderlint/vendor, $(wildcard ./awsproviderlint/*))
 
 # Currently required by tf-deploy compile
 fmtcheck:
@@ -55,10 +55,6 @@ depscheck:
 	@go mod tidy
 	@git diff --exit-code -- go.mod go.sum || \
 		(echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
-	@echo "==> Checking source code with go mod vendor..."
-	@go mod vendor
-	@git diff --compact-summary --exit-code -- vendor || \
-		(echo; echo "Unexpected difference in vendor/ directory. Run 'go mod vendor' command or revert any go.mod/go.sum/vendor changes and commit."; exit 1)
 
 docs-lint:
 	@echo "==> Checking docs against linters..."
@@ -83,7 +79,7 @@ docscheck:
 		-require-resource-subcategory
 	@misspell -error -source text CHANGELOG.md
 
-lint: golangci-lint awsproviderlint
+lint: golangci-lint awsproviderlint importlint
 
 golangci-lint:
 	@golangci-lint run ./$(PKG_NAME)/...
@@ -99,7 +95,9 @@ awsproviderlint:
 		-AT007 \
 		-AT008 \
 		-AWSAT001 \
+		-AWSAT002 \
 		-AWSAT004 \
+		-AWSAT005 \
 		-AWSR001 \
 		-AWSR002 \
 		-R002 \
@@ -114,6 +112,9 @@ awsproviderlint:
 		-R012 \
 		-R013 \
 		-R014 \
+		-R015 \
+		-R016 \
+		-R017 \
 		-S001 \
 		-S002 \
 		-S003 \
@@ -160,12 +161,17 @@ awsproviderlint:
 		-V008 \
 		./$(PKG_NAME)
 
+importlint:
+	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
+
 tools:
-	GO111MODULE=on go install ./awsproviderlint
-	GO111MODULE=on go install github.com/bflad/tfproviderdocs
-	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
-	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	GO111MODULE=on go install github.com/katbyte/terrafmt
+	cd awsproviderlint && GO111MODULE=on go install .
+	cd tools && GO111MODULE=on go install github.com/bflad/tfproviderdocs
+	cd tools && GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
+	cd tools && GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	cd tools && GO111MODULE=on go install github.com/katbyte/terrafmt
+	cd tools && GO111MODULE=on go install github.com/terraform-linters/tflint
+	cd tools && GO111MODULE=on go install github.com/pavius/impi/cmd/impi
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \

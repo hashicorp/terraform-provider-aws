@@ -17,7 +17,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
@@ -49,7 +49,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
@@ -72,7 +72,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_ALBEndpoint_ClientIP(t *testing.T)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
@@ -133,7 +133,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_InstanceEndpoint(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
@@ -175,7 +175,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_update(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
@@ -213,7 +213,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_tcp(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
 		Steps: []resource.TestStep{
@@ -483,9 +483,9 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
-  subnet_id         = aws_subnet.test.id
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
 
   tags = {
     Name = %[1]q
@@ -513,7 +513,7 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
 
   endpoint_configuration {
     endpoint_id                    = aws_instance.test.id
-	weight                         = 20
+    weight                         = 20
     client_ip_preservation_enabled = true
   }
 
@@ -574,11 +574,11 @@ func testAccGlobalAcceleratorEndpointGroup_tcp(rInt int) string {
 resource "aws_globalaccelerator_accelerator" "example" {
   name            = "tf-%d"
   ip_address_type = "IPV4"
-	enabled         = false
+  enabled         = false
 }
 
 resource "aws_globalaccelerator_listener" "example" {
-  accelerator_arn = "${aws_globalaccelerator_accelerator.example.id}"
+  accelerator_arn = aws_globalaccelerator_accelerator.example.id
   protocol        = "TCP"
 
   port_range {
@@ -592,14 +592,14 @@ data "aws_region" "current" {}
 resource "aws_eip" "example" {}
 
 resource "aws_globalaccelerator_endpoint_group" "example" {
-  listener_arn = "${aws_globalaccelerator_listener.example.id}"
+  listener_arn = aws_globalaccelerator_listener.example.id
 
   endpoint_configuration {
-    endpoint_id = "${aws_eip.example.id}"
-    weight = 10
+    endpoint_id = aws_eip.example.id
+    weight      = 10
   }
 
-  endpoint_group_region         = "${data.aws_region.current.name}"
+  endpoint_group_region         = data.aws_region.current.name
   health_check_interval_seconds = 30
   health_check_port             = 1234
   health_check_protocol         = "TCP"

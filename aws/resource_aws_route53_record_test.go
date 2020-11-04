@@ -2,19 +2,17 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
-
-	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestCleanRecordName(t *testing.T) {
@@ -1181,7 +1179,7 @@ resource "aws_route53_record" "default" {
 resource "aws_route53_record" "overwriting" {
   depends_on = [aws_route53_record.default]
 
-  allow_overwrite = %v
+  allow_overwrite = %t
   zone_id         = aws_route53_zone.main.zone_id
   name            = "www.notexample.com"
   type            = "A"

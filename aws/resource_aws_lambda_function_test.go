@@ -409,8 +409,13 @@ func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLambdaConfigVersioned("test-fixtures/lambdatest.zip", funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, "1")),
+				),
 			},
 			{
+				// Test for changed code
 				PreConfig: func() {
 					if err := testAccCreateZipFromFiles(map[string]string{"test-fixtures/lambda_func_modified.js": "lambda.js"}, zipFile); err != nil {
 						t.Fatalf("error creating zip from files: %s", err)
@@ -422,7 +427,7 @@ func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
 					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "version", version),
 					testAccCheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, version)),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
@@ -430,6 +435,7 @@ func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
 				),
 			},
 			{
+				// Test for changed runtime
 				PreConfig: func() {
 					timeBeforeUpdate = time.Now()
 				},
@@ -438,7 +444,7 @@ func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
 					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					resource.TestMatchResourceAttr(resourceName, "version", regexp.MustCompile("^3$")),
+					resource.TestCheckResourceAttr(resourceName, "version", versionUpdated),
 					testAccCheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, versionUpdated)),
 					resource.TestCheckResourceAttr(resourceName, "runtime", lambda.RuntimeNodejs10X),
 					func(s *terraform.State) error {
@@ -457,7 +463,7 @@ func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
 }
 
 func TestAccAWSLambdaFunction_enablePublish(t *testing.T) {
-	var conf lambda.GetFunctionOutput
+	var conf1, conf2, conf3 lambda.GetFunctionOutput
 
 	rString := acctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_enable_publish_%s", rString)
@@ -478,18 +484,21 @@ func TestAccAWSLambdaFunction_enablePublish(t *testing.T) {
 			{
 				Config: testAccAWSLambdaConfigPublishable(fileName, funcName, policyName, roleName, sgName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf1),
+					testAccCheckAwsLambdaFunctionName(&conf1, funcName),
+					resource.TestCheckResourceAttr(resourceName, "publish", "false"),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", unpublishedVersion),
 					testAccCheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, unpublishedVersion)),
 				),
 			},
 			{
+				// No changes, except to `publish`. This should publish a new version.
 				Config: testAccAWSLambdaConfigPublishable(fileName, funcName, policyName, roleName, sgName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf2),
+					testAccCheckAwsLambdaFunctionName(&conf2, funcName),
+					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", publishedVersion),
 					testAccCheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, publishedVersion)),
@@ -500,6 +509,17 @@ func TestAccAWSLambdaFunction_enablePublish(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			{
+				// No changes, `publish` is true. This should not publish a new version.
+				Config: testAccAWSLambdaConfigPublishable(fileName, funcName, policyName, roleName, sgName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf3),
+					testAccCheckAwsLambdaFunctionName(&conf3, funcName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					resource.TestCheckResourceAttr(resourceName, "version", publishedVersion),
+					testAccCheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, publishedVersion)),
+				),
 			},
 		},
 	})
@@ -774,7 +794,7 @@ func TestAccAWSLambdaFunction_tracingConfig(t *testing.T) {
 // This test is to verify the existing behavior in the Lambda API where the KMS Key ARN
 // is not returned if environment variables are not in use. If the API begins saving this
 // value and the kms_key_arn check begins failing, the documentation should be updated.
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6366
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6366
 func TestAccAWSLambdaFunction_KmsKeyArn_NoEnvironmentVariables(t *testing.T) {
 	var function1 lambda.GetFunctionOutput
 
@@ -1044,7 +1064,7 @@ func TestAccAWSLambdaFunction_VPC_withInvocation(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/10044
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10044
 func TestAccAWSLambdaFunction_VpcConfig_ProperIamDependencies(t *testing.T) {
 	var function lambda.GetFunctionOutput
 
@@ -1594,6 +1614,7 @@ func testAccCheckAwsLambdaFunctionName(function *lambda.GetFunctionOutput, expec
 	}
 }
 
+// Rename to correctly identify as using API values
 func testAccCheckAWSLambdaFunctionVersion(function *lambda.GetFunctionOutput, expectedVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		c := function.Configuration
@@ -2002,6 +2023,7 @@ resource "aws_lambda_function" "test" {
 `, keyDesc, funcName)
 }
 
+// This is the same as testAccAWSLambdaConfigPublishable(..., true)
 func testAccAWSLambdaConfigVersioned(fileName, funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
@@ -2064,7 +2086,6 @@ resource "aws_efs_access_point" "access_point_1" {
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
-  publish       = true
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
@@ -2120,7 +2141,6 @@ resource "aws_efs_access_point" "access_point_2" {
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
-  publish       = true
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"

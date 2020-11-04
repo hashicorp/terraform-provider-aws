@@ -48,7 +48,7 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      7,
-				ValidateFunc: validation.IntBetween(0, 35),
+				ValidateFunc: validation.IntBetween(0, 90),
 			},
 			"copy_tags_to_backups": {
 				Type:     schema.TypeBool,

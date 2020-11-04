@@ -94,7 +94,7 @@ The following arguments are supported:
 * `partition_keys` - (Optional) A list of columns by which the table is partitioned. Only primitive types are supported as partition keys.
 * `view_original_text` - (Optional) If the table is a view, the original text of the view; otherwise null.
 * `view_expanded_text` - (Optional) If the table is a view, the expanded text of the view; otherwise null.
-* `table_type` - (Optional) The type of this table (EXTERNAL_TABLE, VIRTUAL_VIEW, etc.).
+* `table_type` - (Optional) The type of this table (EXTERNAL_TABLE, VIRTUAL_VIEW, etc.). While optional, some Athena DDL queries such as `ALTER TABLE` and `SHOW CREATE TABLE` will fail if this argument is empty.
 * `parameters` - (Optional) Properties associated with this table, as a list of key-value pairs.
 
 ##### storage_descriptor

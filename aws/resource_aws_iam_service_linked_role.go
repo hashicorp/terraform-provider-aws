@@ -87,11 +87,11 @@ func resourceAwsIamServiceLinkedRoleCreate(d *schema.ResourceData, meta interfac
 		AWSServiceName: aws.String(serviceName),
 	}
 
-	if v, ok := d.GetOk("custom_suffix"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("custom_suffix"); ok {
 		params.CustomSuffix = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("description"); ok {
 		params.Description = aws.String(v.(string))
 	}
 

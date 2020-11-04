@@ -37,9 +37,9 @@ func TestAccDataSourceAWSRDSCluster_basic(t *testing.T) {
 }
 
 func testAccDataSourceAwsRdsClusterConfigBasic(clusterName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "%s"
+  cluster_identifier              = "%[1]s"
   database_name                   = "mydb"
   db_cluster_parameter_group_name = "default.aurora5.6"
   db_subnet_group_name            = aws_db_subnet_group.test.name
@@ -63,7 +63,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "a" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.0.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-rds-cluster-data-source-basic"
@@ -73,7 +73,7 @@ resource "aws_subnet" "a" {
 resource "aws_subnet" "b" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
     Name = "tf-acc-rds-cluster-data-source-basic"
@@ -81,12 +81,12 @@ resource "aws_subnet" "b" {
 }
 
 resource "aws_db_subnet_group" "test" {
-  name       = "%s"
+  name       = "%[1]s"
   subnet_ids = [aws_subnet.a.id, aws_subnet.b.id]
 }
 
 data "aws_rds_cluster" "test" {
   cluster_identifier = aws_rds_cluster.test.cluster_identifier
 }
-`, clusterName, clusterName)
+`, clusterName))
 }

@@ -565,7 +565,7 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 		ApplicationName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("code"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("code"); ok {
 		createOpts.ApplicationCode = aws.String(v.(string))
 	}
 
@@ -598,11 +598,11 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		output, err := conn.CreateApplication(createOpts)
 		if err != nil {
-			// Kinesis Stream: https://github.com/terraform-providers/terraform-provider-aws/issues/7032
+			// Kinesis Stream: https://github.com/hashicorp/terraform-provider-aws/issues/7032
 			if isAWSErr(err, kinesisanalytics.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
 				return resource.RetryableError(err)
 			}
-			// Kinesis Firehose: https://github.com/terraform-providers/terraform-provider-aws/issues/7394
+			// Kinesis Firehose: https://github.com/hashicorp/terraform-provider-aws/issues/7394
 			if isAWSErr(err, kinesisanalytics.ErrCodeInvalidArgumentException, "Kinesis Analytics doesn't have sufficient privileges") {
 				return resource.RetryableError(err)
 			}
@@ -1086,7 +1086,7 @@ func createApplicationUpdateOpts(d *schema.ResourceData) *kinesisanalytics.Appli
 	applicationUpdate := &kinesisanalytics.ApplicationUpdate{}
 
 	if d.HasChange("code") {
-		if v, ok := d.GetOk("code"); ok && v.(string) != "" {
+		if v, ok := d.GetOk("code"); ok {
 			applicationUpdate.ApplicationCodeUpdate = aws.String(v.(string))
 		}
 	}

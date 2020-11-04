@@ -148,7 +148,7 @@ func TestAccAWSDefaultSecurityGroup_Classic_empty(t *testing.T) {
 
 	TestAccSkip(t, "This resource does not currently clear tags when adopting the resource")
 	// Additional references:
-	//  * https://github.com/terraform-providers/terraform-provider-aws/issues/14631
+	//  * https://github.com/hashicorp/terraform-provider-aws/issues/14631
 
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
@@ -218,7 +218,7 @@ func testAccCheckAWSDefaultSecurityGroupARN(resourceName string, group *ec2.Secu
 const testAccAWSDefaultSecurityGroupConfig_Vpc = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
-  
+
   tags = {
     Name = "terraform-testacc-default-security-group"
   }

@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -21,7 +20,7 @@ func TestAccAwsAppsyncFunction_basic(t *testing.T) {
 	var config appsync.FunctionConfiguration
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
 		Steps: []resource.TestStep{
@@ -59,7 +58,7 @@ func TestAccAwsAppsyncFunction_description(t *testing.T) {
 	var config appsync.FunctionConfiguration
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
 		Steps: []resource.TestStep{
@@ -93,7 +92,7 @@ func TestAccAwsAppsyncFunction_responseMappingTemplate(t *testing.T) {
 	var config appsync.FunctionConfiguration
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
 		Steps: []resource.TestStep{
@@ -119,7 +118,7 @@ func TestAccAwsAppsyncFunction_disappears(t *testing.T) {
 	var config appsync.FunctionConfiguration
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
 		Steps: []resource.TestStep{
@@ -199,10 +198,10 @@ func testAccAWSAppsyncFunctionConfig(r1, r2, region string) string {
 %[1]s
 
 resource "aws_appsync_function" "test" {
-	api_id      = "${aws_appsync_graphql_api.test.id}"
-	data_source = "${aws_appsync_datasource.test.name}"
-	name        = "%[2]s"
-	request_mapping_template = <<EOF
+  api_id                   = aws_appsync_graphql_api.test.id
+  data_source              = aws_appsync_datasource.test.name
+  name                     = "%[2]s"
+  request_mapping_template = <<EOF
 {
 	"version": "2018-05-29",
 	"method": "GET",
@@ -212,7 +211,8 @@ resource "aws_appsync_function" "test" {
 	}
 }
 EOF
-	response_mapping_template = <<EOF
+
+  response_mapping_template = <<EOF
 #if($ctx.result.statusCode == 200)
 	$ctx.result.body
 #else
@@ -220,7 +220,6 @@ EOF
 #end
 EOF
 }
-
 `, testAccAppsyncDatasourceConfig_DynamoDBConfig_Region(r1, region), r2)
 }
 
@@ -229,11 +228,11 @@ func testAccAWSAppsyncFunctionConfigDescription(r1, r2, region, description stri
 %[1]s
 
 resource "aws_appsync_function" "test" {
-	api_id      = "${aws_appsync_graphql_api.test.id}"
-	data_source = "${aws_appsync_datasource.test.name}"
-	name        = "%[2]s"
-	description = "%[3]s"
-	request_mapping_template = <<EOF
+  api_id                   = aws_appsync_graphql_api.test.id
+  data_source              = aws_appsync_datasource.test.name
+  name                     = "%[2]s"
+  description              = "%[3]s"
+  request_mapping_template = <<EOF
 {
 	"version": "2018-05-29",
 	"method": "GET",
@@ -243,7 +242,8 @@ resource "aws_appsync_function" "test" {
 	}
 }
 EOF
-	response_mapping_template = <<EOF
+
+  response_mapping_template = <<EOF
 #if($ctx.result.statusCode == 200)
 	$ctx.result.body
 #else
@@ -251,7 +251,6 @@ EOF
 #end
 EOF
 }
-
 `, testAccAppsyncDatasourceConfig_DynamoDBConfig_Region(r1, region), r2, description)
 }
 
@@ -260,10 +259,10 @@ func testAccAWSAppsyncFunctionConfigResponseMappingTemplate(r1, r2, region strin
 %[1]s
 
 resource "aws_appsync_function" "test" {
-	api_id      = "${aws_appsync_graphql_api.test.id}"
-	data_source = "${aws_appsync_datasource.test.name}"
-	name        = "%[2]s"
-	request_mapping_template = <<EOF
+  api_id                   = aws_appsync_graphql_api.test.id
+  data_source              = aws_appsync_datasource.test.name
+  name                     = "%[2]s"
+  request_mapping_template = <<EOF
 {
 	"version": "2018-05-29",
 	"method": "GET",
@@ -273,7 +272,8 @@ resource "aws_appsync_function" "test" {
 	}
 }
 EOF
-	response_mapping_template = <<EOF
+
+  response_mapping_template = <<EOF
 #if($ctx.result.statusCode == 200)
 	$ctx.result.body
 #else
@@ -281,6 +281,5 @@ EOF
 #end
 EOF
 }
-
 `, testAccAppsyncDatasourceConfig_DynamoDBConfig_Region(r1, region), r2)
 }

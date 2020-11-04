@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -182,10 +181,10 @@ func TestAccAWSLBCookieStickinessPolicy_missingLB(t *testing.T) {
 }
 
 func testAccLBCookieStickinessPolicyConfig(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"
-  availability_zones = ["us-west-2a"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port     = 8000
@@ -200,15 +199,15 @@ resource "aws_lb_cookie_stickiness_policy" "foo" {
   load_balancer = aws_elb.lb.id
   lb_port       = 80
 }
-`, rName)
+`, rName))
 }
 
 // Sets the cookie_expiration_period to 300s.
 func testAccLBCookieStickinessPolicyConfigUpdate(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"
-  availability_zones = ["us-west-2a"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port     = 8000
@@ -224,15 +223,15 @@ resource "aws_lb_cookie_stickiness_policy" "foo" {
   lb_port                  = 80
   cookie_expiration_period = 300
 }
-`, rName)
+`, rName))
 }
 
 // attempt to destroy the policy, but we'll delete the LB in the PreConfig
 func testAccLBCookieStickinessPolicyConfigDestroy(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"
-  availability_zones = ["us-west-2a"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port     = 8000
@@ -241,5 +240,5 @@ resource "aws_elb" "lb" {
     lb_protocol       = "http"
   }
 }
-`, rName)
+`, rName))
 }

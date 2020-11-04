@@ -296,7 +296,7 @@ Security Groups and Subnets referenced in these attributes must all be within th
 
 **log_publishing_options** supports the following attribute:
 
-* `log_type` - (Required) A type of Elasticsearch log. Valid values: INDEX_SLOW_LOGS, SEARCH_SLOW_LOGS, ES_APPLICATION_LOGS
+* `log_type` - (Required) A type of Elasticsearch log. Valid values: INDEX_SLOW_LOGS, SEARCH_SLOW_LOGS, ES_APPLICATION_LOGS, AUDIT_LOGS
 * `cloudwatch_log_group_arn` - (Required) ARN of the Cloudwatch log group to which log needs to be published.
 * `enabled` - (Optional, Default: true) Specifies whether given log publishing option is enabled or not.
 

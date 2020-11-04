@@ -145,11 +145,11 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 		params.EndpointConfiguration = expandApiGatewayEndpointConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("api_key_source"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("api_key_source"); ok {
 		params.ApiKeySource = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("policy"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("policy"); ok {
 		params.Policy = aws.String(v.(string))
 	}
 

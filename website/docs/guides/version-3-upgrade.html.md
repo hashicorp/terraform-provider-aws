@@ -10,7 +10,7 @@ description: |-
 
 Version 3.0.0 of the AWS provider for Terraform is a major release and includes some changes that you will need to consider when upgrading. This guide is intended to help with that process and focuses only on changes from version 2.X to version 3.0.0. See the [Version 2 Upgrade Guide](/docs/providers/aws/guides/version-2-upgrade.html) for information about upgrading from 1.X to version 2.0.0.
 
-Most of the changes outlined in this guide have been previously marked as deprecated in the Terraform plan/apply output throughout previous provider releases. These changes, such as deprecation notices, can always be found in the [Terraform AWS Provider CHANGELOG](https://github.com/terraform-providers/terraform-provider-aws/blob/master/CHANGELOG.md).
+Most of the changes outlined in this guide have been previously marked as deprecated in the Terraform plan/apply output throughout previous provider releases. These changes, such as deprecation notices, can always be found in the [Terraform AWS Provider CHANGELOG](https://github.com/hashicorp/terraform-provider-aws/blob/master/CHANGELOG.md).
 
 ~> **NOTE:** Version 3.0.0 and later of the AWS Provider can only be automatically installed on Terraform 0.12 and later.
 
@@ -23,6 +23,7 @@ Upgrade topics:
 - [Provider Custom Service Endpoint Updates](#provider-custom-service-endpoint-updates)
 - [Data Source: aws_availability_zones](#data-source-aws_availability_zones)
 - [Data Source: aws_lambda_invocation](#data-source-aws_lambda_invocation)
+- [Data Source: aws_launch_template](#data-source-aws_launch_template)
 - [Data Source: aws_route53_resolver_rule](#data-source-aws_route53_resolver_rule)
 - [Data Source: aws_route53_zone](#data-source-aws_route53_zone)
 - [Resource: aws_acm_certificate](#resource-aws_acm_certificate)
@@ -216,6 +217,21 @@ output "lambda_result" {
   value = jsondecode(data.aws_lambda_invocation.example.result)["key1"]
 }
 ```
+
+## Data Source: aws_launch_template
+
+### Error raised if no matching launch template is found
+
+Previously, when a launch template matching the criteria was not found the data source would have been `null`.
+Now this could produce errors similar to the below:
+
+```
+data.aws_launch_template.current: Refreshing state...
+
+Error: error reading launch template: empty output
+```
+
+Configuration that depend on the previous behavior will need to be updated.
 
 ## Data Source: aws_route53_resolver_rule
 
@@ -754,6 +770,8 @@ resource "aws_codepipeline" "example" {
   }
 }
 ```
+
+The configuration could be updated as follows:
 
 ```bash
 $ TF_VAR_github_token=<token> terraform apply

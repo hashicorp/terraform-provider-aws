@@ -8,14 +8,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -141,6 +141,56 @@ func TestAccAWSRDSCluster_basic(t *testing.T) {
 					"skip_final_snapshot",
 					"snapshot_identifier",
 				},
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSCluster_AllowMajorVersionUpgrade(t *testing.T) {
+	var dbCluster1, dbCluster2 rds.DBCluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_rds_cluster.test"
+	// If these hardcoded versions become a maintenance burden, use DescribeDBEngineVersions
+	// either by having a new data source created or implementing the testing similar
+	// to TestAccAWSDmsReplicationInstance_EngineVersion
+	engine := "aurora-postgresql"
+	engineVersion1 := "10.11"
+	engineVersion2 := "11.7"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterConfig_AllowMajorVersionUpgrade(rName, true, engine, engineVersion1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, "engine", engine),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"master_password",
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccAWSClusterConfig_AllowMajorVersionUpgrade(rName, true, engine, engineVersion2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster2),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, "engine", engine),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion2),
+				),
 			},
 		},
 	})
@@ -448,8 +498,8 @@ func TestAccAWSRDSCluster_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports(t *testing.T) {
-	var dbCluster1, dbCluster2, dbCluster3, dbCluster4 rds.DBCluster
+func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports_MySQL(t *testing.T) {
+	var dbCluster1, dbCluster2, dbCluster3 rds.DBCluster
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_rds_cluster.test"
 
@@ -463,7 +513,7 @@ func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.0", "audit"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
 				),
 			},
 			{
@@ -479,12 +529,12 @@ func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAWSClusterConfigEnabledCloudwatchLogsExports2(rName, "error", "slowquery"),
+				Config: testAccAWSClusterConfigEnabledCloudwatchLogsExports2(rName, "slowquery", "error"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.0", "error"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.1", "slowquery"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "slowquery"),
 				),
 			},
 			{
@@ -492,16 +542,42 @@ func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster3),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.0", "error"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports_Postgresql(t *testing.T) {
+	var dbCluster1 rds.DBCluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSClusterConfigEnabledCloudwatchLogsExportsPostgres1(rName, "postgresql"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSClusterExists(resourceName, &dbCluster4),
+					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.0", "postgresql"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "postgresql"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"master_password",
+					"skip_final_snapshot",
+					"snapshot_identifier",
+				},
 			},
 		},
 	})
@@ -686,7 +762,7 @@ func TestAccAWSRDSCluster_ReplicationSourceIdentifier_KmsKeyId(t *testing.T) {
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSClusterDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
@@ -904,7 +980,7 @@ func TestAccAWSRDSCluster_EngineMode_Global(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSClusterConfig_EngineMode(rName, "global"),
+				Config: testAccAWSRDSClusterConfig_EngineMode_Global(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "global"),
@@ -1043,11 +1119,11 @@ func TestAccAWSRDSCluster_EngineVersionWithPrimaryInstance(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(rInt, "aurora-postgresql", "9.6.3"),
+				Config: testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(rInt, "aurora-postgresql", "9.6.17"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "9.6.3"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "9.6.17"),
 				),
 			},
 			{
@@ -1063,11 +1139,11 @@ func TestAccAWSRDSCluster_EngineVersionWithPrimaryInstance(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(rInt, "aurora-postgresql", "9.6.6"),
+				Config: testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(rInt, "aurora-postgresql", "9.6.18"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "9.6.6"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "9.6.18"),
 				),
 			},
 		},
@@ -1121,7 +1197,7 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_EngineMode_Global_Add(t *testi
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSClusterConfig_EngineMode(rName, "global"),
+				Config: testAccAWSRDSClusterConfig_EngineMode_Global(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
@@ -1179,7 +1255,7 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_EngineMode_Global_Remove(t *te
 				},
 			},
 			{
-				Config: testAccAWSRDSClusterConfig_EngineMode(rName, "global"),
+				Config: testAccAWSRDSClusterConfig_EngineMode_Global(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
@@ -1264,7 +1340,7 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_EngineMode_Provisioned(t *test
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13126
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13126
 func TestAccAWSRDSCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *testing.T) {
 	var providers []*schema.Provider
 	var primaryDbCluster, secondaryDbCluster rds.DBCluster
@@ -1277,8 +1353,12 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *te
 	resourceNameSecondary := "aws_rds_cluster.secondary"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
+			testAccPreCheckAWSRdsGlobalCluster(t)
+		},
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1292,7 +1372,7 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *te
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13715
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13715
 func TestAccAWSRDSCluster_GlobalClusterIdentifier_ReplicationSourceIdentifier(t *testing.T) {
 	var providers []*schema.Provider
 	var primaryDbCluster, secondaryDbCluster rds.DBCluster
@@ -1307,7 +1387,7 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_ReplicationSourceIdentifier(t 
 			testAccMultipleRegionPreCheck(t, 2)
 			testAccPreCheckAWSRdsGlobalCluster(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1413,7 +1493,7 @@ func TestAccAWSRDSCluster_ScalingConfiguration(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/11698
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11698
 func TestAccAWSRDSCluster_ScalingConfiguration_DefaultMinCapacity(t *testing.T) {
 	var dbCluster rds.DBCluster
 
@@ -1661,7 +1741,7 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_EngineMode_Serverless(t *testing.T)
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6157
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6157
 func TestAccAWSRDSCluster_SnapshotIdentifier_EngineVersion_Different(t *testing.T) {
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
@@ -1701,7 +1781,7 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_EngineVersion_Different(t *testing.
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6157
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6157
 func TestAccAWSRDSCluster_SnapshotIdentifier_EngineVersion_Equal(t *testing.T) {
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
@@ -1977,7 +2057,7 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_VpcSecurityGroupIds(t *testing.T) {
 	})
 }
 
-// Regression reference: https://github.com/terraform-providers/terraform-provider-aws/issues/5450
+// Regression reference: https://github.com/hashicorp/terraform-provider-aws/issues/5450
 // This acceptance test explicitly tests when snapshot_identifier is set,
 // vpc_security_group_ids is set (which triggered the resource update function),
 // and tags is set which was missing its ARN used for tagging
@@ -2249,6 +2329,40 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot             = true
 }
 `, rName)
+}
+
+func testAccAWSClusterConfig_AllowMajorVersionUpgrade(rName string, allowMajorVersionUpgrade bool, engine string, engineVersion string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  allow_major_version_upgrade = %[2]t
+  apply_immediately           = true
+  cluster_identifier          = %[1]q
+  engine                      = %[3]q
+  engine_version              = %[4]q
+  master_password             = "mustbeeightcharaters"
+  master_username             = "test"
+  skip_final_snapshot         = true
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = aws_rds_cluster.test.engine
+  engine_version             = aws_rds_cluster.test.engine_version
+  preferred_instance_classes = ["db.t3.medium", "db.r5.large", "db.r4.large"]
+}
+
+# Upgrading requires a healthy primary instance
+resource "aws_rds_cluster_instance" "test" {
+  cluster_identifier = aws_rds_cluster.test.id
+  engine             = data.aws_rds_orderable_db_instance.test.engine
+  engine_version     = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier         = %[1]q
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+
+  lifecycle {
+    ignore_changes = [engine_version]
+  }
+}
+`, rName, allowMajorVersionUpgrade, engine, engineVersion)
 }
 
 func testAccAWSClusterConfig_AvailabilityZones(rName string) string {
@@ -3085,6 +3199,19 @@ resource "aws_rds_cluster" "test" {
 `, rName, engineMode)
 }
 
+func testAccAWSRDSClusterConfig_EngineMode_Global(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  engine_mode         = "global"
+  engine_version      = "5.6.10a" # version compatible with engine_mode = "global"
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
+}
+`, rName)
+}
+
 func testAccAWSRDSClusterConfig_EngineMode_Multimaster(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -3144,18 +3271,21 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSRDSClusterConfig_GlobalClusterIdentifier_EngineMode_Global(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_global_cluster" "test" {
-  global_cluster_identifier = %q
+  engine_version            = "5.6.10a" # version compatible with engine_mode = "global"
+  force_destroy             = true      # Partial configuration removal ordering fix for after Terraform 0.12
+  global_cluster_identifier = %[1]q
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier        = %q
+  cluster_identifier        = %[1]q
   global_cluster_identifier = aws_rds_global_cluster.test.id
   engine_mode               = "global"
+  engine_version            = aws_rds_global_cluster.test.engine_version
   master_password           = "barbarbarbar"
   master_username           = "foo"
   skip_final_snapshot       = true
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccAWSRDSClusterConfig_GlobalClusterIdentifier_EngineMode_Global_Update(rName, globalClusterIdentifierResourceName string) string {
@@ -3163,18 +3293,20 @@ func testAccAWSRDSClusterConfig_GlobalClusterIdentifier_EngineMode_Global_Update
 resource "aws_rds_global_cluster" "test" {
   count = 2
 
-  global_cluster_identifier = "%s-${count.index}"
+  engine_version            = "5.6.10a" # version compatible with engine_mode = "global"
+  global_cluster_identifier = "%[1]s-${count.index}"
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier        = %q
-  global_cluster_identifier = %s.id
+  cluster_identifier        = %[1]q
+  global_cluster_identifier = %[2]s.id
   engine_mode               = "global"
+  engine_version            = %[2]s.engine_version
   master_password           = "barbarbarbar"
   master_username           = "foo"
   skip_final_snapshot       = true
 }
-`, rName, rName, globalClusterIdentifierResourceName)
+`, rName, globalClusterIdentifierResourceName)
 }
 
 func testAccAWSRDSClusterConfig_GlobalClusterIdentifier_EngineMode_Provisioned(rName string) string {

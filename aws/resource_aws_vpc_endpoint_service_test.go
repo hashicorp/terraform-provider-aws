@@ -294,8 +294,8 @@ resource "aws_lb" "test1" {
   name = %[1]q
 
   subnets = [
-    "${aws_subnet.test1.id}",
-    "${aws_subnet.test2.id}",
+    aws_subnet.test1.id,
+    aws_subnet.test2.id,
   ]
 
   load_balancer_type         = "network"
@@ -312,8 +312,8 @@ resource "aws_lb" "test2" {
   name = %[2]q
 
   subnets = [
-    "${aws_subnet.test1.id}",
-    "${aws_subnet.test2.id}",
+    aws_subnet.test1.id,
+    aws_subnet.test2.id,
   ]
 
   load_balancer_type         = "network"
@@ -336,9 +336,9 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_subnet" "test1" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
@@ -346,9 +346,9 @@ resource "aws_subnet" "test1" {
 }
 
 resource "aws_subnet" "test2" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.2.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
     Name = %[1]q
@@ -367,7 +367,7 @@ resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
 
   network_load_balancer_arns = [
-    "${aws_lb.test1.arn}",
+    aws_lb.test1.arn,
   ]
 }
 `)
@@ -381,11 +381,11 @@ resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
 
   network_load_balancer_arns = [
-    "${aws_lb.test1.arn}",
+    aws_lb.test1.arn,
   ]
 
   allowed_principals = [
-    "${data.aws_caller_identity.current.arn}",
+    data.aws_caller_identity.current.arn,
   ]
 
   tags = {
@@ -403,14 +403,14 @@ resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = true
 
   network_load_balancer_arns = [
-    "${aws_lb.test1.arn}",
-    "${aws_lb.test2.arn}",
+    aws_lb.test1.arn,
+    aws_lb.test2.arn,
   ]
 
   allowed_principals = []
 
   tags = {
-    Name  = %[1]q
+    Name = %[1]q
   }
 }
 `, rName1))
@@ -424,7 +424,7 @@ resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
 
   network_load_balancer_arns = [
-    "${aws_lb.test1.arn}",
+    aws_lb.test1.arn,
   ]
 
   tags = {
@@ -442,7 +442,7 @@ resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
 
   network_load_balancer_arns = [
-    "${aws_lb.test1.arn}",
+    aws_lb.test1.arn,
   ]
 
   tags = {

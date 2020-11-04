@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -42,6 +43,11 @@ func resourceAwsRDSCluster() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"allow_major_version_upgrade": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 
 			"availability_zones": {
@@ -390,7 +396,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 			},
 
 			"enabled_cloudwatch_logs_exports": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -462,9 +468,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			opts.AvailabilityZones = expandStringList(attr.List())
 		}
 
-		// Need to check value > 0 due to:
-		// InvalidParameterValue: Backtrack is not enabled for the aurora-postgresql engine.
-		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
+		if v, ok := d.GetOk("backtrack_window"); ok {
 			opts.BacktrackWindow = aws.Int64(int64(v.(int)))
 		}
 
@@ -485,8 +489,8 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			opts.DBSubnetGroupName = aws.String(attr.(string))
 		}
 
-		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
-			opts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
+			opts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOk("engine_version"); ok {
@@ -564,9 +568,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			Tags:                tags,
 		}
 
-		// Need to check value > 0 due to:
-		// InvalidParameterValue: Backtrack is not enabled for the aurora-postgresql engine.
-		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
+		if v, ok := d.GetOk("backtrack_window"); ok {
 			createOpts.BacktrackWindow = aws.Int64(int64(v.(int)))
 		}
 
@@ -618,8 +620,8 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			createOpts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
 		}
 
-		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
-			createOpts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
+			createOpts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOkExists("storage_encrypted"); ok {
@@ -674,20 +676,19 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		// unless the cluster is a read-replica. This also applies to clusters
 		// within a global cluster. Providing a password and/or username for
 		// a replica will result in an InvalidParameterValue error.
-		if v, ok := d.GetOk("master_password"); ok && v.(string) != "" {
+		if v, ok := d.GetOk("master_password"); ok {
 			createOpts.MasterUserPassword = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("master_username"); ok && v.(string) != "" {
+		if v, ok := d.GetOk("master_username"); ok {
 			createOpts.MasterUsername = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("enable_http_endpoint"); ok {
 			createOpts.EnableHttpEndpoint = aws.Bool(v.(bool))
 		}
-		// Need to check value > 0 due to:
-		// InvalidParameterValue: Backtrack is not enabled for the aurora-postgresql engine.
-		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
+
+		if v, ok := d.GetOk("backtrack_window"); ok {
 			createOpts.BacktrackWindow = aws.Int64(int64(v.(int)))
 		}
 
@@ -747,8 +748,8 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			createOpts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
 		}
 
-		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
-			createOpts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
+			createOpts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOk("replication_source_identifier"); ok && createOpts.GlobalClusterIdentifier == nil {
@@ -982,6 +983,10 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		DBClusterIdentifier: aws.String(d.Id()),
 	}
 
+	if v, ok := d.GetOk("allow_major_version_upgrade"); ok {
+		req.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
+	}
+
 	if d.HasChange("backtrack_window") {
 		req.BacktrackWindow = aws.Int64(int64(d.Get("backtrack_window").(int)))
 		requestUpdate = true
@@ -1042,7 +1047,17 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("enabled_cloudwatch_logs_exports") {
-		req.CloudwatchLogsExportConfiguration = buildCloudwatchLogsExportConfiguration(d)
+		oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
+		o := oraw.(*schema.Set)
+		n := nraw.(*schema.Set)
+
+		enable := n.Difference(o)
+		disable := o.Difference(n)
+
+		req.CloudwatchLogsExportConfiguration = &rds.CloudwatchLogsExportConfiguration{
+			EnableLogTypes:  expandStringSet(enable),
+			DisableLogTypes: expandStringSet(disable),
+		}
 		requestUpdate = true
 	}
 
@@ -1108,7 +1123,9 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		log.Printf("[DEBUG] Removing RDS Cluster from RDS Global Cluster: %s", input)
-		if _, err := conn.RemoveFromGlobalCluster(input); err != nil {
+		_, err := conn.RemoveFromGlobalCluster(input)
+
+		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
 			return fmt.Errorf("error removing RDS Cluster (%s) from RDS Global Cluster: %s", d.Id(), err)
 		}
 	}
@@ -1168,7 +1185,7 @@ func resourceAwsRDSClusterDelete(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[DEBUG] Removing RDS Cluster from RDS Global Cluster: %s", input)
 		_, err := conn.RemoveFromGlobalCluster(input)
 
-		if err != nil && !isAWSErr(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
+		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
 			return fmt.Errorf("error removing RDS Cluster (%s) from RDS Global Cluster: %s", d.Id(), err)
 		}
 	}

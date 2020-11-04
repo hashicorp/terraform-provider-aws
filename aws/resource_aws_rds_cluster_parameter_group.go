@@ -8,10 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const rdsClusterParameterGroupMaxParamsBulkEdit = 20
@@ -267,6 +267,11 @@ func resourceAwsRDSClusterParameterGroupUpdate(d *schema.ResourceData, meta inte
 					}
 					return nil
 				})
+
+				if tfresource.TimedOut(err) {
+					_, err = rdsconn.ResetDBClusterParameterGroup(&resetOpts)
+				}
+
 				if err != nil {
 					return fmt.Errorf("error resetting DB Cluster Parameter Group: %s", err)
 				}

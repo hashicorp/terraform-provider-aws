@@ -64,12 +64,17 @@ func TestAccAWSDbInstanceDataSource_ec2Classic(t *testing.T) {
 
 func testAccAWSDBInstanceDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = "mariadb"
+  preferred_instance_classes = ["db.t3.micro", "db.t2.micro", "db.t3.small"]
+}
+
 resource "aws_db_instance" "bar" {
   identifier = "datasource-test-terraform-%d"
 
   allocated_storage = 10
-  engine            = "mariadb"
-  instance_class    = "db.t2.micro"
+  engine            = data.aws_rds_orderable_db_instance.test.engine
+  instance_class    = data.aws_rds_orderable_db_instance.test.instance_class
   name              = "baz"
   password          = "barbarbarbar"
   username          = "foo"
@@ -95,10 +100,29 @@ data "aws_db_instance" "bar" {
 
 func testAccAWSDBInstanceDataSourceConfig_ec2Classic(rInt int) string {
 	return fmt.Sprintf(`
-%s
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = "mysql"
+  engine_version             = "5.6.41"
+  preferred_instance_classes = ["db.m3.medium", "db.m3.large", "db.r3.large"]
+}
+
+resource "aws_db_instance" "bar" {
+  identifier           = "foobarbaz-test-terraform-%[1]d"
+  allocated_storage    = 10
+  engine               = data.aws_rds_orderable_db_instance.test.engine
+  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  name                 = "baz"
+  password             = "barbarbarbar"
+  username             = "foo"
+  publicly_accessible  = true
+  security_group_names = ["default"]
+  parameter_group_name = "default.mysql5.6"
+  skip_final_snapshot  = true
+}
 
 data "aws_db_instance" "bar" {
   db_instance_identifier = aws_db_instance.bar.identifier
 }
-`, testAccAWSDBInstanceConfigEc2Classic(rInt))
+`, rInt)
 }

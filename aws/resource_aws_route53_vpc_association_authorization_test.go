@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53"
 )
 
 func TestAccAWSRoute53VpcAssociationAuthorization_basic(t *testing.T) {
@@ -21,7 +20,7 @@ func TestAccAWSRoute53VpcAssociationAuthorization_basic(t *testing.T) {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckRoute53VPCAssociationAuthorizationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -49,7 +48,7 @@ func TestAccAWSRoute53VpcAssociationAuthorization_disappears(t *testing.T) {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckRoute53VPCAssociationAuthorizationDestroy,
 		Steps: []resource.TestStep{
 			{

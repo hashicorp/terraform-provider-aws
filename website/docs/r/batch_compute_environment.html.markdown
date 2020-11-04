@@ -129,6 +129,7 @@ resource "aws_batch_compute_environment" "sample" {
 * `compute_resources` - (Optional) Details of the compute resources managed by the compute environment. This parameter is required for managed compute environments. See details below.
 * `service_role` - (Required) The full Amazon Resource Name (ARN) of the IAM role that allows AWS Batch to make calls to other AWS services on your behalf.
 * `state` - (Optional) The state of the compute environment. If the state is `ENABLED`, then the compute environment accepts jobs from a queue and can scale out automatically based on queues. Valid items are `ENABLED` or `DISABLED`. Defaults to `ENABLED`.
+* `tags` - (Optional) Key-value map of resource tags
 * `type` - (Required) The type of the compute environment. Valid items are `MANAGED` or `UNMANAGED`.
 
 **compute_resources** is a child block with a single argument:
