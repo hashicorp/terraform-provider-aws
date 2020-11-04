@@ -15,6 +15,8 @@
         - [Other Recommended Variables](#other-recommended-variables)
         - [Basic Acceptance Tests](#basic-acceptance-tests)
         - [PreChecks](#prechecks)
+            - [Standard Provider PreChecks](#standard-provider-prechecks)
+            - [Custom PreChecks](#custom-prechecks)
         - [Disappears Acceptance Tests](#disappears-acceptance-tests)
         - [Per Attribute Acceptance Tests](#per-attribute-acceptance-tests)
         - [Cross-Account Acceptance Tests](#cross-account-acceptance-tests)
@@ -522,12 +524,34 @@ func TestAccAwsExampleThing_basic(t *testing.T) {
 
 Extend the default PreCheck by adding calls to functions in the anonymous PreCheck function. The functions can be existing functions in the provider or custom functions you add for new capabilities.
 
-These are some of the existing functions:
+##### Standard Provider PreChecks
+
+If you add a new test that has preconditions which are checked by an existing provider function, use that standard PreCheck instead of creating a new one. Some existing tests are missing standard PreChecks and you can help by adding them where appropriate.
+
+These are some of the standard provider PreChecks:
 
 * `testAccPartitionHasServicePreCheck(serviceId string, t *testing.T)` checks whether the current partition lists the service as part of its offerings. Note: AWS may not add new or public preview services to the service list immediately. This function will return a false positive in that case.
 * `testAccOrganizationsAccountPreCheck(t *testing.T)` checks whether the current account can perform AWS Organizations tests.
 * `testAccAlternateAccountPreCheck(t *testing.T)` checks whether the environment is set up for tests across accounts.
 * `testAccMultipleRegionPreCheck(t *testing.T, regions int)` checks whether the environment is set up for tests across regions.
+
+This is an example of using a standard PreCheck function. For an established service, such as WAF or FSx, use `testAccPartitionHasServicePreCheck()` and the service endpoint ID to check that a partition supports the service.
+
+```go
+func TestAccAwsExampleThing_basic(t *testing.T) {
+  rName := acctest.RandomWithPrefix("tf-acc-test")
+  resourceName := "aws_example_thing.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(waf.EndpointsID, t) },
+    // ... additional checks follow ...
+  })
+}
+```
+
+##### Custom PreChecks
+
+In situations where standard PreChecks do not test for the required preconditions, create a custom PreCheck.
 
 Below is an example of adding a custom PreCheck function. For a new or preview service that AWS does not include in the partition service list yet, you can verify the existence of the service with a simple read-only request (e.g., list all X service things). (For acceptance tests of established services, use `testAccPartitionHasServicePreCheck()` instead.)
 
