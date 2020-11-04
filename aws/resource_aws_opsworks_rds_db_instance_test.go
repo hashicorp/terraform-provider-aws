@@ -16,7 +16,7 @@ func TestAccAWSOpsworksRdsDbInstance_basic(t *testing.T) {
 	sName := fmt.Sprintf("test-db-instance-%d", acctest.RandInt())
 	var opsdb opsworks.RdsDbInstance
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("opsworks", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksRdsDbDestroy,
 		Steps: []resource.TestStep{
