@@ -48,6 +48,7 @@ func TestAccAWSStorageGatewayNfsFileShare_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "squash", "RootSquash"),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "file_share_name", rName),
 				),
 			},
 			{

@@ -166,6 +166,7 @@ func resourceAwsStorageGatewayNfsFileShare() *schema.Resource {
 			"file_share_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"tags": tagsSchema(),
