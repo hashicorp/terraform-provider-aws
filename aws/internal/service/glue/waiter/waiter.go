@@ -1,9 +1,9 @@
 package waiter
 
 import (
-	"github.com/aws/aws-sdk-go/service/glue"
 	"time"
 
+	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 

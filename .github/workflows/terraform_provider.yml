@@ -230,6 +230,32 @@ jobs:
     - run: golangci-lint run ./aws/...
     - run: cd awsproviderlint && golangci-lint run ./...
 
+  importlint:
+    needs: [go_build]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    - name: go env
+      run: |
+        echo "::set-env name=GOCACHE::$(go env GOCACHE)"
+    - uses: actions/cache@v2
+      continue-on-error: true
+      timeout-minutes: 2
+      with:
+        path: ${{ env.GOCACHE }}
+        key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('aws/**') }}
+    - uses: actions/cache@v2
+      continue-on-error: true
+      timeout-minutes: 2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+    - run: cd tools && go install github.com/pavius/impi/cmd/impi
+    - run: impi --local . --scheme stdThirdPartyLocal ./...
+
   goreleaser:
     needs: [go_mod_download]
     runs-on: ubuntu-latest
