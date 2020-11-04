@@ -17,6 +17,7 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* resource/resource_aws_glue_classifier: fix `quote_symbol` being optional [GH-15948]
 * resource/aws_rds_cluster: Prevent error removing cluster from global cluster when not found [GH-15938]
 * resource/aws_rds_global_cluster: Prevent error removing cluster from global cluster when not found [GH-15938]
 
