@@ -38,7 +38,7 @@ func TestAccAWSAmiDataSource_natInstance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
 					resource.TestCheckResourceAttr(resourceName, "most_recent", "true"),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("^amzn-ami-vpc-nat")),
-					resource.TestCheckResourceAttr(resourceName, "owner_id", "137112412989"),
+					testAccMatchResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "public", "true"),
 					resource.TestCheckResourceAttr(resourceName, "product_codes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/xvda"),
@@ -76,7 +76,7 @@ func TestAccAWSAmiDataSource_windowsInstance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
 					resource.TestCheckResourceAttr(resourceName, "most_recent", "true"),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("^Windows_Server-2012-R2")),
-					resource.TestCheckResourceAttr(resourceName, "owner_id", "801119661308"),
+					testAccMatchResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "platform", "windows"),
 					resource.TestCheckResourceAttr(resourceName, "public", "true"),
 					resource.TestCheckResourceAttr(resourceName, "product_codes.#", "0"),
@@ -96,13 +96,13 @@ func TestAccAWSAmiDataSource_windowsInstance(t *testing.T) {
 }
 
 func TestAccAWSAmiDataSource_instanceStore(t *testing.T) {
-	resourceName := "data.aws_ami.instance_store_ami"
+	resourceName := "data.aws_ami.amzn-ami-minimal-hvm-instance-store"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsAmiDataSourceInstanceStoreConfig,
+				Config: testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAmiDataSourceID(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
@@ -110,11 +110,11 @@ func TestAccAWSAmiDataSource_instanceStore(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "creation_date", regexp.MustCompile("^20[0-9]{2}-")),
 					resource.TestCheckResourceAttr(resourceName, "hypervisor", "xen"),
 					resource.TestMatchResourceAttr(resourceName, "image_id", regexp.MustCompile("^ami-")),
-					resource.TestMatchResourceAttr(resourceName, "image_location", regexp.MustCompile("ubuntu-trusty-14.04-amd64-server")),
+					resource.TestMatchResourceAttr(resourceName, "image_location", regexp.MustCompile("amzn-ami-minimal-hvm")),
 					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
 					resource.TestCheckResourceAttr(resourceName, "most_recent", "true"),
-					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("^ubuntu/images/hvm-instance/ubuntu-trusty-14.04-amd64-server")),
-					resource.TestCheckResourceAttr(resourceName, "owner_id", "099720109477"),
+					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("amzn-ami-minimal-hvm")),
+					testAccMatchResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "public", "true"),
 					resource.TestCheckResourceAttr(resourceName, "product_codes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "root_device_type", "instance-store"),
@@ -220,29 +220,6 @@ data "aws_ami" "windows_ami" {
 }
 `
 
-// Instance store test - using Ubuntu images
-const testAccCheckAwsAmiDataSourceInstanceStoreConfig = `
-data "aws_ami" "instance_store_ami" {
-  most_recent = true
-  owners      = ["099720109477"]
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-instance/ubuntu-trusty-14.04-amd64-server*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["instance-store"]
-  }
-}
-`
-
 // Testing name_regex parameter
 const testAccCheckAwsAmiDataSourceNameRegexConfig = `
 data "aws_ami" "name_regex_filtered_ami" {
@@ -254,6 +231,6 @@ data "aws_ami" "name_regex_filtered_ami" {
     values = ["amzn-ami-*"]
   }
 
-  name_regex = "^amzn-ami-\\d{3}[5].*-ecs-optimized"
+  name_regex = "^amzn-ami-min[a-z]{4}-hvm"
 }
 `

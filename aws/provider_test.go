@@ -292,6 +292,13 @@ func testAccCheckResourceAttrHostnameWithPort(resourceName, attributeName, servi
 	}
 }
 
+// testAccMatchResourceAttrAccountID ensures the Terraform state regexp matches an account ID
+func testAccMatchResourceAttrAccountID(resourceName, attributeName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return resource.TestMatchResourceAttr(resourceName, attributeName, regexp.MustCompile(`^\d{12}$`))(s)
+	}
+}
+
 // testAccMatchResourceAttrRegionalARN ensures the Terraform state regexp matches a formatted ARN with region
 func testAccMatchResourceAttrRegionalARN(resourceName, attributeName, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
