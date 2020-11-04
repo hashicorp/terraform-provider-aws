@@ -980,7 +980,7 @@ func TestAccAWSRDSCluster_EngineMode_Global(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSClusterConfig_EngineMode(rName, "global"),
+				Config: testAccAWSRDSClusterConfig_EngineMode_Global(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "global"),
@@ -1119,11 +1119,11 @@ func TestAccAWSRDSCluster_EngineVersionWithPrimaryInstance(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(rInt, "aurora-postgresql", "9.6.3"),
+				Config: testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(rInt, "aurora-postgresql", "9.6.17"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "9.6.3"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "9.6.17"),
 				),
 			},
 			{
@@ -1139,11 +1139,11 @@ func TestAccAWSRDSCluster_EngineVersionWithPrimaryInstance(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(rInt, "aurora-postgresql", "9.6.6"),
+				Config: testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(rInt, "aurora-postgresql", "9.6.18"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "9.6.6"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "9.6.18"),
 				),
 			},
 		},
@@ -1197,7 +1197,7 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_EngineMode_Global_Add(t *testi
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSClusterConfig_EngineMode(rName, "global"),
+				Config: testAccAWSRDSClusterConfig_EngineMode_Global(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
@@ -1255,7 +1255,7 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_EngineMode_Global_Remove(t *te
 				},
 			},
 			{
-				Config: testAccAWSRDSClusterConfig_EngineMode(rName, "global"),
+				Config: testAccAWSRDSClusterConfig_EngineMode_Global(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
@@ -3199,6 +3199,19 @@ resource "aws_rds_cluster" "test" {
 `, rName, engineMode)
 }
 
+func testAccAWSRDSClusterConfig_EngineMode_Global(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  engine_mode         = "global"
+  engine_version      = "5.6.10a" # version compatible with engine_mode = "global"
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
+}
+`, rName)
+}
+
 func testAccAWSRDSClusterConfig_EngineMode_Multimaster(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -3258,18 +3271,21 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSRDSClusterConfig_GlobalClusterIdentifier_EngineMode_Global(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_global_cluster" "test" {
-  global_cluster_identifier = %q
+  engine_version            = "5.6.10a" # version compatible with engine_mode = "global"
+  force_destroy             = true      # Partial configuration removal ordering fix for after Terraform 0.12
+  global_cluster_identifier = %[1]q
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier        = %q
+  cluster_identifier        = %[1]q
   global_cluster_identifier = aws_rds_global_cluster.test.id
   engine_mode               = "global"
+  engine_version            = aws_rds_global_cluster.test.engine_version
   master_password           = "barbarbarbar"
   master_username           = "foo"
   skip_final_snapshot       = true
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccAWSRDSClusterConfig_GlobalClusterIdentifier_EngineMode_Global_Update(rName, globalClusterIdentifierResourceName string) string {
@@ -3277,18 +3293,20 @@ func testAccAWSRDSClusterConfig_GlobalClusterIdentifier_EngineMode_Global_Update
 resource "aws_rds_global_cluster" "test" {
   count = 2
 
-  global_cluster_identifier = "%s-${count.index}"
+  engine_version            = "5.6.10a" # version compatible with engine_mode = "global"
+  global_cluster_identifier = "%[1]s-${count.index}"
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier        = %q
-  global_cluster_identifier = %s.id
+  cluster_identifier        = %[1]q
+  global_cluster_identifier = %[2]s.id
   engine_mode               = "global"
+  engine_version            = %[2]s.engine_version
   master_password           = "barbarbarbar"
   master_username           = "foo"
   skip_final_snapshot       = true
 }
-`, rName, rName, globalClusterIdentifierResourceName)
+`, rName, globalClusterIdentifierResourceName)
 }
 
 func testAccAWSRDSClusterConfig_GlobalClusterIdentifier_EngineMode_Provisioned(rName string) string {
