@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -485,7 +486,7 @@ func TestAccAWSS3Bucket_acceleration(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck("cloudfront", t)
+			testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,

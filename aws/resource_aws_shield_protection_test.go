@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -115,7 +116,7 @@ func TestAccAWSShieldProtection_Cloudfront(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck("cloudfront", t)
+			testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
 		Providers:    testAccProviders,
