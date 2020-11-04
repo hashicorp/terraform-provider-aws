@@ -63,11 +63,12 @@ github.com/bflad/gopaniccheck/passes/logpaniccallexpr
 github.com/bflad/gopaniccheck/passes/logpanicfcallexpr
 github.com/bflad/gopaniccheck/passes/logpaniclncallexpr
 github.com/bflad/gopaniccheck/passes/paniccallexpr
-# github.com/bflad/tfproviderlint v0.19.0
+# github.com/bflad/tfproviderlint v0.20.0
 ## explicit
 github.com/bflad/tfproviderlint/helper/analysisutils
 github.com/bflad/tfproviderlint/helper/astutils
 github.com/bflad/tfproviderlint/helper/terraformtype
+github.com/bflad/tfproviderlint/helper/terraformtype/helper/acctest
 github.com/bflad/tfproviderlint/helper/terraformtype/helper/resource
 github.com/bflad/tfproviderlint/helper/terraformtype/helper/schema
 github.com/bflad/tfproviderlint/helper/terraformtype/helper/validation
@@ -80,6 +81,7 @@ github.com/bflad/tfproviderlint/passes/AT005
 github.com/bflad/tfproviderlint/passes/AT006
 github.com/bflad/tfproviderlint/passes/AT007
 github.com/bflad/tfproviderlint/passes/AT008
+github.com/bflad/tfproviderlint/passes/AT009
 github.com/bflad/tfproviderlint/passes/R001
 github.com/bflad/tfproviderlint/passes/R002
 github.com/bflad/tfproviderlint/passes/R003
@@ -144,6 +146,7 @@ github.com/bflad/tfproviderlint/passes/V006
 github.com/bflad/tfproviderlint/passes/V007
 github.com/bflad/tfproviderlint/passes/V008
 github.com/bflad/tfproviderlint/passes/commentignore
+github.com/bflad/tfproviderlint/passes/helper/acctest/randstringfromcharsetcallexpr
 github.com/bflad/tfproviderlint/passes/helper/resource/retryfuncinfo
 github.com/bflad/tfproviderlint/passes/helper/resource/testcaseinfo
 github.com/bflad/tfproviderlint/passes/helper/resource/testcheckresourceattrcallexpr
