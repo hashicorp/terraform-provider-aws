@@ -160,7 +160,7 @@ func dataSourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{})
 
 	tags, tagsErr := keyvaluetags.SsoListTags(conn, permissionSetArn, instanceArn)
 	if tagsErr != nil {
-		return fmt.Errorf("Error listing tags for ASW SSO Permission Set (%s): %s", permissionSetArn, tagsErr)
+		return fmt.Errorf("Error listing tags for AWS SSO Permission Set (%s): %s", permissionSetArn, tagsErr)
 	}
 
 	d.SetId(permissionSetArn)
