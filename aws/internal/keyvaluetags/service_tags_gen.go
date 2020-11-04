@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
@@ -905,6 +906,33 @@ func (tags KeyValueTags) CloudwatcheventsTags() []*cloudwatchevents.Tag {
 
 // CloudwatcheventsKeyValueTags creates KeyValueTags from cloudwatchevents service tags.
 func CloudwatcheventsKeyValueTags(tags []*cloudwatchevents.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// CodeartifactTags returns codeartifact service tags.
+func (tags KeyValueTags) CodeartifactTags() []*codeartifact.Tag {
+	result := make([]*codeartifact.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &codeartifact.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// CodeartifactKeyValueTags creates KeyValueTags from codeartifact service tags.
+func CodeartifactKeyValueTags(tags []*codeartifact.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
