@@ -192,7 +192,7 @@ data "aws_route53_resolver_endpoint" "foo" {
   }
 
   filter {
-    name = "SecurityGroupIds"
+    name   = "SecurityGroupIds"
     values = [aws_security_group.sg1.id, aws_security_group.sg2.id]
   }
 }
@@ -208,7 +208,7 @@ data "aws_route53_resolver_endpoint" "foo" {
 const testAccDataSourceAwsRoute53ResolverEndpointConfig_NonExistentFilter = `
 data "aws_route53_resolver_endpoint" "foo" {
   filter {
-    name = "Name"
+    name   = "Name"
     values = ["None-Existent-Resource"]
   }
 }
