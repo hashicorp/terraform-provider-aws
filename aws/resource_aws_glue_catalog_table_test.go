@@ -63,6 +63,7 @@ func TestAccAWSGlueCatalogTable_basic(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("table/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
+					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
 				),
 			},
 			{
