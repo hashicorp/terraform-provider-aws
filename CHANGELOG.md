@@ -9,16 +9,17 @@ ENHANCEMENTS
 
 * resource/aws_apigatewayv2_integration: `timeout_milliseconds` has different valid ranges and default values between HTTP and WebSocket APIs. `timeout_milliseconds` is now `Computed`, meaning Terraform will only perform drift detection of its value when present in a configuration. [GH-16017]
 * resource/aws_cloudwatch_event_target: add plan time validation to `arn`, `role_arn`, `launch_type`, `task_definition_arn` [GH-11685]
-* resource/aws_codeartifact_domain - add `tags` argument. [GH-16006]
-* resource/aws_codeartifact_repository - add `tags` argument. [GH-16006]
-* resource/aws_glue_catalog_database - add plan time validations for `description` and `name`. [GH-15956]
-* resource/aws_glue_crawler - Support MongoDB target [GH-15934]
-* resource/aws_glue_trigger - Add plan time validation to `name` [GH-15793]
-* resource/aws_glue_trigger - Add `security_configuration` and `notification_property` arguments to `actions` block [GH-15793]
+* resource/aws_codeartifact_domain: add `tags` argument. [GH-16006]
+* resource/aws_codeartifact_repository: add `tags` argument. [GH-16006]
+* resource/aws_glue_catalog_database: add plan time validations for `description` and `name`. [GH-15956]
+* resource/aws_glue_crawler: Support MongoDB target [GH-15934]
+* resource/aws_glue_trigger: Add plan time validation to `name` [GH-15793]
+* resource/aws_glue_trigger: Add `security_configuration` and `notification_property` arguments to `actions` block [GH-15793]
 
 BUG FIXES
 
-* resource/resource_aws_glue_classifier: fix `quote_symbol` being optional [GH-15948]
+* resource/aws_glue_classifier: Fix `quote_symbol` being optional [GH-15948]
+* resource/aws_lambda_function: Publish version if value of `publish` is only change [GH-15020]
 * resource/aws_rds_cluster: Prevent error removing cluster from global cluster when not found [GH-15938]
 * resource/aws_rds_global_cluster: Prevent error removing cluster from global cluster when not found [GH-15938]
 
