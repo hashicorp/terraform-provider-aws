@@ -77,11 +77,6 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
-						"parameters": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
 						"type": {
 							Type:         schema.TypeString,
 							Optional:     true,
