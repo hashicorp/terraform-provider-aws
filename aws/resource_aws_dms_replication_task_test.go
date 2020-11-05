@@ -127,12 +127,12 @@ data "aws_iam_policy_document" "dms_assume_role_policy_document" {
 
 resource "aws_iam_role" "dms_vpc_role" {
   assume_role_policy = data.aws_iam_policy_document.dms_assume_role_policy_document.json
-  name = "dms-vpc-role"
+  name               = "dms-vpc-role"
 }
 
 resource "aws_iam_role" "dms_cloudwatch_logs_role" {
   assume_role_policy = data.aws_iam_policy_document.dms_assume_role_policy_document.json
-  name = "dms-cloudwatch-logs-role"
+  name               = "dms-cloudwatch-logs-role"
 }
 
 resource "aws_iam_role_policy_attachment" "dms_vpc_access_policy" {
@@ -258,12 +258,12 @@ data "aws_iam_policy_document" "dms_assume_role_policy_document" {
 
 resource "aws_iam_role" "dms_vpc_role" {
   assume_role_policy = data.aws_iam_policy_document.dms_assume_role_policy_document.json
-  name = "dms-vpc-role"
+  name               = "dms-vpc-role"
 }
 
 resource "aws_iam_role" "dms_cloudwatch_logs_role" {
   assume_role_policy = data.aws_iam_policy_document.dms_assume_role_policy_document.json
-  name = "dms-cloudwatch-logs-role"
+  name               = "dms-cloudwatch-logs-role"
 }
 
 resource "aws_iam_role_policy_attachment" "dms_vpc_access_policy" {
