@@ -33,7 +33,7 @@ resource "aws_secretsmanager_secret" "example" {
 
 resource "aws_secretsmanager_secret_version" "example" {
   secret_id     = aws_secretsmanager_secret.example.id
-  secret_string = jsonencode({ username = "example", passowrd = "example" })
+  secret_string = jsonencode({ username = "example", password = "example" })
 }
 
 resource "aws_sagemaker_code_repository" "example" {
