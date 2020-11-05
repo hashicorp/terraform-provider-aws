@@ -186,15 +186,15 @@ resource "aws_route53_resolver_endpoint" "foo" {
 }
 
 data "aws_route53_resolver_endpoint" "foo" {
-    filter {
-      name   = "Name"
-      values = [aws_route53_resolver_endpoint.foo.name]
-    }
+  filter {
+    name   = "Name"
+    values = [aws_route53_resolver_endpoint.foo.name]
+  }
 
-    filter {
-      name = "SecurityGroupIds"
-      values = [aws_security_group.sg1.id, aws_security_group.sg2.id]
-    }
+  filter {
+    name = "SecurityGroupIds"
+    values = [aws_security_group.sg1.id, aws_security_group.sg2.id]
+  }
 }
 `, direction, name))
 }
@@ -207,9 +207,9 @@ data "aws_route53_resolver_endpoint" "foo" {
 
 const testAccDataSourceAwsRoute53ResolverEndpointConfig_NonExistentFilter = `
 data "aws_route53_resolver_endpoint" "foo" {
-    filter {
-      name = "Name"
-      values = ["None-Existent-Resource"]
-    }
+  filter {
+    name = "Name"
+    values = ["None-Existent-Resource"]
+  }
 }
 `
