@@ -803,11 +803,11 @@ resource "aws_glue_catalog_table" "test" {
     columns {
       name    = "my_column_1"
       type    = "int"
-	  comment = "my_column1_comment"
-	  
-	  parameters = {
-		param2 = "param2_val"
-	  }
+      comment = "my_column1_comment"
+
+      parameters = {
+        param2 = "param2_val"
+      }
     }
 
     ser_de_info {
