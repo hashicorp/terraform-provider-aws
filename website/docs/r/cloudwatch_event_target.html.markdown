@@ -237,6 +237,53 @@ DOC
 }
 ```
 
+## Example Input Transformer Usage - JSON Object
+
+```terraform
+resource "aws_cloudwatch_event_target" "example" {
+  arn  = aws_lambda_function.example.arn
+  rule = aws_cloudwatch_event_rule.example.id
+
+  input_transformer {
+    input_paths = {
+      instance = "$.detail.instance",
+      status   = "$.detail.status",
+    }
+    input_template = <<EOF
+{
+  "instance_id": <instance>,
+  "instance_status": <status>
+}
+EOF
+  }
+}
+
+resource "aws_cloudwatch_event_rule" "example" {
+  # ...
+}
+```
+
+## Example Input Transformer Usage - Simple String
+
+```terraform
+resource "aws_cloudwatch_event_target" "example" {
+  arn  = aws_lambda_function.example.arn
+  rule = aws_cloudwatch_event_rule.example.id
+
+  input_transformer {
+    input_paths = {
+      instance = "$.detail.instance",
+      status   = "$.detail.status",
+    }
+    input_template = "\"<instance> is in state <status>\""
+  }
+}
+
+resource "aws_cloudwatch_event_rule" "example" {
+  # ...
+}
+```
+
 ## Argument Reference
 
 -> **Note:** In order to be able to have your AWS Lambda function or
@@ -306,7 +353,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
     * You must use JSON dot notation, not bracket notation.
     * The keys can't start with "AWS".
 
-* `input_template` - (Required) Structure containing the template body.
+* `input_template` - (Required) Template to customize data sent to the target. Must be valid JSON. To send a string value, the string value must include double quotes. Values must be escaped for both JSON and Terraform, e.g. `"\"Your string goes here.\\nA new line.\""`
 
 ## Import
 
