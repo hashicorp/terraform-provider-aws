@@ -372,7 +372,7 @@ func expandWorkspaceProperties(properties []interface{}) *workspaces.WorkspacePr
 		UserVolumeSizeGib: aws.Int64(int64(p["user_volume_size_gib"].(int))),
 	}
 
-	if p["running_mode"] == workspaces.RunningModeAutoStop {
+	if p["running_mode"].(string) == workspaces.RunningModeAutoStop {
 		workspaceProperties.RunningModeAutoStopTimeoutInMinutes = aws.Int64(int64(p["running_mode_auto_stop_timeout_in_minutes"].(int)))
 	}
 
