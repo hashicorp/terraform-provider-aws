@@ -32,6 +32,7 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* resource/aws_datasync_task: Allow `UNAVAILABLE` as pending status during creation [GH-15949]
 * resource/aws_glue_classifier: Fix `quote_symbol` being optional [GH-15948]
 * resource/aws_lambda_function: Publish version if value of `publish` is only change [GH-15020]
 * resource/aws_rds_cluster: Prevent error removing cluster from global cluster when not found [GH-15938]
