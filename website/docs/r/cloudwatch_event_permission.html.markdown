@@ -46,6 +46,7 @@ The following arguments are supported:
 * `statement_id` - (Required) An identifier string for the external account that you are granting permissions to.
 * `action` - (Optional) The action that you are enabling the other account to perform. Defaults to `events:PutEvents`.
 * `condition` - (Optional) Configuration block to limit the event bus permissions you are granting to only accounts that fulfill the condition. Specified below.
+* `event_bus_name` - (Optional) The event bus to set the permissions on. If you omit this, the permissions are set on the `default` event bus.
 
 ### condition
 
@@ -61,8 +62,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EventBridge permissions can be imported using the statement ID, e.g.
+EventBridge permissions can be imported using the `event_bus_name/statement_id` (if you omit `event_bus_name`, the `default` event bus will be used), e.g.
 
 ```shell
-$ terraform import aws_cloudwatch_event_permission.DevAccountAccess DevAccountAccess
+$ terraform import aws_cloudwatch_event_permission.DevAccountAccess example-event-bus/DevAccountAccess
 ```
