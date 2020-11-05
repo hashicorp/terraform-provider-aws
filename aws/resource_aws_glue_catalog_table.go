@@ -50,7 +50,7 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringDoesNotMatch(regexp.MustCompile(`[A-Z]`), "uppercase charcters cannot be used"),
+					validation.StringDoesNotMatch(regexp.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
 				),
 			},
 			"owner": {
@@ -274,7 +274,7 @@ func resourceAwsGlueCatalogTableCreate(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Glue catalog table input: %#v", input)
 	_, err := conn.CreateTable(input)
 	if err != nil {
-		return fmt.Errorf("Error creating Catalog Table: %w", err)
+		return fmt.Errorf("Error creating Glue Catalog Table: %w", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s:%s", catalogID, dbName, name))
