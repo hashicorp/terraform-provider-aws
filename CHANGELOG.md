@@ -11,6 +11,7 @@ ENHANCEMENTS
 * resource/aws_cloudwatch_event_target: add plan time validation to `arn`, `role_arn`, `launch_type`, `task_definition_arn` [GH-11685]
 * resource/aws_codeartifact_domain: add `tags` argument. [GH-16006]
 * resource/aws_codeartifact_repository: add `tags` argument. [GH-16006]
+* resource/aws_eip: Add `network_border_group` argument [GH-14028]
 * resource/aws_glue_catalog_database: add plan time validations for `description` and `name`. [GH-15956]
 * resource/aws_glue_crawler: Support MongoDB target [GH-15934]
 * resource/aws_glue_trigger: Add plan time validation to `name` [GH-15793]
