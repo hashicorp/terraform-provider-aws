@@ -36,6 +36,7 @@ BUG FIXES
 * resource/aws_lambda_function: Publish version if value of `publish` is only change [GH-15020]
 * resource/aws_rds_cluster: Prevent error removing cluster from global cluster when not found [GH-15938]
 * resource/aws_rds_cluster: Prevent recreation when using `snapshot_identifier` and `kms_key_id` without `storage_encrypted = true` [GH-15915]
+* resource/aws_rds_cluster_instance: Add Cluster Identifier to creation error message [GH-15939]
 * resource/aws_rds_global_cluster: Prevent error removing cluster from global cluster when not found [GH-15938]
 
 ## 3.13.0 (October 29, 2020)
