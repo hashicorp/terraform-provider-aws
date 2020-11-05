@@ -8,7 +8,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Apply needs-triage Label
-      uses: actions/labeler@v2
+      uses: actions/labeler@v3
       if: github.event.action == 'opened' && !contains(fromJSON('["anGie44", "bflad", "breathingdust", "dependabot[bot]", "DrFaust92", "ewbankkit", "gdavison", "maryelizbeth", "YakDriver"]'), github.actor)
       with:
         configuration-path: .github/labeler-needs-triage.yml
