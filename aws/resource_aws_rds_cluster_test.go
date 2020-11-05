@@ -1074,6 +1074,7 @@ func TestAccAWSRDSCluster_EngineVersion(t *testing.T) {
 	var dbCluster rds.DBCluster
 	rInt := acctest.RandInt()
 	resourceName := "aws_rds_cluster.test"
+	dataSourceName := "data.aws_rds_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1081,11 +1082,11 @@ func TestAccAWSRDSCluster_EngineVersion(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterConfig_EngineVersion(rInt, "aurora-postgresql", "9.6.3"),
+				Config: testAccAWSClusterConfig_EngineVersion(false, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "9.6.3"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceName, "version"),
 				),
 			},
 			{
@@ -1101,7 +1102,7 @@ func TestAccAWSRDSCluster_EngineVersion(t *testing.T) {
 				},
 			},
 			{
-				Config:      testAccAWSClusterConfig_EngineVersion(rInt, "aurora-postgresql", "9.6.6"),
+				Config:      testAccAWSClusterConfig_EngineVersion(true, rInt),
 				ExpectError: regexp.MustCompile(`Cannot modify engine version without a healthy primary instance in DB cluster`),
 			},
 		},
@@ -1112,6 +1113,8 @@ func TestAccAWSRDSCluster_EngineVersionWithPrimaryInstance(t *testing.T) {
 	var dbCluster rds.DBCluster
 	rInt := acctest.RandInt()
 	resourceName := "aws_rds_cluster.test"
+	dataSourceName := "data.aws_rds_engine_version.test"
+	dataSourceNameUpgrade := "data.aws_rds_engine_version.upgrade"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1119,11 +1122,11 @@ func TestAccAWSRDSCluster_EngineVersionWithPrimaryInstance(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(rInt, "aurora-postgresql", "9.6.17"),
+				Config: testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(false, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "9.6.17"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine", dataSourceName, "engine"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceName, "version"),
 				),
 			},
 			{
@@ -1139,11 +1142,11 @@ func TestAccAWSRDSCluster_EngineVersionWithPrimaryInstance(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(rInt, "aurora-postgresql", "9.6.18"),
+				Config: testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(true, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "9.6.18"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine", dataSourceNameUpgrade, "engine"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceNameUpgrade, "version"),
 				),
 			},
 		},
@@ -1750,6 +1753,7 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_EngineVersion_Different(t *testing.
 	sourceDbResourceName := "aws_rds_cluster.source"
 	snapshotResourceName := "aws_db_cluster_snapshot.test"
 	resourceName := "aws_rds_cluster.test"
+	dataSourceName := "data.aws_rds_engine_version.upgrade"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1757,12 +1761,12 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_EngineVersion_Different(t *testing.
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSClusterConfig_SnapshotIdentifier_EngineVersion(rName, "aurora-postgresql", "9.6.3", "9.6.6"),
+				Config: testAccAWSRDSClusterConfig_SnapshotIdentifier_EngineVersion(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(sourceDbResourceName, &sourceDbCluster),
 					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "9.6.6"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceName, "version"),
 				),
 			},
 			{
@@ -1790,6 +1794,7 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_EngineVersion_Equal(t *testing.T) {
 	sourceDbResourceName := "aws_rds_cluster.source"
 	snapshotResourceName := "aws_db_cluster_snapshot.test"
 	resourceName := "aws_rds_cluster.test"
+	dataSourceName := "data.aws_rds_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1797,12 +1802,12 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_EngineVersion_Equal(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSClusterConfig_SnapshotIdentifier_EngineVersion(rName, "aurora-postgresql", "9.6.3", "9.6.3"),
+				Config: testAccAWSRDSClusterConfig_SnapshotIdentifier_EngineVersion(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(sourceDbResourceName, &sourceDbCluster),
 					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "9.6.3"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceName, "version"),
 				),
 			},
 			{
@@ -2321,7 +2326,7 @@ func TestAccAWSRDSCluster_EnableHttpEndpoint(t *testing.T) {
 func testAccAWSClusterConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %[1]q
+  cluster_identifier              = %q
   database_name                   = "mydb"
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
@@ -2334,9 +2339,9 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSClusterConfig_AllowMajorVersionUpgrade(rName string, allowMajorVersionUpgrade bool, engine string, engineVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  allow_major_version_upgrade = %[2]t
+  allow_major_version_upgrade = %[1]t
   apply_immediately           = true
-  cluster_identifier          = %[1]q
+  cluster_identifier          = %[2]q
   engine                      = %[3]q
   engine_version              = %[4]q
   master_password             = "mustbeeightcharaters"
@@ -2355,14 +2360,14 @@ resource "aws_rds_cluster_instance" "test" {
   cluster_identifier = aws_rds_cluster.test.id
   engine             = data.aws_rds_orderable_db_instance.test.engine
   engine_version     = data.aws_rds_orderable_db_instance.test.engine_version
-  identifier         = %[1]q
+  identifier         = %[2]q
   instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 
   lifecycle {
     ignore_changes = [engine_version]
   }
 }
-`, rName, allowMajorVersionUpgrade, engine, engineVersion)
+`, allowMajorVersionUpgrade, rName, engine, engineVersion)
 }
 
 func testAccAWSClusterConfig_AvailabilityZones(rName string) string {
@@ -2379,7 +2384,7 @@ data "aws_availability_zones" "available" {
 resource "aws_rds_cluster" "test" {
   apply_immediately   = true
   availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
-  cluster_identifier  = %[1]q
+  cluster_identifier  = %q
   master_password     = "mustbeeightcharaters"
   master_username     = "test"
   skip_final_snapshot = true
@@ -2403,7 +2408,7 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSClusterConfig_ClusterIdentifierPrefix(clusterIdentifierPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier_prefix = %[1]q
+  cluster_identifier_prefix = %q
   master_username           = "root"
   master_password           = "password"
   skip_final_snapshot       = true
@@ -2570,18 +2575,18 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSClusterConfigWithFinalSnapshot(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-aurora-cluster-%d"
+  cluster_identifier              = "tf-aurora-cluster-%[1]d"
   database_name                   = "mydb"
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.aurora5.6"
-  final_snapshot_identifier       = "tf-acctest-rdscluster-snapshot-%d"
+  final_snapshot_identifier       = "tf-acctest-rdscluster-snapshot-%[1]d"
 
   tags = {
     Environment = "production"
   }
 }
-`, n, n)
+`, n)
 }
 
 func testAccAWSClusterConfigWithoutUserNameAndPassword(n int) string {
@@ -2597,13 +2602,13 @@ resource "aws_rds_cluster" "default" {
 func testAccAWSClusterConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %[1]q
+  cluster_identifier  = %q
   master_username     = "foo"
   master_password     = "mustbeeightcharaters"
   skip_final_snapshot = true
 
   tags = {
-    %[2]q = %[3]q
+    %q = %q
   }
 }
 `, rName, tagKey1, tagValue1)
@@ -2612,14 +2617,14 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSClusterConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %[1]q
+  cluster_identifier  = %q
   master_username     = "foo"
   master_password     = "mustbeeightcharaters"
   skip_final_snapshot = true
 
   tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
+    %q = %q
+    %q = %q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
@@ -2628,8 +2633,8 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSClusterConfigEnabledCloudwatchLogsExports1(rName, enabledCloudwatchLogExports1 string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %[1]q
-  enabled_cloudwatch_logs_exports = [%[2]q]
+  cluster_identifier              = %q
+  enabled_cloudwatch_logs_exports = [%q]
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
   skip_final_snapshot             = true
@@ -2640,8 +2645,8 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSClusterConfigEnabledCloudwatchLogsExports2(rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2 string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %[1]q
-  enabled_cloudwatch_logs_exports = [%[2]q, %[3]q]
+  cluster_identifier              = %q
+  enabled_cloudwatch_logs_exports = [%q, %q]
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
   skip_final_snapshot             = true
@@ -2652,8 +2657,8 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSClusterConfigEnabledCloudwatchLogsExportsPostgres1(rName, enabledCloudwatchLogExports1 string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %[1]q
-  enabled_cloudwatch_logs_exports = [%[2]q]
+  cluster_identifier              = %q
+  enabled_cloudwatch_logs_exports = [%q]
   engine                          = "aurora-postgresql"
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
@@ -2666,7 +2671,7 @@ func testAccAWSClusterConfig_kmsKey(n int) string {
 	return fmt.Sprintf(`
 
 resource "aws_kms_key" "foo" {
-  description = "Terraform acc test %d"
+  description = "Terraform acc test %[1]d"
 
   policy = <<POLICY
 {
@@ -2689,7 +2694,7 @@ resource "aws_kms_key" "foo" {
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-aurora-cluster-%d"
+  cluster_identifier              = "tf-aurora-cluster-%[1]d"
   database_name                   = "mydb"
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
@@ -2698,7 +2703,7 @@ resource "aws_rds_cluster" "test" {
   kms_key_id                      = aws_kms_key.foo.arn
   skip_final_snapshot             = true
 }
-`, n, n)
+`, n)
 }
 
 func testAccAWSClusterConfig_encrypted(n int) string {
@@ -2758,43 +2763,79 @@ resource "aws_rds_cluster" "test" {
 `, n)
 }
 
-func testAccAWSClusterConfig_EngineVersion(rInt int, engine, engineVersion string) string {
+func testAccAWSClusterConfig_EngineVersion(upgrade bool, rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-acc-test-%d"
-  database_name                   = "mydb"
-  db_cluster_parameter_group_name = "default.aurora-postgresql9.6"
-  engine                          = "%s"
-  engine_version                  = "%s"
-  master_password                 = "mustbeeightcharaters"
-  master_username                 = "foo"
-  skip_final_snapshot             = true
-  apply_immediately               = true
-}
-`, rInt, engine, engineVersion)
+data "aws_rds_engine_version" "test" {
+  engine             = "aurora-postgresql"
+  preferred_versions = ["9.6.3", "9.6.6", "9.6.8"]
 }
 
-func testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(rInt int, engine, engineVersion string) string {
-	return fmt.Sprintf(`
+data "aws_rds_engine_version" "upgrade" {
+  engine             = data.aws_rds_engine_version.test.engine
+  preferred_versions = data.aws_rds_engine_version.test.valid_upgrade_targets
+}
+
+locals {
+  parameter_group_name = %[1]t ? data.aws_rds_engine_version.upgrade.parameter_group_family : data.aws_rds_engine_version.test.parameter_group_family
+  engine_version       = %[1]t ? data.aws_rds_engine_version.upgrade.version : data.aws_rds_engine_version.test.version
+}
+
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-acc-test-%d"
+  cluster_identifier              = "tf-acc-test-%[2]d"
   database_name                   = "mydb"
-  db_cluster_parameter_group_name = "default.aurora-postgresql9.6"
-  engine                          = %q
-  engine_version                  = %q
+  db_cluster_parameter_group_name = "default.${local.parameter_group_name}"
+  engine                          = data.aws_rds_engine_version.test.engine
+  engine_version                  = local.engine_version
   master_password                 = "mustbeeightcharaters"
   master_username                 = "foo"
   skip_final_snapshot             = true
   apply_immediately               = true
+}
+`, upgrade, rInt)
+}
+
+func testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(upgrade bool, rInt int) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "test" {
+  engine             = "aurora-postgresql"
+  preferred_versions = ["10.7", "10.13", "11.6"]
+}
+
+data "aws_rds_engine_version" "upgrade" {
+  engine             = data.aws_rds_engine_version.test.engine
+  preferred_versions = data.aws_rds_engine_version.test.valid_upgrade_targets
+}
+
+locals {
+  parameter_group_name = %[1]t ? data.aws_rds_engine_version.upgrade.parameter_group_family : data.aws_rds_engine_version.test.parameter_group_family
+  engine_version       = %[1]t ? data.aws_rds_engine_version.upgrade.version : data.aws_rds_engine_version.test.version
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier              = "tf-acc-test-%[2]d"
+  database_name                   = "mydb"
+  db_cluster_parameter_group_name = "default.${local.parameter_group_name}"
+  engine                          = data.aws_rds_engine_version.test.engine
+  engine_version                  = local.engine_version
+  master_password                 = "mustbeeightcharaters"
+  master_username                 = "foo"
+  skip_final_snapshot             = true
+  apply_immediately               = true
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.test.engine
+  engine_version             = data.aws_rds_engine_version.test.version
+  preferred_instance_classes = ["db.t2.small", "db.t3.medium", "db.r4.large"]
 }
 
 resource "aws_rds_cluster_instance" "test" {
-  identifier         = "tf-acc-test-%d"
+  identifier         = "tf-acc-test-%[2]d"
   cluster_identifier = aws_rds_cluster.test.cluster_identifier
   engine             = aws_rds_cluster.test.engine
-  instance_class     = "db.r4.large"
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
-`, rInt, engine, engineVersion, rInt)
+`, upgrade, rInt)
 }
 
 func testAccAWSClusterConfig_Port(rInt, port int) string {
@@ -2815,7 +2856,7 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSClusterConfigIncludingIamRoles(n int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "rds_sample_role" {
-  name = "rds_sample_role_%d"
+  name = "rds_sample_role_%[1]d"
   path = "/"
 
   assume_role_policy = <<EOF
@@ -2836,7 +2877,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "rds_policy" {
-  name = "rds_sample_role_policy_%d"
+  name = "rds_sample_role_policy_%[1]d"
   role = aws_iam_role.rds_sample_role.name
 
   policy = <<EOF
@@ -2852,7 +2893,7 @@ EOF
 }
 
 resource "aws_iam_role" "another_rds_sample_role" {
-  name = "another_rds_sample_role_%d"
+  name = "another_rds_sample_role_%[1]d"
   path = "/"
 
   assume_role_policy = <<EOF
@@ -2873,7 +2914,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "another_rds_policy" {
-  name = "another_rds_sample_role_policy_%d"
+  name = "another_rds_sample_role_policy_%[1]d"
   role = aws_iam_role.another_rds_sample_role.name
 
   policy = <<EOF
@@ -2889,7 +2930,7 @@ EOF
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-aurora-cluster-%d"
+  cluster_identifier              = "tf-aurora-cluster-%[1]d"
   database_name                   = "mydb"
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
@@ -2902,13 +2943,13 @@ resource "aws_rds_cluster" "test" {
 
   depends_on = [aws_iam_role.another_rds_sample_role, aws_iam_role.rds_sample_role]
 }
-`, n, n, n, n, n)
+`, n)
 }
 
 func testAccAWSClusterConfigAddIamRoles(n int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "rds_sample_role" {
-  name = "rds_sample_role_%d"
+  name = "rds_sample_role_%[1]d"
   path = "/"
 
   assume_role_policy = <<EOF
@@ -2929,7 +2970,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "rds_policy" {
-  name = "rds_sample_role_policy_%d"
+  name = "rds_sample_role_policy_%[1]d"
   role = aws_iam_role.rds_sample_role.name
 
   policy = <<EOF
@@ -2945,7 +2986,7 @@ EOF
 }
 
 resource "aws_iam_role" "another_rds_sample_role" {
-  name = "another_rds_sample_role_%d"
+  name = "another_rds_sample_role_%[1]d"
   path = "/"
 
   assume_role_policy = <<EOF
@@ -2966,7 +3007,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "another_rds_policy" {
-  name = "another_rds_sample_role_policy_%d"
+  name = "another_rds_sample_role_policy_%[1]d"
   role = aws_iam_role.another_rds_sample_role.name
 
   policy = <<EOF
@@ -2982,7 +3023,7 @@ EOF
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-aurora-cluster-%d"
+  cluster_identifier              = "tf-aurora-cluster-%[1]d"
   database_name                   = "mydb"
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
@@ -2996,13 +3037,13 @@ resource "aws_rds_cluster" "test" {
 
   depends_on = [aws_iam_role.another_rds_sample_role, aws_iam_role.rds_sample_role]
 }
-`, n, n, n, n, n)
+`, n)
 }
 
 func testAccAWSClusterConfigRemoveIamRoles(n int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "another_rds_sample_role" {
-  name = "another_rds_sample_role_%d"
+  name = "another_rds_sample_role_%[1]d"
   path = "/"
 
   assume_role_policy = <<EOF
@@ -3023,7 +3064,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "another_rds_policy" {
-  name = "another_rds_sample_role_policy_%d"
+  name = "another_rds_sample_role_policy_%[1]d"
   role = aws_iam_role.another_rds_sample_role.name
 
   policy = <<EOF
@@ -3039,7 +3080,7 @@ EOF
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-aurora-cluster-%d"
+  cluster_identifier              = "tf-aurora-cluster-%[1]d"
   database_name                   = "mydb"
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
@@ -3053,7 +3094,7 @@ resource "aws_rds_cluster" "test" {
 
   depends_on = [aws_iam_role.another_rds_sample_role]
 }
-`, n, n, n)
+`, n)
 }
 
 func testAccAWSClusterConfigReplicationSourceIdentifierKmsKeyId(rName string) string {
@@ -3202,7 +3243,7 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSRDSClusterConfig_EngineMode_Global(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %[1]q
+  cluster_identifier  = %q
   engine_mode         = "global"
   engine_version      = "5.6.10a" # version compatible with engine_mode = "global"
   master_password     = "barbarbarbar"
@@ -3562,7 +3603,7 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSRDSClusterConfig_SnapshotIdentifier(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "source" {
-  cluster_identifier  = "%s-source"
+  cluster_identifier  = "%[1]s-source"
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
@@ -3570,21 +3611,21 @@ resource "aws_rds_cluster" "source" {
 
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.source.id
-  db_cluster_snapshot_identifier = %q
+  db_cluster_snapshot_identifier = %[1]q
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %q
+  cluster_identifier  = %[1]q
   skip_final_snapshot = true
   snapshot_identifier = aws_db_cluster_snapshot.test.id
 }
-`, rName, rName, rName)
+`, rName)
 }
 
 func testAccAWSRDSClusterConfig_SnapshotIdentifier_DeletionProtection(rName string, deletionProtection bool) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "source" {
-  cluster_identifier  = "%s-source"
+  cluster_identifier  = "%[1]s-source"
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
@@ -3592,23 +3633,23 @@ resource "aws_rds_cluster" "source" {
 
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.source.id
-  db_cluster_snapshot_identifier = %q
+  db_cluster_snapshot_identifier = %[1]q
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %q
-  deletion_protection = %t
+  cluster_identifier  = %[1]q
+  deletion_protection = %[2]t
   skip_final_snapshot = true
   snapshot_identifier = aws_db_cluster_snapshot.test.id
 }
-`, rName, rName, rName, deletionProtection)
+`, rName, deletionProtection)
 }
 
 func testAccAWSRDSClusterConfig_SnapshotIdentifier_EngineMode(rName, engineMode string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "source" {
-  cluster_identifier  = "%s-source"
-  engine_mode         = %q
+  cluster_identifier  = "%[1]s-source"
+  engine_mode         = %[2]q
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
@@ -3616,24 +3657,34 @@ resource "aws_rds_cluster" "source" {
 
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.source.id
-  db_cluster_snapshot_identifier = %q
+  db_cluster_snapshot_identifier = %[1]q
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %q
-  engine_mode         = %q
+  cluster_identifier  = %[1]q
+  engine_mode         = %[2]q
   skip_final_snapshot = true
   snapshot_identifier = aws_db_cluster_snapshot.test.id
 }
-`, rName, engineMode, rName, rName, engineMode)
+`, rName, engineMode)
 }
 
-func testAccAWSRDSClusterConfig_SnapshotIdentifier_EngineVersion(rName, engine, engineVersionSource, engineVersion string) string {
+func testAccAWSRDSClusterConfig_SnapshotIdentifier_EngineVersion(rName string, same bool) string {
 	return fmt.Sprintf(`
+data "aws_rds_engine_version" "test" {
+  engine             = "aurora-postgresql"
+  preferred_versions = ["11.4", "10.4", "9.6.6"]
+}
+
+data "aws_rds_engine_version" "upgrade" {
+  engine             = data.aws_rds_engine_version.test.engine
+  preferred_versions = data.aws_rds_engine_version.test.valid_upgrade_targets
+}
+
 resource "aws_rds_cluster" "source" {
-  cluster_identifier  = "%s-source"
-  engine              = %q
-  engine_version      = %q
+  cluster_identifier  = "%[1]s-source"
+  engine              = data.aws_rds_engine_version.test.engine
+  engine_version      = data.aws_rds_engine_version.test.version
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
@@ -3641,17 +3692,17 @@ resource "aws_rds_cluster" "source" {
 
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.source.id
-  db_cluster_snapshot_identifier = %q
+  db_cluster_snapshot_identifier = %[1]q
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %q
-  engine              = %q
-  engine_version      = %q
+  cluster_identifier  = %[1]q
+  engine              = data.aws_rds_engine_version.test.engine
+  engine_version      = %[2]t ? data.aws_rds_engine_version.test.version : data.aws_rds_engine_version.upgrade.version
   skip_final_snapshot = true
   snapshot_identifier = aws_db_cluster_snapshot.test.id
 }
-`, rName, engine, engineVersionSource, rName, rName, engine, engineVersion)
+`, rName, same)
 }
 
 func testAccAWSRDSClusterConfig_SnapshotIdentifier_MasterPassword(rName, masterPassword string) string {
@@ -3703,7 +3754,7 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSRDSClusterConfig_SnapshotIdentifier_PreferredBackupWindow(rName, preferredBackupWindow string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "source" {
-  cluster_identifier  = "%s-source"
+  cluster_identifier  = "%[1]s-source"
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
@@ -3711,22 +3762,22 @@ resource "aws_rds_cluster" "source" {
 
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.source.id
-  db_cluster_snapshot_identifier = %q
+  db_cluster_snapshot_identifier = %[1]q
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier      = %q
-  preferred_backup_window = %q
+  cluster_identifier      = %[1]q
+  preferred_backup_window = %[2]q
   skip_final_snapshot     = true
   snapshot_identifier     = aws_db_cluster_snapshot.test.id
 }
-`, rName, rName, rName, preferredBackupWindow)
+`, rName, preferredBackupWindow)
 }
 
 func testAccAWSRDSClusterConfig_SnapshotIdentifier_PreferredMaintenanceWindow(rName, preferredMaintenanceWindow string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "source" {
-  cluster_identifier  = "%s-source"
+  cluster_identifier  = "%[1]s-source"
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
@@ -3734,22 +3785,22 @@ resource "aws_rds_cluster" "source" {
 
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.source.id
-  db_cluster_snapshot_identifier = %q
+  db_cluster_snapshot_identifier = %[1]q
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier           = %q
-  preferred_maintenance_window = %q
+  cluster_identifier           = %[1]q
+  preferred_maintenance_window = %[2]q
   skip_final_snapshot          = true
   snapshot_identifier          = aws_db_cluster_snapshot.test.id
 }
-`, rName, rName, rName, preferredMaintenanceWindow)
+`, rName, preferredMaintenanceWindow)
 }
 
 func testAccAWSRDSClusterConfig_SnapshotIdentifier_Tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "source" {
-  cluster_identifier  = "%s-source"
+  cluster_identifier  = "%[1]s-source"
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
@@ -3757,11 +3808,11 @@ resource "aws_rds_cluster" "source" {
 
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.source.id
-  db_cluster_snapshot_identifier = %q
+  db_cluster_snapshot_identifier = %[1]q
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %q
+  cluster_identifier  = %[1]q
   skip_final_snapshot = true
   snapshot_identifier = aws_db_cluster_snapshot.test.id
 
@@ -3769,7 +3820,7 @@ resource "aws_rds_cluster" "test" {
     key1 = "value1"
   }
 }
-`, rName, rName, rName)
+`, rName)
 }
 
 func testAccAWSRDSClusterConfig_SnapshotIdentifier_VpcSecurityGroupIds(rName string) string {
@@ -3784,7 +3835,7 @@ data "aws_security_group" "default" {
 }
 
 resource "aws_rds_cluster" "source" {
-  cluster_identifier  = "%s-source"
+  cluster_identifier  = "%[1]s-source"
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
@@ -3792,16 +3843,16 @@ resource "aws_rds_cluster" "source" {
 
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.source.id
-  db_cluster_snapshot_identifier = %q
+  db_cluster_snapshot_identifier = %[1]q
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier     = %q
+  cluster_identifier     = %[1]q
   skip_final_snapshot    = true
   snapshot_identifier    = aws_db_cluster_snapshot.test.id
   vpc_security_group_ids = [data.aws_security_group.default.id]
 }
-`, rName, rName, rName)
+`, rName)
 }
 
 func testAccAWSRDSClusterConfig_SnapshotIdentifier_VpcSecurityGroupIds_Tags(rName string) string {
@@ -3816,7 +3867,7 @@ data "aws_security_group" "default" {
 }
 
 resource "aws_rds_cluster" "source" {
-  cluster_identifier  = "%s-source"
+  cluster_identifier  = "%[1]s-source"
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
@@ -3824,11 +3875,11 @@ resource "aws_rds_cluster" "source" {
 
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.source.id
-  db_cluster_snapshot_identifier = %q
+  db_cluster_snapshot_identifier = %[1]q
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier     = %q
+  cluster_identifier     = %[1]q
   skip_final_snapshot    = true
   snapshot_identifier    = aws_db_cluster_snapshot.test.id
   vpc_security_group_ids = [data.aws_security_group.default.id]
@@ -3837,7 +3888,7 @@ resource "aws_rds_cluster" "test" {
     key1 = "value1"
   }
 }
-`, rName, rName, rName)
+`, rName)
 }
 
 func testAccAWSRDSClusterConfig_SnapshotIdentifier_EncryptedRestore(rName string) string {
@@ -3845,7 +3896,7 @@ func testAccAWSRDSClusterConfig_SnapshotIdentifier_EncryptedRestore(rName string
 resource "aws_kms_key" "test" {}
 
 resource "aws_rds_cluster" "source" {
-  cluster_identifier  = "%s-source"
+  cluster_identifier  = "%[1]s-source"
   master_password     = "barbarbarbar"
   master_username     = "foo"
   skip_final_snapshot = true
@@ -3853,29 +3904,29 @@ resource "aws_rds_cluster" "source" {
 
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.source.id
-  db_cluster_snapshot_identifier = %q
+  db_cluster_snapshot_identifier = %[1]q
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %q
+  cluster_identifier  = %[1]q
   skip_final_snapshot = true
   snapshot_identifier = aws_db_cluster_snapshot.test.id
 
   storage_encrypted = true
   kms_key_id        = aws_kms_key.test.arn
 }
-`, rName, rName, rName)
+`, rName)
 }
 
 func testAccAWSClusterConfigWithCopyTagsToSnapshot(n int, f bool) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-aurora-cluster-%[1]d"
+  cluster_identifier              = "tf-aurora-cluster-%d"
   database_name                   = "mydb"
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.aurora5.6"
-  copy_tags_to_snapshot           = %[2]t
+  copy_tags_to_snapshot           = %t
   skip_final_snapshot             = true
 }
 `, n, f)
