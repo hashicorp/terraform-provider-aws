@@ -2733,7 +2733,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     hec_endpoint = "https://input-test.com:443"
     hec_token    = "51D4DA16-C61B-4F5F-8EC7-ED4301342A4A"
   }
-}  
+}
 `
 
 var testAccKinesisFirehoseDeliveryStreamConfig_SplunkUpdates = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
@@ -2764,18 +2764,18 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
         type = "Lambda"
 
         parameters {
-           parameter_name  = "LambdaArn"
-           parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
         }
 
         parameters {
-           parameter_name  = "RoleArn"
-           parameter_value = aws_iam_role.firehose.arn
+          parameter_name  = "RoleArn"
+          parameter_value = aws_iam_role.firehose.arn
         }
 
         parameters {
-           parameter_name  = "BufferSizeInMBs"
-           parameter_value = 1
+          parameter_name  = "BufferSizeInMBs"
+          parameter_value = 1
         }
 
         parameters {
@@ -2785,7 +2785,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
       }
     }
   }
-}  
+}
 `
 
 var testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpointBasic = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
@@ -2825,8 +2825,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     url            = "https://input-test.com:443"
     name           = "HTTP_test"
     access_key     = "test_key"
-	role_arn       = aws_iam_role.firehose.arn
-    s3_backup_mode             = "FailedEventsOnly"
+    role_arn       = aws_iam_role.firehose.arn
+    s3_backup_mode = "FailedEventsOnly"
 
     processing_configuration {
       enabled = true
@@ -2835,18 +2835,18 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
         type = "Lambda"
 
         parameters {
-           parameter_name  = "LambdaArn"
-           parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
         }
 
         parameters {
-           parameter_name  = "RoleArn"
-           parameter_value = aws_iam_role.firehose.arn
+          parameter_name  = "RoleArn"
+          parameter_value = aws_iam_role.firehose.arn
         }
 
         parameters {
-           parameter_name  = "BufferSizeInMBs"
-           parameter_value = 1
+          parameter_name  = "BufferSizeInMBs"
+          parameter_value = 1
         }
 
         parameters {
@@ -2856,7 +2856,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
       }
     }
   }
-}  
+}
 `
 
 var testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
