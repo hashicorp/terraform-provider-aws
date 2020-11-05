@@ -83,7 +83,7 @@ resource "aws_subnet" "sn1" {
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-      Name = "tf-acc-r53-resolver-sn1-%d"
+    Name = "tf-acc-r53-resolver-sn1-%d"
   }
 }
 
@@ -103,7 +103,7 @@ resource "aws_subnet" "sn3" {
   availability_zone = data.aws_availability_zones.available.names[2]
 
   tags = {
-      Name = "tf-acc-r53-resolver-sn3-%d"
+    Name = "tf-acc-r53-resolver-sn3-%d"
   }
 }
 
@@ -112,7 +112,7 @@ resource "aws_security_group" "sg1" {
   name   = "tf-acc-r53-resolver-sg1-%d"
 
   tags = {
-       Name = "tf-acc-r53-resolver-sg1-%d"
+    Name = "tf-acc-r53-resolver-sg1-%d"
   }
 }
 
@@ -121,7 +121,7 @@ resource "aws_security_group" "sg2" {
   name   = "tf-acc-r53-resolver-sg2-%d"
 
   tags = {
-      Name = "tf-acc-r53-resolver-sg2-%d"
+    Name = "tf-acc-r53-resolver-sg2-%d"
   }
 }
 `, rInt, rInt, rInt, rInt, rInt, rInt, rInt, rInt)
@@ -154,7 +154,7 @@ resource "aws_route53_resolver_endpoint" "foo" {
 }
 
 data "aws_route53_resolver_endpoint" "foo" {
-    resolver_endpoint_id = aws_route53_resolver_endpoint.foo.id
+  resolver_endpoint_id = aws_route53_resolver_endpoint.foo.id
 }
 `, direction, name))
 }
@@ -187,11 +187,14 @@ resource "aws_route53_resolver_endpoint" "foo" {
 
 data "aws_route53_resolver_endpoint" "foo" {
     filter {
-           name   = "Name"
-           values = [aws_route53_resolver_endpoint.foo.name]
+      name   = "Name"
+      values = [aws_route53_resolver_endpoint.foo.name]
     }
 
-   depends_on = [aws_route53_resolver_endpoint.foo]
+    filter {
+      name = "SecurityGroupIds"
+      values = [aws_security_group.sg1.id, aws_security_group.sg2.id]
+    }
 }
 `, direction, name))
 }
@@ -205,8 +208,8 @@ data "aws_route53_resolver_endpoint" "foo" {
 const testAccDataSourceAwsRoute53ResolverEndpointConfig_NonExistentFilter = `
 data "aws_route53_resolver_endpoint" "foo" {
     filter {
-           name = "Name"
-           values = ["None-Existent-Resource"]
+      name = "Name"
+      values = ["None-Existent-Resource"]
     }
 }
 `
