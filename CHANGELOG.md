@@ -16,6 +16,12 @@ ENHANCEMENTS
 * resource/aws_glue_crawler: Support MongoDB target [GH-15934]
 * resource/aws_glue_trigger: Add plan time validation to `name` [GH-15793]
 * resource/aws_glue_trigger: Add `security_configuration` and `notification_property` arguments to `actions` block [GH-15793]
+* resource/aws_kinesis_analytics_application: Wait for resource deletion. [GH-16005]
+* resource/aws_kinesis_analytics_application: `inputs.parallelism` is a computed attribute. [GH-16005]
+* resource/aws_kinesis_analytics_application: Handle `inputs.processing_configuration` addition and deletion. [GH-16005]
+* resource/aws_kinesis_analytics_application: Handle `reference_data_sources` deletion. [GH-16005]
+* resource/aws_kinesis_analytics_application: Handle `cloudwatch_logging_options` deletion. [GH-16005]
+* resource/aws_kinesis_analytics_application: Set the `description` attribute on creation. [GH-16005]
 
 BUG FIXES
 
