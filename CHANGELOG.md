@@ -24,7 +24,7 @@ ENHANCEMENTS
 * resource/aws_kinesis_analytics_application: Handle `cloudwatch_logging_options` deletion. [GH-16005]
 * resource/aws_kinesis_analytics_application: Set the `description` attribute on creation. [GH-16005]
 * resource/aws_sagemaker_endpoint_configuration: Add support for `data_capture_config`. [GH-15887]
-* resource/aws_sagemaker_endpoint_configuration: Add plan time validation for `production_variants.accelerator_type`, `production_variants.instance_type `. [GH-15887]
+* resource/aws_sagemaker_endpoint_configuration: Add plan time validation for `production_variants.accelerator_type`, `production_variants.instance_type`. [GH-15887]
 * resource/aws_sagemaker_model: Add support for `primary_container. image_config` and `containers.image_config` [GH-15957]
 * resource/aws_sagemaker_model: Add plan time validation for `execution_role_arn`  [GH-15957]
 
