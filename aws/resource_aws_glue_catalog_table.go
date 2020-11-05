@@ -77,6 +77,11 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
+						"parameters": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"type": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -118,6 +123,11 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
+									},
+									"parameters": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"type": {
 										Type:         schema.TypeString,
@@ -269,7 +279,7 @@ func resourceAwsGlueCatalogTableCreate(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Glue catalog table input: %#v", input)
 	_, err := conn.CreateTable(input)
 	if err != nil {
-		return fmt.Errorf("Error creating Catalog Table: %s", err)
+		return fmt.Errorf("Error creating Catalog Table: %w", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s:%s", catalogID, dbName, name))
@@ -300,7 +310,7 @@ func resourceAwsGlueCatalogTableRead(d *schema.ResourceData, meta interface{}) e
 			return nil
 		}
 
-		return fmt.Errorf("Error reading Glue Catalog Table: %s", err)
+		return fmt.Errorf("Error reading Glue Catalog Table: %w", err)
 	}
 
 	table := out.Table
@@ -321,11 +331,11 @@ func resourceAwsGlueCatalogTableRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("retention", table.Retention)
 
 	if err := d.Set("storage_descriptor", flattenGlueStorageDescriptor(table.StorageDescriptor)); err != nil {
-		return fmt.Errorf("error setting storage_descriptor: %s", err)
+		return fmt.Errorf("error setting storage_descriptor: %w", err)
 	}
 
 	if err := d.Set("partition_keys", flattenGlueColumns(table.PartitionKeys)); err != nil {
-		return fmt.Errorf("error setting partition_keys: %s", err)
+		return fmt.Errorf("error setting partition_keys: %w", err)
 	}
 
 	d.Set("view_original_text", table.ViewOriginalText)
@@ -333,7 +343,7 @@ func resourceAwsGlueCatalogTableRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("table_type", table.TableType)
 
 	if err := d.Set("parameters", aws.StringValueMap(table.Parameters)); err != nil {
-		return fmt.Errorf("error setting parameters: %s", err)
+		return fmt.Errorf("error setting parameters: %w", err)
 	}
 
 	return nil
@@ -354,7 +364,7 @@ func resourceAwsGlueCatalogTableUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if _, err := conn.UpdateTable(updateTableInput); err != nil {
-		return fmt.Errorf("Error updating Glue Catalog Table: %s", err)
+		return fmt.Errorf("Error updating Glue Catalog Table: %w", err)
 	}
 
 	return resourceAwsGlueCatalogTableRead(d, meta)
@@ -375,7 +385,7 @@ func resourceAwsGlueCatalogTableDelete(d *schema.ResourceData, meta interface{})
 		DatabaseName: aws.String(dbName),
 	})
 	if err != nil {
-		return fmt.Errorf("Error deleting Glue Catalog Table: %s", err.Error())
+		return fmt.Errorf("Error deleting Glue Catalog Table: %w", err)
 	}
 	return nil
 }
@@ -433,8 +443,7 @@ func expandGlueStorageDescriptor(l []interface{}) *glue.StorageDescriptor {
 	storageDescriptor := &glue.StorageDescriptor{}
 
 	if v, ok := s["columns"]; ok {
-		columns := expandGlueColumns(v.([]interface{}))
-		storageDescriptor.Columns = columns
+		storageDescriptor.Columns = expandGlueColumns(v.([]interface{}))
 	}
 
 	if v, ok := s["location"]; ok {
@@ -499,6 +508,10 @@ func expandGlueColumns(columns []interface{}) []*glue.Column {
 
 		if v, ok := elementMap["type"]; ok {
 			column.Type = aws.String(v.(string))
+		}
+
+		if v, ok := elementMap["parameters"]; ok {
+			column.Parameters = stringMapToPointers(v.(map[string]interface{}))
 		}
 
 		columnSlice = append(columnSlice, column)
@@ -601,8 +614,8 @@ func flattenGlueStorageDescriptor(s *glue.StorageDescriptor) []map[string]interf
 	return storageDescriptors
 }
 
-func flattenGlueColumns(cs []*glue.Column) []map[string]string {
-	columnsSlice := make([]map[string]string, len(cs))
+func flattenGlueColumns(cs []*glue.Column) []map[string]interface{} {
+	columnsSlice := make([]map[string]interface{}, len(cs))
 	if len(cs) > 0 {
 		for i, v := range cs {
 			columnsSlice[i] = flattenGlueColumn(v)
@@ -612,8 +625,8 @@ func flattenGlueColumns(cs []*glue.Column) []map[string]string {
 	return columnsSlice
 }
 
-func flattenGlueColumn(c *glue.Column) map[string]string {
-	column := make(map[string]string)
+func flattenGlueColumn(c *glue.Column) map[string]interface{} {
+	column := make(map[string]interface{})
 
 	if c == nil {
 		return column
@@ -629,6 +642,10 @@ func flattenGlueColumn(c *glue.Column) map[string]string {
 
 	if v := aws.StringValue(c.Comment); v != "" {
 		column["comment"] = v
+	}
+
+	if v := c.Parameters; v != nil {
+		column["parameters"] = aws.StringValueMap(v)
 	}
 
 	return column
