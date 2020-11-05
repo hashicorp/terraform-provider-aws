@@ -74,6 +74,7 @@ The following arguments are supported:
 * `description` - (Optional) The description of the repository.
 * `upstream` - (Optional) A list of upstream repositories to associate with the repository. The order of the upstream repositories in the list determines their priority order when AWS CodeArtifact looks for a requested package version. see [Upstream](#upstream)
 * `external_connections` - An array of external connections associated with the repository. Only one external connection can be set per repository. see [External Connections](#external-connections).
+* `tags` - (Optional) Key-value map of resource tags.
 
 ### Upstream
 

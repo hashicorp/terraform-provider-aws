@@ -1,14 +1,16 @@
 ---
-subcategory: "CloudWatch"
+subcategory: "EventBridge (CloudWatch Events)"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_rule"
 description: |-
-  Provides a CloudWatch Event Rule resource.
+  Provides an EventBridge Rule resource.
 ---
 
 # Resource: aws_cloudwatch_event_rule
 
-Provides a CloudWatch Event Rule resource.
+Provides an EventBridge Rule resource.
+
+~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
 ## Example Usage
 
@@ -66,7 +68,7 @@ The following arguments are supported:
 	For example, `cron(0 20 * * ? *)` or `rate(5 minutes)`. At least one of `schedule_expression` or `event_pattern` is required. Can only be used on the default event bus.
 * `event_bus_name` - (Optional) The event bus to associate with this rule. If you omit this, the `default` event bus is used.
 * `event_pattern` - (Optional) The event pattern described a JSON object. At least one of `schedule_expression` or `event_pattern` is required.
-	See full documentation of [CloudWatch Events and Event Patterns](http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CloudWatchEventsandEventPatterns.html) for details.
+	See full documentation of [Events and Event Patterns in EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/eventbridge-and-event-patterns.html) for details.
 * `description` - (Optional) The description of the rule.
 * `role_arn` - (Optional) The Amazon Resource Name (ARN) associated with the role that is used for target invocation.
 * `is_enabled` - (Optional) Whether the rule should be enabled (defaults to `true`).
@@ -82,7 +84,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudwatch Event Rules can be imported using the `event_bus_name/rule_name` (if you omit `event_bus_name`, the `default` event bus will be used), e.g.
+EventBridge Rules can be imported using the `event_bus_name/rule_name` (if you omit `event_bus_name`, the `default` event bus will be used), e.g.
 
 ```
 $ terraform import aws_cloudwatch_event_rule.console capture-console-sign-in

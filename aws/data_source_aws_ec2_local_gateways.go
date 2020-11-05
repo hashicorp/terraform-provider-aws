@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -66,7 +65,8 @@ func dataSourceAwsEc2LocalGatewaysRead(d *schema.ResourceData, meta interface{})
 		localgateways = append(localgateways, aws.StringValue(localgateway.LocalGatewayId))
 	}
 
-	d.SetId(time.Now().UTC().String())
+	d.SetId(meta.(*AWSClient).region)
+
 	if err := d.Set("ids", localgateways); err != nil {
 		return fmt.Errorf("Error setting local gateway ids: %s", err)
 	}

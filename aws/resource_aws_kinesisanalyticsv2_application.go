@@ -2606,12 +2606,12 @@ func kinesisAnalyticsV2RetryIAMEventualConsistency(f func() (interface{}, error)
 
 		output, err = f()
 
-		// Kinesis Stream: https://github.com/terraform-providers/terraform-provider-aws/issues/7032
+		// Kinesis Stream: https://github.com/hashicorp/terraform-provider-aws/issues/7032
 		if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
 			return resource.RetryableError(err)
 		}
 
-		// Kinesis Firehose: https://github.com/terraform-providers/terraform-provider-aws/issues/7394
+		// Kinesis Firehose: https://github.com/hashicorp/terraform-provider-aws/issues/7394
 		if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics doesn't have sufficient privileges") {
 			return resource.RetryableError(err)
 		}

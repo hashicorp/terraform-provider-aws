@@ -215,7 +215,7 @@ func TestAccAwsWorkspacesWorkspace_workspaceProperties(t *testing.T) {
 
 // TestAccAwsWorkspacesWorkspace_workspaceProperties_runningModeAlwaysOn
 // validates workspace resource creation/import when workspace_properties.running_mode is set to ALWAYS_ON
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13558
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13558
 func TestAccAwsWorkspacesWorkspace_workspaceProperties_runningModeAlwaysOn(t *testing.T) {
 	var v1 workspaces.Workspace
 	rName := acctest.RandomWithPrefix("tf-acc-test")

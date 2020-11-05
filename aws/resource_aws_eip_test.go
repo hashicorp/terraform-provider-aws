@@ -275,7 +275,7 @@ func TestAccAWSEIP_associated_user_private_ip(t *testing.T) {
 }
 
 // Regression test for https://github.com/hashicorp/terraform/issues/3429 (now
-// https://github.com/terraform-providers/terraform-provider-aws/issues/42)
+// https://github.com/hashicorp/terraform-provider-aws/issues/42)
 func TestAccAWSEIP_Instance_Reassociate(t *testing.T) {
 	instanceResourceName := "aws_instance.test"
 	resourceName := "aws_eip.test"
@@ -436,6 +436,34 @@ func TestAccAWSEIP_PublicIpv4Pool_default(t *testing.T) {
 					testAccCheckAWSEIPAttributes(&conf),
 					resource.TestCheckResourceAttr(resourceName, "public_ipv4_pool", "amazon"),
 					resource.TestCheckResourceAttr(resourceName, "domain", ec2.DomainTypeVpc),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEIP_NetworkBorderGroup(t *testing.T) {
+	var conf ec2.Address
+	resourceName := "aws_eip.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSEIPDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEIPConfigNetworkBorderGroup,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists(resourceName, &conf),
+					testAccCheckAWSEIPAttributes(&conf),
+					resource.TestCheckResourceAttr(resourceName, "public_ipv4_pool", "amazon"),
+					resource.TestCheckResourceAttr(resourceName, "network_border_group", testAccGetRegion()),
 				),
 			},
 			{
@@ -1095,3 +1123,12 @@ resource "aws_eip" "test" {
 }
 `
 }
+
+const testAccAWSEIPConfigNetworkBorderGroup = `
+data "aws_region" current {}
+
+resource "aws_eip" "test" {
+  vpc                  = true
+  network_border_group = data.aws_region.current.name
+}
+`

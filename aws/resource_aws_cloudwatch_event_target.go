@@ -52,8 +52,9 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 			},
 
 			"arn": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"input": {
@@ -71,8 +72,9 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 			},
 
 			"role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"run_command_targets": {
@@ -107,9 +109,10 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
 						"launch_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "EC2",
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      events.LaunchTypeEc2,
+							ValidateFunc: validation.StringInSlice(events.LaunchType_Values(), false),
 						},
 						"network_configuration": {
 							Type:     schema.TypeList,
@@ -121,13 +124,11 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
-										Set:      schema.HashString,
 									},
 									"subnets": {
 										Type:     schema.TypeSet,
 										Required: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
-										Set:      schema.HashString,
 									},
 									"assign_public_ip": {
 										Type:     schema.TypeBool,
@@ -151,7 +152,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 						"task_definition_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1600),
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -595,11 +596,11 @@ func flattenAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(nc *events
 	}
 
 	result := make(map[string]interface{})
-	result["security_groups"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.SecurityGroups))
-	result["subnets"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.Subnets))
+	result["security_groups"] = flattenStringSet(nc.AwsvpcConfiguration.SecurityGroups)
+	result["subnets"] = flattenStringSet(nc.AwsvpcConfiguration.Subnets)
 
 	if nc.AwsvpcConfiguration.AssignPublicIp != nil {
-		result["assign_public_ip"] = *nc.AwsvpcConfiguration.AssignPublicIp == events.AssignPublicIpEnabled
+		result["assign_public_ip"] = aws.StringValue(nc.AwsvpcConfiguration.AssignPublicIp) == events.AssignPublicIpEnabled
 	}
 
 	return []interface{}{result}

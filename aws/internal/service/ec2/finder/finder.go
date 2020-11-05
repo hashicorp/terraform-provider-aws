@@ -72,6 +72,25 @@ func SecurityGroupByID(conn *ec2.EC2, id string) (*ec2.SecurityGroup, error) {
 	return result.SecurityGroups[0], nil
 }
 
+// VpcPeeringConnectionByID returns the VPC peering connection corresponding to the specified identifier.
+// Returns nil and potentially an error if no VPC peering connection is found.
+func VpcPeeringConnectionByID(conn *ec2.EC2, id string) (*ec2.VpcPeeringConnection, error) {
+	input := &ec2.DescribeVpcPeeringConnectionsInput{
+		VpcPeeringConnectionIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeVpcPeeringConnections(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.VpcPeeringConnections) == 0 {
+		return nil, nil
+	}
+
+	return output.VpcPeeringConnections[0], nil
+}
+
 // VpnGatewayVpcAttachment returns the attachment between the specified VPN gateway and VPC.
 // Returns nil and potentially an error if no attachment is found.
 func VpnGatewayVpcAttachment(conn *ec2.EC2, vpnGatewayID, vpcID string) (*ec2.VpcAttachment, error) {

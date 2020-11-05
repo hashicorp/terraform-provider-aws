@@ -48,4 +48,5 @@ The following arguments are supported:
 
 All of the argument attributes are also exported as result attributes.
 
+* `id` - Globally unique key ID for the customer master key.
 * `ciphertext_blob` - Base64 encoded ciphertext

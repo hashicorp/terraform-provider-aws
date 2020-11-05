@@ -1,15 +1,13 @@
 package plugin
 
 import (
-	"context"
-
 	hclog "github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5/server"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	grpcplugin "github.com/hashicorp/terraform-plugin-sdk/v2/internal/helper/plugin"
-	proto "github.com/hashicorp/terraform-plugin-sdk/v2/internal/tfplugin5"
 )
 
 const (
@@ -26,7 +24,7 @@ var Handshake = plugin.HandshakeConfig{
 }
 
 type ProviderFunc func() *schema.Provider
-type GRPCProviderFunc func() proto.ProviderServer
+type GRPCProviderFunc func() tfprotov5.ProviderServer
 
 // ServeOpts are the configurations to serve a plugin.
 type ServeOpts struct {
@@ -53,8 +51,8 @@ func Serve(opts *ServeOpts) {
 	// since the plugins may not yet be aware of the new protocol, we
 	// automatically wrap the plugins in the grpc shims.
 	if opts.GRPCProviderFunc == nil && opts.ProviderFunc != nil {
-		opts.GRPCProviderFunc = func() proto.ProviderServer {
-			return grpcplugin.NewGRPCProviderServer(opts.ProviderFunc())
+		opts.GRPCProviderFunc = func() tfprotov5.ProviderServer {
+			return schema.NewGRPCProviderServer(opts.ProviderFunc())
 		}
 	}
 
@@ -63,18 +61,15 @@ func Serve(opts *ServeOpts) {
 		HandshakeConfig: Handshake,
 		VersionedPlugins: map[int]plugin.PluginSet{
 			5: {
-				ProviderPluginName: &gRPCProviderPlugin{
-					GRPCProvider: func() proto.ProviderServer {
+				ProviderPluginName: &tf5server.GRPCProviderPlugin{
+					GRPCProvider: func() tfprotov5.ProviderServer {
 						return provider
 					},
 				},
 			},
 		},
 		GRPCServer: func(opts []grpc.ServerOption) *grpc.Server {
-			return grpc.NewServer(append(opts, grpc.UnaryInterceptor(func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-				ctx = provider.(*grpcplugin.GRPCProviderServer).StopContext(ctx)
-				return handler(ctx, req)
-			}))...)
+			return grpc.NewServer(opts...)
 		},
 		Logger: opts.Logger,
 		Test:   opts.TestConfig,

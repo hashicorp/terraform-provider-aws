@@ -51,7 +51,7 @@ func testAccAwsOrganizationsPolicy_basic(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/5073
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/5073
 func testAccAwsOrganizationsPolicy_concurrent(t *testing.T) {
 	var policy1, policy2, policy3, policy4, policy5 organizations.Policy
 	rName := acctest.RandomWithPrefix("tf-acc-test")

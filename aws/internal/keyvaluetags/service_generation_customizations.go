@@ -26,6 +26,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
@@ -164,6 +165,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(cloudwatchevents.New)
 	case "cloudwatchlogs":
 		funcType = reflect.TypeOf(cloudwatchlogs.New)
+	case "codeartifact":
+		funcType = reflect.TypeOf(codeartifact.New)
 	case "codecommit":
 		funcType = reflect.TypeOf(codecommit.New)
 	case "codedeploy":

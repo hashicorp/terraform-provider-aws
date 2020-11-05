@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -187,11 +186,11 @@ func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *t
 }
 
 func TestAccAWSMskCluster_ConfigurationInfo_Revision(t *testing.T) {
-	TestAccSkip(t, "aws_msk_cluster is correctly calling UpdateClusterConfiguration however API is always returning 429 and 500 errors")
 
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	configurationResourceName := "aws_msk_configuration.test"
+	configurationResourceName2 := "aws_msk_configuration.test2"
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -223,8 +222,8 @@ func TestAccAWSMskCluster_ConfigurationInfo_Revision(t *testing.T) {
 					testAccCheckMskClusterExists(resourceName, &cluster2),
 					testAccCheckMskClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.arn", configurationResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.revision", configurationResourceName, "latest_revision"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.arn", configurationResourceName2, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.revision", configurationResourceName2, "latest_revision"),
 				),
 			},
 		},
@@ -828,6 +827,15 @@ func testAccMskClusterConfigConfigurationInfoRevision2(rName string) string {
 	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
 resource "aws_msk_configuration" "test" {
   kafka_versions = ["2.2.1"]
+  name           = "%[1]s-1"
+
+  server_properties = <<PROPERTIES
+log.cleaner.delete.retention.ms = 86400000
+PROPERTIES
+}
+
+resource "aws_msk_configuration" "test2" {
+  kafka_versions = ["2.2.1"]
   name           = "%[1]s-2"
 
   server_properties = <<PROPERTIES
@@ -840,12 +848,6 @@ resource "aws_msk_cluster" "test" {
   kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
 
-  encryption_info {
-    encryption_in_transit {
-      client_broker = "TLS_PLAINTEXT"
-    }
-  }
-
   broker_node_group_info {
     client_subnets  = [aws_subnet.example_subnet_az1.id, aws_subnet.example_subnet_az2.id, aws_subnet.example_subnet_az3.id]
     ebs_volume_size = 10
@@ -854,8 +856,8 @@ resource "aws_msk_cluster" "test" {
   }
 
   configuration_info {
-    arn      = aws_msk_configuration.test.arn
-    revision = aws_msk_configuration.test.latest_revision
+    arn      = aws_msk_configuration.test2.arn
+    revision = aws_msk_configuration.test2.latest_revision
   }
 }
 `, rName)

@@ -8,9 +8,10 @@ import (
 
 const (
 	MLTransformStatusUnknown = "Unknown"
+	TriggerStatusUnknown     = "Unknown"
 )
 
-// MLTransformStatus fetches the Operation and its Status
+// MLTransformStatus fetches the MLTransform and its Status
 func MLTransformStatus(conn *glue.Glue, transformId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &glue.GetMLTransformInput{
@@ -28,5 +29,26 @@ func MLTransformStatus(conn *glue.Glue, transformId string) resource.StateRefres
 		}
 
 		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+// TriggerStatus fetches the Trigger and its Status
+func TriggerStatus(conn *glue.Glue, triggerName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &glue.GetTriggerInput{
+			Name: aws.String(triggerName),
+		}
+
+		output, err := conn.GetTrigger(input)
+
+		if err != nil {
+			return nil, TriggerStatusUnknown, err
+		}
+
+		if output == nil {
+			return output, TriggerStatusUnknown, nil
+		}
+
+		return output, aws.StringValue(output.Trigger.State), nil
 	}
 }

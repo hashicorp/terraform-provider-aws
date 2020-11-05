@@ -64,7 +64,7 @@ The following arguments are supported:
 
 ~> **NOTE:** If `version_stages` is configured, you must include the `AWSCURRENT` staging label if this secret version is the only version or if the label is currently present on this secret version, otherwise Terraform will show a perpetual difference.
 
-## Attribute Reference
+## Attributes Reference
 
 * `arn` - The ARN of the secret.
 * `id` - A pipe delimited combination of secret ID and version ID.

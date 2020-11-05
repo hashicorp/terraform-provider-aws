@@ -151,7 +151,7 @@ func TestAccAWSWafRateBasedRule_changePredicates(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/9659
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/9659
 func TestAccAWSWafRateBasedRule_changeRateLimit(t *testing.T) {
 	var ipset waf.IPSet
 	var before, after waf.RateBasedRule

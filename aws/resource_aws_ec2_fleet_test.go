@@ -988,7 +988,7 @@ func TestAccAWSEc2Fleet_Type(t *testing.T) {
 	})
 }
 
-// Test for the bug described in https://github.com/terraform-providers/terraform-provider-aws/issues/6777
+// Test for the bug described in https://github.com/hashicorp/terraform-provider-aws/issues/6777
 func TestAccAWSEc2Fleet_TemplateMultipleNetworkInterfaces(t *testing.T) {
 	var fleet1 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"

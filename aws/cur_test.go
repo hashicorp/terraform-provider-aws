@@ -97,10 +97,3 @@ func testAccGetCurRegion() string {
 
 	return testAccCurRegion
 }
-
-// testAccProviderFactoriesCur initializes providers for Cost and Usage Reporting testing.
-//
-// Deprecated: This will be replaced with testAccProviderFactories when it only returns the "aws" provider
-func testAccProviderFactoriesCur() map[string]func() (*schema.Provider, error) {
-	return testAccProviderFactoriesInit(nil, []string{ProviderNameAws})
-}

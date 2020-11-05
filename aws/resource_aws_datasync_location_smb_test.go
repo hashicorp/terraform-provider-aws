@@ -435,7 +435,7 @@ data "aws_storagegateway_local_disk" "test" {
 resource "aws_storagegateway_cache" "test" {
   # ACCEPTANCE TESTING WORKAROUND:
   # (Shamelessly stolen from:
-  # https://github.com/terraform-providers/terraform-provider-aws/
+  # https://github.com/hashicorp/terraform-provider-aws/
   # blob/1647a5ba13c5abaf5cf65ecdeb7c5fdf0107e56f/aws
   # /resource_aws_storagegateway_cache_test.go#L219 )
   # Data sources are not refreshed before plan after apply in TestStep

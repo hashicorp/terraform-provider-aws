@@ -1568,30 +1568,31 @@ func stringMapToPointers(m map[string]interface{}) map[string]*string {
 	return list
 }
 
-// diffStringMaps returns the set of keys and values that must be created,
-// and the set of keys and values that must be destroyed.
-// Equivalent to 'diffTagsGeneric'.
-func diffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, map[string]*string) {
+// diffStringMaps returns the set of keys and values that must be created, the set of keys
+// and values that must be destroyed, and the set of keys and values that are unchanged.
+func diffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, map[string]*string, map[string]*string) {
 	// First, we're creating everything we have
 	create := map[string]*string{}
 	for k, v := range newMap {
 		create[k] = aws.String(v.(string))
 	}
 
-	// Build the map of what to remove
+	// Build the maps of what to remove and what is unchanged
 	remove := map[string]*string{}
+	unchanged := map[string]*string{}
 	for k, v := range oldMap {
 		old, ok := create[k]
 		if !ok || aws.StringValue(old) != v.(string) {
 			// Delete it!
 			remove[k] = aws.String(v.(string))
 		} else if ok {
+			unchanged[k] = aws.String(v.(string))
 			// already present so remove from new
 			delete(create, k)
 		}
 	}
 
-	return create, remove
+	return create, remove, unchanged
 }
 
 func flattenDSVpcSettings(
@@ -2300,66 +2301,6 @@ func normalizeJsonOrYamlString(templateString interface{}) (string, error) {
 	}
 
 	return checkYamlString(templateString)
-}
-
-func flattenApiGatewayUsageApiStages(s []*apigateway.ApiStage) []map[string]interface{} {
-	stages := make([]map[string]interface{}, 0)
-
-	for _, bd := range s {
-		if bd.ApiId != nil && bd.Stage != nil {
-			stage := make(map[string]interface{})
-			stage["api_id"] = *bd.ApiId
-			stage["stage"] = *bd.Stage
-
-			stages = append(stages, stage)
-		}
-	}
-
-	if len(stages) > 0 {
-		return stages
-	}
-
-	return nil
-}
-
-func flattenApiGatewayUsagePlanThrottling(s *apigateway.ThrottleSettings) []map[string]interface{} {
-	settings := make(map[string]interface{})
-
-	if s == nil {
-		return nil
-	}
-
-	if s.BurstLimit != nil {
-		settings["burst_limit"] = *s.BurstLimit
-	}
-
-	if s.RateLimit != nil {
-		settings["rate_limit"] = *s.RateLimit
-	}
-
-	return []map[string]interface{}{settings}
-}
-
-func flattenApiGatewayUsagePlanQuota(s *apigateway.QuotaSettings) []map[string]interface{} {
-	settings := make(map[string]interface{})
-
-	if s == nil {
-		return nil
-	}
-
-	if s.Limit != nil {
-		settings["limit"] = *s.Limit
-	}
-
-	if s.Offset != nil {
-		settings["offset"] = *s.Offset
-	}
-
-	if s.Period != nil {
-		settings["period"] = *s.Period
-	}
-
-	return []map[string]interface{}{settings}
 }
 
 func buildApiGatewayInvokeURL(client *AWSClient, restApiId, stageName string) string {
@@ -4206,7 +4147,7 @@ func expandDynamoDbLocalSecondaryIndexes(cfg []interface{}, keySchemaM map[strin
 		m := lsi.(map[string]interface{})
 		idxName := m["name"].(string)
 
-		// TODO: See https://github.com/terraform-providers/terraform-provider-aws/issues/3176
+		// TODO: See https://github.com/hashicorp/terraform-provider-aws/issues/3176
 		if _, ok := m["hash_key"]; !ok {
 			m["hash_key"] = keySchemaM["hash_key"]
 		}

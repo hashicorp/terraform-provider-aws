@@ -2111,7 +2111,7 @@ func validateAmazonSideAsn(v interface{}, k string) (ws []string, errors []error
 		return
 	}
 
-	// https://github.com/terraform-providers/terraform-provider-aws/issues/5263
+	// https://github.com/hashicorp/terraform-provider-aws/issues/5263
 	isLegacyAsn := func(a int64) bool {
 		return a == 7224 || a == 9059 || a == 10124 || a == 17493
 	}
@@ -2498,7 +2498,7 @@ func MapMaxItems(max int) schema.SchemaValidateFunc {
 		}
 
 		if len(m) > max {
-			errors = append(errors, fmt.Errorf("expected number of items in %s to be lesser than or equal to %d, got %d", k, max, len(m)))
+			errors = append(errors, fmt.Errorf("expected number of items in %s to be less than or equal to %d, got %d", k, max, len(m)))
 		}
 
 		return warnings, errors

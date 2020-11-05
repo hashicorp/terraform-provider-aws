@@ -1,9 +1,8 @@
 package aws
 
 import (
-	"fmt"
-
 	"encoding/json"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"

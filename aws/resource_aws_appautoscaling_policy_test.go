@@ -390,7 +390,7 @@ func TestAccAWSAppautoScalingPolicy_multiplePoliciesSameResource(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/7963
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7963
 func TestAccAWSAppautoScalingPolicy_ResourceId_ForceNew(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 	appAutoscalingTargetResourceName := "aws_appautoscaling_target.test"

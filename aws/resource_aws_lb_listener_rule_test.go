@@ -576,7 +576,7 @@ func TestAccAWSLBListenerRule_Action_Order(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6171
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6171
 func TestAccAWSLBListenerRule_Action_Order_Recreates(t *testing.T) {
 	var rule elbv2.Rule
 	key := tlsRsaPrivateKeyPem(2048)

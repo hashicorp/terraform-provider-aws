@@ -76,7 +76,7 @@ queued_behavior "release_commenter" "releases" {
   message = <<-EOF
     This has been released in [version ${var.release_version} of the Terraform AWS provider](${var.changelog_link}). Please see the [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#provider-versions) or reach out if you need any assistance upgrading.
 
-    For further feature requests or bug reports with this functionality, please create a [new GitHub issue](https://github.com/terraform-providers/terraform-provider-aws/issues/new/choose) following the template for triage. Thanks!
+    For further feature requests or bug reports with this functionality, please create a [new GitHub issue](https://github.com/hashicorp/terraform-provider-aws/issues/new/choose) following the template for triage. Thanks!
   EOF
 }
 
@@ -202,6 +202,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/codestar" = [
       "aws_codestar_",
     ],
+    "service/codestarconnections" = [
+      "aws_codestarconnections_",
+    ],
     "service/codestarnotifications" = [
       "aws_codestarnotifications_",
     ],
@@ -306,6 +309,10 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/emr" = [
       "aws_emr_",
+    ],
+    "service/eventbridge" = [
+      # EventBridge is rebranded CloudWatch Events
+      "aws_cloudwatch_event_",
     ],
     "service/firehose" = [
       "aws_kinesis_firehose_",
@@ -814,6 +821,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_codestar_*",
       "**/codestar_*"
     ]
+    "service/codestarconnections" = [
+      "aws/internal/service/codestarconnections/**/*",
+      "**/*_codestarconnections_*",
+      "**/codestarconnections_*"
+    ]
     "service/codestarnotifications" = [
       "aws/internal/service/codestarnotifications/**/*",
       "**/*_codestarnotifications_*",
@@ -1033,6 +1045,12 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/emr/**/*",
       "**/*_emr_*",
       "**/emr_*"
+    ]
+    "service/eventbridge" = [
+      # EventBridge is rebranded CloudWatch Events
+      "aws/internal/service/cloudwatchevents/**/*",
+      "**/*_cloudwatch_event_*",
+      "**/cloudwatch_event_*"
     ]
     "service/firehose" = [
       "aws/internal/service/firehose/**/*",
@@ -1489,4 +1507,44 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/xray_*"
     ]
   }
+}
+
+behavior "regexp_issue_labeler" "panic_label" {
+    regexp = "panic:"
+    labels = ["crash", "bug"]
+}
+
+behavior "remove_labels_on_reply" "remove_stale" {
+    labels = ["waiting-response", "stale"]
+    only_non_maintainers = true
+}
+
+behavior "pull_request_size_labeler" "size" {
+    label_prefix = "size/"
+    label_map = {
+        "size/XS" = {
+            from = 0
+            to = 30
+        }
+        "size/S" = {
+            from = 31
+            to = 60
+        }
+        "size/M" = {
+            from = 61
+            to = 150
+        }
+        "size/L" = {
+            from = 151
+            to = 300
+        }
+        "size/XL" = {
+            from = 301
+            to = 1000
+        }
+        "size/XXL" = {
+            from = 1001
+            to = 0
+        }
+    }
 }

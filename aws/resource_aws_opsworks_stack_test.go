@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 ///////////////////////////////
@@ -25,7 +24,7 @@ func TestAccAWSOpsworksStack_noVpcBasic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck("opsworks", t)
+			testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t)
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
 		Providers:    testAccProviders,
@@ -55,7 +54,7 @@ func TestAccAWSOpsworksStack_noVpcChangeServiceRoleForceNew(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck("opsworks", t)
+			testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t)
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
 		Providers:    testAccProviders,
@@ -91,7 +90,7 @@ func TestAccAWSOpsworksStack_vpc(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck("opsworks", t)
+			testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t)
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
 		Providers:    testAccProviders,
@@ -139,7 +138,7 @@ func TestAccAWSOpsworksStack_noVpcCreateTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck("opsworks", t)
+			testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t)
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
 		Providers:    testAccProviders,
@@ -182,7 +181,7 @@ func TestAccAWSOpsworksStack_CustomCookbooks_SetPrivateProperties(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck("opsworks", t)
+			testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t)
 			testAccPreCheckAWSOpsWorksStacks(t)
 		},
 		Providers:    testAccProviders,
