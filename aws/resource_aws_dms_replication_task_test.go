@@ -137,12 +137,12 @@ resource "aws_iam_role" "dms_cloudwatch_logs_role" {
 
 resource "aws_iam_role_policy_attachment" "dms_vpc_access_policy" {
   role       = aws_iam_role.dms_vpc_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonDMSVPCManagementRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonDMSVPCManagementRole"
 }
 
 resource "aws_iam_role_policy_attachment" "dms_cloudwatch_logs_access_policy" {
   role       = aws_iam_role.dms_cloudwatch_logs_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonDMSCloudWatchLogsRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonDMSCloudWatchLogsRole"
 }
 
 resource "aws_vpc" "dms_vpc" {
@@ -268,12 +268,12 @@ resource "aws_iam_role" "dms_cloudwatch_logs_role" {
 
 resource "aws_iam_role_policy_attachment" "dms_vpc_access_policy" {
   role       = aws_iam_role.dms_vpc_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonDMSVPCManagementRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonDMSVPCManagementRole"
 }
 
 resource "aws_iam_role_policy_attachment" "dms_cloudwatch_logs_access_policy" {
   role       = aws_iam_role.dms_cloudwatch_logs_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonDMSCloudWatchLogsRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonDMSCloudWatchLogsRole"
 }
 
 resource "aws_vpc" "dms_vpc" {
