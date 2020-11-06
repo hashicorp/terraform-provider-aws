@@ -103,6 +103,33 @@ func TestAccAWSSagemakerDomain_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSagemakerDomain_efsKms(t *testing.T) {
+	var notebook sagemaker.DescribeDomainOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerDomainConfigEFSKMS(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					resource.TestCheckResourceAttrPair(resourceName, "home_efs_file_system_kms_key_id", "aws_kms_key.test", "arn"),
+					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSagemakerDomain_tags(t *testing.T) {
 	var notebook sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -397,6 +424,45 @@ resource "aws_sagemaker_domain" "test" {
   default_user_settings {
 	execution_role  = aws_iam_role.test.arn
 	security_groups = [aws_security_group.test.id, aws_security_group.test2.id] 
+  }
+}
+`, rName)
+}
+
+func testAccAWSSagemakerDomainConfigEFSKMS(rName string) string {
+	return testAccAWSSagemakerDomainConfigBase(rName) + fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = "Terraform acc test %s"
+  deletion_window_in_days = 7
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name                     = %[1]q
+  auth_mode                       = "IAM"
+  vpc_id                          = aws_vpc.test.id
+  subnet_ids                      = [aws_subnet.test.id]
+  home_efs_file_system_kms_key_id = aws_kms_key.test.arn
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
   }
 }
 `, rName)
