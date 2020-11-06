@@ -69,3 +69,23 @@ jobs:
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: cd tools && go install github.com/client9/misspell/cmd/misspell
       - run: misspell -error -source text CHANGELOG.md
+
+name: Generate CHANGELOG
+on:
+  pull_request:
+    types: [closed]
+jobs:
+  GenerateChangelog:
+    if: github.event.pull_request.merged
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - run: |
+          ./scripts/generate-changelog.sh
+          git config --local user.email "hashibot@hashicorp.com"
+          git config --local user.name "ChangelogBot"
+          git add CHANGELOG.md
+          git commit -m "Update CHANGELOG.md for #${{ github.event.pull_request.number }}" 
+          git push   

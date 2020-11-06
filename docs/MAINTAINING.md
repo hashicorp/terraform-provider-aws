@@ -13,7 +13,6 @@
             - [tfproviderlint Updates](#tfproviderlint-updates)
             - [yaml.v2 Updates](#yaml-v2-updates)
     - [Pull Request Merge Process](#pull-request-merge-process)
-    - [Pull Request Types to CHANGELOG](#pull-request-types-to-changelog)
 - [Breaking Changes](#breaking-changes)
 - [Branch Dictionary](#branch-dictionary)
 - [Environment Variable Dictionary](#environment-variable-dictionary)
@@ -312,28 +311,6 @@ Run the acceptance testing pattern, `TestAccAWSCloudFormationStack(_dataSource)?
 ```markdown
 The fix for this has been merged and will release with version X.Y.Z of the Terraform AWS Provider, expected in the XXX timeframe.
 ```
-
-### Pull Request Types to CHANGELOG
-
-The CHANGELOG is intended to show operator-impacting changes to the codebase for a particular version. If every change or commit to the code resulted in an entry, the CHANGELOG would become less useful for operators. The lists below are general guidelines on when a decision needs to be made to decide whether a change should have an entry.
-
-#### Changes that should have a CHANGELOG entry
-
-- New Resources and Data Sources
-- New full-length documentation guides (e.g. EKS Getting Started Guide, IAM Policy Documents with Terraform)
-- Resource and provider bug fixes
-- Resource and provider enhancements
-- Deprecations
-- Removals
-
-#### Changes that may have a CHANGELOG entry
-
-- Dependency updates: If the update contains relevant bug fixes or enhancements that affect operators, those should be called out.
-
-#### Changes that should _not_ have a CHANGELOG entry
-
-- Resource and provider documentation updates
-- Testing updates
 
 ## Breaking Changes
 

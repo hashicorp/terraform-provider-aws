@@ -25,6 +25,8 @@ expect:
    or adding `[WIP]` to the beginning of the pull request title.
    Please include specific questions or items you'd like feedback on.
 
+1. Create a changelog entry following the process outlined [here]($changelog-process)
+
 1. Once you believe your pull request is ready to be reviewed, ensure the
    pull request is not a draft pull request by [marking it ready for review](https://help.github.com/en/articles/changing-the-stage-of-a-pull-request)
    or removing `[WIP]` from the pull request title if necessary, and a
@@ -39,8 +41,7 @@ expect:
 
 1. Once all outstanding comments and checklist items have been addressed, your
    contribution will be merged! Merged PRs will be included in the next
-   Terraform release. The provider team takes care of updating the CHANGELOG as
-   they merge.
+   Terraform release.
 
 1. In some cases, we might decide that a PR should be closed without merging.
    We'll make sure to provide clear reasoning when this happens.
@@ -183,3 +184,42 @@ if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchTagSet) {
 
 - [ ] __Uses Paginated AWS Go SDK Functions When Iterating Over a Collection of Objects__: When the API for listing a collection of objects provides a paginated function, use it instead of looping until the next page token is not set. For example, with the EC2 API, [`DescribeInstancesPages`](https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#EC2.DescribeInstancesPages) should be used instead of [`DescribeInstances`](https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#EC2.DescribeInstances) when more than one result is expected.
 - [ ] __Adds Paginated Functions Missing from the AWS Go SDK to Internal Service Package__: If the AWS Go SDK does not define a paginated equivalent for a function to list a collection of objects, it should be added to a per-service internal package using the [`listpages` generator](../../aws/internal/generators/listpages/README.md). A support case should also be opened with AWS to have the paginated functions added to the AWS Go SDK.
+
+## Changelog Process
+
+HashiCorp’s open-source projects have always maintained user-friendly, readable CHANGELOGs that allow users to tell at a glance whether a release should have any effect on them, and to gauge the risk of an upgrade.
+
+We use the [go-changelog](https://github.com/hashicorp/go-changelog) to generate and update the changelog from files created in the `.changelog/` directory. It is important that when you raise your Pull Request, there is a changelog entry which describes the changes your contribution makes. Not all changes require an entry in the CHANGELOG, guidance follows on what changes do.
+
+### Pull Request Types to CHANGELOG
+
+The CHANGELOG is intended to show operator-impacting changes to the codebase for a particular version. If every change or commit to the code resulted in an entry, the CHANGELOG would become less useful for operators. The lists below are general guidelines on when a decision needs to be made to decide whether a change should have an entry.
+
+#### Changes that should have a CHANGELOG entry
+
+- New Resources and Data Sources
+- New full-length documentation guides (e.g. EKS Getting Started Guide, IAM Policy Documents with Terraform)
+- Resource and provider bug fixes
+- Resource and provider enhancements
+- Deprecations
+- Removals
+
+#### Changes that may have a CHANGELOG entry
+
+- Dependency updates: If the update contains relevant bug fixes or enhancements that affect operators, those should be called out.
+
+#### Changes that should _not_ have a CHANGELOG entry
+
+- Resource and provider documentation updates
+- Testing updates
+
+### Changelog Format
+
+The changelog format requires an entry in the following format:
+
+```
+  ```release-note:enhancement
+  Added the `bar` interface.
+  ```
+
+```
