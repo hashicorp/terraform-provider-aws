@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -19,6 +20,7 @@ func init() {
 		Name: "aws_sagemaker_domain",
 		F:    testSweepSagemakerDomains,
 		Dependencies: []string{
+			"aws_efs_mount_target",
 			"aws_efs_file_system",
 		},
 	})
@@ -88,6 +90,7 @@ func TestAccAWSSagemakerDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
+					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 				),
 			},
 			{
@@ -237,6 +240,54 @@ func testAccCheckAWSSagemakerDomainExists(n string, codeRepo *sagemaker.Describe
 		}
 
 		*codeRepo = *resp
+
+		return nil
+	}
+}
+
+func testAccCheckAWSSagemakerDomainDeleteImplicitResources(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Sagemaker domain not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("Sagemaker domain name not set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).efsconn
+		efsFsID := rs.Primary.Attributes["home_efs_file_system_id"]
+		vpcID := rs.Primary.Attributes["vpc_id"]
+
+		resp, err := conn.DescribeMountTargets(&efs.DescribeMountTargetsInput{
+			FileSystemId: aws.String(efsFsID),
+		})
+
+		if err != nil {
+			return fmt.Errorf("Sagemaker domain EFS mount targets not found: %w", err)
+		}
+
+		//reusing EFS mount target delete for wait logic
+		mountTargets := resp.MountTargets
+		for _, mt := range mountTargets {
+			r := resourceAwsEfsMountTarget()
+			d := r.Data(nil)
+			mtId := aws.StringValue(mt.MountTargetId)
+			d.SetId(mtId)
+			err := r.Delete(d, testAccProvider.Meta())
+			if err != nil {
+				return fmt.Errorf("Sagemaker domain EFS mount target (%s) failed to delete: %w", mtId, err)
+			}
+		}
+
+		r := resourceAwsEfsFileSystem()
+		d := r.Data(nil)
+		d.SetId(efsFsID)
+		err = r.Delete(d, testAccProvider.Meta())
+		if err != nil {
+			return fmt.Errorf("Sagemaker domain EFS file system (%s) failed to delete: %w", efsFsID, err)
+		}
 
 		return nil
 	}

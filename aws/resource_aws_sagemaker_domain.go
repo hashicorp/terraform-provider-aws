@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -321,19 +320,6 @@ func resourceAwsSagemakerDomainDelete(d *schema.ResourceData, meta interface{}) 
 		if !isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
 			return fmt.Errorf("error waiting for sagemaker domain (%s) to delete: %w", d.Id(), err)
 		}
-	}
-
-	efsConn := meta.(*AWSClient).efsconn
-	efsFsID := d.Get("home_efs_file_system_id").(string)
-
-	_, err := efsConn.DeleteFileSystem(&efs.DeleteFileSystemInput{
-		FileSystemId: aws.String(efsFsID),
-	})
-	if err != nil {
-		if isAWSErr(err, efs.ErrCodeFileSystemNotFound, "") {
-			return nil
-		}
-		return fmt.Errorf("Error delete EFS file system (%s): %w", efsFsID, err)
 	}
 
 	return nil
