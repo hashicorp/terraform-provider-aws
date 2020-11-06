@@ -1,8 +1,8 @@
-## 3.14.1 (Unreleased)
+## 3.14.1 (November 06, 2020)
 
 BUG FIXES
 
-* resource/aws_cloudwatch_event_target: Prevent regression from version 3.14.0 with `ListTargetsByRuleInput.EventBusName` error [GH-16075]
+* resource/aws_cloudwatch_event_target: Prevent regression from version 3.14.0 with `ListTargetsByRuleInput.EventBusName` error ([#16075](https://github.com/hashicorp/terraform-provider-aws/issues/16075))
 
 ## 3.14.0 (November 06, 2020)
 
