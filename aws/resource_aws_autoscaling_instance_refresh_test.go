@@ -47,25 +47,6 @@ func testAccCheckAWSAutoScalingInstanceRefreshExists(
 	}
 }
 
-const testAccAwsAutoscalingInstanceRefreshBase = `
-data "aws_ami" "test" {
-	most_recent = true
-	owners      = ["amazon"]
-
-	filter {
-		name   = "name"
-		values = ["amzn-ami-hvm-*-x86_64-gp2"]
-	}
-}
-
-data "aws_availability_zones" "current" {
-	filter {
-		name   = "state"
-		values = ["available"]
-	}
-}
-`
-
 func TestAccAWSAutoscalingInstanceRefresh_basic(t *testing.T) {
 	resourceName := "aws_autoscaling_instance_refresh.test"
 	asgName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -109,9 +90,25 @@ func testAccAwsAutoscalingInstanceRefresh_basic_create(
 	asgName string,
 	instanceType string,
 ) string {
-	return composeConfig(
-		testAccAwsAutoscalingInstanceRefreshBase,
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
 		fmt.Sprintf(`
+data "aws_ami" "test" {
+	most_recent = true
+	owners      = ["amazon"]
+
+	filter {
+		name   = "name"
+		values = ["amzn-ami-hvm-*-x86_64-gp2"]
+	}
+}
+
+data "aws_availability_zones" "current" {
+	filter {
+		name   = "state"
+		values = ["available"]
+	}
+}
+
 resource "aws_launch_configuration" "test" {
 	image_id      = data.aws_ami.test.id
 	instance_type = %[2]q
@@ -140,7 +137,7 @@ resource "aws_autoscaling_instance_refresh" "test" {
 `,
 			asgName,
 			instanceType,
-		))
+		)
 }
 
 func TestAccAWSAutoscalingInstanceRefresh_disappears(t *testing.T) {
@@ -179,9 +176,25 @@ func TestAccAWSAutoscalingInstanceRefresh_disappears(t *testing.T) {
 func testAccAwsAutoscalingInstanceRefresh_disappears(
 	asgName string,
 ) string {
-	return composeConfig(
-		testAccAwsAutoscalingInstanceRefreshBase,
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
 		fmt.Sprintf(`
+data "aws_ami" "test" {
+	most_recent = true
+	owners      = ["amazon"]
+
+	filter {
+		name   = "name"
+		values = ["amzn-ami-hvm-*-x86_64-gp2"]
+	}
+}
+
+data "aws_availability_zones" "current" {
+	filter {
+		name   = "state"
+		values = ["available"]
+	}
+}
+
 resource "aws_launch_configuration" "test" {
 	image_id      = data.aws_ami.test.id
 	instance_type = "t2.micro"
@@ -209,7 +222,7 @@ resource "aws_autoscaling_instance_refresh" "test" {
 }
 `,
 			asgName,
-		))
+		)
 }
 
 func TestAccAWSAutoscalingInstanceRefresh_alreadyOngoing(t *testing.T) {
@@ -240,9 +253,25 @@ func TestAccAWSAutoscalingInstanceRefresh_alreadyOngoing(t *testing.T) {
 func testAccAwsAutoscalingInstanceRefresh_alreadyOngoing(
 	asgName string,
 ) string {
-	return composeConfig(
-		testAccAwsAutoscalingInstanceRefreshBase,
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
 		fmt.Sprintf(`
+data "aws_ami" "test" {
+	most_recent = true
+	owners      = ["amazon"]
+
+	filter {
+		name   = "name"
+		values = ["amzn-ami-hvm-*-x86_64-gp2"]
+	}
+}
+
+data "aws_availability_zones" "current" {
+	filter {
+		name   = "state"
+		values = ["available"]
+	}
+}
+
 resource "aws_launch_configuration" "test" {
 	image_id      = data.aws_ami.test.id
 	instance_type = "t2.micro" 
@@ -275,7 +304,7 @@ resource "aws_autoscaling_instance_refresh" "test" {
 }
 `,
 			asgName,
-		))
+		)
 }
 
 func TestAccAWSAutoscalingInstanceRefresh_cancelOnTimeout(t *testing.T) {
@@ -328,9 +357,25 @@ func TestAccAWSAutoscalingInstanceRefresh_cancelOnTimeout(t *testing.T) {
 func testAccAwsAutoscalingInstanceRefresh_cancelOnTimeout_create(
 	asgName string,
 ) string {
-	return composeConfig(
-		testAccAwsAutoscalingInstanceRefreshBase,
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
 		fmt.Sprintf(`
+data "aws_ami" "test" {
+	most_recent = true
+	owners      = ["amazon"]
+
+	filter {
+		name   = "name"
+		values = ["amzn-ami-hvm-*-x86_64-gp2"]
+	}
+}
+
+data "aws_availability_zones" "current" {
+	filter {
+		name   = "state"
+		values = ["available"]
+	}
+}
+
 resource "aws_launch_configuration" "test" {
 	image_id      = data.aws_ami.test.id
 	instance_type = "t2.micro"
@@ -347,15 +392,31 @@ resource "aws_autoscaling_group" "test" {
 }
 `,
 			asgName,
-		))
+		)
 }
 
 func testAccAwsAutoscalingInstanceRefresh_cancelOnTimeout_update(
 	asgName string,
 ) string {
-	return composeConfig(
-		testAccAwsAutoscalingInstanceRefreshBase,
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
 		fmt.Sprintf(`
+data "aws_ami" "test" {
+	most_recent = true
+	owners      = ["amazon"]
+
+	filter {
+		name   = "name"
+		values = ["amzn-ami-hvm-*-x86_64-gp2"]
+	}
+}
+
+data "aws_availability_zones" "current" {
+	filter {
+		name   = "state"
+		values = ["available"]
+	}
+}
+
 resource "aws_launch_configuration" "test" {
 	image_id      = data.aws_ami.test.id
 	instance_type = "t2.micro"
@@ -387,5 +448,5 @@ resource "aws_autoscaling_instance_refresh" "test" {
 }
 `,
 			asgName,
-		))
+		)
 }
