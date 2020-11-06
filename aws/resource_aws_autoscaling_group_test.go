@@ -4291,12 +4291,12 @@ locals {
   availability_zone_count    = %[1]d
   subnet_count               = %[2]d
   instance_type              = %[3]q
-  use_launch_configuration   = %[4]v
-  use_launch_template        = %[5]v
-  use_mixed_instances_policy = %[6]v
-  use_placement_group        = %[7]v
+  use_launch_configuration   = %[4]t
+  use_launch_template        = %[5]t
+  use_mixed_instances_policy = %[6]t
+  use_placement_group        = %[7]t
   placement_group_name       = %[8]q
-  propagate_at_launch        = %[9]v
+  propagate_at_launch        = %[9]t
 }
 data "aws_ami" "test" {
   most_recent = true
@@ -4318,12 +4318,12 @@ resource "aws_default_subnet" "current" {
   availability_zone = data.aws_availability_zones.current.names[count.index]
 }
 resource "aws_launch_configuration" "test" {
-  image_id      = "${data.aws_ami.test.id}"
+  image_id      = data.aws_ami.test.id
   instance_type = local.instance_type
 }
 resource "aws_launch_template" "test" {
-  image_id               = data.aws_ami.test.image_id
-  instance_type          = local.instance_type
+  image_id      = data.aws_ami.test.image_id
+  instance_type = local.instance_type
 }
 resource "aws_placement_group" "test" {
   name     = local.placement_group_name

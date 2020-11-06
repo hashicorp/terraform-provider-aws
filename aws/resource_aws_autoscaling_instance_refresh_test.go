@@ -47,25 +47,6 @@ func testAccCheckAWSAutoScalingInstanceRefreshExists(
 	}
 }
 
-const testAccAwsAutoscalingInstanceRefreshBase = `
-data "aws_ami" "test" {
-	most_recent = true
-	owners      = ["amazon"]
-
-	filter {
-		name   = "name"
-		values = ["amzn-ami-hvm-*-x86_64-gp2"]
-	}
-}
-
-data "aws_availability_zones" "current" {
-	filter {
-		name   = "state"
-		values = ["available"]
-	}
-}
-`
-
 func TestAccAWSAutoscalingInstanceRefresh_basic(t *testing.T) {
 	resourceName := "aws_autoscaling_instance_refresh.test"
 	asgName := fmt.Sprintf("tf-test-%s", acctest.RandString(10))
@@ -109,38 +90,51 @@ func testAccAwsAutoscalingInstanceRefresh_basic_create(
 	asgName string,
 	instanceType string,
 ) string {
-	return composeConfig(
-		testAccAwsAutoscalingInstanceRefreshBase,
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
 		fmt.Sprintf(`
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_availability_zones" "current" {
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
+}
+
 resource "aws_launch_configuration" "test" {
-	image_id      = "${data.aws_ami.test.id}"
-	instance_type = %[2]q
+  image_id      = data.aws_ami.test.id
+  instance_type = %[2]q
 }
 
 resource "aws_autoscaling_group" "test" {
-	name                      = %[1]q
-	availability_zones        = data.aws_availability_zones.current.names
-	min_size                  = 1
-	desired_capacity          = 1
-	max_size                  = 2
-	launch_configuration      = aws_launch_configuration.test.name
-	health_check_grace_period = 5
+  name                      = %[1]q
+  availability_zones        = data.aws_availability_zones.current.names
+  min_size                  = 1
+  desired_capacity          = 1
+  max_size                  = 2
+  launch_configuration      = aws_launch_configuration.test.name
+  health_check_grace_period = 5
 }
 
 resource "aws_autoscaling_instance_refresh" "test" {
-	autoscaling_group_name  = aws_autoscaling_group.test.name
-	min_healthy_percentage  = 50
-	instance_warmup_seconds = 5
-	strategy                = "Rolling"
+  autoscaling_group_name  = aws_autoscaling_group.test.name
+  min_healthy_percentage  = 50
+  instance_warmup_seconds = 5
+  strategy                = "Rolling"
 
-	triggers = {
-		token = aws_autoscaling_group.test.instance_refresh_token
-	}
+  triggers = {
+    token = aws_autoscaling_group.test.instance_refresh_token
+  }
 }
-`,
-			asgName,
-			instanceType,
-		))
+`, asgName, instanceType)
 }
 
 func TestAccAWSAutoscalingInstanceRefresh_disappears(t *testing.T) {
@@ -179,37 +173,51 @@ func TestAccAWSAutoscalingInstanceRefresh_disappears(t *testing.T) {
 func testAccAwsAutoscalingInstanceRefresh_disappears(
 	asgName string,
 ) string {
-	return composeConfig(
-		testAccAwsAutoscalingInstanceRefreshBase,
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
 		fmt.Sprintf(`
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_availability_zones" "current" {
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
+}
+
 resource "aws_launch_configuration" "test" {
-	image_id      = "${data.aws_ami.test.id}"
-	instance_type = "t2.micro"
+  image_id      = data.aws_ami.test.id
+  instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "test" {
-	name                      = %[1]q
-	availability_zones        = data.aws_availability_zones.current.names
-	min_size                  = 1
-	desired_capacity          = 1
-	max_size                  = 2
-	launch_configuration      = aws_launch_configuration.test.name
-	health_check_grace_period = 5
+  name                      = %[1]q
+  availability_zones        = data.aws_availability_zones.current.names
+  min_size                  = 1
+  desired_capacity          = 1
+  max_size                  = 2
+  launch_configuration      = aws_launch_configuration.test.name
+  health_check_grace_period = 5
 }
 
 resource "aws_autoscaling_instance_refresh" "test" {
-	autoscaling_group_name  = aws_autoscaling_group.test.name
-	min_healthy_percentage  = 50
-	instance_warmup_seconds = 5
-	strategy                = "Rolling"
+  autoscaling_group_name  = aws_autoscaling_group.test.name
+  min_healthy_percentage  = 50
+  instance_warmup_seconds = 5
+  strategy                = "Rolling"
 
-	triggers = {
-		token = aws_autoscaling_group.test.instance_refresh_token
-	}
+  triggers = {
+    token = aws_autoscaling_group.test.instance_refresh_token
+  }
 }
-`,
-			asgName,
-		))
+`, asgName)
 }
 
 func TestAccAWSAutoscalingInstanceRefresh_alreadyOngoing(t *testing.T) {
@@ -223,13 +231,13 @@ func TestAccAWSAutoscalingInstanceRefresh_alreadyOngoing(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAutoscalingInstanceRefresh_alreadyOngoing(asgName, acctest.RandString(10)),
+				Config: testAccAwsAutoscalingInstanceRefresh_alreadyOngoing(asgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAutoScalingInstanceRefreshExists(resourceName, &instanceRefresh)),
 			},
 			{
 				Taint:              []string{resourceName},
-				Config:             testAccAwsAutoscalingInstanceRefresh_alreadyOngoing(asgName, acctest.RandString(10)),
+				Config:             testAccAwsAutoscalingInstanceRefresh_alreadyOngoing(asgName),
 				ExpectError:        regexp.MustCompile(`InstanceRefreshInProgress`),
 				ExpectNonEmptyPlan: true,
 			},
@@ -239,45 +247,57 @@ func TestAccAWSAutoscalingInstanceRefresh_alreadyOngoing(t *testing.T) {
 
 func testAccAwsAutoscalingInstanceRefresh_alreadyOngoing(
 	asgName string,
-	trigger string,
 ) string {
-	return composeConfig(
-		testAccAwsAutoscalingInstanceRefreshBase,
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
 		fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
-	image_id      = "${data.aws_ami.test.id}"
-	instance_type = "t2.micro" 
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
 
-	lifecycle {
-		create_before_destroy = true
-	}
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_availability_zones" "current" {
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
+}
+
+resource "aws_launch_configuration" "test" {
+  image_id      = data.aws_ami.test.id
+  instance_type = "t2.micro"
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_autoscaling_group" "test" {
-	name                      = %[1]q
-	availability_zones        = data.aws_availability_zones.current.names
-	min_size                  = 1
-	desired_capacity          = 1
-	max_size                  = 2
-	launch_configuration      = aws_launch_configuration.test.name
-    health_check_grace_period = 5
+  name                      = %[1]q
+  availability_zones        = data.aws_availability_zones.current.names
+  min_size                  = 1
+  desired_capacity          = 1
+  max_size                  = 2
+  launch_configuration      = aws_launch_configuration.test.name
+  health_check_grace_period = 5
 }
 
 resource "aws_autoscaling_instance_refresh" "test" {
-	autoscaling_group_name  = aws_autoscaling_group.test.name
-	min_healthy_percentage  = 0
-	instance_warmup_seconds = 20
-	strategy                = "Rolling"
-	wait_for_completion     = false
+  autoscaling_group_name  = aws_autoscaling_group.test.name
+  min_healthy_percentage  = 0
+  instance_warmup_seconds = 20
+  strategy                = "Rolling"
+  wait_for_completion     = false
 
-	triggers = {
-		trigger = %[2]q  
-	}
+  triggers = {
+    token = aws_autoscaling_group.test.instance_refresh_token
+  }
 }
-`,
-			asgName,
-			trigger,
-		))
+`, asgName)
 }
 
 func TestAccAWSAutoscalingInstanceRefresh_cancelOnTimeout(t *testing.T) {
@@ -330,64 +350,92 @@ func TestAccAWSAutoscalingInstanceRefresh_cancelOnTimeout(t *testing.T) {
 func testAccAwsAutoscalingInstanceRefresh_cancelOnTimeout_create(
 	asgName string,
 ) string {
-	return composeConfig(
-		testAccAwsAutoscalingInstanceRefreshBase,
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
 		fmt.Sprintf(`
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_availability_zones" "current" {
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
+}
+
 resource "aws_launch_configuration" "test" {
-	image_id      = "${data.aws_ami.test.id}"
-	instance_type = "t2.micro"
+  image_id      = data.aws_ami.test.id
+  instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "test" {
-	name                      = %[1]q
-	availability_zones        = data.aws_availability_zones.current.names
-	min_size                  = 1
-	desired_capacity          = 2
-	max_size                  = 2
-	launch_configuration      = aws_launch_configuration.test.name
-	health_check_grace_period = 5
+  name                      = %[1]q
+  availability_zones        = data.aws_availability_zones.current.names
+  min_size                  = 1
+  desired_capacity          = 2
+  max_size                  = 2
+  launch_configuration      = aws_launch_configuration.test.name
+  health_check_grace_period = 5
 }
-`,
-			asgName,
-		))
+`, asgName)
 }
 
 func testAccAwsAutoscalingInstanceRefresh_cancelOnTimeout_update(
 	asgName string,
 ) string {
-	return composeConfig(
-		testAccAwsAutoscalingInstanceRefreshBase,
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
 		fmt.Sprintf(`
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_availability_zones" "current" {
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
+}
+
 resource "aws_launch_configuration" "test" {
-	image_id      = "${data.aws_ami.test.id}"
-	instance_type = "t2.micro"
+  image_id      = data.aws_ami.test.id
+  instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "test" {
-	name                      = %[1]q
-	availability_zones        = data.aws_availability_zones.current.names
-	min_size                  = 1
-	desired_capacity          = 2
-	max_size                  = 2
-	launch_configuration      = aws_launch_configuration.test.name
-	health_check_grace_period = 5
+  name                      = %[1]q
+  availability_zones        = data.aws_availability_zones.current.names
+  min_size                  = 1
+  desired_capacity          = 2
+  max_size                  = 2
+  launch_configuration      = aws_launch_configuration.test.name
+  health_check_grace_period = 5
 }
 
 resource "aws_autoscaling_instance_refresh" "test" {
-	autoscaling_group_name  = aws_autoscaling_group.test.name
-	min_healthy_percentage  = 50
-	instance_warmup_seconds = 300
-	strategy                = "Rolling"
+  autoscaling_group_name  = aws_autoscaling_group.test.name
+  min_healthy_percentage  = 50
+  instance_warmup_seconds = 300
+  strategy                = "Rolling"
 
-	triggers = {
-		token = aws_autoscaling_group.test.instance_refresh_token
-	}
+  triggers = {
+    token = aws_autoscaling_group.test.instance_refresh_token
+  }
 
-	timeouts {
-		create = "10s"
-	}
+  timeouts {
+    create = "10s"
+  }
 }
-`,
-			asgName,
-		))
+`, asgName)
 }
