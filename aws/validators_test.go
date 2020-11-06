@@ -3221,7 +3221,7 @@ func TestValidateServiceDiscoveryNamespaceName(t *testing.T) {
 	}
 }
 
-func TestValidateRdsRestorableTimeFormat(t *testing.T) {
+func TestValidateUTCTimestamp(t *testing.T) {
 	validT := []string{
 		"2006-01-02T15:04:05Z",
 	}
@@ -3233,14 +3233,14 @@ func TestValidateRdsRestorableTimeFormat(t *testing.T) {
 	}
 
 	for _, f := range validT {
-		_, errors := validateRdsRestorableTimeFormat(f, "valid_restorable_time_format")
+		_, errors := validateUTCTimestamp(f, "valid_restorable_time_format")
 		if len(errors) > 0 {
 			t.Fatalf("Expected the time %q to be in valid format, got error %q", f, errors)
 		}
 	}
 
 	for _, f := range invalidT {
-		_, errors := validateRdsRestorableTimeFormat(f, "invalid_restorable_time_format")
+		_, errors := validateUTCTimestamp(f, "invalid_restorable_time_format")
 		if len(errors) == 0 {
 			t.Fatalf("Expected the time %q to fail validation", f)
 		}

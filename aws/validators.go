@@ -1081,7 +1081,7 @@ func validateOnceADayWindowFormat(v interface{}, k string) (ws []string, errors 
 	return
 }
 
-func validateRdsRestorableTimeFormat(v interface{}, k string) (ws []string, errors []error) {
+func validateUTCTimestamp(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := time.Parse(time.RFC3339, value)
 	if err != nil {

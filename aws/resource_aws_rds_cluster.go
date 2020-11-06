@@ -257,7 +257,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validateRdsRestorableTimeFormat,
+							ValidateFunc: validateUTCTimestamp,
 						},
 					},
 				},
