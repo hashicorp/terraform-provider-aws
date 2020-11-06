@@ -1,45 +1,45 @@
-## 3.14.0 (Unreleased)
+## 3.14.0 (November 06, 2020)
 
 FEATURES
 
-* **New Data Source:** `aws_route53_resolver_endpoint` [GH-8628]
+* **New Data Source:** `aws_route53_resolver_endpoint` ([#8628](https://github.com/hashicorp/terraform-provider-aws/issues/8628))
 * **New Data Source:** `aws_sagemaker_prebuilt_ecr_image` ([#15924](https://github.com/hashicorp/terraform-provider-aws/pull/15924))
-* **New Data Source:** `aws_workspaces_workspace` [GH-14135]
+* **New Data Source:** `aws_workspaces_workspace` ([#14135](https://github.com/hashicorp/terraform-provider-aws/issues/14135))
 * **New Resource:** `aws_secretsmanager_secret_policy` ([#14468](https://github.com/hashicorp/terraform-provider-aws/pull/14468))
 
 ENHANCEMENTS
 
-* resource/aws_apigatewayv2_integration: `timeout_milliseconds` has different valid ranges and default values between HTTP and WebSocket APIs. `timeout_milliseconds` is now `Computed`, meaning Terraform will only perform drift detection of its value when present in a configuration. [GH-16017]
-* resource/aws_cloudwatch_event_permission: Add `event_bus_name` [GH-15922]
-* resource/aws_cloudwatch_event_target: Add plan time validation to `arn`, `role_arn`, `launch_type`, `task_definition_arn` [GH-11685]
-* resource/aws_cloudwatch_event_target: Add `event_bus_name` [GH-15799]
-* resource/aws_codeartifact_domain: add `tags` argument. [GH-16006]
-* resource/aws_codeartifact_repository: add `tags` argument. [GH-16006]
-* resource/aws_eip: Add `network_border_group` argument [GH-14028]
-* resource/aws_glue_catalog_database: add plan time validations for `description` and `name`. [GH-15956]
-* resource/aws_glue_crawler: Support MongoDB target [GH-15934]
-* resource/aws_glue_trigger: Add plan time validation to `name` [GH-15793]
-* resource/aws_glue_trigger: Add `security_configuration` and `notification_property` arguments to `actions` block [GH-15793]
-* resource/aws_kinesis_analytics_application: Wait for resource deletion. [GH-16005]
-* resource/aws_kinesis_analytics_application: `inputs.parallelism` is a computed attribute. [GH-16005]
-* resource/aws_kinesis_analytics_application: Handle `inputs.processing_configuration` addition and deletion. [GH-16005]
-* resource/aws_kinesis_analytics_application: Handle `reference_data_sources` deletion. [GH-16005]
-* resource/aws_kinesis_analytics_application: Handle `cloudwatch_logging_options` deletion. [GH-16005]
-* resource/aws_kinesis_analytics_application: Set the `description` attribute on creation. [GH-16005]
-* resource/aws_sagemaker_endpoint_configuration: Add support for `data_capture_config`. [GH-15887]
-* resource/aws_sagemaker_endpoint_configuration: Add plan time validation for `production_variants.accelerator_type`, `production_variants.instance_type`. [GH-15887]
-* resource/aws_sagemaker_model: Add support for `primary_container. image_config` and `containers.image_config` [GH-15957]
-* resource/aws_sagemaker_model: Add plan time validation for `execution_role_arn`  [GH-15957]
+* resource/aws_apigatewayv2_integration: `timeout_milliseconds` has different valid ranges and default values between HTTP and WebSocket APIs. `timeout_milliseconds` is now `Computed`, meaning Terraform will only perform drift detection of its value when present in a configuration. ([#16017](https://github.com/hashicorp/terraform-provider-aws/issues/16017))
+* resource/aws_cloudwatch_event_permission: Add `event_bus_name` ([#15922](https://github.com/hashicorp/terraform-provider-aws/issues/15922))
+* resource/aws_cloudwatch_event_target: Add plan time validation to `arn`, `role_arn`, `launch_type`, `task_definition_arn` ([#11685](https://github.com/hashicorp/terraform-provider-aws/issues/11685))
+* resource/aws_cloudwatch_event_target: Add `event_bus_name` ([#15799](https://github.com/hashicorp/terraform-provider-aws/issues/15799))
+* resource/aws_codeartifact_domain: add `tags` argument. ([#16006](https://github.com/hashicorp/terraform-provider-aws/issues/16006))
+* resource/aws_codeartifact_repository: add `tags` argument. ([#16006](https://github.com/hashicorp/terraform-provider-aws/issues/16006))
+* resource/aws_eip: Add `network_border_group` argument ([#14028](https://github.com/hashicorp/terraform-provider-aws/issues/14028))
+* resource/aws_glue_catalog_database: add plan time validations for `description` and `name`. ([#15956](https://github.com/hashicorp/terraform-provider-aws/issues/15956))
+* resource/aws_glue_crawler: Support MongoDB target ([#15934](https://github.com/hashicorp/terraform-provider-aws/issues/15934))
+* resource/aws_glue_trigger: Add plan time validation to `name` ([#15793](https://github.com/hashicorp/terraform-provider-aws/issues/15793))
+* resource/aws_glue_trigger: Add `security_configuration` and `notification_property` arguments to `actions` block ([#15793](https://github.com/hashicorp/terraform-provider-aws/issues/15793))
+* resource/aws_kinesis_analytics_application: Wait for resource deletion. ([#16005](https://github.com/hashicorp/terraform-provider-aws/issues/16005))
+* resource/aws_kinesis_analytics_application: `inputs.parallelism` is a computed attribute. ([#16005](https://github.com/hashicorp/terraform-provider-aws/issues/16005))
+* resource/aws_kinesis_analytics_application: Handle `inputs.processing_configuration` addition and deletion. ([#16005](https://github.com/hashicorp/terraform-provider-aws/issues/16005))
+* resource/aws_kinesis_analytics_application: Handle `reference_data_sources` deletion. ([#16005](https://github.com/hashicorp/terraform-provider-aws/issues/16005))
+* resource/aws_kinesis_analytics_application: Handle `cloudwatch_logging_options` deletion. ([#16005](https://github.com/hashicorp/terraform-provider-aws/issues/16005))
+* resource/aws_kinesis_analytics_application: Set the `description` attribute on creation. ([#16005](https://github.com/hashicorp/terraform-provider-aws/issues/16005))
+* resource/aws_sagemaker_endpoint_configuration: Add support for `data_capture_config`. ([#15887](https://github.com/hashicorp/terraform-provider-aws/issues/15887))
+* resource/aws_sagemaker_endpoint_configuration: Add plan time validation for `production_variants.accelerator_type`, `production_variants.instance_type`. ([#15887](https://github.com/hashicorp/terraform-provider-aws/issues/15887))
+* resource/aws_sagemaker_model: Add support for `primary_container. image_config` and `containers.image_config` ([#15957](https://github.com/hashicorp/terraform-provider-aws/issues/15957))
+* resource/aws_sagemaker_model: Add plan time validation for `execution_role_arn`  ([#15957](https://github.com/hashicorp/terraform-provider-aws/issues/15957))
 
 BUG FIXES
 
-* resource/aws_datasync_task: Allow `UNAVAILABLE` as pending status during creation [GH-15949]
-* resource/aws_glue_classifier: Fix `quote_symbol` being optional [GH-15948]
-* resource/aws_lambda_function: Publish version if value of `publish` is only change [GH-15020]
-* resource/aws_rds_cluster: Prevent error removing cluster from global cluster when not found [GH-15938]
-* resource/aws_rds_cluster: Prevent recreation when using `snapshot_identifier` and `kms_key_id` without `storage_encrypted = true` [GH-15915]
-* resource/aws_rds_cluster_instance: Add Cluster Identifier to creation error message [GH-15939]
-* resource/aws_rds_global_cluster: Prevent error removing cluster from global cluster when not found [GH-15938]
+* resource/aws_datasync_task: Allow `UNAVAILABLE` as pending status during creation ([#15949](https://github.com/hashicorp/terraform-provider-aws/issues/15949))
+* resource/aws_glue_classifier: Fix `quote_symbol` being optional ([#15948](https://github.com/hashicorp/terraform-provider-aws/issues/15948))
+* resource/aws_lambda_function: Publish version if value of `publish` is only change ([#15020](https://github.com/hashicorp/terraform-provider-aws/issues/15020))
+* resource/aws_rds_cluster: Prevent error removing cluster from global cluster when not found ([#15938](https://github.com/hashicorp/terraform-provider-aws/issues/15938))
+* resource/aws_rds_cluster: Prevent recreation when using `snapshot_identifier` and `kms_key_id` without `storage_encrypted = true` ([#15915](https://github.com/hashicorp/terraform-provider-aws/issues/15915))
+* resource/aws_rds_cluster_instance: Add Cluster Identifier to creation error message ([#15939](https://github.com/hashicorp/terraform-provider-aws/issues/15939))
+* resource/aws_rds_global_cluster: Prevent error removing cluster from global cluster when not found ([#15938](https://github.com/hashicorp/terraform-provider-aws/issues/15938))
 
 ## 3.13.0 (October 29, 2020)
 
