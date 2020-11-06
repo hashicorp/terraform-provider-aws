@@ -11,7 +11,8 @@ ENHANCEMENTS
 
 * resource/aws_apigatewayv2_integration: `timeout_milliseconds` has different valid ranges and default values between HTTP and WebSocket APIs. `timeout_milliseconds` is now `Computed`, meaning Terraform will only perform drift detection of its value when present in a configuration. [GH-16017]
 * resource/aws_cloudwatch_event_permission: Add `event_bus_name` [GH-15922]
-* resource/aws_cloudwatch_event_target: add plan time validation to `arn`, `role_arn`, `launch_type`, `task_definition_arn` [GH-11685]
+* resource/aws_cloudwatch_event_target: Add plan time validation to `arn`, `role_arn`, `launch_type`, `task_definition_arn` [GH-11685]
+* resource/aws_cloudwatch_event_target: Add `event_bus_name` [GH-15799]
 * resource/aws_codeartifact_domain: add `tags` argument. [GH-16006]
 * resource/aws_codeartifact_repository: add `tags` argument. [GH-16006]
 * resource/aws_eip: Add `network_border_group` argument [GH-14028]
