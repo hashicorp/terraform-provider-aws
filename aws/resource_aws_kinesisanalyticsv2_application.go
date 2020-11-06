@@ -904,12 +904,12 @@ func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta i
 	arn := aws.StringValue(application.ApplicationARN)
 	d.Set("arn", arn)
 	d.Set("create_timestamp", aws.TimeValue(application.CreateTimestamp).Format(time.RFC3339))
-	d.Set("description", aws.StringValue(application.ApplicationDescription))
+	d.Set("description", application.ApplicationDescription)
 	d.Set("last_update_timestamp", aws.TimeValue(application.LastUpdateTimestamp).Format(time.RFC3339))
 	d.Set("name", application.ApplicationName)
 	d.Set("runtime_environment", application.RuntimeEnvironment)
-	d.Set("service_execution_role", aws.StringValue(application.ServiceExecutionRole))
-	d.Set("status", aws.StringValue(application.ApplicationStatus))
+	d.Set("service_execution_role", application.ServiceExecutionRole)
+	d.Set("status", application.ApplicationStatus)
 	d.Set("version_id", int(aws.Int64Value(application.ApplicationVersionId)))
 
 	if err := d.Set("application_configuration", flattenKinesisAnalyticsV2ApplicationConfigurationDescription(application.ApplicationConfigurationDescription)); err != nil {
