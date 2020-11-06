@@ -3,6 +3,7 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 	"log"
 	"regexp"
 	"strings"
@@ -217,7 +218,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"restore_in_time": {
+			"restore_to_point_in_time": {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -249,7 +250,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 							Type:          schema.TypeBool,
 							Optional:      true,
 							ForceNew:      true,
-							ConflictsWith: []string{"restore_in_time.restore_to_time"},
+							ConflictsWith: []string{"restore_to_point_in_time.restore_to_time"},
 						},
 
 						"restore_to_time": {
@@ -268,7 +269,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 				MaxItems: 1,
 				ConflictsWith: []string{
 					"snapshot_identifier",
-					"restore_in_time",
+					"restore_to_point_in_time",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -451,7 +452,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Default:  false,
 			},
 
-			"tags": tagsSchemaComputed(),
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -696,7 +697,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			return err
 		}
 
-	} else if v, ok := d.GetOk("restore_in_time"); ok {
+	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok {
 		pointInTime := v.([]interface{})[0].(map[string]interface{})
 
 		restoreToTimeAttr := pointInTime["restore_to_time"].(string)
@@ -768,7 +769,6 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 		requireUpdateAttrs := []string{
 			"master_password",
-			"final_snapshot_identifier",
 			"backup_retention_period",
 			"preferred_backup_window",
 			"preferred_maintenance_window",
@@ -788,7 +788,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 				case "preferred_maintenance_window":
 					modifyDbClusterInput.PreferredMaintenanceWindow = aws.String(val.(string))
 				case "scaling_configuration":
-					modifyDbClusterInput.ScalingConfiguration = expandRdsScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
+					modifyDbClusterInput.ScalingConfiguration = expandRdsClusterScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
 				}
 			}
 		}
@@ -798,19 +798,16 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 			resp, err := conn.RestoreDBClusterToPointInTime(createOpts)
 			if err != nil {
-				if isAWSErr(err, "DBClusterSnapshotNotFoundFault", "DBClusterSnapshotIdentifier doesn't refer to an existing DB cluster snapshot") {
-					return resource.RetryableError(err)
-				}
-				if isAWSErr(err, "KMSKeyNotAccessibleFault", "An error occurred accessing an AWS KMS key") {
-					return resource.RetryableError(err)
-				}
-
 				return resource.NonRetryableError(err)
 			}
 
 			log.Printf("[DEBUG]: RDS Cluster restore response: %s", resp)
 			return nil
 		})
+
+		if tfresource.TimedOut(err) {
+			_, err = conn.RestoreDBClusterToPointInTime(createOpts)
+		}
 
 		if err != nil {
 			log.Printf("[ERROR] Error restoring RDS Cluster: %s", err)
