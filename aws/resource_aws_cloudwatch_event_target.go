@@ -27,6 +27,15 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 			State: resourceAwsCloudWatchEventTargetImport,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceAwsCloudWatchEventTargetV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAwsCloudWatchEventTargetStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"event_bus_name": {
 				Type:         schema.TypeString,
@@ -361,11 +370,13 @@ func resourceAwsCloudWatchEventTargetUpdate(d *schema.ResourceData, meta interfa
 func resourceAwsCloudWatchEventTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
-	busName := d.Get("event_bus_name").(string)
 	input := &events.RemoveTargetsInput{
-		Ids:          []*string{aws.String(d.Get("target_id").(string))},
-		Rule:         aws.String(d.Get("rule").(string)),
-		EventBusName: aws.String(busName),
+		Ids:  []*string{aws.String(d.Get("target_id").(string))},
+		Rule: aws.String(d.Get("rule").(string)),
+	}
+
+	if v, ok := d.GetOk("event_bus_name"); ok {
+		input.EventBusName = aws.String(v.(string))
 	}
 
 	output, err := conn.RemoveTargets(input)
