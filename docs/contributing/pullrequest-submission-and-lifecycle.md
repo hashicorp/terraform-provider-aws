@@ -191,35 +191,83 @@ HashiCorp’s open-source projects have always maintained user-friendly, readabl
 
 We use the [go-changelog](https://github.com/hashicorp/go-changelog) to generate and update the changelog from files created in the `.changelog/` directory. It is important that when you raise your Pull Request, there is a changelog entry which describes the changes your contribution makes. Not all changes require an entry in the CHANGELOG, guidance follows on what changes do.
 
+### Changelog Format
+
+The changelog format requires an entry in the following format, where HEADER corresponds to the changelog category, and the entry is the changelog entry itself. The entry should be included in a file in the `.changelog` directory in the format `{PR-NUMBER}.txt`.
+
+~~~
+```release-note:{HEADER}
+{ENTRY}
+```
+~~~
+
 ### Pull Request Types to CHANGELOG
 
-The CHANGELOG is intended to show operator-impacting changes to the codebase for a particular version. If every change or commit to the code resulted in an entry, the CHANGELOG would become less useful for operators. The lists below are general guidelines on when a decision needs to be made to decide whether a change should have an entry.
+The CHANGELOG is intended to show operator-impacting changes to the codebase for a particular version. If every change or commit to the code resulted in an entry, the CHANGELOG would become less useful for operators. The lists below are general guidelines and examples for when a decision needs to be made to decide whether a change should have an entry.
 
 #### Changes that should have a CHANGELOG entry
 
-- New Resources and Data Sources
-- New full-length documentation guides (e.g. EKS Getting Started Guide, IAM Policy Documents with Terraform)
-- Resource and provider bug fixes
-- Resource and provider enhancements
-- Deprecations
-- Removals
+##### New resource
+
+~~~
+```release-note:new-resource
+aws_secretsmanager_secret_policy
+```
+~~~
+
+##### New data source:
+
+~~~
+```release-note:new-datasource
+aws_workspaces_workspace
+```
+~~~
+
+##### New full-length documentation guides (e.g. EKS Getting Started Guide, IAM Policy Documents with Terraform)
+
+~~~
+```release-note:enhancements
+Added full length Custom Service Endpoint Configuration guide 
+```
+~~~
+
+##### Resource and provider bug fixes
+
+~~~
+```release-note:bug
+resource/aws_glue_classifier: Fix quote_symbol being optional 
+```
+~~~
+
+##### Resource and provider enhancements
+
+~~~
+```release-note:enhancements
+resource/aws_eip: Add network_border_group argument 
+```
+~~~
+
+##### Deprecations, removals or breaking changes
+
+~~~
+```release-note:breaking-change
+esource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
+```
+~~~
 
 #### Changes that may have a CHANGELOG entry
 
-- Dependency updates: If the update contains relevant bug fixes or enhancements that affect operators, those should be called out.
+Dependency updates: If the update contains relevant bug fixes or enhancements that affect operators, those should be called out.
+Any changes which do not fit into the above categories but warrant highlighting.
+
+~~~
+```release-note:notes
+esource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
+```
+~~~
 
 #### Changes that should _not_ have a CHANGELOG entry
 
 - Resource and provider documentation updates
 - Testing updates
 
-### Changelog Format
-
-The changelog format requires an entry in the following format:
-
-```
-  ```release-note:enhancement
-  Added the `bar` interface.
-  ```
-
-```
