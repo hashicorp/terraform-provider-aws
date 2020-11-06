@@ -5,6 +5,7 @@
 - [Common Review Items](#common-review-items)
     - [Go Coding Style](#go-coding-style)
     - [Resource Contribution Guidelines](#resource-contribution-guidelines)
+- [Changelog Process](#changelog-process)
 
 We appreciate direct contributions to the provider codebase. Here's what to
 expect:
