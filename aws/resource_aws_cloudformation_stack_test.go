@@ -114,7 +114,7 @@ func TestAccAWSCloudFormationStack_disappears(t *testing.T) {
 				Config: testAccAWSCloudFormationStackConfig(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackExists(resourceName, &stack),
-					testAccCheckCloudFormationStackDisappears(&stack),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFormationStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -425,7 +425,7 @@ func testAccCheckAWSCloudFormationDestroy(s *terraform.State) error {
 		}
 
 		for _, s := range resp.Stacks {
-			if *s.StackId == rs.Primary.ID && *s.StackStatus != "DELETE_COMPLETE" {
+			if aws.StringValue(s.StackId) == rs.Primary.ID && aws.StringValue(s.StackStatus) != cloudformation.StackStatusDeleteComplete {
 				return fmt.Errorf("CloudFormation stack still exists: %q", rs.Primary.ID)
 			}
 		}
