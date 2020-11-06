@@ -4318,12 +4318,12 @@ resource "aws_default_subnet" "current" {
   availability_zone = data.aws_availability_zones.current.names[count.index]
 }
 resource "aws_launch_configuration" "test" {
-  image_id      = "${data.aws_ami.test.id}"
+  image_id      = data.aws_ami.test.id
   instance_type = local.instance_type
 }
 resource "aws_launch_template" "test" {
-  image_id               = data.aws_ami.test.image_id
-  instance_type          = local.instance_type
+  image_id      = data.aws_ami.test.image_id
+  instance_type = local.instance_type
 }
 resource "aws_placement_group" "test" {
   name     = local.placement_group_name

@@ -113,7 +113,7 @@ func testAccAwsAutoscalingInstanceRefresh_basic_create(
 		testAccAwsAutoscalingInstanceRefreshBase,
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-	image_id      = "${data.aws_ami.test.id}"
+	image_id      = data.aws_ami.test.id
 	instance_type = %[2]q
 }
 
@@ -183,7 +183,7 @@ func testAccAwsAutoscalingInstanceRefresh_disappears(
 		testAccAwsAutoscalingInstanceRefreshBase,
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-	image_id      = "${data.aws_ami.test.id}"
+	image_id      = data.aws_ami.test.id
 	instance_type = "t2.micro"
 }
 
@@ -245,7 +245,7 @@ func testAccAwsAutoscalingInstanceRefresh_alreadyOngoing(
 		testAccAwsAutoscalingInstanceRefreshBase,
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-	image_id      = "${data.aws_ami.test.id}"
+	image_id      = data.aws_ami.test.id
 	instance_type = "t2.micro" 
 
 	lifecycle {
@@ -334,7 +334,7 @@ func testAccAwsAutoscalingInstanceRefresh_cancelOnTimeout_create(
 		testAccAwsAutoscalingInstanceRefreshBase,
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-	image_id      = "${data.aws_ami.test.id}"
+	image_id      = data.aws_ami.test.id
 	instance_type = "t2.micro"
 }
 
@@ -359,7 +359,7 @@ func testAccAwsAutoscalingInstanceRefresh_cancelOnTimeout_update(
 		testAccAwsAutoscalingInstanceRefreshBase,
 		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-	image_id      = "${data.aws_ami.test.id}"
+	image_id      = data.aws_ami.test.id
 	instance_type = "t2.micro"
 }
 
