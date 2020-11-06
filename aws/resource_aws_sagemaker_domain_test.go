@@ -334,7 +334,6 @@ func testAccCheckAWSSagemakerDomainDeleteImplicitResources(n string) resource.Te
 func testAccAWSSagemakerDomainConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-	
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -398,8 +397,8 @@ resource "aws_sagemaker_domain" "test" {
   subnet_ids  = [aws_subnet.test.id]
 
   default_user_settings {
-	execution_role  = aws_iam_role.test.arn
-	security_groups = [aws_security_group.test.id] 
+    execution_role  = aws_iam_role.test.arn
+    security_groups = [aws_security_group.test.id] 
   }
 }
 `, rName)
@@ -422,8 +421,8 @@ resource "aws_sagemaker_domain" "test" {
   subnet_ids  = [aws_subnet.test.id]
 
   default_user_settings {
-	execution_role  = aws_iam_role.test.arn
-	security_groups = [aws_security_group.test.id, aws_security_group.test2.id] 
+    execution_role  = aws_iam_role.test.arn
+    security_groups = [aws_security_group.test.id, aws_security_group.test2.id] 
   }
 }
 `, rName)
@@ -500,8 +499,8 @@ resource "aws_sagemaker_domain" "test" {
   }
 
   tags = {
-	%[2]q = %[3]q
-	%[4]q = %[5]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
