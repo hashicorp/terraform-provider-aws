@@ -13,6 +13,7 @@ on:
       - .markdownlinkcheck.json
       - .markdownlint.yml
       - website/docs/**
+      - tools/go.mod
 
 env:
   GO_VERSION: "1.14"
@@ -90,11 +91,7 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: |
-          # go get github.com/katbyte/terrafmt
-          git clone --branch json-output --single-branch https://github.com/gdavison/terrafmt terrafmt
-          cd terrafmt
-          go install
+      - run: cd tools && go install github.com/katbyte/terrafmt
       - run: cd tools && go install github.com/terraform-linters/tflint
       - run: |
           exit_code=0

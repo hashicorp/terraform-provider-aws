@@ -38,7 +38,7 @@ The following arguments are supported:
 * `state` - (Required) The state of the job queue. Must be one of: `ENABLED` or `DISABLED`
 * `tags` - (Optional) Key-value map of resource tags
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

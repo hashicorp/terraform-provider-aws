@@ -74,7 +74,7 @@ The following argument is supported:
 	See more [in AWS Docs](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-stage-settings.html#how-to-stage-settings-console).
 	Logging & monitoring can be enabled/disabled and otherwise tuned on the API Gateway Stage level.
 
-## Attribute Reference
+## Attributes Reference
 
 The following attribute is exported:
 

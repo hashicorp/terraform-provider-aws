@@ -459,6 +459,11 @@ func resourceAwsLexIntentUpdate(d *schema.ResourceData, meta interface{}) error 
 
 		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.PutIntent(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error updating intent %s: %w", d.Id(), err)
 	}
@@ -469,10 +474,12 @@ func resourceAwsLexIntentUpdate(d *schema.ResourceData, meta interface{}) error 
 func resourceAwsLexIntentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lexmodelconn
 
+	input := &lexmodelbuildingservice.DeleteIntentInput{
+		Name: aws.String(d.Id()),
+	}
+
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteIntent(&lexmodelbuildingservice.DeleteIntentInput{
-			Name: aws.String(d.Id()),
-		})
+		_, err := conn.DeleteIntent(input)
 
 		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
 			return resource.RetryableError(fmt.Errorf("%q: there is a pending operation, intent still deleting", d.Id()))
@@ -483,6 +490,10 @@ func resourceAwsLexIntentDelete(d *schema.ResourceData, meta interface{}) error 
 
 		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.DeleteIntent(input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error deleting intent %s: %w", d.Id(), err)

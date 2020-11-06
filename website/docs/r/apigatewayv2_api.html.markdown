@@ -74,7 +74,7 @@ The `cors_configuration` object supports the following:
 * `expose_headers` - (Optional) The set of exposed HTTP headers.
 * `max_age` - (Optional) The number of seconds that the browser should cache preflight request results.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

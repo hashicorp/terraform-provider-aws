@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/workspaces/waiter"
 )
@@ -373,7 +372,7 @@ func expandWorkspaceProperties(properties []interface{}) *workspaces.WorkspacePr
 		UserVolumeSizeGib: aws.Int64(int64(p["user_volume_size_gib"].(int))),
 	}
 
-	if p["running_mode"] == workspaces.RunningModeAutoStop {
+	if p["running_mode"].(string) == workspaces.RunningModeAutoStop {
 		workspaceProperties.RunningModeAutoStopTimeoutInMinutes = aws.Int64(int64(p["running_mode_auto_stop_timeout_in_minutes"].(int)))
 	}
 

@@ -128,7 +128,7 @@ have a yes or no answer. You you must provide both the `rejection_statement` and
 or neither. Attributes are documented under [prompt](#prompt).
 * `create_version` - (Optional) Determines if a new slot type version is created when the initial
 resource is created and on each update. Defaults to `false`.
-* `description` - (Optional) A description of the intent.
+* `description` - (Optional) A description of the intent. Must be less than or equal to 200 characters in length.
 * `dialog_code_hook` - (Optional) Specifies a Lambda function to invoke for each user input. You can
 invoke this Lambda function to personalize user interaction. Attributes are documented under [code_hook](#code_hook).
 * `follow_up_prompt` - (Optional) Amazon Lex uses this prompt to solicit additional activity after
@@ -138,7 +138,7 @@ exclusive. You can specify only one. Attributes are documented under [follow_up_
 * `fulfillment_activity` - (Required) Describes how the intent is fulfilled. For example, after a
 user provides all of the information for a pizza order, `fulfillment_activity` defines how the bot
 places an order with a local pizza store. Attributes are documented under [fulfillment_activity](#fulfillment_activity).
-* `name` - (Required) The name of the intent, not case sensitive.
+* `name` - (Required) The name of the intent, not case sensitive. Must be less than or equal to 100 characters in length.
 * `parent_intent_signature` - (Optional) A unique identifier for the built-in intent to base this
 intent on. To find the signature for an intent, see
 [Standard Built-in Intents](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/built-in-intent-ref/standard-intents)
@@ -149,7 +149,7 @@ canceled. You must provide both the `rejection_statement` and the `confirmation_
 Attributes are documented under [statement](#statement).
 * `sample_utterances` - (Optional) An array of utterances (strings) that a user might say to signal
 the intent. For example, "I want {PizzaSize} pizza", "Order {Quantity} {PizzaSize} pizzas".
-In each utterance, a slot name is enclosed in curly braces.
+In each utterance, a slot name is enclosed in curly braces. Must have between 1 and 10 items in the list, and each item must be less than or equal to 200 characters in length.
 * `slot` - (Optional) An list of intent slots. At runtime, Amazon Lex elicits required slot values
 from the user using prompts defined in the slots. Attributes are documented under [slot](#slot).
 
@@ -159,7 +159,7 @@ Specifies a Lambda function that verifies requests to a bot or fulfills the user
 
 * `message_version` - (Required) The version of the request-response that you want Amazon Lex to use
 to invoke your Lambda function. For more information, see
-[Using Lambda Functions](https://docs.aws.amazon.com/lex/latest/dg/using-lambda.html).
+[Using Lambda Functions](https://docs.aws.amazon.com/lex/latest/dg/using-lambda.html). Must be less than or equal to 5 characters in length.
 * `uri` - (Required) The Amazon Resource Name (ARN) of the Lambda function.
 
 ### follow_up_prompt
@@ -185,10 +185,10 @@ Required if type is CodeHook. Attributes are documented under [code_hook](#code_
 
 The message object that provides the message text and its type.
 
-* `content` - (Required) The text of the message.
+* `content` - (Required) The text of the message. Must be less than or equal to 1000 characters in length.
 * `content_type` - (Required) The content type of the message string.
 * `group_number` - (Optional) Identifies the message group that the message belongs to. When a group
-is assigned to a message, Amazon Lex returns one message from each group in the response.
+is assigned to a message, Amazon Lex returns one message from each group in the response. Must be a number between 1 and 5 (inclusive).
 
 ### prompt
 
@@ -196,34 +196,34 @@ Obtains information from the user. To define a prompt, provide one or more messa
 number of attempts to get information from the user. If you provide more than one message, Amazon
 Lex chooses one of the messages to use to prompt the user.
 
-* `max_attempts` - (Required) The number of times to prompt the user for information.
+* `max_attempts` - (Required) The number of times to prompt the user for information. Must be a number between 1 and 5 (inclusive).
 * `message` - (Required) A set of messages, each of which provides a message string and its type.
 You can specify the message string in plain text or in Speech Synthesis Markup Language (SSML).
-Attributes are documented under [message](#message).
+Attributes are documented under [message](#message). Must contain between 1 and 15 messages.
 * `response_card` - (Optional) The response card. Amazon Lex will substitute session attributes and
 slot values into the response card. For more information, see
-[Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html).
+[Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html). Must be less than or equal to 50000 characters in length.
 
 ### slot
 
 Identifies the version of a specific slot.
 
-* `name` - (Required) The name of the intent slot that you want to create. The name is case sensitive.
+* `name` - (Required) The name of the intent slot that you want to create. The name is case sensitive. Must be less than or equal to 100 characters in length.
 * `slot_constraint` - (Required) Specifies whether the slot is required or optional.
-* `description` - (Optional) A description of the bot.
+* `description` - (Optional) A description of the bot. Must be less than or equal to 200 characters in length.
 * `priority` - (Optional) Directs Lex the order in which to elicit this slot value from the user.
 For example, if the intent has two slots with priorities 1 and 2, AWS Lex first elicits a value for
 the slot with priority 1. If multiple slots share the same priority, the order in which Lex elicits
-values is arbitrary.
+values is arbitrary. Must be between 1 and 100.
 * `response_card` - (Optional) The response card. Amazon Lex will substitute session attributes and
 slot values into the response card. For more information, see
-[Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html).
+[Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html). Must be less than or equal to 50000 characters in length.
 * `sample_utterances` - (Optional) If you know a specific pattern with which users might respond to
 an Amazon Lex request for a slot value, you can provide those utterances to improve accuracy. This
-is optional. In most cases, Amazon Lex is capable of understanding user utterances.
+is optional. In most cases, Amazon Lex is capable of understanding user utterances. Must have between 1 and 10 items in the list, and each item must be less than or equal to 200 characters in length.
 * `slot_type` - (Optional) The type of the slot, either a custom slot type that you defined or one of
-the built-in slot types.
-* `slot_type_version` - (Optional) The version of the slot type.
+the built-in slot types. Must be less than or equal to 100 characters in length.
+* `slot_type_version` - (Optional) The version of the slot type. Must be less than or equal to 64 characters in length.
 * `value_elicitation_prompt` - (Optional) The prompt that Amazon Lex uses to elicit the slot value
 from the user. Attributes are documented under [prompt](#prompt).
 
@@ -234,10 +234,10 @@ convey information to the user. At runtime, Amazon Lex selects the message to co
 
 * `message` - (Required) A set of messages, each of which provides a message string and its type.
 You can specify the message string in plain text or in Speech Synthesis Markup Language (SSML).
-Attributes are documented under [message](#message).
+Attributes are documented under [message](#message). Must contain between 1 and 15 messages.
 * `response_card` - (Optional) The response card. Amazon Lex will substitute session attributes and
 slot values into the response card. For more information, see
-[Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html).
+[Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html). Must be less than or equal to 50000 characters in length.
 
 ### Timeouts
 

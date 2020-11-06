@@ -36,7 +36,7 @@ The following arguments are supported:
 * `subnet_ids` - (Required) Subnet IDs for the VPC Link.
 * `tags` - (Optional) A map of tags to assign to the VPC Link.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

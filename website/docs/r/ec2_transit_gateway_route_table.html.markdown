@@ -25,7 +25,7 @@ The following arguments are supported:
 * `transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Route Table.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

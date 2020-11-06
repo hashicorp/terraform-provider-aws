@@ -6,6 +6,14 @@ import (
 
 func TestAccAWSAppmesh_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
+		"GatewayRoute": {
+			"basic":      testAccAwsAppmeshGatewayRoute_basic,
+			"disappears": testAccAwsAppmeshGatewayRoute_disappears,
+			"grpcRoute":  testAccAwsAppmeshGatewayRoute_GrpcRoute,
+			"httpRoute":  testAccAwsAppmeshGatewayRoute_HttpRoute,
+			"http2Route": testAccAwsAppmeshGatewayRoute_Http2Route,
+			"tags":       testAccAwsAppmeshGatewayRoute_Tags,
+		},
 		"Mesh": {
 			"basic":        testAccAwsAppmeshMesh_basic,
 			"egressFilter": testAccAwsAppmeshMesh_egressFilter,
@@ -24,6 +32,15 @@ func TestAccAWSAppmesh_serial(t *testing.T) {
 			"tcpRoute":          testAccAwsAppmeshRoute_tcpRoute,
 			"tcpRouteTimeout":   testAccAwsAppmeshRoute_tcpRouteTimeout,
 			"tags":              testAccAwsAppmeshRoute_tags,
+		},
+		"VirtualGateway": {
+			"backendDefaults":      testAccAwsAppmeshVirtualGateway_BackendDefaults,
+			"basic":                testAccAwsAppmeshVirtualGateway_basic,
+			"disappears":           testAccAwsAppmeshVirtualGateway_disappears,
+			"listenerHealthChecks": testAccAwsAppmeshVirtualGateway_ListenerHealthChecks,
+			"logging":              testAccAwsAppmeshVirtualGateway_Logging,
+			"tags":                 testAccAwsAppmeshVirtualGateway_Tags,
+			"tls":                  testAccAwsAppmeshVirtualGateway_TLS,
 		},
 		"VirtualNode": {
 			"basic":                    testAccAwsAppmeshVirtualNode_basic,

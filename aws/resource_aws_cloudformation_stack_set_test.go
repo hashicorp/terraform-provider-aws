@@ -407,7 +407,7 @@ func TestAccAWSCloudFormationStackSet_Parameters_Default(t *testing.T) {
 func TestAccAWSCloudFormationStackSet_Parameters_NoEcho(t *testing.T) {
 	TestAccSkip(t, "this resource does not currently ignore CloudFormation template parameters with the NoEcho property")
 	// Additional references:
-	//  * https://github.com/terraform-providers/terraform-provider-aws/issues/55
+	//  * https://github.com/hashicorp/terraform-provider-aws/issues/55
 
 	var stackSet1, stackSet2 cloudformation.StackSet
 	rName := acctest.RandomWithPrefix("tf-acc-test")

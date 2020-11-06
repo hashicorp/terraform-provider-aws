@@ -177,7 +177,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_basic(t *testing.T) {
 	dnsNameRegex := regexp.MustCompile(`^a[a-f0-9]{16}\.awsglobalaccelerator\.com$`)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
@@ -216,7 +216,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_update(t *testing.T) {
 	newName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
@@ -251,7 +251,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
@@ -279,7 +279,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
@@ -315,6 +315,22 @@ func TestAccAwsGlobalAcceleratorAccelerator_tags(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccPreCheckGlobalAccelerator(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).globalacceleratorconn
+
+	input := &globalaccelerator.ListAcceleratorsInput{}
+
+	_, err := conn.ListAccelerators(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 
 func testAccCheckGlobalAcceleratorAcceleratorExists(name string) resource.TestCheckFunc {

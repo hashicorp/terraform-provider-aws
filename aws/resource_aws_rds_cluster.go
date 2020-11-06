@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -212,18 +213,8 @@ func resourceAwsRDSCluster() *schema.Resource {
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Allow configuration to be unset when using engine_mode serverless, as its required to be true
-					// InvalidParameterCombination: Aurora Serverless DB clusters are always encrypted at rest. Encryption can't be disabled.
-					if d.Get("engine_mode").(string) != "serverless" {
-						return false
-					}
-					if new != "false" {
-						return false
-					}
-					return true
-				},
 			},
 
 			"s3_import": {
@@ -1122,7 +1113,9 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		log.Printf("[DEBUG] Removing RDS Cluster from RDS Global Cluster: %s", input)
-		if _, err := conn.RemoveFromGlobalCluster(input); err != nil {
+		_, err := conn.RemoveFromGlobalCluster(input)
+
+		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
 			return fmt.Errorf("error removing RDS Cluster (%s) from RDS Global Cluster: %s", d.Id(), err)
 		}
 	}
@@ -1182,7 +1175,7 @@ func resourceAwsRDSClusterDelete(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[DEBUG] Removing RDS Cluster from RDS Global Cluster: %s", input)
 		_, err := conn.RemoveFromGlobalCluster(input)
 
-		if err != nil && !isAWSErr(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
+		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
 			return fmt.Errorf("error removing RDS Cluster (%s) from RDS Global Cluster: %s", d.Id(), err)
 		}
 	}

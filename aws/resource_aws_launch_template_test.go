@@ -642,7 +642,7 @@ func TestAccAWSLaunchTemplate_creditSpecification_t3(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6757
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6757
 func TestAccAWSLaunchTemplate_IamInstanceProfile_EmptyConfigurationBlock(t *testing.T) {
 	var template1 ec2.LaunchTemplate
 	rName := acctest.RandomWithPrefix("tf-acc-test")

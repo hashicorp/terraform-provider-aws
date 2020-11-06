@@ -289,7 +289,7 @@ func TestAccAWSCodeDeployDeploymentGroup_triggerConfiguration_multiple(t *testin
 						"InstanceFailure",
 					}),
 					testAccCheckCodeDeployDeploymentGroupTriggerTargetArn(&group, "test-trigger-2",
-						regexp.MustCompile("^arn:aws:sns:[^:]+:[0-9]{12}:tf-acc-test-2-"+rName+"$")),
+						regexp.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:tf-acc-test-2-%s$", testAccGetPartition(), rName))),
 				),
 			},
 			{
@@ -310,7 +310,7 @@ func TestAccAWSCodeDeployDeploymentGroup_triggerConfiguration_multiple(t *testin
 						"InstanceFailure",
 					}),
 					testAccCheckCodeDeployDeploymentGroupTriggerTargetArn(&group, "test-trigger-2",
-						regexp.MustCompile("^arn:aws:sns:[^:]+:[0-9]{12}:tf-acc-test-3-"+rName+"$")),
+						regexp.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:tf-acc-test-3-%s$", testAccGetPartition(), rName))),
 				),
 			},
 			{
@@ -1626,7 +1626,7 @@ func TestAWSCodeDeployDeploymentGroup_buildTriggerConfigs(t *testing.T) {
 				"DeploymentFailure",
 			}),
 			"trigger_name":       "test-trigger",
-			"trigger_target_arn": "arn:aws:sns:us-west-2:123456789012:test-topic",
+			"trigger_target_arn": "arn:aws:sns:us-west-2:123456789012:test-topic", // lintignore:AWSAT003,AWSAT005 // unit test
 		},
 	}
 
@@ -1636,7 +1636,7 @@ func TestAWSCodeDeployDeploymentGroup_buildTriggerConfigs(t *testing.T) {
 				aws.String("DeploymentFailure"),
 			},
 			TriggerName:      aws.String("test-trigger"),
-			TriggerTargetArn: aws.String("arn:aws:sns:us-west-2:123456789012:test-topic"),
+			TriggerTargetArn: aws.String("arn:aws:sns:us-west-2:123456789012:test-topic"), // lintignore:AWSAT003,AWSAT005 // unit test
 		},
 	}
 
@@ -1656,7 +1656,7 @@ func TestAWSCodeDeployDeploymentGroup_triggerConfigsToMap(t *testing.T) {
 				aws.String("InstanceFailure"),
 			},
 			TriggerName:      aws.String("test-trigger-2"),
-			TriggerTargetArn: aws.String("arn:aws:sns:us-west-2:123456789012:test-topic-2"),
+			TriggerTargetArn: aws.String("arn:aws:sns:us-west-2:123456789012:test-topic-2"), // lintignore:AWSAT003,AWSAT005 // unit test
 		},
 	}
 
@@ -1666,7 +1666,7 @@ func TestAWSCodeDeployDeploymentGroup_triggerConfigsToMap(t *testing.T) {
 			"InstanceFailure",
 		}),
 		"trigger_name":       "test-trigger-2",
-		"trigger_target_arn": "arn:aws:sns:us-west-2:123456789012:test-topic-2",
+		"trigger_target_arn": "arn:aws:sns:us-west-2:123456789012:test-topic-2", // lintignore:AWSAT003,AWSAT005 // unit test
 	}
 
 	actual := triggerConfigsToMap(input)[0]
@@ -2299,6 +2299,8 @@ resource "aws_iam_role_policy" "test" {
 EOF
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = "tf-acc-test-%[1]s"
 
@@ -2311,7 +2313,7 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "codedeploy.amazonaws.com"
+          "codedeploy.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": "sts:AssumeRole"
@@ -2388,6 +2390,8 @@ resource "aws_iam_role_policy" "test" {
 EOF
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test_updated" {
   name = "tf-acc-test-updated-%[1]s"
 
@@ -2400,7 +2404,7 @@ resource "aws_iam_role" "test_updated" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "codedeploy.amazonaws.com"
+          "codedeploy.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": "sts:AssumeRole"
@@ -2447,6 +2451,8 @@ resource "aws_iam_role_policy" "test" {
 EOF
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = "tf-acc-test-%[1]s"
 
@@ -2459,7 +2465,7 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "codedeploy.amazonaws.com"
+          "codedeploy.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": "sts:AssumeRole"
@@ -2520,6 +2526,8 @@ resource "aws_iam_role_policy" "test" {
 EOF
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = "tf-acc-test-%[1]s"
 
@@ -2531,7 +2539,7 @@ resource "aws_iam_role" "test" {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "Service": "codedeploy.amazonaws.com"
+        "Service": "codedeploy.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -3405,6 +3413,8 @@ resource "aws_codedeploy_app" "test" {
   name             = %[1]q
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -3418,7 +3428,7 @@ resource "aws_iam_role" "test" {
       "Action": "sts:AssumeRole",
       "Principal": {
         "Service": [
-          "codedeploy.amazonaws.com"
+          "codedeploy.${data.aws_partition.current.dns_suffix}"
         ]
       }
     }

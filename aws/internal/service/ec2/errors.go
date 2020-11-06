@@ -13,6 +13,10 @@ const (
 )
 
 const (
+	ErrCodeInvalidVpcPeeringConnectionIDNotFound = "InvalidVpcPeeringConnectionID.NotFound"
+)
+
+const (
 	InvalidVpnGatewayAttachmentNotFound = "InvalidVpnGatewayAttachment.NotFound"
 	InvalidVpnGatewayIDNotFound         = "InvalidVpnGatewayID.NotFound"
 )

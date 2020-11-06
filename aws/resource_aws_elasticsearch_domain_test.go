@@ -690,6 +690,8 @@ func TestAccAWSElasticSearchDomain_LogPublishingOptions_AuditLogs(t *testing.T) 
 				ImportState:       true,
 				ImportStateId:     resourceId,
 				ImportStateVerify: true,
+				// MasterUserOptions are not returned from DescribeElasticsearchDomainConfig
+				ImportStateVerifyIgnore: []string{"advanced_security_options.0.master_user_options"},
 			},
 		},
 	})
@@ -1000,7 +1002,7 @@ func TestAccAWSElasticSearchDomain_update_volume_type(t *testing.T) {
 		}})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13867
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13867
 func TestAccAWSElasticSearchDomain_WithVolumeType_Missing(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"

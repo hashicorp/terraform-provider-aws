@@ -216,6 +216,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_SessionPinningFilters(t *testing.T) {
 
 func TestAccAWSDBProxyDefaultTargetGroup_disappears(t *testing.T) {
 	var v rds.DBProxy
+	dbProxyResourceName := "aws_db_proxy.test"
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
@@ -227,7 +228,9 @@ func TestAccAWSDBProxyDefaultTargetGroup_disappears(t *testing.T) {
 				Config: testAccAWSDBProxyDefaultTargetGroupConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDbProxyDefaultTargetGroup(), resourceName),
+					// DB Proxy default Target Group implicitly exists so it cannot be removed.
+					// Verify disappearance handling for DB Proxy removal instead.
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsDbProxy(), dbProxyResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
