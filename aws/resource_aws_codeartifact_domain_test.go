@@ -98,9 +98,6 @@ func TestAccAWSCodeArtifactDomain_basic(t *testing.T) {
 	})
 }
 
-<<<<<<< HEAD
-func TestAccAWSCodeArtifactDomain_tags(t *testing.T) {
-=======
 func TestAccAWSCodeArtifactDomain_defaultencryptionkey(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codeartifact_domain.test"
@@ -131,8 +128,7 @@ func TestAccAWSCodeArtifactDomain_defaultencryptionkey(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeArtifactDomain_disappears(t *testing.T) {
->>>>>>> a4649a922 (Add acceptance test + docs)
+func TestAccAWSCodeArtifactDomain_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codeartifact_domain.test"
 
@@ -305,6 +301,7 @@ resource "aws_codeartifact_domain" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
 
 func testAccAWSCodeArtifactDomainDefaultEncryptionKeyConfig(rName string) string {
 	return fmt.Sprintf(`
