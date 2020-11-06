@@ -3,7 +3,6 @@ package aws
 import (
 	"errors"
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 	"log"
 	"regexp"
 	"strings"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -250,7 +250,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 							Type:          schema.TypeBool,
 							Optional:      true,
 							ForceNew:      true,
-							ConflictsWith: []string{"restore_to_point_in_time.restore_to_time"},
+							ConflictsWith: []string{"restore_to_point_in_time.0.restore_to_time"},
 						},
 
 						"restore_to_time": {
@@ -731,7 +731,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			return err
 		}
 
-		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
+		if v, ok := d.GetOk("backtrack_window"); ok {
 			createOpts.BacktrackWindow = aws.Int64(int64(v.(int)))
 		}
 
@@ -795,15 +795,10 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 		log.Printf("[DEBUG] RDS Cluster restore options: %s", createOpts)
 
-		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-			resp, err := conn.RestoreDBClusterToPointInTime(createOpts)
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
+		resp, err := conn.RestoreDBClusterToPointInTime(createOpts)
+		if err != nil {
 			log.Printf("[DEBUG]: RDS Cluster restore response: %s", resp)
-			return nil
-		})
+		}
 
 		if tfresource.TimedOut(err) {
 			_, err = conn.RestoreDBClusterToPointInTime(createOpts)

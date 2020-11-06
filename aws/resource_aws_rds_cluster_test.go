@@ -2665,12 +2665,12 @@ func testAccAWSClusterConfig_pointInTimeRestoreSource(parentId, childId string) 
 data "aws_availability_zones" "available" {}
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier = "%s"
-  master_username = "root"
-  master_password = "password"
+  cluster_identifier   = "%s"
+  master_username      = "root"
+  master_password      = "password"
   db_subnet_group_name = aws_db_subnet_group.test.name
-  skip_final_snapshot = true
-  engine = "aurora-mysql"
+  skip_final_snapshot  = true
+  engine               = "aurora-mysql"
 }
 
 resource "aws_vpc" "test" {
@@ -2681,9 +2681,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "subnets" {
-  count = length(data.aws_availability_zones.available.names)
-  vpc_id = aws_vpc.test.id
-  cidr_block = "10.0.${count.index}.0/24"
+  count             = length(data.aws_availability_zones.available.names)
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.${count.index}.0/24"
   availability_zone = data.aws_availability_zones.available.names[count.index]
   tags = {
     Name = "%s-subnet-${count.index}"
@@ -2691,19 +2691,19 @@ resource "aws_subnet" "subnets" {
 }
 
 resource "aws_db_subnet_group" "test" {
-  name = "%s-db-subnet-group"
+  name       = "%s-db-subnet-group"
   subnet_ids = aws_subnet.subnets[*].id
 }
 
 resource "aws_rds_cluster" "restored_pit" {
-	cluster_identifier = "%s"
-	skip_final_snapshot = true
-	engine = "aurora-mysql"
-	restore_to_point_in_time {
-		source_cluster_identifier = aws_rds_cluster.test.cluster_identifier
-		restore_type = "full-copy"
-		use_latest_restorable_time = true
-	}
+  cluster_identifier  = "%s"
+  skip_final_snapshot = true
+  engine              = "aurora-mysql"
+  restore_to_point_in_time {
+    source_cluster_identifier  = aws_rds_cluster.test.cluster_identifier
+    restore_type               = "full-copy"
+    use_latest_restorable_time = true
+  }
 }
 `, parentId, parentId, parentId, parentId, childId)
 }

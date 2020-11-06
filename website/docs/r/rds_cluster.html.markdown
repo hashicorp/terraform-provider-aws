@@ -199,8 +199,8 @@ resource "aws_rds_cluster" "example-clone" {
   # ... other configuration ...
 
   restore_To_point_in_time {
-    source_cluster_identifier = "example"
-    restore_type = "copy-on-write"
+    source_cluster_identifier  = "example"
+    restore_type               = "copy-on-write"
     use_latest_restorable_time = true
   }
 }
@@ -212,7 +212,7 @@ resource "aws_rds_cluster" "example-clone" {
 * `use_latest_restorable_time` - (Optional) Set to true to restore the database cluster to the latest restorable backup time. Defaults to false.
 * `restore_to_time` - (Optional) Date and time in UTC format to restore the database cluster to.
 
-~> **NOTE:** `use_latest_restorable_time` and `restore_to_time` conflict with each other. 
+~> **NOTE:** `use_latest_restorable_time` and `restore_to_time` conflict with each other.
 
 ## Attributes Reference
 
