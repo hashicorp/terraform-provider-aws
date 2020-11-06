@@ -7,10 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3control"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfs3 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3"
 )
 
 func TestAccAWSS3BucketPublicAccessBlock_basic(t *testing.T) {
@@ -271,7 +272,7 @@ func testAccCheckAWSS3BucketPublicAccessBlockExists(n string, config *s3.PublicA
 			var err error
 			output, err = conn.GetPublicAccessBlock(input)
 
-			if isAWSErr(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration, "") {
+			if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchPublicAccessBlockConfiguration) {
 				return resource.RetryableError(err)
 			}
 
@@ -324,7 +325,7 @@ func testAccCheckAWSS3BucketPublicAccessBlockDisappears(n string) resource.TestC
 		return resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.GetPublicAccessBlock(getInput)
 
-			if isAWSErr(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration, "") {
+			if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchPublicAccessBlockConfiguration) {
 				return nil
 			}
 
