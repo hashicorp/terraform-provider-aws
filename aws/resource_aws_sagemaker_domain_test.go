@@ -412,7 +412,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_security_group" "test2" {
-  name = "%[2]s-2"
+  name = "%[1]s-2"
 }
 
 resource "aws_sagemaker_domain" "test" {
