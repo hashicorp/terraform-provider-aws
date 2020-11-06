@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -297,6 +298,7 @@ func testAccCheckAWSSagemakerDomainDeleteImplicitResources(n string) resource.Te
 
 		conn := testAccProvider.Meta().(*AWSClient).efsconn
 		efsFsID := rs.Primary.Attributes["home_efs_file_system_id"]
+		vpcID := rs.Primary.Attributes["vpc_id"]
 
 		resp, err := conn.DescribeMountTargets(&efs.DescribeMountTargetsInput{
 			FileSystemId: aws.String(efsFsID),
@@ -325,6 +327,34 @@ func testAccCheckAWSSagemakerDomainDeleteImplicitResources(n string) resource.Te
 		err = r.Delete(d, testAccProvider.Meta())
 		if err != nil {
 			return fmt.Errorf("Sagemaker domain EFS file system (%s) failed to delete: %w", efsFsID, err)
+		}
+
+		var filters []*ec2.Filter
+		filters = append(filters, &ec2.Filter{
+			Name:   aws.String("vpc-id"),
+			Values: aws.StringSlice([]string{vpcID}),
+		})
+
+		req := &ec2.DescribeSecurityGroupsInput{
+			Filters: filters,
+		}
+
+		ec2conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		sgResp, err := ec2conn.DescribeSecurityGroups(req)
+		if err != nil {
+			return fmt.Errorf("error reading security groups: %w", err)
+		}
+
+		for _, sg := range sgResp.SecurityGroups {
+			sgID := aws.StringValue(sg.GroupId)
+			r := resourceAwsSecurityGroup()
+			d := r.Data(nil)
+			d.SetId(sgID)
+			err = r.Delete(d, testAccProvider.Meta())
+			if err != nil {
+				return fmt.Errorf("Sagemaker domain EFS file system sg (%s) failed to delete: %w", sgID, err)
+			}
 		}
 
 		return nil
