@@ -2498,7 +2498,7 @@ func MapMaxItems(max int) schema.SchemaValidateFunc {
 		}
 
 		if len(m) > max {
-			errors = append(errors, fmt.Errorf("expected number of items in %s to be lesser than or equal to %d, got %d", k, max, len(m)))
+			errors = append(errors, fmt.Errorf("expected number of items in %s to be less than or equal to %d, got %d", k, max, len(m)))
 		}
 
 		return warnings, errors

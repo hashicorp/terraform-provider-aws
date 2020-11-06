@@ -37,14 +37,14 @@ func testSweepCloudWatchEventRules(region string) error {
 	var sweeperErrs *multierror.Error
 	var count int
 
-	input := &events.ListRulesInput{}
+	rulesInput := &events.ListRulesInput{}
 
-	err = lister.ListRulesPages(conn, input, func(page *events.ListRulesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	err = lister.ListRulesPages(conn, rulesInput, func(rulesPage *events.ListRulesOutput, lastRulesPage bool) bool {
+		if rulesPage == nil {
+			return !lastRulesPage
 		}
 
-		for _, rule := range page.Rules {
+		for _, rule := range rulesPage.Rules {
 			count++
 			name := aws.StringValue(rule.Name)
 
@@ -59,7 +59,7 @@ func testSweepCloudWatchEventRules(region string) error {
 			}
 		}
 
-		return !lastPage
+		return !lastRulesPage
 	})
 
 	if testSweepSkipSweepError(err) {
