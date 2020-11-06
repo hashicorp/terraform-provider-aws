@@ -56,7 +56,6 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 					validation.StringLenBetween(3, 900),
 					validation.StringMatch(regexp.MustCompile(`^s3://`), "must begin with s3://"),
 				),
-				RequiredWith: []string{"auto_import_policy"},
 			},
 			"imported_file_chunk_size": {
 				Type:         schema.TypeInt,
