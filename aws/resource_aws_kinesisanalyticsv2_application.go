@@ -12,13 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
@@ -872,7 +870,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Creating Kinesis Analytics v2 Application: %s", input)
 
-	outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+	outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 		return conn.CreateApplication(input)
 	})
 
@@ -990,7 +988,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 						log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) input: %s", d.Id(), input)
 
-						outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+						outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 							return conn.AddApplicationInput(input)
 						})
 
@@ -1025,7 +1023,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 								log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) input processing configuration: %s", d.Id(), input)
 
-								outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+								outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 									return conn.AddApplicationInputProcessingConfiguration(input)
 								})
 
@@ -1046,7 +1044,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 								log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) input processing configuration: %s", d.Id(), input)
 
-								outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+								outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 									return conn.DeleteApplicationInputProcessingConfiguration(input)
 								})
 
@@ -1104,7 +1102,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 						log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) output: %s", d.Id(), input)
 
-						outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+						outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 							return conn.DeleteApplicationOutput(input)
 						})
 
@@ -1127,7 +1125,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 						log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) output: %s", d.Id(), input)
 
-						outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+						outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 							return conn.AddApplicationOutput(input)
 						})
 
@@ -1154,7 +1152,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 						log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) reference data source: %s", d.Id(), input)
 
-						outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+						outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 							return conn.AddApplicationReferenceDataSource(input)
 						})
 
@@ -1175,7 +1173,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 						log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) reference data source: %s", d.Id(), input)
 
-						outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+						outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 							return conn.DeleteApplicationReferenceDataSource(input)
 						})
 
@@ -1212,7 +1210,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 					log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) VPC configuration: %s", d.Id(), input)
 
-					outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+					outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 						return conn.AddApplicationVpcConfiguration(input)
 					})
 
@@ -1233,7 +1231,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 					log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) VPC configuration: %s", d.Id(), input)
 
-					outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+					outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 						return conn.DeleteApplicationVpcConfiguration(input)
 					})
 
@@ -1272,7 +1270,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 				log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), input)
 
-				outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+				outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 					return conn.AddApplicationCloudWatchLoggingOption(input)
 				})
 
@@ -1293,7 +1291,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 				log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), input)
 
-				outputRaw, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+				outputRaw, err := waiter.IAMPropagation(func() (interface{}, error) {
 					return conn.DeleteApplicationCloudWatchLoggingOption(input)
 				})
 
@@ -1328,7 +1326,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 			log.Printf("[DEBUG] Updating Kinesis Analytics v2 Application (%s): %s", d.Id(), input)
 
-			_, err := kinesisAnalyticsV2RetryIAMEventualConsistency(func() (interface{}, error) {
+			_, err := waiter.IAMPropagation(func() (interface{}, error) {
 				return conn.UpdateApplication(input)
 			})
 
@@ -1342,7 +1340,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 		arn := d.Get("arn").(string)
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.Kinesisanalyticsv2UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Kinesis Analytics Application (%s) tags: %s", arn, err)
+			return fmt.Errorf("error updating Kinesis Analytics v2 Application (%s) tags: %s", arn, err)
 		}
 	}
 
@@ -2593,48 +2591,4 @@ func expandKinesisAnalyticsV2VpcConfigurationUpdate(vVpcConfiguration []interfac
 	}
 
 	return vpcConfigurationUpdate
-}
-
-// kinesisAnalyticsV2RetryIAMEventualConsistency retries the specified function for 1 minute
-// if the returned error indicates an IAM eventual consistency issue.
-// If the retries time out the specified function is called one last time.
-func kinesisAnalyticsV2RetryIAMEventualConsistency(f func() (interface{}, error)) (interface{}, error) {
-	var output interface{}
-
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-
-		output, err = f()
-
-		// Kinesis Stream: https://github.com/hashicorp/terraform-provider-aws/issues/7032
-		if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
-			return resource.RetryableError(err)
-		}
-
-		// Kinesis Firehose: https://github.com/hashicorp/terraform-provider-aws/issues/7394
-		if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics doesn't have sufficient privileges") {
-			return resource.RetryableError(err)
-		}
-
-		// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
-		if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "does not provide Invoke permissions on the Lambda resource") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = f()
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
 }
