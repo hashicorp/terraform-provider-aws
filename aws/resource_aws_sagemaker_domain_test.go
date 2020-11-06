@@ -114,7 +114,7 @@ func TestAccAWSSagemakerDomain_tags(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerDomainBasicConfigTags1(rName, "key1", "value1"),
+				Config: testAccAWSSagemakerDomainConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -127,7 +127,7 @@ func TestAccAWSSagemakerDomain_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSagemakerDomainBasicConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAWSSagemakerDomainConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -136,11 +136,48 @@ func TestAccAWSSagemakerDomain_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSSagemakerDomainBasicConfigTags1(rName, "key2", "value2"),
+				Config: testAccAWSSagemakerDomainConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerDomain_securityGroup(t *testing.T) {
+	var notebook sagemaker.DescribeDomainOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerDomainConfigSecurityGroup1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.security_groups.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSagemakerDomainConfigSecurityGroup2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.security_groups.#", "2"),
+					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 				),
 			},
 		},
@@ -321,7 +358,51 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-func testAccAWSSagemakerDomainBasicConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccAWSSagemakerDomainConfigSecurityGroup1(rName string) string {
+	return testAccAWSSagemakerDomainConfigBase(rName) + fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = "%[1]s"
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = [aws_subnet.test.id]
+
+  default_user_settings {
+	execution_role  = aws_iam_role.test.arn
+	security_groups = [aws_security_group.test.id] 
+  }
+}
+`, rName)
+}
+
+func testAccAWSSagemakerDomainConfigSecurityGroup2(rName string) string {
+	return testAccAWSSagemakerDomainConfigBase(rName) + fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_security_group" "test2" {
+  name = "%[2]s-2"
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = [aws_subnet.test.id]
+
+  default_user_settings {
+	execution_role  = aws_iam_role.test.arn
+	security_groups = [aws_security_group.test.id, aws_security_group.test2.id] 
+  }
+}
+`, rName)
+}
+
+func testAccAWSSagemakerDomainConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return testAccAWSSagemakerDomainConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -340,7 +421,7 @@ resource "aws_sagemaker_domain" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSSagemakerDomainBasicConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAWSSagemakerDomainConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccAWSSagemakerDomainConfigBase(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
