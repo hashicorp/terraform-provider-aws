@@ -1,4 +1,8 @@
-## 3.15.0 (Unreleased)
+## 3.14.1 (Unreleased)
+
+BUG FIXES
+
+* resource/aws_cloudwatch_event_target: Prevent regression from version 3.14.0 with `ListTargetsByRuleInput.EventBusName` error [GH-16075]
 
 ## 3.14.0 (November 06, 2020)
 
