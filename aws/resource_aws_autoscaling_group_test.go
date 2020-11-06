@@ -4291,12 +4291,12 @@ locals {
   availability_zone_count    = %[1]d
   subnet_count               = %[2]d
   instance_type              = %[3]q
-  use_launch_configuration   = %[4]v
-  use_launch_template        = %[5]v
-  use_mixed_instances_policy = %[6]v
-  use_placement_group        = %[7]v
+  use_launch_configuration   = %[4]t
+  use_launch_template        = %[5]t
+  use_mixed_instances_policy = %[6]t
+  use_placement_group        = %[7]t
   placement_group_name       = %[8]q
-  propagate_at_launch        = %[9]v
+  propagate_at_launch        = %[9]t
 }
 data "aws_ami" "test" {
   most_recent = true

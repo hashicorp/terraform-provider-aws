@@ -223,13 +223,13 @@ func TestAccAWSAutoscalingInstanceRefresh_alreadyOngoing(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAutoscalingInstanceRefresh_alreadyOngoing(asgName, acctest.RandString(10)),
+				Config: testAccAwsAutoscalingInstanceRefresh_alreadyOngoing(asgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAutoScalingInstanceRefreshExists(resourceName, &instanceRefresh)),
 			},
 			{
 				Taint:              []string{resourceName},
-				Config:             testAccAwsAutoscalingInstanceRefresh_alreadyOngoing(asgName, acctest.RandString(10)),
+				Config:             testAccAwsAutoscalingInstanceRefresh_alreadyOngoing(asgName),
 				ExpectError:        regexp.MustCompile(`InstanceRefreshInProgress`),
 				ExpectNonEmptyPlan: true,
 			},
@@ -239,7 +239,6 @@ func TestAccAWSAutoscalingInstanceRefresh_alreadyOngoing(t *testing.T) {
 
 func testAccAwsAutoscalingInstanceRefresh_alreadyOngoing(
 	asgName string,
-	trigger string,
 ) string {
 	return composeConfig(
 		testAccAwsAutoscalingInstanceRefreshBase,
@@ -271,12 +270,11 @@ resource "aws_autoscaling_instance_refresh" "test" {
 	wait_for_completion     = false
 
 	triggers = {
-		trigger = %[2]q  
+		token = aws_autoscaling_group.test.instance_refresh_token  
 	}
 }
 `,
 			asgName,
-			trigger,
 		))
 }
 
