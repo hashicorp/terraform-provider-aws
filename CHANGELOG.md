@@ -1,3 +1,9 @@
+## 3.15.0 (Unreleased)
+
+ENHANCEMENTS
+
+* resource/aws_kinesis_firehose_delivery_stream: Add `http_endpoint` configuration block [GH-15356]
+
 ## 3.14.1 (November 06, 2020)
 
 BUG FIXES
