@@ -272,6 +272,7 @@ resource "aws_codeartifact_domain" "test" {
   domain = %[1]q
 }
 `, rName)
+}
 
 func testAccAWSCodeArtifactDomainConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
