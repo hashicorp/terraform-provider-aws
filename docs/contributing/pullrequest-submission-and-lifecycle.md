@@ -210,6 +210,8 @@ The CHANGELOG is intended to show operator-impacting changes to the codebase for
 
 ##### New resource
 
+A new resource entry should only contain the name of the resource, and use the `new-resource` header.
+
 ~~~
 ```release-note:new-resource
 aws_secretsmanager_secret_policy
@@ -217,6 +219,8 @@ aws_secretsmanager_secret_policy
 ~~~
 
 ##### New data source:
+
+A new datasource entry should only contain the name of the datasource, and use the `new-datasource` header.
 
 ~~~
 ```release-note:new-datasource
@@ -226,6 +230,8 @@ aws_workspaces_workspace
 
 ##### New full-length documentation guides (e.g. EKS Getting Started Guide, IAM Policy Documents with Terraform)
 
+A new full length documentation entry describe the guide being added, and use the `enhancements` header.
+
 ~~~
 ```release-note:enhancements
 Added full length Custom Service Endpoint Configuration guide 
@@ -233,6 +239,8 @@ Added full length Custom Service Endpoint Configuration guide
 ~~~
 
 ##### Resource and provider bug fixes
+
+A new bug entry should have a prefix indicating the resource or datasource it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level fixes.
 
 ~~~
 ```release-note:bug
@@ -242,6 +250,8 @@ resource/aws_glue_classifier: Fix quote_symbol being optional
 
 ##### Resource and provider enhancements
 
+A new enhancement entry should have a prefix indicating the resource or datasource it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level enchancements.
+
 ~~~
 ```release-note:enhancements
 resource/aws_eip: Add network_border_group argument 
@@ -250,9 +260,11 @@ resource/aws_eip: Add network_border_group argument
 
 ##### Deprecations, removals or breaking changes
 
+A breaking-change entry should have a prefix indicating the resource or datasource it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level changes.
+
 ~~~
 ```release-note:breaking-change
-esource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
+resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
 ```
 ~~~
 
@@ -260,10 +272,11 @@ esource/aws_lambda_alias: Resource import no longer converts Lambda Function nam
 
 Dependency updates: If the update contains relevant bug fixes or enhancements that affect operators, those should be called out.
 Any changes which do not fit into the above categories but warrant highlighting.
+Use resource/datasource/provider prefixes where appropriate.
 
 ~~~
 ```release-note:notes
-esource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
+resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
 ```
 ~~~
 
