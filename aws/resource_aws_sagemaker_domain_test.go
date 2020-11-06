@@ -90,6 +90,7 @@ func TestAccAWSSagemakerDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
+					resource.TestCheckResourceAttrSet(resourceName, "home_efs_file_system_id"),
 					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 				),
 			},
@@ -102,76 +103,49 @@ func TestAccAWSSagemakerDomain_basic(t *testing.T) {
 	})
 }
 
-// func TestAccAWSSagemakerDomain_gitConfig_branch(t *testing.T) {
-// 	var notebook sagemaker.DescribeDomainOutput
-// 	rName := acctest.RandomWithPrefix("tf-acc-test")
-// 	resourceName := "aws_sagemaker_domain.test"
+func TestAccAWSSagemakerDomain_tags(t *testing.T) {
+	var notebook sagemaker.DescribeDomainOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_domain.test"
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:     func() { testAccPreCheck(t) },
-// 		Providers:    testAccProviders,
-// 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccAWSSagemakerDomainGitConfigBranchConfig(rName),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
-// 					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
-// 					testAccCheckResourceAttrRegionalARN(resourceName0......, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
-// 					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "git_config.0.repository_url", "https://github.com/terraform-providers/terraform-provider-aws.git"),
-// 					resource.TestCheckResourceAttr(resourceName, "git_config.0.branch", "master"),
-// 				),
-// 			},
-// 			{
-// 				ResourceName:      resourceName,
-// 				ImportState:       true,
-// 				ImportStateVerify: true,
-// 			},
-// 		},
-// 	})
-// }
-
-// func TestAccAWSSagemakerDomain_gitConfig_secret(t *testing.T) {
-// 	var notebook sagemaker.DescribeDomainOutput
-// 	rName := acctest.RandomWithPrefix("tf-acc-test")
-// 	resourceName := "aws_sagemaker_domain.test"
-
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:     func() { testAccPreCheck(t) },
-// 		Providers:    testAccProviders,
-// 		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccAWSSagemakerDomainGitConfigSecretConfig(rName),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
-// 					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
-// 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
-// 					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "git_config.0.repository_url", "https://github.com/terraform-providers/terraform-provider-aws.git"),
-// 					resource.TestCheckResourceAttrPair(resourceName, "git_config.0.secret_arn", "aws_secretsmanager_secret.test", "arn"),
-// 				),
-// 			},
-// 			{
-// 				ResourceName:      resourceName,
-// 				ImportState:       true,
-// 				ImportStateVerify: true,
-// 			},
-// 			{
-// 				Config: testAccAWSSagemakerDomainGitConfigSecretUpdatedConfig(rName),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
-// 					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
-// 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
-// 					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "git_config.0.repository_url", "https://github.com/terraform-providers/terraform-provider-aws.git"),
-// 					resource.TestCheckResourceAttrPair(resourceName, "git_config.0.secret_arn", "aws_secretsmanager_secret.test2", "arn"),
-// 				),
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerDomainBasicConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSagemakerDomainBasicConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSSagemakerDomainBasicConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccAWSSagemakerDomain_disappears(t *testing.T) {
 	var notebook sagemaker.DescribeDomainOutput
@@ -187,6 +161,7 @@ func TestAccAWSSagemakerDomain_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerDomainBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -258,7 +233,6 @@ func testAccCheckAWSSagemakerDomainDeleteImplicitResources(n string) resource.Te
 
 		conn := testAccProvider.Meta().(*AWSClient).efsconn
 		efsFsID := rs.Primary.Attributes["home_efs_file_system_id"]
-		vpcID := rs.Primary.Attributes["vpc_id"]
 
 		resp, err := conn.DescribeMountTargets(&efs.DescribeMountTargetsInput{
 			FileSystemId: aws.String(efsFsID),
@@ -273,11 +247,11 @@ func testAccCheckAWSSagemakerDomainDeleteImplicitResources(n string) resource.Te
 		for _, mt := range mountTargets {
 			r := resourceAwsEfsMountTarget()
 			d := r.Data(nil)
-			mtId := aws.StringValue(mt.MountTargetId)
-			d.SetId(mtId)
+			mtID := aws.StringValue(mt.MountTargetId)
+			d.SetId(mtID)
 			err := r.Delete(d, testAccProvider.Meta())
 			if err != nil {
-				return fmt.Errorf("Sagemaker domain EFS mount target (%s) failed to delete: %w", mtId, err)
+				return fmt.Errorf("Sagemaker domain EFS mount target (%s) failed to delete: %w", mtID, err)
 			}
 		}
 
@@ -347,63 +321,41 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
-// func testAccAWSSagemakerDomainGitConfigBranchConfig(rName string) string {
-// 	return fmt.Sprintf(`
-// resource "aws_sagemaker_domain" "test" {
-//   domain_name = %[1]q
+func testAccAWSSagemakerDomainBasicConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return testAccAWSSagemakerDomainConfigBase(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = [aws_subnet.test.id]
 
-//   git_config {
-//     repository_url = "https://github.com/terraform-providers/terraform-provider-aws.git"
-//     branch         = "master"
-//   }
-// }
-// `, rName)
-// }
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+  }
 
-// func testAccAWSSagemakerDomainGitConfigSecretConfig(rName string) string {
-// 	return fmt.Sprintf(`
-// resource "aws_secretsmanager_secret" "test" {
-//   name = %[1]q
-// }
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
 
-// resource "aws_secretsmanager_secret_version" "test" {
-//   secret_id     = aws_secretsmanager_secret.test.id
-//   secret_string = jsonencode({ username = "example", passowrd = "example" })
-// }
+func testAccAWSSagemakerDomainBasicConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccAWSSagemakerDomainConfigBase(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = [aws_subnet.test.id]
 
-// resource "aws_sagemaker_domain" "test" {
-//   domain_name = %[1]q
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+  }
 
-//   git_config {
-//     repository_url = "https://github.com/terraform-providers/terraform-provider-aws.git"
-//     secret_arn     = aws_secretsmanager_secret.test.arn
-//   }
-
-//   depends_on = [aws_secretsmanager_secret_version.test]
-// }
-// `, rName)
-// }
-
-// func testAccAWSSagemakerDomainGitConfigSecretUpdatedConfig(rName string) string {
-// 	return fmt.Sprintf(`
-// resource "aws_secretsmanager_secret" "test2" {
-//   name = "%[1]s-2"
-// }
-
-// resource "aws_secretsmanager_secret_version" "test2" {
-//   secret_id     = aws_secretsmanager_secret.test2.id
-//   secret_string = jsonencode({ username = "example", passowrd = "example" })
-// }
-
-// resource "aws_sagemaker_domain" "test" {
-//   domain_name = %[1]q
-
-//   git_config {
-//     repository_url = "https://github.com/terraform-providers/terraform-provider-aws.git"
-//     secret_arn     = aws_secretsmanager_secret.test2.arn
-//   }
-
-//   depends_on = [aws_secretsmanager_secret_version.test2]
-// }
-// `, rName)
-// }
+  tags = {
+	%[2]q = %[3]q
+	%[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
