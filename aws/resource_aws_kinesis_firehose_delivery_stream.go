@@ -1492,7 +1492,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						"retry_duration": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      3600,
+							Default:      300,
 							ValidateFunc: validation.IntBetween(0, 7200),
 						},
 

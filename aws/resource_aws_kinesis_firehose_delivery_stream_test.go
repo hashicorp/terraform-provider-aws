@@ -2791,7 +2791,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 var testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpointBasic = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
-  name        = "terraform-kinesis-firehose-basichttpendpointtest-%d"
+  name        = "terraform-kinesis-firehose-httpendpoint-%d"
   destination = "http_endpoint"
 
   s3_configuration {
@@ -2810,7 +2810,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 var testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpointUpdates = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
-  name        = "terraform-kinesis-firehose-basichttpendpointtest-%d"
+  name        = "terraform-kinesis-firehose-httpendpoint-%d"
   destination = "http_endpoint"
 
   s3_configuration {
