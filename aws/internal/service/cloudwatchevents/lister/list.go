@@ -9,9 +9,13 @@ import (
 
 func ListAllTargetsForRulePages(conn *events.CloudWatchEvents, busName, ruleName string, fn func(*events.ListTargetsByRuleOutput, bool) bool) error {
 	input := &events.ListTargetsByRuleInput{
-		Rule:         aws.String(ruleName),
-		EventBusName: aws.String(busName),
-		Limit:        aws.Int64(100), // Set limit to allowed maximum to prevent API throttling
+		Rule:  aws.String(ruleName),
+		Limit: aws.Int64(100), // Set limit to allowed maximum to prevent API throttling
 	}
+
+	if busName != "" {
+		input.EventBusName = aws.String(busName)
+	}
+
 	return ListTargetsByRulePages(conn, input, fn)
 }
