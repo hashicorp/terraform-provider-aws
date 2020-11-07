@@ -310,6 +310,7 @@ func resourceAwsAmplifyAppCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsAmplifyAppRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).amplifyconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 	log.Printf("[DEBUG] Reading Amplify App: %s", d.Id())
 
 	resp, err := conn.GetApp(&amplify.GetAppInput{
@@ -345,7 +346,7 @@ func resourceAwsAmplifyAppRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.App.Name)
 	d.Set("platform", resp.App.Platform)
 	d.Set("repository", resp.App.Repository)
-	if err := d.Set("tags", keyvaluetags.AmplifyKeyValueTags(resp.App.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.AmplifyKeyValueTags(resp.App.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

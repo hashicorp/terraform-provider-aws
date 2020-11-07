@@ -27,7 +27,7 @@ func TestAccAWSAmplifyApp_basic(t *testing.T) {
 				Config: testAccAWSAmplifyAppConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAmplifyAppExists(resourceName, &app),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile("^arn:[^:]+:amplify:[^:]+:[^:]+:apps/[^/]+$")),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "repository", ""),
@@ -420,7 +420,7 @@ func TestAccAWSAmplifyApp_iamServiceRoleArn(t *testing.T) {
 			{
 				Config: testAccAWSAmplifyAppConfigIAMServiceRoleArn(rName, roleName1),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "iam_service_role_arn", regexp.MustCompile("^arn:[^:]+:iam:[^:]*:[^:]+:role/"+roleName1)),
+					testAccMatchResourceAttrGlobalARN(resourceName, "iam_service_role_arn", "iam", regexp.MustCompile("role/"+roleName1)),
 				),
 			},
 			{
@@ -431,7 +431,7 @@ func TestAccAWSAmplifyApp_iamServiceRoleArn(t *testing.T) {
 			{
 				Config: testAccAWSAmplifyAppConfigIAMServiceRoleArn(rName, roleName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "iam_service_role_arn", regexp.MustCompile("^arn:[^:]+:iam:[^:]*:[^:]+:role/"+roleName2)),
+					testAccMatchResourceAttrGlobalARN(resourceName, "iam_service_role_arn", "iam", regexp.MustCompile("role/"+roleName2)),
 				),
 			},
 		},
@@ -637,10 +637,10 @@ resource "aws_amplify_app" "test" {
   auto_branch_creation_config {
     enable_auto_branch_creation = true
 
-	auto_branch_creation_patterns = [
-	  "*",
-	  "*/**",
-	]
+    auto_branch_creation_patterns = [
+      "*",
+      "*/**",
+    ]
   }
 }
 `, rName)
@@ -654,9 +654,9 @@ resource "aws_amplify_app" "test" {
   auto_branch_creation_config {
     enable_auto_branch_creation = true
 
-	auto_branch_creation_patterns = [
-	  "feature/*",
-	]
+    auto_branch_creation_patterns = [
+      "feature/*",
+    ]
 
     build_spec = "version: 0.1"
     framework  = "React"
@@ -678,6 +678,7 @@ resource "aws_amplify_app" "test" {
     }
   }
 }
+
 `, rName)
 }
 
@@ -689,9 +690,9 @@ resource "aws_amplify_app" "test" {
   auto_branch_creation_config {
     enable_auto_branch_creation = true
 
-	auto_branch_creation_patterns = [
-	  "feature/*",
-	]
+    auto_branch_creation_patterns = [
+      "feature/*",
+    ]
 
     build_spec = "version: 0.1"
     framework  = "React"
