@@ -233,9 +233,9 @@ func TestAccAWSSagemakerDomain_tensorboardAppSettings(t *testing.T) {
 					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.default_resource_spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.default_resource_spec.instance_type", "ml.t3.micro"),
-					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+					// testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 				),
 			},
 			{
@@ -609,7 +609,7 @@ resource "aws_sagemaker_domain" "test" {
 	
     tensor_board_app_settings {
 	  default_resource_spec {
-        instance_type = "ml.t3.micro"  
+        instance_type = "ml.t3.micro"
       }
     }
   }
