@@ -1,14 +1,12 @@
 package waiter
 
 import (
-	"errors"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/finder"
 )
@@ -76,7 +74,7 @@ func ActivityStreamStatus(conn *rds.RDS, dbClusterIdentifier string) resource.St
 
 		if err != nil {
 			log.Printf("[DEBUG] Refreshing RDS Cluster Activity Stream State. Occur error: %s", err)
-			if isAWSErr(err, rds.ErrCodeDBClusterNotFoundFault, "") {
+			if tfawserr.ErrCodeContains(err, rds.ErrCodeDBClusterNotFoundFault) {
 				return emptyResp, rds.ActivityStreamStatusStopped, nil
 			} else if resp != nil && len(resp.DBClusters) == 0 {
 				return emptyResp, rds.ActivityStreamStatusStopped, nil
@@ -95,14 +93,4 @@ func ActivityStreamStatus(conn *rds.RDS, dbClusterIdentifier string) resource.St
 		log.Printf("[DEBUG] Refreshing RDS Cluster Activity Stream State... %s", status)
 		return cluster, status, nil
 	}
-}
-
-// Similar to isAWSErr from aws/awserr.go
-// TODO: Add and export in shared package
-func isAWSErr(err error, code string, message string) bool {
-	var awsErr awserr.Error
-	if errors.As(err, &awsErr) {
-		return awsErr.Code() == code && strings.Contains(awsErr.Message(), message)
-	}
-	return false
 }
