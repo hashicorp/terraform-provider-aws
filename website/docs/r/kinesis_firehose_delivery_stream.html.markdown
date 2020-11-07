@@ -477,6 +477,7 @@ The `http_endpoint_configuration` objects supports the following:
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below.
 * `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
 * `request_configuration` - (Optional) The request configuration.  More details are given below.
+* `retry_duration` - (Optional) Total amount of seconds Firehose spends on retries. This duration starts after the initial attempt fails, It does not include the time periods during which Firehose waits for acknowledgment from the specified destination after each attempt. Valid values between `0` and `7200`. Default is `300`.
 
 The `cloudwatch_logging_options` object supports the following:
 

@@ -736,7 +736,8 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 			}
 		} else if destination.HttpEndpointDestinationDescription != nil {
 			d.Set("destination", firehoseDestinationTypeHttpEndpoint)
-			if err := d.Set("http_endpoint_configuration", flattenFirehoseHttpEndpointConfiguration(destination.HttpEndpointDestinationDescription)); err != nil {
+			configuredAccessKey := d.Get("http_endpoint_configuration.0.access_key").(string)
+			if err := d.Set("http_endpoint_configuration", flattenFirehoseHttpEndpointConfiguration(destination.HttpEndpointDestinationDescription, configuredAccessKey)); err != nil {
 				return fmt.Errorf("error setting http_endpoint_configuration: %s", err)
 			}
 			if err := d.Set("s3_configuration", flattenFirehoseS3Configuration(destination.HttpEndpointDestinationDescription.S3DestinationDescription)); err != nil {
@@ -759,11 +760,12 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 	return nil
 }
 
-func flattenFirehoseHttpEndpointConfiguration(description *firehose.HttpEndpointDestinationDescription) []map[string]interface{} {
+func flattenFirehoseHttpEndpointConfiguration(description *firehose.HttpEndpointDestinationDescription, configuredAccessKey string) []map[string]interface{} {
 	if description == nil {
 		return []map[string]interface{}{}
 	}
 	m := map[string]interface{}{
+		"access_key":                 configuredAccessKey,
 		"url":                        aws.StringValue(description.EndpointConfiguration.Url),
 		"name":                       aws.StringValue(description.EndpointConfiguration.Name),
 		"role_arn":                   aws.StringValue(description.RoleARN),
@@ -2250,6 +2252,7 @@ func createHttpEndpointConfig(d *schema.ResourceData, s3Config *firehose.S3Desti
 	HttpEndpoint := sl[0].(map[string]interface{})
 
 	configuration := &firehose.HttpEndpointDestinationConfiguration{
+		RetryOptions:    extractHttpEndpointRetryOptions(HttpEndpoint),
 		RoleARN:         aws.String(HttpEndpoint["role_arn"].(string)),
 		S3Configuration: s3Config,
 	}
@@ -2294,8 +2297,9 @@ func updateHttpEndpointConfig(d *schema.ResourceData, s3Update *firehose.S3Desti
 	HttpEndpoint := sl[0].(map[string]interface{})
 
 	configuration := &firehose.HttpEndpointDestinationUpdate{
-		RoleARN:  aws.String(HttpEndpoint["role_arn"].(string)),
-		S3Update: s3Update,
+		RetryOptions: extractHttpEndpointRetryOptions(HttpEndpoint),
+		RoleARN:      aws.String(HttpEndpoint["role_arn"].(string)),
+		S3Update:     s3Update,
 	}
 
 	configuration.EndpointConfiguration = extractHttpEndpointConfiguration(HttpEndpoint)
@@ -2398,6 +2402,16 @@ func extractElasticSearchRetryOptions(es map[string]interface{}) *firehose.Elast
 	retryOptions := &firehose.ElasticsearchRetryOptions{}
 
 	if retryDuration, ok := es["retry_duration"].(int); ok {
+		retryOptions.DurationInSeconds = aws.Int64(int64(retryDuration))
+	}
+
+	return retryOptions
+}
+
+func extractHttpEndpointRetryOptions(tfMap map[string]interface{}) *firehose.HttpEndpointRetryOptions {
+	retryOptions := &firehose.HttpEndpointRetryOptions{}
+
+	if retryDuration, ok := tfMap["retry_duration"].(int); ok {
 		retryOptions.DurationInSeconds = aws.Int64(int64(retryDuration))
 	}
 

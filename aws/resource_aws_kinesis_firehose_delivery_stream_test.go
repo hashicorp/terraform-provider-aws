@@ -1132,7 +1132,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_SplunkConfigUpdates(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_HTTPEndpointConfigUpdates(t *testing.T) {
+func TestAccAWSKinesisFirehoseDeliveryStream_HttpEndpointConfiguration(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 
 	ri := acctest.RandInt()
@@ -1153,8 +1153,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_HTTPEndpointConfigUpdates(t *testin
 			Url:  aws.String("https://input-test.com:443"),
 			Name: aws.String("HTTP_test"),
 		},
-		RoleARN:      aws.String("valueNotTested"),
-		S3BackupMode: aws.String("FailedEventsOnly"),
+		S3BackupMode: aws.String("FailedDataOnly"),
 		ProcessingConfiguration: &firehose.ProcessingConfiguration{
 			Enabled: aws.Bool(true),
 			Processors: []*firehose.Processor{
@@ -1193,6 +1192,37 @@ func TestAccAWSKinesisFirehoseDeliveryStream_HTTPEndpointConfigUpdates(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, updatedHTTPEndpointConfig),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisFirehoseDeliveryStream_HttpEndpointConfiguration_RetryDuration(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rInt := acctest.RandInt()
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpoint_RetryDuration(rInt, 301),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpoint_RetryDuration(rInt, 302),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 				),
 			},
 		},
@@ -1587,12 +1617,9 @@ func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.Del
 			if httpEndpointConfig != nil {
 				s := httpEndpointConfig.(*firehose.HttpEndpointDestinationDescription)
 				// Range over the Stream Destinations, looking for the matching HttpEndpoint destination
-				var matchRoleARN, matchS3BackupMode, matchUrl, matchName, processingConfigMatch bool
+				var matchS3BackupMode, matchUrl, matchName, processingConfigMatch bool
 				for _, d := range stream.Destinations {
 					if d.HttpEndpointDestinationDescription != nil {
-						if *d.HttpEndpointDestinationDescription.RoleARN == *s.RoleARN {
-							matchRoleARN = true
-						}
 						if *d.HttpEndpointDestinationDescription.S3BackupMode == *s.S3BackupMode {
 							matchS3BackupMode = true
 						}
@@ -1607,8 +1634,11 @@ func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.Del
 						}
 					}
 				}
-				if !matchRoleARN || !matchUrl || !matchName || !matchS3BackupMode {
-					return fmt.Errorf("Mismatch HTTP Endpoint roleARN or EndpointConfiguration, expected: %s, got: %s", s, stream.Destinations)
+				if !matchS3BackupMode {
+					return fmt.Errorf("Mismatch HTTP Endpoint S3BackupMode, expected: %s, got: %s", s, stream.Destinations)
+				}
+				if !matchUrl || !matchName {
+					return fmt.Errorf("Mismatch HTTP Endpoint EndpointConfiguration, expected: %s, got: %s", s, stream.Destinations)
 				}
 				if !processingConfigMatch {
 					return fmt.Errorf("Mismatch HTTP Endpoint ProcessingConfiguration.Processors count, expected: %s, got: %s", s, stream.Destinations)
@@ -2803,6 +2833,30 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 `
 
+func testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpoint_RetryDuration(rInt, retryDuration int) string {
+	return composeConfig(
+		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = "terraform-kinesis-firehose-httpendpoint-%[1]d"
+  destination = "http_endpoint"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  http_endpoint_configuration {
+    url            = "https://input-test.com:443"
+    name           = "HTTP_test"
+    retry_duration = %[2]d
+    role_arn       = aws_iam_role.firehose.arn
+  }
+}
+`, rInt, retryDuration))
+}
+
 var testAccKinesisFirehoseDeliveryStreamConfig_HTTPEndpointUpdates = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
@@ -2822,7 +2876,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     name           = "HTTP_test"
     access_key     = "test_key"
     role_arn       = aws_iam_role.firehose.arn
-    s3_backup_mode = "FailedEventsOnly"
+    s3_backup_mode = "FailedDataOnly"
 
     processing_configuration {
       enabled = true
@@ -2835,10 +2889,10 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
           parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
         }
 
-        parameters {
-          parameter_name  = "RoleArn"
-          parameter_value = aws_iam_role.firehose.arn
-        }
+        // parameters {
+        //   parameter_name  = "RoleArn"
+        //   parameter_value = aws_iam_role.firehose.arn
+        // }
 
         parameters {
           parameter_name  = "BufferSizeInMBs"
