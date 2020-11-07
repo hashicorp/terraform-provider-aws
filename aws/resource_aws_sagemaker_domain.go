@@ -65,12 +65,6 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 				Default:      sagemaker.AppNetworkAccessTypePublicInternetOnly,
 				ValidateFunc: validation.StringInSlice(sagemaker.AppNetworkAccessType_Values(), false),
 			},
-			"home_efs_file_system_kms_key_id": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Optional:     true,
-				ValidateFunc: validateArn,
-			},
 			"default_user_settings": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -228,10 +222,6 @@ func resourceAwsSagemakerDomainCreate(d *schema.ResourceData, meta interface{}) 
 		DefaultUserSettings:  expandSagemakerDomainDefaultUserSettings(d.Get("default_user_settings").([]interface{})),
 	}
 
-	if v, ok := d.GetOk("home_efs_file_system_kms_key_id"); ok {
-		input.HomeEfsFileSystemKmsKeyId = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("tags"); ok {
 		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SagemakerTags()
 	}
@@ -277,7 +267,6 @@ func resourceAwsSagemakerDomainRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("app_network_access_type", domain.AppNetworkAccessType)
 	d.Set("arn", arn)
 	d.Set("home_efs_file_system_id", domain.HomeEfsFileSystemId)
-	d.Set("home_efs_file_system_kms_key_id", domain.HomeEfsFileSystemKmsKeyId)
 	d.Set("single_sign_on_managed_application_instance_id", domain.SingleSignOnManagedApplicationInstanceId)
 	d.Set("url", domain.Url)
 	d.Set("vpc_id", domain.VpcId)
