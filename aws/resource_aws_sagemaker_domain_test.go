@@ -235,7 +235,67 @@ func TestAccAWSSagemakerDomain_tensorboardAppSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
-					// testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
+					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerDomain_kernelGatewayAppSettings(t *testing.T) {
+	var notebook sagemaker.DescribeDomainOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerDomainConfigKernelGatewayAppSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerDomain_jupyterServerAppSettings(t *testing.T) {
+	var notebook sagemaker.DescribeDomainOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerDomainConfigJupyterServerAppSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.0.default_resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 				),
 			},
 			{
@@ -608,6 +668,48 @@ resource "aws_sagemaker_domain" "test" {
 	execution_role = aws_iam_role.test.arn
 	
     tensor_board_app_settings {
+	  default_resource_spec {
+        instance_type = "ml.t3.micro"
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAWSSagemakerDomainConfigJupyterServerAppSettings(rName string) string {
+	return testAccAWSSagemakerDomainConfigBase(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = [aws_subnet.test.id]
+
+  default_user_settings {
+	execution_role = aws_iam_role.test.arn
+	
+    jupyter_server_app_settings {
+	  default_resource_spec {
+        instance_type = "ml.t3.micro"
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAWSSagemakerDomainConfigKernelGatewayAppSettings(rName string) string {
+	return testAccAWSSagemakerDomainConfigBase(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = [aws_subnet.test.id]
+
+  default_user_settings {
+	execution_role = aws_iam_role.test.arn
+	
+    kernel_gateway_app_settings {
 	  default_resource_spec {
         instance_type = "ml.t3.micro"
       }
