@@ -346,14 +346,45 @@ func testAccCheckAWSSagemakerDomainDeleteImplicitResources(n string) resource.Te
 			return fmt.Errorf("error reading security groups: %w", err)
 		}
 
+		//revoke permissions
 		for _, sg := range sgResp.SecurityGroups {
 			sgID := aws.StringValue(sg.GroupId)
-			r := resourceAwsSecurityGroup()
-			d := r.Data(nil)
-			d.SetId(sgID)
-			err = r.Delete(d, testAccProvider.Meta())
-			if err != nil {
-				return fmt.Errorf("Sagemaker domain EFS file system sg (%s) failed to delete: %w", sgID, err)
+
+			if len(sg.IpPermissions) > 0 {
+				req := &ec2.RevokeSecurityGroupIngressInput{
+					GroupId:       sg.GroupId,
+					IpPermissions: sg.IpPermissions,
+				}
+				_, err = ec2conn.RevokeSecurityGroupIngress(req)
+
+				if err != nil {
+					return fmt.Errorf("Error revoking security group %s rules: %w", sgID, err)
+				}
+			}
+
+			if len(sg.IpPermissionsEgress) > 0 {
+				req := &ec2.RevokeSecurityGroupEgressInput{
+					GroupId:       sg.GroupId,
+					IpPermissions: sg.IpPermissionsEgress,
+				}
+				_, err = ec2conn.RevokeSecurityGroupEgress(req)
+
+				if err != nil {
+					return fmt.Errorf("Error revoking security group %s rules: %w", sgID, err)
+				}
+			}
+		}
+
+		for _, sg := range sgResp.SecurityGroups {
+			sgID := aws.StringValue(sg.GroupId)
+			if aws.StringValue(sg.GroupName) != "default" {
+				r := resourceAwsSecurityGroup()
+				d := r.Data(nil)
+				d.SetId(sgID)
+				err = r.Delete(d, testAccProvider.Meta())
+				if err != nil {
+					return fmt.Errorf("Sagemaker domain EFS file system sg (%s) failed to delete: %w", sgID, err)
+				}
 			}
 		}
 
@@ -428,7 +459,7 @@ resource "aws_sagemaker_domain" "test" {
 
   default_user_settings {
     execution_role  = aws_iam_role.test.arn
-    security_groups = [aws_security_group.test.id]
+    security_groups = [aws_security_sg.test.id]
   }
 }
 `, rName)
@@ -452,7 +483,7 @@ resource "aws_sagemaker_domain" "test" {
 
   default_user_settings {
     execution_role  = aws_iam_role.test.arn
-    security_groups = [aws_security_group.test.id, aws_security_group.test2.id]
+    security_groups = [aws_security_sg.test.id, aws_security_sg.test2.id]
   }
 }
 `, rName)
