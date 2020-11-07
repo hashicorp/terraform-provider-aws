@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -305,7 +306,7 @@ func testAccCheckAWSSagemakerDomainDeleteImplicitResources(n string) resource.Te
 		})
 
 		if err != nil {
-			return fmt.Errorf("Sagemaker domain EFS mount targets not found: %w", err)
+			return fmt.Errorf("Sagemaker domain EFS mount targets for EFS FS (%s) not found: %w", efsFsID, err)
 		}
 
 		//reusing EFS mount target delete for wait logic
@@ -377,7 +378,8 @@ func testAccCheckAWSSagemakerDomainDeleteImplicitResources(n string) resource.Te
 
 		for _, sg := range sgResp.SecurityGroups {
 			sgID := aws.StringValue(sg.GroupId)
-			if aws.StringValue(sg.GroupName) != "default" {
+			sgName := aws.StringValue(sg.GroupName)
+			if sgName != "default" && strings.HasPrefix(sgName, "tf-acc-test") {
 				r := resourceAwsSecurityGroup()
 				d := r.Data(nil)
 				d.SetId(sgID)
@@ -459,7 +461,7 @@ resource "aws_sagemaker_domain" "test" {
 
   default_user_settings {
     execution_role  = aws_iam_role.test.arn
-    security_groups = [aws_security_sg.test.id]
+    security_groups = [aws_security_group.test.id]
   }
 }
 `, rName)
@@ -483,7 +485,7 @@ resource "aws_sagemaker_domain" "test" {
 
   default_user_settings {
     execution_role  = aws_iam_role.test.arn
-    security_groups = [aws_security_sg.test.id, aws_security_sg.test2.id]
+    security_groups = [aws_security_group.test.id, aws_security_group.test2.id]
   }
 }
 `, rName)

@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
 )
@@ -231,6 +232,10 @@ func resourceAwsSagemakerDomainCreate(d *schema.ResourceData, meta interface{}) 
 		input.HomeEfsFileSystemKmsKeyId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("tags"); ok {
+		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SagemakerTags()
+	}
+
 	log.Printf("[DEBUG] sagemaker domain create config: %#v", *input)
 	output, err := conn.CreateDomain(input)
 	if err != nil {
@@ -254,6 +259,7 @@ func resourceAwsSagemakerDomainCreate(d *schema.ResourceData, meta interface{}) 
 
 func resourceAwsSagemakerDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	domain, err := finder.DomainByName(conn, d.Id())
 	if err != nil {
@@ -265,10 +271,11 @@ func resourceAwsSagemakerDomainRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error reading SageMaker domain (%s): %w", d.Id(), err)
 	}
 
+	arn := aws.StringValue(domain.DomainArn)
 	d.Set("domain_name", domain.DomainName)
 	d.Set("auth_mode", domain.AuthMode)
 	d.Set("app_network_access_type", domain.AppNetworkAccessType)
-	d.Set("arn", domain.DomainArn)
+	d.Set("arn", arn)
 	d.Set("home_efs_file_system_id", domain.HomeEfsFileSystemId)
 	d.Set("home_efs_file_system_kms_key_id", domain.HomeEfsFileSystemKmsKeyId)
 	d.Set("single_sign_on_managed_application_instance_id", domain.SingleSignOnManagedApplicationInstanceId)
@@ -283,21 +290,41 @@ func resourceAwsSagemakerDomainRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error setting default_user_settings for sagemaker domain (%s): %w", d.Id(), err)
 	}
 
+	tags, err := keyvaluetags.SagemakerListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Sagemaker Domain (%s): %w", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
 	return nil
 }
 
 func resourceAwsSagemakerDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
 
-	input := &sagemaker.UpdateDomainInput{
-		DomainId:            aws.String(d.Id()),
-		DefaultUserSettings: expandSagemakerDomainDefaultUserSettings(d.Get("default_user_settings").([]interface{})),
+	if d.HasChange("default_user_settings") {
+		input := &sagemaker.UpdateDomainInput{
+			DomainId:            aws.String(d.Id()),
+			DefaultUserSettings: expandSagemakerDomainDefaultUserSettings(d.Get("default_user_settings").([]interface{})),
+		}
+
+		log.Printf("[DEBUG] sagemaker domain update config: %#v", *input)
+		_, err := conn.UpdateDomain(input)
+		if err != nil {
+			return fmt.Errorf("error updating SageMaker domain: %w", err)
+		}
 	}
 
-	log.Printf("[DEBUG] sagemaker domain update config: %#v", *input)
-	_, err := conn.UpdateDomain(input)
-	if err != nil {
-		return fmt.Errorf("error updating SageMaker domain: %w", err)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Sagemaker Notebook Instance (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsSagemakerDomainRead(d, meta)
