@@ -100,7 +100,8 @@ func TestAccAwsCloudFrontCachePolicy_basic(t *testing.T) {
 						Quantity: aws.Int64(2),
 					},
 				},
-				EnableAcceptEncodingGzip: aws.Bool(true),
+				EnableAcceptEncodingBrotli: aws.Bool(true),
+				EnableAcceptEncodingGzip:   aws.Bool(true),
 				HeadersConfig: &cloudfront.CachePolicyHeadersConfig{
 					HeaderBehavior: aws.String("whitelist"),
 					Headers: &cloudfront.Headers{
@@ -139,6 +140,7 @@ func TestAccAwsCloudFrontCachePolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cookie_behavior", "none"),
 					resource.TestCheckResourceAttr(resourceName, "cookie_names.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "86400"),
+					resource.TestCheckResourceAttr(resourceName, "enable_accept_encoding_brotli", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_accept_encoding_gzip", "false"),
 					resource.TestCheckResourceAttrPtr(resourceName, "etag", &etag),
 					resource.TestCheckResourceAttr(resourceName, "header_behavior", "none"),
@@ -165,6 +167,7 @@ func TestAccAwsCloudFrontCachePolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cookie_behavior", "whitelist"),
 					resource.TestCheckResourceAttr(resourceName, "cookie_names.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "enable_accept_encoding_brotli", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_accept_encoding_gzip", "true"),
 					resource.TestCheckResourceAttrPtr(resourceName, "etag", &etag),
 					resource.TestCheckResourceAttr(resourceName, "header_behavior", "whitelist"),
@@ -194,18 +197,19 @@ resource "aws_cloudfront_cache_policy" "test" {
 func testAccAwsCloudFrontCachePolicyConfig_basic_update(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_cache_policy" "test" {
-	comment                     = "Greetings, programs!"
-	cookie_behavior             = "whitelist"
-	cookie_names                = ["Cookie1", "Cookie2"]
-	default_ttl                 = 3600
-	enable_accept_encoding_gzip = true
-	header_behavior             = "whitelist"
-	header_names                = ["X-Header-1", "X-Header-2"]
-	max_ttl                     = 86400
-	min_ttl                     = 0
-	name                        = %[1]q
-	query_string_behavior       = "whitelist"
-	query_string_names          = ["test"]
+	comment                       = "Greetings, programs!"
+	cookie_behavior               = "whitelist"
+	cookie_names                  = ["Cookie1", "Cookie2"]
+	default_ttl                   = 3600
+	enable_accept_encoding_brotli = true
+	enable_accept_encoding_gzip   = true
+	header_behavior               = "whitelist"
+	header_names                  = ["X-Header-1", "X-Header-2"]
+	max_ttl                       = 86400
+	min_ttl                       = 0
+	name                          = %[1]q
+	query_string_behavior         = "whitelist"
+	query_string_names            = ["test"]
 }
 `, name)
 }

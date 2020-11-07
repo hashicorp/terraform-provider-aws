@@ -43,6 +43,11 @@ func resourceAwsCloudFrontCachePolicy() *schema.Resource {
 				Default:      86400,
 				ValidateFunc: validation.IntAtLeast(0),
 			},
+			"enable_accept_encoding_brotli": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"enable_accept_encoding_gzip": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -238,7 +243,8 @@ func expandAwsCloudFrontCachePolicyConfig(d *schema.ResourceData) *cloudfront.Ca
 				CookieBehavior: aws.String(d.Get("cookie_behavior").(string)),
 				Cookies:        nil,
 			},
-			EnableAcceptEncodingGzip: aws.Bool(d.Get("enable_accept_encoding_gzip").(bool)),
+			EnableAcceptEncodingBrotli: aws.Bool(d.Get("enable_accept_encoding_brotli").(bool)),
+			EnableAcceptEncodingGzip:   aws.Bool(d.Get("enable_accept_encoding_gzip").(bool)),
 			HeadersConfig: &cloudfront.CachePolicyHeadersConfig{
 				HeaderBehavior: aws.String(d.Get("header_behavior").(string)),
 				Headers:        nil,
@@ -299,6 +305,7 @@ func flattenAwsCloudFrontCachePolicyConfig(d *schema.ResourceData, config *cloud
 			}
 		}
 
+		d.Set("enable_accept_encoding_brotli", forwarded.EnableAcceptEncodingBrotli)
 		d.Set("enable_accept_encoding_gzip", forwarded.EnableAcceptEncodingGzip)
 
 		if headers := forwarded.HeadersConfig; headers != nil {

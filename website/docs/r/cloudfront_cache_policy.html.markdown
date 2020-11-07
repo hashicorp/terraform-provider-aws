@@ -39,6 +39,8 @@ The following arguments are supported:
  
 * `default_ttl` - (Optional) The default amount of time, in seconds, that you want objects to stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated. CloudFront uses this value as the object’s time to live (TTL) only when the origin does not send `Cache-Control` or `Expires` headers with the object. [See here for more information.](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html) The default value for this field is 86400 seconds (1 day). If the value of `min_ttl` is more than 86400 seconds, then the default value for this field is the same as the value of `min_ttl`. 
 
+* `enable_accept_encoding_brotli` - (Optional) A flag that determines whether the `Accept-Encoding` HTTP header is included in the cache key and included in requests that CloudFront sends to the origin. [See here for more information](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-policy-compressed-objects). The default value of this field is `false`.
+
 * `enable_accept_encoding_gzip` - (Optional) A flag that determines whether the `Accept-Encoding` HTTP header is included in the cache key and included in requests that CloudFront sends to the origin. [See here for more information](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/controlling-the-cache-key.html#cache-policy-compressed-objects). The default value of this field is `false`.
 
 * `header_behavior` - (Optional) Determines whether any HTTP headers are included in the cache key and automatically included in requests that CloudFront sends to the origin. Valid values are `none` (default) and `whitelist`.
