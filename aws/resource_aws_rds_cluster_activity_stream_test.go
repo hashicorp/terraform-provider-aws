@@ -303,15 +303,15 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_kms_key" "test" {
-	description             = "Testing for AWS RDS Cluster Activity Stream"
+  description             = "Testing for AWS RDS Cluster Activity Stream"
   deletion_window_in_days = 7
 }
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier              = "%[1]s"
-  engine                  				= "aurora-postgresql"
+  engine                          = "aurora-postgresql"
   engine_version                  = "10.11"
-	availability_zones  						= ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones              = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
   database_name                   = "mydb"
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
@@ -321,18 +321,18 @@ resource "aws_rds_cluster" "test" {
 }
 
 resource "aws_rds_cluster_instance" "test" {
-	identifier         = "%[2]s"
+  identifier         = "%[2]s"
   cluster_identifier = "${aws_rds_cluster.test.cluster_identifier}"
   engine             = "${aws_rds_cluster.test.engine}"
   instance_class     = "db.r5.large"
 }
 
 resource "aws_rds_cluster_activity_stream" "test" {
-  resource_arn        = "${aws_rds_cluster.test.arn}"
-  kms_key_id 					= "${aws_kms_key.test.key_id}"
-  mode         				= "async"
-	
-	depends_on = [aws_rds_cluster_instance.test]
+  resource_arn = "${aws_rds_cluster.test.arn}"
+  kms_key_id   = "${aws_kms_key.test.key_id}"
+  mode         = "async"
+
+  depends_on = [aws_rds_cluster_instance.test]
 }
 `, clusterName, instanceName)
 }
@@ -344,15 +344,15 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_kms_key" "new_kms_key" {
-	description             = "Testing for AWS RDS Cluster Activity Stream"
+  description             = "Testing for AWS RDS Cluster Activity Stream"
   deletion_window_in_days = 7
 }
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier              = "%[1]s"
-  engine                  				= "aurora-postgresql"
+  engine                          = "aurora-postgresql"
   engine_version                  = "10.11"
-	availability_zones  						= ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones              = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
   database_name                   = "mydb"
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
@@ -362,18 +362,18 @@ resource "aws_rds_cluster" "test" {
 }
 
 resource "aws_rds_cluster_instance" "test" {
-	identifier         = "%[2]s"
+  identifier         = "%[2]s"
   cluster_identifier = "${aws_rds_cluster.test.cluster_identifier}"
   engine             = "${aws_rds_cluster.test.engine}"
   instance_class     = "db.r5.large"
 }
 
 resource "aws_rds_cluster_activity_stream" "test" {
-  resource_arn        = "${aws_rds_cluster.test.arn}"
-  kms_key_id 					= "${aws_kms_key.new_kms_key.key_id}"
-  mode         				= "async"
-	
-	depends_on = [aws_rds_cluster_instance.test]
+  resource_arn = "${aws_rds_cluster.test.arn}"
+  kms_key_id   = "${aws_kms_key.new_kms_key.key_id}"
+  mode         = "async"
+
+  depends_on = [aws_rds_cluster_instance.test]
 }
 `, clusterName, instanceName)
 }
@@ -385,15 +385,15 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_kms_key" "test" {
-	description             = "Testing for AWS RDS Cluster Activity Stream"
+  description             = "Testing for AWS RDS Cluster Activity Stream"
   deletion_window_in_days = 7
 }
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier              = "%[1]s"
-  engine                  				= "aurora-postgresql"
+  engine                          = "aurora-postgresql"
   engine_version                  = "10.11"
-	availability_zones  						= ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones              = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
   database_name                   = "mydb"
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
@@ -403,18 +403,18 @@ resource "aws_rds_cluster" "test" {
 }
 
 resource "aws_rds_cluster_instance" "test" {
-	identifier         = "%[2]s"
+  identifier         = "%[2]s"
   cluster_identifier = "${aws_rds_cluster.test.cluster_identifier}"
   engine             = "${aws_rds_cluster.test.engine}"
   instance_class     = "db.r5.large"
 }
 
 resource "aws_rds_cluster_activity_stream" "test" {
-  resource_arn        = "${aws_rds_cluster.test.arn}"
-  kms_key_id 					= "${aws_kms_key.test.key_id}"
-  mode         				= "sync"
-	
-	depends_on = [aws_rds_cluster_instance.test]
+  resource_arn = "${aws_rds_cluster.test.arn}"
+  kms_key_id   = "${aws_kms_key.test.key_id}"
+  mode         = "sync"
+
+  depends_on = [aws_rds_cluster_instance.test]
 }
 `, clusterName, instanceName)
 }
@@ -426,15 +426,15 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_kms_key" "test" {
-	description             = "Testing for AWS RDS Cluster Activity Stream"
+  description             = "Testing for AWS RDS Cluster Activity Stream"
   deletion_window_in_days = 7
 }
 
 resource "aws_rds_cluster" "new_rds_cluster_test" {
   cluster_identifier              = "%[1]s"
-  engine                  				= "aurora-postgresql"
+  engine                          = "aurora-postgresql"
   engine_version                  = "10.11"
-	availability_zones  						= ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones              = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
   database_name                   = "mydb"
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
@@ -444,18 +444,18 @@ resource "aws_rds_cluster" "new_rds_cluster_test" {
 }
 
 resource "aws_rds_cluster_instance" "new_rds_instance_test" {
-	identifier         = "%[2]s"
+  identifier         = "%[2]s"
   cluster_identifier = "${aws_rds_cluster.new_rds_cluster_test.cluster_identifier}"
   engine             = "${aws_rds_cluster.new_rds_cluster_test.engine}"
   instance_class     = "db.r5.large"
 }
 
 resource "aws_rds_cluster_activity_stream" "test" {
-  resource_arn        = "${aws_rds_cluster.new_rds_cluster_test.arn}"
-  kms_key_id 					= "${aws_kms_key.test.key_id}"
-  mode         				= "async"
-	
-	depends_on = [aws_rds_cluster_instance.new_rds_instance_test]
+  resource_arn = "${aws_rds_cluster.new_rds_cluster_test.arn}"
+  kms_key_id   = "${aws_kms_key.test.key_id}"
+  mode         = "async"
+
+  depends_on = [aws_rds_cluster_instance.new_rds_instance_test]
 }
 `, clusterName, instanceName)
 }

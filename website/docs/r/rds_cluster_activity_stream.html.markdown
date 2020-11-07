@@ -12,13 +12,13 @@ Manages RDS Aurora Cluster Database Activity Streams.
 
 Database Activity Streams have some limits and requirements, You can refer to the [User Guide][1].
 
-~> **Note:** `apply_immediately` always is true, cannot be modified. 
+~> **Note:** `apply_immediately` always is true, cannot be modified.
 Because when apply_immediately=false, terraform cannot get activity stream associated attributes.
 
 ~> **Note:** This resource depends on having one `aws_rds_cluster_instance` created.
 To avoid race conditions when all resources are being created together, you need to add explicit resource
 references using the [resource `depends_on` meta-argument](/docs/configuration/resources.html#depends_on-explicit-resource-dependencies).
- 
+
 
 ## Example Usage
 
