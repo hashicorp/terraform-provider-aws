@@ -379,7 +379,7 @@ func testAccCheckAWSSagemakerDomainDeleteImplicitResources(n string) resource.Te
 		for _, sg := range sgResp.SecurityGroups {
 			sgID := aws.StringValue(sg.GroupId)
 			sgName := aws.StringValue(sg.GroupName)
-			if sgName != "default" && strings.HasPrefix(sgName, "tf-acc-test") {
+			if sgName != "default" && !strings.HasPrefix(sgName, "tf-acc-test") {
 				r := resourceAwsSecurityGroup()
 				d := r.Data(nil)
 				d.SetId(sgID)
