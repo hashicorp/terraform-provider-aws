@@ -387,7 +387,7 @@ func expandSagemakerDomainJupyterServerAppSettings(l []interface{}) *sagemaker.J
 
 	config := &sagemaker.JupyterServerAppSettings{}
 
-	if v, ok := m["default_resurce_spec"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandSagemakerDomainDefaultResourceSpec(v)
 	}
 
@@ -403,7 +403,7 @@ func expandSagemakerDomainKernelGatewayAppSettings(l []interface{}) *sagemaker.K
 
 	config := &sagemaker.KernelGatewayAppSettings{}
 
-	if v, ok := m["default_resurce_spec"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandSagemakerDomainDefaultResourceSpec(v)
 	}
 
@@ -419,7 +419,7 @@ func expandSagemakerDomainTensorBoardAppSettings(l []interface{}) *sagemaker.Ten
 
 	config := &sagemaker.TensorBoardAppSettings{}
 
-	if v, ok := m["default_resurce_spec"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandSagemakerDomainDefaultResourceSpec(v)
 	}
 
@@ -528,7 +528,7 @@ func flattenSagemakerDomainTensorBoardAppSettings(config *sagemaker.TensorBoardA
 	m := map[string]interface{}{}
 
 	if config.DefaultResourceSpec != nil {
-		m["default_resurce_spec"] = flattenSagemakerDomainDefaultResourceSpec(config.DefaultResourceSpec)
+		m["default_resource_spec"] = flattenSagemakerDomainDefaultResourceSpec(config.DefaultResourceSpec)
 	}
 
 	return []map[string]interface{}{m}
@@ -542,7 +542,7 @@ func flattenSagemakerDomainJupyterServerAppSettings(config *sagemaker.JupyterSer
 	m := map[string]interface{}{}
 
 	if config.DefaultResourceSpec != nil {
-		m["default_resurce_spec"] = flattenSagemakerDomainDefaultResourceSpec(config.DefaultResourceSpec)
+		m["default_resource_spec"] = flattenSagemakerDomainDefaultResourceSpec(config.DefaultResourceSpec)
 	}
 
 	return []map[string]interface{}{m}
@@ -556,7 +556,7 @@ func flattenSagemakerDomainKernelGatewayAppSettings(config *sagemaker.KernelGate
 	m := map[string]interface{}{}
 
 	if config.DefaultResourceSpec != nil {
-		m["default_resurce_spec"] = flattenSagemakerDomainDefaultResourceSpec(config.DefaultResourceSpec)
+		m["default_resource_spec"] = flattenSagemakerDomainDefaultResourceSpec(config.DefaultResourceSpec)
 	}
 
 	return []map[string]interface{}{m}
