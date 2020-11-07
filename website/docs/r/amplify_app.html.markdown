@@ -19,7 +19,7 @@ resource "aws_amplify_app" "app" {
   name       = "app"
   repository = "https://github.com/example/app"
 
-  // The default build_spec added by the Amplify Console for React.
+  # The default build_spec added by the Amplify Console for React.
   build_spec = <<-EOT
     version: 0.1
     frontend:
@@ -39,7 +39,7 @@ resource "aws_amplify_app" "app" {
           - node_modules/**/*
   EOT
 
-  // The default custom_rules added by the Amplify Console.
+  # The default custom_rules added by the Amplify Console.
   custom_rules {
     source = "/<*>"
     status = "404"
@@ -57,7 +57,7 @@ resource "aws_amplify_app" "app" {
   name       = "app"
   repository = "https://github.com/example/app"
 
-  // GitHub personal access token
+  # GitHub personal access token
   access_token = "..."
 }
 ```
@@ -71,16 +71,16 @@ resource "aws_amplify_app" "app" {
   name = "app"
 
   auto_branch_creation_config {
-    // Enable auto branch creation.
+    # Enable auto branch creation.
     enable_auto_branch_creation = true
 
-    // The default patterns added by the Amplify Console.
+    # The default patterns added by the Amplify Console.
     auto_branch_creation_patterns = [
       "*",
       "*/**",
     ]
 
-    // Enable auto build for the created branch.
+    # Enable auto build for the created branch.
     enable_auto_build = true
   }
 }
@@ -93,7 +93,7 @@ resource "aws_amplify_app" "app" {
   name = "app"
 
   basic_auth_config {
-    // Enable basic authentication.
+    # Enable basic authentication.
     enable_basic_auth = true
 
     username = "username"
@@ -108,16 +108,16 @@ resource "aws_amplify_app" "app" {
 resource "aws_amplify_app" "app" {
   name = "app"
 
-  // Reverse Proxy Rewrite for API requests
-  // https://docs.aws.amazon.com/amplify/latest/userguide/redirects.html#reverse-proxy-rewrite
+  # Reverse Proxy Rewrite for API requests
+  # https://docs.aws.amazon.com/amplify/latest/userguide/redirects.html#reverse-proxy-rewrite
   custom_rules {
     source = "/api/<*>"
     status = "200"
     target = "https://api.example.com/api/<*>"
   }
 
-  // Redirects for Single Page Web Apps (SPA)
-  // https://docs.aws.amazon.com/amplify/latest/userguide/redirects.html#redirects-for-single-page-web-apps-spa
+  # Redirects for Single Page Web Apps (SPA)
+  # https://docs.aws.amazon.com/amplify/latest/userguide/redirects.html#redirects-for-single-page-web-apps-spa
   custom_rules {
     source = "</^[^.]+$|\\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|ttf|map|json)$)([^.]+$)/>"
     status = "200"
