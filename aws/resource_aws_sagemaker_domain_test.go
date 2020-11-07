@@ -88,6 +88,8 @@ func TestAccAWSSagemakerDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.notebook_output_option", "Disabled"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`domain/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
@@ -181,6 +183,37 @@ func TestAccAWSSagemakerDomain_securityGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.security_groups.#", "2"),
 					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerDomain_sharingSettings(t *testing.T) {
+	var notebook sagemaker.DescribeDomainOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerDomainConfigSharingSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.notebook_output_option", "Allowed"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.sharing_settings.0.s3_kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "default_user_settings.0.sharing_settings.0.s3_output_path"),
+					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -501,4 +534,36 @@ resource "aws_sagemaker_domain" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAWSSagemakerDomainConfigSharingSettings(rName string) string {
+	return testAccAWSSagemakerDomainConfigBase(rName) + fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = [aws_subnet.test.id]
+
+  default_user_settings {
+	execution_role = aws_iam_role.test.arn
+	
+    sharing_settings {
+      notebook_output_option = "Allowed"
+      s3_kms_key_id          = aws_kms_key.test.arn
+      s3_output_path         = "s3://${aws_s3_bucket.test.bucket}/sharing"
+	}
+  }
+}
+`, rName)
 }

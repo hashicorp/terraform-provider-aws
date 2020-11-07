@@ -85,6 +85,7 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 						"sharing_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -370,7 +371,7 @@ func expandSagemakerDomainDefaultUserSettings(l []interface{}) *sagemaker.UserSe
 		config.JupyterServerAppSettings = expandSagemakerDomainJupyterServerAppSettings(v)
 	}
 
-	if v, ok := m["share_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["sharing_settings"].([]interface{}); ok && len(v) > 0 {
 		config.SharingSettings = expandSagemakerDomainShareSettings(v)
 	}
 
@@ -495,7 +496,7 @@ func flattenSagemakerDomainDefaultUserSettings(config *sagemaker.UserSettings) [
 	}
 
 	if config.SharingSettings != nil {
-		m["share_settings"] = flattenSagemakerDomainShareSettings(config.SharingSettings)
+		m["sharing_settings"] = flattenSagemakerDomainShareSettings(config.SharingSettings)
 	}
 
 	return []map[string]interface{}{m}
