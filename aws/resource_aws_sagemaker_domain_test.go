@@ -644,13 +644,13 @@ resource "aws_sagemaker_domain" "test" {
   subnet_ids  = [aws_subnet.test.id]
 
   default_user_settings {
-	execution_role = aws_iam_role.test.arn
-	
+    execution_role = aws_iam_role.test.arn
+
     sharing_settings {
       notebook_output_option = "Allowed"
       s3_kms_key_id          = aws_kms_key.test.arn
       s3_output_path         = "s3://${aws_s3_bucket.test.bucket}/sharing"
-	}
+    }
   }
 }
 `, rName)
@@ -665,10 +665,10 @@ resource "aws_sagemaker_domain" "test" {
   subnet_ids  = [aws_subnet.test.id]
 
   default_user_settings {
-	execution_role = aws_iam_role.test.arn
-	
+    execution_role = aws_iam_role.test.arn
+
     tensor_board_app_settings {
-	  default_resource_spec {
+      default_resource_spec {
         instance_type = "ml.t3.micro"
       }
     }
@@ -686,10 +686,10 @@ resource "aws_sagemaker_domain" "test" {
   subnet_ids  = [aws_subnet.test.id]
 
   default_user_settings {
-	execution_role = aws_iam_role.test.arn
-	
+    execution_role = aws_iam_role.test.arn
+
     jupyter_server_app_settings {
-	  default_resource_spec {
+      default_resource_spec {
         instance_type = "ml.t3.micro"
       }
     }
@@ -707,10 +707,10 @@ resource "aws_sagemaker_domain" "test" {
   subnet_ids  = [aws_subnet.test.id]
 
   default_user_settings {
-	execution_role = aws_iam_role.test.arn
-	
+    execution_role = aws_iam_role.test.arn
+
     kernel_gateway_app_settings {
-	  default_resource_spec {
+      default_resource_spec {
         instance_type = "ml.t3.micro"
       }
     }
