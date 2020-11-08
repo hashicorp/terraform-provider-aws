@@ -12,6 +12,7 @@ const (
 	NotebookInstanceStoppedTimeout   = 10 * time.Minute
 	NotebookInstanceDeletedTimeout   = 10 * time.Minute
 	ImageCreatedTimeout              = 10 * time.Minute
+	ImageDeletedTimeout              = 10 * time.Minute
 )
 
 // NotebookInstanceInService waits for a NotebookInstance to return InService
@@ -105,7 +106,7 @@ func ImageDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeIm
 		Pending: []string{sagemaker.ImageStatusDeleting},
 		Target:  []string{},
 		Refresh: ImageStatus(conn, name),
-		Timeout: ImageCreatedTimeout,
+		Timeout: ImageDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
