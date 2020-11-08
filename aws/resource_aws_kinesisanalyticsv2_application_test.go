@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/lister"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -32,17 +33,12 @@ func testSweepKinesisAnalyticsV2Application(region string) error {
 	input := &kinesisanalyticsv2.ListApplicationsInput{}
 	var sweeperErrs *multierror.Error
 
-	for {
-		output, err := conn.ListApplications(input)
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Kinesis Analytics v2 Application sweep for %s: %s", region, err)
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("error retrieving Kinesis Analytics v2 Applications: %w", err)
+	err = lister.ListApplicationsPages(conn, input, func(page *kinesisanalyticsv2.ListApplicationsOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
 		}
 
-		for _, applicationSummary := range output.ApplicationSummaries {
+		for _, applicationSummary := range page.ApplicationSummaries {
 			arn := aws.StringValue(applicationSummary.ApplicationARN)
 			name := aws.StringValue(applicationSummary.ApplicationName)
 
@@ -69,10 +65,16 @@ func testSweepKinesisAnalyticsV2Application(region string) error {
 			}
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
+		return !isLast
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Kinesis Analytics v2 Application sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Kinesis Analytics v2 Applications: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
