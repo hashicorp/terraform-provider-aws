@@ -286,12 +286,12 @@ resource "aws_iam_role" "test" {
 
 data "aws_iam_policy_document" "test" {
   statement {
-	actions = ["sts:AssumeRole"]
+    actions = ["sts:AssumeRole"]
 
-	principals {
-	  type        = "Service"
-	  identifiers = ["sagemaker.amazonaws.com"]
-	}
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
   }
 }
 `, rName)
