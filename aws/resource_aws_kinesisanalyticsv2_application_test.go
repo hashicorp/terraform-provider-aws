@@ -55,7 +55,6 @@ func testSweepKinesisAnalyticsV2Application(region string) error {
 				continue
 			}
 
-			log.Printf("[INFO] Deleting Kinesis Analytics v2 Application: %s", arn)
 			r := resourceAwsKinesisAnalyticsV2Application()
 			d := r.Data(nil)
 			d.SetId(arn)
