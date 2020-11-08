@@ -149,6 +149,7 @@ func resourceAwsSagemakerImageUpdate(d *schema.ResourceData, meta interface{}) e
 			input.Description = aws.String(v.(string))
 		} else {
 			deleteProperties = append(deleteProperties, aws.String("Description"))
+			input.DeleteProperties = deleteProperties
 		}
 		needsUpdate = true
 	}
@@ -158,6 +159,7 @@ func resourceAwsSagemakerImageUpdate(d *schema.ResourceData, meta interface{}) e
 			input.DisplayName = aws.String(v.(string))
 		} else {
 			deleteProperties = append(deleteProperties, aws.String("DisplayName"))
+			input.DeleteProperties = deleteProperties
 		}
 		needsUpdate = true
 	}
