@@ -87,7 +87,7 @@ func TestAccAWSSagemakerImage_basic(t *testing.T) {
 }
 
 func TestAccAWSSagemakerImage_disappears(t *testing.T) {
-	var notebook sagemaker.DescribeImageOutput
+	var image sagemaker.DescribeImageOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_image.test"
 
@@ -99,7 +99,7 @@ func TestAccAWSSagemakerImage_disappears(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerImageBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerImageExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerImageExists(resourceName, &image),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerImage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
