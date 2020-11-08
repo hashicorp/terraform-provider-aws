@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -261,7 +262,7 @@ func resourceAwsGlueDevEndpointRead(d *schema.ResourceData, meta interface{}) er
 
 	output, err := conn.GetDevEndpoint(request)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Dev Endpoint (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -505,7 +506,7 @@ func resourceAwsDevEndpointDelete(d *schema.ResourceData, meta interface{}) erro
 
 	_, err := conn.DeleteDevEndpoint(deleteOpts)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 
@@ -514,7 +515,7 @@ func resourceAwsDevEndpointDelete(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[DEBUG] Waiting for Glue Dev Endpoint (%s) to become terminated", d.Id())
 	if _, err := waiter.GlueDevEndpointDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
 

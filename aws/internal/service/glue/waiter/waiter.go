@@ -97,10 +97,8 @@ func GlueDevEndpointCreated(conn *glue.Glue, devEndpointId string) (*glue.GetDev
 // GlueDevEndpointDeleted waits for a Glue Dev Endpoint to become terminated.
 func GlueDevEndpointDeleted(conn *glue.Glue, devEndpointId string) (*glue.GetDevEndpointOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			"TERMINATING",
-		},
-		Target:  []string{"TERMINATED"},
+		Pending: []string{"TERMINATING"},
+		Target:  []string{},
 		Refresh: GlueDevEndpointStatus(conn, devEndpointId),
 		Timeout: 15 * time.Minute,
 	}

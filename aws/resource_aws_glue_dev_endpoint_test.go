@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -87,7 +88,7 @@ func TestAccGlueDevEndpoint_Basic(t *testing.T) {
 					testAccCheckAWSGlueDevEndpointExists(resourceName, &endpoint),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("devEndpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "role_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
 					resource.TestCheckResourceAttr(resourceName, "arguments.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "5"),
@@ -233,7 +234,7 @@ func TestAccGlueDevEndpoint_GlueVersion(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGlueDevEndpointConfig_GlueVersion(rName, "1"),
-				ExpectError: regexp.MustCompile(`attribute glue_version must match version pattern X.X`),
+				ExpectError: regexp.MustCompile(`must match version pattern X.X`),
 			},
 			{
 				Config: testAccGlueDevEndpointConfig_GlueVersion(rName, "1.0"),
@@ -618,7 +619,7 @@ func testAccCheckAWSGlueDevEndpointDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				return nil
 			}
 			return err
