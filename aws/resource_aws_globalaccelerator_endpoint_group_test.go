@@ -6,9 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/globalaccelerator/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -238,6 +240,30 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_tcp(t *testing.T) {
 	})
 }
 
+func testAccCheckGlobalAcceleratorEndpointGroupDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).globalacceleratorconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_globalaccelerator_endpoint_group" {
+			continue
+		}
+
+		endpointGroup, err := finder.EndpointGroupByARN(conn, rs.Primary.ID)
+		if isAWSErr(err, globalaccelerator.ErrCodeEndpointGroupNotFoundException, "") {
+			continue
+		}
+		if err != nil {
+			return err
+		}
+		if endpointGroup == nil {
+			continue
+		}
+
+		return fmt.Errorf("Global Accelerator endpoint group %s still exists", rs.Primary.ID)
+	}
+	return nil
+}
+
 func testAccCheckGlobalAcceleratorEndpointGroupExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).globalacceleratorconn
@@ -248,40 +274,20 @@ func testAccCheckGlobalAcceleratorEndpointGroupExists(name string) resource.Test
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No Global Accelerator endpoint group ID is set")
 		}
 
-		accelerator, err := resourceAwsGlobalAcceleratorEndpointGroupRetrieve(conn, rs.Primary.ID)
+		endpointGroup, err := finder.EndpointGroupByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		if accelerator == nil {
+		if endpointGroup == nil {
 			return fmt.Errorf("Global Accelerator endpoint group not found")
 		}
 
 		return nil
 	}
-}
-
-func testAccCheckGlobalAcceleratorEndpointGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).globalacceleratorconn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_globalaccelerator_endpoint_group" {
-			continue
-		}
-
-		accelerator, err := resourceAwsGlobalAcceleratorEndpointGroupRetrieve(conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		if accelerator != nil {
-			return fmt.Errorf("Global Accelerator endpoint group still exists")
-		}
-	}
-	return nil
 }
 
 // testAccCheckGlobalAcceleratorEndpointGroupDeleteGlobalAcceleratorSecurityGroup deletes the security group
