@@ -25,6 +25,11 @@ func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"endpoint_configuration": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -226,6 +231,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupRead(d *schema.ResourceData, meta 
 		return err
 	}
 
+	d.Set("arn", endpointGroup.EndpointGroupArn)
 	d.Set("endpoint_group_region", endpointGroup.EndpointGroupRegion)
 	d.Set("health_check_interval_seconds", endpointGroup.HealthCheckIntervalSeconds)
 	d.Set("health_check_path", endpointGroup.HealthCheckPath)

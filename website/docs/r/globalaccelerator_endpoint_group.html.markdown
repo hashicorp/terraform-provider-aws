@@ -56,6 +56,7 @@ Terraform will only perform drift detection of its value when present in a confi
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Amazon Resource Name (ARN) of the endpoint group.
+* `arn` - The Amazon Resource Name (ARN) of the endpoint group.
 
 ## Import
 
