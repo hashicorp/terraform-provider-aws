@@ -303,6 +303,12 @@ func TestAccAWSIoTTopicRule_http(t *testing.T) {
 					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
+			{
+				Config: testAccAWSIoTTopicRule_http_errorAction(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
+				),
+			},
 		},
 	})
 }
@@ -930,6 +936,28 @@ resource "aws_iot_topic_rule" "rule" {
 		value = "rab"
 	}
   }
+}
+`, rName)
+}
+
+func testAccAWSIoTTopicRule_http_errorAction(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iot_topic_rule" "rule" {
+	name        = "test_rule_%[1]s"
+	description = "Example rule"
+	enabled     = true
+	sql         = "SELECT * FROM 'topic/test'"
+	sql_version = "2015-10-08"
+
+	http {
+		url = "https://foo.bar/ingress"
+    }
+
+	error_action {
+		http {
+			url = "https://bar.foo/error-ingress"
+		}
+  	}
 }
 `, rName)
 }
