@@ -52,7 +52,7 @@ The following arguments are supported:
 * `auth_mode` - (Required) The mode of authentication that members use to access the domain. Valid values are `IAM` and `SSO`.
 * `vpc_id` - (Required) The ID of the Amazon Virtual Private Cloud (VPC) that Studio uses for communication.
 * `subnet_ids` - (Required) The VPC subnets that Studio uses for communication.
-* `default_user_settings` - (Required) The default user settings. see [Default User Settings](#default-user-settings) below.
+* `default_user_settings` - (Required) The default user settings. See [Default User Settings](#default-user-settings) below.
 * `app_network_access_type` - (Optional) Specifies the VPC used for non-EFS traffic. The default value is `PublicInternetOnly`. Valid values are `PublicInternetOnly` and `VpcOnly`.
 * `tags` - (Optional) A map of tags to assign to the resource.
 
@@ -60,10 +60,10 @@ The following arguments are supported:
 
 * `execution_role` - (Required) The execution role ARN for the user.
 * `security_groups` - (Optional) The security groups.
-* `sharing_settings` - (Optional) The sharing settings. see [Sharing Settings](#sharing-settings) below.
-* `tensor_board_app_settings` - (Optional) The TensorBoard app settings. see [TensorBoard App Settings](#tensorboard-app-settings) below.
-* `jupyter_server_app_settings` - (Optional) The kernel gateway app settings. see [Jupyter Server App Settings](#jupyter-server-app-settings) below.
-* `kernel_gateway_app_settings` - (Optional) The Jupyter server's app settings. see [Kernel Gateway App Settings](#kernal-gateway-app-settings) below.
+* `sharing_settings` - (Optional) The sharing settings. See [Sharing Settings](#sharing-settings) below.
+* `tensor_board_app_settings` - (Optional) The TensorBoard app settings. See [TensorBoard App Settings](#tensorboard-app-settings) below.
+* `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [Jupyter Server App Settings](#jupyter-server-app-settings) below.
+* `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernal-gateway-app-settings) below.
 
 #### Sharing Settings
 
