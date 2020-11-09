@@ -656,8 +656,8 @@ resource "aws_cognito_user_pool" "test" {
 }
 
 resource "aws_cognito_user_pool_client" "test" {
-  name              = %[1]q
-  user_pool_id      = aws_cognito_user_pool.test.id
+  name         = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
 
   token_validity_units {
     access_token  = %[2]q
@@ -677,7 +677,6 @@ resource "aws_cognito_user_pool" "test" {
 resource "aws_cognito_user_pool_client" "test" {
   name              = %[1]q
   user_pool_id      = aws_cognito_user_pool.test.id
-
   id_token_validity = 1
 
   token_validity_units {
