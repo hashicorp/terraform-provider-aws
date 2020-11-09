@@ -37,8 +37,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the Lightsail Instance. Names be unique within each AWS Region in your Lightsail account.
 * `availability_zone` - (Required) The Availability Zone in which to create your
 instance (see list below)
-* `blueprint_id` - (Required) The ID for a virtual private server image
-(see list below)
+* `blueprint_id` - (Required) The ID for a virtual private server image. A list of available blueprint IDs can be obtained using the AWS CLI command: `aws lightsail get-blueprints`
 * `bundle_id` - (Required) The bundle of specification information (see list below)
 * `key_pair_name` - (Optional) The name of your key pair. Created in the
 Lightsail console (cannot use `aws_key_pair` at this time)
@@ -61,48 +60,6 @@ Lightsail currently supports the following Availability Zones (e.g. `us-east-1a`
 - `us-east-1{a,b,c,d,e,f}`
 - `us-east-2{a,b,c}`
 - `us-west-2{a,b,c}`
-
-## Blueprints
-
-Lightsail currently supports the following Blueprint IDs:
-
-### OS Only
-
-- `windows_server_2019`
-- `windows_server_2016`
-- `windows_server_2012`
-- `amazon_linux_2`
-- `amazon_linux`
-- `ubuntu_20_04`
-- `ubuntu_18_04`
-- `ubuntu_16_04_2`
-- `debian_10`
-- `debian_9_5`
-- `debian_8_7`
-- `freebsd_12`
-- `opensuse_15_1`
-- `centos_7_1901_01`
-
-### Apps and OS
-
-- `windows_server_2016_sql_2016_express`
-- `wordpress`
-- `wordpress_multisite`
-- `lamp_7`
-- `nodejs`
-- `joomla`
-- `magento`
-- `mean`
-- `drupal`
-- `gitlab`
-- `redmine`
-- `nginx`
-- `ghost_bitnami`
-- `django_bitnami`
-- `plesk_ubuntu_18_0_28`
-- `cpanel_whm_linux`
-
-**Note:** The following AWS CLI command can be used to obtain a full list of available Blueprint IDs: `aws lightsail get-blueprints`
 
 ## Bundles
 
