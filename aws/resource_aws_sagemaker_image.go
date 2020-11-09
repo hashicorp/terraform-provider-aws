@@ -141,7 +141,7 @@ func resourceAwsSagemakerImageUpdate(d *schema.ResourceData, meta interface{}) e
 	var deleteProperties []*string
 
 	if d.HasChange("role_arn") {
-		input.Description = aws.String(d.Get("role_arn").(string))
+		input.RoleArn= aws.String(d.Get("role_arn").(string))
 	}
 
 	if d.HasChange("description") {
