@@ -921,11 +921,11 @@ resource "aws_iot_topic_rule" "rule" {
 
   http {
 	url = "https://foo.bar/ingress"
-	headers {
+	http_header {
 		key = "foo"
 		value = "bar"
 	}
-	headers {
+	http_header {
 		key = "oof"
 		value = "rab"
 	}
