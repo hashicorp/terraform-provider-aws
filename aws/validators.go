@@ -1517,8 +1517,8 @@ func validateAwsKmsGrantName(v interface{}, k string) (ws []string, es []error) 
 
 func validateCognitoIdentityPoolName(v interface{}, k string) (ws []string, errors []error) {
 	val := v.(string)
-	if !regexp.MustCompile(`^[\w _]+$`).MatchString(val) {
-		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters and spaces", k))
+	if !regexp.MustCompile(`^[\w\s+=,.@-]+$`).MatchString(val) {
+		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, underscores and hyphens", k))
 	}
 
 	return
