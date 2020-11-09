@@ -191,6 +191,27 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 											},
 										},
 									},
+									"custom_image": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 30,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"app_image_config_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_version_number": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -410,6 +431,10 @@ func expandSagemakerDomainKernelGatewayAppSettings(l []interface{}) *sagemaker.K
 		config.DefaultResourceSpec = expandSagemakerDomainDefaultResourceSpec(v)
 	}
 
+	if v, ok := m["custom_image"].([]interface{}); ok && len(v) > 0 {
+		config.CustomImages = expandSagemakerDomainCustomImages(v)
+	}
+
 	return config
 }
 
@@ -469,6 +494,27 @@ func expandSagemakerDomainShareSettings(l []interface{}) *sagemaker.SharingSetti
 	}
 
 	return config
+}
+
+func expandSagemakerDomainCustomImages(l []interface{}) []*sagemaker.CustomImage {
+	images := make([]*sagemaker.CustomImage, 0, len(l))
+
+	for _, eRaw := range l {
+		data := eRaw.(map[string]interface{})
+
+		image := &sagemaker.CustomImage{
+			AppImageConfigName: aws.String(data["app_image_config_name"].(string)),
+			ImageName:          aws.String(data["image_name"].(string)),
+		}
+
+		if v, ok := data["image_version_number"].(int); ok {
+			image.ImageVersionNumber = aws.Int64(int64(v))
+		}
+
+		images = append(images, image)
+	}
+
+	return images
 }
 
 func flattenSagemakerDomainDefaultUserSettings(config *sagemaker.UserSettings) []map[string]interface{} {
@@ -562,6 +608,10 @@ func flattenSagemakerDomainKernelGatewayAppSettings(config *sagemaker.KernelGate
 		m["default_resource_spec"] = flattenSagemakerDomainDefaultResourceSpec(config.DefaultResourceSpec)
 	}
 
+	if config.CustomImages != nil {
+		m["custom_image"] = flattenSagemakerDomainCustomImages(config.CustomImages)
+	}
+
 	return []map[string]interface{}{m}
 }
 
@@ -583,6 +633,25 @@ func flattenSagemakerDomainShareSettings(config *sagemaker.SharingSettings) []ma
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func flattenSagemakerDomainCustomImages(config []*sagemaker.CustomImage) []map[string]interface{} {
+	images := make([]map[string]interface{}, 0, len(config))
+
+	for _, raw := range config {
+		image := make(map[string]interface{})
+
+		image["app_image_config_name"] = aws.StringValue(raw.AppImageConfigName)
+		image["image_name"] = aws.StringValue(raw.ImageName)
+
+		if raw.ImageVersionNumber != nil {
+			image["image_version_number"] = aws.Int64Value(raw.ImageVersionNumber)
+		}
+
+		images = append(images, image)
+	}
+
+	return images
 }
 
 func decodeSagemakerDomainID(id string) (string, error) {

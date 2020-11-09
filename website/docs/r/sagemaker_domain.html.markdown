@@ -78,6 +78,7 @@ The following arguments are supported:
 #### Kernel Gateway App Settings
 
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
+* `custom_image` - (Optional) A list of custom SageMaker images that are configured to run as a KernelGateway app. see [Custom Image](#custom-image) below.
 
 #### Jupyter Server App Settings
 
@@ -87,6 +88,12 @@ The following arguments are supported:
 
 * `instance_type` - (Optional) The instance type.
 * `sagemaker_image_arn` - (Optional) The Amazon Resource Name (ARN) of the SageMaker image created on the instance.
+
+##### Custom Image
+
+* `app_image_config_name` - (Required) The name of the App Image Config.
+* `image_name` - (Required) The name of the Custom Image.
+* `image_version_number` - (Optional) The version number of the Custom Image.
 
 ## Attributes Reference
 
