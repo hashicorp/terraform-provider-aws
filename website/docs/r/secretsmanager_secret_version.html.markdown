@@ -75,5 +75,5 @@ The following arguments are supported:
 `aws_secretsmanager_secret_version` can be imported by using the secret ID and version ID, e.g.
 
 ```
-$ terraform import aws_secretsmanager_secret_version.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456|xxxxx-xxxxxxx-xxxxxxx-xxxxx
+$ terraform import aws_secretsmanager_secret_version.example 'arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456|xxxxx-xxxxxxx-xxxxxxx-xxxxx'
 ```
