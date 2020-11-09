@@ -875,9 +875,9 @@ resource "aws_datasync_task" "test" {
 func testAccAWSDataSyncTaskScheduleConfig(rName, cron string) string {
 	return testAccAWSDataSyncTaskConfigDestinationLocationS3Base(rName) + testAccAWSDataSyncTaskConfigSourceLocationNfsBase(rName) + fmt.Sprintf(`
 resource "aws_datasync_task" "test" {
-  destination_location_arn = "${aws_datasync_location_s3.destination.arn}"
+  destination_location_arn = aws_datasync_location_s3.destination.arn
   name                     = %[1]q
-  source_location_arn      = "${aws_datasync_location_nfs.source.arn}"
+  source_location_arn      = aws_datasync_location_nfs.source.arn
 
   schedule {
     schedule_expression = %[2]q
