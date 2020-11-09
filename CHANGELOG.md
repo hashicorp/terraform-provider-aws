@@ -4,6 +4,10 @@ ENHANCEMENTS
 
 * resource/aws_kinesis_firehose_delivery_stream: Add `http_endpoint_configuration` configuration block [GH-15356]
 
+BUG FIXES
+
+* resource/aws_ecs_service: Properly remove resource from Terraform state with `ClusterNotFoundException` error [GH-15927]
+
 ## 3.14.1 (November 06, 2020)
 
 BUG FIXES
