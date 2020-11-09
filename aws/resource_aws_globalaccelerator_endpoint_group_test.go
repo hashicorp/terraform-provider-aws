@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/globalaccelerator/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
@@ -193,7 +194,89 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_InstanceEndpoint(t *testing.T) {
 	})
 }
 
-func TestAccAwsGlobalAcceleratorEndpointGroup_update(t *testing.T) {
+func TestAccAwsGlobalAcceleratorEndpointGroup_MultiRegion(t *testing.T) {
+	var providers []*schema.Provider
+	var v globalaccelerator.EndpointGroup
+	resourceName := "aws_globalaccelerator_endpoint_group.test"
+	eipResourceName := "aws_eip.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccMultipleRegionPreCheck(t, 2); testAccPreCheckGlobalAccelerator(t) },
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckGlobalAcceleratorEndpointGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalAcceleratorEndpointGroupConfigMultiRegion(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName, &v),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
+						"client_ip_preservation_enabled": "false",
+						"weight":                         "20",
+					}),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", eipResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", testAccGetAlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "10"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/foo"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "HTTPS"),
+					testAccMatchResourceAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
+					resource.TestCheckResourceAttr(resourceName, "threshold_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsGlobalAcceleratorEndpointGroup_TCPHealthCheckProtocol(t *testing.T) {
+	var v globalaccelerator.EndpointGroup
+	resourceName := "aws_globalaccelerator_endpoint_group.test"
+	eipResourceName := "aws_eip.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalAcceleratorEndpointGroupConfigTcpHealthCheckProtocol(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName, &v),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
+						"client_ip_preservation_enabled": "false",
+						"weight":                         "10",
+					}),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", eipResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_port", "1234"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "TCP"),
+					testAccMatchResourceAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
+					resource.TestCheckResourceAttr(resourceName, "threshold_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "100"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsGlobalAcceleratorEndpointGroup_Update(t *testing.T) {
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	eipResourceName := "aws_eip.test"
@@ -239,46 +322,6 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_update(t *testing.T) {
 					testAccMatchResourceAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "threshold_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAwsGlobalAcceleratorEndpointGroup_tcp(t *testing.T) {
-	var v globalaccelerator.EndpointGroup
-	resourceName := "aws_globalaccelerator_endpoint_group.test"
-	eipResourceName := "aws_eip.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGlobalAcceleratorEndpointGroupConfigTcp(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName, &v),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
-						"client_ip_preservation_enabled": "false",
-						"weight":                         "10",
-					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", eipResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", testAccGetRegion()),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
-					resource.TestCheckResourceAttr(resourceName, "health_check_port", "1234"),
-					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "TCP"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
-					resource.TestCheckResourceAttr(resourceName, "threshold_count", "3"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "100"),
 				),
 			},
 			{
@@ -585,8 +628,8 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
 `, rName))
 }
 
-func testAccGlobalAcceleratorEndpointGroupConfigUpdated(rName string) string {
-	return fmt.Sprintf(`
+func testAccGlobalAcceleratorEndpointGroupConfigMultiRegion(rName string) string {
+	return composeConfig(testAccAlternateRegionProviderConfig(), fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "test" {
   name            = %[1]q
   ip_address_type = "IPV4"
@@ -604,6 +647,10 @@ resource "aws_globalaccelerator_listener" "test" {
 }
 
 resource "aws_eip" "test" {
+  provider = "awsalternate"
+
+  vpc = true
+
   tags = {
     Name = %[1]q
   }
@@ -617,6 +664,7 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
     weight      = 20
   }
 
+  endpoint_group_region         = %[2]q
   health_check_interval_seconds = 10
   health_check_path             = "/foo"
   health_check_port             = 8080
@@ -624,10 +672,10 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
   threshold_count               = 1
   traffic_dial_percentage       = 0
 }
-`, rName)
+`, rName, testAccGetAlternateRegion()))
 }
 
-func testAccGlobalAcceleratorEndpointGroupConfigTcp(rName string) string {
+func testAccGlobalAcceleratorEndpointGroupConfigTcpHealthCheckProtocol(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "test" {
   name            = %[1]q
@@ -646,6 +694,8 @@ resource "aws_globalaccelerator_listener" "test" {
 }
 
 resource "aws_eip" "test" {
+  vpc = true
+
   tags = {
     Name = %[1]q
   }
@@ -667,6 +717,50 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
   health_check_protocol         = "TCP"
   threshold_count               = 3
   traffic_dial_percentage       = 100
+}
+`, rName)
+}
+
+func testAccGlobalAcceleratorEndpointGroupConfigUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_globalaccelerator_accelerator" "test" {
+  name            = %[1]q
+  ip_address_type = "IPV4"
+  enabled         = false
+}
+
+resource "aws_globalaccelerator_listener" "test" {
+  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  protocol        = "TCP"
+
+  port_range {
+    from_port = 80
+    to_port   = 80
+  }
+}
+
+resource "aws_eip" "test" {
+  vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_globalaccelerator_endpoint_group" "test" {
+  listener_arn = aws_globalaccelerator_listener.test.id
+
+  endpoint_configuration {
+    endpoint_id = aws_eip.test.id
+    weight      = 20
+  }
+
+  health_check_interval_seconds = 10
+  health_check_path             = "/foo"
+  health_check_port             = 8080
+  health_check_protocol         = "HTTPS"
+  threshold_count               = 1
+  traffic_dial_percentage       = 0
 }
 `, rName)
 }
