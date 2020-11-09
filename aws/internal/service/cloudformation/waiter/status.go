@@ -73,18 +73,19 @@ const (
 	stackStatusNotFound = "NotFound"
 )
 
-// stackStatus is not exported because we need a wrapper to return the last status value
-func stackStatus(conn *cloudformation.CloudFormation, stackName string) (interface{}, string, error) {
-	resp, err := conn.DescribeStacks(&cloudformation.DescribeStacksInput{
-		StackName: aws.String(stackName),
-	})
-	if err != nil {
-		return nil, stackStatusError, err
-	}
+func StackStatus(conn *cloudformation.CloudFormation, stackName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := conn.DescribeStacks(&cloudformation.DescribeStacksInput{
+			StackName: aws.String(stackName),
+		})
+		if err != nil {
+			return nil, stackStatusError, err
+		}
 
-	if resp.Stacks == nil || len(resp.Stacks) == 0 {
-		return nil, stackStatusNotFound, nil
-	}
+		if resp.Stacks == nil || len(resp.Stacks) == 0 {
+			return nil, stackStatusNotFound, nil
+		}
 
-	return resp.Stacks[0], aws.StringValue(resp.Stacks[0].StackStatus), err
+		return resp.Stacks[0], aws.StringValue(resp.Stacks[0].StackStatus), err
+	}
 }
