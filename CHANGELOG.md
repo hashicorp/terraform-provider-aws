@@ -3,7 +3,6 @@
 ENHANCEMENTS
 
 * resource/aws_kinesis_firehose_delivery_stream: Add `http_endpoint_configuration` configuration block [GH-15356]
-Configurable workspaces timeouts
 * resource/aws_workspaces_workspace: Add configurable timeouts [GH-15479]
 
 BUG FIXES
