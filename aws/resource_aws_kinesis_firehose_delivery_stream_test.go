@@ -2889,11 +2889,6 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
           parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
         }
 
-        // parameters {
-        //   parameter_name  = "RoleArn"
-        //   parameter_value = aws_iam_role.firehose.arn
-        // }
-
         parameters {
           parameter_name  = "BufferSizeInMBs"
           parameter_value = 1
