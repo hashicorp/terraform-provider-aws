@@ -6,6 +6,7 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* resource/aws_cognito_identity_pool: Update `identity_pool_name` argument validation to include additional characters supported by the API [GH-15773]
 * resource/aws_ecs_service: Properly remove resource from Terraform state with `ClusterNotFoundException` error [GH-15927]
 
 ## 3.14.1 (November 06, 2020)
