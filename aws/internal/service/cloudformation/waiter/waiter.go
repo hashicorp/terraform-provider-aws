@@ -196,10 +196,10 @@ func StackDeleted(conn *cloudformation.CloudFormation, stackName string, timeout
 	if lastStatus == cloudformation.StackStatusDeleteFailed {
 		reasons, err := GetCloudFormationFailures(stackName, conn)
 		if err != nil {
-			return stack, fmt.Errorf("Failed getting reasons for deletion failure: %w", err)
+			return stack, fmt.Errorf("failed to delete CloudFormation stack (%s). Got an error reading failure information: %w", lastStatus, err)
 		}
 
-		return stack, fmt.Errorf("%s: %q", lastStatus, reasons)
+		return stack, fmt.Errorf("failed to delete CloudFormation stack (%s): %q", lastStatus, reasons)
 	}
 
 	return stack, nil
