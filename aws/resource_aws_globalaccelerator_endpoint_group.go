@@ -172,6 +172,10 @@ func resourceAwsGlobalAcceleratorEndpointGroupCreate(d *schema.ResourceData, met
 		opts.HealthCheckProtocol = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("port_override"); ok {
+		opts.PortOverrides = expandGlobalAcceleratorPortOverrides(v.(*schema.Set).List())
+	}
+
 	if v, ok := d.GetOk("threshold_count"); ok {
 		opts.ThresholdCount = aws.Int64(int64(v.(int)))
 	}
@@ -232,17 +236,20 @@ func resourceAwsGlobalAcceleratorEndpointGroupRead(d *schema.ResourceData, meta 
 	}
 
 	d.Set("arn", endpointGroup.EndpointGroupArn)
+	if err := d.Set("endpoint_configuration", flattenGlobalAcceleratorEndpointDescriptions(endpointGroup.EndpointDescriptions)); err != nil {
+		return fmt.Errorf("error setting endpoint_configuration: %w", err)
+	}
 	d.Set("endpoint_group_region", endpointGroup.EndpointGroupRegion)
 	d.Set("health_check_interval_seconds", endpointGroup.HealthCheckIntervalSeconds)
 	d.Set("health_check_path", endpointGroup.HealthCheckPath)
 	d.Set("health_check_port", endpointGroup.HealthCheckPort)
 	d.Set("health_check_protocol", endpointGroup.HealthCheckProtocol)
 	d.Set("listener_arn", listenerArn)
+	if err := d.Set("port_override", flattenGlobalAcceleratorPortOverrides(endpointGroup.PortOverrides)); err != nil {
+		return fmt.Errorf("error setting port_override: %w", err)
+	}
 	d.Set("threshold_count", endpointGroup.ThresholdCount)
 	d.Set("traffic_dial_percentage", endpointGroup.TrafficDialPercentage)
-	if err := d.Set("endpoint_configuration", flattenGlobalAcceleratorEndpointDescriptions(endpointGroup.EndpointDescriptions)); err != nil {
-		return fmt.Errorf("error setting endpoint_configuration: %w", err)
-	}
 
 	return nil
 }
@@ -274,6 +281,12 @@ func resourceAwsGlobalAcceleratorEndpointGroupUpdate(d *schema.ResourceData, met
 
 	if v, ok := d.GetOk("health_check_protocol"); ok {
 		opts.HealthCheckProtocol = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("port_override"); ok {
+		opts.PortOverrides = expandGlobalAcceleratorPortOverrides(v.(*schema.Set).List())
+	} else {
+		opts.PortOverrides = []*globalaccelerator.PortOverride{}
 	}
 
 	if v, ok := d.GetOk("threshold_count"); ok {
@@ -364,6 +377,27 @@ func expandGlobalAcceleratorEndpointConfigurations(configurations []interface{})
 	return out
 }
 
+func expandGlobalAcceleratorPortOverrides(vPortOverrides []interface{}) []*globalaccelerator.PortOverride {
+	portOverrides := []*globalaccelerator.PortOverride{}
+
+	for _, vPortOverride := range vPortOverrides {
+		portOverride := &globalaccelerator.PortOverride{}
+
+		mPortOverride := vPortOverride.(map[string]interface{})
+
+		if vEndpointPort, ok := mPortOverride["endpoint_port"].(int); ok && vEndpointPort > 0 {
+			portOverride.EndpointPort = aws.Int64(int64(vEndpointPort))
+		}
+		if vListenerPort, ok := mPortOverride["listener_port"].(int); ok && vListenerPort > 0 {
+			portOverride.ListenerPort = aws.Int64(int64(vListenerPort))
+		}
+
+		portOverrides = append(portOverrides, portOverride)
+	}
+
+	return portOverrides
+}
+
 func flattenGlobalAcceleratorEndpointDescriptions(configurations []*globalaccelerator.EndpointDescription) []interface{} {
 	out := make([]interface{}, len(configurations))
 
@@ -378,4 +412,23 @@ func flattenGlobalAcceleratorEndpointDescriptions(configurations []*globalaccele
 	}
 
 	return out
+}
+
+func flattenGlobalAcceleratorPortOverrides(portOverrides []*globalaccelerator.PortOverride) []interface{} {
+	if len(portOverrides) == 0 || portOverrides[0] == nil {
+		return []interface{}{}
+	}
+
+	vPortOverrides := []interface{}{}
+
+	for _, portOverride := range portOverrides {
+		mPortOverride := map[string]interface{}{
+			"endpoint_port": int(aws.Int64Value(portOverride.EndpointPort)),
+			"listener_port": int(aws.Int64Value(portOverride.ListenerPort)),
+		}
+
+		vPortOverrides = append(vPortOverrides, mPortOverride)
+	}
+
+	return vPortOverrides
 }
