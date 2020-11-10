@@ -121,8 +121,10 @@ func resourceAwsCloudFormationStack() *schema.Resource {
 func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cfconn
 
+	requestToken := resource.UniqueId()
 	input := cloudformation.CreateStackInput{
-		StackName: aws.String(d.Get("name").(string)),
+		StackName:          aws.String(d.Get("name").(string)),
+		ClientRequestToken: aws.String(requestToken),
 	}
 	if v, ok := d.GetOk("template_body"); ok {
 		template, err := normalizeJsonOrYamlString(v)
@@ -178,7 +180,7 @@ func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(aws.StringValue(resp.StackId))
 
-	stack, err := waiter.StackCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	stack, err := waiter.StackCreated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		if stack != nil {
 			status := aws.StringValue(stack.StackStatus)
@@ -295,8 +297,10 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cfconn
 
+	requestToken := resource.UniqueId()
 	input := &cloudformation.UpdateStackInput{
-		StackName: aws.String(d.Id()),
+		StackName:          aws.String(d.Id()),
+		ClientRequestToken: aws.String(requestToken),
 	}
 
 	// Either TemplateBody, TemplateURL or UsePreviousTemplate are required
@@ -358,12 +362,7 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 		log.Printf("[DEBUG] Current CloudFormation stack has no updates")
 	}
 
-	lastUpdatedTime, err := getLastCfEventTimestamp(d.Id(), conn)
-	if err != nil {
-		return err
-	}
-
-	_, err = waiter.StackUpdated(conn, d.Id(), lastUpdatedTime, d.Timeout(schema.TimeoutUpdate))
+	_, err = waiter.StackUpdated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return err
 	}
@@ -376,8 +375,10 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 func resourceAwsCloudFormationStackDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cfconn
 
+	requestToken := resource.UniqueId()
 	input := &cloudformation.DeleteStackInput{
-		StackName: aws.String(d.Id()),
+		StackName:          aws.String(d.Id()),
+		ClientRequestToken: aws.String(requestToken),
 	}
 	log.Printf("[DEBUG] Deleting CloudFormation stack %s", input)
 	_, err := conn.DeleteStack(input)
@@ -394,7 +395,7 @@ func resourceAwsCloudFormationStackDelete(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	_, err = waiter.StackDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	_, err = waiter.StackDeleted(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return err
 	}
@@ -402,23 +403,6 @@ func resourceAwsCloudFormationStackDelete(d *schema.ResourceData, meta interface
 	log.Printf("[INFO] CloudFormation stack (%s) deleted", d.Id())
 
 	return nil
-}
-
-// getLastCfEventTimestamp takes the first event in a list
-// of events ordered from the newest to the oldest
-// and extracts timestamp from it
-// LastUpdatedTime only provides last >successful< updated time
-// TODO: remove
-func getLastCfEventTimestamp(stackName string, conn *cloudformation.CloudFormation) (
-	*time.Time, error) {
-	output, err := conn.DescribeStackEvents(&cloudformation.DescribeStackEventsInput{
-		StackName: aws.String(stackName),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return output.StackEvents[0].Timestamp, nil
 }
 
 // TODO: remove
