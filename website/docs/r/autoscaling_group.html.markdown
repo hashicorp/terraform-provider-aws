@@ -142,11 +142,11 @@ resource "aws_launch_template" "example" {
 }
 
 resource "aws_autoscaling_group" "example" {
-  capacity_rebalance   = true
-  desired_capacity     = 12
-  max_size             = 15
-  min_size             = 12
-  vpc_zone_identifier  = [aws_subnet.example1.id, aws_subnet.example2.id]
+  capacity_rebalance  = true
+  desired_capacity    = 12
+  max_size            = 15
+  min_size            = 12
+  vpc_zone_identifier = [aws_subnet.example1.id, aws_subnet.example2.id]
 
   mixed_instances_policy {
     instance_distribution {
