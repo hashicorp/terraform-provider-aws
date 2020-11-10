@@ -66,17 +66,10 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 			},
 
 			"protocol": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					elbv2.ProtocolEnumHttp,
-					elbv2.ProtocolEnumHttps,
-					elbv2.ProtocolEnumTcp,
-					elbv2.ProtocolEnumTls,
-					elbv2.ProtocolEnumUdp,
-					elbv2.ProtocolEnumTcpUdp,
-				}, true),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(elbv2.ProtocolEnum_Values(), true),
 			},
 
 			"vpc_id": {
