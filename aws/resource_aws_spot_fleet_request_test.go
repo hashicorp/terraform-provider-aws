@@ -2469,7 +2469,7 @@ resource "aws_spot_fleet_request" "test" {
     capacity_rebalance {
       replacement_strategy = "launch"
     }
-  }	
+  }
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
