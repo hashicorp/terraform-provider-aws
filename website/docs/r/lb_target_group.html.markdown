@@ -85,7 +85,7 @@ Stickiness Blocks (`stickiness`) support the following:
 * `cookie_duration` - (Optional) Only used when the type is `lb_cookie`. The time period, in seconds, during which requests from a client should be routed to the same target. After this time period expires, the load balancer-generated cookie is considered stale. The range is 1 second to 1 week (604800 seconds). The default value is 1 day (86400 seconds).
 * `enabled` - (Optional) Boolean to enable / disable `stickiness`. Default is `true`
 
-~> **NOTE:** To help facilitate the authoring of modules that support target groups of any protocol, you can define `stickiness` regardless of the protocol chosen. However, for `TCP` target groups, `enabled` must be `false`.
+~> **NOTE:** Currently, an NLB (i.e., protocol of `HTTP` or `HTTPS`) can have an invalid `stickiness` block with `type` set to `lb_cookie` as long as `enabled` is set to `false`. However, please update your configurations to avoid errors in a future version of the provider: either remove the invalid `stickiness` block or set the `type` to `source_ip`.
 
 Health Check Blocks (`health_check`):
 
@@ -99,7 +99,7 @@ The underlying function is invoked when `target_type` is set to `lambda`.
 
 * `enabled` - (Optional) Indicates whether  health checks are enabled. Defaults to true.
 * `interval` - (Optional) The approximate amount of time, in seconds, between health checks of an individual target. Minimum value 5 seconds, Maximum value 300 seconds. For `lambda` target groups, it needs to be greater as the `timeout` of the underlying `lambda`. Default 30 seconds.
-* `path` - (Required for HTTP/HTTPS ALB) The destination for the health check request. Applies to Application Load Balancers only (HTTP/HTTPS), not Network Load Balancers (TCP).
+* `path` - (Required for HTTP/HTTPS ALB and HTTP NLB) The destination for the health check request. Applies to only HTTP/HTTPS.
 * `port` - (Optional) The port to use to connect with the target. Valid values are either ports 1-65535, or `traffic-port`. Defaults to `traffic-port`.
 * `protocol` - (Optional) The protocol to use to connect with the target. Defaults to `HTTP`. Not applicable when `target_type` is `lambda`.
 * `protocol_version` - (Optional) The protocol version. Defaults to `HTTP1`. Specify GRPC to send requests to targets using GRPC, HTTP2 to send requests to targets using HTTP/2, HTTP1 to send requests to targets using HTTP/1.1.

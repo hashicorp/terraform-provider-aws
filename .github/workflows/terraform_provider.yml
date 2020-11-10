@@ -171,7 +171,7 @@ jobs:
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-    - run: go generate ./...
+    - run: make gen
     - name: Check for Git Differences
       run: |
         git diff --compact-summary --exit-code || \

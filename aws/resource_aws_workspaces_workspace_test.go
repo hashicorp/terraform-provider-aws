@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/workspaces/waiter"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func testSweepWorkspacesWorkspace(region string) error {
 	input := &workspaces.DescribeWorkspacesInput{}
 	err = conn.DescribeWorkspacesPages(input, func(resp *workspaces.DescribeWorkspacesOutput, _ bool) bool {
 		for _, workspace := range resp.Workspaces {
-			err := workspaceDelete(aws.StringValue(workspace.WorkspaceId), conn)
+			err := workspaceDelete(conn, aws.StringValue(workspace.WorkspaceId), waiter.WorkspaceTerminatedTimeout)
 			if err != nil {
 				errors = multierror.Append(errors, err)
 			}
@@ -317,6 +318,33 @@ func TestAccAwsWorkspacesWorkspace_recreate(t *testing.T) {
 	})
 }
 
+func TestAccAwsWorkspacesWorkspace_timeout(t *testing.T) {
+	var v workspaces.Workspace
+	rName := acctest.RandString(8)
+
+	resourceName := "aws_workspaces_workspace.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Destroy: false,
+				Config:  testAccWorkspacesWorkspaceConfig_timeout(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsWorkspacesWorkspaceExists(resourceName, &v),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsWorkspacesWorkspaceDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).workspacesconn
 
@@ -550,6 +578,25 @@ resource "aws_workspaces_workspace" "test" {
 
   tags = {
     TerraformProviderAwsTest = true
+  }
+}
+`
+}
+
+func testAccWorkspacesWorkspaceConfig_timeout(rName string) string {
+	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
+resource "aws_workspaces_workspace" "test" {
+  bundle_id    = data.aws_workspaces_bundle.test.id
+  directory_id = aws_workspaces_directory.test.id
+
+  # NOTE: WorkSpaces API doesn't allow creating users in the directory.
+  # However, "Administrator"" user is always present in a bare directory.
+  user_name = "Administrator"
+
+  timeouts {
+    create = "60m"
+    update = "30m"
+    delete = "30m"
   }
 }
 `

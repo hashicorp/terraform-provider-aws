@@ -584,6 +584,13 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	if isResourceTimeoutError(err) {
 		out, err = conn.DescribeServices(&input)
 	}
+
+	if isAWSErr(err, ecs.ErrCodeClusterNotFoundException, "") {
+		log.Printf("[WARN] ECS Service %s parent cluster %s not found, removing from state.", d.Id(), d.Get("cluster").(string))
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error reading ECS service: %s", err)
 	}

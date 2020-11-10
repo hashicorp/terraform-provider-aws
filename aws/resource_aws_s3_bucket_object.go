@@ -46,18 +46,10 @@ func resourceAwsS3BucketObject() *schema.Resource {
 			},
 
 			"acl": {
-				Type:     schema.TypeString,
-				Default:  s3.ObjectCannedACLPrivate,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.ObjectCannedACLPrivate,
-					s3.ObjectCannedACLPublicRead,
-					s3.ObjectCannedACLPublicReadWrite,
-					s3.ObjectCannedACLAuthenticatedRead,
-					s3.ObjectCannedACLAwsExecRead,
-					s3.ObjectCannedACLBucketOwnerRead,
-					s3.ObjectCannedACLBucketOwnerFullControl,
-				}, false),
+				Type:         schema.TypeString,
+				Default:      s3.ObjectCannedACLPrivate,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(s3.ObjectCannedACL_Values(), false),
 			},
 
 			"cache_control": {
@@ -112,28 +104,17 @@ func resourceAwsS3BucketObject() *schema.Resource {
 			},
 
 			"storage_class": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.ObjectStorageClassStandard,
-					s3.ObjectStorageClassReducedRedundancy,
-					s3.ObjectStorageClassGlacier,
-					s3.ObjectStorageClassStandardIa,
-					s3.ObjectStorageClassOnezoneIa,
-					s3.ObjectStorageClassIntelligentTiering,
-					s3.ObjectStorageClassDeepArchive,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(s3.ObjectStorageClass_Values(), false),
 			},
 
 			"server_side_encryption": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.ServerSideEncryptionAes256,
-					s3.ServerSideEncryptionAwsKms,
-				}, false),
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(s3.ServerSideEncryption_Values(), false),
+				Computed:     true,
 			},
 
 			"kms_key_id": {
@@ -179,21 +160,15 @@ func resourceAwsS3BucketObject() *schema.Resource {
 			},
 
 			"object_lock_legal_hold_status": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.ObjectLockLegalHoldStatusOn,
-					s3.ObjectLockLegalHoldStatusOff,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(s3.ObjectLockLegalHoldStatus_Values(), false),
 			},
 
 			"object_lock_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.ObjectLockModeGovernance,
-					s3.ObjectLockModeCompliance,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(s3.ObjectLockMode_Values(), false),
 			},
 
 			"object_lock_retain_until_date": {

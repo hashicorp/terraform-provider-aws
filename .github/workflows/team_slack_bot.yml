@@ -15,6 +15,6 @@ jobs:
         github_token: ${{ secrets.GITHUB_ACTIONS_TOKEN}}
         org: hashicorp
         repo: terraform-provider-aws
-        team_slug: aws-provider
+        team_slug: terraform-aws
         slack_token: ${{ secrets.SLACK_BOT_TOKEN }}
         slack_channel: ${{ secrets.SLACK_CHANNEL }}
