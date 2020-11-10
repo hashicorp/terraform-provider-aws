@@ -2466,9 +2466,9 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   spot_maintenance_strategies {
-	capacity_rebalance {
-	  replacement_strategy = "launch"
-	}
+    capacity_rebalance {
+      replacement_strategy = "launch"
+    }
   }	
 
   launch_specification {
