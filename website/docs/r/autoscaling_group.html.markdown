@@ -150,10 +150,10 @@ resource "aws_autoscaling_group" "example" {
 
   mixed_instances_policy {
     instance_distribution {
-            on_demand_base_capacity = 0,
-            on_demand_percentage_above_base_capacity = 25,
-            spot_allocation_strategy = "capacity-optimized"
-        },
+      on_demand_base_capacity                  = 0
+      on_demand_percentage_above_base_capacity = 25
+      spot_allocation_strategy                 = "capacity-optimized"
+    }
 
     launch_template {
       launch_template_specification {
