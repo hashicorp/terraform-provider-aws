@@ -67,7 +67,7 @@ func resourceAwsBackupVaultPolicyRead(d *schema.ResourceData, meta interface{}) 
 
 	resp, err := conn.GetBackupVaultAccessPolicy(input)
 	if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] Backup Vault Notifcations %s not found, removing from state", d.Id())
+		log.Printf("[WARN] Backup Vault Policy %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
