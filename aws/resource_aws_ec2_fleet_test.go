@@ -1801,7 +1801,7 @@ resource "aws_ec2_fleet" "test" {
       capacity_rebalance {
         replacement_strategy = "launch"
       }
-    }	
+    }
   }
 
   target_capacity_specification {
