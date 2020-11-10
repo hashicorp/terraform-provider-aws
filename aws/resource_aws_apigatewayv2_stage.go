@@ -215,7 +215,7 @@ func resourceAwsApiGatewayV2StageCreate(d *schema.ResourceData, meta interface{}
 		req.Description = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("route_settings"); ok {
-		req.RouteSettings = expandApiGatewayV2RouteSettings(v.(*schema.Set), protocolType)
+		req.RouteSettings = expandApiGatewayV2RouteSettings(v.(*schema.Set).List(), protocolType)
 	}
 	if v, ok := d.GetOk("stage_variables"); ok {
 		req.StageVariables = stringMapToPointers(v.(map[string]interface{}))
@@ -353,7 +353,28 @@ func resourceAwsApiGatewayV2StageUpdate(d *schema.ResourceData, meta interface{}
 			req.Description = aws.String(d.Get("description").(string))
 		}
 		if d.HasChange("route_settings") {
-			req.RouteSettings = expandApiGatewayV2RouteSettings(d.Get("route_settings").(*schema.Set), protocolType)
+			o, n := d.GetChange("route_settings")
+			os := o.(*schema.Set)
+			ns := n.(*schema.Set)
+
+			for _, vRouteSetting := range os.Difference(ns).List() {
+				routeKey := vRouteSetting.(map[string]interface{})["route_key"].(string)
+
+				log.Printf("[DEBUG] Deleting API Gateway v2 stage (%s) route settings (%s)", d.Id(), routeKey)
+				_, err := conn.DeleteRouteSettings(&apigatewayv2.DeleteRouteSettingsInput{
+					ApiId:     aws.String(d.Get("api_id").(string)),
+					RouteKey:  aws.String(routeKey),
+					StageName: aws.String(d.Id()),
+				})
+				if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+					continue
+				}
+				if err != nil {
+					return fmt.Errorf("error deleting API Gateway v2 stage (%s) route settings (%s): %w", d.Id(), routeKey, err)
+				}
+			}
+
+			req.RouteSettings = expandApiGatewayV2RouteSettings(ns.List(), protocolType)
 		}
 		if d.HasChange("stage_variables") {
 			o, n := d.GetChange("stage_variables")
@@ -503,10 +524,10 @@ func flattenApiGatewayV2DefaultRouteSettings(routeSettings *apigatewayv2.RouteSe
 	}}
 }
 
-func expandApiGatewayV2RouteSettings(vSettings *schema.Set, protocolType string) map[string]*apigatewayv2.RouteSettings {
+func expandApiGatewayV2RouteSettings(vSettings []interface{}, protocolType string) map[string]*apigatewayv2.RouteSettings {
 	settings := map[string]*apigatewayv2.RouteSettings{}
 
-	for _, v := range vSettings.List() {
+	for _, v := range vSettings {
 		routeSettings := &apigatewayv2.RouteSettings{}
 
 		mSettings := v.(map[string]interface{})
