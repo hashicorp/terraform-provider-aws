@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,19 +11,19 @@ import (
 )
 
 func TestAccAwsFmsAdminAccount_basic(t *testing.T) {
-	oldDefaultRegion := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldDefaultRegion)
-
 	resourceName := "aws_fms_admin_account.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckFmsAdminAccountDestroy,
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccOrganizationsAccountPreCheck(t)
+			testAccPreCheckFmsAdminAccountConfiguration(t)
+		},
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckFmsAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFmsAdminAccountConfig_basic,
+				Config: testAccFmsAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceAttrAccountID(resourceName, "account_id"),
 				),
@@ -61,7 +60,8 @@ func testAccCheckFmsAdminAccountDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccFmsAdminAccountConfig_basic = `
+func testAccFmsAdminAccountConfig_basic() string {
+	return composeConfig(testAccFmsAdminAccountConfigurationRegionProviderConfig(), fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {
   aws_service_access_principals = ["fms.amazonaws.com"]
   feature_set                   = "ALL"
@@ -70,4 +70,5 @@ resource "aws_organizations_organization" "test" {
 resource "aws_fms_admin_account" "test" {
   account_id = aws_organizations_organization.test.master_account_id
 }
-`
+`))
+}
