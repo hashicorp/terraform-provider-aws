@@ -106,6 +106,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
+							// TypeAmazonCustomerByEmail is not currently supported
 							ValidateFunc: validation.StringInSlice([]string{
 								s3.TypeCanonicalUser,
 								s3.TypeGroup,
@@ -121,14 +122,8 @@ func resourceAwsS3Bucket() *schema.Resource {
 							Required: true,
 							Set:      schema.HashString,
 							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.StringInSlice([]string{
-									s3.PermissionFullControl,
-									s3.PermissionRead,
-									s3.PermissionReadAcp,
-									s3.PermissionWrite,
-									s3.PermissionWriteAcp,
-								}, false),
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(s3.Permission_Values(), false),
 							},
 						},
 					},
@@ -395,23 +390,17 @@ func resourceAwsS3Bucket() *schema.Resource {
 			},
 
 			"acceleration_status": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.BucketAccelerateStatusEnabled,
-					s3.BucketAccelerateStatusSuspended,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(s3.BucketAccelerateStatus_Values(), false),
 			},
 
 			"request_payer": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.PayerRequester,
-					s3.PayerBucketOwner,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(s3.Payer_Values(), false),
 			},
 
 			"replication_configuration": {
@@ -453,17 +442,9 @@ func resourceAwsS3Bucket() *schema.Resource {
 													ValidateFunc: validateArn,
 												},
 												"storage_class": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														s3.StorageClassStandard,
-														s3.StorageClassReducedRedundancy,
-														s3.StorageClassStandardIa,
-														s3.StorageClassOnezoneIa,
-														s3.StorageClassIntelligentTiering,
-														s3.StorageClassGlacier,
-														s3.StorageClassDeepArchive,
-													}, false),
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(s3.StorageClass_Values(), false),
 												},
 												"replica_kms_key_id": {
 													Type:     schema.TypeString,
@@ -477,11 +458,9 @@ func resourceAwsS3Bucket() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"owner": {
-																Type:     schema.TypeString,
-																Required: true,
-																ValidateFunc: validation.StringInSlice([]string{
-																	s3.OwnerOverrideDestination,
-																}, false),
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringInSlice(s3.OwnerOverride_Values(), false),
 															},
 														},
 													},
@@ -519,12 +498,9 @@ func resourceAwsS3Bucket() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(0, 1024),
 									},
 									"status": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											s3.ReplicationRuleStatusEnabled,
-											s3.ReplicationRuleStatusDisabled,
-										}, false),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(s3.ReplicationRuleStatus_Values(), false),
 									},
 									"priority": {
 										Type:     schema.TypeInt,
@@ -576,12 +552,9 @@ func resourceAwsS3Bucket() *schema.Resource {
 													Optional: true,
 												},
 												"sse_algorithm": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														s3.ServerSideEncryptionAes256,
-														s3.ServerSideEncryptionAwsKms,
-													}, false),
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(s3.ServerSideEncryption_Values(), false),
 												},
 											},
 										},
@@ -600,12 +573,10 @@ func resourceAwsS3Bucket() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"object_lock_enabled": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								s3.ObjectLockEnabledEnabled,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(s3.ObjectLockEnabled_Values(), false),
 						},
 
 						"rule": {
@@ -622,12 +593,9 @@ func resourceAwsS3Bucket() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"mode": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														s3.ObjectLockRetentionModeGovernance,
-														s3.ObjectLockRetentionModeCompliance,
-													}, false),
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(s3.ObjectLockRetentionMode_Values(), false),
 												},
 
 												"days": {
