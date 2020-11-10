@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"reflect"
 	"regexp"
 	"time"
 
@@ -283,10 +284,18 @@ func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff
 		d.SetNewComputed("version")
 		d.SetNewComputed("qualified_arn")
 	}
+
 	return nil
 }
 
 func hasConfigChanges(d resourceDiffer) bool {
+	hasVpcConfigChange := d.HasChange("vpc_config")
+	if hasVpcConfigChange {
+		// This returns true when vpc_config is set even when the values are the same
+		o, n := d.GetChange("vpc_config")
+		hasVpcConfigChange = reflect.DeepEqual(o, n)
+	}
+
 	return d.HasChange("description") ||
 		d.HasChange("handler") ||
 		d.HasChange("file_system_config") ||
@@ -297,7 +306,7 @@ func hasConfigChanges(d resourceDiffer) bool {
 		d.HasChange("layers") ||
 		d.HasChange("dead_letter_config") ||
 		d.HasChange("tracing_config") ||
-		d.HasChange("vpc_config") ||
+		hasVpcConfigChange ||
 		d.HasChange("runtime") ||
 		d.HasChange("environment")
 }
@@ -693,6 +702,7 @@ func resourceAwsLambdaFunctionDelete(d *schema.ResourceData, meta interface{}) e
 
 type resourceDiffer interface {
 	HasChange(string) bool
+	GetChange(string) (interface{}, interface{})
 }
 
 func needsFunctionCodeUpdate(d resourceDiffer) bool {
