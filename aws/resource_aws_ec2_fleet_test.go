@@ -1796,12 +1796,12 @@ resource "aws_ec2_fleet" "test" {
   }
 
   spot_options {
-	allocation_strategy = %q
+    allocation_strategy = %[1]q
     maintenance_strategies {
-		capacity_rebalance {
-		  replacement_strategy = "launch"
-		}
-	  }	
+      capacity_rebalance {
+        replacement_strategy = "launch"
+      }
+    }	
   }
 
   target_capacity_specification {
