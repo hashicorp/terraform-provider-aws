@@ -85,6 +85,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
@@ -283,6 +284,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(mq.New)
 	case "neptune":
 		funcType = reflect.TypeOf(neptune.New)
+	case "networkfirewall":
+		funcType = reflect.TypeOf(networkfirewall.New)
 	case "networkmanager":
 		funcType = reflect.TypeOf(networkmanager.New)
 	case "opsworks":
