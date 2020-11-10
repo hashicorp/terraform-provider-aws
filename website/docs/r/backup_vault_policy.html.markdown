@@ -18,7 +18,7 @@ resource "aws_backup_vault" "example" {
 }
 
 resource "aws_backup_vault_policy" "example" {
-  backup_vault_name   = aws_backup_vault.example.name
+  backup_vault_name = aws_backup_vault.example.name
 
   policy = <<POLICY
 {
