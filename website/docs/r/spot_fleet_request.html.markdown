@@ -221,9 +221,11 @@ The `launch_template_config` block supports the following:
     what you can specify as spot fleet does not support all the attributes that are supported by autoscaling groups. [AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html#launch-templates-spot-fleet) is currently sparse, but at least `instance_initiated_shutdown_behavior` is confirmed unsupported.
 
 ### spot_maintenance_strategies
+
 * `capacity_rebalance` - (Optional) Nested argument containing the capacity rebalnce for your fleet request. Defined below.
 
 ### capacity_rebalance
+
 * `replacement_strategy` - (Optional) The replacement strategy to use. Only available for spot fleets with `fleet_type` set to `maintain`. Valid values: `launch`.
 
 
