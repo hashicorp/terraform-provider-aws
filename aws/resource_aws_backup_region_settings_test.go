@@ -92,14 +92,14 @@ func testAccBackupRegionSettingsConfig1(rName string) string {
 	return `
 resource "aws_backup_region_settings" "test" {
   resource_type_opt_in_preference = {
-	"DynamoDB"        = true
-	"Aurora"          = true
-	"EBS"             = true
-	"EC2"             = true
-	"EFS"             = true
-	"FSx"             = true
-	"RDS"             = true
-	"Storage Gateway" = true
+    "DynamoDB"        = true
+    "Aurora"          = true
+    "EBS"             = true
+    "EC2"             = true
+    "EFS"             = true
+    "FSx"             = true
+    "RDS"             = true
+    "Storage Gateway" = true
   }
 }
 `
@@ -109,14 +109,14 @@ func testAccBackupRegionSettingsConfig2(rName string) string {
 	return `
 resource "aws_backup_region_settings" "test" {
   resource_type_opt_in_preference = {
-	"DynamoDB"        = true
-	"Aurora"          = false
-	"EBS"             = true
-	"EC2"             = true
-	"EFS"             = true
-	"FSx"             = true
-	"RDS"             = true
-	"Storage Gateway" = true
+    "DynamoDB"        = true
+    "Aurora"          = false
+    "EBS"             = true
+    "EC2"             = true
+    "EFS"             = true
+    "FSx"             = true
+    "RDS"             = true
+    "Storage Gateway" = true
   }
 }
 `
