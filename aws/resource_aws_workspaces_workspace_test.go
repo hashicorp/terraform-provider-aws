@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/workspaces/waiter"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func testSweepWorkspacesWorkspace(region string) error {
 	input := &workspaces.DescribeWorkspacesInput{}
 	err = conn.DescribeWorkspacesPages(input, func(resp *workspaces.DescribeWorkspacesOutput, _ bool) bool {
 		for _, workspace := range resp.Workspaces {
-			err := workspaceDelete(aws.StringValue(workspace.WorkspaceId), conn)
+			err := workspaceDelete(conn, aws.StringValue(workspace.WorkspaceId), waiter.WorkspaceTerminatedTimeout)
 			if err != nil {
 				errors = multierror.Append(errors, err)
 			}
@@ -215,7 +216,7 @@ func TestAccAwsWorkspacesWorkspace_workspaceProperties(t *testing.T) {
 
 // TestAccAwsWorkspacesWorkspace_workspaceProperties_runningModeAlwaysOn
 // validates workspace resource creation/import when workspace_properties.running_mode is set to ALWAYS_ON
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13558
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13558
 func TestAccAwsWorkspacesWorkspace_workspaceProperties_runningModeAlwaysOn(t *testing.T) {
 	var v1 workspaces.Workspace
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -284,6 +285,66 @@ func TestAccAwsWorkspacesWorkspace_validateUserVolumeSize(t *testing.T) {
 	})
 }
 
+func TestAccAwsWorkspacesWorkspace_recreate(t *testing.T) {
+	var v workspaces.Workspace
+	rName := acctest.RandString(8)
+
+	resourceName := "aws_workspaces_workspace.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspacesWorkspaceConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsWorkspacesWorkspaceExists(resourceName, &v),
+				),
+			},
+			{
+				Taint:  []string{resourceName}, // Force workspace re-creation
+				Config: testAccWorkspacesWorkspaceConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsWorkspacesWorkspaceExists(resourceName, &v),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsWorkspacesWorkspace_timeout(t *testing.T) {
+	var v workspaces.Workspace
+	rName := acctest.RandString(8)
+
+	resourceName := "aws_workspaces_workspace.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Destroy: false,
+				Config:  testAccWorkspacesWorkspaceConfig_timeout(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsWorkspacesWorkspaceExists(resourceName, &v),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsWorkspacesWorkspaceDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).workspacesconn
 
@@ -300,7 +361,7 @@ func testAccCheckAwsWorkspacesWorkspaceDestroy(s *terraform.State) error {
 		}
 
 		if len(resp.Workspaces) == 0 {
-			return fmt.Errorf("workspace %q was not terminated", rs.Primary.ID)
+			return nil
 		}
 		ws := resp.Workspaces[0]
 
@@ -517,6 +578,25 @@ resource "aws_workspaces_workspace" "test" {
 
   tags = {
     TerraformProviderAwsTest = true
+  }
+}
+`
+}
+
+func testAccWorkspacesWorkspaceConfig_timeout(rName string) string {
+	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
+resource "aws_workspaces_workspace" "test" {
+  bundle_id    = data.aws_workspaces_bundle.test.id
+  directory_id = aws_workspaces_directory.test.id
+
+  # NOTE: WorkSpaces API doesn't allow creating users in the directory.
+  # However, "Administrator"" user is always present in a bare directory.
+  user_name = "Administrator"
+
+  timeouts {
+    create = "60m"
+    update = "30m"
+    delete = "30m"
   }
 }
 `

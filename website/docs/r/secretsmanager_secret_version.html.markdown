@@ -64,7 +64,7 @@ The following arguments are supported:
 
 ~> **NOTE:** If `version_stages` is configured, you must include the `AWSCURRENT` staging label if this secret version is the only version or if the label is currently present on this secret version, otherwise Terraform will show a perpetual difference.
 
-## Attribute Reference
+## Attributes Reference
 
 * `arn` - The ARN of the secret.
 * `id` - A pipe delimited combination of secret ID and version ID.
@@ -75,5 +75,5 @@ The following arguments are supported:
 `aws_secretsmanager_secret_version` can be imported by using the secret ID and version ID, e.g.
 
 ```
-$ terraform import aws_secretsmanager_secret_version.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456|xxxxx-xxxxxxx-xxxxxxx-xxxxx
+$ terraform import aws_secretsmanager_secret_version.example 'arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456|xxxxx-xxxxxxx-xxxxxxx-xxxxx'
 ```

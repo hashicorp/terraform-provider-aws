@@ -785,7 +785,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_vpc_endpoint" "test" {
-  policy       = <<POLICY%[2]sPOLICY
+  policy       = <<POLICY
+%[2]s
+POLICY
   service_name = data.aws_vpc_endpoint_service.test.service_name
   vpc_id       = aws_vpc.test.id
 

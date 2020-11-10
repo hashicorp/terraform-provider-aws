@@ -62,7 +62,7 @@ The `listener` object supports the following:
 The `port_mapping` object supports the following:
 
 * `port` - (Required) The port used for the port mapping.
-* `protocol` - (Required) The protocol used for the port mapping. Valid values are `http` and `tcp`.
+* `protocol` - (Required) The protocol used for the port mapping. Valid values are `http`,`http2`, `tcp` and `grpc`.
 
 ## Attributes Reference
 

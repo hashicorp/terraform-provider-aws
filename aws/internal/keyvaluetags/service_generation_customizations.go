@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
@@ -25,6 +26,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
@@ -147,6 +149,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(autoscaling.New)
 	case "backup":
 		funcType = reflect.TypeOf(backup.New)
+	case "batch":
+		funcType = reflect.TypeOf(batch.New)
 	case "cloud9":
 		funcType = reflect.TypeOf(cloud9.New)
 	case "cloudfront":
@@ -161,6 +165,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(cloudwatchevents.New)
 	case "cloudwatchlogs":
 		funcType = reflect.TypeOf(cloudwatchlogs.New)
+	case "codeartifact":
+		funcType = reflect.TypeOf(codeartifact.New)
 	case "codecommit":
 		funcType = reflect.TypeOf(codecommit.New)
 	case "codedeploy":
@@ -831,6 +837,8 @@ func ServiceTagType(serviceName string) string {
 		return "TagListEntry"
 	case "fms":
 		return "ResourceTag"
+	case "s3control":
+		return "S3Tag"
 	case "swf":
 		return "ResourceTag"
 	default:

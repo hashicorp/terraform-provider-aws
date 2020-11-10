@@ -159,7 +159,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the dimension.
 * `value` - (Required) The value of the dimension.
 
-## Attribute Reference
+## Attributes Reference
 
 * `arn` - The ARN assigned by AWS to the scaling policy.
 * `name` - The scaling policy's name.

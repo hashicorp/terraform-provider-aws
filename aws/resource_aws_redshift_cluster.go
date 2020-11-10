@@ -28,7 +28,7 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(75 * time.Minute),
-			Update: schema.DefaultTimeout(40 * time.Minute),
+			Update: schema.DefaultTimeout(75 * time.Minute),
 			Delete: schema.DefaultTimeout(40 * time.Minute),
 		},
 

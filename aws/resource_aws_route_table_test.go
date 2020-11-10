@@ -191,7 +191,7 @@ func TestAccAWSRouteTable_instance(t *testing.T) {
 		CheckDestroy:  testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableConfigInstance,
+				Config: testAccRouteTableConfigInstance(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &v),
 					testCheck,
@@ -286,8 +286,7 @@ func TestAccAWSRouteTable_tags(t *testing.T) {
 	})
 }
 
-// For GH-13545, Fixes panic on an empty route config block
-func TestAccAWSRouteTable_panicEmptyRoute(t *testing.T) {
+func TestAccAWSRouteTable_RequireRouteDestination(t *testing.T) {
 	resourceName := "aws_route_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -297,8 +296,25 @@ func TestAccAWSRouteTable_panicEmptyRoute(t *testing.T) {
 		CheckDestroy:  testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccRouteTableConfigPanicEmptyRoute,
-				ExpectError: regexp.MustCompile("The request must contain the parameter destinationCidrBlock or destinationIpv6CidrBlock"),
+				Config:      testAccRouteTableConfigNoDestination(),
+				ExpectError: regexp.MustCompile("error creating route: one of `cidr_block"),
+			},
+		},
+	})
+}
+
+func TestAccAWSRouteTable_RequireRouteTarget(t *testing.T) {
+	resourceName := "aws_route_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRouteTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRouteTableConfigNoTarget,
+				ExpectError: regexp.MustCompile("error creating route: one of `egress_only_gateway_id"),
 			},
 		},
 	})
@@ -673,22 +689,10 @@ resource "aws_route_table" "test" {
 }
 `
 
-const testAccRouteTableConfigInstance = `
-data "aws_ami" "amzn-ami-minimal-hvm" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
+func testAccRouteTableConfigInstance() string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -698,8 +702,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id     = aws_vpc.test.id
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-route-table-instance"
@@ -707,7 +712,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm.id
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.test.id
 }
@@ -720,7 +725,8 @@ resource "aws_route_table" "test" {
     instance_id = aws_instance.test.id
   }
 }
-`
+`)
+}
 
 func testAccAWSRouteTableConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
@@ -835,20 +841,59 @@ resource "aws_route_table" "test" {
 }
 `
 
-// For GH-13545
-const testAccRouteTableConfigPanicEmptyRoute = `
+func testAccRouteTableConfigNoDestination() string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(), `
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    instance_id = aws_instance.test.id
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "tf-acc-route-table-no-destination"
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = "tf-acc-route-table-no-destination"
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.test.id
+}
+`)
+}
+
+const testAccRouteTableConfigNoTarget = `
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block = "10.1.0.0/16"
+  }
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.2.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-route-table-panic-empty-route"
+    Name = "tf-acc-route-table-no-target"
   }
-}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  route {}
 }
 `
 
@@ -936,18 +981,8 @@ resource "aws_route_table" "test" {
 }
 
 func testAccAWSRouteTableConfigRouteTransitGatewayID() string {
-	return `
-data "aws_availability_zones" "available" {
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -982,7 +1017,7 @@ resource "aws_route_table" "test" {
     transit_gateway_id = aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id
   }
 }
-`
+`)
 }
 
 func testAccAWSRouteTableConfigRouteLocalGatewayID() string {
@@ -1006,8 +1041,8 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = aws_vpc.test.id
+  cidr_block = "10.0.0.0/24"
+  vpc_id     = aws_vpc.test.id
 }
 
 resource "aws_ec2_local_gateway_route_table_vpc_association" "example" {
@@ -1019,7 +1054,7 @@ resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
 
   route {
-    cidr_block         = "0.0.0.0/0"
+    cidr_block       = "0.0.0.0/0"
     local_gateway_id = data.aws_ec2_local_gateway.first.id
   }
   depends_on = [aws_ec2_local_gateway_route_table_vpc_association.example]

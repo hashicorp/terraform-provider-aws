@@ -899,7 +899,7 @@ func validateHeathCheckTarget(v interface{}, k string) (ws []string, errors []er
 		// Invalid target? Return immediately,
 		// there is no need to collect other
 		// errors.
-		return
+		return ws, errors
 	}
 
 	// Check if the value contains a valid protocol.
@@ -945,7 +945,7 @@ func validateHeathCheckTarget(v interface{}, k string) (ws []string, errors []er
 
 	}
 
-	return
+	return ws, errors
 }
 
 func isValidProtocol(s string) bool {

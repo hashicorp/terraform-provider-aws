@@ -351,16 +351,15 @@ func testAccCheckConfigConfigRuleDestroy(s *terraform.State) error {
 
 func testAccConfigConfigRuleConfig_base(rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {
-}
+data "aws_partition" "current" {}
 
 resource "aws_config_configuration_recorder" "test" {
-  name     = %q
+  name     = %[1]q
   role_arn = aws_iam_role.test.arn
 }
 
 resource "aws_iam_role" "test" {
-  name = %q
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -369,7 +368,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "config.amazonaws.com"
+        "Service": "config.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -383,13 +382,13 @@ resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSConfigRole"
   role       = aws_iam_role.test.name
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccConfigConfigRuleConfig_basic(rName string) string {
 	return testAccConfigConfigRuleConfig_base(rName) + fmt.Sprintf(`
 resource "aws_config_config_rule" "test" {
-  name = %[1]q
+  name = %q
 
   source {
     owner             = "AWS"
@@ -404,7 +403,7 @@ resource "aws_config_config_rule" "test" {
 func testAccConfigConfigRuleConfig_ownerAws(rName string) string {
 	return testAccConfigConfigRuleConfig_base(rName) + fmt.Sprintf(`
 resource "aws_config_config_rule" "test" {
-  name        = %[1]q
+  name        = %q
   description = "Terraform Acceptance tests"
 
   source {
@@ -432,7 +431,7 @@ PARAMS
 func testAccConfigConfigRuleConfig_customLambda(randInt int, path string) string {
 	return fmt.Sprintf(`
 resource "aws_config_config_rule" "test" {
-  name                        = "tf-acc-test-%d"
+  name                        = "tf-acc-test-%[1]d"
   description                 = "Terraform Acceptance tests"
   maximum_execution_frequency = "Six_Hours"
 
@@ -458,22 +457,24 @@ resource "aws_config_config_rule" "test" {
 }
 
 resource "aws_lambda_function" "f" {
-  filename      = "%s"
-  function_name = "tf_acc_lambda_awsconfig_%d"
+  filename      = "%[2]s"
+  function_name = "tf_acc_lambda_awsconfig_%[1]d"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_lambda_permission" "p" {
   statement_id  = "AllowExecutionFromConfig"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.f.arn
-  principal     = "config.amazonaws.com"
+  principal     = "config.${data.aws_partition.current.dns_suffix}"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "tf_acc_lambda_aws_config_%d"
+  name = "tf_acc_lambda_aws_config_%[1]d"
 
   assume_role_policy = <<POLICY
 {
@@ -482,7 +483,7 @@ resource "aws_iam_role" "iam_for_lambda" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "lambda.amazonaws.com"
+        "Service": "lambda.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -494,11 +495,11 @@ POLICY
 
 resource "aws_iam_role_policy_attachment" "a" {
   role       = aws_iam_role.iam_for_lambda.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSConfigRulesExecutionRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSConfigRulesExecutionRole"
 }
 
 resource "aws_config_delivery_channel" "foo" {
-  name           = "tf-acc-test-%d"
+  name           = "tf-acc-test-%[1]d"
   s3_bucket_name = aws_s3_bucket.b.bucket
 
   snapshot_delivery_properties {
@@ -509,17 +510,17 @@ resource "aws_config_delivery_channel" "foo" {
 }
 
 resource "aws_s3_bucket" "b" {
-  bucket        = "tf-acc-awsconfig-%d"
+  bucket        = "tf-acc-awsconfig-%[1]d"
   force_destroy = true
 }
 
 resource "aws_config_configuration_recorder" "foo" {
-  name     = "tf-acc-test-%d"
+  name     = "tf-acc-test-%[1]d"
   role_arn = aws_iam_role.r.arn
 }
 
 resource "aws_iam_role" "r" {
-  name = "tf-acc-test-awsconfig-%d"
+  name = "tf-acc-test-awsconfig-%[1]d"
 
   assume_role_policy = <<POLICY
 {
@@ -528,7 +529,7 @@ resource "aws_iam_role" "r" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "config.amazonaws.com"
+        "Service": "config.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -539,7 +540,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "p" {
-  name = "tf-acc-test-awsconfig-%d"
+  name = "tf-acc-test-awsconfig-%[1]d"
   role = aws_iam_role.r.id
 
   policy = <<POLICY
@@ -568,7 +569,7 @@ resource "aws_iam_role_policy" "p" {
 }
 POLICY
 }
-`, randInt, path, randInt, randInt, randInt, randInt, randInt, randInt, randInt)
+`, randInt, path)
 }
 
 func testAccConfigConfigRuleConfig_Scope_TagKey(rName, tagKey string) string {

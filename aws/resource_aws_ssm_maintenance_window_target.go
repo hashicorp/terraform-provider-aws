@@ -2,13 +2,14 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"regexp"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"log"
-	"regexp"
-	"strings"
 )
 
 func resourceAwsSsmMaintenanceWindowTarget() *schema.Resource {

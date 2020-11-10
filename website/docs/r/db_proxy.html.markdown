@@ -50,7 +50,6 @@ The following arguments are supported:
 * `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role that the proxy uses to access secrets in AWS Secrets Manager.
 * `vpc_security_group_ids` - (Optional) One or more VPC security group IDs to associate with the new proxy.
 * `vpc_subnet_ids` - (Required) One or more VPC subnet IDs to associate with the new proxy.
-describe-db-parameters.html) after initial creation of the group.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
 `auth` blocks support the following:
@@ -75,7 +74,7 @@ In addition to all arguments above, the following attributes are exported:
 
 - `create` - (Default `30 minutes`) Used for creating DB proxies.
 - `update` - (Default `30 minutes`) Used for modifying DB proxies.
-- `delete` - (Default `30 minutes`) Used for destroying DB proxies.
+- `delete` - (Default `60 minutes`) Used for destroying DB proxies.
 
 ## Import
 

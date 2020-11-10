@@ -69,8 +69,8 @@ The following arguments are supported:
 * `load_balancing_algorithm_type` - (Optional) Determines how the load balancer selects targets when routing requests. Only applicable for Application Load Balancer Target Groups. The value is `round_robin` or `least_outstanding_requests`. The default is `round_robin`.
 * `lambda_multi_value_headers_enabled` - (Optional) Boolean whether the request and response headers exchanged between the load balancer and the Lambda function include arrays of values or strings. Only applies when `target_type` is `lambda`.
 * `proxy_protocol_v2` - (Optional) Boolean to enable / disable support for proxy protocol v2 on Network Load Balancers. See [doc](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-target-groups.html#proxy-protocol) for more information.
-* `stickiness` - (Optional) A Stickiness block. Stickiness blocks are documented below. `stickiness` is only valid if used with Load Balancers of type `Application`
-* `health_check` - (Optional) A Health Check block. Health Check blocks are documented below.
+* `stickiness` - (Optional, Maximum of 1) A Stickiness block. Stickiness blocks are documented below.
+* `health_check` - (Optional, Maximum of 1) A Health Check block. Health Check blocks are documented below.
 * `target_type` - (Optional, Forces new resource) The type of target that you must specify when registering targets with this target group.
 The possible values are `instance` (targets are specified by instance ID) or `ip` (targets are specified by IP address) or `lambda` (targets are specified by lambda arn).
 The default is `instance`. Note that you can't specify targets for a target group using both instance IDs and IP addresses.
@@ -81,8 +81,8 @@ You can't specify publicly routable IP addresses.
 
 Stickiness Blocks (`stickiness`) support the following:
 
-* `type` - (Required) The type of sticky sessions. The only current possible value is `lb_cookie`.
-* `cookie_duration` - (Optional) The time period, in seconds, during which requests from a client should be routed to the same target. After this time period expires, the load balancer-generated cookie is considered stale. The range is 1 second to 1 week (604800 seconds). The default value is 1 day (86400 seconds).
+* `type` - (Required) The type of sticky sessions. The only current possible values are `lb_cookie` for ALBs and `source_ip` for NLBs.
+* `cookie_duration` - (Optional) Only used when the type is `lb_cookie`. The time period, in seconds, during which requests from a client should be routed to the same target. After this time period expires, the load balancer-generated cookie is considered stale. The range is 1 second to 1 week (604800 seconds). The default value is 1 day (86400 seconds).
 * `enabled` - (Optional) Boolean to enable / disable `stickiness`. Default is `true`
 
 ~> **NOTE:** To help facilitate the authoring of modules that support target groups of any protocol, you can define `stickiness` regardless of the protocol chosen. However, for `TCP` target groups, `enabled` must be `false`.
@@ -99,7 +99,7 @@ The underlying function is invoked when `target_type` is set to `lambda`.
 
 * `enabled` - (Optional) Indicates whether  health checks are enabled. Defaults to true.
 * `interval` - (Optional) The approximate amount of time, in seconds, between health checks of an individual target. Minimum value 5 seconds, Maximum value 300 seconds. For `lambda` target groups, it needs to be greater as the `timeout` of the underlying `lambda`. Default 30 seconds.
-* `path` - (Required for HTTP/HTTPS ALB) The destination for the health check request. Applies to Application Load Balancers only (HTTP/HTTPS), not Network Load Balancers (TCP).
+* `path` - (Required for HTTP/HTTPS ALB and HTTP NLB) The destination for the health check request. Applies to only HTTP/HTTPS.
 * `port` - (Optional) The port to use to connect with the target. Valid values are either ports 1-65535, or `traffic-port`. Defaults to `traffic-port`.
 * `protocol` - (Optional) The protocol to use to connect with the target. Defaults to `HTTP`. Not applicable when `target_type` is `lambda`.
 * `timeout` - (Optional) The amount of time, in seconds, during which no response means a failed health check. For Application Load Balancers, the range is 2 to 120 seconds, and the default is 5 seconds for the `instance` target type and 30 seconds for the `lambda` target type. For Network Load Balancers, you cannot set a custom value, and the default is 10 seconds for TCP and HTTPS health checks and 6 seconds for HTTP health checks.

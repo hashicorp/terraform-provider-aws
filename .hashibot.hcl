@@ -76,7 +76,7 @@ queued_behavior "release_commenter" "releases" {
   message = <<-EOF
     This has been released in [version ${var.release_version} of the Terraform AWS provider](${var.changelog_link}). Please see the [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#provider-versions) or reach out if you need any assistance upgrading.
 
-    For further feature requests or bug reports with this functionality, please create a [new GitHub issue](https://github.com/terraform-providers/terraform-provider-aws/issues/new/choose) following the template for triage. Thanks!
+    For further feature requests or bug reports with this functionality, please create a [new GitHub issue](https://github.com/hashicorp/terraform-provider-aws/issues/new/choose) following the template for triage. Thanks!
   EOF
 }
 
@@ -202,6 +202,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/codestar" = [
       "aws_codestar_",
     ],
+    "service/codestarconnections" = [
+      "aws_codestarconnections_",
+    ],
     "service/codestarnotifications" = [
       "aws_codestarnotifications_",
     ],
@@ -307,6 +310,10 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/emr" = [
       "aws_emr_",
     ],
+    "service/eventbridge" = [
+      # EventBridge is rebranded CloudWatch Events
+      "aws_cloudwatch_event_",
+    ],
     "service/firehose" = [
       "aws_kinesis_firehose_",
     ],
@@ -391,6 +398,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/macie" = [
       "aws_macie_",
+    ],
+    "service/macie2" = [
+      "aws_macie2_",
     ],
     "service/marketplacecatalog" = [
       "aws_marketplace_catalog_",
@@ -487,6 +497,10 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/s3control" = [
       "aws_s3_account_",
+      "aws_s3control_",
+    ],
+    "service/s3outposts" = [
+      "aws_s3outposts_",
     ],
     "service/sagemaker" = [
       "aws_sagemaker_",
@@ -545,6 +559,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/synthetics" = [
       "aws_synthetics_",
     ],
+    "service/timestreamwrite" = [
+      "aws_timestreamwrite_",
+    ],
     "service/transfer" = [
       "aws_transfer_",
     ],
@@ -599,7 +616,6 @@ behavior "pull_request_path_labeler" "service_labels" {
       "GNUmakefile",
       "infrastructure/**/*",
       "main.go",
-      "renovate.json",
       "website/docs/index.html.markdown",
       "website/**/arn*",
       "website/**/ip_ranges*",
@@ -608,7 +624,6 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "dependencies" = [
       ".github/dependabot.yml",
-      "renovate.json",
     ]
     "documentation" = [
       "docs/**/*",
@@ -805,6 +820,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/codestar/**/*",
       "**/*_codestar_*",
       "**/codestar_*"
+    ]
+    "service/codestarconnections" = [
+      "aws/internal/service/codestarconnections/**/*",
+      "**/*_codestarconnections_*",
+      "**/codestarconnections_*"
     ]
     "service/codestarnotifications" = [
       "aws/internal/service/codestarnotifications/**/*",
@@ -1026,6 +1046,12 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_emr_*",
       "**/emr_*"
     ]
+    "service/eventbridge" = [
+      # EventBridge is rebranded CloudWatch Events
+      "aws/internal/service/cloudwatchevents/**/*",
+      "**/*_cloudwatch_event_*",
+      "**/cloudwatch_event_*"
+    ]
     "service/firehose" = [
       "aws/internal/service/firehose/**/*",
       "**/*_firehose_*",
@@ -1160,6 +1186,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/macie/**/*",
       "**/*_macie_*",
       "**/macie_*"
+    ]
+    "service/macie2" = [
+      "aws/internal/service/macie2/**/*",
+      "**/*_macie2_*",
+      "**/macie2_*"
     ]
     "service/marketplacecatalog" = [
       "aws/internal/service/marketplacecatalog/**/*",
@@ -1323,7 +1354,14 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/s3control" = [
       "aws/internal/service/s3control/**/*",
       "**/*_s3_account_*",
-      "**/s3_account_*"
+      "**/s3_account_*",
+      "**/*_s3control_*",
+      "**/s3control_*"
+    ]
+    "service/s3outposts" = [
+      "aws/internal/service/s3outposts/**/*",
+      "**/*_s3outposts_*",
+      "**/s3outposts_*"
     ]
     "service/sagemaker" = [
       "aws/internal/service/sagemaker/**/*",
@@ -1420,6 +1458,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_synthetics_*",
       "**/synthetics_*"
     ]
+    "service/timestreamwrite" = [
+      "aws/internal/service/timestreamwrite/**/*",
+      "**/*_timestreamwrite_*",
+      "**/timestreamwrite_*"
+    ]
     "service/transfer" = [
       "aws/internal/service/transfer/**/*",
       "**/*_transfer_*",
@@ -1464,4 +1507,44 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/xray_*"
     ]
   }
+}
+
+behavior "regexp_issue_labeler" "panic_label" {
+    regexp = "panic:"
+    labels = ["crash", "bug"]
+}
+
+behavior "remove_labels_on_reply" "remove_stale" {
+    labels = ["waiting-response", "stale"]
+    only_non_maintainers = true
+}
+
+behavior "pull_request_size_labeler" "size" {
+    label_prefix = "size/"
+    label_map = {
+        "size/XS" = {
+            from = 0
+            to = 30
+        }
+        "size/S" = {
+            from = 31
+            to = 60
+        }
+        "size/M" = {
+            from = 61
+            to = 150
+        }
+        "size/L" = {
+            from = 151
+            to = 300
+        }
+        "size/XL" = {
+            from = 301
+            to = 1000
+        }
+        "size/XXL" = {
+            from = 1001
+            to = 0
+        }
+    }
 }

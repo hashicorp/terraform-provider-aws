@@ -111,7 +111,7 @@ func TestAccAWSSESDomainIdentity_disappears(t *testing.T) {
 }
 
 // TestAccAWSSESDomainIdentity_trailingPeriod updated in 3.0 to account for domain plan-time validation
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13510
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13510
 func TestAccAWSSESDomainIdentity_trailingPeriod(t *testing.T) {
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com.",

@@ -165,7 +165,7 @@ func TestAccAWSVpc_ignoreTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{

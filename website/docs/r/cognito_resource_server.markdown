@@ -61,7 +61,7 @@ The following arguments are supported:
 * `scope_name` - (Required) The scope name.
 * `scope_description` - (Required) The scope description.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to the arguments, which are exported, the following attributes are exported:
 

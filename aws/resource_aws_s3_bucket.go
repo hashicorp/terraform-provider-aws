@@ -28,6 +28,19 @@ import (
 
 const s3BucketCreationTimeout = 2 * time.Minute
 
+// These should be defined in the AWS SDK for Go. There is an open issue https://github.com/aws/aws-sdk-go/issues/2683
+const (
+	BucketCannedACLAwsExecRead      = "aws-exec-read"
+	BucketCannedACLLogDeliveryWrite = "log-delivery-write"
+)
+
+func BucketCannedACL_Values() []string {
+	result := s3.BucketCannedACL_Values()
+	result = appendUniqueString(result, BucketCannedACLAwsExecRead)
+	result = appendUniqueString(result, BucketCannedACLLogDeliveryWrite)
+	return result
+}
+
 func resourceAwsS3Bucket() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsS3BucketCreate,
@@ -76,14 +89,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 				Default:       "private",
 				Optional:      true,
 				ConflictsWith: []string{"grant"},
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.BucketCannedACLPrivate,
-					s3.BucketCannedACLPublicRead,
-					s3.BucketCannedACLPublicReadWrite,
-					s3.BucketCannedACLAWSExecRead,
-					s3.BucketCannedACLAuthenticatedRead,
-					s3.BucketCannedACLLogDeliveryWrite,
-				}, false),
+				ValidateFunc:  validation.StringInSlice(BucketCannedACL_Values(), false),
 			},
 
 			"grant": {
@@ -2268,7 +2274,8 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 		// we explicitly pass a default ExpiredObjectDeleteMarker value to be able to create
 		// the rule while keeping the policy unaffected if the conditions are not met.
 		if rule.Expiration == nil && rule.NoncurrentVersionExpiration == nil &&
-			rule.Transitions == nil && rule.NoncurrentVersionTransitions == nil {
+			rule.Transitions == nil && rule.NoncurrentVersionTransitions == nil &&
+			rule.AbortIncompleteMultipartUpload == nil {
 			rule.Expiration = &s3.LifecycleExpiration{ExpiredObjectDeleteMarker: aws.Bool(false)}
 		}
 

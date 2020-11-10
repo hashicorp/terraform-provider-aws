@@ -261,7 +261,7 @@ func TestAccAwsDxGatewayAssociation_basicVpnGatewayCrossAccount(t *testing.T) {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -340,7 +340,7 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewayCrossAccount(t *testing.T
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -441,7 +441,7 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewayCrossAccount(t *tes
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{

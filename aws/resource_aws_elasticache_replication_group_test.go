@@ -925,7 +925,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_elasticache_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_elasticache_replication_group" "test" {
@@ -1639,7 +1639,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_elasticache_subnet_group" "test" {
   name       = "%[1]s"
-  subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_elasticache_replication_group" "test" {

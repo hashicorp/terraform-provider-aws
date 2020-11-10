@@ -22,7 +22,7 @@ resource "aws_lb" "test" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.lb_sg.id]
-  subnets            = [aws_subnet.public.*.id]
+  subnets            = aws_subnet.public.*.id
 
   enable_deletion_protection = true
 
@@ -45,7 +45,7 @@ resource "aws_lb" "test" {
   name               = "test-lb-tf"
   internal           = false
   load_balancer_type = "network"
-  subnets            = [aws_subnet.public.*.id]
+  subnets            = aws_subnet.public.*.id
 
   enable_deletion_protection = true
 

@@ -199,7 +199,7 @@ func TestAccAWSKmsKey_Policy_IamRole(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/7646
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7646
 func TestAccAWSKmsKey_Policy_IamServiceLinkedRole(t *testing.T) {
 	var key kms.KeyMetadata
 	rName := acctest.RandomWithPrefix("tf-acc-test")

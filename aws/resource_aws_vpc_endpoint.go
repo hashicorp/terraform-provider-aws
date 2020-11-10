@@ -16,6 +16,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
+const (
+	// Maximum amount of time to wait for VPC Endpoint creation
+	Ec2VpcEndpointCreationTimeout = 10 * time.Minute
+)
+
 func resourceAwsVpcEndpoint() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsVpcEndpointCreate,
@@ -139,7 +144,7 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(Ec2VpcEndpointCreationTimeout),
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},

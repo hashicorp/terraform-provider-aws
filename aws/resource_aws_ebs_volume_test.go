@@ -319,7 +319,7 @@ func TestAccAWSEBSVolume_NoIops(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/12667
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
 func TestAccAWSEBSVolume_InvalidIopsForType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{

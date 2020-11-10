@@ -69,12 +69,12 @@ func TestLBCloudwatchSuffixFromARN(t *testing.T) {
 	}{
 		{
 			name:   "valid suffix",
-			arn:    aws.String(`arn:aws:elasticloadbalancing:us-east-1:123456:loadbalancer/app/my-alb/abc123`),
+			arn:    aws.String(`arn:aws:elasticloadbalancing:us-east-1:123456:loadbalancer/app/my-alb/abc123`), //lintignore:AWSAT003,AWSAT005
 			suffix: `app/my-alb/abc123`,
 		},
 		{
 			name:   "no suffix",
-			arn:    aws.String(`arn:aws:elasticloadbalancing:us-east-1:123456:loadbalancer`),
+			arn:    aws.String(`arn:aws:elasticloadbalancing:us-east-1:123456:loadbalancer`), //lintignore:AWSAT003,AWSAT005
 			suffix: ``,
 		},
 		{
@@ -1585,7 +1585,7 @@ resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = [aws_subnet.alb_test[0].id, aws_subnet.alb_test[1].id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1853,7 +1853,7 @@ resource "aws_route_table" "public" {
 
 resource "aws_route_table_association" "a" {
   count          = length(data.aws_availability_zones.available.names)
-  subnet_id      = aws_subnet.public.*.id[count.index]
+  subnet_id      = aws_subnet.public[*].id[count.index]
   route_table_id = aws_route_table.public.id
 }
 
@@ -1862,13 +1862,13 @@ resource "aws_lb" "lb_test" {
   load_balancer_type = "network"
 
   subnet_mapping {
-    subnet_id     = aws_subnet.public.0.id
-    allocation_id = aws_eip.lb.0.id
+    subnet_id     = aws_subnet.public[0].id
+    allocation_id = aws_eip.lb[0].id
   }
 
   subnet_mapping {
-    subnet_id     = aws_subnet.public.1.id
-    allocation_id = aws_eip.lb.1.id
+    subnet_id     = aws_subnet.public[1].id
+    allocation_id = aws_eip.lb[1].id
   }
 
   depends_on = [aws_internet_gateway.default]
@@ -2143,7 +2143,7 @@ resource "aws_lb" "lb_test" {
   }
 }
 
-# See https://github.com/terraform-providers/terraform-provider-aws/issues/2498
+# See https://github.com/hashicorp/terraform-provider-aws/issues/2498
 output "lb_name" {
   value = aws_lb.lb_test.name
 }
