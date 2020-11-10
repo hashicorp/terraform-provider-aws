@@ -118,7 +118,7 @@ func TestAccAWSDefaultSecurityGroup_Classic_basic(t *testing.T) {
 						"cidr_blocks.0": "10.0.0.0/8",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
-					testAccCheckAWSDefaultSecurityGroupARN(resourceName, &group),
+					testAccCheckAWSDefaultSecurityGroupARNEc2Classic(resourceName, &group),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-acc-test"),
@@ -233,6 +233,12 @@ func testAccCheckAWSDefaultSecurityGroupEc2ClassicExists(n string, group *ec2.Se
 }
 
 func testAccCheckAWSDefaultSecurityGroupARN(resourceName string, group *ec2.SecurityGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ec2", fmt.Sprintf("security-group/%s", aws.StringValue(group.GroupId)))(s)
+	}
+}
+
+func testAccCheckAWSDefaultSecurityGroupARNEc2Classic(resourceName string, group *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return testAccCheckResourceAttrRegionalARNEc2Classic(resourceName, "arn", "ec2", fmt.Sprintf("security-group/%s", aws.StringValue(group.GroupId)))(s)
 	}
