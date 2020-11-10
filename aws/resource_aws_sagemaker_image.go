@@ -205,7 +205,7 @@ func resourceAwsSagemakerImageDelete(d *schema.ResourceData, meta interface{}) e
 		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "No Image with the name") {
 			return nil
 		}
-		return fmt.Errorf("error waiting for sagemaker image (%s) to delete: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for SageMaker Image (%s) to delete: %w", d.Id(), err)
 
 	}
 
