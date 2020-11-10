@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -403,81 +402,4 @@ func resourceAwsCloudFormationStackDelete(d *schema.ResourceData, meta interface
 	log.Printf("[INFO] CloudFormation stack (%s) deleted", d.Id())
 
 	return nil
-}
-
-// TODO: remove
-func cfStackStateRefresh(conn *cloudformation.CloudFormation, stackId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeStacks(&cloudformation.DescribeStacksInput{
-			StackName: aws.String(stackId),
-		})
-		if err != nil {
-			return nil, "", fmt.Errorf("error describing CloudFormation stacks: %s", err)
-		}
-
-		n := len(resp.Stacks)
-		switch n {
-		case 0:
-			return "", cloudformation.StackStatusDeleteComplete, nil
-
-		case 1:
-			stack := resp.Stacks[0]
-			return stack, aws.StringValue(stack.StackStatus), nil
-
-		default:
-			return nil, "", fmt.Errorf("found %d CloudFormation stacks for %s, expected 1", n, stackId)
-		}
-	}
-}
-
-// TODO: remove
-func waitForCloudFormationStackCreation(conn *cloudformation.CloudFormation, stackId string, timeout time.Duration) (string, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			cloudformation.StackStatusCreateInProgress,
-			cloudformation.StackStatusDeleteInProgress,
-			cloudformation.StackStatusRollbackInProgress,
-		},
-		Target: []string{
-			cloudformation.StackStatusCreateComplete,
-			cloudformation.StackStatusCreateFailed,
-			cloudformation.StackStatusDeleteComplete,
-			cloudformation.StackStatusDeleteFailed,
-			cloudformation.StackStatusRollbackComplete,
-			cloudformation.StackStatusRollbackFailed,
-		},
-		Refresh:    cfStackStateRefresh(conn, stackId),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-
-	v, err := stateConf.WaitForState()
-	if err != nil {
-		return "", err
-	}
-
-	return aws.StringValue(v.(*cloudformation.Stack).StackStatus), nil
-}
-
-// TODO: remove
-func waitForCloudFormationStackDeletion(conn *cloudformation.CloudFormation, stackId string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			cloudformation.StackStatusDeleteInProgress,
-			cloudformation.StackStatusRollbackInProgress,
-		},
-		Target: []string{
-			cloudformation.StackStatusDeleteComplete,
-			cloudformation.StackStatusDeleteFailed,
-		},
-		Refresh:    cfStackStateRefresh(conn, stackId),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
 }
