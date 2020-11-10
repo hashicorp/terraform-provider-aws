@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"strings"
@@ -11,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -170,7 +168,6 @@ func resourceAwsApiGatewayV2Stage() *schema.Resource {
 						},
 					},
 				},
-				Set: apiGatewayV2RouteSettingsHash,
 			},
 			"stage_variables": {
 				Type:     schema.TypeMap,
@@ -536,7 +533,7 @@ func expandApiGatewayV2RouteSettings(vSettings *schema.Set, protocolType string)
 	return settings
 }
 
-func flattenApiGatewayV2RouteSettings(settings map[string]*apigatewayv2.RouteSettings) *schema.Set {
+func flattenApiGatewayV2RouteSettings(settings map[string]*apigatewayv2.RouteSettings) []interface{} {
 	vSettings := []interface{}{}
 
 	for k, routeSetting := range settings {
@@ -550,32 +547,5 @@ func flattenApiGatewayV2RouteSettings(settings map[string]*apigatewayv2.RouteSet
 		})
 	}
 
-	return schema.NewSet(apiGatewayV2RouteSettingsHash, vSettings)
-}
-
-func apiGatewayV2RouteSettingsHash(vSettings interface{}) int {
-	var buf bytes.Buffer
-
-	mSettings := vSettings.(map[string]interface{})
-
-	if v, ok := mSettings["route_key"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	if v, ok := mSettings["data_trace_enabled"].(bool); ok {
-		buf.WriteString(fmt.Sprintf("%t-", v))
-	}
-	if v, ok := mSettings["detailed_metrics_enabled"].(bool); ok {
-		buf.WriteString(fmt.Sprintf("%t-", v))
-	}
-	if v, ok := mSettings["logging_level"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	if v, ok := mSettings["throttling_burst_limit"].(int); ok {
-		buf.WriteString(fmt.Sprintf("%d-", v))
-	}
-	if v, ok := mSettings["throttling_rate_limit"].(float64); ok {
-		buf.WriteString(fmt.Sprintf("%g-", v))
-	}
-
-	return hashcode.String(buf.String())
+	return vSettings
 }
