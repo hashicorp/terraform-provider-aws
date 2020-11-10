@@ -89,7 +89,7 @@ func resourceAwsSagemakerImageCreate(d *schema.ResourceData, meta interface{}) e
 	d.SetId(name)
 
 	if _, err := waiter.ImageCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for sagemaker image (%s) to create: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for SageMaker Image (%s) to create: %w", d.Id(), err)
 	}
 
 	return resourceAwsSagemakerImageRead(d, meta)
@@ -120,7 +120,7 @@ func resourceAwsSagemakerImageRead(d *schema.ResourceData, meta interface{}) err
 	tags, err := keyvaluetags.SagemakerListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Sagemaker Image (%s): %w", d.Id(), err)
+		return fmt.Errorf("error listing tags for SageMaker Image (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
@@ -172,7 +172,7 @@ func resourceAwsSagemakerImageUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if _, err := waiter.ImageCreated(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for sagemaker image (%s) to update: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for SageMaker Image (%s) to update: %w", d.Id(), err)
 		}
 	}
 
@@ -180,7 +180,7 @@ func resourceAwsSagemakerImageUpdate(d *schema.ResourceData, meta interface{}) e
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Sagemaker Image (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating SageMaker Image (%s) tags: %s", d.Id(), err)
 		}
 	}
 
