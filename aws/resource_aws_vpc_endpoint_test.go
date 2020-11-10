@@ -1163,9 +1163,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  availability_zone       = data.aws_availability_zones.available.names[0]
-  cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 2, 0)
-  vpc_id                  = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 0)
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test-load-balancer"
