@@ -207,7 +207,6 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 			"capacity_rebalance": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 
 			"desired_capacity": {
