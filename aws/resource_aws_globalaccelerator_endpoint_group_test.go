@@ -241,6 +241,71 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_MultiRegion(t *testing.T) {
 	})
 }
 
+func TestAccAwsGlobalAcceleratorEndpointGroup_PortOverrides(t *testing.T) {
+	var v globalaccelerator.EndpointGroup
+	resourceName := "aws_globalaccelerator_endpoint_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlobalAcceleratorEndpointGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalAcceleratorEndpointGroupConfigPortOverrides(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName, &v),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_path", ""),
+					resource.TestCheckResourceAttr(resourceName, "health_check_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "TCP"),
+					testAccMatchResourceAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
+					resource.TestCheckResourceAttr(resourceName, "port_override.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_override.*", map[string]string{
+						"endpoint_port": "8081",
+						"listener_port": "81",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "threshold_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "100"),
+				),
+			},
+			{
+				Config: testAccGlobalAcceleratorEndpointGroupConfigPortOverridesUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalAcceleratorEndpointGroupExists(resourceName, &v),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", testAccGetRegion()),
+					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_path", ""),
+					resource.TestCheckResourceAttr(resourceName, "health_check_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "TCP"),
+					testAccMatchResourceAttrGlobalARN(resourceName, "listener_arn", "globalaccelerator", regexp.MustCompile(`accelerator/[^/]+/listener/[^/]+`)),
+					resource.TestCheckResourceAttr(resourceName, "port_override.#", "2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_override.*", map[string]string{
+						"endpoint_port": "8081",
+						"listener_port": "81",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_override.*", map[string]string{
+						"endpoint_port": "9090",
+						"listener_port": "90",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "threshold_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "100"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsGlobalAcceleratorEndpointGroup_TCPHealthCheckProtocol(t *testing.T) {
 	var v globalaccelerator.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
@@ -681,6 +746,71 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
   traffic_dial_percentage       = 0
 }
 `, rName, testAccGetAlternateRegion()))
+}
+
+func testAccGlobalAcceleratorEndpointGroupConfigPortOverrides(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_globalaccelerator_accelerator" "test" {
+  name            = %[1]q
+  ip_address_type = "IPV4"
+  enabled         = false
+}
+
+resource "aws_globalaccelerator_listener" "test" {
+  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  protocol        = "TCP"
+
+  port_range {
+    from_port = 80
+    to_port   = 90
+  }
+}
+
+resource "aws_globalaccelerator_endpoint_group" "test" {
+  listener_arn = aws_globalaccelerator_listener.test.id
+
+  health_check_port = 80
+
+  port_override {
+    endpoint_port = 8081
+    listener_port = 81
+  }
+}
+`, rName)
+}
+
+func testAccGlobalAcceleratorEndpointGroupConfigPortOverridesUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_globalaccelerator_accelerator" "test" {
+  name            = %[1]q
+  ip_address_type = "IPV4"
+  enabled         = false
+}
+
+resource "aws_globalaccelerator_listener" "test" {
+  accelerator_arn = aws_globalaccelerator_accelerator.test.id
+  protocol        = "TCP"
+
+  port_range {
+    from_port = 80
+    to_port   = 90
+  }
+}
+
+resource "aws_globalaccelerator_endpoint_group" "test" {
+  listener_arn = aws_globalaccelerator_listener.test.id
+
+  port_override {
+    endpoint_port = 8081
+    listener_port = 81
+  }
+
+  port_override {
+    endpoint_port = 9090
+    listener_port = 90
+  }
+}
+`, rName)
 }
 
 func testAccGlobalAcceleratorEndpointGroupConfigTcpHealthCheckProtocol(rName string) string {
