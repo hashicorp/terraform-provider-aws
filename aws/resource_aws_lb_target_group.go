@@ -347,6 +347,7 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 			}
 
 			m := healthCheck["matcher"].(string)
+			protocolVersion := d.Get("protocol_version").(string)
 			if m != "" {
 				if protocolVersion == "GRPC" {
 					params.Matcher = &elbv2.Matcher{
