@@ -178,7 +178,7 @@ resource "aws_backup_vault" "test" {
 }
 
 resource "aws_backup_vault_policy" "test" {
-  backup_vault_name   = aws_backup_vault.test.name
+  backup_vault_name = aws_backup_vault.test.name
 
   policy = <<POLICY
 {
@@ -217,7 +217,7 @@ resource "aws_backup_vault" "test" {
 }
 
 resource "aws_backup_vault_policy" "test" {
-  backup_vault_name   = aws_backup_vault.test.name
+  backup_vault_name = aws_backup_vault.test.name
 
   policy = <<POLICY
 {
