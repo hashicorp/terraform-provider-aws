@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -204,31 +204,27 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 		StackName: aws.String(d.Id()),
 	}
 	resp, err := conn.DescribeStacks(input)
+	if tfawserr.ErrCodeEquals(err, "ValidationError") {
+		log.Printf("[WARN] CloudFormation stack (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		awsErr, ok := err.(awserr.Error)
-		// ValidationError: Stack with id % does not exist
-		if ok && awsErr.Code() == "ValidationError" {
-			log.Printf("[WARN] Removing CloudFormation stack %s as it's already gone", d.Id())
-			d.SetId("")
-			return nil
-		}
-
 		return err
 	}
 
 	stacks := resp.Stacks
 	if len(stacks) < 1 {
-		log.Printf("[WARN] Removing CloudFormation stack %s as it's already gone", d.Id())
+		log.Printf("[WARN] CloudFormation stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
-	for _, s := range stacks {
-		if aws.StringValue(s.StackId) == d.Id() && *s.StackStatus == cloudformation.StackStatusDeleteComplete {
-			log.Printf("[DEBUG] Removing CloudFormation stack %s"+
-				" as it has been already deleted", d.Id())
-			d.SetId("")
-			return nil
-		}
+
+	stack := stacks[0]
+	if aws.StringValue(stack.StackStatus) == cloudformation.StackStatusDeleteComplete {
+		log.Printf("[WARN] CloudFormation stack (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	tInput := cloudformation.GetTemplateInput{
@@ -246,7 +242,6 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 	}
 	d.Set("template_body", template)
 
-	stack := stacks[0]
 	log.Printf("[DEBUG] Received CloudFormation stack: %s", stack)
 
 	d.Set("name", stack.StackName)
@@ -349,21 +344,15 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 
 	log.Printf("[DEBUG] Updating CloudFormation stack: %s", input)
 	_, err := conn.UpdateStack(input)
-	if err != nil {
-		awsErr, ok := err.(awserr.Error)
-		// ValidationError: No updates are to be performed.
-		if !ok ||
-			awsErr.Code() != "ValidationError" ||
-			awsErr.Message() != "No updates are to be performed." {
-			return err
-		}
-
+	if tfawserr.ErrMessageContains(err, "ValidationError", "No updates are to be performed.") {
 		log.Printf("[DEBUG] Current CloudFormation stack has no updates")
+	} else if err != nil {
+		return fmt.Errorf("error updating CloudFormation stack (%s): %w", d.Id(), err)
 	}
 
 	_, err = waiter.StackUpdated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
-		return err
+		return fmt.Errorf("error waiting for CloudFormation Stack update: %w", err)
 	}
 
 	log.Printf("[INFO] CloudFormation stack (%s) updated", d.Id())
@@ -381,22 +370,16 @@ func resourceAwsCloudFormationStackDelete(d *schema.ResourceData, meta interface
 	}
 	log.Printf("[DEBUG] Deleting CloudFormation stack %s", input)
 	_, err := conn.DeleteStack(input)
+	if tfawserr.ErrCodeEquals(err, "ValidationError") {
+		return nil
+	}
 	if err != nil {
-		awsErr, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-
-		if awsErr.Code() == "ValidationError" {
-			// Ignore stack which has been already deleted
-			return nil
-		}
 		return err
 	}
 
 	_, err = waiter.StackDeleted(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		return err
+		return fmt.Errorf("error waiting for CloudFormation Stack deletion: %w", err)
 	}
 
 	log.Printf("[INFO] CloudFormation stack (%s) deleted", d.Id())
