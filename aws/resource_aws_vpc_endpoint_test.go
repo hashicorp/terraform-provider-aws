@@ -1188,10 +1188,10 @@ resource "aws_vpc_endpoint_service" "test" {
 }
 
 resource "aws_vpc_endpoint" "test" {
-  service_name       = aws_vpc_endpoint_service.test.service_name
-  subnet_ids         = [aws_subnet.test.id]
-  vpc_endpoint_type  = aws_vpc_endpoint_service.test.service_type
-  vpc_id             = aws_vpc.test.id
+  service_name      = aws_vpc_endpoint_service.test.service_name
+  subnet_ids        = [aws_subnet.test.id]
+  vpc_endpoint_type = aws_vpc_endpoint_service.test.service_type
+  vpc_id            = aws_vpc.test.id
 }
 `, rName))
 }
