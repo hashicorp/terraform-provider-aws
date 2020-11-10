@@ -285,16 +285,6 @@ func suppressIfTargetType(t string) schema.SchemaDiffSuppressFunc {
 	}
 }
 
-//
-//func defaultProtocolValue() schema.SchemaDefaultFunc {
-//	return func(d *schema.ResourceData) (interface{}, error) {
-//		if d.Get("protocol").(string) == "HTTP" || d.Get("protocol").(string) == "HTTPS" {
-//			return "HTTP1", nil
-//		}
-//		return nil, nil
-//	}
-//}
-
 func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
 
