@@ -79,6 +79,31 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				}, true),
 			},
 
+			"protocol_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  "HTTP1",
+				StateFunc: func(v interface{}) string {
+					return strings.ToUpper(v.(string))
+				},
+				ValidateFunc: validation.StringInSlice([]string{
+					"GRPC",
+					"HTTP1",
+					"HTTP2",
+				}, true),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if d.Get("target_type").(string) == elbv2.TargetTypeEnumLambda {
+						return true
+					}
+					switch d.Get("protocol").(string) {
+					case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+						return false
+					}
+					return true
+				},
+			},
+
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -299,8 +324,22 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 		if _, ok := d.GetOk("vpc_id"); !ok {
 			return fmt.Errorf("vpc_id should be set when target type is %s", d.Get("target_type").(string))
 		}
+
 		params.Port = aws.Int64(int64(d.Get("port").(int)))
 		params.Protocol = aws.String(d.Get("protocol").(string))
+
+		if d.Get("protocol").(string) == "HTTP" || d.Get("protocol").(string) == "HTTPS" {
+			if _, ok := d.GetOk("protocol_version"); ok {
+				params.ProtocolVersion = aws.String(d.Get("protocol_version").(string))
+			} else {
+				params.ProtocolVersion = aws.String("HTTP1")
+			}
+		} else {
+			if _, ok := d.GetOk("protocol_version"); ok {
+				return fmt.Errorf("protocol_version should not be set when protocol is %s", d.Get("protocol").(string))
+			}
+		}
+
 		params.VpcId = aws.String(d.Get("vpc_id").(string))
 	}
 
@@ -326,9 +365,16 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 			}
 
 			m := healthCheck["matcher"].(string)
+			protocolVersion := d.Get("protocol_version").(string)
 			if m != "" {
-				params.Matcher = &elbv2.Matcher{
-					HttpCode: aws.String(m),
+				if protocolVersion == "GRPC" {
+					params.Matcher = &elbv2.Matcher{
+						GrpcCode: aws.String(m),
+					}
+				} else {
+					params.Matcher = &elbv2.Matcher{
+						HttpCode: aws.String(m),
+					}
 				}
 			}
 		}
@@ -405,10 +451,16 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 			}
 
 			healthCheckProtocol := healthCheck["protocol"].(string)
-
+			protocolVersion := d.Get("protocol_version").(string)
 			if healthCheckProtocol != elbv2.ProtocolEnumTcp && !d.IsNewResource() {
-				params.Matcher = &elbv2.Matcher{
-					HttpCode: aws.String(healthCheck["matcher"].(string)),
+				if protocolVersion == "GRPC" {
+					params.Matcher = &elbv2.Matcher{
+						GrpcCode: aws.String(healthCheck["matcher"].(string)),
+					}
+				} else {
+					params.Matcher = &elbv2.Matcher{
+						HttpCode: aws.String(healthCheck["matcher"].(string)),
+					}
 				}
 				params.HealthCheckPath = aws.String(healthCheck["path"].(string))
 				params.HealthCheckIntervalSeconds = aws.Int64(int64(healthCheck["interval"].(int)))
@@ -634,10 +686,14 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	if targetGroup.Matcher != nil && targetGroup.Matcher.HttpCode != nil {
 		healthCheck["matcher"] = aws.StringValue(targetGroup.Matcher.HttpCode)
 	}
+	if targetGroup.Matcher != nil && targetGroup.Matcher.GrpcCode != nil {
+		healthCheck["matcher"] = aws.StringValue(targetGroup.Matcher.GrpcCode)
+	}
 	if v, _ := d.Get("target_type").(string); v != elbv2.TargetTypeEnumLambda {
 		d.Set("vpc_id", targetGroup.VpcId)
 		d.Set("port", targetGroup.Port)
 		d.Set("protocol", targetGroup.Protocol)
+		d.Set("protocol_version", targetGroup.ProtocolVersion)
 	}
 
 	if err := d.Set("health_check", []interface{}{healthCheck}); err != nil {
