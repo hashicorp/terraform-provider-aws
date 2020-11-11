@@ -2660,9 +2660,7 @@ resource "aws_rds_cluster" "default" {
 }
 
 func testAccAWSClusterConfig_pointInTimeRestoreSource(parentId, childId string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
-
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier   = "%[1]s"
   master_username      = "root"
@@ -2704,7 +2702,7 @@ resource "aws_rds_cluster" "restored_pit" {
     use_latest_restorable_time = true
   }
 }
-`, parentId, childId)
+`, parentId, childId))
 }
 
 func testAccAWSClusterConfigTags1(rName, tagKey1, tagValue1 string) string {
