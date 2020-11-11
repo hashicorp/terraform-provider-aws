@@ -121,6 +121,7 @@ func resourceAwsMskCluster() *schema.Resource {
 									},
 								},
 							},
+							ConflictsWith: []string{"client_authentication.0.tls"},
 						},
 					},
 				},

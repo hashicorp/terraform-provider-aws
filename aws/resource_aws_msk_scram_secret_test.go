@@ -86,6 +86,39 @@ func TestAccAwsMskScramSecret_UpdateRemove(t *testing.T) {
 	})
 }
 
+func TestAwsMskFilterNewSecrets(t *testing.T) {
+	expected := []string{"AmazonMSK_test_aws_example_test_tf-test-5-I50lRm"}
+
+	result := filterMskNewSecrets(newSecrets, existingSecrets)
+	if !reflect.DeepEqual(expected, aws.StringValueSlice(result)) {
+		t.Fatalf("Expected secret list to be %v, got %v", expected, aws.StringValueSlice(result))
+	}
+}
+
+func TestAwsMskFilterExistingSecrets(t *testing.T) {
+	expected := []string{"AmazonMSK_test_aws_example_test_tf-test-2-jbuaA1"}
+
+	result := filterMskExistingSecrets(newSecrets, existingSecrets)
+	if !reflect.DeepEqual(expected, aws.StringValueSlice(result)) {
+		t.Fatalf("Expected secret list to be %v, got %v", expected, aws.StringValueSlice(result))
+	}
+}
+
+func TestAwsMskFilterDeletionSecrets(t *testing.T) {
+	expectedUpdate := []string{"AmazonMSK_test_aws_example_test_tf-test-5-I50lRm"}
+	expectedDelete := []string{"AmazonMSK_test_aws_example_test_tf-test-4-I50lRm"}
+
+	updated, deleted := filterMskSecretsForDeletion(newSecrets, existingSecrets)
+
+	if !reflect.DeepEqual(expectedUpdate, aws.StringValueSlice(updated)) {
+		t.Fatalf("Expected secret list to be %v, got %v", expectedUpdate, aws.StringValueSlice(updated))
+	}
+
+	if !reflect.DeepEqual(expectedDelete, aws.StringValueSlice(deleted)) {
+		t.Fatalf("Expected secret list to be %v, got %v", expectedDelete, aws.StringValueSlice(deleted))
+	}
+}
+
 func testAccCheckAwsSaslScramSecretsDontExist(resourceName string, count int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -109,39 +142,6 @@ func testAccCheckAwsSaslScramSecretsDestruction(resourceName string) resource.Te
 		}
 
 		return nil
-	}
-}
-
-func TestAwsMskFilterNewSecrets(t *testing.T) {
-	expected := []string{"AmazonMSK_test_aws_example_test_tf-test-5-I50lRm"}
-
-	result := filterNewSecrets(newSecrets, existingSecrets)
-	if !reflect.DeepEqual(expected, aws.StringValueSlice(result)) {
-		t.Fatalf("Expected secret list to be %v, got %v", expected, aws.StringValueSlice(result))
-	}
-}
-
-func TestAwsMskFilterExistingSecrets(t *testing.T) {
-	expected := []string{"AmazonMSK_test_aws_example_test_tf-test-2-jbuaA1"}
-
-	result := filterExistingSecrets(newSecrets, existingSecrets)
-	if !reflect.DeepEqual(expected, aws.StringValueSlice(result)) {
-		t.Fatalf("Expected secret list to be %v, got %v", expected, aws.StringValueSlice(result))
-	}
-}
-
-func TestAwsMskFilterDeletionSecrets(t *testing.T) {
-	expectedUpdate := []string{"AmazonMSK_test_aws_example_test_tf-test-5-I50lRm"}
-	expectedDelete := []string{"AmazonMSK_test_aws_example_test_tf-test-4-I50lRm"}
-
-	updated, deleted := filterSecretsForDeletion(newSecrets, existingSecrets)
-
-	if !reflect.DeepEqual(expectedUpdate, aws.StringValueSlice(updated)) {
-		t.Fatalf("Expected secret list to be %v, got %v", expectedUpdate, aws.StringValueSlice(updated))
-	}
-
-	if !reflect.DeepEqual(expectedDelete, aws.StringValueSlice(deleted)) {
-		t.Fatalf("Expected secret list to be %v, got %v", expectedDelete, aws.StringValueSlice(deleted))
 	}
 }
 

@@ -43,14 +43,14 @@ func resourceAwsMskScramSecret() *schema.Resource {
 func resourceAwsMskScramSecretCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kafkaconn
 
-	existingSecrets, err := readSecrets(conn, d.Get("cluster_arn").(string))
+	existingSecrets, err := readMSKClusterSecrets(conn, d.Get("cluster_arn").(string))
 	if err != nil {
 		return fmt.Errorf("failed lookup secrets %s", err)
 	}
 
-	createSecrets := filterNewSecrets(expandStringList(d.Get("secret_arn_list").([]interface{})), existingSecrets)
+	createSecrets := filterMskNewSecrets(expandStringList(d.Get("secret_arn_list").([]interface{})), existingSecrets)
 
-	out, err := associateSecrets(conn, d.Get("cluster_arn").(string), createSecrets)
+	out, err := associateMSKClusterSecrets(conn, d.Get("cluster_arn").(string), createSecrets)
 	if err != nil {
 		return fmt.Errorf("error associating credentials with MSK cluster: %s", err)
 	}
@@ -66,12 +66,12 @@ func resourceAwsMskScramSecretCreate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsMskScramSecretRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kafkaconn
 
-	scramSecrets, err := readSecrets(conn, d.Get("cluster_arn").(string))
+	scramSecrets, err := readMSKClusterSecrets(conn, d.Get("cluster_arn").(string))
 	if err != nil {
 		return fmt.Errorf("failed lookup secrets %s", err)
 	}
 
-	allSecrets := filterExistingSecrets(expandStringList(d.Get("secret_arn_list").([]interface{})), scramSecrets)
+	allSecrets := filterMskExistingSecrets(expandStringList(d.Get("secret_arn_list").([]interface{})), scramSecrets)
 
 	d.SetId(d.Get("cluster_arn").(string))
 	d.Set("arn", d.Get("cluster_arn").(string))
@@ -85,9 +85,9 @@ func resourceAwsMskScramSecretUpdate(d *schema.ResourceData, meta interface{}) e
 
 	existingSecrets := expandStringList(d.Get("scram_secrets").([]interface{}))
 
-	updateSecrets, deleteSecrets := filterSecretsForDeletion(expandStringList(d.Get("secret_arn_list").([]interface{})), existingSecrets)
+	updateSecrets, deleteSecrets := filterMskSecretsForDeletion(expandStringList(d.Get("secret_arn_list").([]interface{})), existingSecrets)
 
-	out, err := associateSecrets(conn, d.Get("cluster_arn").(string), updateSecrets)
+	out, err := associateMSKClusterSecrets(conn, d.Get("cluster_arn").(string), updateSecrets)
 	if err != nil {
 		return fmt.Errorf("error associating credentials with MSK cluster: %s", err)
 	}
@@ -127,7 +127,7 @@ func resourceAwsMskScramSecretDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func readSecrets(conn *kafka.Kafka, clusterArn string) ([]*string, error) {
+func readMSKClusterSecrets(conn *kafka.Kafka, clusterArn string) ([]*string, error) {
 	input := &kafka.ListScramSecretsInput{
 		ClusterArn: aws.String(clusterArn),
 	}
@@ -145,7 +145,7 @@ func readSecrets(conn *kafka.Kafka, clusterArn string) ([]*string, error) {
 	return scramSecrets, nil
 }
 
-func associateSecrets(conn *kafka.Kafka, clusterArn string, secretArnList []*string) (*kafka.BatchAssociateScramSecretOutput, error) {
+func associateMSKClusterSecrets(conn *kafka.Kafka, clusterArn string, secretArnList []*string) (*kafka.BatchAssociateScramSecretOutput, error) {
 	batch := 10
 
 	output := &kafka.BatchAssociateScramSecretOutput{}
@@ -171,7 +171,7 @@ func associateSecrets(conn *kafka.Kafka, clusterArn string, secretArnList []*str
 	return output, nil
 }
 
-func filterExistingSecrets(existingSecrets, newSecrets []*string) []*string {
+func filterMskExistingSecrets(existingSecrets, newSecrets []*string) []*string {
 	finalSecrets := []*string{}
 	for _, existingSecret := range existingSecrets {
 		if contains(newSecrets, existingSecret) {
@@ -181,7 +181,7 @@ func filterExistingSecrets(existingSecrets, newSecrets []*string) []*string {
 	return finalSecrets
 }
 
-func filterNewSecrets(existingSecrets, newSecrets []*string) []*string {
+func filterMskNewSecrets(existingSecrets, newSecrets []*string) []*string {
 	finalSecrets := []*string{}
 	for _, existingSecret := range existingSecrets {
 		if !contains(newSecrets, existingSecret) {
@@ -191,7 +191,7 @@ func filterNewSecrets(existingSecrets, newSecrets []*string) []*string {
 	return finalSecrets
 }
 
-func filterSecretsForDeletion(newSecrets, existingSecrets []*string) ([]*string, []*string) {
+func filterMskSecretsForDeletion(newSecrets, existingSecrets []*string) ([]*string, []*string) {
 	var updateSecrets, deleteSecrets []*string
 	for _, existingSecret := range existingSecrets {
 		if !contains(newSecrets, existingSecret) {
