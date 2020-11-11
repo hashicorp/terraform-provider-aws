@@ -2695,7 +2695,7 @@ resource "aws_db_subnet_group" "test" {
 resource "aws_rds_cluster" "restored_pit" {
   cluster_identifier  = "%s"
   skip_final_snapshot = true
-  engine              = "aurora-mysql"
+  engine              = aws_rds_cluster.test.engine
   restore_to_point_in_time {
     source_cluster_identifier  = aws_rds_cluster.test.cluster_identifier
     restore_type               = "full-copy"
