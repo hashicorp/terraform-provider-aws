@@ -308,7 +308,6 @@ func resourceAwsDbInstance() *schema.Resource {
 						"use_latest_restorable_time": {
 							Type:          schema.TypeBool,
 							Optional:      true,
-							Default:       false,
 							ConflictsWith: []string{"restore_to_point_in_time.0.restore_time"},
 						},
 					},
@@ -1956,7 +1955,7 @@ func expandRestoreToPointInTime(l []interface{}) *rds.RestoreDBInstanceToPointIn
 	if v, ok := tfMap["source_dbi_resource_id"].(string); ok && v != "" {
 		input.SourceDbiResourceId = aws.String(v)
 	}
-	if v, ok := tfMap["use_latest_restorable_time"].(bool); ok {
+	if v, ok := tfMap["use_latest_restorable_time"].(bool); ok && v {
 		input.UseLatestRestorableTime = aws.Bool(v)
 	}
 
