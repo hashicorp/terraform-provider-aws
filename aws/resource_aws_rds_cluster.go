@@ -706,7 +706,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			Tags:                      tags,
 		}
 
-		if v, ok := pointInTime["restore_to_time"].(string); ok {
+		if v, ok := pointInTime["restore_to_time"].(string); ok && v != "" {
 			restoreToTime, _ := time.Parse(time.RFC3339, v)
 			createOpts.RestoreToTime = aws.Time(restoreToTime)
 		}
@@ -794,9 +794,6 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		resp, err := conn.RestoreDBClusterToPointInTime(createOpts)
 		if err != nil {
 			log.Printf("[DEBUG]: RDS Cluster restore response: %s", resp)
-		}
-
-		if err != nil {
 			log.Printf("[ERROR] Error restoring RDS Cluster: %s", err)
 			return err
 		}
