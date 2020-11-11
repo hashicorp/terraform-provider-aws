@@ -1398,7 +1398,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("availability_zone", v.AvailabilityZone)
 	d.Set("backup_retention_period", v.BackupRetentionPeriod)
 	d.Set("backup_window", v.PreferredBackupWindow)
-	d.Set("latest_restorable_time", v.LatestRestorableTime.Format(time.RFC3339))
+	d.Set("latest_restorable_time", aws.TimeValue(v.LatestRestorableTime).Format(time.RFC3339))
 	d.Set("license_model", v.LicenseModel)
 	d.Set("maintenance_window", v.PreferredMaintenanceWindow)
 	d.Set("max_allocated_storage", v.MaxAllocatedStorage)
