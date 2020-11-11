@@ -706,7 +706,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			Tags:                      tags,
 		}
 
-		if v, ok := pointInTime["restore_in_time"].(string); ok {
+		if v, ok := pointInTime["restore_to_time"].(string); ok {
 			restoreToTime, _ := time.Parse(time.RFC3339, v)
 			createOpts.RestoreToTime = aws.Time(restoreToTime)
 		}
