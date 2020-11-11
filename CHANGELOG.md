@@ -2,7 +2,15 @@
 
 ENHANCEMENTS
 
+* data-source/aws_route_table: Add `route` `vpc_endpoint_id` attribute [GH-16131]
+* resource/aws_default_route_table: Add `route` configuration block `vpc_endpoint_id` argument [GH-16131]
 * resource/aws_kinesis_firehose_delivery_stream: Add `http_endpoint_configuration` configuration block [GH-15356]
+* resource/aws_lb: Support `load_balancer_type` argument value of `gateway` [GH-16131]
+* resource/aws_lb_target_group: Support `protocol` argument value of `GENEVE` [GH-16131]
+* resource/aws_route: Add `vpc_endpoint_id` argument [GH-16131]
+* resource/aws_route_table: Add `route` configuration block `vpc_endpoint_id` argument [GH-16131]
+* resource/aws_vpc_endpoint: Support `vpc_endpoint_type` argument value `GatewayLoadBalancer` [GH-16131]
+* resource/aws_vpc_endpoint_service: Add `gateway_load_balancer_arns` argument [GH-16131]
 * resource/aws_workspaces_workspace: Add configurable timeouts [GH-15479]
 
 BUG FIXES
