@@ -127,14 +127,11 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 			},
 			"tags": tagsSchema(),
 			"vpc_endpoint_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  ec2.VpcEndpointTypeGateway,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.VpcEndpointTypeGateway,
-					ec2.VpcEndpointTypeInterface,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      ec2.VpcEndpointTypeGateway,
+				ValidateFunc: validation.StringInSlice(ec2.VpcEndpointType_Values(), false),
 			},
 			"vpc_id": {
 				Type:     schema.TypeString,

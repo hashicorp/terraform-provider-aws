@@ -74,14 +74,11 @@ func resourceAwsLb() *schema.Resource {
 			},
 
 			"load_balancer_type": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-				Default:  elbv2.LoadBalancerTypeEnumApplication,
-				ValidateFunc: validation.StringInSlice([]string{
-					elbv2.LoadBalancerTypeEnumApplication,
-					elbv2.LoadBalancerTypeEnumNetwork,
-				}, false),
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Optional:     true,
+				Default:      elbv2.LoadBalancerTypeEnumApplication,
+				ValidateFunc: validation.StringInSlice(elbv2.LoadBalancerTypeEnum_Values(), false),
 			},
 
 			"security_groups": {
