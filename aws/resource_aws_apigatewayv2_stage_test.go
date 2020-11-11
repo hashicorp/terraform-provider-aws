@@ -1155,52 +1155,8 @@ resource "aws_apigatewayv2_api" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayV2StageConfig_basicWebSocket(rName string) string {
-	return testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName) + fmt.Sprintf(`
-resource "aws_apigatewayv2_stage" "test" {
-  api_id = aws_apigatewayv2_api.test.id
-  name   = %[1]q
-}
-`, rName)
-}
-
-func testAccAWSAPIGatewayV2StageConfig_basicHttp(rName string) string {
-	return testAccAWSAPIGatewayV2StageConfig_apiHttp(rName) + fmt.Sprintf(`
-resource "aws_apigatewayv2_stage" "test" {
-  api_id = aws_apigatewayv2_api.test.id
-  name   = %[1]q
-}
-`, rName)
-}
-
-func testAccAWSAPIGatewayV2StageConfig_defaultHttpStage(rName string) string {
-	return testAccAWSAPIGatewayV2StageConfig_apiHttp(rName) + `
-resource "aws_apigatewayv2_stage" "test" {
-  api_id = aws_apigatewayv2_api.test.id
-  name   = "$default"
-}
-`
-}
-
-func testAccAWSAPIGatewayV2StageConfig_autoDeployHttp(rName string, autoDeploy bool) string {
-	return testAccAWSAPIGatewayV2IntegrationConfig_httpProxy(rName) + fmt.Sprintf(`
-resource "aws_apigatewayv2_route" "test" {
-  api_id    = aws_apigatewayv2_api.test.id
-  route_key = "GET /test"
-  target    = "integrations/${aws_apigatewayv2_integration.test.id}"
-}
-
-resource "aws_apigatewayv2_stage" "test" {
-  api_id = aws_apigatewayv2_api.test.id
-  name   = %[1]q
-
-  auto_deploy = %[2]t
-}
-`, rName, autoDeploy)
-}
-
-func testAccAWSAPIGatewayV2StageConfig_accessLogSettings(rName, format string) string {
-	return testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName) + fmt.Sprintf(`
+func testAccAWSAPIGatewayV2StageConfigBaseAccountCloudWatchRoleArn(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -1242,8 +1198,69 @@ EOF
 
 resource "aws_api_gateway_account" "test" {
   cloudwatch_role_arn = aws_iam_role.test.arn
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName)
 }
 
+func testAccAWSAPIGatewayV2StageConfig_basicWebSocket(rName string) string {
+	return composeConfig(
+		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
+		fmt.Sprintf(`
+resource "aws_apigatewayv2_stage" "test" {
+  api_id = aws_apigatewayv2_api.test.id
+  name   = %[1]q
+}
+`, rName))
+}
+
+func testAccAWSAPIGatewayV2StageConfig_basicHttp(rName string) string {
+	return composeConfig(
+		testAccAWSAPIGatewayV2StageConfig_apiHttp(rName),
+		fmt.Sprintf(`
+resource "aws_apigatewayv2_stage" "test" {
+  api_id = aws_apigatewayv2_api.test.id
+  name   = %[1]q
+}
+`, rName))
+}
+
+func testAccAWSAPIGatewayV2StageConfig_defaultHttpStage(rName string) string {
+	return composeConfig(
+		testAccAWSAPIGatewayV2StageConfig_apiHttp(rName),
+		`
+resource "aws_apigatewayv2_stage" "test" {
+  api_id = aws_apigatewayv2_api.test.id
+  name   = "$default"
+}
+`)
+}
+
+func testAccAWSAPIGatewayV2StageConfig_autoDeployHttp(rName string, autoDeploy bool) string {
+	return composeConfig(
+		testAccAWSAPIGatewayV2IntegrationConfig_httpProxy(rName),
+		fmt.Sprintf(`
+resource "aws_apigatewayv2_route" "test" {
+  api_id    = aws_apigatewayv2_api.test.id
+  route_key = "GET /test"
+  target    = "integrations/${aws_apigatewayv2_integration.test.id}"
+}
+
+resource "aws_apigatewayv2_stage" "test" {
+  api_id = aws_apigatewayv2_api.test.id
+  name   = %[1]q
+
+  auto_deploy = %[2]t
+}
+`, rName, autoDeploy))
+}
+
+func testAccAWSAPIGatewayV2StageConfig_accessLogSettings(rName, format string) string {
+	return composeConfig(
+		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
+		testAccAWSAPIGatewayV2StageConfigBaseAccountCloudWatchRoleArn(rName),
+		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
@@ -1259,11 +1276,13 @@ resource "aws_apigatewayv2_stage" "test" {
 
   depends_on = [aws_api_gateway_account.test]
 }
-`, rName, format)
+`, rName, format))
 }
 
 func testAccAWSAPIGatewayV2StageConfig_clientCertificateIdAndDescription(rName string) string {
-	return testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
+		fmt.Sprintf(`
 resource "aws_api_gateway_client_certificate" "test" {
   description = %[1]q
 }
@@ -1275,11 +1294,13 @@ resource "aws_apigatewayv2_stage" "test" {
   client_certificate_id = aws_api_gateway_client_certificate.test.id
   description           = "Test stage"
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSAPIGatewayV2StageConfig_clientCertificateIdAndDescriptionUpdated(rName string) string {
-	return testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
+		fmt.Sprintf(`
 resource "aws_api_gateway_client_certificate" "test" {
   description = %[1]q
 }
@@ -1290,12 +1311,13 @@ resource "aws_apigatewayv2_stage" "test" {
 
   description = "Test stage updated"
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSAPIGatewayV2StageConfig_defaultRouteSettingsWebSocket(rName string) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
+		testAccAWSAPIGatewayV2StageConfigBaseAccountCloudWatchRoleArn(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
   api_id = aws_apigatewayv2_api.test.id
@@ -1308,6 +1330,8 @@ resource "aws_apigatewayv2_stage" "test" {
     throttling_burst_limit   = 2222
     throttling_rate_limit    = 8888
   }
+
+  depends_on = [aws_api_gateway_account.test]
 }
 `, rName))
 }
@@ -1315,6 +1339,7 @@ resource "aws_apigatewayv2_stage" "test" {
 func testAccAWSAPIGatewayV2StageConfig_defaultRouteSettingsWebSocketUpdated(rName string) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
+		testAccAWSAPIGatewayV2StageConfigBaseAccountCloudWatchRoleArn(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
   api_id = aws_apigatewayv2_api.test.id
@@ -1327,6 +1352,8 @@ resource "aws_apigatewayv2_stage" "test" {
     throttling_burst_limit   = 1111
     throttling_rate_limit    = 9999
   }
+
+  depends_on = [aws_api_gateway_account.test]
 }
 `, rName))
 }
@@ -1365,19 +1392,22 @@ resource "aws_apigatewayv2_stage" "test" {
 }
 
 func testAccAWSAPIGatewayV2StageConfig_deployment(rName string) string {
-	return testAccAWSAPIGatewayV2DeploymentConfig_basic(rName, rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSAPIGatewayV2DeploymentConfig_basic(rName, rName),
+		fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
   api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
 
   deployment_id = aws_apigatewayv2_deployment.test.id
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSAPIGatewayV2StageConfig_routeSettingsWebSocket(rName string) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
+		testAccAWSAPIGatewayV2StageConfigBaseAccountCloudWatchRoleArn(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
   api_id = aws_apigatewayv2_api.test.id
@@ -1396,6 +1426,8 @@ resource "aws_apigatewayv2_stage" "test" {
     throttling_burst_limit   = 2222
     throttling_rate_limit    = 8888
   }
+
+  depends_on = [aws_api_gateway_account.test]
 }
 `, rName))
 }
@@ -1403,6 +1435,7 @@ resource "aws_apigatewayv2_stage" "test" {
 func testAccAWSAPIGatewayV2StageConfig_routeSettingsWebSocketUpdated(rName string) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
+		testAccAWSAPIGatewayV2StageConfigBaseAccountCloudWatchRoleArn(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
   api_id = aws_apigatewayv2_api.test.id
@@ -1424,6 +1457,8 @@ resource "aws_apigatewayv2_stage" "test" {
   route_settings {
     route_key = "$disconnect"
   }
+
+  depends_on = [aws_api_gateway_account.test]
 }
 `, rName))
 }
@@ -1496,7 +1531,9 @@ resource "aws_apigatewayv2_integration" "test" {
 }
 
 func testAccAWSAPIGatewayV2StageConfig_stageVariables(rName string) string {
-	return testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
+		fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
   api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
@@ -1506,11 +1543,13 @@ resource "aws_apigatewayv2_stage" "test" {
     Var2 = "Value2"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSAPIGatewayV2StageConfig_tags(rName string) string {
-	return testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
+		fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
   api_id = aws_apigatewayv2_api.test.id
   name   = %[1]q
@@ -1520,5 +1559,5 @@ resource "aws_apigatewayv2_stage" "test" {
     Key2 = "Value2"
   }
 }
-`, rName)
+`, rName))
 }
