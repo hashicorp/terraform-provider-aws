@@ -164,6 +164,8 @@ This will not recreate the resource if the S3 object changes in some way. It's o
 
 ### restore_to_point_in_time Argument Reference
 
+~> **NOTE:**  The DB cluster is created from the source DB cluster with the same configuration as the original DB cluster, except that the new DB cluster is created with the default DB security group. Thus, the following arguments should only be specified with the source DB cluster's respective values: `database_name`, `master_username`, `storage_encrypted`, `replication_source_identifier`, and `source_region`.
+
 Example:
 
 ```hcl

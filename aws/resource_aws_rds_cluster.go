@@ -723,10 +723,6 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			createOpts.RestoreType = aws.String(attr)
 		}
 
-		if err := validateRestoreToPointInTimeInput(d); err != nil {
-			return err
-		}
-
 		if v, ok := d.GetOk("backtrack_window"); ok {
 			createOpts.BacktrackWindow = aws.Int64(int64(v.(int)))
 		}
@@ -968,24 +964,6 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	return resourceAwsRDSClusterRead(d, meta)
-}
-
-func validateRestoreToPointInTimeInput(d *schema.ResourceData) error {
-	invalidAttrs := []string{
-		"database_name",
-		"master_username",
-		"storage_encrypted",
-		"replication_source_identifier",
-		"source_region",
-	}
-
-	for _, attr := range invalidAttrs {
-		if _, ok := d.GetOk(attr); ok {
-			return fmt.Errorf(`provider.aws: aws_rds_cluster: %s: %q attribute must not be set for point in time restore operation`, d.Get("database_name"), attr)
-		}
-	}
-
-	return nil
 }
 
 func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
