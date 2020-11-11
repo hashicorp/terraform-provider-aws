@@ -250,7 +250,7 @@ func TestAccAWSAPIGatewayV2Stage_AccessLogSettings(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
@@ -390,7 +390,7 @@ func TestAccAWSAPIGatewayV2Stage_DefaultRouteSettingsWebSocket(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
@@ -616,7 +616,7 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettingsWebSocket(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAPIGatewayAccountCloudWatchRoleArn(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
@@ -1155,55 +1155,6 @@ resource "aws_apigatewayv2_api" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayV2StageConfigBaseAccountCloudWatchRoleArn(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {"Service": "apigateway.amazonaws.com"},
-    "Action": "sts:AssumeRole"
-  }]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Action": [
-      "logs:CreateLogGroup",
-      "logs:CreateLogStream",
-      "logs:DescribeLogGroups",
-      "logs:DescribeLogStreams",
-      "logs:PutLogEvents",
-      "logs:GetLogEvents",
-      "logs:FilterLogEvents"
-    ],
-    "Resource": "*"
-  }]
-}
-EOF
-}
-
-resource "aws_api_gateway_account" "test" {
-  cloudwatch_role_arn = aws_iam_role.test.arn
-
-  depends_on = [aws_iam_role_policy.test]
-}
-`, rName)
-}
-
 func testAccAWSAPIGatewayV2StageConfig_basicWebSocket(rName string) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
@@ -1259,7 +1210,6 @@ resource "aws_apigatewayv2_stage" "test" {
 func testAccAWSAPIGatewayV2StageConfig_accessLogSettings(rName, format string) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
-		testAccAWSAPIGatewayV2StageConfigBaseAccountCloudWatchRoleArn(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -1273,8 +1223,6 @@ resource "aws_apigatewayv2_stage" "test" {
     destination_arn = aws_cloudwatch_log_group.test.arn
     format          = %[2]q
   }
-
-  depends_on = [aws_api_gateway_account.test]
 }
 `, rName, format))
 }
@@ -1317,7 +1265,6 @@ resource "aws_apigatewayv2_stage" "test" {
 func testAccAWSAPIGatewayV2StageConfig_defaultRouteSettingsWebSocket(rName string) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
-		testAccAWSAPIGatewayV2StageConfigBaseAccountCloudWatchRoleArn(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
   api_id = aws_apigatewayv2_api.test.id
@@ -1330,8 +1277,6 @@ resource "aws_apigatewayv2_stage" "test" {
     throttling_burst_limit   = 2222
     throttling_rate_limit    = 8888
   }
-
-  depends_on = [aws_api_gateway_account.test]
 }
 `, rName))
 }
@@ -1339,7 +1284,6 @@ resource "aws_apigatewayv2_stage" "test" {
 func testAccAWSAPIGatewayV2StageConfig_defaultRouteSettingsWebSocketUpdated(rName string) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
-		testAccAWSAPIGatewayV2StageConfigBaseAccountCloudWatchRoleArn(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
   api_id = aws_apigatewayv2_api.test.id
@@ -1352,8 +1296,6 @@ resource "aws_apigatewayv2_stage" "test" {
     throttling_burst_limit   = 1111
     throttling_rate_limit    = 9999
   }
-
-  depends_on = [aws_api_gateway_account.test]
 }
 `, rName))
 }
@@ -1407,7 +1349,6 @@ resource "aws_apigatewayv2_stage" "test" {
 func testAccAWSAPIGatewayV2StageConfig_routeSettingsWebSocket(rName string) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
-		testAccAWSAPIGatewayV2StageConfigBaseAccountCloudWatchRoleArn(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
   api_id = aws_apigatewayv2_api.test.id
@@ -1426,8 +1367,6 @@ resource "aws_apigatewayv2_stage" "test" {
     throttling_burst_limit   = 2222
     throttling_rate_limit    = 8888
   }
-
-  depends_on = [aws_api_gateway_account.test]
 }
 `, rName))
 }
@@ -1435,7 +1374,6 @@ resource "aws_apigatewayv2_stage" "test" {
 func testAccAWSAPIGatewayV2StageConfig_routeSettingsWebSocketUpdated(rName string) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName),
-		testAccAWSAPIGatewayV2StageConfigBaseAccountCloudWatchRoleArn(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
   api_id = aws_apigatewayv2_api.test.id
@@ -1457,8 +1395,6 @@ resource "aws_apigatewayv2_stage" "test" {
   route_settings {
     route_key = "$disconnect"
   }
-
-  depends_on = [aws_api_gateway_account.test]
 }
 `, rName))
 }
