@@ -1828,7 +1828,7 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "public" {
-  count             = length(data.aws_availability_zones.available.names)
+  count             = 2
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.10.${count.index}.0/24"
   vpc_id            = aws_vpc.main.id
@@ -1852,8 +1852,8 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table_association" "a" {
-  count          = length(data.aws_availability_zones.available.names)
-  subnet_id      = aws_subnet.public[*].id[count.index]
+  count          = 2
+  subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
 
