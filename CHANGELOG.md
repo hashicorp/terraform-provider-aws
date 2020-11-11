@@ -17,6 +17,7 @@ BUG FIXES
 
 * data-source/aws_network_interface: Prevent crash with ENI attachments missing DeviceIndex or AttachmentID [GH-15567]
 * resource/aws_cognito_identity_pool: Update `identity_pool_name` argument validation to include additional characters supported by the API [GH-15773]
+* resource/aws_db_instance: Ignore `DBInstanceNotFound` error during deletion [GH-15942]
 * resource/aws_ecs_service: Properly remove resource from Terraform state with `ClusterNotFoundException` error [GH-15927]
 * resource/aws_kinesis_analytics_application: Handle IAM role eventual consistency issues [GH-16125]
 * resource/aws_kinesisanalyticsv2_application: Handle IAM role eventual consistency issues [GH-16125]
