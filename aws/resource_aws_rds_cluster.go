@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -254,10 +253,10 @@ func resourceAwsRDSCluster() *schema.Resource {
 						},
 
 						"restore_to_time": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validateUTCTimestamp,
+							Type:          schema.TypeString,
+							Optional:      true,
+							ForceNew:      true,
+							ValidateFunc:  validateUTCTimestamp,
 							ConflictsWith: []string{"restore_to_point_in_time.0.use_latest_restorable_time"},
 						},
 					},
@@ -700,14 +699,6 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok {
 		pointInTime := v.([]interface{})[0].(map[string]interface{})
-
-		restoreToTimeAttr := pointInTime["restore_to_time"].(string)
-		useLatestRestorableTimeAttr := pointInTime["use_latest_restorable_time"].(bool)
-
-		if useLatestRestorableTimeAttr && restoreToTimeAttr != "" {
-			return fmt.Errorf(`provider.aws: aws_rds_cluster: %s: Either "restore_to_time" or "use_latest_restorable_time" must be set`, d.Get("database_name").(string))
-		}
-
 		createOpts := &rds.RestoreDBClusterToPointInTimeInput{
 			DBClusterIdentifier:       aws.String(identifier),
 			DeletionProtection:        aws.Bool(d.Get("deletion_protection").(bool)),
@@ -715,17 +706,21 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			Tags:                      tags,
 		}
 
-		if attr, ok := pointInTime["restore_type"]; ok {
-			createOpts.RestoreType = aws.String(attr.(string))
+		if v, ok := pointInTime["restore_in_time"].(string); ok {
+			restoreToTime, _ := time.Parse(time.RFC3339, v)
+			createOpts.RestoreToTime = aws.Time(restoreToTime)
 		}
 
-		if useLatestRestorableTimeAttr {
-			createOpts.UseLatestRestorableTime = aws.Bool(useLatestRestorableTimeAttr)
-		} else if restoreToTimeAttr != "" {
-			restoreToTime, _ := time.Parse(time.RFC3339, restoreToTimeAttr)
-			createOpts.RestoreToTime = aws.Time(restoreToTime)
-		} else {
-			return fmt.Errorf(`provider.aws: aws_rds_cluster: %s: Both "restore_to_time" and "use_latest_restorable_time" cannot be set`, d.Get("database_name").(string))
+		if v, ok := pointInTime["use_latest_restorable_time"].(bool); ok && v {
+			createOpts.UseLatestRestorableTime = aws.Bool(v)
+		}
+
+		if createOpts.RestoreToTime == nil && createOpts.UseLatestRestorableTime == nil {
+			return fmt.Errorf(`provider.aws: aws_rds_cluster: %s: Either "restore_to_time" or "use_latest_restorable_time" must be set`, d.Get("database_name").(string))
+		}
+
+		if attr, ok := pointInTime["restore_type"].(string); ok {
+			createOpts.RestoreType = aws.String(attr)
 		}
 
 		if err := validateRestoreToPointInTimeInput(d); err != nil {
@@ -799,10 +794,6 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		resp, err := conn.RestoreDBClusterToPointInTime(createOpts)
 		if err != nil {
 			log.Printf("[DEBUG]: RDS Cluster restore response: %s", resp)
-		}
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.RestoreDBClusterToPointInTime(createOpts)
 		}
 
 		if err != nil {

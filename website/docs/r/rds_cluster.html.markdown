@@ -162,6 +162,28 @@ resource "aws_rds_cluster" "db" {
 
 This will not recreate the resource if the S3 object changes in some way. It's only used to initialize the database. This only works currently with the aurora engine. See AWS for currently supported engines and options. See [Aurora S3 Migration Docs](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Migrating.ExtMySQL.html#AuroraMySQL.Migrating.ExtMySQL.S3).
 
+### restore_to_point_in_time Argument Reference
+
+Example:
+
+```hcl
+resource "aws_rds_cluster" "example-clone" {
+  # ... other configuration ...
+
+  restore_to_point_in_time {
+    source_cluster_identifier  = "example"
+    restore_type               = "copy-on-write"
+    use_latest_restorable_time = true
+  }
+}
+```
+
+* `source_cluster_identifier` - (Required) The identifier of the source database cluster from which to restore.
+* `restore_type` - (Optional) Type of restore to be performed.
+   Valid options are `full-copy` (default) and `copy-on-write`.
+* `use_latest_restorable_time` - (Optional) Set to true to restore the database cluster to the latest restorable backup time. Defaults to false.
+* `restore_to_time` - (Optional) Date and time in UTC format to restore the database cluster to.
+
 ### scaling_configuration Argument Reference
 
 ~> **NOTE:** `scaling_configuration` configuration is only valid when `engine_mode` is set to `serverless`.
@@ -189,30 +211,6 @@ resource "aws_rds_cluster" "example" {
 * `min_capacity` - (Optional) The minimum capacity. The minimum capacity must be lesser than or equal to the maximum capacity. Valid capacity values are `1`, `2`, `4`, `8`, `16`, `32`, `64`, `128`, and `256`. Defaults to `1`.
 * `seconds_until_auto_pause` - (Optional) The time, in seconds, before an Aurora DB cluster in serverless mode is paused. Valid values are `300` through `86400`. Defaults to `300`.
 * `timeout_action` - (Optional) The action to take when the timeout is reached. Valid values: `ForceApplyCapacityChange`, `RollbackCapacityChange`. Defaults to `RollbackCapacityChange`. See [documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.how-it-works.html#aurora-serverless.how-it-works.timeout-action).
-
-### restore_to_point_in_time Argument Reference
-
-Example:
-
-```hcl
-resource "aws_rds_cluster" "example-clone" {
-  # ... other configuration ...
-
-  restore_To_point_in_time {
-    source_cluster_identifier  = "example"
-    restore_type               = "copy-on-write"
-    use_latest_restorable_time = true
-  }
-}
-```
-
-* `source_cluster_identifier` - (Required) The identifier of the source database cluster from which to restore.
-* `restore_type` - (Optional) Type of restore to be performed.
-   Valid options are `full-copy` (default) and `copy-on-write`.
-* `use_latest_restorable_time` - (Optional) Set to true to restore the database cluster to the latest restorable backup time. Defaults to false.
-* `restore_to_time` - (Optional) Date and time in UTC format to restore the database cluster to.
-
-~> **NOTE:** `use_latest_restorable_time` and `restore_to_time` conflict with each other.
 
 ## Attributes Reference
 

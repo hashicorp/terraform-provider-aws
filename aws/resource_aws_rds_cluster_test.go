@@ -380,10 +380,9 @@ func TestAccAWSRDSCluster_PointInTimeRestore(t *testing.T) {
 				Config: testAccAWSClusterConfig_pointInTimeRestoreSource(parentId, restoredId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists("aws_rds_cluster.test", &v),
-					resource.TestCheckResourceAttr("aws_rds_cluster.test", "engine", "aurora-mysql"),
 					testAccCheckAWSClusterExists("aws_rds_cluster.restored_pit", &c),
 					resource.TestCheckResourceAttr("aws_rds_cluster.restored_pit", "cluster_identifier", restoredId),
-					resource.TestCheckResourceAttr("aws_rds_cluster.test", "engine", "aurora-mysql"),
+					resource.TestCheckResourceAttrPair("aws_rds_cluster.restored_pit", "engine", "aws_rds_cluster.test", "engine"),
 				),
 			},
 		},
