@@ -2665,7 +2665,7 @@ func testAccAWSClusterConfig_pointInTimeRestoreSource(parentId, childId string) 
 data "aws_availability_zones" "available" {}
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier   = "%s"
+  cluster_identifier   = "%[1]s"
   master_username      = "root"
   master_password      = "password"
   db_subnet_group_name = aws_db_subnet_group.test.name
@@ -2676,7 +2676,7 @@ resource "aws_rds_cluster" "test" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
   tags = {
-    Name = "%s-vpc"
+    Name = "%[1]s-vpc"
   }
 }
 
@@ -2686,12 +2686,12 @@ resource "aws_subnet" "subnets" {
   cidr_block        = "10.0.${count.index}.0/24"
   availability_zone = data.aws_availability_zones.available.names[count.index]
   tags = {
-    Name = "%s-subnet-${count.index}"
+    Name = "%[1]s-subnet-${count.index}"
   }
 }
 
 resource "aws_db_subnet_group" "test" {
-  name       = "%s-db-subnet-group"
+  name       = "%[1]s-db-subnet-group"
   subnet_ids = aws_subnet.subnets[*].id
 }
 
@@ -2705,7 +2705,7 @@ resource "aws_rds_cluster" "restored_pit" {
     use_latest_restorable_time = true
   }
 }
-`, parentId, parentId, parentId, parentId, childId)
+`, parentId, childId)
 }
 
 func testAccAWSClusterConfigTags1(rName, tagKey1, tagValue1 string) string {
