@@ -180,13 +180,15 @@ When uploading a certificate, the following arguments are supported:
 * `regional_certificate_name` - (Optional) The user-friendly name of the certificate that will be used by regional endpoint for this domain name. Conflicts with `certificate_arn`, `certificate_name`, `certificate_body`, `certificate_chain`, and
   `certificate_private_key`.
 
+### endpoint_configuration
+
+* `types` - (Required) A list of endpoint types. This resource currently only supports managing a single value. Valid values: `EDGE` or `REGIONAL`. If unspecified, defaults to `EDGE`. Must be declared as `REGIONAL` in non-Commercial partitions. Refer to the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/create-regional-api.html) for more information on the difference between edge-optimized and regional APIs.
+
 ### mutual_tls_authentication
 
 * `truststore_uri` - (Required) An Amazon S3 URL that specifies the truststore for mutual TLS authentication, for example, `s3://bucket-name/key-name`.
 The truststore can contain certificates from public or private certificate authorities. To update the truststore, upload a new version to S3, and then update your custom domain name to use the new version.
 * `truststore_version` - (Optional) The version of the S3 object that contains the truststore. To specify a version, you must have versioning enabled for the S3 bucket.
-
-### endpoint_configuration
 
 ## Attributes Reference
 
