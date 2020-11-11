@@ -248,6 +248,37 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 					},
 				},
 			},
+
+			"dead_letter_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"retry_policy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"maximum_retry_attempts": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"maximum_event_age_in_seconds": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -350,6 +381,18 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if t.RetryPolicy != nil {
+		if err := d.Set("retry_policy", flattenAwsCloudWatchEventTargetRetryPolicyParameters(t.RetryPolicy)); err != nil {
+			return fmt.Errorf("Error setting retry_policy error: %#v", err)
+		}
+	}
+
+	if t.DeadLetterConfig != nil {
+		if err := d.Set("dead_letter_config", flattenAwsCloudWatchEventTargetDeadLetterConfigParameters(t.DeadLetterConfig)); err != nil {
+			return fmt.Errorf("Error setting dead_letter_config error: %#v", err)
+		}
+	}
+
 	return nil
 }
 
@@ -432,6 +475,14 @@ func buildPutTargetInputStruct(d *schema.ResourceData) *events.PutTargetsInput {
 
 	if v, ok := d.GetOk("input_transformer"); ok {
 		e.InputTransformer = expandAwsCloudWatchEventTransformerParameters(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("retry_policy"); ok {
+		e.RetryPolicy = expandAwsCloudWatchEventRetryPolicyParameters(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("dead_letter_config"); ok {
+		e.DeadLetterConfig = expandAwsCloudWatchEventDeadLetterConfigParameters(v.([]interface{}))
 	}
 
 	input := events.PutTargetsInput{
@@ -550,6 +601,31 @@ func expandAwsCloudWatchEventTargetSqsParameters(config []interface{}) *events.S
 	return sqsParameters
 }
 
+func expandAwsCloudWatchEventRetryPolicyParameters(config []interface{}) *events.RetryPolicy {
+	retryPolicyParameters := &events.RetryPolicy{}
+	for _, c := range config {
+		param := c.(map[string]interface{})
+		if v, ok := param["maximum_event_age_in_seconds"].(int); ok {
+			retryPolicyParameters.MaximumEventAgeInSeconds = aws.Int64(int64(v))
+		}
+		if v, ok := param["maximum_retry_attempts"].(int); ok {
+			retryPolicyParameters.MaximumRetryAttempts = aws.Int64(int64(v))
+		}
+	}
+	return retryPolicyParameters
+}
+
+func expandAwsCloudWatchEventDeadLetterConfigParameters(config []interface{}) *events.DeadLetterConfig {
+	deadLetterConfigParameters := &events.DeadLetterConfig{}
+	for _, c := range config {
+		param := c.(map[string]interface{})
+		if v, ok := param["arn"].(string); ok && v != "" {
+			deadLetterConfigParameters.Arn = aws.String(v)
+		}
+	}
+	return deadLetterConfigParameters
+}
+
 func expandAwsCloudWatchEventTransformerParameters(config []interface{}) *events.InputTransformer {
 	transformerParameters := &events.InputTransformer{}
 
@@ -634,6 +710,21 @@ func flattenAwsCloudWatchEventTargetBatchParameters(batchParameters *events.Batc
 func flattenAwsCloudWatchEventTargetKinesisParameters(kinesisParameters *events.KinesisParameters) []map[string]interface{} {
 	config := make(map[string]interface{})
 	config["partition_key_path"] = aws.StringValue(kinesisParameters.PartitionKeyPath)
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flattenAwsCloudWatchEventTargetRetryPolicyParameters(retryPolicy *events.RetryPolicy) []map[string]interface{} {
+	config := make(map[string]interface{})
+	config["maximum_event_age_in_seconds"] = int(aws.Int64Value(retryPolicy.MaximumEventAgeInSeconds))
+	config["maximum_retry_attempts"] = int(aws.Int64Value(retryPolicy.MaximumRetryAttempts))
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flattenAwsCloudWatchEventTargetDeadLetterConfigParameters(deadLetterConfig *events.DeadLetterConfig) []map[string]interface{} {
+	config := make(map[string]interface{})
+	config["arn"] = aws.StringValue(deadLetterConfig.Arn)
 	result := []map[string]interface{}{config}
 	return result
 }
