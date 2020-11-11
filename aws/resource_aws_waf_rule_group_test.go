@@ -8,10 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/waf/lister"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -32,36 +34,60 @@ func testSweepWafRuleGroups(region string) error {
 	}
 	conn := client.(*AWSClient).wafconn
 
-	req := &waf.ListRuleGroupsInput{}
-	resp, err := conn.ListRuleGroups(req)
+	var sweeperErrs *multierror.Error
+
+	input := &waf.ListRuleGroupsInput{}
+
+	err = lister.ListRuleGroupsPages(conn, input, func(page *waf.ListRuleGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, ruleGroup := range page.RuleGroups {
+			id := aws.StringValue(ruleGroup.RuleGroupId)
+
+			r := resourceAwsWafRuleGroup()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			// Need to Read first to fill in activated_rule attribute
+			err := r.Read(d, client)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error reading WAF Rule Group (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+
+			// In case it was already deleted
+			if d.Id() == "" {
+				continue
+			}
+
+			err = r.Delete(d, client)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting WAF Rule Group (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Rule Group sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
 	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping WAF Rule Group sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error describing WAF Rule Groups: %s", err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing WAF Rule Groups: %w", err))
 	}
 
-	if len(resp.RuleGroups) == 0 {
-		log.Print("[DEBUG] No AWS WAF Rule Groups to sweep")
-		return nil
-	}
-
-	for _, group := range resp.RuleGroups {
-		rResp, err := conn.ListActivatedRulesInRuleGroup(&waf.ListActivatedRulesInRuleGroupInput{
-			RuleGroupId: group.RuleGroupId,
-		})
-		if err != nil {
-			return err
-		}
-		oldRules := flattenWafActivatedRules(rResp.ActivatedRules)
-		err = deleteWafRuleGroup(*group.RuleGroupId, oldRules, conn)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSWafRuleGroup_basic(t *testing.T) {

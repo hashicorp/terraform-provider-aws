@@ -2,16 +2,94 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/waf/lister"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_waf_regex_pattern_set", &resource.Sweeper{
+		Name: "aws_waf_regex_pattern_set",
+		F:    testSweepWafRegexPatternSet,
+		Dependencies: []string{
+			"aws_waf_rate_based_rule",
+			"aws_waf_rule",
+			"aws_waf_rule_group",
+		},
+	})
+}
+
+func testSweepWafRegexPatternSet(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).wafconn
+
+	var sweeperErrs *multierror.Error
+
+	input := &waf.ListRegexPatternSetsInput{}
+
+	err = lister.ListRegexPatternSetsPages(conn, input, func(page *waf.ListRegexPatternSetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, regexPatternSet := range page.RegexPatternSets {
+			id := aws.StringValue(regexPatternSet.RegexPatternSetId)
+
+			r := resourceAwsWafRegexPatternSet()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			// Need to Read first to fill in regex_pattern_strings attribute
+			err := r.Read(d, client)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error reading WAF Regex Pattern Set (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+
+			// In case it was already deleted
+			if d.Id() == "" {
+				continue
+			}
+
+			err = r.Delete(d, client)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting WAF Regex Pattern Set (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Regex Pattern Set sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing WAF Regex Pattern Sets: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 // Serialized acceptance tests due to WAF account limits
 // https://docs.aws.amazon.com/waf/latest/developerguide/limits.html

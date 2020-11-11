@@ -2,17 +2,94 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/waf/lister"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_waf_rate_based_rule", &resource.Sweeper{
+		Name: "aws_waf_rate_based_rule",
+		F:    testSweepWafRateBasedRules,
+		Dependencies: []string{
+			"aws_waf_rule_group",
+			"aws_waf_web_acl",
+		},
+	})
+}
+
+func testSweepWafRateBasedRules(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).wafconn
+
+	var sweeperErrs *multierror.Error
+
+	input := &waf.ListRateBasedRulesInput{}
+
+	err = lister.ListRateBasedRulesPages(conn, input, func(page *waf.ListRateBasedRulesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, rule := range page.Rules {
+			id := aws.StringValue(rule.RuleId)
+
+			r := resourceAwsWafRateBasedRule()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			// Need to Read first to fill in predicates attribute
+			err := r.Read(d, client)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error reading WAF Rate Based Rule (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+
+			// In case it was already deleted
+			if d.Id() == "" {
+				continue
+			}
+
+			err = r.Delete(d, client)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting WAF Rate Based Rule (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Rate Based Rule sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing WAF Rate Based Rules: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSWafRateBasedRule_basic(t *testing.T) {
 	var v waf.RateBasedRule
