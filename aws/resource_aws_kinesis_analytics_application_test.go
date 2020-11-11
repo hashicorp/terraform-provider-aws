@@ -8,11 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalytics/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalytics/lister"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -32,23 +34,20 @@ func testSweepKinesisAnalyticsApplications(region string) error {
 	input := &kinesisanalytics.ListApplicationsInput{}
 	var sweeperErrs *multierror.Error
 
-	for {
-		output, err := conn.ListApplications(input)
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Kinesis Analytics Application sweep for %s: %s", region, err)
-			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-		}
-		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Kinesis Analytics Applications: %w", err))
-			return sweeperErrs
+	err = lister.ListApplicationsPages(conn, input, func(page *kinesisanalytics.ListApplicationsOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
 		}
 
-		var name string
-		for _, applicationSummary := range output.ApplicationSummaries {
+		for _, applicationSummary := range page.ApplicationSummaries {
 			arn := aws.StringValue(applicationSummary.ApplicationARN)
-			name = aws.StringValue(applicationSummary.ApplicationName)
+			name := aws.StringValue(applicationSummary.ApplicationName)
 
 			application, err := finder.ApplicationByName(conn, name)
+
+			if tfawserr.ErrMessageContains(err, kinesisanalytics.ErrCodeUnsupportedOperationException, "was created/updated by kinesisanalyticsv2 SDK") {
+				continue
+			}
 
 			if err != nil {
 				sweeperErr := fmt.Errorf("error reading Kinesis Analytics Application (%s): %w", arn, err)
@@ -71,10 +70,16 @@ func testSweepKinesisAnalyticsApplications(region string) error {
 			}
 		}
 
-		if !aws.BoolValue(output.HasMoreApplications) {
-			break
-		}
-		input.ExclusiveStartApplicationName = aws.String(name)
+		return !isLast
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Kinesis Analytics Application sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Kinesis Analytics Applications: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()

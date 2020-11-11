@@ -53,6 +53,11 @@ func IAMPropagation(f func() (interface{}, error)) (interface{}, error) {
 			return resource.RetryableError(err)
 		}
 
+		// S3: https://github.com/hashicorp/terraform-provider-aws/issues/16104
+		if tfawserr.ErrMessageContains(err, kinesisanalytics.ErrCodeInvalidArgumentException, "Please check the role provided or validity of S3 location you provided") {
+			return resource.RetryableError(err)
+		}
+
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
