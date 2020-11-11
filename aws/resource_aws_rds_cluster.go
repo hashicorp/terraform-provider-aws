@@ -258,6 +258,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validateUTCTimestamp,
+							ConflictsWith: []string{"restore_to_point_in_time.0.use_latest_restorable_time"},
 						},
 					},
 				},
