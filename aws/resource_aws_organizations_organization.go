@@ -402,7 +402,7 @@ func resourceAwsOrganizationsOrganizationUpdate(d *schema.ResourceData, meta int
 
 	if d.HasChange("feature_set") {
 		if _, err := conn.EnableAllFeatures(&organizations.EnableAllFeaturesInput{}); err != nil {
-			return fmt.Errorf("error changing feature_set to ALL")
+			return fmt.Errorf("error enabling all features in Organization (%s): %w", d.Id(), err)
 		}
 	}
 
