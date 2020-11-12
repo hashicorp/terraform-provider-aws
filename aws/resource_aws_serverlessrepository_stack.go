@@ -254,7 +254,6 @@ func resourceAwsServerlessRepositoryStackRead(d *schema.ResourceData, meta inter
 
 	// Serverless Application Repo prefixes the stack name with "serverlessrepo-",
 	// so remove it from the saved string
-	// FIXME: this should be a StateFunc
 	stackName := strings.TrimPrefix(aws.StringValue(stack.StackName), "serverlessrepo-")
 	d.Set("name", &stackName)
 

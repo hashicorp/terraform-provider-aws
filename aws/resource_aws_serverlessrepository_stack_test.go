@@ -27,6 +27,7 @@ func TestAccAwsServerlessRepositoryStack_basic(t *testing.T) {
 				Config: testAccAwsServerlessRepositoryStackConfig(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerlessRepositoryStackExists(resourceName, &stack),
+					resource.TestCheckResourceAttr(resourceName, "name", stackName),
 					resource.TestCheckResourceAttr(resourceName, "application_id", "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttrSet(resourceName, "semantic_version"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
