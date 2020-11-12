@@ -67,8 +67,8 @@ explained below:
 
 ### Static Credentials
 
-!> **Warning:** Hard-coding credentials into any Terraform configuration are not
-recommended, and risks secret leakage should this file ever be committed to a
+!> **Warning:** Hard-coded credentials are not recommended in any Terraform
+configuration and risks secret leakage should this file ever be committed to a
 public version control system.
 
 Static credentials can be provided by adding an `access_key` and `secret_key`
