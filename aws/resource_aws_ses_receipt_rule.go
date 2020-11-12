@@ -57,7 +57,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 
 			"recipients": {
@@ -69,17 +69,14 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 			"scan_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 
 			"tls_policy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ses.TlsPolicyOptional,
-					ses.TlsPolicyRequire,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(ses.TlsPolicy_Values(), false),
 			},
 
 			"add_header_action": {
@@ -189,13 +186,10 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 						},
 
 						"invocation_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								ses.InvocationTypeEvent,
-								ses.InvocationTypeRequestResponse,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(ses.InvocationType_Values(), false),
 						},
 
 						"topic_arn": {
@@ -429,7 +423,7 @@ func resourceAwsSesReceiptRuleCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(d.Get("name").(string))
 
-	return resourceAwsSesReceiptRuleUpdate(d, meta)
+	return resourceAwsSesReceiptRuleRead(d, meta)
 }
 
 func resourceAwsSesReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) error {

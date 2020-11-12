@@ -395,7 +395,7 @@ resource "aws_ses_receipt_rule" "test" {
   tls_policy    = "Require"
 
   s3_action {
-    bucket_name = aws_s3_bucket.emails.id
+    bucket_name = aws_s3_bucket.test.id
     position    = 1
   }
 }
@@ -409,9 +409,15 @@ resource "aws_ses_receipt_rule_set" "test" {
 }
 
 resource "aws_ses_receipt_rule" "test" {
+  name          = "second"
+  rule_set_name = aws_ses_receipt_rule_set.test.rule_set_name
+  after         = aws_ses_receipt_rule.test1.name
+}
+
 resource "aws_ses_receipt_rule" "test1" {
   name          = "first"
   rule_set_name = aws_ses_receipt_rule_set.test.rule_set_name
+}
 `, rName)
 }
 
