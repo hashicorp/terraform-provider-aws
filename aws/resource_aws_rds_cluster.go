@@ -792,7 +792,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			log.Printf("[ERROR] Error restoring RDS Cluster: %s", err)
 			return err
 		}
-		
+
 		log.Printf("[DEBUG]: RDS Cluster restore response: %s", resp)
 	} else {
 
