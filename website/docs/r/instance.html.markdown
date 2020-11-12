@@ -97,7 +97,10 @@ instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/Use
 * `ipv6_address_count`- (Optional) A number of IPv6 addresses to associate with the primary network interface. Amazon EC2 chooses the IPv6 addresses from the range of your subnet.
 * `ipv6_addresses` - (Optional) Specify one or more IPv6 addresses from the range of the subnet to associate with the primary network interface
 * `tags` - (Optional) A map of tags to assign to the resource.
-* `volume_tags` - (Optional) A map of tags to assign to the devices created by the instance at launch time. Not recommended to use in configurations with EBS volumes attached via `aws_volume_attachment` resource. Use `tags` in `root_block_device` parameter in such cases.
+* `volume_tags` - (Optional) A map of tags to assign to the devices created by the instance at launch time.
+
+~> **NOTE:** Use `volume_tags` to apply the same tags to an instance's root and EBS devices. Using `volume_tags` is incompatible with other ways of tagging an instance's volumes such as using `tags` in `root_block_device` or `ebs_block_device` blocks, or using `tags` in an `aws_ebs_volume` resource attached via `aws_volume_attachment`. Using `volume_tags` together with other ways of tagging volumes will cause inconsistent behavior and resource cycling.
+
 * `root_block_device` - (Optional) Customize details about the root block
   device of the instance. See [Block Devices](#block-devices) below for details.
 * `ebs_block_device` - (Optional) Additional EBS block devices to attach to the

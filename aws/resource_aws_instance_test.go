@@ -1150,6 +1150,14 @@ func TestAccAWSInstance_blockDeviceVolumeTags(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config:      testAccCheckInstanceConfigBlockDeviceRootTagsConflictWithVolumeTags(),
+				ExpectError: regexp.MustCompile(`"root_block_device\.0\.tags": conflicts with volume_tags`),
+			},
+			{
+				Config:      testAccCheckInstanceConfigBlockDeviceEbsTagsConflictWithVolumeTags(),
+				ExpectError: regexp.MustCompile(`"ebs_block_device\.0\.tags": conflicts with volume_tags`),
+			},
+			{
 				Config: testAccCheckInstanceConfigBlockDeviceNoRootVolumeTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
@@ -4079,6 +4087,62 @@ resource "aws_volume_attachment" "test" {
 `)
 }
 
+func testAccCheckInstanceConfigBlockDeviceRootTagsConflictWithVolumeTags() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+
+  instance_type = "t2.medium"
+
+  root_block_device {
+    volume_type = "gp2"
+    volume_size = 11
+
+    tags = {
+      Name = "root-tag"
+    }
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdb"
+    volume_size = 9
+  }
+
+  volume_tags = {
+    Name = "volume-tags"
+  }
+}
+`))
+}
+
+func testAccCheckInstanceConfigBlockDeviceEbsTagsConflictWithVolumeTags() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+
+  instance_type = "t2.medium"
+
+  root_block_device {
+    volume_type = "gp2"
+    volume_size = 11
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdb"
+    volume_size = 9
+
+    tags = {
+      Name = "ebs-volume"
+    }
+  }
+
+  volume_tags = {
+    Name = "volume-tags"
+  }
+}
+`))
+}
+
 func testAccCheckInstanceConfigNoVolumeTags() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
@@ -4131,6 +4195,7 @@ resource "aws_instance" "test" {
   ebs_block_device {
     device_name = "/dev/sdb"
     volume_size = 1
+
     tags = {
       Name = "terraform-test-ebs"
     }
@@ -4140,7 +4205,6 @@ resource "aws_instance" "test" {
     device_name = "/dev/sdc"
     volume_size = 1
   }
-
 
   ephemeral_block_device {
     device_name  = "/dev/sde"
@@ -4159,6 +4223,7 @@ resource "aws_instance" "test" {
 
   root_block_device {
     volume_type = "gp2"
+
     tags = {
       Name    = "terraform-test-root"
       Purpose = "test"
@@ -4168,6 +4233,7 @@ resource "aws_instance" "test" {
   ebs_block_device {
     device_name = "/dev/sdb"
     volume_size = 1
+
     tags = {
       Name = "terraform-test-ebs"
     }
@@ -4195,6 +4261,7 @@ resource "aws_instance" "test" {
 
   root_block_device {
     volume_type = "gp2"
+
     tags = {
       Name = "terraform-test-root-new"
       Env  = "dev"
@@ -4204,6 +4271,7 @@ resource "aws_instance" "test" {
   ebs_block_device {
     device_name = "/dev/sdb"
     volume_size = 1
+
     tags = {
       Name = "terraform-test-ebs"
     }
