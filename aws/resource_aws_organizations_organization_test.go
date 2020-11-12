@@ -230,7 +230,7 @@ func testAccAwsOrganizationsOrganization_FeatureSetForcesNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &afterValue),
 					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetConsolidatedBilling),
-					testAccAwsOrganizationsOrganizationRecreated(t, &beforeValue, &afterValue),
+					testAccAwsOrganizationsOrganizationRecreated(&beforeValue, &afterValue),
 				),
 			},
 		},
@@ -267,7 +267,7 @@ func testAccAwsOrganizationsOrganization_FeatureSetUpdate(t *testing.T) {
 					// via Console. Until then, the FeatureSet will not actually be toggled to ALL
 					// and will continue to show as CONSOLIDATED_BILLING when calling DescribeOrganization
 					// resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetAll),
-					testAccAwsOrganizationsOrganizationNotRecreated(t, &beforeValue, &afterValue),
+					testAccAwsOrganizationsOrganizationNotRecreated(&beforeValue, &afterValue),
 				),
 			},
 		},
@@ -425,7 +425,7 @@ func testFlattenOrganizationsRootPolicyTypes(t *testing.T, index int, result []m
 	}
 }
 
-func testAccAwsOrganizationsOrganizationRecreated(t *testing.T, before, after *organizations.Organization) resource.TestCheckFunc {
+func testAccAwsOrganizationsOrganizationRecreated(before, after *organizations.Organization) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(before.Id) == aws.StringValue(after.Id) {
 			return fmt.Errorf("Organization (%s) not recreated", aws.StringValue(before.Id))
@@ -434,7 +434,7 @@ func testAccAwsOrganizationsOrganizationRecreated(t *testing.T, before, after *o
 	}
 }
 
-func testAccAwsOrganizationsOrganizationNotRecreated(t *testing.T, before, after *organizations.Organization) resource.TestCheckFunc {
+func testAccAwsOrganizationsOrganizationNotRecreated(before, after *organizations.Organization) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(before.Id) != aws.StringValue(after.Id) {
 			return fmt.Errorf("Organization (%s) recreated", aws.StringValue(before.Id))
