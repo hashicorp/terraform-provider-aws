@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/serverlessrepository/waiter"
 )
 
 func resourceAwsServerlessRepositoryStack() *schema.Resource {
@@ -28,9 +29,9 @@ func resourceAwsServerlessRepositoryStack() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
+			Create: schema.DefaultTimeout(waiter.StackCreatedDefaultTimeout),
+			Update: schema.DefaultTimeout(waiter.StackUpdatedDefaultTimeout),
+			Delete: schema.DefaultTimeout(waiter.StackDeletedDefaultTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
