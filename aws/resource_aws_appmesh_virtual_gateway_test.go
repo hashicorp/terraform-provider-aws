@@ -399,6 +399,108 @@ func testAccAwsAppmeshVirtualGateway_ListenerHealthChecks(t *testing.T) {
 	})
 }
 
+func testAccAwsAppmeshVirtualGateway_ListenerTls(t *testing.T) {
+	var v appmesh.VirtualGatewayData
+	var ca acmpca.CertificateAuthority
+	resourceName := "aws_appmesh_virtual_gateway.test"
+	acmCAResourceName := "aws_acmpca_certificate_authority.test"
+	acmCertificateResourceName := "aws_acm_certificate.test"
+	meshName := acctest.RandomWithPrefix("tf-acc-test")
+	vgName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppmeshVirtualGatewayConfigListenerTlsFile(meshName, vgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.0.certificate_chain", "/cert_chain.pem"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.0.private_key", "/key.pem"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.mode", "PERMISSIVE"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// We need to create and activate the CA before issuing a certificate.
+			{
+				Config: testAccAppmeshVirtualGatewayConfigRootCA(vgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAcmpcaCertificateAuthorityExists(acmCAResourceName, &ca),
+					testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(&ca),
+				),
+			},
+			{
+				Config: testAccAppmeshVirtualGatewayConfigListenerTlsAcm(meshName, vgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.0.certificate_arn", acmCertificateResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.mode", "STRICT"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAppmeshVirtualGatewayConfigListenerTlsAcm(meshName, vgName),
+				Check: resource.ComposeTestCheckFunc(
+					// CA must be DISABLED for deletion.
+					testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccAwsAppmeshVirtualGateway_Logging(t *testing.T) {
 	var v appmesh.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
@@ -516,107 +618,6 @@ func testAccAwsAppmeshVirtualGateway_Tags(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualGateway_TLS(t *testing.T) {
-	var v appmesh.VirtualGatewayData
-	var ca acmpca.CertificateAuthority
-	resourceName := "aws_appmesh_virtual_gateway.test"
-	acmCAResourceName := "aws_acmpca_certificate_authority.test"
-	acmCertificateResourceName := "aws_acm_certificate.test"
-	meshName := acctest.RandomWithPrefix("tf-acc-test")
-	vgName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAppmeshVirtualGatewayConfigTlsFile(meshName, vgName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.0.certificate_chain", "/cert_chain.pem"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.0.private_key", "/key.pem"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.mode", "PERMISSIVE"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			// We need to create and activate the CA before issuing a certificate.
-			{
-				Config: testAccAppmeshVirtualGatewayConfigRootCA(vgName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAcmpcaCertificateAuthorityExists(acmCAResourceName, &ca),
-					testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(&ca),
-				),
-			},
-			{
-				Config: testAccAppmeshVirtualGatewayConfigTlsAcm(meshName, vgName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualGatewayExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "name", vgName),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.#", "1"),
-					testAccCheckAppmeshVirtualGatewayTlsAcmCertificateArn(acmCertificateResourceName, "arn", &v),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.mode", "STRICT"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAppmeshVirtualGatewayConfigTlsAcm(meshName, vgName),
-				Check: resource.ComposeTestCheckFunc(
-					// CA must be DISABLED for deletion.
-					testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
 func testAccCheckAppmeshVirtualGatewayDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).appmeshconn
 
@@ -657,30 +658,6 @@ func testAccCheckAppmeshVirtualGatewayExists(name string, v *appmesh.VirtualGate
 		}
 
 		*v = *out
-
-		return nil
-	}
-}
-
-func testAccCheckAppmeshVirtualGatewayTlsAcmCertificateArn(name, key string, v *appmesh.VirtualGatewayData) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		expected, ok := rs.Primary.Attributes[key]
-		if !ok {
-			return fmt.Errorf("Key not found: %s", key)
-		}
-		if v.Spec == nil || v.Spec.Listeners == nil || len(v.Spec.Listeners) != 1 || v.Spec.Listeners[0].Tls == nil ||
-			v.Spec.Listeners[0].Tls.Certificate == nil || v.Spec.Listeners[0].Tls.Certificate.Acm == nil {
-			return fmt.Errorf("Not found: v.Spec.Listeners[0].Tls.Certificate.Acm")
-		}
-		got := aws.StringValue(v.Spec.Listeners[0].Tls.Certificate.Acm.CertificateArn)
-		if got != expected {
-			return fmt.Errorf("Expected ACM certificate ARN %q, got %q", expected, got)
-		}
 
 		return nil
 	}
@@ -903,6 +880,96 @@ resource "aws_appmesh_virtual_gateway" "test" {
 `, meshName, vgName)
 }
 
+func testAccAppmeshVirtualGatewayConfigRootCA(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  type                            = "ROOT"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = "%[1]s.com"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAppmeshVirtualGatewayConfigListenerTlsAcm(meshName, vgName string) string {
+	return composeConfig(
+		testAccAppmeshVirtualGatewayConfigRootCA(vgName),
+		fmt.Sprintf(`
+resource "aws_appmesh_mesh" "test" {
+  name = %[1]q
+}
+
+resource "aws_acm_certificate" "test" {
+  domain_name               = "test.%[2]s.com"
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+}
+
+resource "aws_appmesh_virtual_gateway" "test" {
+  name      = %[2]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+
+      tls {
+        certificate {
+          acm {
+            certificate_arn = aws_acm_certificate.test.arn
+          }
+        }
+
+        mode = "STRICT"
+      }
+    }
+  }
+}
+`, meshName, vgName))
+}
+
+func testAccAppmeshVirtualGatewayConfigListenerTlsFile(meshName, vgName string) string {
+	return fmt.Sprintf(`
+resource "aws_appmesh_mesh" "test" {
+  name = %[1]q
+}
+
+resource "aws_appmesh_virtual_gateway" "test" {
+  name      = %[2]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+
+      tls {
+        certificate {
+          file {
+            certificate_chain = "/cert_chain.pem"
+            private_key       = "/key.pem"
+          }
+        }
+
+        mode = "PERMISSIVE"
+      }
+    }
+  }
+}
+`, meshName, vgName)
+}
+
 func testAccAppmeshVirtualGatewayConfigLogging(meshName, vgName, path string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
@@ -984,94 +1051,4 @@ resource "aws_appmesh_virtual_gateway" "test" {
   }
 }
 `, meshName, vgName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccAppmeshVirtualGatewayConfigTlsFile(meshName, vgName string) string {
-	return fmt.Sprintf(`
-resource "aws_appmesh_mesh" "test" {
-  name = %[1]q
-}
-
-resource "aws_appmesh_virtual_gateway" "test" {
-  name      = %[2]q
-  mesh_name = aws_appmesh_mesh.test.id
-
-  spec {
-    listener {
-      port_mapping {
-        port     = 8080
-        protocol = "http"
-      }
-
-      tls {
-        certificate {
-          file {
-            certificate_chain = "/cert_chain.pem"
-            private_key       = "/key.pem"
-          }
-        }
-
-        mode = "PERMISSIVE"
-      }
-    }
-  }
-}
-`, meshName, vgName)
-}
-
-func testAccAppmeshVirtualGatewayConfigRootCA(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_acmpca_certificate_authority" "test" {
-  permanent_deletion_time_in_days = 7
-  type                            = "ROOT"
-
-  certificate_authority_configuration {
-    key_algorithm     = "RSA_4096"
-    signing_algorithm = "SHA512WITHRSA"
-
-    subject {
-      common_name = "%[1]s.com"
-    }
-  }
-}
-`, rName)
-}
-
-func testAccAppmeshVirtualGatewayConfigTlsAcm(meshName, vgName string) string {
-	return composeConfig(
-		testAccAppmeshVirtualGatewayConfigRootCA(vgName),
-		fmt.Sprintf(`
-resource "aws_appmesh_mesh" "test" {
-  name = %[1]q
-}
-
-resource "aws_acm_certificate" "test" {
-  domain_name               = "test.%[2]s.com"
-  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
-}
-
-resource "aws_appmesh_virtual_gateway" "test" {
-  name      = %[2]q
-  mesh_name = aws_appmesh_mesh.test.id
-
-  spec {
-    listener {
-      port_mapping {
-        port     = 8080
-        protocol = "http"
-      }
-
-      tls {
-        certificate {
-          acm {
-            certificate_arn = aws_acm_certificate.test.arn
-          }
-        }
-
-        mode = "STRICT"
-      }
-    }
-  }
-}
-`, meshName, vgName))
 }

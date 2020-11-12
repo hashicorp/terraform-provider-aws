@@ -39,9 +39,9 @@ func TestAccAWSAppmesh_serial(t *testing.T) {
 			"disappears":             testAccAwsAppmeshVirtualGateway_disappears,
 			"listenerConnectionPool": testAccAwsAppmeshVirtualGateway_ListenerConnectionPool,
 			"listenerHealthChecks":   testAccAwsAppmeshVirtualGateway_ListenerHealthChecks,
+			"listenerTls":            testAccAwsAppmeshVirtualGateway_ListenerTls,
 			"logging":                testAccAwsAppmeshVirtualGateway_Logging,
 			"tags":                   testAccAwsAppmeshVirtualGateway_Tags,
-			"tls":                    testAccAwsAppmeshVirtualGateway_TLS,
 		},
 		"VirtualNode": {
 			"basic":                    testAccAwsAppmeshVirtualNode_basic,
