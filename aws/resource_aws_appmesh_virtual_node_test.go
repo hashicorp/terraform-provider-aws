@@ -170,7 +170,7 @@ func testAccAwsAppmeshVirtualNode_backendClientPolicyAcm(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_clientPolicyAcm(meshName, vnName),
+				Config: testAccAppmeshVirtualNodeConfig_backendClientPolicyAcm(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
@@ -191,7 +191,7 @@ func testAccAwsAppmeshVirtualNode_backendClientPolicyAcm(t *testing.T) {
 						"virtual_service.0.virtual_service_name":                              "servicea.simpleapp.local",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.backend.*.virtual_service.0.client_policy.0.tls.0.ports.*", "8443"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "spec.0.backend.*.virtual_service.0.client_policy.0.tls.0.acm.certificate_authority_arns.*", acmCAResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "spec.0.backend.*.virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.acm.0.certificate_authority_arns.*", acmCAResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
@@ -218,7 +218,7 @@ func testAccAwsAppmeshVirtualNode_backendClientPolicyAcm(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_clientPolicyAcm(meshName, vnName),
+				Config: testAccAppmeshVirtualNodeConfig_backendClientPolicyAcm(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
 					// CA must be DISABLED for deletion.
 					testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
@@ -241,7 +241,7 @@ func testAccAwsAppmeshVirtualNode_backendClientPolicyFile(t *testing.T) {
 		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualNodeConfig_clientPolicyFile(meshName, vnName),
+				Config: testAccAppmeshVirtualNodeConfig_backendClientPolicyFile(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
@@ -283,7 +283,7 @@ func testAccAwsAppmeshVirtualNode_backendClientPolicyFile(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_clientPolicyFileUpdated(meshName, vnName),
+				Config: testAccAppmeshVirtualNodeConfig_backendClientPolicyFileUpdated(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
@@ -684,7 +684,7 @@ func testAccAwsAppmeshVirtualNode_listenerOutlierDetection(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
 						"virtual_service.#":                      "1",
 						"virtual_service.0.virtual_service_name": "servicea.simpleapp.local",
 					}),
@@ -720,7 +720,7 @@ func testAccAwsAppmeshVirtualNode_listenerOutlierDetection(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
 						"virtual_service.#":                      "1",
 						"virtual_service.0.virtual_service_name": "servicea.simpleapp.local",
 					}),
@@ -866,7 +866,7 @@ func testAccAwsAppmeshVirtualNode_listenerTls(t *testing.T) {
 		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppmeshVirtualNodeConfig_tlsFile(meshName, vnName),
+				Config: testAccAppmeshVirtualNodeConfig_listenerTlsFile(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
@@ -919,7 +919,7 @@ func testAccAwsAppmeshVirtualNode_listenerTls(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_tlsAcm(meshName, vnName),
+				Config: testAccAppmeshVirtualNodeConfig_listenerTlsAcm(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, "name", vnName),
@@ -963,7 +963,7 @@ func testAccAwsAppmeshVirtualNode_listenerTls(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppmeshVirtualNodeConfig_tlsAcm(meshName, vnName),
+				Config: testAccAppmeshVirtualNodeConfig_listenerTlsAcm(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
 					// CA must be DISABLED for deletion.
 					testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
@@ -1118,33 +1118,6 @@ func testAccCheckAppmeshVirtualNodeExists(name string, v *appmesh.VirtualNodeDat
 	}
 }
 
-func testAccCheckAppmeshVirtualNodeClientPolicyAcmCertificateAuthorityArn(name, key string, v *appmesh.VirtualNodeData) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		expected, ok := rs.Primary.Attributes[key]
-		if !ok {
-			return fmt.Errorf("Key not found: %s", key)
-		}
-		if v.Spec == nil || len(v.Spec.Backends) != 1 || v.Spec.Backends[0].VirtualService == nil ||
-			v.Spec.Backends[0].VirtualService.ClientPolicy == nil || v.Spec.Backends[0].VirtualService.ClientPolicy.Tls == nil ||
-			v.Spec.Backends[0].VirtualService.ClientPolicy.Tls.Validation == nil || v.Spec.Backends[0].VirtualService.ClientPolicy.Tls.Validation.Trust == nil ||
-			v.Spec.Backends[0].VirtualService.ClientPolicy.Tls.Validation.Trust.Acm == nil ||
-			len(v.Spec.Backends[0].VirtualService.ClientPolicy.Tls.Validation.Trust.Acm.CertificateAuthorityArns) != 1 {
-			return fmt.Errorf("Not found: .Spec.Backends[0].VirtualService.ClientPolicy.Tls.Validation.Trust.Acm.CertificateAuthorityArns[0]")
-		}
-		got := aws.StringValue(v.Spec.Backends[0].VirtualService.ClientPolicy.Tls.Validation.Trust.Acm.CertificateAuthorityArns[0])
-		if got != expected {
-			return fmt.Errorf("Expected ACM CA ARN %q, got %q", expected, got)
-		}
-
-		return nil
-	}
-}
-
 func testAccAppmeshVirtualNodeConfig_mesh(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "test" {
@@ -1187,6 +1160,196 @@ resource "aws_appmesh_virtual_node" "test" {
   mesh_name = aws_appmesh_mesh.test.id
 
   spec {}
+}
+`, vnName))
+}
+
+func testAccAppmeshVirtualNodeConfig_backendDefaults(meshName, vnName string) string {
+	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+resource "aws_appmesh_virtual_node" "test" {
+  name      = %[1]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    backend_defaults {
+      client_policy {
+        tls {
+          ports = [8443]
+
+          validation {
+            trust {
+              file {
+                certificate_chain = "/cert_chain.pem"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, vnName))
+}
+
+func testAccAppmeshVirtualNodeConfig_backendDefaultsUpdated(meshName, vnName string) string {
+	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+resource "aws_appmesh_virtual_node" "test" {
+  name      = %[1]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    backend_defaults {
+      client_policy {
+        tls {
+          ports = [443, 8443]
+
+          validation {
+            trust {
+              file {
+                certificate_chain = "/etc/ssl/certs/cert_chain.pem"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, vnName))
+}
+
+func testAccAppmeshVirtualNodeConfig_backendClientPolicyAcm(meshName, vnName string) string {
+	return composeConfig(
+		testAccAppmeshVirtualNodeConfigRootCA(vnName),
+		testAccAppmeshVirtualNodeConfigPrivateCert(vnName),
+		testAccAppmeshVirtualNodeConfig_mesh(meshName),
+		fmt.Sprintf(`
+resource "aws_appmesh_virtual_node" "test" {
+  name      = %[1]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    backend {
+      virtual_service {
+        virtual_service_name = "servicea.simpleapp.local"
+
+        client_policy {
+          tls {
+            ports = [8443]
+
+            validation {
+              trust {
+                acm {
+                  certificate_authority_arns = [aws_acmpca_certificate_authority.test.arn]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
+
+    service_discovery {
+      dns {
+        hostname = "serviceb.simpleapp.local"
+      }
+    }
+  }
+}
+`, vnName))
+}
+
+func testAccAppmeshVirtualNodeConfig_backendClientPolicyFile(meshName, vnName string) string {
+	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+resource "aws_appmesh_virtual_node" "test" {
+  name      = %[1]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    backend {
+      virtual_service {
+        virtual_service_name = "servicea.simpleapp.local"
+
+        client_policy {
+          tls {
+            ports = [8443]
+
+            validation {
+              trust {
+                file {
+                  certificate_chain = "/cert_chain.pem"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
+
+    service_discovery {
+      dns {
+        hostname = "serviceb.simpleapp.local"
+      }
+    }
+  }
+}
+`, vnName))
+}
+
+func testAccAppmeshVirtualNodeConfig_backendClientPolicyFileUpdated(meshName, vnName string) string {
+	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+resource "aws_appmesh_virtual_node" "test" {
+  name      = %[1]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    backend {
+      virtual_service {
+        virtual_service_name = "servicea.simpleapp.local"
+
+        client_policy {
+          tls {
+            ports = [443, 8443]
+
+            validation {
+              trust {
+                file {
+                  certificate_chain = "/etc/ssl/certs/cert_chain.pem"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
+
+    service_discovery {
+      dns {
+        hostname = "serviceb.simpleapp.local"
+      }
+    }
+  }
 }
 `, vnName))
 }
@@ -1560,6 +1723,91 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName))
 }
 
+func testAccAppmeshVirtualNodeConfig_listenerTlsFile(meshName, vnName string) string {
+	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+resource "aws_appmesh_virtual_node" "test" {
+  name      = %[1]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    backend {
+      virtual_service {
+        virtual_service_name = "servicea.simpleapp.local"
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+
+      tls {
+        certificate {
+          file {
+            certificate_chain = "/cert_chain.pem"
+            private_key       = "/key.pem"
+          }
+        }
+
+        mode = "PERMISSIVE"
+      }
+    }
+
+    service_discovery {
+      dns {
+        hostname = "serviceb.simpleapp.local"
+      }
+    }
+  }
+}
+`, vnName))
+}
+
+func testAccAppmeshVirtualNodeConfig_listenerTlsAcm(meshName, vnName string) string {
+	return composeConfig(
+		testAccAppmeshVirtualNodeConfigRootCA(vnName),
+		testAccAppmeshVirtualNodeConfigPrivateCert(vnName),
+		testAccAppmeshVirtualNodeConfig_mesh(meshName),
+		fmt.Sprintf(`
+resource "aws_appmesh_virtual_node" "test" {
+  name      = %[1]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    backend {
+      virtual_service {
+        virtual_service_name = "servicea.simpleapp.local"
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+
+      tls {
+        certificate {
+          acm {
+            certificate_arn = aws_acm_certificate.test.arn
+          }
+        }
+
+        mode = "STRICT"
+      }
+    }
+
+    service_discovery {
+      dns {
+        hostname = "serviceb.simpleapp.local"
+      }
+    }
+  }
+}
+`, vnName))
+}
+
 func testAccAppmeshVirtualNodeConfig_logging(meshName, vnName, path string) string {
 	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
 resource "aws_appmesh_virtual_node" "test" {
@@ -1612,279 +1860,4 @@ resource "aws_appmesh_virtual_node" "test" {
   }
 }
 `, vnName, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func testAccAppmeshVirtualNodeConfig_tlsFile(meshName, vnName string) string {
-	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
-resource "aws_appmesh_virtual_node" "test" {
-  name      = %[1]q
-  mesh_name = aws_appmesh_mesh.test.id
-
-  spec {
-    backend {
-      virtual_service {
-        virtual_service_name = "servicea.simpleapp.local"
-      }
-    }
-
-    listener {
-      port_mapping {
-        port     = 8080
-        protocol = "http"
-      }
-
-      tls {
-        certificate {
-          file {
-            certificate_chain = "/cert_chain.pem"
-            private_key       = "/key.pem"
-          }
-        }
-
-        mode = "PERMISSIVE"
-      }
-    }
-
-    service_discovery {
-      dns {
-        hostname = "serviceb.simpleapp.local"
-      }
-    }
-  }
-}
-`, vnName))
-}
-
-func testAccAppmeshVirtualNodeConfig_tlsAcm(meshName, vnName string) string {
-	return composeConfig(
-		testAccAppmeshVirtualNodeConfigRootCA(vnName),
-		testAccAppmeshVirtualNodeConfigPrivateCert(vnName),
-		testAccAppmeshVirtualNodeConfig_mesh(meshName),
-		fmt.Sprintf(`
-resource "aws_appmesh_virtual_node" "test" {
-  name      = %[1]q
-  mesh_name = aws_appmesh_mesh.test.id
-
-  spec {
-    backend {
-      virtual_service {
-        virtual_service_name = "servicea.simpleapp.local"
-      }
-    }
-
-    listener {
-      port_mapping {
-        port     = 8080
-        protocol = "http"
-      }
-
-      tls {
-        certificate {
-          acm {
-            certificate_arn = aws_acm_certificate.test.arn
-          }
-        }
-
-        mode = "STRICT"
-      }
-    }
-
-    service_discovery {
-      dns {
-        hostname = "serviceb.simpleapp.local"
-      }
-    }
-  }
-}
-`, vnName))
-}
-
-func testAccAppmeshVirtualNodeConfig_clientPolicyFile(meshName, vnName string) string {
-	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
-resource "aws_appmesh_virtual_node" "test" {
-  name      = %[1]q
-  mesh_name = aws_appmesh_mesh.test.id
-
-  spec {
-    backend {
-      virtual_service {
-        virtual_service_name = "servicea.simpleapp.local"
-
-        client_policy {
-          tls {
-            ports = [8443]
-
-            validation {
-              trust {
-                file {
-                  certificate_chain = "/cert_chain.pem"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    listener {
-      port_mapping {
-        port     = 8080
-        protocol = "http"
-      }
-    }
-
-    service_discovery {
-      dns {
-        hostname = "serviceb.simpleapp.local"
-      }
-    }
-  }
-}
-`, vnName))
-}
-
-func testAccAppmeshVirtualNodeConfig_clientPolicyFileUpdated(meshName, vnName string) string {
-	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
-resource "aws_appmesh_virtual_node" "test" {
-  name      = %[1]q
-  mesh_name = aws_appmesh_mesh.test.id
-
-  spec {
-    backend {
-      virtual_service {
-        virtual_service_name = "servicea.simpleapp.local"
-
-        client_policy {
-          tls {
-            ports = [443, 8443]
-
-            validation {
-              trust {
-                file {
-                  certificate_chain = "/etc/ssl/certs/cert_chain.pem"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    listener {
-      port_mapping {
-        port     = 8080
-        protocol = "http"
-      }
-    }
-
-    service_discovery {
-      dns {
-        hostname = "serviceb.simpleapp.local"
-      }
-    }
-  }
-}
-`, vnName))
-}
-
-func testAccAppmeshVirtualNodeConfig_clientPolicyAcm(meshName, vnName string) string {
-	return composeConfig(
-		testAccAppmeshVirtualNodeConfigRootCA(vnName),
-		testAccAppmeshVirtualNodeConfigPrivateCert(vnName),
-		testAccAppmeshVirtualNodeConfig_mesh(meshName),
-		fmt.Sprintf(`
-resource "aws_appmesh_virtual_node" "test" {
-  name      = %[1]q
-  mesh_name = aws_appmesh_mesh.test.id
-
-  spec {
-    backend {
-      virtual_service {
-        virtual_service_name = "servicea.simpleapp.local"
-
-        client_policy {
-          tls {
-            ports = [8443]
-
-            validation {
-              trust {
-                acm {
-                  certificate_authority_arns = [aws_acmpca_certificate_authority.test.arn]
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    listener {
-      port_mapping {
-        port     = 8080
-        protocol = "http"
-      }
-    }
-
-    service_discovery {
-      dns {
-        hostname = "serviceb.simpleapp.local"
-      }
-    }
-  }
-}
-`, vnName))
-}
-
-func testAccAppmeshVirtualNodeConfig_backendDefaults(meshName, vnName string) string {
-	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
-resource "aws_appmesh_virtual_node" "test" {
-  name      = %[1]q
-  mesh_name = aws_appmesh_mesh.test.id
-
-  spec {
-    backend_defaults {
-      client_policy {
-        tls {
-          ports = [8443]
-
-          validation {
-            trust {
-              file {
-                certificate_chain = "/cert_chain.pem"
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-`, vnName))
-}
-
-func testAccAppmeshVirtualNodeConfig_backendDefaultsUpdated(meshName, vnName string) string {
-	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
-resource "aws_appmesh_virtual_node" "test" {
-  name      = %[1]q
-  mesh_name = aws_appmesh_mesh.test.id
-
-  spec {
-    backend_defaults {
-      client_policy {
-        tls {
-          ports = [443, 8443]
-
-          validation {
-            trust {
-              file {
-                certificate_chain = "/etc/ssl/certs/cert_chain.pem"
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-`, vnName))
 }
