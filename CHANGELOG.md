@@ -1,3 +1,7 @@
+## 3.16.0 (Unreleased)
+
+* **New Resource:** `aws_glue_dev_endpoint` ([#7895](https://github.com/hashicorp/terraform-provider-aws/pull/7895))
+
 ## 3.15.0 (November 12, 2020)
 
 ENHANCEMENTS
