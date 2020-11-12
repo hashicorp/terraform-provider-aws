@@ -658,10 +658,10 @@ resource "aws_ec2_transit_gateway" "test" {
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  appliance_mode_support        = %q
-  subnet_ids         			= [aws_subnet.test.id]
-  transit_gateway_id 			= aws_ec2_transit_gateway.test.id
-  vpc_id             			= aws_vpc.test.id
+  appliance_mode_support = %q
+  subnet_ids             = [aws_subnet.test.id]
+  transit_gateway_id     = aws_ec2_transit_gateway.test.id
+  vpc_id                 = aws_vpc.test.id
 }
 `, appModeSupport)
 }
