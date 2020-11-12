@@ -5,6 +5,7 @@ ENHANCEMENTS
 * data-source/aws_ec2_transit_gateway_vpc_attachment: Add `appliance_mode_support` attribute [GH-16159]
 * data-source/aws_route_table: Add `route` `vpc_endpoint_id` attribute [GH-16131]
 * resource/aws_default_route_table: Add `route` configuration block `vpc_endpoint_id` argument [GH-16131]
+* resource/aws_ec2_transit_gateway: Support in-place updates for most arguments [GH-15556]
 * resource/aws_ec2_transit_gateway_vpc_attachment: Add `appliance_mode_support` argument [GH-16159]
 * resource/aws_ec2_transit_gateway_vpc_attachment_accepter: Add `appliance_mode_support` attribute [GH-16159]
 * resource/aws_kinesis_firehose_delivery_stream: Add `http_endpoint_configuration` configuration block [GH-15356]
