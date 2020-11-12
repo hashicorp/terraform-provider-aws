@@ -125,6 +125,29 @@ func testAccAwsAppmeshVirtualNode_basic(t *testing.T) {
 	})
 }
 
+func testAccAwsAppmeshVirtualNode_disappears(t *testing.T) {
+	var vn appmesh.VirtualNodeData
+	resourceName := "aws_appmesh_virtual_node.test"
+	meshName := acctest.RandomWithPrefix("tf-acc-test")
+	vnName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppmeshVirtualNodeConfig_basic(meshName, vnName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppmeshVirtualNode(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccAwsAppmeshVirtualNode_backendClientPolicyAcm(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	var ca acmpca.CertificateAuthority

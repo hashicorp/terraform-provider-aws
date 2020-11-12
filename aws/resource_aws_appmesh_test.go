@@ -45,6 +45,7 @@ func TestAccAWSAppmesh_serial(t *testing.T) {
 		},
 		"VirtualNode": {
 			"basic":                    testAccAwsAppmeshVirtualNode_basic,
+			"disappears":               testAccAwsAppmeshVirtualNode_disappears,
 			"backendClientPolicyAcm":   testAccAwsAppmeshVirtualNode_backendClientPolicyAcm,
 			"backendClientPolicyFile":  testAccAwsAppmeshVirtualNode_backendClientPolicyFile,
 			"backendDefaults":          testAccAwsAppmeshVirtualNode_backendDefaults,
