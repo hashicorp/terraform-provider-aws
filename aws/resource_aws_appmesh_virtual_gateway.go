@@ -123,7 +123,10 @@ func resourceAwsAppmeshVirtualGateway() *schema.Resource {
 																								},
 																							},
 																						},
-																						ConflictsWith: []string{"spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.file"},
+																						ExactlyOneOf: []string{
+																							"spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.acm",
+																							"spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.file",
+																						},
 																					},
 
 																					"file": {
@@ -140,7 +143,10 @@ func resourceAwsAppmeshVirtualGateway() *schema.Resource {
 																								},
 																							},
 																						},
-																						ConflictsWith: []string{"spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.acm"},
+																						ExactlyOneOf: []string{
+																							"spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.acm",
+																							"spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.file",
+																						},
 																					},
 																				},
 																			},
@@ -267,7 +273,10 @@ func resourceAwsAppmeshVirtualGateway() *schema.Resource {
 																		},
 																	},
 																},
-																ConflictsWith: []string{"spec.0.listener.0.tls.0.certificate.0.file"},
+																ExactlyOneOf: []string{
+																	"spec.0.listener.0.tls.0.certificate.0.acm",
+																	"spec.0.listener.0.tls.0.certificate.0.file",
+																},
 															},
 
 															"file": {
@@ -290,7 +299,10 @@ func resourceAwsAppmeshVirtualGateway() *schema.Resource {
 																		},
 																	},
 																},
-																ConflictsWith: []string{"spec.0.listener.0.tls.0.certificate.0.acm"},
+																ExactlyOneOf: []string{
+																	"spec.0.listener.0.tls.0.certificate.0.acm",
+																	"spec.0.listener.0.tls.0.certificate.0.file",
+																},
 															},
 														},
 													},
