@@ -1081,6 +1081,15 @@ func validateOnceADayWindowFormat(v interface{}, k string) (ws []string, errors 
 	return
 }
 
+func validateUTCTimestamp(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	_, err := time.Parse(time.RFC3339, value)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("%q must be in RFC3339 time format %q. Example: %s", k, time.RFC3339, err))
+	}
+	return
+}
+
 // Validates that ECS Placement Constraints are set correctly
 // Takes type, and expression as strings
 func validateAwsEcsPlacementConstraint(constType, constExpr string) error {
