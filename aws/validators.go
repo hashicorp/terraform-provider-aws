@@ -1081,6 +1081,9 @@ func validateOnceADayWindowFormat(v interface{}, k string) (ws []string, errors 
 	return
 }
 
+// validateUTCTimestamp validates a string in UTC Format required by APIs including:
+// https://docs.aws.amazon.com/iot/latest/apireference/API_CloudwatchMetricAction.html
+// https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceToPointInTime.html
 func validateUTCTimestamp(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := time.Parse(time.RFC3339, value)
@@ -1963,18 +1966,6 @@ func validateIoTTopicRuleCloudWatchAlarmStateValue(v interface{}, s string) ([]s
 	}
 
 	return nil, []error{fmt.Errorf("State must be one of OK, ALARM, or INSUFFICIENT_DATA")}
-}
-
-// validateUTCTimestamp validates a string in UTC Format required by APIs including:
-// https://docs.aws.amazon.com/iot/latest/apireference/API_CloudwatchMetricAction.html
-// https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceToPointInTime.html
-func validateUTCTimestamp(v interface{}, k string) (ws []string, errors []error) {
-	dateString := v.(string)
-	_, err := time.Parse(time.RFC3339, dateString)
-	if err != nil {
-		errors = append(errors, fmt.Errorf("%q cannot be parsed in UTC format e.g. %q", k, time.RFC3339))
-	}
-	return
 }
 
 func validateIoTTopicRuleElasticSearchEndpoint(v interface{}, k string) (ws []string, errors []error) {
