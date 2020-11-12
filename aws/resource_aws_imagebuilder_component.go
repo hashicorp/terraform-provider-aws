@@ -1,15 +1,16 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"log"
 )
 
 func resourceAwsImageBuilderComponent() *schema.Resource {
@@ -34,16 +35,26 @@ func resourceAwsImageBuilderComponent() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"data": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.StringLenBetween(1, 16000),
-				ConflictsWith: []string{"uri"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"data", "uri"},
+				ValidateFunc: validation.StringLenBetween(1, 16000),
+			},
+			"date_created": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
+			},
+			"encrypted": {
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 			"kms_key_id": {
 				Type:         schema.TypeString,
@@ -57,24 +68,43 @@ func resourceAwsImageBuilderComponent() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 126),
 			},
+			"owner": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"platform": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"Windows", "Linux"}, false),
+				ValidateFunc: validation.StringInSlice(imagebuilder.Platform_Values(), false),
 			},
-			"semantic_version": {
+			"supported_os_versions": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
+				MinItems: 1,
+				MaxItems: 25,
+			},
+			"tags": tagsSchema(),
+			"type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"uri": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"data", "uri"},
+			},
+			"version": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-			"tags": tagsSchema(),
-			"uri": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"data"},
 			},
 		},
 	}
@@ -84,44 +114,60 @@ func resourceAwsImageBuilderComponentCreate(d *schema.ResourceData, meta interfa
 	conn := meta.(*AWSClient).imagebuilderconn
 
 	input := &imagebuilder.CreateComponentInput{
-		ClientToken:     aws.String(resource.UniqueId()),
-		Name:            aws.String(d.Get("name").(string)),
-		Platform:        aws.String(d.Get("platform").(string)),
-		SemanticVersion: aws.String(d.Get("semantic_version").(string)),
+		ClientToken: aws.String(resource.UniqueId()),
 	}
 
 	if v, ok := d.GetOk("change_description"); ok {
-		input.SetChangeDescription(v.(string))
+		input.ChangeDescription = aws.String(v.(string))
 	}
-	data, dataok := d.GetOk("data")
-	if dataok {
-		input.SetData(data.(string))
+
+	if v, ok := d.GetOk("data"); ok {
+		input.Data = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("description"); ok {
-		input.SetDescription(v.(string))
+		input.Description = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("kms_key_id"); ok {
-		input.SetKmsKeyId(v.(string))
-	}
-	uri, uriok := d.GetOk("uri")
-	if uriok {
-		input.SetUri(uri.(string))
-	}
-	if !uriok && !dataok {
-		return errors.New("one of data or uri must be set")
-	}
-	if v, ok := d.GetOk("tags"); ok {
-		input.SetTags(keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().ImagebuilderTags())
+		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Component: %#v", input)
+	if v, ok := d.GetOk("name"); ok {
+		input.Name = aws.String(v.(string))
+	}
 
-	resp, err := conn.CreateComponent(input)
+	if v, ok := d.GetOk("platform"); ok {
+		input.Platform = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("supported_os_versions"); ok && v.(*schema.Set).Len() > 0 {
+		input.SupportedOsVersions = expandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
+		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().ImagebuilderTags()
+	}
+
+	if v, ok := d.GetOk("uri"); ok {
+		input.Uri = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("version"); ok {
+		input.SemanticVersion = aws.String(v.(string))
+	}
+
+	output, err := conn.CreateComponent(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating Component: %s", err)
+		return fmt.Errorf("error creating Image Builder Component: %w", err)
 	}
 
-	d.SetId(aws.StringValue(resp.ComponentBuildVersionArn))
+	if output == nil {
+		return fmt.Errorf("error creating Image Builder Component: empty result")
+	}
+
+	d.SetId(aws.StringValue(output.ComponentBuildVersionArn))
 
 	return resourceAwsImageBuilderComponentRead(d, meta)
 }
@@ -130,36 +176,46 @@ func resourceAwsImageBuilderComponentRead(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).imagebuilderconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.GetComponent(&imagebuilder.GetComponentInput{
+	input := &imagebuilder.GetComponentInput{
 		ComponentBuildVersionArn: aws.String(d.Id()),
-	})
+	}
 
-	if isAWSErr(err, imagebuilder.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] Component (%s) not found, removing from state", d.Id())
+	output, err := conn.GetComponent(input)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Image Builder Component (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Component (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting Image Builder Component (%s): %w", d.Id(), err)
 	}
 
-	d.Set("arn", resp.Component.Arn)
-	d.Set("name", resp.Component.Name)
-	d.Set("semantic_version", resp.Component.Version)
-	d.Set("change_description", resp.Component.ChangeDescription)
-	d.Set("data", resp.Component.Data)
-	d.Set("description", resp.Component.Description)
-	d.Set("kms_key_id", resp.Component.KmsKeyId)
-	d.Set("platform", resp.Component.Platform)
-
-	tags, err := keyvaluetags.ImagebuilderListTags(conn, d.Get("arn").(string))
-	if err != nil {
-		return fmt.Errorf("error listing tags for Component (%s): %s", d.Id(), err)
+	if output == nil || output.Component == nil {
+		return fmt.Errorf("error getting Image Builder Component (%s): empty result", d.Id())
 	}
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+
+	component := output.Component
+
+	d.Set("arn", component.Arn)
+	d.Set("change_description", component.ChangeDescription)
+	d.Set("data", component.Data)
+	d.Set("date_created", component.DateCreated)
+	d.Set("description", component.Description)
+	d.Set("encrypted", component.Encrypted)
+	d.Set("kms_key_id", component.KmsKeyId)
+	d.Set("name", component.Name)
+	d.Set("owner", component.Owner)
+	d.Set("platform", component.Platform)
+	d.Set("supported_os_versions", aws.StringValueSlice(component.SupportedOsVersions))
+
+	if err := d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(component.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
+
+	d.Set("type", component.Type)
+	d.Set("version", component.Version)
 
 	return nil
 }
@@ -167,11 +223,11 @@ func resourceAwsImageBuilderComponentRead(d *schema.ResourceData, meta interface
 func resourceAwsImageBuilderComponentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
 
-	// tags are the only thing we can actually change, everything else is ForceNew
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
-		if err := keyvaluetags.ImagebuilderUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags for Component (%s): %s", d.Id(), err)
+
+		if err := keyvaluetags.ImagebuilderUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags for Image Builder Component (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -181,16 +237,18 @@ func resourceAwsImageBuilderComponentUpdate(d *schema.ResourceData, meta interfa
 func resourceAwsImageBuilderComponentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
 
-	_, err := conn.DeleteComponent(&imagebuilder.DeleteComponentInput{
+	input := &imagebuilder.DeleteComponentInput{
 		ComponentBuildVersionArn: aws.String(d.Id()),
-	})
+	}
 
-	if isAWSErr(err, imagebuilder.ErrCodeResourceNotFoundException, "") {
+	_, err := conn.DeleteComponent(input)
+
+	if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Component (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Image Builder Component (%s): %w", d.Id(), err)
 	}
 
 	return nil

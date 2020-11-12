@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -14,8 +15,9 @@ func dataSourceAwsImageBuilderComponent() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
 			},
 			"change_description": {
 				Type:     schema.TypeString,
@@ -36,33 +38,36 @@ func dataSourceAwsImageBuilderComponent() *schema.Resource {
 			"encrypted": {
 				Type:     schema.TypeBool,
 				Computed: true,
-				Optional: true,
+			},
+			"kms_key_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
 			},
 			"owner": {
 				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
 			},
 			"platform": {
 				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
+			},
+			"supported_os_versions": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": tagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
 			},
-			"semantic_version": {
-				Type:     schema.TypeInt,
+			"version": {
+				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
 			},
 		},
 	}
@@ -72,35 +77,44 @@ func dataSourceAwsImageBuilderComponentRead(d *schema.ResourceData, meta interfa
 	conn := meta.(*AWSClient).imagebuilderconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	componentArn := d.Get("arn").(string)
+	input := &imagebuilder.GetComponentInput{}
 
-	params := &imagebuilder.GetComponentInput{
-		ComponentBuildVersionArn: aws.String(componentArn),
+	if v, ok := d.GetOk("arn"); ok {
+		input.ComponentBuildVersionArn = aws.String(v.(string))
 	}
 
-	resp, err := conn.GetComponent(params)
+	output, err := conn.GetComponent(input)
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving Component: %s", err)
+		return fmt.Errorf("error getting Image Builder Component: %w", err)
 	}
 
-	d.SetId(*resp.Component.Arn)
+	if output == nil || output.Component == nil {
+		return fmt.Errorf("error getting Image Builder Component: empty result")
+	}
 
-	if err := d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(resp.Component.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	component := output.Component
+
+	d.SetId(aws.StringValue(component.Arn))
+
+	d.Set("arn", component.Arn)
+	d.Set("change_description", component.ChangeDescription)
+	d.Set("data", component.Data)
+	d.Set("date_created", component.DateCreated)
+	d.Set("description", component.Description)
+	d.Set("encrypted", component.Encrypted)
+	d.Set("kms_key_id", component.KmsKeyId)
+	d.Set("name", component.Name)
+	d.Set("owner", component.Owner)
+	d.Set("platform", component.Platform)
+	d.Set("supported_os_versions", aws.StringValueSlice(component.SupportedOsVersions))
+
+	if err := d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(component.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
-	d.Set("change_description", resp.Component.ChangeDescription)
-	d.Set("data", resp.Component.Data)
-	d.Set("date_created", resp.Component.DateCreated)
-	d.Set("description", resp.Component.Description)
-	d.Set("encrypted", resp.Component.Encrypted)
-	d.Set("kms_key_id", resp.Component.KmsKeyId)
-	d.Set("name", resp.Component.Name)
-	d.Set("owner", resp.Component.Owner)
-	d.Set("platform", resp.Component.Platform)
-	d.Set("type", resp.Component.Type)
-	d.Set("semantic_version", resp.Component.Version)
+	d.Set("type", component.Type)
+	d.Set("version", component.Version)
 
 	return nil
 }
