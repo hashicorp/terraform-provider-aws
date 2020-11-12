@@ -3234,16 +3234,16 @@ func TestValidateUTCTimestamp(t *testing.T) {
 	}
 
 	for _, f := range validT {
-		_, errors := validateUTCTimestamp(f, "valid_restorable_time_format")
+		_, errors := validateUTCTimestamp(f, "utc_timestamp")
 		if len(errors) > 0 {
-			t.Fatalf("Expected the time %q to be in valid format, got error %q", f, errors)
+			t.Fatalf("expected the time %q to be in valid format, got error %q", f, errors)
 		}
 	}
 
 	for _, f := range invalidT {
-		_, errors := validateUTCTimestamp(f, "invalid_restorable_time_format")
+		_, errors := validateUTCTimestamp(f, "utc_timestamp")
 		if len(errors) == 0 {
-			t.Fatalf("Expected the time %q to fail validation", f)
+			t.Fatalf("expected the time %q to fail validation", f)
 		}
 	}
 }
