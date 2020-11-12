@@ -44,6 +44,29 @@ func TestAccAwsServerlessRepositoryStack_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsServerlessRepositoryStack_disappears(t *testing.T) {
+	var stack cloudformation.Stack
+	stackName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resourceName := "aws_serverlessrepository_stack.postgres-rotator"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAmiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsServerlessRepositoryStackConfig(stackName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerlessRepositoryStackExists(resourceName, &stack),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsServerlessRepositoryStack(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsServerlessRepositoryStack_versioned(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := acctest.RandomWithPrefix("tf-acc-test")
