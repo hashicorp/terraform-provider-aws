@@ -234,6 +234,12 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 															},
 														},
 													},
+													ExactlyOneOf: []string{
+														"spec.0.listener.0.timeout.0.grpc",
+														"spec.0.listener.0.timeout.0.http",
+														"spec.0.listener.0.timeout.0.http2",
+														"spec.0.listener.0.timeout.0.tcp",
+													},
 												},
 
 												"http": {
@@ -285,6 +291,12 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 																},
 															},
 														},
+													},
+													ExactlyOneOf: []string{
+														"spec.0.listener.0.timeout.0.grpc",
+														"spec.0.listener.0.timeout.0.http",
+														"spec.0.listener.0.timeout.0.http2",
+														"spec.0.listener.0.timeout.0.tcp",
 													},
 												},
 
@@ -338,6 +350,12 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 															},
 														},
 													},
+													ExactlyOneOf: []string{
+														"spec.0.listener.0.timeout.0.grpc",
+														"spec.0.listener.0.timeout.0.http",
+														"spec.0.listener.0.timeout.0.http2",
+														"spec.0.listener.0.timeout.0.tcp",
+													},
 												},
 
 												"tcp": {
@@ -368,6 +386,12 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 																},
 															},
 														},
+													},
+													ExactlyOneOf: []string{
+														"spec.0.listener.0.timeout.0.grpc",
+														"spec.0.listener.0.timeout.0.http",
+														"spec.0.listener.0.timeout.0.http2",
+														"spec.0.listener.0.timeout.0.tcp",
 													},
 												},
 											},
