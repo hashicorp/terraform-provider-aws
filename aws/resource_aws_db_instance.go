@@ -297,14 +297,17 @@ func resourceAwsDbInstance() *schema.Resource {
 							ValidateFunc:  validateUTCTimestamp,
 							ConflictsWith: []string{"restore_to_point_in_time.0.use_latest_restorable_time"},
 						},
+
 						"source_db_instance_identifier": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+
 						"source_dbi_resource_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+
 						"use_latest_restorable_time": {
 							Type:          schema.TypeBool,
 							Optional:      true,
@@ -1089,59 +1092,77 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			if v, ok := d.GetOk("availability_zone"); ok {
 				input.AvailabilityZone = aws.String(v.(string))
 			}
+
 			if v, ok := d.GetOk("domain"); ok {
 				input.Domain = aws.String(v.(string))
 			}
+
 			if v, ok := d.GetOk("domain_iam_role_name"); ok {
 				input.DomainIAMRoleName = aws.String(v.(string))
 			}
+
 			if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
 				input.EnableCloudwatchLogsExports = expandStringSet(v.(*schema.Set))
 			}
+
 			if v, ok := d.GetOk("engine"); ok {
 				input.Engine = aws.String(v.(string))
 			}
+
 			if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
 				input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
 			}
+
 			if v, ok := d.GetOk("iops"); ok {
 				input.Iops = aws.Int64(int64(v.(int)))
 			}
+
 			if v, ok := d.GetOk("license_model"); ok {
 				input.LicenseModel = aws.String(v.(string))
 			}
+
 			if v, ok := d.GetOk("max_allocated_storage"); ok {
 				input.MaxAllocatedStorage = aws.Int64(int64(v.(int)))
 			}
+
 			if v, ok := d.GetOk("multi_az"); ok {
 				input.MultiAZ = aws.Bool(v.(bool))
 			}
+
 			if v, ok := d.GetOk("name"); ok {
 				input.DBName = aws.String(v.(string))
 			}
+
 			if v, ok := d.GetOk("option_group_name"); ok {
 				input.OptionGroupName = aws.String(v.(string))
 			}
+
 			if v, ok := d.GetOk("parameter_group_name"); ok {
 				input.DBParameterGroupName = aws.String(v.(string))
 			}
+
 			if v, ok := d.GetOk("port"); ok {
 				input.Port = aws.Int64(int64(v.(int)))
 			}
+
 			if v, ok := d.GetOk("storage_type"); ok {
 				input.StorageType = aws.String(v.(string))
 			}
+
 			if v, ok := d.GetOk("subnet_group_name"); ok {
 				input.DBSubnetGroupName = aws.String(v.(string))
 			}
+
 			if v, ok := d.GetOk("tde_credential_arn"); ok {
 				input.TdeCredentialArn = aws.String(v.(string))
 			}
+
 			if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
 				input.VpcSecurityGroupIds = expandStringSet(v.(*schema.Set))
 			}
 
 			log.Printf("[DEBUG] DB Instance restore to point in time configuration: %s", input)
+
 			_, err := conn.RestoreDBInstanceToPointInTime(input)
 			if err != nil {
 				return fmt.Errorf("error creating DB Instance: %w", err)
@@ -1938,23 +1959,29 @@ func expandRestoreToPointInTime(l []interface{}) *rds.RestoreDBInstanceToPointIn
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
+
 	tfMap, ok := l[0].(map[string]interface{})
 	if !ok {
 		return nil
 	}
+
 	input := &rds.RestoreDBInstanceToPointInTimeInput{}
+
 	if v, ok := tfMap["restore_time"].(string); ok && v != "" {
 		parsedTime, err := time.Parse(time.RFC3339, v)
 		if err == nil {
 			input.RestoreTime = aws.Time(parsedTime)
 		}
 	}
+
 	if v, ok := tfMap["source_db_instance_identifier"].(string); ok && v != "" {
 		input.SourceDBInstanceIdentifier = aws.String(v)
 	}
+
 	if v, ok := tfMap["source_dbi_resource_id"].(string); ok && v != "" {
 		input.SourceDbiResourceId = aws.String(v)
 	}
+
 	if v, ok := tfMap["use_latest_restorable_time"].(bool); ok && v {
 		input.UseLatestRestorableTime = aws.Bool(v)
 	}
