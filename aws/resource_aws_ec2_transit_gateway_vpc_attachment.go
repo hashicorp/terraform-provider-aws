@@ -23,13 +23,10 @@ func resourceAwsEc2TransitGatewayVpcAttachment() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"appliance_mode_support": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.ApplianceModeSupportValueDisable,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.ApplianceModeSupportValueDisable,
-					ec2.ApplianceModeSupportValueEnable,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.ApplianceModeSupportValueDisable,
+				ValidateFunc: validation.StringInSlice(ec2.ApplianceModeSupportValue_Values(), false),
 			},
 			"dns_support": {
 				Type:     schema.TypeString,
