@@ -402,6 +402,7 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 																		},
 																	},
 																},
+																ExactlyOneOf: []string{"spec.0.listener.0.tls.0.certificate.0.acm", "spec.0.listener.0.tls.0.certificate.0.file"},
 															},
 
 															"file": {
@@ -424,6 +425,7 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 																		},
 																	},
 																},
+																ExactlyOneOf: []string{"spec.0.listener.0.tls.0.certificate.0.acm", "spec.0.listener.0.tls.0.certificate.0.file"},
 															},
 														},
 													},
