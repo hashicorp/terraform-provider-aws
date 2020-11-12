@@ -789,10 +789,11 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 		resp, err := conn.RestoreDBClusterToPointInTime(createOpts)
 		if err != nil {
-			log.Printf("[DEBUG]: RDS Cluster restore response: %s", resp)
 			log.Printf("[ERROR] Error restoring RDS Cluster: %s", err)
 			return err
 		}
+		
+		log.Printf("[DEBUG]: RDS Cluster restore response: %s", resp)
 	} else {
 
 		createOpts := &rds.CreateDBClusterInput{
