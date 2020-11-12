@@ -436,50 +436,8 @@ resource "aws_acm_certificate_validation" "test" {
 func testAccAWSAPIGatewayDomainNameConfig_CertificateArn(rootDomain string, domain string) string {
 	return composeConfig(
 		testAccApigatewayEdgeDomainNameRegionProviderConfig(),
-		fmt.Sprintf(`
-data "aws_route53_zone" "test" {
-  name         = %[1]q
-  private_zone = false
-}
-
-resource "aws_acm_certificate" "test" {
-  domain_name       = %[2]q
-  validation_method = "DNS"
-}
-
-#
-# for_each acceptance testing requires:
-# https://github.com/hashicorp/terraform-plugin-sdk/issues/536
-#
-# resource "aws_route53_record" "test" {
-#   for_each = {
-#     for dvo in aws_acm_certificate.test.domain_validation_options: dvo.domain_name => {
-#       name   = dvo.resource_record_name
-#       record = dvo.resource_record_value
-#       type   = dvo.resource_record_type
-#     }
-#   }
-#   allow_overwrite = true
-#   name            = each.value.name
-#   records         = [each.value.record]
-#   ttl             = 60
-#   type            = each.value.type
-#   zone_id         = data.aws_route53_zone.test.zone_id
-# }
-
-resource "aws_route53_record" "test" {
-  allow_overwrite = true
-  name            = tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_name
-  records         = [tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_value]
-  ttl             = 60
-  type            = tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_type
-  zone_id         = data.aws_route53_zone.test.zone_id
-}
-
-resource "aws_acm_certificate_validation" "test" {
-  certificate_arn         = aws_acm_certificate.test.arn
-  validation_record_fqdns = [aws_route53_record.test.fqdn]
-}
+		testAccAWSAPIGatewayDomainNameConfigPublicCert(rootDomain, domain),
+		`
 resource "aws_api_gateway_domain_name" "test" {
   domain_name     = aws_acm_certificate.test.domain_name
   certificate_arn = aws_acm_certificate_validation.test.certificate_arn
@@ -488,7 +446,7 @@ resource "aws_api_gateway_domain_name" "test" {
     types = ["EDGE"]
   }
 }
-`, rootDomain, domain))
+`)
 }
 
 func testAccAWSAPIGatewayDomainNameConfig_CertificateName(domainName, key, certificate, chainCertificate string) string {
