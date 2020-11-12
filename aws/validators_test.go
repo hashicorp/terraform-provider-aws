@@ -3269,7 +3269,7 @@ func TestValidateUTCTimestamp(t *testing.T) {
 	for _, f := range invalidT {
 		_, errors := validateUTCTimestamp(f, "invalid UTC timestamp")
 		if len(errors) == 0 {
-			t.Fatalf("Expected the time %q to fail validation", f)
+			t.Fatalf("expected the time %q to fail validation", f)
 		}
 	}
 }
