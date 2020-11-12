@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -89,6 +89,11 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 						},
 
 						"transit_gateway_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
+						"vpc_endpoint_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},

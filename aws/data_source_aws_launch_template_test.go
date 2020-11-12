@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccAWSLaunchTemplateDataSource_basic(t *testing.T) {
@@ -160,8 +160,42 @@ func TestAccAWSLaunchTemplateDataSource_associatePublicIPAddress(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplateDataSource_NonExistent(t *testing.T) {
+func TestAccAWSLaunchTemplateDataSource_networkInterfaces_deleteOnTermination(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_launch_template.test"
+	resourceName := "aws_launch_template.test"
 
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateDataSourceConfigNetworkInterfacesDeleteOnTermination(rName, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_interfaces.#", resourceName, "network_interfaces.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_interfaces.0.delete_on_termination", resourceName, "network_interfaces.0.delete_on_termination"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateDataSourceConfigNetworkInterfacesDeleteOnTermination(rName, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_interfaces.#", resourceName, "network_interfaces.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_interfaces.0.delete_on_termination", resourceName, "network_interfaces.0.delete_on_termination"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateDataSourceConfigNetworkInterfacesDeleteOnTermination(rName, "null"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_interfaces.#", resourceName, "network_interfaces.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_interfaces.0.delete_on_termination", resourceName, "network_interfaces.0.delete_on_termination"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchTemplateDataSource_NonExistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -182,7 +216,7 @@ resource "aws_launch_template" "test" {
 }
 
 data "aws_launch_template" "test" {
-  name = "${aws_launch_template.test.name}"
+  name = aws_launch_template.test.name
 }
 `, rName)
 }
@@ -196,7 +230,7 @@ resource "aws_launch_template" "test" {
 data "aws_launch_template" "test" {
   filter {
     name   = "launch-template-name"
-    values = ["${aws_launch_template.test.name}"]
+    values = [aws_launch_template.test.name]
   }
 }
 `, rName)
@@ -206,6 +240,7 @@ func testAccAWSLaunchTemplateDataSourceConfigFilterTags(rName string, rInt int) 
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name = %[1]q
+
   tags = {
     Name     = "key1"
     TestSeed = "%[2]d"
@@ -214,7 +249,7 @@ resource "aws_launch_template" "test" {
 
 data "aws_launch_template" "test" {
   tags = {
-    Name     = "${aws_launch_template.test.tags["Name"]}"
+    Name     = aws_launch_template.test.tags["Name"]
     TestSeed = "%[2]d"
   }
 }
@@ -245,7 +280,7 @@ resource "aws_launch_template" "test" {
   name = %[1]q
 
   network_interfaces {
-	associate_public_ip_address = %[2]s
+    associate_public_ip_address = %[2]s
   }
 }
 
@@ -253,6 +288,22 @@ data "aws_launch_template" "test" {
   name = aws_launch_template.test.name
 }
 `, rName, associatePublicIPAddress)
+}
+
+func testAccAWSLaunchTemplateDataSourceConfigNetworkInterfacesDeleteOnTermination(rName, deleteOnTermination string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  network_interfaces {
+    delete_on_termination = %[2]s
+  }
+}
+
+data "aws_launch_template" "test" {
+  name = aws_launch_template.test.name
+}
+`, rName, deleteOnTermination)
 }
 
 const testAccAWSLaunchTemplateDataSourceConfig_NonExistent = `

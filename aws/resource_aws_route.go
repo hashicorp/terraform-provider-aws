@@ -9,16 +9,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 )
 
 // How long to sleep if a limit-exceeded event happens
 var routeTargetValidationError = errors.New("Error: more than 1 target specified. Only 1 of gateway_id, " +
-	"egress_only_gateway_id, nat_gateway_id, instance_id, network_interface_id or " +
-	"vpc_peering_connection_id is allowed.")
+	"egress_only_gateway_id, nat_gateway_id, instance_id, network_interface_id, local_gateway_id, transit_gateway_id, " +
+	"vpc_endpoint_id, vpc_peering_connection_id is allowed.")
 
 // AWS Route resource Schema declaration
 func resourceAwsRoute() *schema.Resource {
@@ -96,6 +96,12 @@ func resourceAwsRoute() *schema.Resource {
 				Computed: true,
 			},
 
+			"local_gateway_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
 			"instance_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -134,6 +140,11 @@ func resourceAwsRoute() *schema.Resource {
 				Optional: true,
 			},
 
+			"vpc_endpoint_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"vpc_peering_connection_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -150,10 +161,12 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		"egress_only_gateway_id",
 		"gateway_id",
 		"nat_gateway_id",
+		"local_gateway_id",
 		"instance_id",
 		"network_interface_id",
 		"transit_gateway_id",
 		"vpc_peering_connection_id",
+		"vpc_endpoint_id",
 	}
 
 	// Check if more than 1 target is specified
@@ -197,6 +210,12 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 			DestinationCidrBlock: aws.String(d.Get("destination_cidr_block").(string)),
 			NatGatewayId:         aws.String(d.Get("nat_gateway_id").(string)),
 		}
+	case "local_gateway_id":
+		createOpts = &ec2.CreateRouteInput{
+			RouteTableId:         aws.String(d.Get("route_table_id").(string)),
+			DestinationCidrBlock: aws.String(d.Get("destination_cidr_block").(string)),
+			LocalGatewayId:       aws.String(d.Get("local_gateway_id").(string)),
+		}
 	case "instance_id":
 		createOpts = &ec2.CreateRouteInput{
 			RouteTableId: aws.String(d.Get("route_table_id").(string)),
@@ -229,6 +248,20 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		createOpts = &ec2.CreateRouteInput{
 			RouteTableId:     aws.String(d.Get("route_table_id").(string)),
 			TransitGatewayId: aws.String(d.Get("transit_gateway_id").(string)),
+		}
+
+		if v, ok := d.GetOk("destination_cidr_block"); ok {
+			createOpts.DestinationCidrBlock = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
+			createOpts.DestinationIpv6CidrBlock = aws.String(v.(string))
+		}
+
+	case "vpc_endpoint_id":
+		createOpts = &ec2.CreateRouteInput{
+			RouteTableId:  aws.String(d.Get("route_table_id").(string)),
+			VpcEndpointId: aws.String(d.Get("vpc_endpoint_id").(string)),
 		}
 
 		if v, ok := d.GetOk("destination_cidr_block"); ok {
@@ -366,9 +399,15 @@ func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("destination_cidr_block", route.DestinationCidrBlock)
 	d.Set("destination_ipv6_cidr_block", route.DestinationIpv6CidrBlock)
 	d.Set("destination_prefix_list_id", route.DestinationPrefixListId)
-	d.Set("gateway_id", route.GatewayId)
+	// VPC Endpoint ID is returned in Gateway ID field
+	if strings.HasPrefix(aws.StringValue(route.GatewayId), "vpce-") {
+		d.Set("vpc_endpoint_id", route.GatewayId)
+	} else {
+		d.Set("gateway_id", route.GatewayId)
+	}
 	d.Set("egress_only_gateway_id", route.EgressOnlyInternetGatewayId)
 	d.Set("nat_gateway_id", route.NatGatewayId)
+	d.Set("local_gateway_id", route.LocalGatewayId)
 	d.Set("instance_id", route.InstanceId)
 	d.Set("instance_owner_id", route.InstanceOwnerId)
 	d.Set("network_interface_id", route.NetworkInterfaceId)
@@ -389,9 +428,11 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 		"egress_only_gateway_id",
 		"gateway_id",
 		"nat_gateway_id",
+		"local_gateway_id",
 		"network_interface_id",
 		"instance_id",
 		"transit_gateway_id",
+		"vpc_endpoint_id",
 		"vpc_peering_connection_id",
 	}
 	// Check if more than 1 target is specified
@@ -437,6 +478,12 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 			DestinationCidrBlock: aws.String(d.Get("destination_cidr_block").(string)),
 			NatGatewayId:         aws.String(d.Get("nat_gateway_id").(string)),
 		}
+	case "local_gateway_id":
+		replaceOpts = &ec2.ReplaceRouteInput{
+			RouteTableId:         aws.String(d.Get("route_table_id").(string)),
+			DestinationCidrBlock: aws.String(d.Get("destination_cidr_block").(string)),
+			LocalGatewayId:       aws.String(d.Get("local_gateway_id").(string)),
+		}
 	case "instance_id":
 		replaceOpts = &ec2.ReplaceRouteInput{
 			RouteTableId:         aws.String(d.Get("route_table_id").(string)),
@@ -454,6 +501,12 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 			RouteTableId:         aws.String(d.Get("route_table_id").(string)),
 			DestinationCidrBlock: aws.String(d.Get("destination_cidr_block").(string)),
 			TransitGatewayId:     aws.String(d.Get("transit_gateway_id").(string)),
+		}
+	case "vpc_endpoint_id":
+		replaceOpts = &ec2.ReplaceRouteInput{
+			RouteTableId:         aws.String(d.Get("route_table_id").(string)),
+			DestinationCidrBlock: aws.String(d.Get("destination_cidr_block").(string)),
+			VpcEndpointId:        aws.String(d.Get("vpc_endpoint_id").(string)),
 		}
 	case "vpc_peering_connection_id":
 		replaceOpts = &ec2.ReplaceRouteInput{

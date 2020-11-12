@@ -54,3 +54,79 @@ func ClientVpnRouteByID(conn *ec2.EC2, routeID string) (*ec2.DescribeClientVpnRo
 
 	return ClientVpnRoute(conn, endpointID, targetSubnetID, destinationCidr)
 }
+
+// SecurityGroupByID looks up a security group by ID. When not found, returns nil and potentially an API error.
+func SecurityGroupByID(conn *ec2.EC2, id string) (*ec2.SecurityGroup, error) {
+	req := &ec2.DescribeSecurityGroupsInput{
+		GroupIds: aws.StringSlice([]string{id}),
+	}
+	result, err := conn.DescribeSecurityGroups(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if result == nil || len(result.SecurityGroups) == 0 || result.SecurityGroups[0] == nil {
+		return nil, nil
+	}
+
+	return result.SecurityGroups[0], nil
+}
+
+// VpcPeeringConnectionByID returns the VPC peering connection corresponding to the specified identifier.
+// Returns nil and potentially an error if no VPC peering connection is found.
+func VpcPeeringConnectionByID(conn *ec2.EC2, id string) (*ec2.VpcPeeringConnection, error) {
+	input := &ec2.DescribeVpcPeeringConnectionsInput{
+		VpcPeeringConnectionIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeVpcPeeringConnections(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.VpcPeeringConnections) == 0 {
+		return nil, nil
+	}
+
+	return output.VpcPeeringConnections[0], nil
+}
+
+// VpnGatewayVpcAttachment returns the attachment between the specified VPN gateway and VPC.
+// Returns nil and potentially an error if no attachment is found.
+func VpnGatewayVpcAttachment(conn *ec2.EC2, vpnGatewayID, vpcID string) (*ec2.VpcAttachment, error) {
+	vpnGateway, err := VpnGatewayByID(conn, vpnGatewayID)
+	if err != nil {
+		return nil, err
+	}
+
+	if vpnGateway == nil {
+		return nil, nil
+	}
+
+	for _, vpcAttachment := range vpnGateway.VpcAttachments {
+		if aws.StringValue(vpcAttachment.VpcId) == vpcID {
+			return vpcAttachment, nil
+		}
+	}
+
+	return nil, nil
+}
+
+// VpnGatewayByID returns the VPN gateway corresponding to the specified identifier.
+// Returns nil and potentially an error if no VPN gateway is found.
+func VpnGatewayByID(conn *ec2.EC2, id string) (*ec2.VpnGateway, error) {
+	input := &ec2.DescribeVpnGatewaysInput{
+		VpnGatewayIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeVpnGateways(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.VpnGateways) == 0 {
+		return nil, nil
+	}
+
+	return output.VpnGateways[0], nil
+}

@@ -23,7 +23,7 @@ resource "aws_ebs_volume" "example" {
 }
 
 resource "aws_ebs_snapshot" "example_snapshot" {
-  volume_id = "${aws_ebs_volume.example.id}"
+  volume_id = aws_ebs_volume.example.id
 
   tags = {
     Name = "HelloWorld_snap"

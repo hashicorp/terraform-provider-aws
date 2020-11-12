@@ -11,10 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -353,6 +353,12 @@ func resourceAwsEcsService() *schema.Resource {
 				},
 			},
 			"tags": tagsSchema(),
+
+			"wait_for_steady_state": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -528,6 +534,12 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] ECS service created: %s", aws.StringValue(service.ServiceArn))
 	d.SetId(aws.StringValue(service.ServiceArn))
 
+	if d.Get("wait_for_steady_state").(bool) {
+		if err := waitForSteadyState(conn, d); err != nil {
+			return err
+		}
+	}
+
 	return resourceAwsEcsServiceRead(d, meta)
 }
 
@@ -572,6 +584,13 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	if isResourceTimeoutError(err) {
 		out, err = conn.DescribeServices(&input)
 	}
+
+	if isAWSErr(err, ecs.ErrCodeClusterNotFoundException, "") {
+		log.Printf("[WARN] ECS Service %s parent cluster %s not found, removing from state.", d.Id(), d.Get("cluster").(string))
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error reading ECS service: %s", err)
 	}
@@ -1035,6 +1054,12 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
+	if d.Get("wait_for_steady_state").(bool) {
+		if err := waitForSteadyState(conn, d); err != nil {
+			return err
+		}
+	}
+
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
@@ -1163,4 +1188,18 @@ func buildFamilyAndRevisionFromARN(arn string) string {
 // arn:aws:ecs:us-west-2:0123456789:cluster/radek-cluster
 func getNameFromARN(arn string) string {
 	return strings.Split(arn, "/")[1]
+}
+
+func waitForSteadyState(conn *ecs.ECS, d *schema.ResourceData) error {
+	input := &ecs.DescribeServicesInput{
+		Services: aws.StringSlice([]string{d.Id()}),
+	}
+	if v, ok := d.GetOk("cluster"); ok {
+		input.Cluster = aws.String(v.(string))
+	}
+
+	if err := conn.WaitUntilServicesStable(input); err != nil {
+		return fmt.Errorf("error waiting for service (%s) to reach a steady state: %w", d.Id(), err)
+	}
+	return nil
 }

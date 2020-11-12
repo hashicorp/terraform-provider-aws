@@ -24,7 +24,7 @@ data "aws_vpcs" "foo" {
 }
 
 output "foo" {
-  value = "${data.aws_vpcs.foo.ids}"
+  value = data.aws_vpcs.foo.ids
 }
 ```
 
@@ -70,4 +70,5 @@ which take the following arguments:
 
 ## Attributes Reference
 
+* `id` - AWS Region.
 * `ids` - A list of all the VPC Ids found. This data source will fail if none are found.

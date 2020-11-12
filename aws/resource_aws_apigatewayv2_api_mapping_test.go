@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -266,9 +266,9 @@ resource "aws_apigatewayv2_domain_name" "test" {
 func testAccAWSAPIGatewayV2ApiMappingConfig_basic(rName, certificateArn string) string {
 	return testAccAWSAPIGatewayV2ApiMappingConfig_base(rName, certificateArn) + testAccAWSAPIGatewayV2StageConfig_basicWebSocket(rName) + `
 resource "aws_apigatewayv2_api_mapping" "test" {
-  api_id      = "${aws_apigatewayv2_api.test.id}"
-  domain_name = "${aws_apigatewayv2_domain_name.test.id}"
-  stage       = "${aws_apigatewayv2_stage.test.id}"
+  api_id      = aws_apigatewayv2_api.test.id
+  domain_name = aws_apigatewayv2_domain_name.test.id
+  stage       = aws_apigatewayv2_stage.test.id
 }
 `
 }
@@ -276,9 +276,9 @@ resource "aws_apigatewayv2_api_mapping" "test" {
 func testAccAWSAPIGatewayV2ApiMappingConfig_apiMappingKey(rName, certificateArn, apiMappingKey string) string {
 	return testAccAWSAPIGatewayV2ApiMappingConfig_base(rName, certificateArn) + testAccAWSAPIGatewayV2StageConfig_basicWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_api_mapping" "test" {
-  api_id      = "${aws_apigatewayv2_api.test.id}"
-  domain_name = "${aws_apigatewayv2_domain_name.test.id}"
-  stage       = "${aws_apigatewayv2_stage.test.id}"
+  api_id      = aws_apigatewayv2_api.test.id
+  domain_name = aws_apigatewayv2_domain_name.test.id
+  stage       = aws_apigatewayv2_stage.test.id
 
   api_mapping_key = %[1]q
 }

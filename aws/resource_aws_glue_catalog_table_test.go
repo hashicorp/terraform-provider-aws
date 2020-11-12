@@ -6,10 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSGlueCatalogTable_recreates(t *testing.T) {
@@ -323,7 +322,7 @@ func TestAccAWSGlueCatalogTable_update_replaceValues(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/11784
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11784
 func TestAccAWSGlueCatalogTable_StorageDescriptor_EmptyConfigurationBlock(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_catalog_table.test"
@@ -345,7 +344,7 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_EmptyConfigurationBlock(t *tes
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/11784
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11784
 func TestAccAWSGlueCatalogTable_StorageDescriptor_SerDeInfo_EmptyConfigurationBlock(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_catalog_table.test"
@@ -367,7 +366,46 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_SerDeInfo_EmptyConfigurationBl
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/11784
+func TestAccAWSGlueCatalogTable_StorageDescriptor_SerDeInfo_UpdateValues(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_catalog_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlueTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:  testAccGlueCatalogTableConfigStorageDescriptorSerDeInfo(rName),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueCatalogTableExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.name", "ser_de_name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:  testAccGlueCatalogTableConfigStorageDescriptorSerDeInfoUpdate(rName),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueCatalogTableExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.parameters.param1", "param_val_1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.serialization_library", "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"),
+				),
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11784
 func TestAccAWSGlueCatalogTable_StorageDescriptor_SkewedInfo_EmptyConfigurationBlock(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_catalog_table.test"
@@ -418,8 +456,8 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_catalog_table" "test" {
-  name          =  %[1]q
-  database_name = "${aws_glue_catalog_database.test.name}"
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
 }
 `, rName)
 }
@@ -432,7 +470,7 @@ resource "aws_glue_catalog_database" "test" {
 
 resource "aws_glue_catalog_table" "test" {
   name               = %[1]q
-  database_name      = "${aws_glue_catalog_database.test.name}"
+  database_name      = aws_glue_catalog_database.test.name
   description        = %[2]q
   owner              = "my_owner"
   retention          = 1
@@ -522,7 +560,7 @@ resource "aws_glue_catalog_database" "test" {
 
 resource "aws_glue_catalog_table" "test" {
   name               = %[1]q
-  database_name      = "${aws_glue_catalog_database.test.name}"
+  database_name      = aws_glue_catalog_database.test.name
   description        = "A test table from terraform2"
   owner              = "my_owner2"
   retention          = 2
@@ -641,6 +679,47 @@ resource "aws_glue_catalog_table" "test" {
 `, rName)
 }
 
+func testAccGlueCatalogTableConfigStorageDescriptorSerDeInfo(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+
+  storage_descriptor {
+    ser_de_info {
+      name = "ser_de_name"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccGlueCatalogTableConfigStorageDescriptorSerDeInfoUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+
+  storage_descriptor {
+    ser_de_info {
+      parameters = {
+        param1 = "param_val_1"
+      }
+      serialization_library = "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"
+    }
+  }
+}
+`, rName)
+}
+
 func testAccGlueCatalogTableConfigStorageDescriptorSkewedInfoEmptyConfigurationBlock(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
@@ -653,7 +732,8 @@ resource "aws_glue_catalog_table" "test" {
 
   storage_descriptor {
     skewed_info {
-      skewed_column_names               = []
+      skewed_column_names = []
+
       skewed_column_value_location_maps = {}
       skewed_column_values              = []
     }

@@ -6,7 +6,7 @@ description: |-
   Provides a workspaces in AWS Workspaces Service.
 ---
 
-# Resource: aws_workspace
+# Resource: aws_workspaces_workspace
 
 Provides a workspace in [AWS Workspaces](https://docs.aws.amazon.com/workspaces/latest/adminguide/amazon-workspaces.html) Service
 
@@ -16,18 +16,14 @@ policy `arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess`, or it will leak 
 ## Example Usage
 
 ```hcl
-data "aws_workspaces_directory" "main" {
-  directory_id = "d-ten5h0y19"
-}
-
 data "aws_workspaces_bundle" "value_windows_10" {
   bundle_id = "wsb-bh8rsxt14" # Value with Windows 10 (English)
 }
 
-resource "aws_workspaces_workspace" "jhon.doe" {
-  directory_id = "${data.aws_workspaces_directory.main.id}"
-  bundle_id    = "${data.aws_workspaces_bundle.value_windows_10.id}"
-  user_name    = "jhon.doe"
+resource "aws_workspaces_workspace" "example" {
+  directory_id = aws_workspaces_directory.example.id
+  bundle_id    = data.aws_workspaces_bundle.value_windows_10.id
+  user_name    = "john.doe"
 
   root_volume_encryption_enabled = true
   user_volume_encryption_enabled = true
@@ -67,6 +63,15 @@ The following arguments are supported:
 * `running_mode` – (Optional) The running mode. For more information, see [Manage the WorkSpace Running Mode](https://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html). Valid values are `AUTO_STOP` and `ALWAYS_ON`.
 * `running_mode_auto_stop_timeout_in_minutes` – (Optional) The time after a user logs off when WorkSpaces are automatically stopped. Configured in 60-minute intervals.
 * `user_volume_size_gib` – (Optional) The size of the user storage.
+
+### Timeouts
+
+`aws_workspaces_workspace` provides the following
+[Timeouts](/docs/configuration/resources.html#operation-timeouts) configuration options:
+
+- `create` - (Default `30 minutes`) Used for WorkSpace creation.
+- `update` - (Default `10 minutes`) Used for WorkSpace updating.
+- `delete` - (Default `10 minutes`) Used for WorkSpace termination.
 
 ## Attributes Reference
 

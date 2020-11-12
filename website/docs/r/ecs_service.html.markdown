@@ -19,11 +19,11 @@ See [ECS Services section in AWS developer guide](https://docs.aws.amazon.com/Am
 ```hcl
 resource "aws_ecs_service" "mongo" {
   name            = "mongodb"
-  cluster         = "${aws_ecs_cluster.foo.id}"
-  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+  cluster         = aws_ecs_cluster.foo.id
+  task_definition = aws_ecs_task_definition.mongo.arn
   desired_count   = 3
-  iam_role        = "${aws_iam_role.foo.arn}"
-  depends_on      = ["aws_iam_role_policy.foo"]
+  iam_role        = aws_iam_role.foo.arn
+  depends_on      = [aws_iam_role_policy.foo]
 
   ordered_placement_strategy {
     type  = "binpack"
@@ -31,7 +31,7 @@ resource "aws_ecs_service" "mongo" {
   }
 
   load_balancer {
-    target_group_arn = "${aws_lb_target_group.foo.arn}"
+    target_group_arn = aws_lb_target_group.foo.arn
     container_name   = "mongo"
     container_port   = 8080
   }
@@ -56,7 +56,7 @@ resource "aws_ecs_service" "example" {
 
   # Optional: Allow external changes without Terraform plan difference
   lifecycle {
-    ignore_changes = ["desired_count"]
+    ignore_changes = [desired_count]
   }
 }
 ```
@@ -66,8 +66,8 @@ resource "aws_ecs_service" "example" {
 ```hcl
 resource "aws_ecs_service" "bar" {
   name                = "bar"
-  cluster             = "${aws_ecs_cluster.foo.id}"
-  task_definition     = "${aws_ecs_task_definition.bar.arn}"
+  cluster             = aws_ecs_cluster.foo.id
+  task_definition     = aws_ecs_task_definition.bar.arn
   scheduling_strategy = "DAEMON"
 }
 ```
@@ -77,7 +77,7 @@ resource "aws_ecs_service" "bar" {
 ```hcl
 resource "aws_ecs_service" "example" {
   name    = "example"
-  cluster = "${aws_ecs_cluster.example.id}"
+  cluster = aws_ecs_cluster.example.id
 
   deployment_controller {
     type = "EXTERNAL"
@@ -111,6 +111,7 @@ The following arguments are supported:
 * `service_registries` - (Optional) The service discovery registries for the service. The maximum number of `service_registries` blocks is `1`.
 * `tags` - (Optional) Key-value map of resource tags
 * `task_definition` - (Optional) The family and revision (`family:revision`) or full ARN of the task definition that you want to run in your service. Required unless using the `EXTERNAL` deployment controller. If a revision is not specified, the latest `ACTIVE` revision is used.
+* `wait_for_steady_state` - (Optional) If `true`, Terraform will wait for the service to reach a steady state (like [`aws ecs wait services-stable`](https://docs.aws.amazon.com/cli/latest/reference/ecs/wait/services-stable.html)) before continuing. Default `false`.
 
 ## capacity_provider_strategy
 

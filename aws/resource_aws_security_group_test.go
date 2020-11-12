@@ -7,16 +7,18 @@ import (
 	"reflect"
 	"regexp"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
@@ -551,7 +553,6 @@ func TestResourceAwsSecurityGroupIPPermGather(t *testing.T) {
 		// loop and match rules, because the ordering is not guarneteed
 		for _, l := range local {
 			if i["from_port"] == l["from_port"] {
-
 				if i["to_port"] != l["to_port"] {
 					t.Fatalf("to_port does not match")
 				}
@@ -694,6 +695,7 @@ func TestAccAWSSecurityGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", "terraform_acceptance_test_example"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"cidr_blocks.#":      "1",
 						"cidr_blocks.0":      "10.0.0.0/8",
@@ -1183,10 +1185,8 @@ func TestAccAWSSecurityGroup_vpc(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					testAccCheckAWSSecurityGroupAttributes(&group),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", "terraform_acceptance_test_example"),
-					resource.TestCheckResourceAttr(
-						resourceName, "description", "Used in the terraform acceptance tests"),
+					resource.TestCheckResourceAttr(resourceName, "name", "terraform_acceptance_test_example"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"protocol":      "tcp",
 						"from_port":     "80",
@@ -1229,10 +1229,8 @@ func TestAccAWSSecurityGroup_vpcNegOneIngress(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					testAccCheckAWSSecurityGroupAttributesNegOneProtocol(&group),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", "terraform_acceptance_test_example"),
-					resource.TestCheckResourceAttr(
-						resourceName, "description", "Used in the terraform acceptance tests"),
+					resource.TestCheckResourceAttr(resourceName, "name", "terraform_acceptance_test_example"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"protocol":      "-1",
 						"from_port":     "0",
@@ -1266,10 +1264,8 @@ func TestAccAWSSecurityGroup_vpcProtoNumIngress(t *testing.T) {
 				Config: testAccAWSSecurityGroupConfigVpcProtoNumIngress,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", "terraform_acceptance_test_example"),
-					resource.TestCheckResourceAttr(
-						resourceName, "description", "Used in the terraform acceptance tests"),
+					resource.TestCheckResourceAttr(resourceName, "name", "terraform_acceptance_test_example"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"protocol":      "50",
 						"from_port":     "0",
@@ -1515,24 +1511,21 @@ func TestAccAWSSecurityGroup_defaultEgressVPC(t *testing.T) {
 func TestAccAWSSecurityGroup_defaultEgressClassic(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
-
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSSecurityGroupDestroy,
+		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSSecurityGroupEc2ClassicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityGroupConfigClassic,
+				Config: testAccAWSSecurityGroupConfigClassic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityGroupExists(resourceName, &group),
+					testAccCheckAWSSecurityGroupEc2ClassicExists(resourceName, &group),
 				),
 			},
 			{
+				Config:                  testAccAWSSecurityGroupConfigClassic(rName),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -1702,6 +1695,7 @@ func TestAccAWSSecurityGroup_invalidCIDRBlock(t *testing.T) {
 func TestAccAWSSecurityGroup_tags(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1709,11 +1703,11 @@ func TestAccAWSSecurityGroup_tags(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityGroupConfigTags,
+				Config: testAccAWSAWSSecurityGroupConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -1723,12 +1717,20 @@ func TestAccAWSSecurityGroup_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 			{
-				Config: testAccAWSSecurityGroupConfigTagsUpdate,
+				Config: testAccAWSAWSSecurityGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.env", "Production"),
-					resource.TestCheckResourceAttr(resourceName, "tags.bar", "baz"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSAWSSecurityGroupConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -1815,21 +1817,17 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGsVPC(t *testing.T) {
 func TestAccAWSSecurityGroup_ingressWithCidrAndSGsClassic(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
-
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSSecurityGroupEc2ClassicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityGroupConfig_ingressWithCidrAndSGs_classic,
+				Config: testAccAWSSecurityGroupConfig_ingressWithCidrAndSGs_classic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityGroupExists(resourceName, &group),
-					testAccCheckAWSSecurityGroupSGandCidrAttributes(&group),
+					testAccCheckAWSSecurityGroupEc2ClassicExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
@@ -1846,6 +1844,7 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGsClassic(t *testing.T) {
 				),
 			},
 			{
+				Config:                  testAccAWSSecurityGroupConfig_ingressWithCidrAndSGs_classic(rName),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -1869,8 +1868,7 @@ func TestAccAWSSecurityGroup_egressWithPrefixList(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					testAccCheckAWSSecurityGroupEgressPrefixListAttributes(&group),
-					resource.TestCheckResourceAttr(
-						resourceName, "egress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
 				),
 			},
 			{
@@ -1897,8 +1895,7 @@ func TestAccAWSSecurityGroup_ingressWithPrefixList(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					testAccCheckAWSSecurityGroupIngressPrefixListAttributes(&group),
-					resource.TestCheckResourceAttr(
-						resourceName, "ingress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
 				),
 			},
 			{
@@ -1964,7 +1961,7 @@ func TestAccAWSSecurityGroup_ipv4andipv6Egress(t *testing.T) {
 
 func testAccAWSSecurityGroupCheckVPCIDExists(group *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(*terraform.State) error {
-		if *group.VpcId == "" {
+		if aws.StringValue(group.VpcId) == "" {
 			return fmt.Errorf("should have vpc ID")
 		}
 		return nil
@@ -2110,6 +2107,38 @@ func testAccCheckAWSSecurityGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccCheckAWSSecurityGroupEc2ClassicDestroy(s *terraform.State) error {
+	conn := testAccProviderEc2Classic.Meta().(*AWSClient).ec2conn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_security_group" {
+			continue
+		}
+
+		input := &ec2.DescribeSecurityGroupsInput{
+			GroupIds: []*string{aws.String(rs.Primary.ID)},
+		}
+
+		output, err := conn.DescribeSecurityGroups(input)
+
+		if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("error describing EC2 Security Group (%s): %w", rs.Primary.ID, err)
+		}
+
+		for _, sg := range output.SecurityGroups {
+			if aws.StringValue(sg.GroupId) == rs.Primary.ID {
+				return fmt.Errorf("EC2 Security Group (%s) still exists", rs.Primary.ID)
+			}
+		}
+	}
+
+	return nil
+}
+
 func testAccCheckAWSSecurityGroupExists(n string, group *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -2136,6 +2165,40 @@ func testAccCheckAWSSecurityGroupExists(n string, group *ec2.SecurityGroup) reso
 		}
 
 		return fmt.Errorf("Security Group not found")
+	}
+}
+
+func testAccCheckAWSSecurityGroupEc2ClassicExists(n string, group *ec2.SecurityGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Security Group is set")
+		}
+
+		conn := testAccProviderEc2Classic.Meta().(*AWSClient).ec2conn
+
+		input := &ec2.DescribeSecurityGroupsInput{
+			GroupIds: []*string{aws.String(rs.Primary.ID)},
+		}
+
+		output, err := conn.DescribeSecurityGroups(input)
+
+		if err != nil {
+			return fmt.Errorf("error describing EC2 Security Group (%s): %w", rs.Primary.ID, err)
+		}
+
+		for _, sg := range output.SecurityGroups {
+			if aws.StringValue(sg.GroupId) == rs.Primary.ID {
+				*group = *sg
+				return nil
+			}
+		}
+
+		return fmt.Errorf("EC2 Security Group (%s) not found", rs.Primary.ID)
 	}
 }
 
@@ -2410,6 +2473,8 @@ func testAccCheckAWSSecurityGroupExistsWithoutDefault(n string) resource.TestChe
 func TestAccAWSSecurityGroup_failWithDiffMismatch(t *testing.T) {
 	var group ec2.SecurityGroup
 
+	resourceName := "aws_security_group.nat"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -2418,9 +2483,9 @@ func TestAccAWSSecurityGroup_failWithDiffMismatch(t *testing.T) {
 			{
 				Config: testAccAWSSecurityGroupConfig_failWithDiffMismatch,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityGroupExists("aws_security_group.nat", &group),
-					resource.TestCheckResourceAttr("aws_security_group.nat", "egress.#", "0"),
-					resource.TestCheckResourceAttr("aws_security_group.nat", "ingress.#", "2"),
+					testAccCheckAWSSecurityGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
 				),
 			},
 		},
@@ -2431,6 +2496,9 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
 	ruleLimit := testAccAWSSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
+
+	resourceName := "aws_security_group.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -2440,8 +2508,9 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
 			{
 				Config: testAccAWSSecurityGroupConfigRuleLimit(0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					testAccCheckAWSSecurityGroupRuleCount(&group, 0, ruleLimit),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", strconv.Itoa(ruleLimit)),
 				),
 			},
 			// append a rule to step over the limit
@@ -2452,7 +2521,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
 			{
 				PreConfig: func() {
 					// should have the original rules still
-					err := testSecurityGroupRuleCount(*group.GroupId, 0, ruleLimit)
+					err := testSecurityGroupRuleCount(aws.StringValue(group.GroupId), 0, ruleLimit)
 					if err != nil {
 						t.Fatalf("PreConfig check failed: %s", err)
 					}
@@ -2460,8 +2529,9 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
 				// running the original config again now should restore the rules
 				Config: testAccAWSSecurityGroupConfigRuleLimit(0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					testAccCheckAWSSecurityGroupRuleCount(&group, 0, ruleLimit),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", strconv.Itoa(ruleLimit)),
 				),
 			},
 		},
@@ -2472,6 +2542,9 @@ func TestAccAWSSecurityGroup_ruleLimitCidrBlockExceededAppend(t *testing.T) {
 	ruleLimit := testAccAWSSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
+
+	resourceName := "aws_security_group.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -2481,7 +2554,7 @@ func TestAccAWSSecurityGroup_ruleLimitCidrBlockExceededAppend(t *testing.T) {
 			{
 				Config: testAccAWSSecurityGroupConfigCidrBlockRuleLimit(0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					testAccCheckAWSSecurityGroupRuleCount(&group, 0, 1),
 				),
 			},
@@ -2493,7 +2566,7 @@ func TestAccAWSSecurityGroup_ruleLimitCidrBlockExceededAppend(t *testing.T) {
 			{
 				PreConfig: func() {
 					// should have the original cidr blocks still in 1 rule
-					err := testSecurityGroupRuleCount(*group.GroupId, 0, 1)
+					err := testSecurityGroupRuleCount(aws.StringValue(group.GroupId), 0, 1)
 					if err != nil {
 						t.Fatalf("PreConfig check failed: %s", err)
 					}
@@ -2525,7 +2598,7 @@ func TestAccAWSSecurityGroup_ruleLimitCidrBlockExceededAppend(t *testing.T) {
 				// running the original config again now should restore the rules
 				Config: testAccAWSSecurityGroupConfigCidrBlockRuleLimit(0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					testAccCheckAWSSecurityGroupRuleCount(&group, 0, 1),
 				),
 			},
@@ -2537,6 +2610,9 @@ func TestAccAWSSecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
 	ruleLimit := testAccAWSSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
+
+	resourceName := "aws_security_group.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -2546,7 +2622,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
 			{
 				Config: testAccAWSSecurityGroupConfigRuleLimit(0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					testAccCheckAWSSecurityGroupRuleCount(&group, 0, ruleLimit),
 				),
 			},
@@ -2558,7 +2634,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
 			{
 				PreConfig: func() {
 					// should have the original rules still (limit - 1 because of the shift)
-					err := testSecurityGroupRuleCount(*group.GroupId, 0, ruleLimit-1)
+					err := testSecurityGroupRuleCount(aws.StringValue(group.GroupId), 0, ruleLimit-1)
 					if err != nil {
 						t.Fatalf("PreConfig check failed: %s", err)
 					}
@@ -2566,7 +2642,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
 				// running the original config again now should restore the rules
 				Config: testAccAWSSecurityGroupConfigRuleLimit(0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					testAccCheckAWSSecurityGroupRuleCount(&group, 0, ruleLimit),
 				),
 			},
@@ -2578,6 +2654,9 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 	ruleLimit := testAccAWSSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
+
+	resourceName := "aws_security_group.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -2587,7 +2666,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 			{
 				Config: testAccAWSSecurityGroupConfigRuleLimit(0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					testAccCheckAWSSecurityGroupRuleCount(&group, 0, ruleLimit),
 				),
 			},
@@ -2599,7 +2678,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 			{
 				// all the rules should have been revoked and the add failed
 				PreConfig: func() {
-					err := testSecurityGroupRuleCount(*group.GroupId, 0, 0)
+					err := testSecurityGroupRuleCount(aws.StringValue(group.GroupId), 0, 0)
 					if err != nil {
 						t.Fatalf("PreConfig check failed: %s", err)
 					}
@@ -2607,7 +2686,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 				// running the original config again now should restore the rules
 				Config: testAccAWSSecurityGroupConfigRuleLimit(0, ruleLimit),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					testAccCheckAWSSecurityGroupRuleCount(&group, 0, ruleLimit),
 				),
 			},
@@ -2618,6 +2697,8 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 func TestAccAWSSecurityGroup_rulesDropOnError(t *testing.T) {
 	var group ec2.SecurityGroup
 
+	resourceName := "aws_security_group.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -2627,7 +2708,7 @@ func TestAccAWSSecurityGroup_rulesDropOnError(t *testing.T) {
 			{
 				Config: testAccAWSSecurityGroupConfig_rulesDropOnError_Init,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityGroupExists("aws_security_group.test", &group),
+					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 				),
 			},
 			// Add a bad rule to trigger API error
@@ -2646,7 +2727,7 @@ func TestAccAWSSecurityGroup_rulesDropOnError(t *testing.T) {
 
 func testAccCheckAWSSecurityGroupRuleCount(group *ec2.SecurityGroup, expectedIngressCount, expectedEgressCount int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		id := *group.GroupId
+		id := aws.StringValue(group.GroupId)
 		return testSecurityGroupRuleCount(id, expectedIngressCount, expectedEgressCount)
 	}
 }
@@ -2682,104 +2763,107 @@ func testSecurityGroupRuleCount(id string, expectedIngressCount, expectedEgressC
 }
 
 func testAccAWSSecurityGroupConfigRuleLimit(egressStartIndex, egressRulesCount int) string {
-	c := `
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-  tags = {
-    Name = "terraform-testacc-security-group-rule-limit"
-  }
-}
-
-resource "aws_security_group" "test" {
-  name = "terraform_acceptance_test_rule_limit"
-  description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.test.id}"
-
-	tags = {
-    Name = "tf-acc-test"
-  }
-
-	// egress rules to exhaust the limit
-`
-
+	var egressRules strings.Builder
 	for i := egressStartIndex; i < egressRulesCount+egressStartIndex; i++ {
-		c += fmt.Sprintf(`
+		fmt.Fprintf(&egressRules, `
   egress {
-		protocol = "tcp"
-		from_port = "${80 + %[1]d}"
-		to_port = "${80 + %[1]d}"
-		cidr_blocks = ["${cidrhost("10.1.0.0/16", %[1]d)}/32"]
-	}
+    protocol    = "tcp"
+    from_port   = "${80 + %[1]d}"
+    to_port     = "${80 + %[1]d}"
+    cidr_blocks = ["${cidrhost("10.1.0.0/16", %[1]d)}/32"]
+  }
 `, i)
 	}
 
-	c += "\n}"
-
-	return c
-}
-
-func testAccAWSSecurityGroupConfigCidrBlockRuleLimit(egressStartIndex, egressRulesCount int) string {
-	c := `
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-security-group-rule-limit"
   }
 }
 
 resource "aws_security_group" "test" {
-  name = "terraform_acceptance_test_rule_limit"
+  name        = "terraform_acceptance_test_rule_limit"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id      = aws_vpc.test.id
 
-	tags = {
+  tags = {
     Name = "tf-acc-test"
   }
 
-	// egress rules to exhaust the limit
-	egress {
-		protocol = "tcp"
-		from_port = "80"
-		to_port = "80"
-		cidr_blocks = [
-`
+  # egress rules to exhaust the limit
+  %[1]s
+}
+`, egressRules.String())
+}
 
+func testAccAWSSecurityGroupConfigCidrBlockRuleLimit(egressStartIndex, egressRulesCount int) string {
+	var cidrBlocks strings.Builder
 	for i := egressStartIndex; i < egressRulesCount+egressStartIndex; i++ {
-		c += fmt.Sprintf(`
+		fmt.Fprintf(&cidrBlocks, `
 		"${cidrhost("10.1.0.0/16", %[1]d)}/32",
 `, i)
 	}
 
-	c += "\n\t\t]\n\t}\n}"
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
 
-	return c
+  tags = {
+    Name = "terraform-testacc-security-group-rule-limit"
+  }
+}
+
+resource "aws_security_group" "test" {
+  name        = "terraform_acceptance_test_rule_limit"
+  description = "Used in the terraform acceptance tests"
+  vpc_id      = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-test"
+  }
+
+  egress {
+    protocol  = "tcp"
+    from_port = "80"
+    to_port   = "80"
+    # cidr_blocks to exhaust the limit
+    cidr_blocks = [
+		%s
+    ]
+  }
+}
+`, cidrBlocks.String())
 }
 
 const testAccAWSSecurityGroupConfigEmptyRuleDescription = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-security-group-empty-rule-description"
   }
 }
 
 resource "aws_security_group" "test" {
-  name = "terraform_acceptance_test_desc_example"
+  name        = "terraform_acceptance_test_desc_example"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
 
   ingress {
-    protocol = "6"
-    from_port = 80
-    to_port = 8000
+    protocol    = "6"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
     description = ""
   }
 
   egress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 8000
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
     description = ""
   }
@@ -2787,132 +2871,135 @@ resource "aws_security_group" "test" {
   tags = {
     Name = "tf-acc-test"
   }
-}`
+}
+`
 
 const testAccAWSSecurityGroupConfigIpv6 = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-security-group-ipv6"
   }
 }
 
 resource "aws_security_group" "test" {
-  name = "terraform_acceptance_test_example"
+  name        = "terraform_acceptance_test_example"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
 
   ingress {
-    protocol = "6"
-    from_port = 80
-    to_port = 8000
+    protocol         = "6"
+    from_port        = 80
+    to_port          = 8000
     ipv6_cidr_blocks = ["::/0"]
   }
 
   egress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 8000
+    protocol         = "tcp"
+    from_port        = 80
+    to_port          = 8000
     ipv6_cidr_blocks = ["::/0"]
   }
 
-	tags = {
-		Name = "tf-acc-test"
-	}
+  tags = {
+    Name = "tf-acc-test"
+  }
 }
 `
 
 const testAccAWSSecurityGroupConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-security-group"
-	}
+
+  tags = {
+    Name = "terraform-testacc-security-group"
+  }
 }
 
 resource "aws_security_group" "test" {
-  name = "terraform_acceptance_test_example"
+  name        = "terraform_acceptance_test_example"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
 
   ingress {
-    protocol = "6"
-    from_port = 80
-    to_port = 8000
+    protocol    = "6"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
   }
-
-	tags = {
-		Name = "tf-acc-revoke-test"
-	}
 }
 `
 
 const testAccAWSSecurityGroupConfig_revoke_base_removed = `
 resource "aws_vpc" "sg-race-revoke" {
   cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-security-group-revoke"
-	}
+
+  tags = {
+    Name = "terraform-testacc-security-group-revoke"
+  }
 }
 `
+
 const testAccAWSSecurityGroupConfig_revoke_base = `
 resource "aws_vpc" "sg-race-revoke" {
   cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-security-group-revoke"
-	}
+
+  tags = {
+    Name = "terraform-testacc-security-group-revoke"
+  }
 }
 
 resource "aws_security_group" "primary" {
-  name = "tf-acc-sg-race-revoke-primary"
+  name        = "tf-acc-sg-race-revoke-primary"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.sg-race-revoke.id}"
+  vpc_id      = aws_vpc.sg-race-revoke.id
 
-	tags = {
-		Name = "tf-acc-revoke-test-primary"
-	}
+  tags = {
+    Name = "tf-acc-revoke-test-primary"
+  }
 }
 
 resource "aws_security_group" "secondary" {
-  name = "tf-acc-sg-race-revoke-secondary"
+  name        = "tf-acc-sg-race-revoke-secondary"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.sg-race-revoke.id}"
+  vpc_id      = aws_vpc.sg-race-revoke.id
 
-	tags = {
-		Name = "tf-acc-revoke-test-secondary"
-	}
+  tags = {
+    Name = "tf-acc-revoke-test-secondary"
+  }
 }
 `
 
 const testAccAWSSecurityGroupConfig_revoke_false = `
 resource "aws_vpc" "sg-race-revoke" {
   cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-security-group-revoke"
-	}
+
+  tags = {
+    Name = "terraform-testacc-security-group-revoke"
+  }
 }
 
 resource "aws_security_group" "primary" {
-  name = "tf-acc-sg-race-revoke-primary"
+  name        = "tf-acc-sg-race-revoke-primary"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.sg-race-revoke.id}"
+  vpc_id      = aws_vpc.sg-race-revoke.id
 
-	tags = {
-		Name = "tf-acc-revoke-test-primary"
-	}
+  tags = {
+    Name = "tf-acc-revoke-test-primary"
+  }
 
   revoke_rules_on_delete = false
 }
 
 resource "aws_security_group" "secondary" {
-  name = "tf-acc-sg-race-revoke-secondary"
+  name        = "tf-acc-sg-race-revoke-secondary"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.sg-race-revoke.id}"
+  vpc_id      = aws_vpc.sg-race-revoke.id
 
-	tags = {
-		Name = "tf-acc-revoke-test-secondary"
-	}
+  tags = {
+    Name = "tf-acc-revoke-test-secondary"
+  }
 
   revoke_rules_on_delete = false
 }
@@ -2921,31 +3008,32 @@ resource "aws_security_group" "secondary" {
 const testAccAWSSecurityGroupConfig_revoke_true = `
 resource "aws_vpc" "sg-race-revoke" {
   cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-security-group-revoke"
-	}
+
+  tags = {
+    Name = "terraform-testacc-security-group-revoke"
+  }
 }
 
 resource "aws_security_group" "primary" {
-  name = "tf-acc-sg-race-revoke-primary"
+  name        = "tf-acc-sg-race-revoke-primary"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.sg-race-revoke.id}"
+  vpc_id      = aws_vpc.sg-race-revoke.id
 
-	tags = {
-		Name = "tf-acc-revoke-test-primary"
-	}
+  tags = {
+    Name = "tf-acc-revoke-test-primary"
+  }
 
   revoke_rules_on_delete = true
 }
 
 resource "aws_security_group" "secondary" {
-  name = "tf-acc-sg-race-revoke-secondary"
+  name        = "tf-acc-sg-race-revoke-secondary"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.sg-race-revoke.id}"
+  vpc_id      = aws_vpc.sg-race-revoke.id
 
-	tags = {
-		Name = "tf-acc-revoke-test-secondary"
-	}
+  tags = {
+    Name = "tf-acc-revoke-test-secondary"
+  }
 
   revoke_rules_on_delete = true
 }
@@ -2954,34 +3042,35 @@ resource "aws_security_group" "secondary" {
 const testAccAWSSecurityGroupConfigChange = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-security-group-change"
   }
 }
 
 resource "aws_security_group" "test" {
-  name = "terraform_acceptance_test_example"
+  name        = "terraform_acceptance_test_example"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
 
   ingress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 9000
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 9000
     cidr_blocks = ["10.0.0.0/8"]
   }
 
   ingress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 8000
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["0.0.0.0/0", "10.0.0.0/8"]
   }
 
   egress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 8000
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
   }
 }
@@ -3000,7 +3089,7 @@ resource "aws_vpc" "foo" {
 resource "aws_security_group" "test" {
   name        = "terraform_acceptance_test_example"
   description = "Used in the terraform acceptance tests"
-  vpc_id      = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
 
   ingress {
     protocol    = "6"
@@ -3028,27 +3117,28 @@ resource "aws_security_group" "test" {
 const testAccAWSSecurityGroupConfigSelf = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-security-group-self"
   }
 }
 
 resource "aws_security_group" "test" {
-  name = "terraform_acceptance_test_example"
+  name        = "terraform_acceptance_test_example"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
 
   ingress {
-    protocol = "tcp"
+    protocol  = "tcp"
     from_port = 80
-    to_port = 8000
-    self = true
+    to_port   = 8000
+    self      = true
   }
 
   egress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 8000
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
   }
 }
@@ -3057,223 +3147,239 @@ resource "aws_security_group" "test" {
 const testAccAWSSecurityGroupConfigVpc = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-security-group-vpc"
   }
 }
 
 resource "aws_security_group" "test" {
-  name = "terraform_acceptance_test_example"
+  name        = "terraform_acceptance_test_example"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
 
   ingress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 8000
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
   }
 
-	egress {
-		protocol = "tcp"
-		from_port = 80
-		to_port = 8000
-		cidr_blocks = ["10.0.0.0/8"]
-	}
+  egress {
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
+    cidr_blocks = ["10.0.0.0/8"]
+  }
 }
 `
 
 const testAccAWSSecurityGroupConfigVpcNegOneIngress = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-security-group-vpc-neg-one-ingress"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-vpc-neg-one-ingress"
+  }
 }
 
 resource "aws_security_group" "test" {
-	name = "terraform_acceptance_test_example"
-	description = "Used in the terraform acceptance tests"
-	vpc_id = "${aws_vpc.foo.id}"
+  name        = "terraform_acceptance_test_example"
+  description = "Used in the terraform acceptance tests"
+  vpc_id      = aws_vpc.foo.id
 
-	ingress {
-		protocol = "-1"
-		from_port = 0
-		to_port = 0
-		cidr_blocks = ["10.0.0.0/8"]
-	}
+  ingress {
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["10.0.0.0/8"]
+  }
 }
 `
 
 const testAccAWSSecurityGroupConfigVpcProtoNumIngress = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-security-group-vpc-proto-num-ingress"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-vpc-proto-num-ingress"
+  }
 }
 
 resource "aws_security_group" "test" {
-	name = "terraform_acceptance_test_example"
-	description = "Used in the terraform acceptance tests"
-	vpc_id = "${aws_vpc.foo.id}"
+  name        = "terraform_acceptance_test_example"
+  description = "Used in the terraform acceptance tests"
+  vpc_id      = aws_vpc.foo.id
 
-	ingress {
-		protocol = "50"
-		from_port = 0
-		to_port = 0
-		cidr_blocks = ["10.0.0.0/8"]
-	}
+  ingress {
+    protocol    = "50"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["10.0.0.0/8"]
+  }
 }
 `
 
 const testAccAWSSecurityGroupConfigMultiIngress = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-security-group-multi-ingress"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-multi-ingress"
+  }
 }
 
 resource "aws_security_group" "test" {
-  name = "terraform_acceptance_test_example_1"
+  name        = "terraform_acceptance_test_example_1"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
 
   ingress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 8000
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
   }
 
   egress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 8000
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
   }
 }
 
 resource "aws_security_group" "test2" {
-  name = "terraform_acceptance_test_example_2"
+  name        = "terraform_acceptance_test_example_2"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
 
   ingress {
-    protocol = "tcp"
-    from_port = 22
-    to_port = 22
+    protocol    = "tcp"
+    from_port   = 22
+    to_port     = 22
     cidr_blocks = ["10.0.0.0/8"]
   }
 
   ingress {
-    protocol = "tcp"
-    from_port = 800
-    to_port = 800
+    protocol    = "tcp"
+    from_port   = 800
+    to_port     = 800
     cidr_blocks = ["10.0.0.0/8"]
   }
 
   ingress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 8000
-    security_groups = ["${aws_security_group.test.id}"]
+    protocol        = "tcp"
+    from_port       = 80
+    to_port         = 8000
+    security_groups = [aws_security_group.test.id]
   }
 
   egress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 8000
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
   }
 }
 `
 
-const testAccAWSSecurityGroupConfigTags = `
-resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-security-group-tags"
-	}
+func testAccAWSAWSSecurityGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test" {
-  name = "terraform_acceptance_test_example"
+  name        = %[1]q
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.test.id
 
   tags = {
-    foo = "bar"
+    %[2]q = %[3]q
   }
 }
-`
+`, rName, tagKey1, tagValue1)
+}
 
-const testAccAWSSecurityGroupConfigTagsUpdate = `
-resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-security-group-tags"
-	}
+func testAccAWSAWSSecurityGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test" {
-  name = "terraform_acceptance_test_example"
+  name        = %[1]q
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.test.id
 
   tags = {
-    bar = "baz"
-    env = "Production"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
 
 const testAccAWSSecurityGroupConfig_generatedName = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-security-group-generated-name"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-generated-name"
+  }
 }
 
 resource "aws_security_group" "test" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
 
-	tags = {
-		Name = "tf-acc-test"
-	}
+  tags = {
+    Name = "tf-acc-test"
+  }
 }
 `
 
 const testAccAWSSecurityGroupConfigDefaultEgress = `
 resource "aws_vpc" "tf_sg_egress_test" {
-    cidr_block = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
+
   tags = {
-        Name = "terraform-testacc-security-group-default-egress"
-    }
+    Name = "terraform-testacc-security-group-default-egress"
+  }
 }
 
 resource "aws_security_group" "test" {
-  name = "terraform_acceptance_test_example_1"
+  name        = "terraform_acceptance_test_example_1"
   description = "Used in the terraform acceptance tests"
-        vpc_id = "${aws_vpc.tf_sg_egress_test.id}"
+  vpc_id      = aws_vpc.tf_sg_egress_test.id
 
   egress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 8000
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
   }
 }
 `
 
-const testAccAWSSecurityGroupConfigClassic = `
+func testAccAWSSecurityGroupConfigClassic(rName string) string {
+	return composeConfig(
+		testAccEc2ClassicRegionProviderConfig(),
+		fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  name = "terraform_acceptance_test_example_1"
+  name        = %[1]q
   description = "Used in the terraform acceptance tests"
 }
-`
+`, rName))
+}
 
 func testAccAWSSecurityGroupPrefixNameConfig(namePrefix string) string {
 	return fmt.Sprintf(`
@@ -3332,13 +3438,13 @@ resource "aws_vpc" "foo" {
 resource "aws_security_group" "test2" {
   name        = "tf_acc_%d"
   description = "Used in the terraform acceptance tests"
-  vpc_id      = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
 }
 
 resource "aws_security_group" "test" {
   name        = "tf_acc_%d"
   description = "Used in the terraform acceptance tests"
-  vpc_id      = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
 
   ingress {
     protocol    = "tcp"
@@ -3358,7 +3464,7 @@ resource "aws_security_group" "test" {
     protocol        = "tcp"
     from_port       = 22
     to_port         = 22
-    security_groups = ["${aws_security_group.test2.id}"]
+    security_groups = [aws_security_group.test2.id]
   }
 
   egress {
@@ -3379,7 +3485,7 @@ resource "aws_security_group" "test" {
     protocol        = "tcp"
     from_port       = 22
     to_port         = 22
-    security_groups = ["${aws_security_group.test2.id}"]
+    security_groups = [aws_security_group.test2.id]
   }
 
   tags = {
@@ -3391,87 +3497,99 @@ resource "aws_security_group" "test" {
 
 const testAccAWSSecurityGroupInvalidIngressCidr = `
 resource "aws_security_group" "test" {
-  name = "testing-foo"
+  name        = "testing-foo"
   description = "foo-testing"
+
   ingress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["1.2.3.4/33"]
   }
-}`
+}
+`
 
 const testAccAWSSecurityGroupInvalidEgressCidr = `
 resource "aws_security_group" "test" {
-  name = "testing-foo"
+  name        = "testing-foo"
   description = "foo-testing"
+
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["1.2.3.4/33"]
   }
-}`
+}
+`
 
 const testAccAWSSecurityGroupInvalidIPv6IngressCidr = `
 resource "aws_security_group" "test" {
-  name = "testing-foo"
+  name        = "testing-foo"
   description = "foo-testing"
+
   ingress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
     ipv6_cidr_blocks = ["::/244"]
   }
-}`
+}
+`
 
 const testAccAWSSecurityGroupInvalidIPv6EgressCidr = `
 resource "aws_security_group" "test" {
-  name = "testing-foo"
+  name        = "testing-foo"
   description = "foo-testing"
+
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
     ipv6_cidr_blocks = ["::/244"]
   }
-}`
+}
+`
 
 const testAccAWSSecurityGroupCombindCIDRandGroups = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-security-group-combine-rand-groups"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-combine-rand-groups"
+  }
 }
 
 resource "aws_security_group" "two" {
-	name = "tf-test-1"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-test-1"
-	}
+  name   = "tf-test-1"
+  vpc_id = aws_vpc.foo.id
+
+  tags = {
+    Name = "tf-test-1"
+  }
 }
 
 resource "aws_security_group" "one" {
-	name = "tf-test-2"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-test-w"
-	}
+  name   = "tf-test-2"
+  vpc_id = aws_vpc.foo.id
+
+  tags = {
+    Name = "tf-test-w"
+  }
 }
 
 resource "aws_security_group" "three" {
-	name = "tf-test-3"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-test-3"
-	}
+  name   = "tf-test-3"
+  vpc_id = aws_vpc.foo.id
+
+  tags = {
+    Name = "tf-test-3"
+  }
 }
 
 resource "aws_security_group" "test" {
-  name = "tf-mix-test"
-  vpc_id = "${aws_vpc.foo.id}"
+  name   = "tf-mix-test"
+  vpc_id = aws_vpc.foo.id
 
   ingress {
     from_port   = 80
@@ -3480,9 +3598,9 @@ resource "aws_security_group" "test" {
     cidr_blocks = ["10.0.0.0/16", "10.1.0.0/16", "10.7.0.0/16"]
 
     security_groups = [
-      "${aws_security_group.one.id}",
-      "${aws_security_group.two.id}",
-      "${aws_security_group.three.id}",
+      aws_security_group.one.id,
+      aws_security_group.two.id,
+      aws_security_group.three.id,
     ]
   }
 
@@ -3494,16 +3612,17 @@ resource "aws_security_group" "test" {
 
 const testAccAWSSecurityGroupConfig_ingressWithCidrAndSGs = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-security-group-ingress-w-cidr-and-sg"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-ingress-w-cidr-and-sg"
+  }
 }
 
 resource "aws_security_group" "test2" {
   name        = "tf_other_acc_tests"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
 
   tags = {
     Name = "tf-acc-test"
@@ -3513,7 +3632,7 @@ resource "aws_security_group" "test2" {
 resource "aws_security_group" "test" {
   name        = "terraform_acceptance_test_example"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
 
   ingress {
     protocol  = "tcp"
@@ -3530,7 +3649,7 @@ resource "aws_security_group" "test" {
     from_port       = 80
     to_port         = 8000
     cidr_blocks     = ["10.0.0.0/8"]
-    security_groups = ["${aws_security_group.test2.id}"]
+    security_groups = [aws_security_group.test2.id]
   }
 
   egress {
@@ -3546,9 +3665,12 @@ resource "aws_security_group" "test" {
 }
 `
 
-const testAccAWSSecurityGroupConfig_ingressWithCidrAndSGs_classic = `
+func testAccAWSSecurityGroupConfig_ingressWithCidrAndSGs_classic(rName string) string {
+	return composeConfig(
+		testAccEc2ClassicRegionProviderConfig(),
+		fmt.Sprintf(`
 resource "aws_security_group" "test2" {
-  name        = "tf_other_acc_tests"
+  name        = "%[1]s-2"
   description = "Used in the terraform acceptance tests"
 
   tags = {
@@ -3557,7 +3679,7 @@ resource "aws_security_group" "test2" {
 }
 
 resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_example"
+  name        = %[1]q
   description = "Used in the terraform acceptance tests"
 
   ingress {
@@ -3575,14 +3697,15 @@ resource "aws_security_group" "test" {
     from_port       = 80
     to_port         = 8000
     cidr_blocks     = ["10.0.0.0/8"]
-    security_groups = ["${aws_security_group.test2.name}"]
+    security_groups = [aws_security_group.test2.name]
   }
 
   tags = {
     Name = "tf-acc-test"
   }
 }
-`
+`, rName))
+}
 
 // fails to apply in one pass with the error "diffs didn't match during apply"
 // GH-2027
@@ -3597,21 +3720,21 @@ resource "aws_vpc" "main" {
 
 resource "aws_security_group" "ssh_base" {
   name   = "test-ssh-base"
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_security_group" "jump" {
   name   = "test-jump"
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_security_group" "provision" {
   name   = "test-provision"
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_security_group" "nat" {
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = aws_vpc.main.id
   name        = "nat"
   description = "For nat servers "
 
@@ -3619,17 +3742,18 @@ resource "aws_security_group" "nat" {
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
-    security_groups = ["${aws_security_group.jump.id}"]
+    security_groups = [aws_security_group.jump.id]
   }
 
   ingress {
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
-    security_groups = ["${aws_security_group.provision.id}"]
+    security_groups = [aws_security_group.provision.id]
   }
 }
 `
+
 const testAccAWSSecurityGroupConfig_allowAll = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
@@ -3642,7 +3766,7 @@ resource "aws_vpc" "foo" {
 resource "aws_security_group" "test" {
   name        = "allow_all"
   description = "Allow all inbound traffic"
-  vpc_id      = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
 }
 
 resource "aws_security_group_rule" "allow_all" {
@@ -3652,7 +3776,7 @@ resource "aws_security_group_rule" "allow_all" {
   protocol    = "tcp"
   cidr_blocks = ["0.0.0.0/0"]
 
-  security_group_id = "${aws_security_group.test.id}"
+  security_group_id = aws_security_group.test.id
 }
 
 resource "aws_security_group_rule" "allow_all-1" {
@@ -3662,7 +3786,7 @@ resource "aws_security_group_rule" "allow_all-1" {
   protocol  = "tcp"
 
   self              = true
-  security_group_id = "${aws_security_group.test.id}"
+  security_group_id = aws_security_group.test.id
 }
 `
 
@@ -3676,18 +3800,18 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_security_group" "test" {
-  name        = "test group 1"
-  vpc_id      = "${aws_vpc.foo.id}"
+  name   = "test group 1"
+  vpc_id = aws_vpc.foo.id
 }
 
 resource "aws_security_group" "test2" {
-  name        = "test group 2"
-  vpc_id      = "${aws_vpc.foo.id}"
+  name   = "test group 2"
+  vpc_id = aws_vpc.foo.id
 }
 
 resource "aws_security_group" "test3" {
-  name        = "test group 3"
-  vpc_id      = "${aws_vpc.foo.id}"
+  name   = "test group 3"
+  vpc_id = aws_vpc.foo.id
 }
 
 resource "aws_security_group_rule" "allow_test2" {
@@ -3696,8 +3820,8 @@ resource "aws_security_group_rule" "allow_test2" {
   to_port   = 0
   protocol  = "tcp"
 
-  source_security_group_id = "${aws_security_group.test.id}"
-  security_group_id = "${aws_security_group.test2.id}"
+  source_security_group_id = aws_security_group.test.id
+  security_group_id        = aws_security_group.test2.id
 }
 
 resource "aws_security_group_rule" "allow_test3" {
@@ -3706,8 +3830,8 @@ resource "aws_security_group_rule" "allow_test3" {
   to_port   = 0
   protocol  = "tcp"
 
-  source_security_group_id = "${aws_security_group.test.id}"
-  security_group_id = "${aws_security_group.test3.id}"
+  source_security_group_id = aws_security_group.test.id
+  security_group_id        = aws_security_group.test3.id
 }
 `
 
@@ -3721,13 +3845,13 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_security_group" "test" {
-  name        = "test group 1"
-  vpc_id      = "${aws_vpc.foo.id}"
+  name   = "test group 1"
+  vpc_id = aws_vpc.foo.id
 }
 
 resource "aws_security_group" "test2" {
-  name        = "test group 2"
-  vpc_id      = "${aws_vpc.foo.id}"
+  name   = "test group 2"
+  vpc_id = aws_vpc.foo.id
 }
 
 resource "aws_security_group_rule" "allow_security_group" {
@@ -3736,8 +3860,8 @@ resource "aws_security_group_rule" "allow_security_group" {
   to_port   = 0
   protocol  = "tcp"
 
-  source_security_group_id = "${aws_security_group.test2.id}"
-  security_group_id = "${aws_security_group.test.id}"
+  source_security_group_id = aws_security_group.test2.id
+  security_group_id        = aws_security_group.test.id
 }
 
 resource "aws_security_group_rule" "allow_cidr_block" {
@@ -3746,8 +3870,8 @@ resource "aws_security_group_rule" "allow_cidr_block" {
   to_port   = 0
   protocol  = "tcp"
 
-  cidr_blocks = ["10.0.0.0/32"]
-  security_group_id = "${aws_security_group.test.id}"
+  cidr_blocks       = ["10.0.0.0/32"]
+  security_group_id = aws_security_group.test.id
 }
 
 resource "aws_security_group_rule" "allow_ipv6_cidr_block" {
@@ -3756,8 +3880,8 @@ resource "aws_security_group_rule" "allow_ipv6_cidr_block" {
   to_port   = 0
   protocol  = "tcp"
 
-  ipv6_cidr_blocks = ["::/0"]
-  security_group_id = "${aws_security_group.test.id}"
+  ipv6_cidr_blocks  = ["::/0"]
+  security_group_id = aws_security_group.test.id
 }
 `
 
@@ -3771,8 +3895,8 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_security_group" "test" {
-  name        = "test group 1"
-  vpc_id      = "${aws_vpc.foo.id}"
+  name   = "test group 1"
+  vpc_id = aws_vpc.foo.id
 }
 
 resource "aws_security_group_rule" "allow_cidr_block" {
@@ -3781,8 +3905,8 @@ resource "aws_security_group_rule" "allow_cidr_block" {
   to_port   = 0
   protocol  = "tcp"
 
-  cidr_blocks = ["10.0.0.0/32"]
-  security_group_id = "${aws_security_group.test.id}"
+  cidr_blocks       = ["10.0.0.0/32"]
+  security_group_id = aws_security_group.test.id
 }
 
 resource "aws_security_group_rule" "allow_ipv6_cidr_block" {
@@ -3791,35 +3915,38 @@ resource "aws_security_group_rule" "allow_ipv6_cidr_block" {
   to_port   = 0
   protocol  = "tcp"
 
-  ipv6_cidr_blocks = ["::/0"]
-  security_group_id = "${aws_security_group.test.id}"
+  ipv6_cidr_blocks  = ["::/0"]
+  security_group_id = aws_security_group.test.id
 }
 `
 
 const testAccAWSSecurityGroupConfigIpv4andIpv6Egress = `
 resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
+  cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
+
   tags = {
-      Name = "terraform-testacc-security-group-ipv4-and-ipv6-egress"
+    Name = "terraform-testacc-security-group-ipv4-and-ipv6-egress"
   }
 }
 
 resource "aws_security_group" "test" {
-  name = "terraform_acceptance_test_example"
+  name        = "terraform_acceptance_test_example"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = aws_vpc.foo.id
+
   egress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    cidr_blocks  = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
+
   egress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    ipv6_cidr_blocks  = ["::/0"]
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    ipv6_cidr_blocks = ["::/0"]
   }
 }
 `
@@ -3828,47 +3955,49 @@ const testAccAWSSecurityGroupConfigPrefixListEgress = `
 data "aws_region" "current" {}
 
 resource "aws_vpc" "tf_sg_prefix_list_egress_test" {
-    cidr_block = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
+
   tags = {
-        Name = "terraform-testacc-security-group-prefix-list-egress"
-    }
+    Name = "terraform-testacc-security-group-prefix-list-egress"
+  }
 }
 
 resource "aws_route_table" "default" {
-    vpc_id = "${aws_vpc.tf_sg_prefix_list_egress_test.id}"
+  vpc_id = aws_vpc.tf_sg_prefix_list_egress_test.id
 }
 
 resource "aws_vpc_endpoint" "test" {
-  	vpc_id = "${aws_vpc.tf_sg_prefix_list_egress_test.id}"
-  	service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
-  	route_table_ids = ["${aws_route_table.default.id}"]
-  	policy = <<POLICY
+  vpc_id          = aws_vpc.tf_sg_prefix_list_egress_test.id
+  service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
+  route_table_ids = [aws_route_table.default.id]
+
+  policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid":"AllowAll",
-			"Effect":"Allow",
-			"Principal":"*",
-			"Action":"*",
-			"Resource":"*"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAll",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "*",
+      "Resource": "*"
+    }
+  ]
 }
 POLICY
 }
 
 resource "aws_security_group" "test" {
-    name = "terraform_acceptance_test_prefix_list_egress"
-    description = "Used in the terraform acceptance tests"
-    vpc_id = "${aws_vpc.tf_sg_prefix_list_egress_test.id}"
+  name        = "terraform_acceptance_test_prefix_list_egress"
+  description = "Used in the terraform acceptance tests"
+  vpc_id      = aws_vpc.tf_sg_prefix_list_egress_test.id
 
-    egress {
-      protocol = "-1"
-      from_port = 0
-      to_port = 0
-      prefix_list_ids = ["${aws_vpc_endpoint.test.prefix_list_id}"]
-    }
+  egress {
+    protocol        = "-1"
+    from_port       = 0
+    to_port         = 0
+    prefix_list_ids = [aws_vpc_endpoint.test.prefix_list_id]
+  }
 }
 `
 
@@ -3876,47 +4005,49 @@ const testAccAWSSecurityGroupConfigPrefixListIngress = `
 data "aws_region" "current" {}
 
 resource "aws_vpc" "tf_sg_prefix_list_ingress_test" {
-    cidr_block = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
+
   tags = {
-        Name = "terraform-testacc-security-group-prefix-list-ingress"
-    }
+    Name = "terraform-testacc-security-group-prefix-list-ingress"
+  }
 }
 
 resource "aws_route_table" "default" {
-    vpc_id = "${aws_vpc.tf_sg_prefix_list_ingress_test.id}"
+  vpc_id = aws_vpc.tf_sg_prefix_list_ingress_test.id
 }
 
 resource "aws_vpc_endpoint" "test" {
-    vpc_id = "${aws_vpc.tf_sg_prefix_list_ingress_test.id}"
-    service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
-    route_table_ids = ["${aws_route_table.default.id}"]
-    policy = <<POLICY
+  vpc_id          = aws_vpc.tf_sg_prefix_list_ingress_test.id
+  service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
+  route_table_ids = [aws_route_table.default.id]
+
+  policy = <<POLICY
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid":"AllowAll",
-            "Effect":"Allow",
-            "Principal":"*",
-            "Action":"*",
-            "Resource":"*"
-        }
-    ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAll",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "*",
+      "Resource": "*"
+    }
+  ]
 }
 POLICY
 }
 
 resource "aws_security_group" "test" {
-    name = "terraform_acceptance_test_prefix_list_ingress"
-    description = "Used in the terraform acceptance tests"
-    vpc_id = "${aws_vpc.tf_sg_prefix_list_ingress_test.id}"
+  name        = "terraform_acceptance_test_prefix_list_ingress"
+  description = "Used in the terraform acceptance tests"
+  vpc_id      = aws_vpc.tf_sg_prefix_list_ingress_test.id
 
-    ingress {
-      protocol = "-1"
-      from_port = 0
-      to_port = 0
-      prefix_list_ids = ["${aws_vpc_endpoint.test.prefix_list_id}"]
-    }
+  ingress {
+    protocol        = "-1"
+    from_port       = 0
+    to_port         = 0
+    prefix_list_ids = [aws_vpc_endpoint.test.prefix_list_id]
+  }
 }
 `
 
@@ -3932,31 +4063,31 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "${var.name}"
+    Name = var.name
   }
 }
 
 resource "aws_route_table" "default" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_vpc_endpoint" "test" {
-  vpc_id          = "${aws_vpc.test.id}"
+  vpc_id          = aws_vpc.test.id
   service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
-  route_table_ids = ["${aws_route_table.default.id}"]
+  route_table_ids = [aws_route_table.default.id]
 
   policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Sid":"AllowAll",
-			"Effect":"Allow",
-			"Principal":"*",
-			"Action":"*",
-			"Resource":"*"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAll",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "*",
+      "Resource": "*"
+    }
+  ]
 }
 POLICY
 }
@@ -3964,19 +4095,19 @@ POLICY
 resource "aws_security_group" "source1" {
   name        = "${var.name}-source1"
   description = "terraform acceptance test for security group as source1"
-  vpc_id      = "${aws_vpc.test.id}"
+  vpc_id      = aws_vpc.test.id
 }
 
 resource "aws_security_group" "source2" {
   name        = "${var.name}-source2"
   description = "terraform acceptance test for security group as source2"
-  vpc_id      = "${aws_vpc.test.id}"
+  vpc_id      = aws_vpc.test.id
 }
 
 resource "aws_security_group" "test" {
-  name        = "${var.name}"
+  name        = var.name
   description = "terraform acceptance test for security group"
-  vpc_id      = "${aws_vpc.test.id}"
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     protocol    = "tcp"
@@ -4014,7 +4145,7 @@ resource "aws_security_group" "test" {
     protocol        = "tcp"
     from_port       = 80
     to_port         = 80
-    security_groups = ["${aws_security_group.source1.id}", "${aws_security_group.source2.id}"]
+    security_groups = [aws_security_group.source1.id, aws_security_group.source2.id]
     description     = "ingress from other security groups"
   }
 
@@ -4038,7 +4169,7 @@ resource "aws_security_group" "test" {
     from_port       = 0
     to_port         = 0
     protocol        = "-1"
-    prefix_list_ids = ["${aws_vpc_endpoint.test.prefix_list_id}"]
+    prefix_list_ids = [aws_vpc_endpoint.test.prefix_list_id]
     description     = "egress for vpc endpoints"
   }
 }
@@ -4048,37 +4179,38 @@ resource "aws_security_group" "test" {
 const testAccAWSSecurityGroupConfig_rulesDropOnError_Init = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-security-group-drop-rules-test"
   }
 }
 
 resource "aws_security_group" "test_ref0" {
-  name = "terraform_acceptance_test_drop_rules_ref0"
-  vpc_id = "${aws_vpc.test.id}"
+  name   = "terraform_acceptance_test_drop_rules_ref0"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_security_group" "test_ref1" {
-  name = "terraform_acceptance_test_drop_rules_ref1"
-  vpc_id = "${aws_vpc.test.id}"
+  name   = "terraform_acceptance_test_drop_rules_ref1"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_security_group" "test" {
-  name = "terraform_acceptance_test_drop_rules"
+  name        = "terraform_acceptance_test_drop_rules"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id      = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test"
   }
 
   ingress {
-    protocol = "tcp"
+    protocol  = "tcp"
     from_port = "80"
-    to_port = "80"
+    to_port   = "80"
     security_groups = [
-      "${aws_security_group.test_ref0.id}",
-      "${aws_security_group.test_ref1.id}",
+      aws_security_group.test_ref0.id,
+      aws_security_group.test_ref1.id,
     ]
   }
 }
@@ -4087,37 +4219,38 @@ resource "aws_security_group" "test" {
 const testAccAWSSecurityGroupConfig_rulesDropOnError_AddBadRule = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-security-group-drop-rules-test"
   }
 }
 
 resource "aws_security_group" "test_ref0" {
-  name = "terraform_acceptance_test_drop_rules_ref0"
-  vpc_id = "${aws_vpc.test.id}"
+  name   = "terraform_acceptance_test_drop_rules_ref0"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_security_group" "test_ref1" {
-  name = "terraform_acceptance_test_drop_rules_ref1"
-  vpc_id = "${aws_vpc.test.id}"
+  name   = "terraform_acceptance_test_drop_rules_ref1"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_security_group" "test" {
-  name = "terraform_acceptance_test_drop_rules"
+  name        = "terraform_acceptance_test_drop_rules"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id      = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test"
   }
 
   ingress {
-    protocol = "tcp"
+    protocol  = "tcp"
     from_port = "80"
-    to_port = "80"
+    to_port   = "80"
     security_groups = [
-      "${aws_security_group.test_ref0.id}",
-      "${aws_security_group.test_ref1.id}",
+      aws_security_group.test_ref0.id,
+      aws_security_group.test_ref1.id,
       "sg-malformed", # non-existent rule to trigger API error
     ]
   }
@@ -4139,17 +4272,17 @@ resource "aws_security_group" "test" {
     Name = "terraform-testacc-security-group-egress-config-mode"
   }
 
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   egress {
-    cidr_blocks = ["${aws_vpc.test.cidr_block}"]
+    cidr_blocks = [aws_vpc.test.cidr_block]
     from_port   = 0
     protocol    = "tcp"
     to_port     = 0
   }
 
   egress {
-    cidr_blocks = ["${aws_vpc.test.cidr_block}"]
+    cidr_blocks = [aws_vpc.test.cidr_block]
     from_port   = 0
     protocol    = "udp"
     to_port     = 0
@@ -4173,7 +4306,7 @@ resource "aws_security_group" "test" {
     Name = "terraform-testacc-security-group-egress-config-mode"
   }
 
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 `
 }
@@ -4195,7 +4328,7 @@ resource "aws_security_group" "test" {
     Name = "terraform-testacc-security-group-egress-config-mode"
   }
 
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 `
 }
@@ -4215,17 +4348,17 @@ resource "aws_security_group" "test" {
     Name = "terraform-testacc-security-group-ingress-config-mode"
   }
 
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   ingress {
-    cidr_blocks = ["${aws_vpc.test.cidr_block}"]
+    cidr_blocks = [aws_vpc.test.cidr_block]
     from_port   = 0
     protocol    = "tcp"
     to_port     = 0
   }
 
   ingress {
-    cidr_blocks = ["${aws_vpc.test.cidr_block}"]
+    cidr_blocks = [aws_vpc.test.cidr_block]
     from_port   = 0
     protocol    = "udp"
     to_port     = 0
@@ -4249,7 +4382,7 @@ resource "aws_security_group" "test" {
     Name = "terraform-testacc-security-group-ingress-config-mode"
   }
 
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 `
 }
@@ -4271,7 +4404,7 @@ resource "aws_security_group" "test" {
     Name = "terraform-testacc-security-group-ingress-config-mode"
   }
 
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 `
 }

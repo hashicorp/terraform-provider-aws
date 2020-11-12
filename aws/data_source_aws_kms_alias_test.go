@@ -5,9 +5,9 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccDataSourceAwsKmsAlias_AwsService(t *testing.T) {
@@ -82,10 +82,9 @@ resource "aws_kms_key" "test" {
 
 resource "aws_kms_alias" "test" {
   name          = "alias/tf-acc-key-alias-%d"
-  target_key_id = "${aws_kms_key.test.key_id}"
+  target_key_id = aws_kms_key.test.key_id
 }
 
 %s
-
 `, rInt, testAccDataSourceAwsKmsAlias_name("${aws_kms_alias.test.name}"))
 }

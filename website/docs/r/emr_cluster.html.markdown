@@ -14,8 +14,6 @@ for more information.
 
 To configure [Instance Groups](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for [task nodes](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-task), see the [`aws_emr_instance_group` resource](/docs/providers/aws/r/emr_instance_group.html).
 
--> Support for [Instance Fleets](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-fleets) will be made available in an upcoming release.
-
 ## Example Usage
 
 ```hcl
@@ -37,10 +35,10 @@ EOF
   keep_job_flow_alive_when_no_steps = true
 
   ec2_attributes {
-    subnet_id                         = "${aws_subnet.main.id}"
-    emr_managed_master_security_group = "${aws_security_group.sg.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.sg.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    subnet_id                         = aws_subnet.main.id
+    emr_managed_master_security_group = aws_security_group.sg.id
+    emr_managed_slave_security_group  = aws_security_group.sg.id
+    instance_profile                  = aws_iam_instance_profile.emr_profile.arn
   }
 
   master_instance_group {
@@ -136,7 +134,7 @@ EOF
   ]
 EOF
 
-  service_role = "${aws_iam_role.iam_emr_service_role.arn}"
+  service_role = aws_iam_role.iam_emr_service_role.arn
 }
 ```
 
@@ -147,6 +145,98 @@ and `AmazonElasticMapReduceforEC2Role` for the EC2 profile. See the [Getting
 Started](https://docs.aws.amazon.com/ElasticMapReduce/latest/ManagementGuide/emr-gs-launch-sample-cluster.html)
 guide for more information on these IAM roles. There is also a fully-bootable
 example Terraform configuration at the bottom of this page.
+
+## Instance Fleet
+
+```hcl
+resource "aws_emr_cluster" "example" {
+  # ... other configuration ...
+  master_instance_fleet {
+    instance_type_configs {
+      instance_type = "m4.xlarge"
+    }
+    target_on_demand_capacity = 1
+  }
+  core_instance_fleet {
+    instance_type_configs {
+      bid_price_as_percentage_of_on_demand_price = 80
+      ebs_config {
+        size                 = 100
+        type                 = "gp2"
+        volumes_per_instance = 1
+      }
+      instance_type     = "m3.xlarge"
+      weighted_capacity = 1
+    }
+    instance_type_configs {
+      bid_price_as_percentage_of_on_demand_price = 100
+      ebs_config {
+        size                 = 100
+        type                 = "gp2"
+        volumes_per_instance = 1
+      }
+      instance_type     = "m4.xlarge"
+      weighted_capacity = 1
+    }
+    instance_type_configs {
+      bid_price_as_percentage_of_on_demand_price = 100
+      ebs_config {
+        size                 = 100
+        type                 = "gp2"
+        volumes_per_instance = 1
+      }
+      instance_type     = "m4.2xlarge"
+      weighted_capacity = 2
+    }
+    launch_specifications {
+      spot_specification {
+        allocation_strategy      = "capacity-optimized"
+        block_duration_minutes   = 0
+        timeout_action           = "SWITCH_TO_ON_DEMAND"
+        timeout_duration_minutes = 10
+      }
+    }
+    name                      = "core fleet"
+    target_on_demand_capacity = 2
+    target_spot_capacity      = 2
+  }
+}
+
+resource "aws_emr_instance_fleet" "task" {
+  cluster_id = aws_emr_cluster.example.id
+  instance_type_configs {
+    bid_price_as_percentage_of_on_demand_price = 100
+    ebs_config {
+      size                 = 100
+      type                 = "gp2"
+      volumes_per_instance = 1
+    }
+    instance_type     = "m4.xlarge"
+    weighted_capacity = 1
+  }
+  instance_type_configs {
+    bid_price_as_percentage_of_on_demand_price = 100
+    ebs_config {
+      size                 = 100
+      type                 = "gp2"
+      volumes_per_instance = 1
+    }
+    instance_type     = "m4.2xlarge"
+    weighted_capacity = 2
+  }
+  launch_specifications {
+    spot_specification {
+      allocation_strategy      = "capacity-optimized"
+      block_duration_minutes   = 0
+      timeout_action           = "TERMINATE_CLUSTER"
+      timeout_duration_minutes = 10
+    }
+  }
+  name                      = "task fleet"
+  target_on_demand_capacity = 1
+  target_spot_capacity      = 1
+}
+```
 
 ### Enable Debug Logging
 
@@ -171,7 +261,7 @@ resource "aws_emr_cluster" "example" {
 
   # Optional: ignore outside changes to running cluster steps
   lifecycle {
-    ignore_changes = ["step"]
+    ignore_changes = [step]
   }
 }
 ```
@@ -204,7 +294,7 @@ resource "aws_emr_cluster" "example" {
   ec2_attributes {
     # ... other configuration ...
 
-    subnet_id = "${aws_subnet.example.id}"
+    subnet_id = aws_subnet.example.id
   }
 
   master_instance_group {
@@ -228,11 +318,13 @@ The following arguments are supported:
 * `name` - (Required) The name of the job flow
 * `release_label` - (Required) The release label for the Amazon EMR release
 * `master_instance_group` - (Optional) Configuration block to use an [Instance Group](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for the [master node type](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-master).
+* `master_instance_fleet` - (Optional) Configuration block to use an [Instance Fleet](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html) for the master node type. Cannot be specified if any `master_instance_group` configuration blocks are set. Detailed below.
 * `scale_down_behavior` - (Optional) The way that individual Amazon EC2 instances terminate when an automatic scale-in activity occurs or an `instance group` is resized.
 * `additional_info` - (Optional) A JSON string for selecting additional features such as adding proxy information. Note: Currently there is no API to retrieve the value of this argument after EMR cluster creation from provider, therefore Terraform cannot detect drift from the actual EMR cluster if its value is changed outside Terraform.
 * `service_role` - (Required) IAM role that will be assumed by the Amazon EMR service to access AWS resources
 * `security_configuration` - (Optional) The security configuration name to attach to the EMR cluster. Only valid for EMR clusters with `release_label` 4.8.0 or greater
 * `core_instance_group` - (Optional) Configuration block to use an [Instance Group](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for the [core node type](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-core).
+* `core_instance_fleet` - (Optional) Configuration block to use an [Instance Fleet](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html) for the core node type. Cannot be specified if any `core_instance_group` configuration blocks are set. Detailed below.
 * `log_uri` - (Optional) S3 bucket to write the log files of the job flow. If a value is not provided, logs are not created
 * `applications` - (Optional) A list of applications for the cluster. Valid values are: `Flink`, `Hadoop`, `Hive`, `Mahout`, `Pig`, `Spark`, and `JupyterHub` (as of EMR 5.14.0). Case insensitive
 * `termination_protection` - (Optional) Switch on/off termination protection (default is `false`, except when using multiple master nodes). Before attempting to destroy the resource when termination protection is enabled, this configuration must be applied with its value set to `false`.
@@ -249,7 +341,10 @@ The following arguments are supported:
 the `Configurations` field instead of providing empty list as value `"Configurations": []`.
 
 ```hcl
-configurations_json = <<EOF
+resource "aws_emr_cluster" "cluster" {
+  # ... other configuration ...
+
+  configurations_json = <<EOF
   [
     {
       "Classification": "hadoop-env",
@@ -265,6 +360,7 @@ configurations_json = <<EOF
     }
   ]
 EOF
+}
 ```
 
 * `visible_to_all_users` - (Optional) Whether the job flow is visible to all IAM users of the AWS account associated with the job flow. Default `true`
@@ -364,6 +460,63 @@ Attributes for Hadoop job step configuration
 * `main_class` - (Optional) Name of the main class in the specified Java file. If not specified, the JAR file should specify a Main-Class in its manifest file.
 * `properties` - (Optional) Key-Value map of Java properties that are set when the step runs. You can use these properties to pass key value pairs to your main function.
 
+## master_instance_fleet Configuration Block
+
+Supported nested arguments for the `master_instance_fleet` configuration block:
+
+* `instance_type_configs` - (Optional) Configuration block for instance fleet
+* `launch_specifications` - (Optional) Configuration block for launch specification
+* `target_on_demand_capacity` - (Optional)  The target capacity of On-Demand units for the instance fleet, which determines how many On-Demand instances to provision.
+* `target_spot_capacity` - (Optional) The target capacity of Spot units for the instance fleet, which determines how many Spot instances to provision.
+* `name` - (Optional) Friendly name given to the instance fleet.
+
+## core_instance_fleet Configuration Block
+
+Supported nested arguments for the `core_instance_fleet` configuration block:
+
+* `instance_type_configs` - (Optional) Configuration block for instance fleet
+* `launch_specifications` - (Optional) Configuration block for launch specification
+* `target_on_demand_capacity` - (Optional)  The target capacity of On-Demand units for the instance fleet, which determines how many On-Demand instances to provision.
+* `target_spot_capacity` - (Optional) The target capacity of Spot units for the instance fleet, which determines how many Spot instances to provision.
+* `name` - (Optional) Friendly name given to the instance fleet.
+
+## instance_type_configs Configuration Block
+
+* `bid_price` - (Optional) The bid price for each EC2 Spot instance type as defined by `instance_type`. Expressed in USD. If neither `bid_price` nor `bid_price_as_percentage_of_on_demand_price` is provided, `bid_price_as_percentage_of_on_demand_price` defaults to 100%.
+* `bid_price_as_percentage_of_on_demand_price` - (Optional) The bid price, as a percentage of On-Demand price, for each EC2 Spot instance as defined by `instance_type`. Expressed as a number (for example, 20 specifies 20%). If neither `bid_price` nor `bid_price_as_percentage_of_on_demand_price` is provided, `bid_price_as_percentage_of_on_demand_price` defaults to 100%.
+* `configurations` - (Optional) A configuration classification that applies when provisioning cluster instances, which can include configurations for applications and software that run on the cluster. List of `configuration` blocks.
+* `ebs_config` - (Optional) Configuration block(s) for EBS volumes attached to each instance in the instance group. Detailed below.
+* `instance_type` - (Required) An EC2 instance type, such as m4.xlarge.
+* `weighted_capacity` - (Optional) The number of units that a provisioned instance of this type provides toward fulfilling the target capacities defined in `aws_emr_instance_fleet`.
+
+## configurations Configuration Block
+
+A configuration classification that applies when provisioning cluster instances, which can include configurations for applications and software that run on the cluster. See [Configuring Applications](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-configure-apps.html).
+
+* `classification` - (Optional) The classification within a configuration.
+* `properties` - (Optional) A map of properties specified within a configuration classification
+
+## launch_specifications Configuration Block
+
+* `on_demand_specification` - (Optional) Configuration block for on demand instances launch specifications
+* `spot_specification` - (Optional) Configuration block for spot instances launch specifications
+
+## on_demand_specification  Configuration Block
+
+The launch specification for On-Demand instances in the instance fleet, which determines the allocation strategy.
+The instance fleet configuration is available only in Amazon EMR versions 4.8.0 and later, excluding 5.0.x versions. On-Demand instances allocation strategy is available in Amazon EMR version 5.12.1 and later.
+
+* `allocation_strategy` - (Required) Specifies the strategy to use in launching On-Demand instance fleets. Currently, the only option is `lowest-price` (the default), which launches the lowest price first.
+
+## spot_specification  Configuration Block
+
+The launch specification for Spot instances in the fleet, which determines the defined duration, provisioning timeout behavior, and allocation strategy.
+
+* `allocation_strategy` - (Required) Specifies the strategy to use in launching Spot instance fleets. Currently, the only option is `capacity-optimized` (the default), which launches instances from Spot instance pools with optimal capacity for the number of instances that are launching.
+* `block_duration_minutes` - (Optional) The defined duration for Spot instances (also known as Spot blocks) in minutes. When specified, the Spot instance does not terminate before the defined duration expires, and defined duration pricing for Spot instances applies. Valid values are 60, 120, 180, 240, 300, or 360. The duration period starts as soon as a Spot instance receives its instance ID. At the end of the duration, Amazon EC2 marks the Spot instance for termination and provides a Spot instance termination notice, which gives the instance a two-minute warning before it terminates.
+* `timeout_action` - (Required) The action to take when TargetSpotCapacity has not been fulfilled when the TimeoutDurationMinutes has expired; that is, when all Spot instances could not be provisioned within the Spot provisioning timeout. Valid values are `TERMINATE_CLUSTER` and `SWITCH_TO_ON_DEMAND`. SWITCH_TO_ON_DEMAND specifies that if no Spot instances are available, On-Demand Instances should be provisioned to fulfill any remaining Spot capacity.
+* `timeout_duration_minutes` - (Required) The spot provisioning timeout period in minutes. If Spot instances are not provisioned within this time period, the TimeOutAction is taken. Minimum value is 5 and maximum value is 1440. The timeout applies only during initial provisioning, when the cluster is first created.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -397,10 +550,10 @@ resource "aws_emr_cluster" "cluster" {
   applications  = ["Spark"]
 
   ec2_attributes {
-    subnet_id                         = "${aws_subnet.main.id}"
-    emr_managed_master_security_group = "${aws_security_group.allow_all.id}"
-    emr_managed_slave_security_group  = "${aws_security_group.allow_all.id}"
-    instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    subnet_id                         = aws_subnet.main.id
+    emr_managed_master_security_group = aws_security_group.allow_all.id
+    emr_managed_slave_security_group  = aws_security_group.allow_all.id
+    instance_profile                  = aws_iam_instance_profile.emr_profile.arn
   }
 
   master_instance_group {
@@ -454,13 +607,13 @@ resource "aws_emr_cluster" "cluster" {
   ]
 EOF
 
-  service_role = "${aws_iam_role.iam_emr_service_role.arn}"
+  service_role = aws_iam_role.iam_emr_service_role.arn
 }
 
 resource "aws_security_group" "allow_access" {
   name        = "allow_access"
   description = "Allow inbound traffic"
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     from_port   = 0
@@ -476,10 +629,13 @@ resource "aws_security_group" "allow_access" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  depends_on = ["aws_subnet.main"]
+  depends_on = [aws_subnet.main]
 
   lifecycle {
-    ignore_changes = ["ingress", "egress"]
+    ignore_changes = [
+      ingress,
+      egress,
+    ]
   }
 
   tags = {
@@ -497,7 +653,7 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "main" {
-  vpc_id     = "${aws_vpc.main.id}"
+  vpc_id     = aws_vpc.main.id
   cidr_block = "168.31.0.0/20"
 
   tags = {
@@ -506,21 +662,21 @@ resource "aws_subnet" "main" {
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_route_table" "r" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.gw.id}"
+    gateway_id = aws_internet_gateway.gw.id
   }
 }
 
 resource "aws_main_route_table_association" "a" {
-  vpc_id         = "${aws_vpc.main.id}"
-  route_table_id = "${aws_route_table.r.id}"
+  vpc_id         = aws_vpc.main.id
+  route_table_id = aws_route_table.r.id
 }
 
 ###
@@ -552,7 +708,7 @@ EOF
 
 resource "aws_iam_role_policy" "iam_emr_service_policy" {
   name = "iam_emr_service_policy"
-  role = "${aws_iam_role.iam_emr_service_role.id}"
+  role = aws_iam_role.iam_emr_service_role.id
 
   policy = <<EOF
 {
@@ -648,7 +804,7 @@ resource "aws_iam_instance_profile" "emr_profile" {
 
 resource "aws_iam_role_policy" "iam_emr_profile_policy" {
   name = "iam_emr_profile_policy"
-  role = "${aws_iam_role.iam_emr_profile_role.id}"
+  role = aws_iam_role.iam_emr_profile_role.id
 
   policy = <<EOF
 {
@@ -701,7 +857,7 @@ resource "aws_emr_cluster" "example" {
   # ... other configuration ...
 
   lifecycle {
-    ignore_changes = ["kerberos_attributes"]
+    ignore_changes = [kerberos_attributes]
   }
 }
 ```

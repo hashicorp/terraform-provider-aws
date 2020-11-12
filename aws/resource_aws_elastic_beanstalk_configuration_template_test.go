@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -153,7 +153,7 @@ resource "aws_elastic_beanstalk_application" "tftest" {
 
 resource "aws_elastic_beanstalk_configuration_template" "tf_template" {
   name                = "tf-test-template-config"
-  application         = "${aws_elastic_beanstalk_application.tftest.name}"
+  application         = aws_elastic_beanstalk_application.tftest.name
   solution_stack_name = "64bit Amazon Linux running Python"
 }
 `, r, r)
@@ -170,7 +170,7 @@ resource "aws_vpc" "tf_b_test" {
 }
 
 resource "aws_subnet" "main" {
-  vpc_id     = "${aws_vpc.tf_b_test.id}"
+  vpc_id     = aws_vpc.tf_b_test.id
   cidr_block = "10.0.0.0/24"
 
   tags = {
@@ -185,20 +185,20 @@ resource "aws_elastic_beanstalk_application" "tftest" {
 
 resource "aws_elastic_beanstalk_configuration_template" "tf_template" {
   name        = "tf-test-%s"
-  application = "${aws_elastic_beanstalk_application.tftest.name}"
+  application = aws_elastic_beanstalk_application.tftest.name
 
   solution_stack_name = "64bit Amazon Linux running Python"
 
   setting {
     namespace = "aws:ec2:vpc"
     name      = "VPCId"
-    value     = "${aws_vpc.tf_b_test.id}"
+    value     = aws_vpc.tf_b_test.id
   }
 
   setting {
     namespace = "aws:ec2:vpc"
     name      = "Subnets"
-    value     = "${aws_subnet.main.id}"
+    value     = aws_subnet.main.id
   }
 }
 `, name, name)
@@ -213,7 +213,7 @@ resource "aws_elastic_beanstalk_application" "tftest" {
 
 resource "aws_elastic_beanstalk_configuration_template" "tf_template" {
   name        = "tf-test-%s"
-  application = "${aws_elastic_beanstalk_application.tftest.name}"
+  application = aws_elastic_beanstalk_application.tftest.name
 
   solution_stack_name = "64bit Amazon Linux running Python"
 

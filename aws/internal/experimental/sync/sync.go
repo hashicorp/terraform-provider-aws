@@ -2,6 +2,7 @@ package sync
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"testing"
@@ -34,7 +35,12 @@ func (s Semaphore) Wait() {
 // Notify releases a semaphore
 // NOTE: this is currently an experimental feature and is likely to change. DO NOT USE.
 func (s Semaphore) Notify() {
-	<-s
+	// Make the Notify non-blocking. This can happen if a Wait was never issued
+	select {
+	case <-s:
+	default:
+		log.Println("[WARN] Notifying semaphore without Wait")
+	}
 }
 
 // TestAccPreCheckSyncronized waits for a semaphore and skips the test if there is no capacity

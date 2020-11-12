@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -19,7 +19,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_basic(t *testing.T) {
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -48,7 +48,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_update(t *testing.T) {
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -105,7 +105,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_changeResourceARNForceNew(t *test
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -147,7 +147,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_changeLogDestinationConfigsForceN
 	kinesisResourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -186,7 +186,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_disappears(t *testing.T) {
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -209,7 +209,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_webACLDisappears(t *testing.T) {
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -297,6 +297,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_iam_role" "firehose" {
   name = "%[1]s"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -305,7 +306,7 @@ resource "aws_iam_role" "firehose" {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "Service": "firehose.amazonaws.com"
+        "Service": "firehose.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole",
       "Condition": {
@@ -317,16 +318,18 @@ resource "aws_iam_role" "firehose" {
   ]
 }
 EOF
+
 }
 
 resource "aws_s3_bucket" "test" {
   bucket = "%[1]s"
-  acl = "private"
+  acl    = "private"
 }
 
 resource "aws_iam_role_policy" "test" {
   name = "%[1]s"
-  role = "${aws_iam_role.firehose.id}"
+  role = aws_iam_role.firehose.id
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -347,15 +350,20 @@ resource "aws_iam_role_policy" "test" {
         "${aws_s3_bucket.test.arn}/*"
       ]
     },
-	{
+    {
       "Effect": "Allow",
-	  "Action": "iam:CreateServiceLinkedRole",
-	  "Resource": "arn:aws:iam::*:role/aws-service-role/wafv2.amazonaws.com/AWSServiceRoleForWAFV2Logging",
-	  "Condition": {"StringLike": {"iam:AWSServiceName": "wafv2.${data.aws_partition.current.dns_suffix}"}}
-	}
+      "Action": "iam:CreateServiceLinkedRole",
+      "Resource": "arn:${data.aws_partition.current.partition}:iam::*:role/aws-service-role/wafv2.${data.aws_partition.current.dns_suffix}/AWSServiceRoleForWAFV2Logging",
+      "Condition": {
+        "StringLike": {
+          "iam:AWSServiceName": "wafv2.${data.aws_partition.current.dns_suffix}"
+        }
+      }
+    }
   ]
 }
 EOF
+
 }
 
 resource "aws_wafv2_web_acl" "test" {
@@ -379,30 +387,30 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-	depends_on = ["aws_iam_role_policy.test"]
-	name = "aws-waf-logs-%s"
-	destination = "s3"
+  depends_on  = [aws_iam_role_policy.test]
+  name        = "aws-waf-logs-%s"
+  destination = "s3"
 
-	s3_configuration {
-		role_arn = "${aws_iam_role.firehose.arn}"
-		bucket_arn = "${aws_s3_bucket.test.arn}"
-	}
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.test.arn
+  }
 }
 `, rName)
 }
 
 const testAccWebACLLoggingConfigurationResourceConfig = `
 resource "aws_wafv2_web_acl_logging_configuration" "test" {
-  resource_arn = aws_wafv2_web_acl.test.arn
+  resource_arn            = aws_wafv2_web_acl.test.arn
   log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
 }
 `
 
 const testAccWebACLLoggingConfigurationResourceUpdateTwoRedactedFieldsConfig = `
 resource "aws_wafv2_web_acl_logging_configuration" "test" {
-  resource_arn = aws_wafv2_web_acl.test.arn
+  resource_arn            = aws_wafv2_web_acl.test.arn
   log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
- 
+
   redacted_fields {
     single_header {
       name = "referer"
@@ -410,7 +418,7 @@ resource "aws_wafv2_web_acl_logging_configuration" "test" {
   }
 
   redacted_fields {
- 	single_header {
+    single_header {
       name = "user-agent"
     }
   }
@@ -419,7 +427,7 @@ resource "aws_wafv2_web_acl_logging_configuration" "test" {
 
 const testAccWebACLLoggingConfigurationResourceUpdateOneRedactedFieldConfig = `
 resource "aws_wafv2_web_acl_logging_configuration" "test" {
-  resource_arn = aws_wafv2_web_acl.test.arn
+  resource_arn            = aws_wafv2_web_acl.test.arn
   log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
 
   redacted_fields {

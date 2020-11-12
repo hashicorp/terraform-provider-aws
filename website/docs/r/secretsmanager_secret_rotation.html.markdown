@@ -16,8 +16,8 @@ Provides a resource to manage AWS Secrets Manager secret rotation. To manage a s
 
 ```hcl
 resource "aws_secretsmanager_secret_rotation" "example" {
-  secret_id           = "${aws_secretsmanager_secret.example.id}"
-  rotation_lambda_arn = "${aws_lambda_function.example.arn}"
+  secret_id           = aws_secretsmanager_secret.example.id
+  rotation_lambda_arn = aws_lambda_function.example.arn
 
   rotation_rules {
     automatically_after_days = 30
@@ -45,7 +45,7 @@ The following arguments are supported:
 
 * `automatically_after_days` - (Required) Specifies the number of days between automatic scheduled rotations of the secret.
 
-## Attribute Reference
+## Attributes Reference
 
 * `id` - Amazon Resource Name (ARN) of the secret.
 * `arn` - Amazon Resource Name (ARN) of the secret.

@@ -8,16 +8,17 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -392,17 +393,11 @@ func resourceAwsInstance() *schema.Resource {
 						},
 
 						"volume_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								ec2.VolumeTypeStandard,
-								ec2.VolumeTypeIo1,
-								ec2.VolumeTypeGp2,
-								ec2.VolumeTypeSc1,
-								ec2.VolumeTypeSt1,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
 						},
 
 						"volume_id": {
@@ -504,16 +499,10 @@ func resourceAwsInstance() *schema.Resource {
 						},
 
 						"volume_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								ec2.VolumeTypeStandard,
-								ec2.VolumeTypeIo1,
-								ec2.VolumeTypeGp2,
-								ec2.VolumeTypeSc1,
-								ec2.VolumeTypeSt1,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
 						},
 
 						"volume_id": {
@@ -592,11 +581,11 @@ func resourceAwsInstance() *schema.Resource {
 }
 
 func iopsDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
-	// Suppress diff if volume_type is not io1 and iops is unset or configured as 0
+	// Suppress diff if volume_type is not io1 or io2 and iops is unset or configured as 0
 	i := strings.LastIndexByte(k, '.')
 	vt := k[:i+1] + "volume_type"
 	v := d.Get(vt).(string)
-	return strings.ToLower(v) != ec2.VolumeTypeIo1 && new == "0"
+	return (strings.ToLower(v) != ec2.VolumeTypeIo1 || strings.ToLower(v) != ec2.VolumeTypeIo2) && new == "0"
 }
 
 func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
@@ -963,12 +952,12 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// AWS Standard will return InstanceCreditSpecification.NotSupported errors for EC2 Instance IDs outside T2 and T3 instance types
-	// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/8055
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8055
 	if strings.HasPrefix(aws.StringValue(instance.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(instance.InstanceType), "t3") {
 		creditSpecifications, err := getCreditSpecifications(conn, d.Id())
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US)
-		// Reference: https://github.com/terraform-providers/terraform-provider-aws/pull/4362
+		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362
 		if err != nil && !isAWSErr(err, "UnsupportedOperation", "") {
 			return fmt.Errorf("error getting EC2 Instance (%s) Credit Specifications: %s", d.Id(), err)
 		}
@@ -1341,6 +1330,22 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				if err != nil {
 					return fmt.Errorf("Error updating metadata options: %s", err)
 				}
+
+				stateConf := &resource.StateChangeConf{
+					Pending:    []string{ec2.InstanceMetadataOptionsStatePending},
+					Target:     []string{ec2.InstanceMetadataOptionsStateApplied},
+					Refresh:    MetadataOptionsRefreshFunc(conn, d.Id()),
+					Timeout:    d.Timeout(schema.TimeoutUpdate),
+					Delay:      10 * time.Second,
+					MinTimeout: 3 * time.Second,
+				}
+
+				_, err = stateConf.WaitForState()
+				if err != nil {
+					return fmt.Errorf(
+						"Error waiting for instance (%s) to apply metadata options update: %s",
+						d.Id(), err)
+				}
 			}
 		}
 	}
@@ -1368,8 +1373,8 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		if d.HasChange("root_block_device.0.iops") {
 			if v, ok := d.Get("root_block_device.0.iops").(int); ok && v != 0 {
 				// Enforce IOPs usage with a valid volume type
-				// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/12667
-				if t, ok := d.Get("root_block_device.0.volume_type").(string); ok && t != ec2.VolumeTypeIo1 {
+				// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
+				if t, ok := d.Get("root_block_device.0.volume_type").(string); ok && t != ec2.VolumeTypeIo1 && t != ec2.VolumeTypeIo2 {
 					if t == "" {
 						// Volume defaults to gp2
 						t = ec2.VolumeTypeGp2
@@ -1421,6 +1426,20 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				if err != nil {
 					return fmt.Errorf("error modifying delete on termination attribute for EC2 instance %q block device %q: %w", d.Id(), deviceName, err)
 				}
+
+				stateConf := &resource.StateChangeConf{
+					Target:     []string{strconv.FormatBool(v)},
+					Refresh:    RootBlockDeviceDeleteOnTerminationRefreshFunc(conn, d.Id()),
+					Timeout:    d.Timeout(schema.TimeoutUpdate),
+					Delay:      10 * time.Second,
+					MinTimeout: 3 * time.Second,
+				}
+
+				_, err = stateConf.WaitForState()
+				if err != nil {
+					return fmt.Errorf("Error waiting for instance (%s) to apply DeleteOnTermination attribute update: %s",
+						d.Id(), err)
+				}
 			}
 		}
 	}
@@ -1471,6 +1490,60 @@ func InstanceStateRefreshFunc(conn *ec2.EC2, instanceID string, failStates []str
 		}
 
 		return instance, state, nil
+	}
+}
+
+// MetadataOptionsRefreshFunc returns a resource.StateRefreshFunc that is used to watch
+// changes in an EC2 instance's metadata options.
+func MetadataOptionsRefreshFunc(conn *ec2.EC2, instanceID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		instance, err := resourceAwsInstanceFindByID(conn, instanceID)
+		if err != nil {
+			if !isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+				log.Printf("Error on InstanceStateRefresh: %s", err)
+				return nil, "", err
+			}
+		}
+
+		if instance == nil || instance.MetadataOptions == nil {
+			// Sometimes AWS just has consistency issues and doesn't see
+			// our instance yet. Return an empty state.
+			return nil, "", nil
+		}
+
+		state := aws.StringValue(instance.MetadataOptions.State)
+
+		return instance, state, nil
+	}
+}
+
+// RootBlockDeviceDeleteOnTerminationRefreshFunc returns a resource.StateRefreshFunc
+// that is used to watch changes in an EC2 instance's root block device's delete on termination attribute.
+func RootBlockDeviceDeleteOnTerminationRefreshFunc(conn *ec2.EC2, instanceID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		instance, err := resourceAwsInstanceFindByID(conn, instanceID)
+		if err != nil {
+			if !isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+				log.Printf("Error on InstanceStateRefresh: %s", err)
+				return nil, "", err
+			}
+		}
+
+		if instance == nil || len(instance.BlockDeviceMappings) == 0 {
+			// Sometimes AWS just has consistency issues and doesn't see
+			// our instance yet. Return an empty state.
+			return nil, "", nil
+		}
+
+		var deleteOnTermination string
+		for _, bd := range instance.BlockDeviceMappings {
+			if blockDeviceIsRoot(bd, instance) {
+				deleteOnTermination = strconv.FormatBool(aws.BoolValue(bd.Ebs.DeleteOnTermination))
+				break
+			}
+		}
+
+		return instance, deleteOnTermination, nil
 	}
 }
 
@@ -1833,15 +1906,15 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 			if v, ok := bd["volume_type"].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
 				if iops, ok := bd["iops"].(int); ok && iops > 0 {
-					if ec2.VolumeTypeIo1 == strings.ToLower(v) {
-						// Condition: This parameter is required for requests to create io1
+					if ec2.VolumeTypeIo1 == strings.ToLower(v) || ec2.VolumeTypeIo2 == strings.ToLower(v) {
+						// Condition: This parameter is required for requests to create io1 or io2
 						// volumes; it is not used in requests to create gp2, st1, sc1, or
 						// standard volumes.
 						// See: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_EbsBlockDevice.html
 						ebs.Iops = aws.Int64(int64(iops))
 					} else {
 						// Enforce IOPs usage with a valid volume type
-						// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/12667
+						// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
 						return nil, fmt.Errorf("error creating resource: iops attribute not supported for ebs_block_device with volume_type %s", v)
 					}
 				}
@@ -1899,8 +1972,8 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 			if v, ok := bd["volume_type"].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
 				if iops, ok := bd["iops"].(int); ok && iops > 0 {
-					if ec2.VolumeTypeIo1 == strings.ToLower(v) {
-						// Only set the iops attribute if the volume type is io1. Setting otherwise
+					if ec2.VolumeTypeIo1 == strings.ToLower(v) || ec2.VolumeTypeIo2 == strings.ToLower(v) {
+						// Only set the iops attribute if the volume type is io1 or io2. Setting otherwise
 						// can trigger a refresh/plan loop based on the computed value that is given
 						// from AWS, and prevent us from specifying 0 as a valid iops.
 						//   See https://github.com/hashicorp/terraform/pull/4146
@@ -1908,7 +1981,7 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 						ebs.Iops = aws.Int64(int64(iops))
 					} else {
 						// Enforce IOPs usage with a valid volume type
-						// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/12667
+						// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
 						return nil, fmt.Errorf("error creating resource: iops attribute not supported for root_block_device with volume_type %s", v)
 					}
 				}

@@ -26,9 +26,9 @@ resource "aws_appautoscaling_target" "dynamodb_table_read_target" {
 resource "aws_appautoscaling_policy" "dynamodb_table_read_policy" {
   name               = "DynamoDBReadCapacityUtilization:${aws_appautoscaling_target.dynamodb_table_read_target.resource_id}"
   policy_type        = "TargetTrackingScaling"
-  resource_id        = "${aws_appautoscaling_target.dynamodb_table_read_target.resource_id}"
-  scalable_dimension = "${aws_appautoscaling_target.dynamodb_table_read_target.scalable_dimension}"
-  service_namespace  = "${aws_appautoscaling_target.dynamodb_table_read_target.service_namespace}"
+  resource_id        = aws_appautoscaling_target.dynamodb_table_read_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.dynamodb_table_read_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.dynamodb_table_read_target.service_namespace
 
   target_tracking_scaling_policy_configuration {
     predefined_metric_specification {
@@ -54,9 +54,9 @@ resource "aws_appautoscaling_target" "ecs_target" {
 resource "aws_appautoscaling_policy" "ecs_policy" {
   name               = "scale-down"
   policy_type        = "StepScaling"
-  resource_id        = "${aws_appautoscaling_target.ecs_target.resource_id}"
-  scalable_dimension = "${aws_appautoscaling_target.ecs_target.scalable_dimension}"
-  service_namespace  = "${aws_appautoscaling_target.ecs_target.service_namespace}"
+  resource_id        = aws_appautoscaling_target.ecs_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_target.service_namespace
 
   step_scaling_policy_configuration {
     adjustment_type         = "ChangeInCapacity"
@@ -81,7 +81,7 @@ resource "aws_ecs_service" "ecs_service" {
   desired_count   = 2
 
   lifecycle {
-    ignore_changes = ["desired_count"]
+    ignore_changes = [desired_count]
   }
 }
 ```
@@ -99,9 +99,9 @@ resource "aws_appautoscaling_target" "replicas" {
 
 resource "aws_appautoscaling_policy" "replicas" {
   name               = "cpu-auto-scaling"
-  service_namespace  = "${aws_appautoscaling_target.replicas.service_namespace}"
-  scalable_dimension = "${aws_appautoscaling_target.replicas.scalable_dimension}"
-  resource_id        = "${aws_appautoscaling_target.replicas.resource_id}"
+  service_namespace  = aws_appautoscaling_target.replicas.service_namespace
+  scalable_dimension = aws_appautoscaling_target.replicas.scalable_dimension
+  resource_id        = aws_appautoscaling_target.replicas.resource_id
   policy_type        = "TargetTrackingScaling"
 
   target_tracking_scaling_policy_configuration {
@@ -215,7 +215,7 @@ The `target_tracking_scaling_policy_configuration` `customized_metric_specificat
 
 ### target_tracking_scaling_policy_configuration customized_metric_specification dimensions
 
-The `target_tracking_scaling_policy_configration` `customized_metric_specification` `dimensions` configuration block supports the following arguments:
+The `target_tracking_scaling_policy_configuration` `customized_metric_specification` `dimensions` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the dimension.
 * `value` - (Required) Value of the dimension.
@@ -227,7 +227,7 @@ The `target_tracking_scaling_policy_configuration` `predefined_metric_specificat
 * `predefined_metric_type` - (Required) The metric type.
 * `resource_label` - (Optional) Reserved for future use.
 
-## Attribute Reference
+## Attributes Reference
 
 * `arn` - The ARN assigned by AWS to the scaling policy.
 * `name` - The scaling policy's name.

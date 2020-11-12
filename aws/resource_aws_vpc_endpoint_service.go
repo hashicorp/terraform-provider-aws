@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -52,13 +52,23 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 				Computed: true,
 				Set:      schema.HashString,
 			},
+			"gateway_load_balancer_arns": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MinItems: 1,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validateArn,
+				},
+				Set: schema.HashString,
+			},
 			"manages_vpc_endpoints": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"network_load_balancer_arns": {
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				MinItems: 1,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
@@ -91,9 +101,20 @@ func resourceAwsVpcEndpointServiceCreate(d *schema.ResourceData, meta interface{
 	conn := meta.(*AWSClient).ec2conn
 
 	req := &ec2.CreateVpcEndpointServiceConfigurationInput{
-		AcceptanceRequired:      aws.Bool(d.Get("acceptance_required").(bool)),
-		NetworkLoadBalancerArns: expandStringSet(d.Get("network_load_balancer_arns").(*schema.Set)),
-		TagSpecifications:       ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), "vpc-endpoint-service"),
+		AcceptanceRequired: aws.Bool(d.Get("acceptance_required").(bool)),
+		TagSpecifications:  ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), "vpc-endpoint-service"),
+	}
+
+	if v, ok := d.GetOk("gateway_load_balancer_arns"); ok {
+		if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
+			req.GatewayLoadBalancerArns = expandStringSet(v)
+		}
+	}
+
+	if v, ok := d.GetOk("network_load_balancer_arns"); ok {
+		if v, ok := v.(*schema.Set); ok && v.Len() > 0 {
+			req.NetworkLoadBalancerArns = expandStringSet(v)
+		}
 	}
 
 	log.Printf("[DEBUG] Creating VPC Endpoint Service configuration: %#v", req)
@@ -161,11 +182,17 @@ func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{})
 	if err != nil {
 		return fmt.Errorf("error setting base_endpoint_dns_names: %s", err)
 	}
-	d.Set("manages_vpc_endpoints", svcCfg.ManagesVpcEndpoints)
-	err = d.Set("network_load_balancer_arns", flattenStringSet(svcCfg.NetworkLoadBalancerArns))
-	if err != nil {
-		return fmt.Errorf("error setting network_load_balancer_arns: %s", err)
+
+	if err := d.Set("gateway_load_balancer_arns", flattenStringSet(svcCfg.GatewayLoadBalancerArns)); err != nil {
+		return fmt.Errorf("error setting gateway_load_balancer_arns: %w", err)
 	}
+
+	d.Set("manages_vpc_endpoints", svcCfg.ManagesVpcEndpoints)
+
+	if err := d.Set("network_load_balancer_arns", flattenStringSet(svcCfg.NetworkLoadBalancerArns)); err != nil {
+		return fmt.Errorf("error setting network_load_balancer_arns: %w", err)
+	}
+
 	d.Set("private_dns_name", svcCfg.PrivateDnsName)
 	d.Set("service_name", svcCfg.ServiceName)
 	d.Set("service_type", svcCfg.ServiceType[0].ServiceType)
@@ -193,7 +220,7 @@ func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{})
 func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if d.HasChanges("acceptance_required", "network_load_balancer_arns") {
+	if d.HasChanges("acceptance_required", "gateway_load_balancer_arns", "network_load_balancer_arns") {
 		modifyCfgReq := &ec2.ModifyVpcEndpointServiceConfigurationInput{
 			ServiceId: aws.String(d.Id()),
 		}
@@ -201,6 +228,9 @@ func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{
 		if d.HasChange("acceptance_required") {
 			modifyCfgReq.AcceptanceRequired = aws.Bool(d.Get("acceptance_required").(bool))
 		}
+
+		setVpcEndpointServiceUpdateLists(d, "gateway_load_balancer_arns",
+			&modifyCfgReq.AddGatewayLoadBalancerArns, &modifyCfgReq.RemoveGatewayLoadBalancerArns)
 
 		setVpcEndpointServiceUpdateLists(d, "network_load_balancer_arns",
 			&modifyCfgReq.AddNetworkLoadBalancerArns, &modifyCfgReq.RemoveNetworkLoadBalancerArns)

@@ -3,19 +3,18 @@ package aws
 import (
 	"fmt"
 	"log"
+	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
-	"os"
-	"regexp"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -249,10 +248,11 @@ func TestAccAWSAcmCertificate_privateCert(t *testing.T) {
 	})
 }
 
+// TestAccAWSAcmCertificate_root_TrailingPeriod updated in 3.0 to account for domain_name plan-time validation
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13510
 func TestAccAWSAcmCertificate_root_TrailingPeriod(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 	domain := fmt.Sprintf("%s.", rootDomain)
-	resourceName := "aws_acm_certificate.cert"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -260,25 +260,8 @@ func TestAccAWSAcmCertificate_root_TrailingPeriod(t *testing.T) {
 		CheckDestroy: testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateConfig(domain, acm.ValidationMethodDns),
-				Check: resource.ComposeTestCheckFunc(
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile(`certificate/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", strings.TrimSuffix(domain, ".")),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
-						"domain_name":          strings.TrimSuffix(domain, "."),
-						"resource_record_type": "CNAME",
-					}),
-					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusPendingValidation),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config:      testAccAcmCertificateConfig(domain, acm.ValidationMethodDns),
+				ExpectError: regexp.MustCompile(`invalid value for domain_name \(cannot end with a period\)`),
 			},
 		},
 	})
@@ -319,6 +302,23 @@ func TestAccAWSAcmCertificate_rootAndWildcardSan(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAcmCertificate_SubjectAlternativeNames_EmptyString(t *testing.T) {
+	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
+	domain := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAcmCertificateConfig_subjectAlternativeNames(domain, strconv.Quote(""), acm.ValidationMethodDns),
+				ExpectError: regexp.MustCompile(`expected length`),
 			},
 		},
 	})
@@ -666,7 +666,7 @@ func TestAccAWSAcmCertificate_imported_DomainName(t *testing.T) {
 }
 
 //lintignore:AT002
-func TestAccAWSAcmCertificate_imported_IpAddress(t *testing.T) { // Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/7103
+func TestAccAWSAcmCertificate_imported_IpAddress(t *testing.T) { // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7103
 	resourceName := "aws_acm_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -688,6 +688,37 @@ func TestAccAWSAcmCertificate_imported_IpAddress(t *testing.T) { // Reference: h
 				ImportStateVerify: true,
 				// These are not returned by the API
 				ImportStateVerifyIgnore: []string{"private_key", "certificate_body"},
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/15055
+func TestAccAWSAcmCertificate_PrivateKey_Tags(t *testing.T) {
+	resourceName := "aws_acm_certificate.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAcmCertificateConfigPrivateKeyTags("1.2.3.4"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"private_key", "certificate_body"},
+			},
+			{
+				Config: testAccAcmCertificateConfigPrivateKeyTags("5.6.7.8"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
 			},
 		},
 	})
@@ -721,7 +752,7 @@ resource "aws_acmpca_certificate_authority" "test" {
 
 resource "aws_acm_certificate" "cert" {
   domain_name               = "%s.terraformtesting.com"
-  certificate_authority_arn = "${aws_acmpca_certificate_authority.test.arn}"
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
 }
 `, rName)
 }
@@ -731,7 +762,7 @@ func testAccAcmCertificateConfig_subjectAlternativeNames(domainName, subjectAlte
 resource "aws_acm_certificate" "cert" {
   domain_name               = "%s"
   subject_alternative_names = [%s]
-  validation_method = "%s"
+  validation_method         = "%s"
 }
 `, domainName, subjectAlternativeNames, validationMethod)
 }
@@ -775,11 +806,27 @@ resource "aws_acm_certificate" "test" {
 `, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
+func testAccAcmCertificateConfigPrivateKeyTags(commonName string) string {
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, commonName)
+
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[1]s"
+  private_key      = "%[2]s"
+
+  tags = {
+    key1 = "value1"
+  }
+}
+`, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+}
+
 func testAccAcmCertificateConfigPrivateKey(certificate, privateKey, chain string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
-  certificate_body =  "%[1]s"
-  private_key      =  "%[2]s"
+  certificate_body  = "%[1]s"
+  private_key       = "%[2]s"
   certificate_chain = "%[3]s"
 }
 `, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(privateKey), tlsPemEscapeNewlines(chain))
@@ -791,7 +838,7 @@ resource "aws_acm_certificate" "cert" {
   domain_name       = "%s"
   validation_method = "%s"
   options {
-	  certificate_transparency_logging_preference = "DISABLED"
+    certificate_transparency_logging_preference = "DISABLED"
   }
 }
 `, domainName, validationMethod)

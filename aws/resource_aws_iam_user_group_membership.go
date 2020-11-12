@@ -6,9 +6,8 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/service/iam"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsIamUserGroupMembership() *schema.Resource {
@@ -47,6 +46,7 @@ func resourceAwsIamUserGroupMembershipCreate(d *schema.ResourceData, meta interf
 		return err
 	}
 
+	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
 	d.SetId(resource.UniqueId())
 
 	return resourceAwsIamUserGroupMembershipRead(d, meta)
@@ -178,6 +178,8 @@ func resourceAwsIamUserGroupMembershipImport(d *schema.ResourceData, meta interf
 
 	d.Set("user", userName)
 	d.Set("groups", groupList)
+
+	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
 	d.SetId(resource.UniqueId())
 
 	return []*schema.ResourceData{d}, nil

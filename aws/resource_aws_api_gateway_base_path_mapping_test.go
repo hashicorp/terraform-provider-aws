@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestDecodeApiGatewayBasePathMappingId(t *testing.T) {
@@ -222,7 +222,7 @@ resource "aws_acm_certificate" "test" {
 
 resource "aws_api_gateway_domain_name" "test" {
   domain_name              = %[1]q
-  regional_certificate_arn = "${aws_acm_certificate.test.arn}"
+  regional_certificate_arn = aws_acm_certificate.test.arn
 
   endpoint_configuration {
     types = ["REGIONAL"]
@@ -240,29 +240,29 @@ resource "aws_api_gateway_rest_api" "test" {
 
 # API gateway won't let us deploy an empty API
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
   path_part   = "tf-acc"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
-  resource_id   = "${aws_api_gateway_resource.test.id}"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 }
 
 resource "aws_api_gateway_integration" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
   type        = "MOCK"
 }
 
 resource "aws_api_gateway_deployment" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
   stage_name  = "test"
-  depends_on  = ["aws_api_gateway_integration.test"]
+  depends_on  = [aws_api_gateway_integration.test]
 }
 `, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
@@ -270,10 +270,10 @@ resource "aws_api_gateway_deployment" "test" {
 func testAccAWSAPIGatewayBasePathConfigBasePath(domainName, key, certificate, basePath string) string {
 	return testAccAWSAPIGatewayBasePathConfigBase(domainName, key, certificate) + fmt.Sprintf(`
 resource "aws_api_gateway_base_path_mapping" "test" {
-  api_id      = "${aws_api_gateway_rest_api.test.id}"
+  api_id      = aws_api_gateway_rest_api.test.id
   base_path   = %[1]q
-  stage_name  = "${aws_api_gateway_deployment.test.stage_name}"
-  domain_name = "${aws_api_gateway_domain_name.test.domain_name}"
+  stage_name  = aws_api_gateway_deployment.test.stage_name
+  domain_name = aws_api_gateway_domain_name.test.domain_name
 }
 `, basePath)
 }

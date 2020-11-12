@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -20,7 +20,7 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
 		Steps: []resource.TestStep{
@@ -134,7 +134,7 @@ func TestAccAWSAPIGatewayIntegration_contentHandling(t *testing.T) {
 	resourceName := "aws_api_gateway_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
 		Steps: []resource.TestStep{
@@ -209,7 +209,7 @@ func TestAccAWSAPIGatewayIntegration_cache_key_parameters(t *testing.T) {
 	resourceName := "aws_api_gateway_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
 		Steps: []resource.TestStep{
@@ -251,7 +251,7 @@ func TestAccAWSAPIGatewayIntegration_integrationType(t *testing.T) {
 	resourceName := "aws_api_gateway_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
 		Steps: []resource.TestStep{
@@ -295,7 +295,7 @@ func TestAccAWSAPIGatewayIntegration_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_integration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
 		Steps: []resource.TestStep{
@@ -391,15 +391,15 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "GET"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
   authorization = "NONE"
 
   request_models = {
@@ -408,25 +408,25 @@ resource "aws_api_gateway_method" "test" {
 }
 
 resource "aws_api_gateway_integration" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
 
   request_templates = {
     "application/json" = ""
-    "application/xml" = "#set($inputRoot = $input.path('$'))\n{ }"
+    "application/xml"  = "#set($inputRoot = $input.path('$'))\n{ }"
   }
 
   request_parameters = {
     "integration.request.header.X-Authorization" = "'static'"
-    "integration.request.header.X-Foo" = "'Bar'"
+    "integration.request.header.X-Foo"           = "'Bar'"
   }
 
-  type = "HTTP"
-  uri = "https://www.google.de"
+  type                    = "HTTP"
+  uri                     = "https://www.google.de"
   integration_http_method = "GET"
-  passthrough_behavior = "WHEN_NO_MATCH"
-	content_handling = "CONVERT_TO_TEXT"
+  passthrough_behavior    = "WHEN_NO_MATCH"
+  content_handling        = "CONVERT_TO_TEXT"
 }
 `, rName)
 }
@@ -438,15 +438,15 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "GET"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
   authorization = "NONE"
 
   request_models = {
@@ -455,26 +455,26 @@ resource "aws_api_gateway_method" "test" {
 }
 
 resource "aws_api_gateway_integration" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
 
   request_templates = {
     "application/json" = "{'foobar': 'bar}"
-    "text/html" = "<html>Foo</html>"
+    "text/html"        = "<html>Foo</html>"
   }
 
   request_parameters = {
     "integration.request.header.X-Authorization" = "'updated'"
-    "integration.request.header.X-FooBar" = "'Baz'"
+    "integration.request.header.X-FooBar"        = "'Baz'"
   }
 
-  type = "HTTP"
-  uri = "https://www.google.de"
+  type                    = "HTTP"
+  uri                     = "https://www.google.de"
   integration_http_method = "GET"
-  passthrough_behavior = "WHEN_NO_MATCH"
-	content_handling = "CONVERT_TO_TEXT"
-	timeout_milliseconds = 2000
+  passthrough_behavior    = "WHEN_NO_MATCH"
+  content_handling        = "CONVERT_TO_TEXT"
+  timeout_milliseconds    = 2000
 }
 `, rName)
 }
@@ -486,15 +486,15 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "GET"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
   authorization = "NONE"
 
   request_models = {
@@ -503,26 +503,26 @@ resource "aws_api_gateway_method" "test" {
 }
 
 resource "aws_api_gateway_integration" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
 
   request_templates = {
     "application/json" = ""
-    "application/xml" = "#set($inputRoot = $input.path('$'))\n{ }"
+    "application/xml"  = "#set($inputRoot = $input.path('$'))\n{ }"
   }
 
   request_parameters = {
     "integration.request.header.X-Authorization" = "'static'"
-    "integration.request.header.X-Foo" = "'Bar'"
+    "integration.request.header.X-Foo"           = "'Bar'"
   }
 
-  type = "HTTP"
-  uri = "https://www.google.de/updated"
+  type                    = "HTTP"
+  uri                     = "https://www.google.de/updated"
   integration_http_method = "GET"
-  passthrough_behavior = "WHEN_NO_MATCH"
-	content_handling = "CONVERT_TO_TEXT"
-	timeout_milliseconds = 2000
+  passthrough_behavior    = "WHEN_NO_MATCH"
+  content_handling        = "CONVERT_TO_TEXT"
+  timeout_milliseconds    = 2000
 }
 `, rName)
 }
@@ -534,15 +534,15 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "GET"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
   authorization = "NONE"
 
   request_models = {
@@ -551,26 +551,26 @@ resource "aws_api_gateway_method" "test" {
 }
 
 resource "aws_api_gateway_integration" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
 
   request_templates = {
     "application/json" = ""
-    "application/xml" = "#set($inputRoot = $input.path('$'))\n{ }"
+    "application/xml"  = "#set($inputRoot = $input.path('$'))\n{ }"
   }
 
   request_parameters = {
     "integration.request.header.X-Authorization" = "'static'"
-    "integration.request.header.X-Foo" = "'Bar'"
+    "integration.request.header.X-Foo"           = "'Bar'"
   }
 
-  type = "HTTP"
-  uri = "https://www.google.de"
+  type                    = "HTTP"
+  uri                     = "https://www.google.de"
   integration_http_method = "GET"
-  passthrough_behavior = "WHEN_NO_MATCH"
-	content_handling = "CONVERT_TO_BINARY"
-	timeout_milliseconds = 2000
+  passthrough_behavior    = "WHEN_NO_MATCH"
+  content_handling        = "CONVERT_TO_BINARY"
+  timeout_milliseconds    = 2000
 }
 `, rName)
 }
@@ -582,15 +582,15 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "GET"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
   authorization = "NONE"
 
   request_models = {
@@ -599,25 +599,25 @@ resource "aws_api_gateway_method" "test" {
 }
 
 resource "aws_api_gateway_integration" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
 
   request_templates = {
     "application/json" = ""
-    "application/xml" = "#set($inputRoot = $input.path('$'))\n{ }"
+    "application/xml"  = "#set($inputRoot = $input.path('$'))\n{ }"
   }
 
   request_parameters = {
     "integration.request.header.X-Authorization" = "'static'"
-    "integration.request.header.X-Foo" = "'Bar'"
+    "integration.request.header.X-Foo"           = "'Bar'"
   }
 
-  type = "HTTP"
-  uri = "https://www.google.de"
+  type                    = "HTTP"
+  uri                     = "https://www.google.de"
   integration_http_method = "GET"
-	passthrough_behavior = "WHEN_NO_MATCH"
-	timeout_milliseconds = 2000
+  passthrough_behavior    = "WHEN_NO_MATCH"
+  timeout_milliseconds    = 2000
 }
 `, rName)
 }
@@ -629,15 +629,15 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "GET"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
   authorization = "NONE"
 
   request_models = {
@@ -646,16 +646,16 @@ resource "aws_api_gateway_method" "test" {
 }
 
 resource "aws_api_gateway_integration" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
 
-  type = "HTTP"
-  uri = "https://www.google.de"
+  type                    = "HTTP"
+  uri                     = "https://www.google.de"
   integration_http_method = "GET"
-  passthrough_behavior = "WHEN_NO_MATCH"
-	content_handling = "CONVERT_TO_TEXT"
-	timeout_milliseconds = 2000
+  passthrough_behavior    = "WHEN_NO_MATCH"
+  content_handling        = "CONVERT_TO_TEXT"
+  timeout_milliseconds    = 2000
 }
 `, rName)
 }
@@ -667,15 +667,15 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "{param}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "{param}"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "GET"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
   authorization = "NONE"
 
   request_models = {
@@ -688,30 +688,30 @@ resource "aws_api_gateway_method" "test" {
 }
 
 resource "aws_api_gateway_integration" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
 
   request_templates = {
     "application/json" = ""
-    "application/xml" = "#set($inputRoot = $input.path('$'))\n{ }"
+    "application/xml"  = "#set($inputRoot = $input.path('$'))\n{ }"
   }
 
   request_parameters = {
     "integration.request.header.X-Authorization" = "'static'"
-    "integration.request.header.X-Foo" = "'Bar'"
-    "integration.request.path.param" = "method.request.path.param"
+    "integration.request.header.X-Foo"           = "'Bar'"
+    "integration.request.path.param"             = "method.request.path.param"
   }
 
   cache_key_parameters = ["method.request.path.param"]
-  cache_namespace = "foobar"
+  cache_namespace      = "foobar"
 
-  type = "HTTP"
-  uri = "https://www.google.de"
+  type                    = "HTTP"
+  uri                     = "https://www.google.de"
   integration_http_method = "GET"
-  passthrough_behavior = "WHEN_NO_MATCH"
-	content_handling = "CONVERT_TO_TEXT"
-	timeout_milliseconds = 2000
+  passthrough_behavior    = "WHEN_NO_MATCH"
+  content_handling        = "CONVERT_TO_TEXT"
+  timeout_milliseconds    = 2000
 }
 `, rName)
 }
@@ -735,29 +735,29 @@ resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
 
   tags = {
-    Name = "${var.name}"
+    Name = var.name
   }
 }
 
 resource "aws_subnet" "test" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.10.0.0/24"
-  availability_zone = "${data.aws_availability_zones.test.names[0]}"
+  availability_zone = data.aws_availability_zones.test.names[0]
 }
 
 resource "aws_api_gateway_rest_api" "test" {
-  name = "${var.name}"
+  name = var.name
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
-  resource_id   = "${aws_api_gateway_resource.test.id}"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
   http_method   = "GET"
   authorization = "NONE"
 
@@ -767,15 +767,15 @@ resource "aws_api_gateway_method" "test" {
 }
 
 resource "aws_lb" "test" {
-  name               = "${var.name}"
+  name               = var.name
   internal           = true
   load_balancer_type = "network"
-  subnets            = ["${aws_subnet.test.id}"]
+  subnets            = [aws_subnet.test.id]
 }
 
 resource "aws_api_gateway_vpc_link" "test" {
-  name        = "${var.name}"
-  target_arns = ["${aws_lb.test.arn}"]
+  name        = var.name
+  target_arns = [aws_lb.test.arn]
 }
 `, rName)
 }
@@ -783,9 +783,9 @@ resource "aws_api_gateway_vpc_link" "test" {
 func testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeVpcLink(rName string) string {
 	return testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeBase(rName) + `
 resource "aws_api_gateway_integration" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
 
   type                    = "HTTP"
   uri                     = "https://www.google.de"
@@ -794,7 +794,7 @@ resource "aws_api_gateway_integration" "test" {
   content_handling        = "CONVERT_TO_TEXT"
 
   connection_type = "VPC_LINK"
-  connection_id   = "${aws_api_gateway_vpc_link.test.id}"
+  connection_id   = aws_api_gateway_vpc_link.test.id
 }
 `
 }
@@ -802,9 +802,9 @@ resource "aws_api_gateway_integration" "test" {
 func testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeInternet(rName string) string {
 	return testAccAWSAPIGatewayIntegrationConfig_IntegrationTypeBase(rName) + `
 resource "aws_api_gateway_integration" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
 
   type                    = "HTTP"
   uri                     = "https://www.google.de"

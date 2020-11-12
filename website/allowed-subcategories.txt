@@ -9,6 +9,7 @@ AppSync
 Application Autoscaling
 Athena
 Autoscaling
+Autoscaling Plans
 Backup
 Batch
 Budgets
@@ -23,6 +24,7 @@ CodeBuild
 CodeCommit
 CodeDeploy
 CodePipeline
+CodeStar Connections
 CodeStar Notifications
 Cognito
 Config
@@ -49,6 +51,7 @@ Elastic Load Balancing v2 (ALB/NLB)
 Elastic Map Reduce (EMR)
 Elastic Transcoder
 ElasticSearch
+EventBridge (CloudWatch Events)
 File System (FSx)
 Firewall Manager (FMS)
 Gamelift
@@ -57,17 +60,21 @@ Global Accelerator
 Glue
 GuardDuty
 IAM
+Identity Store
 Inspector
 IoT
 KMS
 Kinesis
-Kinesis Data Analytics v2 (SQL and Java Applications)
+Kinesis Data Analytics (SQL Applications)
+Kinesis Data Analytics v2 (SQL and Flink Applications)
 Kinesis Firehose
 Kinesis Video
 Lambda
+Lex
 License Manager
 Lightsail
 MQ
+Macie
 Macie Classic
 Managed Streaming for Kafka (MSK)
 MediaConvert
@@ -90,10 +97,13 @@ Route53 Domains
 Route53 Resolver
 Route53
 S3
+S3 Control
+S3 Outposts
 SES
 SNS
 SQS
 SSM
+SSO Admin
 SWF
 Sagemaker
 Secrets Manager
@@ -106,6 +116,7 @@ SimpleDB
 Step Function (SFN)
 Storage Gateway
 Synthetics
+Timestream Write
 Transfer
 Transit Gateway Network Manager
 VPC

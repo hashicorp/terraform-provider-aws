@@ -9,10 +9,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -139,6 +139,47 @@ func TestAccAWSEc2TransitGatewayVpcAttachment_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSEc2TransitGatewayVpcAttachment_ApplianceModeSupport(t *testing.T) {
+	var transitGatewayVpcAttachment1, transitGatewayVpcAttachment2 ec2.TransitGatewayVpcAttachment
+	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSEc2TransitGatewayVpcAttachmentConfigApplianceModeSupport("false"),
+				ExpectError: regexp.MustCompile(`expected appliance_mode_support to be one of`),
+			},
+			{
+				Config:      testAccAWSEc2TransitGatewayVpcAttachmentConfigApplianceModeSupport("true"),
+				ExpectError: regexp.MustCompile(`expected appliance_mode_support to be one of`),
+			},
+			{
+				Config: testAccAWSEc2TransitGatewayVpcAttachmentConfigApplianceModeSupport(ec2.ApplianceModeSupportValueDisable),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEc2TransitGatewayVpcAttachmentExists(resourceName, &transitGatewayVpcAttachment1),
+					resource.TestCheckResourceAttr(resourceName, "appliance_mode_support", ec2.ApplianceModeSupportValueDisable),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEc2TransitGatewayVpcAttachmentConfigApplianceModeSupport(ec2.ApplianceModeSupportValueEnable),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEc2TransitGatewayVpcAttachmentExists(resourceName, &transitGatewayVpcAttachment2),
+					testAccCheckAWSEc2TransitGatewayVpcAttachmentNotRecreated(&transitGatewayVpcAttachment1, &transitGatewayVpcAttachment2),
+					resource.TestCheckResourceAttr(resourceName, "appliance_mode_support", ec2.ApplianceModeSupportValueEnable),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEc2TransitGatewayVpcAttachment_DnsSupport(t *testing.T) {
 	var transitGatewayVpcAttachment1, transitGatewayVpcAttachment2 ec2.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
@@ -218,7 +259,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachment_SharedTransitGateway(t *testing.T)
 			testAccAlternateAccountPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -563,9 +604,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.0.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
@@ -575,11 +616,54 @@ resource "aws_subnet" "test" {
 resource "aws_ec2_transit_gateway" "test" {}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = ["${aws_subnet.test.id}"]
-  transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
-  vpc_id             = "${aws_vpc.test.id}"
+  subnet_ids         = [aws_subnet.test.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
 }
 `
+}
+
+func testAccAWSEc2TransitGatewayVpcAttachmentConfigApplianceModeSupport(appModeSupport string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
+  }
+}
+
+resource "aws_ec2_transit_gateway" "test" {
+}
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
+  appliance_mode_support = %q
+  subnet_ids             = [aws_subnet.test.id]
+  transit_gateway_id     = aws_ec2_transit_gateway.test.id
+  vpc_id                 = aws_vpc.test.id
+}
+`, appModeSupport)
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentConfigDnsSupport(dnsSupport string) string {
@@ -604,22 +688,23 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.0.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
   }
 }
 
-resource "aws_ec2_transit_gateway" "test" {}
+resource "aws_ec2_transit_gateway" "test" {
+}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   dns_support        = %q
-  subnet_ids         = ["${aws_subnet.test.id}"]
-  transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
-  vpc_id             = "${aws_vpc.test.id}"
+  subnet_ids         = [aws_subnet.test.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
 }
 `, dnsSupport)
 }
@@ -647,23 +732,24 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.0.0/24"
-  ipv6_cidr_block   = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
-  vpc_id            = "${aws_vpc.test.id}"
+  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
   }
 }
 
-resource "aws_ec2_transit_gateway" "test" {}
+resource "aws_ec2_transit_gateway" "test" {
+}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   ipv6_support       = %q
-  subnet_ids         = ["${aws_subnet.test.id}"]
-  transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
-  vpc_id             = "${aws_vpc.test.id}"
+  subnet_ids         = [aws_subnet.test.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
 }
 `, ipv6Support)
 }
@@ -684,27 +770,27 @@ data "aws_availability_zones" "available" {
 data "aws_organizations_organization" "test" {}
 
 resource "aws_ec2_transit_gateway" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 
 resource "aws_ram_resource_share" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   name = %[1]q
 }
 
 resource "aws_ram_resource_association" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
-  resource_arn       = "${aws_ec2_transit_gateway.test.arn}"
-  resource_share_arn = "${aws_ram_resource_share.test.id}"
+  resource_arn       = aws_ec2_transit_gateway.test.arn
+  resource_share_arn = aws_ram_resource_share.test.id
 }
 
 resource "aws_ram_principal_association" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
-  principal          = "${data.aws_organizations_organization.test.arn}"
-  resource_share_arn = "${aws_ram_resource_share.test.id}"
+  principal          = data.aws_organizations_organization.test.arn
+  resource_share_arn = aws_ram_resource_share.test.id
 }
 
 resource "aws_vpc" "test" {
@@ -716,9 +802,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.0.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
@@ -726,11 +812,11 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  depends_on = ["aws_ram_principal_association.test", "aws_ram_resource_association.test"]
+  depends_on = [aws_ram_principal_association.test, aws_ram_resource_association.test]
 
-  subnet_ids         = ["${aws_subnet.test.id}"]
-  transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
-  vpc_id             = "${aws_vpc.test.id}"
+  subnet_ids         = [aws_subnet.test.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
 }
 `, rName)
 }
@@ -759,9 +845,9 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   count = "2"
 
-  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
@@ -771,9 +857,9 @@ resource "aws_subnet" "test" {
 resource "aws_ec2_transit_gateway" "test" {}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = ["${aws_subnet.test.0.id}"]
-  transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
-  vpc_id             = "${aws_vpc.test.id}"
+  subnet_ids         = [aws_subnet.test[0].id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
 }
 `
 }
@@ -802,9 +888,9 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   count = "2"
 
-  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
@@ -814,9 +900,9 @@ resource "aws_subnet" "test" {
 resource "aws_ec2_transit_gateway" "test" {}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = ["${aws_subnet.test.0.id}", "${aws_subnet.test.1.id}"]
-  transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
-  vpc_id             = "${aws_vpc.test.id}"
+  subnet_ids         = aws_subnet.test[*].id
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
 }
 `
 }
@@ -843,9 +929,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.0.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
@@ -855,9 +941,9 @@ resource "aws_subnet" "test" {
 resource "aws_ec2_transit_gateway" "test" {}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = ["${aws_subnet.test.id}"]
-  transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
-  vpc_id             = "${aws_vpc.test.id}"
+  subnet_ids         = [aws_subnet.test.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
 
   tags = {
     %q = %q
@@ -888,9 +974,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.0.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
@@ -900,9 +986,9 @@ resource "aws_subnet" "test" {
 resource "aws_ec2_transit_gateway" "test" {}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = ["${aws_subnet.test.id}"]
-  transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
-  vpc_id             = "${aws_vpc.test.id}"
+  subnet_ids         = [aws_subnet.test.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
 
   tags = {
     %q = %q
@@ -934,9 +1020,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.0.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
@@ -949,11 +1035,11 @@ resource "aws_ec2_transit_gateway" "test" {
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids                                      = ["${aws_subnet.test.id}"]
+  subnet_ids                                      = [aws_subnet.test.id]
   transit_gateway_default_route_table_association = false
   transit_gateway_default_route_table_propagation = false
-  transit_gateway_id                              = "${aws_ec2_transit_gateway.test.id}"
-  vpc_id                                          = "${aws_vpc.test.id}"
+  transit_gateway_id                              = aws_ec2_transit_gateway.test.id
+  vpc_id                                          = aws_vpc.test.id
 }
 `
 }
@@ -980,22 +1066,23 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.0.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
   }
 }
 
-resource "aws_ec2_transit_gateway" "test" {}
+resource "aws_ec2_transit_gateway" "test" {
+}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids                                      = ["${aws_subnet.test.id}"]
+  subnet_ids                                      = [aws_subnet.test.id]
   transit_gateway_default_route_table_association = %t
-  transit_gateway_id                              = "${aws_ec2_transit_gateway.test.id}"
-  vpc_id                                          = "${aws_vpc.test.id}"
+  transit_gateway_id                              = aws_ec2_transit_gateway.test.id
+  vpc_id                                          = aws_vpc.test.id
 }
 `, transitGatewayDefaultRouteTableAssociation)
 }
@@ -1022,22 +1109,23 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.0.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
   }
 }
 
-resource "aws_ec2_transit_gateway" "test" {}
+resource "aws_ec2_transit_gateway" "test" {
+}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids                                      = ["${aws_subnet.test.id}"]
+  subnet_ids                                      = [aws_subnet.test.id]
   transit_gateway_default_route_table_propagation = %t
-  transit_gateway_id                              = "${aws_ec2_transit_gateway.test.id}"
-  vpc_id                                          = "${aws_vpc.test.id}"
+  transit_gateway_id                              = aws_ec2_transit_gateway.test.id
+  vpc_id                                          = aws_vpc.test.id
 }
 `, transitGatewayDefaultRouteTablePropagation)
 }

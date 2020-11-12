@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSElasticBeanstalkSolutionStackDataSource_basic(t *testing.T) {
@@ -42,7 +42,7 @@ func testAccCheckAwsElasticBeanstalkSolutionStackDataSourceID(n string) resource
 
 const testAccCheckAwsElasticBeanstalkSolutionStackDataSourceConfig = `
 data "aws_elastic_beanstalk_solution_stack" "multi_docker" {
-	most_recent = true
-	name_regex  = "^64bit Amazon Linux (.*) Multi-container Docker (.*)$"
+  most_recent = true
+  name_regex  = "^64bit Amazon Linux (.*) Multi-container Docker (.*)$"
 }
 `

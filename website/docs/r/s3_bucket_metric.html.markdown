@@ -20,7 +20,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_metric" "example-entire-bucket" {
-  bucket = "${aws_s3_bucket.example.bucket}"
+  bucket = aws_s3_bucket.example.bucket
   name   = "EntireBucket"
 }
 ```
@@ -33,7 +33,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_metric" "example-filtered" {
-  bucket = "${aws_s3_bucket.example.bucket}"
+  bucket = aws_s3_bucket.example.bucket
   name   = "ImportantBlueDocuments"
 
   filter {

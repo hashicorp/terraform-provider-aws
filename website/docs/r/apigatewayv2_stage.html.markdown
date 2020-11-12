@@ -17,7 +17,7 @@ More information can be found in the [Amazon API Gateway Developer Guide](https:
 
 ```hcl
 resource "aws_apigatewayv2_stage" "example" {
-  api_id = "${aws_apigatewayv2_api.example.id}"
+  api_id = aws_apigatewayv2_api.example.id
   name   = "example-stage"
 }
 ```
@@ -66,16 +66,15 @@ Valid values: `ERROR`, `INFO`, `OFF`. Defaults to `OFF`. Supported only for WebS
 * `throttling_burst_limit` - (Optional) The throttling burst limit for the route.
 * `throttling_rate_limit` - (Optional) The throttling rate limit for the route.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The stage identifier.
 * `arn` - The ARN of the stage.
-* `execution_arn` - The ARN prefix to be used in an [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `source_arn` attribute
-or in an [`aws_iam_policy`](/docs/providers/aws/r/iam_policy.html) to authorize access to the [`@connections` API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-connections.html).
+* `execution_arn` - The ARN prefix to be used in an [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `source_arn` attribute.
+For WebSocket APIs this attribute can additionally be used in an [`aws_iam_policy`](/docs/providers/aws/r/iam_policy.html) to authorize access to the [`@connections` API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-connections.html).
 See the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-control-access-iam.html) for details.
-Set only for WebSocket APIs.
 * `invoke_url` - The URL to invoke the API pointing to the stage,
   e.g. `wss://z4675bid1j.execute-api.eu-west-2.amazonaws.com/example-stage`, or `https://z4675bid1j.execute-api.eu-west-2.amazonaws.com/`
 

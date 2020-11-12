@@ -351,6 +351,7 @@ The `byte_match_statement` block supports the following arguments:
 The `geo_match_statement` block supports the following arguments:
 
 * `country_codes` - (Required) An array of two-character country codes, for example, [ "US", "CN" ], from the alpha-2 country ISO codes of the `ISO 3166` international standard. See the [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_GeoMatchStatement.html) for valid values.
+* `forwarded_ip_config` - (Optional) The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. See [Forwarded IP Config](#forwarded-ip-config) below for details.
 
 ### IP Set Reference Statement
 
@@ -359,6 +360,7 @@ A rule statement used to detect web requests coming from particular IP addresses
 The `ip_set_reference_statement` block supports the following arguments:
 
 * `arn` - (Required) The Amazon Resource Name (ARN) of the IP Set that this statement references.
+* `ip_set_forwarded_ip_config` - (Optional) The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. See [IPSet Forwarded IP Config](#ipset-forwarded-ip-config) below for more details.
 
 ### Managed Rule Group Statement
 
@@ -368,7 +370,7 @@ You can't nest a `managed_rule_group_statement`, for example for use inside a `n
 
 The `managed_rule_group_statement` block supports the following arguments:
 
-* `excluded_rule` - (Required) The `rules` whose actions are set to `COUNT` by the web ACL, regardless of the action that is set on the rule. See [Excluded Rule](#excluded-rule) below for details.
+* `excluded_rule` - (Optional) The `rules` whose actions are set to `COUNT` by the web ACL, regardless of the action that is set on the rule. See [Excluded Rule](#excluded-rule) below for details.
 * `name` - (Required) The name of the managed rule group.
 * `vendor_name` - (Required) The name of the managed rule group vendor.
 
@@ -396,8 +398,9 @@ You can't nest a `rate_based_statement`, for example for use inside a `not_state
 
 The `rate_based_statement` block supports the following arguments:
 
-* `aggregate_key_type` - (Optional) Setting that indicates how to aggregate the request counts. Currently the only supported value is `IP` which is set as the default.
-* `limit` - (Required) The limit on requests per 5-minute period for a single originating IP address. 
+* `aggregate_key_type` - (Optional) Setting that indicates how to aggregate the request counts. Valid values include: `FORWARDED_IP` or `IP`. Default: `IP`.
+* `forwarded_ip_config` - (Optional) The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. If `aggregate_key_type` is set to `FORWARDED_IP`, this block is required. See [Forwarded IP Config](#forwarded-ip-config) below for details.
+* `limit` - (Required) The limit on requests per 5-minute period for a single originating IP address.
 * `scope_down_statement` - (Optional) An optional nested statement that narrows the scope of the rate-based statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [Statement](#statement) above for details.
 
 ### Regex Pattern Set Reference Statement
@@ -407,6 +410,8 @@ A rule statement used to search web request components for matches with regular 
 The `regex_pattern_set_reference_statement` block supports the following arguments:
 
 * `arn` - (Required) The Amazon Resource Name (ARN) of the Regex Pattern Set that this statement references.
+* `field_to_match` - (Optional) The part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
+* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text-transformation) below for details.
 
 ### Rule Group Reference Statement
 
@@ -417,11 +422,11 @@ You can't nest a `rule_group_reference_statement`, for example for use inside a 
 The `rule_group_reference_statement` block supports the following arguments:
 
 * `arn` - (Required) The Amazon Resource Name (ARN) of the `aws_wafv2_rule_group` resource.
-* `excluded_rule` - (Required) The `rules` whose actions are set to `COUNT` by the web ACL, regardless of the action that is set on the rule. See [Excluded Rule](#excluded-rule) below for details.
+* `excluded_rule` - (Optional) The `rules` whose actions are set to `COUNT` by the web ACL, regardless of the action that is set on the rule. See [Excluded Rule](#excluded-rule) below for details.
 
 ### Size Constraint Statement
 
-A rule statement that uses a comparison operator to compare a number of bytes against the size of a request component. AWS WAFv2 inspects up to the first 8192 bytes (8 KB) of a request body, and when inspecting the request URI Path, the slash `/` in 
+A rule statement that uses a comparison operator to compare a number of bytes against the size of a request component. AWS WAFv2 inspects up to the first 8192 bytes (8 KB) of a request body, and when inspecting the request URI Path, the slash `/` in
 the URI counts as one character.
 
 The `size_constraint_statement` block supports the following arguments:
@@ -453,7 +458,7 @@ The `xss_match_statement` block supports the following arguments:
 
 The `excluded_rule` block supports the following arguments:
 
-* `name` - (Required) The name of the rule to exclude.
+* `name` - (Required) The name of the rule to exclude. If the rule group is managed by AWS, see the [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-list.html) for a list of names in the appropriate rule group in use.
 
 ### Field to Match
 
@@ -470,6 +475,27 @@ The `field_to_match` block supports the following arguments:
 * `single_header` - (Optional) Inspect a single header. See [Single Header](#single-header) below for details.
 * `single_query_argument` - (Optional) Inspect a single query argument. See [Single Query Argument](#single-query-argument) below for details.
 * `uri_path` - (Optional) Inspect the request URI path. This is the part of a web request that identifies a resource, for example, `/images/daily-ad.jpg`.
+
+### Forwarded IP Config
+
+The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. Commonly, this is the X-Forwarded-For (XFF) header, but you can specify
+any header name. If the specified header isn't present in the request, AWS WAFv2 doesn't apply the rule to the web request at all.
+AWS WAFv2 only evaluates the first IP address found in the specified HTTP header.
+
+The `forwarded_ip_config` block supports the following arguments:
+
+* `fallback_behavior` - (Required) - The match status to assign to the web request if the request doesn't have a valid IP address in the specified position. Valid values include: `MATCH` or `NO_MATCH`.
+* `header_name` - (Required) - The name of the HTTP header to use for the IP address.
+
+### IPSet Forwarded IP Config
+
+The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. Commonly, this is the X-Forwarded-For (XFF) header, but you can specify any header name.
+
+The `ip_set_forwarded_ip_config` block supports the following arguments:
+
+* `fallback_behavior` - (Required) - The match status to assign to the web request if the request doesn't have a valid IP address in the specified position. Valid values include: `MATCH` or `NO_MATCH`.
+* `header_name` - (Required) - The name of the HTTP header to use for the IP address.
+* `position` - (Required) - The position in the header to search for the IP address. Valid values include: `FIRST`, `LAST`, or `ANY`. If `ANY` is specified and the header contains more than 10 IP addresses, AWS WAFv2 inspects the last 10.
 
 ### Single Header
 

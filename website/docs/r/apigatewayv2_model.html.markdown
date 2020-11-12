@@ -16,7 +16,7 @@ Manages an Amazon API Gateway Version 2 [model](https://docs.aws.amazon.com/apig
 
 ```hcl
 resource "aws_apigatewayv2_model" "example" {
-  api_id       = "${aws_apigatewayv2_api.example.id}"
+  api_id       = aws_apigatewayv2_api.example.id
   content_type = "application/json"
   name         = "example"
 
@@ -43,7 +43,7 @@ The following arguments are supported:
 * `schema` - (Required) The schema for the model. This should be a [JSON schema draft 4](https://tools.ietf.org/html/draft-zyp-json-schema-04) model.
 * `description` - (Optional) The description of the model.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

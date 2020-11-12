@@ -6,8 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/workspaces/waiter"
 )
@@ -22,10 +21,44 @@ func resourceAwsWorkspacesDirectory() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
+			"alias": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"customer_user_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"directory_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"directory_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"directory_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"dns_ip_addresses": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+			},
+			"iam_role_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ip_group_ids": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+			},
+			"registration_code": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"self_service_permissions": {
 				Type:     schema.TypeList,
@@ -69,45 +102,44 @@ func resourceAwsWorkspacesDirectory() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"tags": tagsSchema(),
+			"workspace_creation_properties": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"custom_security_group_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"default_ou": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"enable_internet_access": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"enable_maintenance_mode": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"user_enabled_as_local_administrator": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
+			},
 			"workspace_security_group_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"iam_role_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"registration_code": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"directory_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"directory_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"customer_user_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"alias": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ip_group_ids": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"dns_ip_addresses": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-			"tags": tagsSchema(),
 		},
 	}
 }
@@ -144,8 +176,8 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 	}
 	log.Printf("[DEBUG] WorkSpaces Directory %q is registered", directoryId)
 
-	log.Printf("[DEBUG] Modifying WorkSpaces Directory %q self-service permissions...", directoryId)
 	if v, ok := d.GetOk("self_service_permissions"); ok {
+		log.Printf("[DEBUG] Modifying WorkSpaces Directory %q self-service permissions...", directoryId)
 		_, err := conn.ModifySelfservicePermissions(&workspaces.ModifySelfservicePermissionsInput{
 			ResourceId:             aws.String(directoryId),
 			SelfservicePermissions: expandSelfServicePermissions(v.([]interface{})),
@@ -153,8 +185,20 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 		if err != nil {
 			return fmt.Errorf("error setting self service permissions: %s", err)
 		}
+		log.Printf("[DEBUG] WorkSpaces Directory %q self-service permissions are set", directoryId)
 	}
-	log.Printf("[DEBUG] WorkSpaces Directory %q self-service permissions are set", directoryId)
+
+	if v, ok := d.GetOk("workspace_creation_properties"); ok {
+		log.Printf("[DEBUG] Modifying WorkSpaces Directory %q creation properties...", directoryId)
+		_, err := conn.ModifyWorkspaceCreationProperties(&workspaces.ModifyWorkspaceCreationPropertiesInput{
+			ResourceId:                  aws.String(directoryId),
+			WorkspaceCreationProperties: expandWorkspaceCreationProperties(v.([]interface{})),
+		})
+		if err != nil {
+			return fmt.Errorf("error setting creation properties: %s", err)
+		}
+		log.Printf("[DEBUG] WorkSpaces Directory %q creation properties are set", directoryId)
+	}
 
 	return resourceAwsWorkspacesDirectoryRead(d, meta)
 }
@@ -184,8 +228,13 @@ func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}
 	d.Set("directory_name", directory.DirectoryName)
 	d.Set("directory_type", directory.DirectoryType)
 	d.Set("alias", directory.Alias)
+
 	if err := d.Set("self_service_permissions", flattenSelfServicePermissions(directory.SelfservicePermissions)); err != nil {
 		return fmt.Errorf("error setting self_service_permissions: %s", err)
+	}
+
+	if err := d.Set("workspace_creation_properties", flattenWorkspaceCreationProperties(directory.WorkspaceCreationProperties)); err != nil {
+		return fmt.Errorf("error setting workspace_creation_properties: %s", err)
 	}
 
 	if err := d.Set("ip_group_ids", flattenStringSet(directory.IpGroupIds)); err != nil {
@@ -223,6 +272,20 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("error updating self service permissions: %s", err)
 		}
 		log.Printf("[DEBUG] WorkSpaces Directory %q self-service permissions are set", d.Id())
+	}
+
+	if d.HasChange("workspace_creation_properties") {
+		log.Printf("[DEBUG] Modifying WorkSpaces Directory %q creation properties...", d.Id())
+		properties := d.Get("workspace_creation_properties").([]interface{})
+
+		_, err := conn.ModifyWorkspaceCreationProperties(&workspaces.ModifyWorkspaceCreationPropertiesInput{
+			ResourceId:                  aws.String(d.Id()),
+			WorkspaceCreationProperties: expandWorkspaceCreationProperties(properties),
+		})
+		if err != nil {
+			return fmt.Errorf("error updating creation properties: %s", err)
+		}
+		log.Printf("[DEBUG] WorkSpaces Directory %q creation properties are set", d.Id())
 	}
 
 	if d.HasChange("tags") {
@@ -307,6 +370,22 @@ func expandSelfServicePermissions(permissions []interface{}) *workspaces.Selfser
 	return result
 }
 
+func expandWorkspaceCreationProperties(properties []interface{}) *workspaces.WorkspaceCreationProperties {
+	if len(properties) == 0 || properties[0] == nil {
+		return nil
+	}
+
+	p := properties[0].(map[string]interface{})
+
+	return &workspaces.WorkspaceCreationProperties{
+		CustomSecurityGroupId:           aws.String(p["custom_security_group_id"].(string)),
+		DefaultOu:                       aws.String(p["default_ou"].(string)),
+		EnableInternetAccess:            aws.Bool(p["enable_internet_access"].(bool)),
+		EnableMaintenanceMode:           aws.Bool(p["enable_maintenance_mode"].(bool)),
+		UserEnabledAsLocalAdministrator: aws.Bool(p["user_enabled_as_local_administrator"].(bool)),
+	}
+}
+
 func flattenSelfServicePermissions(permissions *workspaces.SelfservicePermissions) []interface{} {
 	if permissions == nil {
 		return []interface{}{}
@@ -360,4 +439,20 @@ func flattenSelfServicePermissions(permissions *workspaces.SelfservicePermission
 	}
 
 	return []interface{}{result}
+}
+
+func flattenWorkspaceCreationProperties(properties *workspaces.DefaultWorkspaceCreationProperties) []interface{} {
+	if properties == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"custom_security_group_id":            aws.StringValue(properties.CustomSecurityGroupId),
+			"default_ou":                          aws.StringValue(properties.DefaultOu),
+			"enable_internet_access":              aws.BoolValue(properties.EnableInternetAccess),
+			"enable_maintenance_mode":             aws.BoolValue(properties.EnableMaintenanceMode),
+			"user_enabled_as_local_administrator": aws.BoolValue(properties.UserEnabledAsLocalAdministrator),
+		},
+	}
 }

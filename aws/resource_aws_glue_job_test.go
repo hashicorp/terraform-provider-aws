@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -75,6 +75,7 @@ func TestAccAWSGlueJob_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
 					resource.TestCheckResourceAttr(resourceName, "default_arguments.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -164,6 +165,44 @@ func TestAccAWSGlueJob_DefaultArguments(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueJob_nonOverridableArguments(t *testing.T) {
+	var job glue.Job
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueJobDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueJobnonOverridableArgumentsConfig(rName, "job-bookmark-disable", "python"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.--job-bookmark-option", "job-bookmark-disable"),
+					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.--job-language", "python"),
+				),
+			},
+			{
+				Config: testAccAWSGlueJobnonOverridableArgumentsConfig(rName, "job-bookmark-enable", "scala"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.--job-bookmark-option", "job-bookmark-enable"),
+					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.--job-language", "scala"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSGlueJob_Description(t *testing.T) {
 	var job glue.Job
 
@@ -210,14 +249,14 @@ func TestAccAWSGlueJob_GlueVersion(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGlueJobConfig_GlueVersion(rName, "0.9"),
+				Config: testAccAWSGlueJobConfig_GlueVersion_MaxCapacity(rName, "0.9"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "0.9"),
 				),
 			},
 			{
-				Config: testAccAWSGlueJobConfig_GlueVersion(rName, "1.0"),
+				Config: testAccAWSGlueJobConfig_GlueVersion_MaxCapacity(rName, "1.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "1.0"),
@@ -227,6 +266,13 @@ func TestAccAWSGlueJob_GlueVersion(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSGlueJobConfig_GlueVersion_NumberOfWorkers(rName, "2.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "glue_version", "2.0"),
+				),
 			},
 		},
 	})
@@ -596,6 +642,29 @@ func TestAccAWSGlueJob_MaxCapacity(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueJob_disappears(t *testing.T) {
+	var job glue.Job
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueJobDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueJobConfig_Required(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueJob(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSGlueJobExists(resourceName string, job *glue.Job) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -661,8 +730,10 @@ func testAccCheckAWSGlueJobDestroy(s *terraform.State) error {
 
 func testAccAWSGlueJobConfig_Base(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_iam_policy" "AWSGlueServiceRole" {
-  arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+  arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
 }
 
 resource "aws_iam_role" "test" {
@@ -675,7 +746,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "glue.amazonaws.com"
+        "Service": "glue.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -686,8 +757,8 @@ POLICY
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
-  policy_arn = "${data.aws_iam_policy.AWSGlueServiceRole.arn}"
-  role       = "${aws_iam_role.test.name}"
+  policy_arn = data.aws_iam_policy.AWSGlueServiceRole.arn
+  role       = aws_iam_role.test.name
 }
 `, rName)
 }
@@ -705,7 +776,7 @@ resource "aws_glue_job" "test" {
     script_location = "%s"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, scriptLocation)
 }
@@ -728,7 +799,30 @@ resource "aws_glue_job" "test" {
     "--job-language"        = "%s"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, testAccAWSGlueJobConfig_Base(rName), rName, jobBookmarkOption, jobLanguage)
+}
+
+func testAccAWSGlueJobnonOverridableArgumentsConfig(rName, jobBookmarkOption, jobLanguage string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_glue_job" "test" {
+  max_capacity = 10
+  name         = "%s"
+  role_arn     = aws_iam_role.test.arn
+
+  command {
+    script_location = "testscriptlocation"
+  }
+
+  non_overridable_arguments = {
+    "--job-bookmark-option" = "%s"
+    "--job-language"        = "%s"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, jobBookmarkOption, jobLanguage)
 }
@@ -747,12 +841,12 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), description, rName)
 }
 
-func testAccAWSGlueJobConfig_GlueVersion(rName, glueVersion string) string {
+func testAccAWSGlueJobConfig_GlueVersion_MaxCapacity(rName, glueVersion string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -766,7 +860,27 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, testAccAWSGlueJobConfig_Base(rName), glueVersion, rName)
+}
+
+func testAccAWSGlueJobConfig_GlueVersion_NumberOfWorkers(rName, glueVersion string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_glue_job" "test" {
+  glue_version      = "%s"
+  name              = "%s"
+  number_of_workers = 2
+  role_arn          = aws_iam_role.test.arn
+  worker_type       = "Standard"
+
+  command {
+    script_location = "testscriptlocation"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), glueVersion, rName)
 }
@@ -788,7 +902,7 @@ resource "aws_glue_job" "test" {
     max_concurrent_runs = %d
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, maxConcurrentRuns)
 }
@@ -807,7 +921,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), maxRetries, rName)
 }
@@ -829,7 +943,7 @@ resource "aws_glue_job" "test" {
     notify_delay_after = %d
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, notifyDelayAfter)
 }
@@ -847,7 +961,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName)
 }
@@ -857,7 +971,7 @@ func testAccAWSGlueJobConfigTags1(rName, tagKey1, tagValue1 string) string {
 resource "aws_glue_job" "test" {
   name              = %[1]q
   number_of_workers = 2
-  role_arn          = "${aws_iam_role.test.arn}"
+  role_arn          = aws_iam_role.test.arn
   worker_type       = "Standard"
 
   command {
@@ -868,7 +982,7 @@ resource "aws_glue_job" "test" {
     %[2]q = %[3]q
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, tagKey1, tagValue1)
 }
@@ -878,7 +992,7 @@ func testAccAWSGlueJobConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 
 resource "aws_glue_job" "test" {
   name              = %[1]q
   number_of_workers = 2
-  role_arn          = "${aws_iam_role.test.arn}"
+  role_arn          = aws_iam_role.test.arn
   worker_type       = "Standard"
 
   command {
@@ -890,7 +1004,7 @@ resource "aws_glue_job" "test" {
     %[4]q = %[5]q
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
@@ -909,7 +1023,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, timeout)
 }
@@ -928,7 +1042,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, securityConfiguration)
 }
@@ -938,16 +1052,16 @@ func testAccAWSGlueJobConfig_WorkerType(rName string, workerType string) string 
 %s
 
 resource "aws_glue_job" "test" {
-  name                   = "%s"
-  role_arn               = "${aws_iam_role.test.arn}"
-  worker_type 			 = "%s"
-  number_of_workers      = 10
+  name              = "%s"
+  role_arn          = aws_iam_role.test.arn
+  worker_type       = "%s"
+  number_of_workers = 10
 
   command {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, workerType)
 }
@@ -958,7 +1072,7 @@ func testAccAWSGlueJobConfig_PythonShell(rName string) string {
 
 resource "aws_glue_job" "test" {
   name         = "%s"
-  role_arn     = "${aws_iam_role.test.arn}"
+  role_arn     = aws_iam_role.test.arn
   max_capacity = 0.0625
 
   command {
@@ -966,7 +1080,7 @@ resource "aws_glue_job" "test" {
     script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName)
 }
@@ -977,16 +1091,16 @@ func testAccAWSGlueJobConfig_PythonShellWithVersion(rName string, pythonVersion 
 
 resource "aws_glue_job" "test" {
   name         = "%s"
-  role_arn     = "${aws_iam_role.test.arn}"
+  role_arn     = aws_iam_role.test.arn
   max_capacity = 0.0625
 
   command {
     name            = "pythonshell"
     script_location = "testscriptlocation"
-		python_version  = "%s"
+    python_version  = "%s"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, pythonVersion)
 }
@@ -996,15 +1110,15 @@ func testAccAWSGlueJobConfig_MaxCapacity(rName string, maxCapacity float64) stri
 %s
 
 resource "aws_glue_job" "test" {
-  name     = "%s"
-  role_arn = "${aws_iam_role.test.arn}"
+  name         = "%s"
+  role_arn     = aws_iam_role.test.arn
   max_capacity = %g
 
   command {
-	script_location = "testscriptlocation"
+    script_location = "testscriptlocation"
   }
 
-  depends_on = ["aws_iam_role_policy_attachment.test"]
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, maxCapacity)
 }

@@ -9,10 +9,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -906,7 +906,7 @@ resource "aws_mq_broker" "test" {
   engine_type        = "ActiveMQ"
   engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-  security_groups    = ["${aws_security_group.test.id}"]
+  security_groups    = [aws_security_group.test.id]
 
   logs {
     general = true
@@ -946,8 +946,8 @@ resource "aws_mq_broker" "test" {
   broker_name                = "%s"
 
   configuration {
-    id       = "${aws_mq_configuration.test.id}"
-    revision = "${aws_mq_configuration.test.latest_revision}"
+    id       = aws_mq_configuration.test.id
+    revision = aws_mq_configuration.test.latest_revision
   }
 
   deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
@@ -962,7 +962,7 @@ resource "aws_mq_broker" "test" {
   }
 
   publicly_accessible = true
-  security_groups     = ["${aws_security_group.mq1.id}", "${aws_security_group.mq2.id}"]
+  security_groups     = [aws_security_group.mq1.id, aws_security_group.mq2.id]
 
   user {
     username = "Test"
@@ -999,23 +999,23 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.test.id}"
+    gateway_id = aws_internet_gateway.test.id
   }
 }
 
 resource "aws_subnet" "private" {
   count             = 2
   cidr_block        = "10.11.${count.index}.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
-  vpc_id            = "${aws_vpc.main.id}"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  vpc_id            = aws_vpc.main.id
 
   tags = {
     Name = "tf-acc-mq-broker-all-fields-custom-vpc-${count.index}"
@@ -1024,18 +1024,18 @@ resource "aws_subnet" "private" {
 
 resource "aws_route_table_association" "test" {
   count          = 2
-  subnet_id      = "${aws_subnet.private.*.id[count.index]}"
-  route_table_id = "${aws_route_table.test.id}"
+  subnet_id      = aws_subnet.private.*.id[count.index]
+  route_table_id = aws_route_table.test.id
 }
 
 resource "aws_security_group" "mq1" {
   name   = "%s-1"
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_security_group" "mq2" {
   name   = "%s-2"
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_mq_configuration" "test" {
@@ -1054,8 +1054,8 @@ resource "aws_mq_broker" "test" {
   broker_name                = "%s"
 
   configuration {
-    id       = "${aws_mq_configuration.test.id}"
-    revision = "${aws_mq_configuration.test.latest_revision}"
+    id       = aws_mq_configuration.test.id
+    revision = aws_mq_configuration.test.latest_revision
   }
 
   deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
@@ -1075,8 +1075,8 @@ resource "aws_mq_broker" "test" {
   }
 
   publicly_accessible = true
-  security_groups     = ["${aws_security_group.mq1.id}", "${aws_security_group.mq2.id}"]
-  subnet_ids          = ["${aws_subnet.private.*.id[0]}", "${aws_subnet.private.*.id[1]}"]
+  security_groups     = [aws_security_group.mq1.id, aws_security_group.mq2.id]
+  subnet_ids          = aws_subnet.private[*].id
 
   user {
     username = "Test"
@@ -1090,7 +1090,7 @@ resource "aws_mq_broker" "test" {
     groups         = ["first", "second", "third"]
   }
 
-  depends_on = ["aws_internet_gateway.test"]
+  depends_on = [aws_internet_gateway.test]
 }
 `, sgName, sgName, cfgName, cfgBody, brokerName)
 }
@@ -1111,10 +1111,10 @@ resource "aws_mq_broker" "test" {
   engine_type        = "ActiveMQ"
   engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-  security_groups    = ["${aws_security_group.test.id}"]
+  security_groups    = [aws_security_group.test.id]
 
   encryption_options {
-    kms_key_id        = "${aws_kms_key.test.arn}"
+    kms_key_id        = aws_kms_key.test.arn
     use_aws_owned_key = false
   }
 
@@ -1141,7 +1141,7 @@ resource "aws_mq_broker" "test" {
   engine_type        = "ActiveMQ"
   engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-  security_groups    = ["${aws_security_group.test.id}"]
+  security_groups    = [aws_security_group.test.id]
 
   encryption_options {
     use_aws_owned_key = %[2]t
@@ -1171,7 +1171,7 @@ resource "aws_mq_broker" "test" {
   engine_type        = "ActiveMQ"
   engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-  security_groups    = ["${aws_security_group.test.id}"]
+  security_groups    = [aws_security_group.test.id]
 
   user {
     username = "first"
@@ -1193,7 +1193,7 @@ resource "aws_mq_broker" "test" {
   engine_type        = "ActiveMQ"
   engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-  security_groups    = ["${aws_security_group.test.id}"]
+  security_groups    = [aws_security_group.test.id]
 
   user {
     console_access = true
@@ -1221,7 +1221,7 @@ resource "aws_mq_broker" "test" {
   engine_type        = "ActiveMQ"
   engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-  security_groups    = ["${aws_security_group.test.id}"]
+  security_groups    = [aws_security_group.test.id]
 
   user {
     username = "second"
@@ -1244,7 +1244,7 @@ resource "aws_mq_broker" "test" {
   engine_type        = "ActiveMQ"
   engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-  security_groups    = ["${aws_security_group.test.id}"]
+  security_groups    = [aws_security_group.test.id]
 
   user {
     username = "Test"
@@ -1270,7 +1270,7 @@ resource "aws_mq_broker" "test" {
   engine_type        = "ActiveMQ"
   engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-  security_groups    = ["${aws_security_group.test.id}"]
+  security_groups    = [aws_security_group.test.id]
 
   user {
     username = "Test"
@@ -1297,7 +1297,7 @@ resource "aws_mq_broker" "test" {
   engine_type        = "ActiveMQ"
   engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-  security_groups    = ["${aws_security_group.test.id}"]
+  security_groups    = [aws_security_group.test.id]
 
   user {
     username = "Test"
@@ -1327,7 +1327,7 @@ resource "aws_mq_broker" "test" {
   engine_type        = "ActiveMQ"
   engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-  security_groups    = ["${aws_security_group.test.id}", "${aws_security_group.test2.id}"]
+  security_groups    = [aws_security_group.test.id, aws_security_group.test2.id]
 
   logs {
     general = true
@@ -1357,7 +1357,7 @@ resource "aws_mq_broker" "test" {
   engine_type        = "ActiveMQ"
   engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-  security_groups    = ["${aws_security_group.test2.id}"]
+  security_groups    = [aws_security_group.test2.id]
 
   logs {
     general = true

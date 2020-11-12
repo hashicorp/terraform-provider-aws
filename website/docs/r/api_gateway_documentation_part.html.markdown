@@ -21,7 +21,7 @@ resource "aws_api_gateway_documentation_part" "example" {
   }
 
   properties  = "{\"description\":\"Example description\"}"
-  rest_api_id = "${aws_api_gateway_rest_api.example.id}"
+  rest_api_id = aws_api_gateway_rest_api.example.id
 }
 
 resource "aws_api_gateway_rest_api" "example" {
@@ -49,7 +49,7 @@ See supported entity types for each field in the [official docs](https://docs.aw
 * `status_code` - (Optional) The HTTP status code of a response. The default value is `*` for any status code.
 * `type` - (Required) The type of API entity to which the documentation content applies. e.g. `API`, `METHOD` or `REQUEST_BODY`
 
-## Attribute Reference
+## Attributes Reference
 
 The following attribute is exported in addition to the arguments listed above:
 

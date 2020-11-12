@@ -1,5 +1,5 @@
 ---
-subcategory: "Kinesis"
+subcategory: "Kinesis Data Analytics (SQL Applications)"
 layout: "aws"
 page_title: "AWS: aws_kinesis_analytics_application"
 description: |-
@@ -12,6 +12,8 @@ Provides a Kinesis Analytics Application resource. Kinesis Analytics is a manage
 allows processing and analyzing streaming data using standard SQL.
 
 For more details, see the [Amazon Kinesis Analytics Documentation][1].
+
+-> **Note:** To manage Amazon Kinesis Data Analytics for Apache Flink applications, use the [`aws_kinesisanalyticsv2_application`](/docs/providers/aws/r/kinesisanalyticsv2_application.html) resource.
 
 ## Example Usage
 
@@ -28,8 +30,8 @@ resource "aws_kinesis_analytics_application" "test_application" {
     name_prefix = "test_prefix"
 
     kinesis_stream {
-      resource_arn = "${aws_kinesis_stream.test_stream.arn}"
-      role_arn     = "${aws_iam_role.test.arn}"
+      resource_arn = aws_kinesis_stream.test_stream.arn
+      role_arn     = aws_iam_role.test.arn
     }
 
     parallelism {

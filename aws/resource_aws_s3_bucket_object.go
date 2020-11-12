@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -14,8 +15,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/mitchellh/go-homedir"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
@@ -45,18 +46,10 @@ func resourceAwsS3BucketObject() *schema.Resource {
 			},
 
 			"acl": {
-				Type:     schema.TypeString,
-				Default:  s3.ObjectCannedACLPrivate,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.ObjectCannedACLPrivate,
-					s3.ObjectCannedACLPublicRead,
-					s3.ObjectCannedACLPublicReadWrite,
-					s3.ObjectCannedACLAuthenticatedRead,
-					s3.ObjectCannedACLAwsExecRead,
-					s3.ObjectCannedACLBucketOwnerRead,
-					s3.ObjectCannedACLBucketOwnerFullControl,
-				}, false),
+				Type:         schema.TypeString,
+				Default:      s3.ObjectCannedACLPrivate,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(s3.ObjectCannedACL_Values(), false),
 			},
 
 			"cache_control": {
@@ -111,34 +104,31 @@ func resourceAwsS3BucketObject() *schema.Resource {
 			},
 
 			"storage_class": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.ObjectStorageClassStandard,
-					s3.ObjectStorageClassReducedRedundancy,
-					s3.ObjectStorageClassGlacier,
-					s3.ObjectStorageClassStandardIa,
-					s3.ObjectStorageClassOnezoneIa,
-					s3.ObjectStorageClassIntelligentTiering,
-					s3.ObjectStorageClassDeepArchive,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(s3.ObjectStorageClass_Values(), false),
 			},
 
 			"server_side_encryption": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.ServerSideEncryptionAes256,
-					s3.ServerSideEncryptionAwsKms,
-				}, false),
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(s3.ServerSideEncryption_Values(), false),
+				Computed:     true,
 			},
 
 			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validateArn,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// ignore diffs where the user hasn't specified a kms_key_id but the bucket has a default KMS key configured
+					if new == "" && d.Get("server_side_encryption") == s3.ServerSideEncryptionAwsKms {
+						return true
+					}
+					return false
+				},
 			},
 
 			"etag": {
@@ -170,21 +160,15 @@ func resourceAwsS3BucketObject() *schema.Resource {
 			},
 
 			"object_lock_legal_hold_status": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.ObjectLockLegalHoldStatusOn,
-					s3.ObjectLockLegalHoldStatusOff,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(s3.ObjectLockLegalHoldStatus_Values(), false),
 			},
 
 			"object_lock_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.ObjectLockModeGovernance,
-					s3.ObjectLockModeCompliance,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(s3.ObjectLockMode_Values(), false),
 			},
 
 			"object_lock_retain_until_date": {
@@ -525,7 +509,7 @@ func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors [
 	return
 }
 
-func resourceAwsS3BucketObjectCustomizeDiff(d *schema.ResourceDiff, meta interface{}) error {
+func resourceAwsS3BucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	if d.HasChange("etag") {
 		d.SetNewComputed("version_id")
 	}

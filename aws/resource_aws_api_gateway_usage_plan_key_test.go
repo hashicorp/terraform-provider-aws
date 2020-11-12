@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAPIGatewayUsagePlanKey_basic(t *testing.T) {
@@ -20,7 +20,7 @@ func TestAccAWSAPIGatewayUsagePlanKey_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan_key.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanKeyDestroy,
 		Steps: []resource.TestStep{
@@ -76,7 +76,7 @@ func TestAccAWSAPIGatewayUsagePlanKey_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan_key.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanKeyDestroy,
 		Steps: []resource.TestStep{
@@ -178,47 +178,47 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "GET"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
   authorization = "NONE"
 }
 
 resource "aws_api_gateway_method_response" "error" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
   status_code = "400"
 }
 
 resource "aws_api_gateway_integration" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
 
-  type = "HTTP"
-  uri = "https://www.google.de"
+  type                    = "HTTP"
+  uri                     = "https://www.google.de"
   integration_http_method = "GET"
 }
 
 resource "aws_api_gateway_integration_response" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_integration.test.http_method}"
-  status_code = "${aws_api_gateway_method_response.error.status_code}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_integration.test.http_method
+  status_code = aws_api_gateway_method_response.error.status_code
 }
 
 resource "aws_api_gateway_deployment" "test" {
-  depends_on = ["aws_api_gateway_integration.test"]
+  depends_on = [aws_api_gateway_integration.test]
 
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  stage_name = "test"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  stage_name  = "test"
   description = "This is a test"
 
   variables = {
@@ -228,12 +228,12 @@ resource "aws_api_gateway_deployment" "test" {
 
 resource "aws_api_gateway_deployment" "foo" {
   depends_on = [
-    "aws_api_gateway_deployment.test",
-    "aws_api_gateway_integration.test",
+    aws_api_gateway_deployment.test,
+    aws_api_gateway_integration.test,
   ]
 
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  stage_name = "foo"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  stage_name  = "foo"
   description = "This is a prod stage"
 }
 
@@ -241,8 +241,8 @@ resource "aws_api_gateway_usage_plan" "main" {
   name = "%[1]s"
 
   api_stages {
-    api_id = "${aws_api_gateway_rest_api.test.id}"
-    stage  = "${aws_api_gateway_deployment.test.stage_name}"
+    api_id = aws_api_gateway_rest_api.test.id
+    stage  = aws_api_gateway_deployment.test.stage_name
   }
 }
 
@@ -250,8 +250,8 @@ resource "aws_api_gateway_usage_plan" "secondary" {
   name = "secondary-%[1]s"
 
   api_stages {
-    api_id = "${aws_api_gateway_rest_api.test.id}"
-    stage  = "${aws_api_gateway_deployment.foo.stage_name}"
+    api_id = aws_api_gateway_rest_api.test.id
+    stage  = aws_api_gateway_deployment.foo.stage_name
   }
 }
 
@@ -264,9 +264,9 @@ resource "aws_api_gateway_api_key" "mykey" {
 func testAccAWSApiGatewayUsagePlanKeyBasicConfig(rName string) string {
 	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanKeyConfig(rName) + `
 resource "aws_api_gateway_usage_plan_key" "main" {
-  key_id        = "${aws_api_gateway_api_key.mykey.id}"
+  key_id        = aws_api_gateway_api_key.mykey.id
   key_type      = "API_KEY"
-  usage_plan_id = "${aws_api_gateway_usage_plan.main.id}"
+  usage_plan_id = aws_api_gateway_usage_plan.main.id
 }
 `)
 }
@@ -274,9 +274,9 @@ resource "aws_api_gateway_usage_plan_key" "main" {
 func testAccAWSApiGatewayUsagePlanKeyBasicUpdatedConfig(rName string) string {
 	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanKeyConfig(rName) + `
 resource "aws_api_gateway_usage_plan_key" "main" {
-  key_id        = "${aws_api_gateway_api_key.mykey.id}"
+  key_id        = aws_api_gateway_api_key.mykey.id
   key_type      = "API_KEY"
-  usage_plan_id = "${aws_api_gateway_usage_plan.secondary.id}"
+  usage_plan_id = aws_api_gateway_usage_plan.secondary.id
 }
 `)
 }

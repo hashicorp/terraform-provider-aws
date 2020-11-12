@@ -14,7 +14,7 @@ For information about Lambda and how to use it, see [What is AWS Lambda?][1]
 
 For a detailed example of setting up Lambda and API Gateway, see [Serverless Applications with AWS Lambda and API Gateway.][11]
 
-~> **NOTE:** Due to [AWS Lambda improved VPC networking changes that began deploying in September 2019](https://aws.amazon.com/blogs/compute/announcing-improved-vpc-networking-for-aws-lambda-functions/), EC2 subnets and security groups associated with Lambda Functions can take up to 45 minutes to successfully delete. Terraform AWS Provider version 2.31.0 and later automatically handles this increased timeout, however prior versions require setting the customizable deletion timeouts of those Terraform resources to 45 minutes (`delete = "45m"`). AWS and HashiCorp are working together to reduce the amount of time required for resource deletion and updates can be tracked in this [GitHub issue](https://github.com/terraform-providers/terraform-provider-aws/issues/10329).
+~> **NOTE:** Due to [AWS Lambda improved VPC networking changes that began deploying in September 2019](https://aws.amazon.com/blogs/compute/announcing-improved-vpc-networking-for-aws-lambda-functions/), EC2 subnets and security groups associated with Lambda Functions can take up to 45 minutes to successfully delete. Terraform AWS Provider version 2.31.0 and later automatically handles this increased timeout, however prior versions require setting the customizable deletion timeouts of those Terraform resources to 45 minutes (`delete = "45m"`). AWS and HashiCorp are working together to reduce the amount of time required for resource deletion and updates can be tracked in this [GitHub issue](https://github.com/hashicorp/terraform-provider-aws/issues/10329).
 
 ## Example Usage
 
@@ -44,13 +44,13 @@ EOF
 resource "aws_lambda_function" "test_lambda" {
   filename      = "lambda_function_payload.zip"
   function_name = "lambda_function_name"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.test"
 
   # The filebase64sha256() function is available in Terraform 0.11.12 and later
   # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
   # source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
-  source_code_hash = "${filebase64sha256("lambda_function_payload.zip")}"
+  source_code_hash = filebase64sha256("lambda_function_payload.zip")
 
   runtime = "nodejs12.x"
 
@@ -73,13 +73,13 @@ resource "aws_lambda_layer_version" "example" {
 
 resource "aws_lambda_function" "example" {
   # ... other configuration ...
-  layers = ["${aws_lambda_layer_version.example.arn}"]
+  layers = [aws_lambda_layer_version.example.arn]
 }
 ```
 
 ### Lambda File Systems
 
-Lambda File Systems allow you to connect an Amazon Elastic File System (EFS) file system to a Lambda function to share data across function invocations, access existing data including large files, and save function state. 
+Lambda File Systems allow you to connect an Amazon Elastic File System (EFS) file system to a Lambda function to share data across function invocations, access existing data including large files, and save function state.
 
 ```hcl
 # A lambda function connected to an EFS file system
@@ -88,18 +88,19 @@ resource "aws_lambda_function" "example" {
 
   file_system_config {
     # EFS file system access point ARN
-    arn = "${aws_efs_access_point.access_point_for_lambda.arn}"
+    arn = aws_efs_access_point.access_point_for_lambda.arn
+
     # Local mount path inside the lambda function. Must start with '/mnt/'.
     local_mount_path = "/mnt/efs"
   }
 
   vpc_config {
     # Every subnet should be able to reach an EFS mount target in the same Availability Zone. Cross-AZ mounts are not permitted.
-    subnet_ids         = ["${aws_subnet.subnet_for_lambda.id}"]
-    security_group_ids = ["${aws_security_group.sg_for_lambda.id}"]
+    subnet_ids         = [aws_subnet.subnet_for_lambda.id]
+    security_group_ids = [aws_security_group.sg_for_lambda.id]
   }
 
-  # Explicitly declare dependency on EFS mount target. 
+  # Explicitly declare dependency on EFS mount target.
   # When creating or updating Lambda functions, mount target must be in 'available' lifecycle state.
   depends_on = [aws_efs_mount_target.alpha]
 }
@@ -113,14 +114,14 @@ resource "aws_efs_file_system" "efs_for_lambda" {
 
 # Mount target connects the file system to the subnet
 resource "aws_efs_mount_target" "alpha" {
-  file_system_id  = "${aws_efs_file_system.efs_for_lambda.id}"
-  subnet_id       = "${aws_subnet.subnet_for_lambda.id}"
-  security_groups = ["${aws_security_group.sg_for_lambda.id}"]
+  file_system_id  = aws_efs_file_system.efs_for_lambda.id
+  subnet_id       = aws_subnet.subnet_for_lambda.id
+  security_groups = [aws_security_group.sg_for_lambda.id]
 }
 
 # EFS access point used by lambda file system
 resource "aws_efs_access_point" "access_point_for_lambda" {
-  file_system_id = "${aws_efs_file_system.efs_for_lambda.id}"
+  file_system_id = aws_efs_file_system.efs_for_lambda.id
 
   root_directory {
     path = "/lambda"
@@ -143,10 +144,18 @@ resource "aws_efs_access_point" "access_point_for_lambda" {
 For more information about CloudWatch Logs for Lambda, see the [Lambda User Guide](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-functions-logs.html).
 
 ```hcl
+variable "lambda_function_name" {
+  default = "lambda_function_name"
+}
+
 resource "aws_lambda_function" "test_lambda" {
-  function_name = "${var.lambda_function_name}"
+  function_name = var.lambda_function_name
+
   # ... other configuration ...
-  depends_on = ["aws_iam_role_policy_attachment.lambda_logs", "aws_cloudwatch_log_group.example"]
+  depends_on = [
+    aws_iam_role_policy_attachment.lambda_logs,
+    aws_cloudwatch_log_group.example,
+  ]
 }
 
 # This is to optionally manage the CloudWatch Log Group for the Lambda Function.
@@ -181,8 +190,8 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_logs" {
-  role       = "${aws_iam_role.iam_for_lambda.name}"
-  policy_arn = "${aws_iam_policy.lambda_logging.arn}"
+  role       = aws_iam_role.iam_for_lambda.name
+  policy_arn = aws_iam_policy.lambda_logging.arn
 }
 ```
 

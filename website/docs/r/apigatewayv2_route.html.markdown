@@ -17,7 +17,7 @@ More information can be found in the [Amazon API Gateway Developer Guide](https:
 
 ```hcl
 resource "aws_apigatewayv2_route" "example" {
-  api_id    = "${aws_apigatewayv2_api.example.id}"
+  api_id    = aws_apigatewayv2_api.example.id
   route_key = "$default"
 }
 ```
@@ -27,7 +27,7 @@ resource "aws_apigatewayv2_route" "example" {
 The following arguments are supported:
 
 * `api_id` - (Required) The API identifier.
-* `route_key` - (Required) The route key for the route.
+* `route_key` - (Required) The route key for the route. For HTTP APIs, the route key can be either `$default`, or a combination of an HTTP method and resource path, for example, `GET /pets`.
 * `api_key_required` - (Optional) Boolean whether an API key is required for the route. Defaults to `false`.
 * `authorization_scopes` - (Optional) The authorization scopes supported by this route. The scopes are used with a JWT authorizer to authorize the method invocation.
 * `authorization_type` - (Optional) The authorization type for the route.
@@ -41,7 +41,7 @@ Defaults to `NONE`.
 * `route_response_selection_expression` - (Optional) The [route response selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-route-response-selection-expressions) for the route.
 * `target` - (Optional) The target for the route.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

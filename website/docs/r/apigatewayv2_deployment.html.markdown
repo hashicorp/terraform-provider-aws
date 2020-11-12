@@ -21,7 +21,7 @@ More information can be found in the [Amazon API Gateway Developer Guide](https:
 
 ```hcl
 resource "aws_apigatewayv2_deployment" "example" {
-  api_id      = "${aws_apigatewayv2_route.example.api_id}"
+  api_id      = aws_apigatewayv2_route.example.api_id
   description = "Example deployment"
 
   lifecycle {
@@ -60,7 +60,7 @@ The following arguments are supported:
 * `description` - (Optional) The description for the deployment resource.
 * `triggers` - (Optional) A map of arbitrary keys and values that, when changed, will trigger a redeployment. To force a redeployment without changing these keys/values, use the [`terraform taint` command](/docs/commands/taint.html).
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

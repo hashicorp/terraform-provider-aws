@@ -2,7 +2,7 @@ terraform {
   required_version = ">= 0.12"
 }
 
-// First account owns the transit gateway and accepts the VPC attachment.
+# First account owns the transit gateway and accepts the VPC attachment.
 provider "aws" {
   alias = "first"
 
@@ -11,7 +11,7 @@ provider "aws" {
   secret_key = var.aws_first_secret_key
 }
 
-// Second account owns the VPC and creates the VPC attachment.
+# Second account owns the VPC and creates the VPC attachment.
 provider "aws" {
   alias = "second"
 
@@ -48,7 +48,7 @@ resource "aws_ram_resource_share" "example" {
   }
 }
 
-// Share the transit gateway...
+# Share the transit gateway...
 resource "aws_ram_resource_association" "example" {
   provider = aws.first
 
@@ -56,7 +56,7 @@ resource "aws_ram_resource_association" "example" {
   resource_share_arn = aws_ram_resource_share.example.id
 }
 
-// ...with the second account.
+# ...with the second account.
 resource "aws_ram_principal_association" "example" {
   provider = aws.first
 
@@ -86,7 +86,7 @@ resource "aws_subnet" "example" {
   }
 }
 
-// Create the VPC attachment in the second account...
+# Create the VPC attachment in the second account...
 resource "aws_ec2_transit_gateway_vpc_attachment" "example" {
   provider = aws.second
 
@@ -105,7 +105,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "example" {
   }
 }
 
-// ...and accept it in the first account.
+# ...and accept it in the first account.
 resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "example" {
   provider = aws.first
 

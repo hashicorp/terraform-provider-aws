@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -372,7 +372,7 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "ram_disk_id"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tag_specifications.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tag_specifications.#", "4"),
 				),
 			},
 			{
@@ -642,7 +642,7 @@ func TestAccAWSLaunchTemplate_creditSpecification_t3(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6757
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6757
 func TestAccAWSLaunchTemplate_IamInstanceProfile_EmptyConfigurationBlock(t *testing.T) {
 	var template1 ec2.LaunchTemplate
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1222,7 +1222,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_launch_template" "test" {
-  image_id      = "${data.aws_ami.test.id}"
+  image_id      = data.aws_ami.test.id
   instance_type = "t2.micro"
   name          = %q
 
@@ -1238,15 +1238,15 @@ resource "aws_launch_template" "test" {
 # Creating an AutoScaling Group verifies the launch template
 # ValidationError: You must use a valid fully-formed launch template. the encrypted flag cannot be specified since device /dev/sda1 has a snapshot specified.
 resource "aws_autoscaling_group" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
   desired_capacity   = 0
   max_size           = 0
   min_size           = 0
   name               = %q
 
   launch_template {
-    id      = "${aws_launch_template.test.id}"
-    version = "${aws_launch_template.test.default_version}"
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.default_version
   }
 }
 `, rName, rName)
@@ -1279,7 +1279,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_launch_template" "test" {
-  image_id      = "${data.aws_ami.test.id}"
+  image_id      = data.aws_ami.test.id
   instance_type = "t2.micro"
   name          = %q
 
@@ -1296,15 +1296,15 @@ resource "aws_launch_template" "test" {
 # Creating an AutoScaling Group verifies the launch template
 # ValidationError: You must use a valid fully-formed launch template. the encrypted flag cannot be specified since device /dev/sda1 has a snapshot specified.
 resource "aws_autoscaling_group" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
   desired_capacity   = 0
   max_size           = 0
   min_size           = 0
   name               = %q
 
   launch_template {
-    id      = "${aws_launch_template.test.id}"
-    version = "${aws_launch_template.test.default_version}"
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.default_version
   }
 }
 `, rName, deleteOnTermination, rName)
@@ -1313,11 +1313,11 @@ resource "aws_autoscaling_group" "test" {
 func testAccAWSLaunchTemplateConfig_NetworkInterfaces_DeleteOnTermination(rName string, deleteOnTermination string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  name          = %q
+  name = %q
 
   network_interfaces {
-    network_interface_id = "eni-123456ab"
-    security_groups = ["sg-1a23bc45"]
+    network_interface_id  = "eni-123456ab"
+    security_groups       = ["sg-1a23bc45"]
     delete_on_termination = %s
   }
 }
@@ -1327,7 +1327,7 @@ resource "aws_launch_template" "test" {
 func testAccAWSLaunchTemplateConfig_EbsOptimized(rName, ebsOptimized string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  ebs_optimized = %s # allows "", false, true, "false", "true" values
+  ebs_optimized = %s
   name          = %q
 }
 `, ebsOptimized, rName)
@@ -1346,7 +1346,7 @@ resource "aws_launch_template" "test" {
 }
 
 func testAccAWSLaunchTemplateConfig_data(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name = %q
 
@@ -1390,7 +1390,7 @@ resource "aws_launch_template" "test" {
   }
 
   placement {
-    availability_zone = "us-west-2b"
+    availability_zone = data.aws_availability_zones.available.names[0]
   }
 
   ram_disk_id = "ari-a12bc3de"
@@ -1404,8 +1404,32 @@ resource "aws_launch_template" "test" {
       Name = "test"
     }
   }
+
+  tag_specifications {
+    resource_type = "volume"
+
+    tags = {
+      Name = "test"
+    }
+  }
+
+  tag_specifications {
+    resource_type = "spot-instances-request"
+
+    tags = {
+      Name = "test"
+    }
+  }
+
+  tag_specifications {
+    resource_type = "elastic-gpu"
+
+    tags = {
+      Name = "test"
+    }
+  }
 }
-`, rName) //lintignore:AWSAT002
+`, rName)) //lintignore:AWSAT002
 }
 
 func testAccAWSLaunchTemplateConfig_tagsUpdate(rName string) string {
@@ -1444,7 +1468,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ec2_capacity_reservation" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   instance_count    = 1
   instance_platform = "Linux/UNIX"
   instance_type     = "t2.micro"
@@ -1455,7 +1479,7 @@ resource "aws_launch_template" "test" {
 
   capacity_reservation_specification {
     capacity_reservation_target {
-      capacity_reservation_id = "${aws_ec2_capacity_reservation.test.id}"
+      capacity_reservation_id = aws_ec2_capacity_reservation.test.id
     }
   }
 }
@@ -1465,11 +1489,11 @@ resource "aws_launch_template" "test" {
 func testAccAWSLaunchTemplateConfig_cpuOptions(rName string, coreCount, threadsPerCore int) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "foo" {
-	name = %q
+  name = %q
 
   cpu_options {
-		core_count = %d
-		threads_per_core = %d
+    core_count       = %d
+    threads_per_core = %d
   }
 }
 `, rName, coreCount, threadsPerCore)
@@ -1509,7 +1533,7 @@ resource "aws_launch_template" "example" {
   name = %q
 
   license_specification {
-    license_configuration_arn = "${aws_licensemanager_license_configuration.example.id}"
+    license_configuration_arn = aws_licensemanager_license_configuration.example.id
   }
 }
 `, rName)
@@ -1531,20 +1555,20 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = aws_vpc.test.id
   cidr_block = "10.1.0.0/24"
 }
 
 resource "aws_network_interface" "test" {
-  subnet_id = "${aws_subnet.test.id}"
+  subnet_id = aws_subnet.test.id
 }
 
 resource "aws_launch_template" "test" {
   name = %[1]q
 
   network_interfaces {
-    network_interface_id = "${aws_network_interface.test.id}"
-    ipv4_address_count = 2
+    network_interface_id = aws_network_interface.test.id
+    ipv4_address_count   = 2
   }
 }
 `, rName)
@@ -1561,7 +1585,7 @@ resource "aws_launch_template" "test" {
   name = %[1]q
 
   placement {
-    group_name       = "${aws_placement_group.test.name}"
+    group_name       = aws_placement_group.test.name
     partition_number = %[2]d
   }
 
@@ -1579,20 +1603,20 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = aws_vpc.test.id
   cidr_block = "10.1.0.0/24"
 }
 
 resource "aws_network_interface" "test" {
-  subnet_id = "${aws_subnet.test.id}"
+  subnet_id = aws_subnet.test.id
 }
 
 resource "aws_launch_template" "test" {
   name = %q
 
   network_interfaces {
-    network_interface_id = "${aws_network_interface.test.id}"
-    ipv4_addresses = ["10.1.0.10", "10.1.0.11"]
+    network_interface_id = aws_network_interface.test.id
+    ipv4_addresses       = ["10.1.0.10", "10.1.0.11"]
   }
 }
 `, rName)
@@ -1606,21 +1630,21 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = aws_vpc.test.id
   cidr_block = "10.1.0.0/24"
 }
 
 resource "aws_network_interface" "test" {
-  subnet_id = "${aws_subnet.test.id}"
+  subnet_id = aws_subnet.test.id
 }
 
 resource "aws_launch_template" "test" {
   name = %[1]q
 
   network_interfaces {
-	network_interface_id = "${aws_network_interface.test.id}"
-	associate_public_ip_address = %[2]s
-    ipv4_address_count = 2
+    network_interface_id        = aws_network_interface.test.id
+    associate_public_ip_address = %[2]s
+    ipv4_address_count          = 2
   }
 }
 `, rName, associatePublicIPAddress)
@@ -1653,8 +1677,8 @@ data "aws_ami" "test_ami" {
 }
 
 resource "aws_launch_template" "test" {
-  name_prefix = "testbar"
-  image_id = "${data.aws_ami.test_ami.id}"
+  name_prefix   = "testbar"
+  image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
 
@@ -1668,13 +1692,14 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
-  desired_capacity = 0
-  max_size = 0
-  min_size = 0
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  desired_capacity   = 0
+  max_size           = 0
+  min_size           = 0
+
   launch_template {
-    id = "${aws_launch_template.test.id}"
-    version = "${aws_launch_template.test.latest_version}"
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.latest_version
   }
 }
 `
@@ -1691,8 +1716,8 @@ data "aws_ami" "test_ami" {
 }
 
 resource "aws_launch_template" "test" {
-  name_prefix = "testbar"
-  image_id = "${data.aws_ami.test_ami.id}"
+  name_prefix   = "testbar"
+  image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.nano"
 }
 
@@ -1706,13 +1731,14 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
-  desired_capacity = 0
-  max_size = 0
-  min_size = 0
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  desired_capacity   = 0
+  max_size           = 0
+  min_size           = 0
+
   launch_template {
-    id = "${aws_launch_template.test.id}"
-    version = "${aws_launch_template.test.latest_version}"
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.latest_version
   }
 }
 `
@@ -1723,18 +1749,19 @@ data "aws_ami" "test" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-hvm-*-x86_64-gp2"]
   }
 }
 
 resource "aws_launch_template" "test" {
-  name_prefix = "instance_market_options"
-  image_id = "${data.aws_ami.test.id}"
+  name_prefix   = "instance_market_options"
+  image_id      = data.aws_ami.test.id
   instance_type = "t2.micro"
 
   instance_market_options {
     market_type = "spot"
+
     spot_options {
       spot_instance_type = "one-time"
     }
@@ -1751,14 +1778,14 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_autoscaling_group" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
-  desired_capacity = 0
-  min_size = 0
-  max_size = 0
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  desired_capacity   = 0
+  min_size           = 0
+  max_size           = 0
 
   launch_template {
-    id = "${aws_launch_template.test.id}"
-    version = "${aws_launch_template.test.latest_version}"
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.latest_version
   }
 }
 `
@@ -1769,18 +1796,19 @@ data "aws_ami" "test" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-hvm-*-x86_64-gp2"]
   }
 }
 
 resource "aws_launch_template" "test" {
-  name_prefix = "instance_market_options"
-  image_id = "${data.aws_ami.test.id}"
+  name_prefix   = "instance_market_options"
+  image_id      = data.aws_ami.test.id
   instance_type = "t2.micro"
 
   instance_market_options {
     market_type = "spot"
+
     spot_options {
       max_price          = "0.5"
       spot_instance_type = "one-time"
@@ -1798,14 +1826,14 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_autoscaling_group" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
-  desired_capacity = 0
-  min_size = 0
-  max_size = 0
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  desired_capacity   = 0
+  min_size           = 0
+  max_size           = 0
 
   launch_template {
-    id = "${aws_launch_template.test.id}"
-    version = "${aws_launch_template.test.latest_version}"
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.latest_version
   }
 }
 `
@@ -1855,10 +1883,11 @@ func testAccAWSLaunchTemplateconfig_descriptionUpdateDefaultVersion(rName, descr
 resource "aws_launch_template" "test" {
   name                   = %q
   description            = %q
-  update_default_version = %v
-  
+  update_default_version = %t
+
   tags = {
     test = "baz"
   }
-}`, rName, description, update)
+}
+`, rName, description, update)
 }

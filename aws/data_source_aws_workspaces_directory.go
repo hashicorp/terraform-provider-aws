@@ -4,8 +4,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/workspaces/waiter"
 )
@@ -15,9 +14,43 @@ func dataSourceAwsWorkspacesDirectory() *schema.Resource {
 		Read: dataSourceAwsWorkspacesDirectoryRead,
 
 		Schema: map[string]*schema.Schema{
+			"alias": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"customer_user_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"directory_id": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"directory_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"directory_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"dns_ip_addresses": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"iam_role_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ip_group_ids": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"registration_code": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"self_service_permissions": {
 				Type:     schema.TypeList,
@@ -52,45 +85,45 @@ func dataSourceAwsWorkspacesDirectory() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"tags": tagsSchema(),
+			"workspace_creation_properties": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"custom_security_group_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"default_ou": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"enable_internet_access": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"enable_maintenance_mode": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"user_enabled_as_local_administrator": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
+			},
 			"workspace_security_group_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"iam_role_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"registration_code": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"directory_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"directory_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"customer_user_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"alias": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ip_group_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"dns_ip_addresses": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"tags": tagsSchema(),
 		},
 	}
 }
@@ -126,6 +159,10 @@ func dataSourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface
 
 	if err := d.Set("self_service_permissions", flattenSelfServicePermissions(directory.SelfservicePermissions)); err != nil {
 		return fmt.Errorf("error setting self_service_permissions: %s", err)
+	}
+
+	if err := d.Set("workspace_creation_properties", flattenWorkspaceCreationProperties(directory.WorkspaceCreationProperties)); err != nil {
+		return fmt.Errorf("error setting workspace_creation_properties: %s", err)
 	}
 
 	if err := d.Set("ip_group_ids", flattenStringSet(directory.IpGroupIds)); err != nil {

@@ -9,9 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -46,7 +45,7 @@ func resourceAwsEbsVolume() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return d.Get("type").(string) != ec2.VolumeTypeIo1 && new == "0"
+					return (d.Get("type").(string) != ec2.VolumeTypeIo1 && new == "0") || (d.Get("type").(string) != ec2.VolumeTypeIo2 && new == "0")
 				},
 			},
 			"kms_key_id": {
@@ -114,10 +113,10 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 		request.OutpostArn = aws.String(value.(string))
 	}
 
-	// IOPs are only valid, and required for, storage type io1. The current minimum
+	// IOPs are only valid, and required for, storage type io1 and io2. The current minimum
 	// is 100. Hard validation in place to return an error if IOPs are provided
 	// for an unsupported storage type.
-	// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/12667
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
 	var t string
 	if value, ok := d.GetOk("type"); ok {
 		t = value.(string)
@@ -125,7 +124,7 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if iops := d.Get("iops").(int); iops > 0 {
-		if t != ec2.VolumeTypeIo1 {
+		if t != ec2.VolumeTypeIo1 && t != ec2.VolumeTypeIo2 {
 			if t == "" {
 				// Volume creation would default to gp2
 				t = ec2.VolumeTypeGp2

@@ -6,57 +6,46 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSELBAttachment_basic(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-
-	testCheckInstanceAttached := func(count int) resource.TestCheckFunc {
-		return func(*terraform.State) error {
-			if len(conf.Instances) != count {
-				return fmt.Errorf("instance count does not match")
-			}
-			return nil
-		}
-	}
+	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_elb.bar",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSELBAttachmentConfig1(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists("aws_elb.bar", &conf),
-					testCheckInstanceAttached(1),
+					testAccCheckAWSELBExists(resourceName, &conf),
+					testAccAWSELBAttachmentCheckInstanceCount(&conf, 1),
 				),
 			},
-
 			{
 				Config: testAccAWSELBAttachmentConfig2(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists("aws_elb.bar", &conf),
-					testCheckInstanceAttached(2),
+					testAccCheckAWSELBExists(resourceName, &conf),
+					testAccAWSELBAttachmentCheckInstanceCount(&conf, 2),
 				),
 			},
-
 			{
 				Config: testAccAWSELBAttachmentConfig3(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists("aws_elb.bar", &conf),
-					testCheckInstanceAttached(2),
+					testAccCheckAWSELBExists(resourceName, &conf),
+					testAccAWSELBAttachmentCheckInstanceCount(&conf, 2),
 				),
 			},
-
 			{
 				Config: testAccAWSELBAttachmentConfig4(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists("aws_elb.bar", &conf),
-					testCheckInstanceAttached(0),
+					testAccCheckAWSELBExists(resourceName, &conf),
+					testAccAWSELBAttachmentCheckInstanceCount(&conf, 0),
 				),
 			},
 		},
@@ -66,6 +55,7 @@ func TestAccAWSELBAttachment_basic(t *testing.T) {
 // remove and instance and check that it's correctly re-attached.
 func TestAccAWSELBAttachment_drift(t *testing.T) {
 	var conf elb.LoadBalancerDescription
+	resourceName := "aws_elb.test"
 
 	deregInstance := func() {
 		conn := testAccProvider.Meta().(*AWSClient).elbconn
@@ -84,40 +74,39 @@ func TestAccAWSELBAttachment_drift(t *testing.T) {
 
 	}
 
-	testCheckInstanceAttached := func(count int) resource.TestCheckFunc {
-		return func(*terraform.State) error {
-			if len(conf.Instances) != count {
-				return fmt.Errorf("instance count does not match")
-			}
-			return nil
-		}
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_elb.bar",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSELBAttachmentConfig1(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists("aws_elb.bar", &conf),
-					testCheckInstanceAttached(1),
+					testAccCheckAWSELBExists(resourceName, &conf),
+					testAccAWSELBAttachmentCheckInstanceCount(&conf, 1),
 				),
 			},
-
 			// remove an instance from the ELB, and make sure it gets re-added
 			{
 				Config:    testAccAWSELBAttachmentConfig1(),
 				PreConfig: deregInstance,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSELBExists("aws_elb.bar", &conf),
-					testCheckInstanceAttached(1),
+					testAccCheckAWSELBExists(resourceName, &conf),
+					testAccAWSELBAttachmentCheckInstanceCount(&conf, 1),
 				),
 			},
 		},
 	})
+}
+
+func testAccAWSELBAttachmentCheckInstanceCount(conf *elb.LoadBalancerDescription, expected int) resource.TestCheckFunc {
+	return func(*terraform.State) error {
+		if actual := len(conf.Instances); actual != expected {
+			return fmt.Errorf("instance count does not match: expected %d, got %d", expected, actual)
+		}
+		return nil
+	}
 }
 
 // add one attachment
@@ -132,12 +121,8 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb" "bar" {
-  availability_zones = [
-    data.aws_availability_zones.available.names[0],
-    data.aws_availability_zones.available.names[1],
-    data.aws_availability_zones.available.names[2]
-  ]
+resource "aws_elb" "test" {
+  availability_zones = data.aws_availability_zones.available.names
 
   listener {
     instance_port     = 8000
@@ -149,12 +134,12 @@ resource "aws_elb" "bar" {
 
 resource "aws_instance" "foo1" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
+  instance_type = "t2.micro"
 }
 
 resource "aws_elb_attachment" "foo1" {
-  elb      = "${aws_elb.bar.id}"
-  instance = "${aws_instance.foo1.id}"
+  elb      = aws_elb.test.id
+  instance = aws_instance.foo1.id
 }
 `)
 }
@@ -171,12 +156,8 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb" "bar" {
-  availability_zones = [
-    data.aws_availability_zones.available.names[0],
-    data.aws_availability_zones.available.names[1],
-    data.aws_availability_zones.available.names[2]
-  ]
+resource "aws_elb" "test" {
+  availability_zones = data.aws_availability_zones.available.names
 
   listener {
     instance_port     = 8000
@@ -188,22 +169,22 @@ resource "aws_elb" "bar" {
 
 resource "aws_instance" "foo1" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
+  instance_type = "t2.micro"
 }
 
 resource "aws_instance" "foo2" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
+  instance_type = "t2.micro"
 }
 
 resource "aws_elb_attachment" "foo1" {
-  elb      = "${aws_elb.bar.id}"
-  instance = "${aws_instance.foo1.id}"
+  elb      = aws_elb.test.id
+  instance = aws_instance.foo1.id
 }
 
 resource "aws_elb_attachment" "foo2" {
-  elb      = "${aws_elb.bar.id}"
-  instance = "${aws_instance.foo2.id}"
+  elb      = aws_elb.test.id
+  instance = aws_instance.foo2.id
 }
 `)
 }
@@ -220,12 +201,8 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb" "bar" {
-  availability_zones = [
-    data.aws_availability_zones.available.names[0],
-    data.aws_availability_zones.available.names[1],
-    data.aws_availability_zones.available.names[2]
-  ]
+resource "aws_elb" "test" {
+  availability_zones = data.aws_availability_zones.available.names
 
   listener {
     instance_port     = 8000
@@ -237,22 +214,22 @@ resource "aws_elb" "bar" {
 
 resource "aws_instance" "foo1" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
+  instance_type = "t2.micro"
 }
 
 resource "aws_instance" "foo2" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
+  instance_type = "t2.micro"
 }
 
 resource "aws_elb_attachment" "foo1" {
-  elb      = "${aws_elb.bar.id}"
-  instance = "${aws_instance.foo2.id}"
+  elb      = aws_elb.test.id
+  instance = aws_instance.foo2.id
 }
 
 resource "aws_elb_attachment" "foo2" {
-  elb      = "${aws_elb.bar.id}"
-  instance = "${aws_instance.foo1.id}"
+  elb      = aws_elb.test.id
+  instance = aws_instance.foo1.id
 }
 `)
 }
@@ -269,12 +246,8 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_elb" "bar" {
-  availability_zones = [
-    data.aws_availability_zones.available.names[0],
-    data.aws_availability_zones.available.names[1],
-    data.aws_availability_zones.available.names[2]
-  ]
+resource "aws_elb" "test" {
+  availability_zones = data.aws_availability_zones.available.names
 
   listener {
     instance_port     = 8000

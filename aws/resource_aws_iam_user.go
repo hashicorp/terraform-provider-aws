@@ -8,10 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -81,7 +80,7 @@ func resourceAwsIamUserCreate(d *schema.ResourceData, meta interface{}) error {
 		UserName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("permissions_boundary"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("permissions_boundary"); ok {
 		request.PermissionsBoundary = aws.String(v.(string))
 	}
 

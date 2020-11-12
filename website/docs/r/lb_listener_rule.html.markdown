@@ -24,12 +24,12 @@ resource "aws_lb_listener" "front_end" {
 }
 
 resource "aws_lb_listener_rule" "static" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
   priority     = 100
 
   action {
     type             = "forward"
-    target_group_arn = "${aws_lb_target_group.static.arn}"
+    target_group_arn = aws_lb_target_group.static.arn
   }
 
   condition {
@@ -48,12 +48,12 @@ resource "aws_lb_listener_rule" "static" {
 # Forward action
 
 resource "aws_lb_listener_rule" "host_based_weighted_routing" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
   priority     = 99
 
   action {
     type             = "forward"
-    target_group_arn = "${aws_lb_target_group.static.arn}"
+    target_group_arn = aws_lb_target_group.static.arn
   }
 
   condition {
@@ -66,19 +66,19 @@ resource "aws_lb_listener_rule" "host_based_weighted_routing" {
 # Weighted Forward action
 
 resource "aws_lb_listener_rule" "host_based_routing" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
   priority     = 99
 
   action {
     type = "forward"
     forward {
       target_group {
-        arn    = "${aws_lb_target_group.main.arn}"
+        arn    = aws_lb_target_group.main.arn
         weight = 80
       }
 
       target_group {
-        arn    = "${aws_lb_target_group.canary.arn}"
+        arn    = aws_lb_target_group.canary.arn
         weight = 20
       }
 
@@ -86,7 +86,6 @@ resource "aws_lb_listener_rule" "host_based_routing" {
         enabled  = true
         duration = 600
       }
-
     }
   }
 
@@ -97,11 +96,10 @@ resource "aws_lb_listener_rule" "host_based_routing" {
   }
 }
 
-
 # Redirect action
 
 resource "aws_lb_listener_rule" "redirect_http_to_https" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
 
   action {
     type = "redirect"
@@ -124,7 +122,7 @@ resource "aws_lb_listener_rule" "redirect_http_to_https" {
 # Fixed-response action
 
 resource "aws_lb_listener_rule" "health_check" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
 
   action {
     type = "fixed-response"
@@ -163,28 +161,28 @@ resource "aws_cognito_user_pool_domain" "domain" {
 }
 
 resource "aws_lb_listener_rule" "admin" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
 
   action {
     type = "authenticate-cognito"
 
     authenticate_cognito {
-      user_pool_arn       = "${aws_cognito_user_pool.pool.arn}"
-      user_pool_client_id = "${aws_cognito_user_pool_client.client.id}"
-      user_pool_domain    = "${aws_cognito_user_pool_domain.domain.domain}"
+      user_pool_arn       = aws_cognito_user_pool.pool.arn
+      user_pool_client_id = aws_cognito_user_pool_client.client.id
+      user_pool_domain    = aws_cognito_user_pool_domain.domain.domain
     }
   }
 
   action {
     type             = "forward"
-    target_group_arn = "${aws_lb_target_group.static.arn}"
+    target_group_arn = aws_lb_target_group.static.arn
   }
 }
 
 # Authenticate-oidc Action
 
-resource "aws_lb_listener_rule" "admin" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+resource "aws_lb_listener_rule" "oidc" {
+  listener_arn = aws_lb_listener.front_end.arn
 
   action {
     type = "authenticate-oidc"
@@ -201,7 +199,7 @@ resource "aws_lb_listener_rule" "admin" {
 
   action {
     type             = "forward"
-    target_group_arn = "${aws_lb_target_group.static.arn}"
+    target_group_arn = aws_lb_target_group.static.arn
   }
 }
 ```

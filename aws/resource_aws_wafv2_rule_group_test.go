@@ -2,17 +2,81 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/wafv2/lister"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_wafv2_rule_group", &resource.Sweeper{
+		Name: "aws_wafv2_rule_group",
+		F:    testSweepWafv2RuleGroups,
+		Dependencies: []string{
+			"aws_wafv2_web_acl",
+		},
+	})
+}
+
+func testSweepWafv2RuleGroups(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).wafv2conn
+
+	var sweeperErrs *multierror.Error
+
+	input := &wafv2.ListRuleGroupsInput{
+		Scope: aws.String(wafv2.ScopeRegional),
+	}
+
+	err = lister.ListRuleGroupsPages(conn, input, func(page *wafv2.ListRuleGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, ruleGroup := range page.RuleGroups {
+			id := aws.StringValue(ruleGroup.Id)
+
+			r := resourceAwsWafv2RuleGroup()
+			d := r.Data(nil)
+			d.SetId(id)
+			d.Set("lock_token", ruleGroup.LockToken)
+			d.Set("name", ruleGroup.Name)
+			d.Set("scope", input.Scope)
+			err := r.Delete(d, client)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting WAFv2 Rule Group (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAFv2 Rule Group sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing WAFv2 Rule Groups: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAwsWafv2RuleGroup_basic(t *testing.T) {
 	var v wafv2.RuleGroup
@@ -20,7 +84,44 @@ func TestAccAwsWafv2RuleGroup_basic(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_Basic(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2RuleGroup_updateRule(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -55,15 +156,115 @@ func TestAccAwsWafv2RuleGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"name":             "rule-2",
-						"priority":         "10",
+						"name":                              "rule-1",
+						"priority":                          "1",
+						"action.#":                          "1",
+						"action.0.allow.#":                  "0",
+						"action.0.block.#":                  "0",
+						"action.0.count.#":                  "1",
+						"statement.#":                       "1",
+						"statement.0.geo_match_statement.#": "1",
+						"statement.0.geo_match_statement.0.country_codes.#": "2",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2RuleGroup_updateRuleProperties(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafv2_rule_group.test"
+	ruleName2 := fmt.Sprintf("%s-2", ruleGroupName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_BasicUpdate(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", "50"),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":             "rule-1",
+						"priority":         "1",
 						"action.#":         "1",
 						"action.0.allow.#": "0",
-						"action.0.block.#": "1",
-						"action.0.count.#": "0",
-						"statement.#":      "1",
+						"action.0.block.#": "0",
+						"action.0.count.#": "1",
+						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.metric_name":                "friendly-rule-metric-name",
+						"visibility_config.0.sampled_requests_enabled":   "false",
+						"statement.#":                                       "1",
+						"statement.0.geo_match_statement.#":                 "1",
+						"statement.0.geo_match_statement.0.country_codes.#": "2",
+					}),
+				),
+			},
+			{
+				// Test step verifies addition of a rule block with the first block unchanged
+				Config: testAccAwsWafv2RuleGroupConfig_UpdateMultipleRules(ruleGroupName, "rule-1", ruleName2, 1, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", "50"),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                "rule-1",
+						"priority":            "1",
+						"action.#":            "1",
+						"action.0.allow.#":    "0",
+						"action.0.block.#":    "0",
+						"action.0.count.#":    "1",
+						"visibility_config.#": "1",
+						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.metric_name":                "rule-1",
+						"visibility_config.0.sampled_requests_enabled":   "false",
+						"statement.#":                                       "1",
+						"statement.0.geo_match_statement.#":                 "1",
+						"statement.0.geo_match_statement.0.country_codes.#": "2",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                ruleName2,
+						"priority":            "2",
+						"action.#":            "1",
+						"action.0.allow.#":    "0",
+						"action.0.block.#":    "1",
+						"action.0.count.#":    "0",
+						"visibility_config.#": "1",
+						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.metric_name":                ruleName2,
+						"visibility_config.0.sampled_requests_enabled":   "false",
+						"statement.#": "1",
 						"statement.0.size_constraint_statement.#":                                 "1",
 						"statement.0.size_constraint_statement.0.comparison_operator":             "LT",
 						"statement.0.size_constraint_statement.0.field_to_match.#":                "1",
@@ -79,13 +280,65 @@ func TestAccAwsWafv2RuleGroup_basic(t *testing.T) {
 						"priority": "5",
 						"type":     "NONE",
 					}),
+				),
+			},
+			{
+				// Test step to verify a change in priority for rule #1 and a change in name and priority for rule #2
+				Config: testAccAwsWafv2RuleGroupConfig_UpdateMultipleRules(ruleGroupName, "rule-1", "updated", 5, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", "50"),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"name":             "rule-1",
-						"priority":         "1",
-						"action.#":         "1",
-						"action.0.allow.#": "0",
-						"action.0.block.#": "0",
-						"action.0.count.#": "1",
+						"name":                "rule-1",
+						"priority":            "5",
+						"action.#":            "1",
+						"action.0.allow.#":    "0",
+						"action.0.block.#":    "0",
+						"action.0.count.#":    "1",
+						"visibility_config.#": "1",
+						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.metric_name":                "rule-1",
+						"visibility_config.0.sampled_requests_enabled":   "false",
+						"statement.#":                                       "1",
+						"statement.0.geo_match_statement.#":                 "1",
+						"statement.0.geo_match_statement.0.country_codes.#": "2",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                "updated",
+						"priority":            "10",
+						"action.#":            "1",
+						"action.0.allow.#":    "0",
+						"action.0.block.#":    "1",
+						"action.0.count.#":    "0",
+						"visibility_config.#": "1",
+						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.metric_name":                "updated",
+						"visibility_config.0.sampled_requests_enabled":   "false",
+						"statement.#": "1",
+						"statement.0.size_constraint_statement.#":                                 "1",
+						"statement.0.size_constraint_statement.0.comparison_operator":             "LT",
+						"statement.0.size_constraint_statement.0.field_to_match.#":                "1",
+						"statement.0.size_constraint_statement.0.field_to_match.0.query_string.#": "1",
+						"statement.0.size_constraint_statement.0.size":                            "50",
+						"statement.0.size_constraint_statement.0.text_transformation.#":           "2",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
+						"priority": "2",
+						"type":     "CMD_LINE",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
+						"priority": "5",
+						"type":     "NONE",
 					}),
 				),
 			},
@@ -105,7 +358,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -167,7 +420,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -330,7 +583,7 @@ func TestAccAwsWafv2RuleGroup_ChangeNameForceNew(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -376,7 +629,7 @@ func TestAccAwsWafv2RuleGroup_ChangeCapacityForceNew(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -422,7 +675,7 @@ func TestAccAwsWafv2RuleGroup_ChangeMetricNameForceNew(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -468,7 +721,7 @@ func TestAccAwsWafv2RuleGroup_Disappears(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -490,7 +743,7 @@ func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -501,11 +754,12 @@ func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                       "1",
-						"statement.0.geo_match_statement.#":                 "1",
-						"statement.0.geo_match_statement.0.country_codes.#": "2",
-						"statement.0.geo_match_statement.0.country_codes.0": "US",
-						"statement.0.geo_match_statement.0.country_codes.1": "NL",
+						"statement.#":                                             "1",
+						"statement.0.geo_match_statement.#":                       "1",
+						"statement.0.geo_match_statement.0.country_codes.#":       "2",
+						"statement.0.geo_match_statement.0.country_codes.0":       "US",
+						"statement.0.geo_match_statement.0.country_codes.1":       "NL",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.#": "0",
 					}),
 				),
 			},
@@ -516,12 +770,69 @@ func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                       "1",
-						"statement.0.geo_match_statement.#":                 "1",
-						"statement.0.geo_match_statement.0.country_codes.#": "3",
-						"statement.0.geo_match_statement.0.country_codes.0": "ZM",
-						"statement.0.geo_match_statement.0.country_codes.1": "EE",
-						"statement.0.geo_match_statement.0.country_codes.2": "MM",
+						"statement.#":                                             "1",
+						"statement.0.geo_match_statement.#":                       "1",
+						"statement.0.geo_match_statement.0.country_codes.#":       "3",
+						"statement.0.geo_match_statement.0.country_codes.0":       "ZM",
+						"statement.0.geo_match_statement.0.country_codes.1":       "EE",
+						"statement.0.geo_match_statement.0.country_codes.2":       "MM",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.#": "0",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2RuleGroup_GeoMatchStatement_ForwardedIPConfig(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_GeoMatchStatement_ForwardedIPConfig(ruleGroupName, "MATCH", "X-Forwarded-For"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                               "1",
+						"statement.0.geo_match_statement.#":                                         "1",
+						"statement.0.geo_match_statement.0.country_codes.#":                         "2",
+						"statement.0.geo_match_statement.0.country_codes.0":                         "US",
+						"statement.0.geo_match_statement.0.country_codes.1":                         "NL",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.#":                   "1",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.0.fallback_behavior": "MATCH",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.0.header_name":       "X-Forwarded-For",
+					}),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_GeoMatchStatement_ForwardedIPConfig(ruleGroupName, "NO_MATCH", "Updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                               "1",
+						"statement.0.geo_match_statement.#":                                         "1",
+						"statement.0.geo_match_statement.0.country_codes.#":                         "2",
+						"statement.0.geo_match_statement.0.country_codes.0":                         "US",
+						"statement.0.geo_match_statement.0.country_codes.1":                         "NL",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.#":                   "1",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.0.fallback_behavior": "NO_MATCH",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.0.header_name":       "Updated",
 					}),
 				),
 			},
@@ -537,12 +848,11 @@ func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement(t *testing.T) {
 	var v wafv2.RuleGroup
-	var idx int
 	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -552,13 +862,113 @@ func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement(t *testing.T) {
 					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					computeWafv2IpSetRefStatementIndex(&v, &idx),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#": "1",
+						"statement.0.ip_set_reference_statement.#":                              "1",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#": "0",
+					}),
+					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
+						"statement.0.ip_set_reference_statement.0.arn": regexp.MustCompile(`regional/ipset/.+$`),
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2RuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement_IPSetForwardedIPConfig(t *testing.T) {
+	var v wafv2.RuleGroup
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement_IPSetForwardedIPConfig(ruleGroupName, "MATCH", "X-Forwarded-For", "FIRST"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"statement.#": "1",
 						"statement.0.ip_set_reference_statement.#": "1",
 					}),
-					// TODO: TypeSet check need regex helper
-					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.ip_set_reference_statement.0.arn", &idx, regexp.MustCompile(`regional/ipset/.+$`)),
+					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
+						"statement.0.ip_set_reference_statement.0.arn": regexp.MustCompile(`regional/ipset/.+$`),
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#":                   "1",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.fallback_behavior": "MATCH",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.header_name":       "X-Forwarded-For",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.position":          "FIRST",
+					}),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement_IPSetForwardedIPConfig(ruleGroupName, "NO_MATCH", "X-Forwarded-For", "LAST"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#": "1",
+						"statement.0.ip_set_reference_statement.#": "1",
+					}),
+					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
+						"statement.0.ip_set_reference_statement.0.arn": regexp.MustCompile(`regional/ipset/.+$`),
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#":                   "1",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.fallback_behavior": "NO_MATCH",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.header_name":       "X-Forwarded-For",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.position":          "LAST",
+					}),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement_IPSetForwardedIPConfig(ruleGroupName, "MATCH", "Updated", "ANY"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#": "1",
+						"statement.0.ip_set_reference_statement.#": "1",
+					}),
+					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
+						"statement.0.ip_set_reference_statement.0.arn": regexp.MustCompile(`regional/ipset/.+$`),
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#":                   "1",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.fallback_behavior": "MATCH",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.header_name":       "Updated",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.position":          "ANY",
+					}),
+				),
+			},
+			{
+				Config: testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#": "1",
+						"statement.0.ip_set_reference_statement.#":                              "1",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#": "0",
+					}),
+					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
+						"statement.0.ip_set_reference_statement.0.arn": regexp.MustCompile(`regional/ipset/.+$`),
+					}),
 				),
 			},
 			{
@@ -577,7 +987,7 @@ func TestAccAwsWafv2RuleGroup_LogicalRuleStatements(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -649,7 +1059,7 @@ func TestAccAwsWafv2RuleGroup_Minimal(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -675,12 +1085,11 @@ func TestAccAwsWafv2RuleGroup_Minimal(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_RegexPatternSetReferenceStatement(t *testing.T) {
 	var v wafv2.RuleGroup
-	var idx int
 	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -690,15 +1099,15 @@ func TestAccAwsWafv2RuleGroup_RegexPatternSetReferenceStatement(t *testing.T) {
 					testAccCheckAwsWafv2RuleGroupExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					computeWafv2RegexSetRefStatementIndex(&v, &idx),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"statement.#": "1",
 						"statement.0.regex_pattern_set_reference_statement.#":                       "1",
 						"statement.0.regex_pattern_set_reference_statement.0.field_to_match.#":      "1",
 						"statement.0.regex_pattern_set_reference_statement.0.text_transformation.#": "1",
 					}),
-					// TODO: TypeSet check need regex helper
-					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.regex_pattern_set_reference_statement.0.arn", &idx, regexp.MustCompile(`regional/regexpatternset/.+$`)),
+					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
+						"statement.0.regex_pattern_set_reference_statement.0.arn": regexp.MustCompile(`regional/regexpatternset/.+$`),
+					}),
 				),
 			},
 			{
@@ -717,7 +1126,7 @@ func TestAccAwsWafv2RuleGroup_RuleAction(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -793,7 +1202,7 @@ func TestAccAwsWafv2RuleGroup_SizeConstraintStatement(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -846,7 +1255,7 @@ func TestAccAwsWafv2RuleGroup_SqliMatchStatement(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -916,7 +1325,7 @@ func TestAccAwsWafv2RuleGroup_Tags(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -964,7 +1373,7 @@ func TestAccAwsWafv2RuleGroup_XssMatchStatement(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWafv2ScopeRegional(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWafv2RuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -1016,124 +1425,21 @@ func TestAccAwsWafv2RuleGroup_XssMatchStatement(t *testing.T) {
 	})
 }
 
-func testAccMatchResourceAttrArnWithIndexesAddr(name, format string, idx *int, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		return testAccMatchResourceAttrRegionalARN(name, fmt.Sprintf(format, *idx), "wafv2", arnResourceRegexp)(s)
+func testAccPreCheckAWSWafv2ScopeRegional(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).wafv2conn
+
+	input := &wafv2.ListRuleGroupsInput{
+		Scope: aws.String(wafv2.ScopeRegional),
 	}
-}
 
-// Calculates the index which isn't static because ARN is generated as part of the test
-func computeWafv2IpSetRefStatementIndex(r *wafv2.RuleGroup, idx *int) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		ruleResource := resourceAwsWafv2RuleGroup().Schema["rule"].Elem.(*schema.Resource)
+	_, err := conn.ListRuleGroups(input)
 
-		rule := map[string]interface{}{
-			"name":     "rule-1",
-			"priority": 1,
-			"action": []interface{}{
-				map[string]interface{}{
-					"allow": make([]interface{}, 1),
-					"block": []interface{}{},
-					"count": []interface{}{},
-				},
-			},
-			"statement": []interface{}{
-				map[string]interface{}{
-					"and_statement":        []interface{}{},
-					"byte_match_statement": []interface{}{},
-					"geo_match_statement":  []interface{}{},
-					"ip_set_reference_statement": []interface{}{
-						map[string]interface{}{
-							"arn": aws.StringValue(r.Rules[0].Statement.IPSetReferenceStatement.ARN),
-						},
-					},
-					"not_statement":                         []interface{}{},
-					"or_statement":                          []interface{}{},
-					"regex_pattern_set_reference_statement": []interface{}{},
-					"size_constraint_statement":             []interface{}{},
-					"sqli_match_statement":                  []interface{}{},
-					"xss_match_statement":                   []interface{}{},
-				},
-			},
-			"visibility_config": []interface{}{
-				map[string]interface{}{
-					"cloudwatch_metrics_enabled": false,
-					"metric_name":                "friendly-rule-metric-name",
-					"sampled_requests_enabled":   false,
-				},
-			},
-		}
-
-		f := schema.HashResource(ruleResource)
-		*idx = f(rule)
-
-		return nil
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
 	}
-}
 
-// Calculates the index which isn't static because ARN is generated as part of the test
-func computeWafv2RegexSetRefStatementIndex(r *wafv2.RuleGroup, idx *int) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		ruleResource := resourceAwsWafv2RuleGroup().Schema["rule"].Elem.(*schema.Resource)
-		textTransformationResource := ruleResource.Schema["statement"].Elem.(*schema.Resource).Schema["regex_pattern_set_reference_statement"].Elem.(*schema.Resource).Schema["text_transformation"].Elem.(*schema.Resource)
-		rule := map[string]interface{}{
-			"name":     "rule-1",
-			"priority": 1,
-			"action": []interface{}{
-				map[string]interface{}{
-					"allow": make([]interface{}, 1),
-					"block": []interface{}{},
-					"count": []interface{}{},
-				},
-			},
-			"statement": []interface{}{
-				map[string]interface{}{
-					"and_statement":              []interface{}{},
-					"byte_match_statement":       []interface{}{},
-					"geo_match_statement":        []interface{}{},
-					"ip_set_reference_statement": []interface{}{},
-					"not_statement":              []interface{}{},
-					"or_statement":               []interface{}{},
-					"regex_pattern_set_reference_statement": []interface{}{
-						map[string]interface{}{
-							"arn": aws.StringValue(r.Rules[0].Statement.RegexPatternSetReferenceStatement.ARN),
-							"field_to_match": []interface{}{
-								map[string]interface{}{
-									"all_query_arguments":   []interface{}{},
-									"body":                  make([]interface{}, 1),
-									"method":                []interface{}{},
-									"query_string":          []interface{}{},
-									"single_header":         []interface{}{},
-									"single_query_argument": []interface{}{},
-									"uri_path":              []interface{}{},
-								},
-							},
-							"text_transformation": schema.NewSet(schema.HashResource(textTransformationResource), []interface{}{
-								map[string]interface{}{
-									"priority": 2,
-									"type":     "NONE",
-								},
-							}),
-						},
-					},
-					"size_constraint_statement": []interface{}{},
-					"sqli_match_statement":      []interface{}{},
-					"xss_match_statement":       []interface{}{},
-				},
-			},
-			"visibility_config": []interface{}{
-				map[string]interface{}{
-					"cloudwatch_metrics_enabled": false,
-					"metric_name":                "friendly-rule-metric-name",
-					"sampled_requests_enabled":   false,
-				},
-			},
-		}
-
-		f := schema.HashResource(ruleResource)
-		*idx = f(rule)
-
-		return nil
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
@@ -1235,8 +1541,67 @@ resource "aws_wafv2_rule_group" "test" {
   scope       = "REGIONAL"
 
   rule {
-    name     = "rule-2"
-    priority = 10
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US", "NL"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
+func testAccAwsWafv2RuleGroupConfig_UpdateMultipleRules(name string, ruleName1, ruleName2 string, priority1, priority2 int) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity    = 50
+  name        = "%[1]s"
+  description = "Updated"
+  scope       = "REGIONAL"
+
+  rule {
+    name     = "%[2]s"
+    priority = %[3]d
+
+    action {
+      count {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US", "NL"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "%[2]s"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  rule {
+    name     = "%[4]s"
+    priority = %[5]d
 
     action {
       block {}
@@ -1265,28 +1630,7 @@ resource "aws_wafv2_rule_group" "test" {
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name                = "friendly-rule-metric-name"
-      sampled_requests_enabled   = false
-    }
-  }
-
-  rule {
-    name     = "rule-1"
-    priority = 1
-
-    action {
-      count {}
-    }
-
-    statement {
-      geo_match_statement {
-        country_codes = ["US", "NL"]
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = false
-      metric_name                = "friendly-rule-metric-name"
+      metric_name                = "%[4]s"
       sampled_requests_enabled   = false
     }
   }
@@ -1297,7 +1641,7 @@ resource "aws_wafv2_rule_group" "test" {
     sampled_requests_enabled   = false
   }
 }
-`, name)
+`, name, ruleName1, priority1, ruleName2, priority2)
 }
 
 func testAccAwsWafv2RuleGroupConfig_UpdateCapacity(name string) string {
@@ -1937,6 +2281,55 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, name)
 }
 
+func testAccAwsWafv2RuleGroupConfig_IpSetReferenceStatement_IPSetForwardedIPConfig(name, fallbackBehavior, headerName, position string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_ip_set" "test" {
+  name               = "ip-set-%[1]s"
+  scope              = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses          = ["1.1.1.1/32", "2.2.2.2/32"]
+}
+
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 5
+  name     = "%[1]s"
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      allow {}
+    }
+
+    statement {
+      ip_set_reference_statement {
+        arn = aws_wafv2_ip_set.test.arn
+        ip_set_forwarded_ip_config {
+          fallback_behavior = "%[2]s"
+          header_name       = "%[3]s"
+          position          = "%[4]s"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name, fallbackBehavior, headerName, position)
+}
+
 func testAccAwsWafv2RuleGroupConfig_GeoMatchStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
@@ -1972,6 +2365,47 @@ resource "aws_wafv2_rule_group" "test" {
   }
 }
 `, name)
+}
+
+func testAccAwsWafv2RuleGroupConfig_GeoMatchStatement_ForwardedIPConfig(name, fallbackBehavior, headerName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 2
+  name     = "%s"
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      allow {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US", "NL"]
+        forwarded_ip_config {
+          fallback_behavior = "%s"
+          header_name       = "%s"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name, fallbackBehavior, headerName)
 }
 
 func testAccAwsWafv2RuleGroupConfig_GeoMatchStatement_Update(name string) string {
@@ -2033,6 +2467,7 @@ resource "aws_wafv2_rule_group" "test" {
             country_codes = ["US"]
           }
         }
+
         statement {
           geo_match_statement {
             country_codes = ["NL"]
@@ -2081,6 +2516,7 @@ resource "aws_wafv2_rule_group" "test" {
                 country_codes = ["US"]
               }
             }
+
             statement {
               geo_match_statement {
                 country_codes = ["NL"]
@@ -2133,6 +2569,7 @@ resource "aws_wafv2_rule_group" "test" {
             }
           }
         }
+
         statement {
           and_statement {
             statement {
@@ -2140,6 +2577,7 @@ resource "aws_wafv2_rule_group" "test" {
                 country_codes = ["US"]
               }
             }
+
             statement {
               geo_match_statement {
                 country_codes = ["NL"]
@@ -2440,7 +2878,6 @@ resource "aws_wafv2_rule_group" "test" {
 
     statement {
       xss_match_statement {
-
         field_to_match {
           body {}
         }

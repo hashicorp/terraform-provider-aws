@@ -23,9 +23,25 @@ resource "aws_elb" "web" {
   instances = aws_instance.web.*.id
 }
 
+data "aws_ami" "ubuntu" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["099720109477"] # Canonical
+}
+
 resource "aws_instance" "web" {
-  instance_type = "m1.small"
-  ami           = var.aws_amis[var.aws_region]
+  instance_type = "t2.small"
+  ami           = data.aws_ami.ubuntu.id
 
   # This will create 4 instances
   count = 4

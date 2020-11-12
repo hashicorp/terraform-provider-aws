@@ -15,7 +15,7 @@ Provides an IAM instance profile.
 ```hcl
 resource "aws_iam_instance_profile" "test_profile" {
   name = "test_profile"
-  role = "${aws_iam_role.role.name}"
+  role = aws_iam_role.role.name
 }
 
 resource "aws_iam_role" "role" {
@@ -49,7 +49,7 @@ The following arguments are supported:
 * `path` - (Optional, default "/") Path in which to create the profile.
 * `role` - (Optional) The role name to include in the profile.
 
-## Attribute Reference
+## Attributes Reference
 
 * `id` - The instance profile's ID.
 * `arn` - The ARN assigned by AWS to the instance profile.

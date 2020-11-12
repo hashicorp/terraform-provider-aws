@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -181,15 +181,15 @@ func resourceAwsApiGatewayDomainNameCreate(d *schema.ResourceData, meta interfac
 		params.EndpointConfiguration = expandApiGatewayEndpointConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("regional_certificate_arn"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("regional_certificate_arn"); ok {
 		params.RegionalCertificateArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("regional_certificate_name"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("regional_certificate_name"); ok {
 		params.RegionalCertificateName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("security_policy"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("security_policy"); ok {
 		params.SecurityPolicy = aws.String(v.(string))
 	}
 

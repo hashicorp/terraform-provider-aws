@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const rfc1123RegexPattern = `^[a-zA-Z]{3}, [0-9]+ [a-zA-Z]+ [0-9]{4} [0-9:]+ [A-Z]+$`
@@ -161,7 +161,7 @@ func TestAccDataSourceAWSS3BucketObject_allParams(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &rObj),
 					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName, &dsObj),
-					resource.TestCheckResourceAttr(dataSourceName, "content_length", "21"),
+					resource.TestCheckResourceAttr(dataSourceName, "content_length", "25"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexp.MustCompile(rfc1123RegexPattern)),
@@ -359,6 +359,26 @@ func TestAccDataSourceAWSS3BucketObject_MultipleSlashes(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAWSS3BucketObject_SingleSlashAsKey(t *testing.T) {
+	var dsObj s3.GetObjectOutput
+	dataSourceName := "data.aws_s3_bucket_object.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                  func() { testAccPreCheck(t) },
+		Providers:                 testAccProviders,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDataSourceS3ObjectConfigSingleSlashAsKey(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName, &dsObj),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsS3ObjectDataSourceExists(n string, obj *s3.GetObjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -437,7 +457,7 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket       = "${aws_s3_bucket.object_bucket.bucket}"
+  bucket       = aws_s3_bucket.object_bucket.bucket
   key          = "tf-testing-obj-%[1]d-readable"
   content      = "yes"
   content_type = "text/plain"
@@ -480,22 +500,27 @@ func testAccAWSDataSourceS3ObjectConfig_allParams(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%[1]d"
+
   versioning {
     enabled = true
   }
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket              = "${aws_s3_bucket.object_bucket.bucket}"
-  key                 = "tf-testing-obj-%[1]d-all-params"
+  bucket = aws_s3_bucket.object_bucket.bucket
+  key    = "tf-testing-obj-%[1]d-all-params"
+
   content             = <<CONTENT
-{"msg": "Hi there!"}
+{
+  "msg": "Hi there!"
+}
 CONTENT
   content_type        = "application/unknown"
   cache_control       = "no-cache"
   content_disposition = "attachment"
   content_encoding    = "identity"
   content_language    = "en-GB"
+
   tags = {
     Key1 = "Value 1"
   }
@@ -523,7 +548,7 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket                        = "${aws_s3_bucket.object_bucket.bucket}"
+  bucket                        = aws_s3_bucket.object_bucket.bucket
   key                           = "tf-testing-obj-%[1]d"
   content                       = "Hello World"
   object_lock_legal_hold_status = "OFF"
@@ -551,7 +576,7 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket                        = "${aws_s3_bucket.object_bucket.bucket}"
+  bucket                        = aws_s3_bucket.object_bucket.bucket
   key                           = "tf-testing-obj-%[1]d"
   content                       = "Hello World"
   force_destroy                 = true
@@ -610,7 +635,7 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object1" {
-  bucket       = "${aws_s3_bucket.object_bucket.bucket}"
+  bucket       = aws_s3_bucket.object_bucket.bucket
   key          = "first//second///third//"
   content      = "yes"
   content_type = "text/plain"
@@ -645,4 +670,17 @@ data "aws_s3_bucket_object" "obj3" {
 `, resources)
 
 	return resources, both
+}
+
+func testAccAWSDataSourceS3ObjectConfigSingleSlashAsKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+data "aws_s3_bucket_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "/"
+}
+`, rName)
 }

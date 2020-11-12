@@ -84,6 +84,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>codecommit</code></li>
   <li><code>codedeploy</code></li>
   <li><code>codepipeline</code></li>
+  <li><code>codestarconnections</code></li>
   <li><code>codestarnotifications</code></li>
   <li><code>cognitoidentity</code></li>
   <li><code>cognitoidp</code></li>
@@ -122,6 +123,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>guardduty</code></li>
   <li><code>greengrass</code></li>
   <li><code>iam</code></li>
+  <li><code>identitystore</code></li>
   <li><code>imagebuilder</code></li>
   <li><code>inspector</code></li>
   <li><code>iot</code></li>
@@ -139,6 +141,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>licensemanager</code></li>
   <li><code>lightsail</code></li>
   <li><code>macie</code></li>
+  <li><code>macie2</code></li>
   <li><code>managedblockchain</code></li>
   <li><code>marketplacecatalog</code></li>
   <li><code>mediaconnect</code></li>
@@ -168,6 +171,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>route53resolver</code></li>
   <li><code>s3</code></li>
   <li><code>s3control</code></li>
+  <li><code>s3outposts</code></li>
   <li><code>sagemaker</code></li>
   <li><code>sdb</code></li>
   <li><code>secretsmanager</code></li>
@@ -181,11 +185,13 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>sns</code></li>
   <li><code>sqs</code></li>
   <li><code>ssm</code></li>
+  <li><code>ssoadmin</code></li>
   <li><code>stepfunctions</code></li>
   <li><code>storagegateway</code></li>
   <li><code>sts</code></li>
   <li><code>swf</code></li>
   <li><code>synthetics</code></li>
+  <li><code>timestreamwrite</code></li>
   <li><code>transfer</code></li>
   <li><code>waf</code></li>
   <li><code>wafregional</code></li>

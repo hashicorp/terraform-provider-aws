@@ -21,7 +21,7 @@ a conflict of rule settings and will overwrite rules.
 
 ```hcl
 resource "aws_network_acl" "main" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 
   egress {
     protocol   = "tcp"

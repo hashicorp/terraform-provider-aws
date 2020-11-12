@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -41,9 +41,6 @@ func resourceAwsApiGatewayV2Stage() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validateArn,
-							StateFunc: func(v interface{}) string {
-								return strings.TrimSuffix(v.(string), ":*")
-							},
 						},
 						"format": {
 							Type:     schema.TypeString,
@@ -277,6 +274,14 @@ func resourceAwsApiGatewayV2StageRead(d *schema.ResourceData, meta interface{}) 
 	}
 	d.Set("deployment_id", resp.DeploymentId)
 	d.Set("description", resp.Description)
+	executionArn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "execute-api",
+		Region:    region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("%s/%s", apiId, stageName),
+	}.String()
+	d.Set("execution_arn", executionArn)
 	d.Set("name", stageName)
 	err = d.Set("route_settings", flattenApiGatewayV2RouteSettings(resp.RouteSettings))
 	if err != nil {
@@ -299,17 +304,8 @@ func resourceAwsApiGatewayV2StageRead(d *schema.ResourceData, meta interface{}) 
 
 	switch aws.StringValue(apiOutput.ProtocolType) {
 	case apigatewayv2.ProtocolTypeWebsocket:
-		executionArn := arn.ARN{
-			Partition: meta.(*AWSClient).partition,
-			Service:   "execute-api",
-			Region:    region,
-			AccountID: meta.(*AWSClient).accountid,
-			Resource:  fmt.Sprintf("%s/%s", apiId, stageName),
-		}.String()
-		d.Set("execution_arn", executionArn)
 		d.Set("invoke_url", fmt.Sprintf("wss://%s.execute-api.%s.amazonaws.com/%s", apiId, region, stageName))
 	case apigatewayv2.ProtocolTypeHttp:
-		d.Set("execution_arn", "")
 		if stageName == apigatewayv2DefaultStageName {
 			d.Set("invoke_url", fmt.Sprintf("https://%s.execute-api.%s.amazonaws.com/", apiId, region))
 		} else {
@@ -364,7 +360,7 @@ func resourceAwsApiGatewayV2StageUpdate(d *schema.ResourceData, meta interface{}
 		}
 		if d.HasChange("stage_variables") {
 			o, n := d.GetChange("stage_variables")
-			add, del := diffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
+			add, del, _ := diffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
 			// Variables are removed by setting the associated value to "".
 			for k := range del {
 				del[k] = aws.String("")

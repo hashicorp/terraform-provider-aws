@@ -9,11 +9,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
-
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -369,7 +368,7 @@ resource "aws_efs_file_system" "test" {
 }
 
 resource "aws_efs_access_point" "test" {
-  file_system_id = "${aws_efs_file_system.test.id}"
+  file_system_id = aws_efs_file_system.test.id
 }
 `, rName)
 }
@@ -381,7 +380,7 @@ resource "aws_efs_file_system" "test" {
 }
 
 resource "aws_efs_access_point" "test" {
-  file_system_id = "${aws_efs_file_system.test.id}"
+  file_system_id = aws_efs_file_system.test.id
   root_directory {
     path = %[2]q
   }
@@ -396,7 +395,7 @@ resource "aws_efs_file_system" "test" {
 }
 
 resource "aws_efs_access_point" "test" {
-  file_system_id = "${aws_efs_file_system.test.id}"
+  file_system_id = aws_efs_file_system.test.id
   root_directory {
     path = %[2]q
     creation_info {
@@ -416,7 +415,7 @@ resource "aws_efs_file_system" "test" {
 }
 
 resource "aws_efs_access_point" "test" {
-  file_system_id = "${aws_efs_file_system.test.id}"
+  file_system_id = aws_efs_file_system.test.id
   posix_user {
     gid = 1001
     uid = 1001
@@ -432,7 +431,7 @@ resource "aws_efs_file_system" "test" {
 }
 
 resource "aws_efs_access_point" "test" {
-  file_system_id = "${aws_efs_file_system.test.id}"
+  file_system_id = aws_efs_file_system.test.id
   posix_user {
     gid            = 1001
     uid            = 1001
@@ -449,7 +448,7 @@ resource "aws_efs_file_system" "test" {
 }
 
 resource "aws_efs_access_point" "test" {
-  file_system_id = "${aws_efs_file_system.test.id}"
+  file_system_id = aws_efs_file_system.test.id
 
   tags = {
     %[2]q = %[3]q
@@ -465,7 +464,7 @@ resource "aws_efs_file_system" "test" {
 }
 
 resource "aws_efs_access_point" "test" {
-  file_system_id = "${aws_efs_file_system.test.id}"
+  file_system_id = aws_efs_file_system.test.id
 
   tags = {
     %[2]q = %[3]q
