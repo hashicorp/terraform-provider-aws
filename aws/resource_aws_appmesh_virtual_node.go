@@ -103,6 +103,110 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"connection_pool": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 0,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"grpc": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max_requests": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+													ExactlyOneOf: []string{
+														"spec.0.listener.0.connection_pool.0.grpc",
+														"spec.0.listener.0.connection_pool.0.http",
+														"spec.0.listener.0.connection_pool.0.http2",
+														"spec.0.listener.0.connection_pool.0.tcp",
+													},
+												},
+
+												"http": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max_connections": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+
+															"max_pending_requests": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+													ExactlyOneOf: []string{
+														"spec.0.listener.0.connection_pool.0.grpc",
+														"spec.0.listener.0.connection_pool.0.http",
+														"spec.0.listener.0.connection_pool.0.http2",
+														"spec.0.listener.0.connection_pool.0.tcp",
+													},
+												},
+
+												"http2": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max_requests": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+													ExactlyOneOf: []string{
+														"spec.0.listener.0.connection_pool.0.grpc",
+														"spec.0.listener.0.connection_pool.0.http",
+														"spec.0.listener.0.connection_pool.0.http2",
+														"spec.0.listener.0.connection_pool.0.tcp",
+													},
+												},
+
+												"tcp": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max_connections": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+													ExactlyOneOf: []string{
+														"spec.0.listener.0.connection_pool.0.grpc",
+														"spec.0.listener.0.connection_pool.0.http",
+														"spec.0.listener.0.connection_pool.0.http2",
+														"spec.0.listener.0.connection_pool.0.tcp",
+													},
+												},
+											},
+										},
+									},
+
 									"health_check": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -689,10 +793,11 @@ func resourceAwsAppmeshVirtualNodeCreate(d *schema.ResourceData, meta interface{
 		req.MeshOwner = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating App Mesh virtual node: %#v", req)
+	log.Printf("[DEBUG] Creating App Mesh virtual node: %s", req)
 	resp, err := conn.CreateVirtualNode(req)
+
 	if err != nil {
-		return fmt.Errorf("error creating App Mesh virtual node: %s", err)
+		return fmt.Errorf("error creating App Mesh virtual node: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.VirtualNode.Metadata.Uid))
@@ -713,14 +818,17 @@ func resourceAwsAppmeshVirtualNodeRead(d *schema.ResourceData, meta interface{})
 	}
 
 	resp, err := conn.DescribeVirtualNode(req)
+
 	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] App Mesh virtual node (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("error reading App Mesh virtual node: %s", err)
+		return fmt.Errorf("error reading App Mesh virtual node (%s): %w", d.Id(), err)
 	}
+
 	if aws.StringValue(resp.VirtualNode.Status.Status) == appmesh.VirtualNodeStatusCodeDeleted {
 		log.Printf("[WARN] App Mesh virtual node (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -737,17 +845,17 @@ func resourceAwsAppmeshVirtualNodeRead(d *schema.ResourceData, meta interface{})
 	d.Set("resource_owner", resp.VirtualNode.Metadata.ResourceOwner)
 	err = d.Set("spec", flattenAppmeshVirtualNodeSpec(resp.VirtualNode.Spec))
 	if err != nil {
-		return fmt.Errorf("error setting spec: %s", err)
+		return fmt.Errorf("error setting spec: %w", err)
 	}
 
 	tags, err := keyvaluetags.AppmeshListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for App Mesh virtual node (%s): %s", arn, err)
+		return fmt.Errorf("error listing tags for App Mesh virtual node (%s): %w", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -767,10 +875,11 @@ func resourceAwsAppmeshVirtualNodeUpdate(d *schema.ResourceData, meta interface{
 			req.MeshOwner = aws.String(v.(string))
 		}
 
-		log.Printf("[DEBUG] Updating App Mesh virtual node: %#v", req)
+		log.Printf("[DEBUG] Updating App Mesh virtual node: %s", req)
 		_, err := conn.UpdateVirtualNode(req)
+
 		if err != nil {
-			return fmt.Errorf("error updating App Mesh virtual node: %s", err)
+			return fmt.Errorf("error updating App Mesh virtual node (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -779,7 +888,7 @@ func resourceAwsAppmeshVirtualNodeUpdate(d *schema.ResourceData, meta interface{
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.AppmeshUpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating App Mesh virtual node (%s) tags: %s", arn, err)
+			return fmt.Errorf("error updating App Mesh virtual node (%s) tags: %w", arn, err)
 		}
 	}
 
@@ -794,11 +903,13 @@ func resourceAwsAppmeshVirtualNodeDelete(d *schema.ResourceData, meta interface{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
 		VirtualNodeName: aws.String(d.Get("name").(string)),
 	})
+
 	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("error deleting App Mesh virtual node: %s", err)
+		return fmt.Errorf("error deleting App Mesh virtual node (%s): %w", d.Id(), err)
 	}
 
 	return nil

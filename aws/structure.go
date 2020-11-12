@@ -4748,6 +4748,65 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 
 			mListener := vListener.(map[string]interface{})
 
+			if vConnectionPool, ok := mListener["connection_pool"].([]interface{}); ok && len(vConnectionPool) > 0 && vConnectionPool[0] != nil {
+				mConnectionPool := vConnectionPool[0].(map[string]interface{})
+
+				connectionPool := &appmesh.VirtualNodeConnectionPool{}
+
+				if vGrpcConnectionPool, ok := mConnectionPool["grpc"].([]interface{}); ok && len(vGrpcConnectionPool) > 0 && vGrpcConnectionPool[0] != nil {
+					mGrpcConnectionPool := vGrpcConnectionPool[0].(map[string]interface{})
+
+					grpcConnectionPool := &appmesh.VirtualNodeGrpcConnectionPool{}
+
+					if vMaxRequests, ok := mGrpcConnectionPool["max_requests"].(int); ok && vMaxRequests > 0 {
+						grpcConnectionPool.MaxRequests = aws.Int64(int64(vMaxRequests))
+					}
+
+					connectionPool.Grpc = grpcConnectionPool
+				}
+
+				if vHttpConnectionPool, ok := mConnectionPool["http"].([]interface{}); ok && len(vHttpConnectionPool) > 0 && vHttpConnectionPool[0] != nil {
+					mHttpConnectionPool := vHttpConnectionPool[0].(map[string]interface{})
+
+					httpConnectionPool := &appmesh.VirtualNodeHttpConnectionPool{}
+
+					if vMaxConnections, ok := mHttpConnectionPool["max_connections"].(int); ok && vMaxConnections > 0 {
+						httpConnectionPool.MaxConnections = aws.Int64(int64(vMaxConnections))
+					}
+					if vMaxPendingRequests, ok := mHttpConnectionPool["max_pending_requests"].(int); ok && vMaxPendingRequests > 0 {
+						httpConnectionPool.MaxPendingRequests = aws.Int64(int64(vMaxPendingRequests))
+					}
+
+					connectionPool.Http = httpConnectionPool
+				}
+
+				if vHttp2ConnectionPool, ok := mConnectionPool["http2"].([]interface{}); ok && len(vHttp2ConnectionPool) > 0 && vHttp2ConnectionPool[0] != nil {
+					mHttp2ConnectionPool := vHttp2ConnectionPool[0].(map[string]interface{})
+
+					http2ConnectionPool := &appmesh.VirtualNodeHttp2ConnectionPool{}
+
+					if vMaxRequests, ok := mHttp2ConnectionPool["max_requests"].(int); ok && vMaxRequests > 0 {
+						http2ConnectionPool.MaxRequests = aws.Int64(int64(vMaxRequests))
+					}
+
+					connectionPool.Http2 = http2ConnectionPool
+				}
+
+				if vTcpConnectionPool, ok := mConnectionPool["tcp"].([]interface{}); ok && len(vTcpConnectionPool) > 0 && vTcpConnectionPool[0] != nil {
+					mTcpConnectionPool := vTcpConnectionPool[0].(map[string]interface{})
+
+					tcpConnectionPool := &appmesh.VirtualNodeTcpConnectionPool{}
+
+					if vMaxConnections, ok := mTcpConnectionPool["max_connections"].(int); ok && vMaxConnections > 0 {
+						tcpConnectionPool.MaxConnections = aws.Int64(int64(vMaxConnections))
+					}
+
+					connectionPool.Tcp = tcpConnectionPool
+				}
+
+				listener.ConnectionPool = connectionPool
+			}
+
 			if vHealthCheck, ok := mListener["health_check"].([]interface{}); ok && len(vHealthCheck) > 0 && vHealthCheck[0] != nil {
 				healthCheck := &appmesh.HealthCheckPolicy{}
 
@@ -4791,6 +4850,30 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 				}
 
 				listener.PortMapping = portMapping
+			}
+
+			if vTimeout, ok := mListener["timeout"].([]interface{}); ok && len(vTimeout) > 0 && vTimeout[0] != nil {
+				mTimeout := vTimeout[0].(map[string]interface{})
+
+				listenerTimeout := &appmesh.ListenerTimeout{}
+
+				if vGrpcTimeout, ok := mTimeout["grpc"].([]interface{}); ok {
+					listenerTimeout.Grpc = expandAppmeshGrpcTimeout(vGrpcTimeout)
+				}
+
+				if vHttpTimeout, ok := mTimeout["http"].([]interface{}); ok {
+					listenerTimeout.Http = expandAppmeshHttpTimeout(vHttpTimeout)
+				}
+
+				if vHttp2Timeout, ok := mTimeout["http2"].([]interface{}); ok {
+					listenerTimeout.Http2 = expandAppmeshHttpTimeout(vHttp2Timeout)
+				}
+
+				if vTcpTimeout, ok := mTimeout["tcp"].([]interface{}); ok {
+					listenerTimeout.Tcp = expandAppmeshTcpTimeout(vTcpTimeout)
+				}
+
+				listener.Timeout = listenerTimeout
 			}
 
 			if vTls, ok := mListener["tls"].([]interface{}); ok && len(vTls) > 0 && vTls[0] != nil {
@@ -4838,30 +4921,6 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 				}
 
 				listener.Tls = tls
-			}
-
-			if vTimeout, ok := mListener["timeout"].([]interface{}); ok && len(vTimeout) > 0 && vTimeout[0] != nil {
-				mTimeout := vTimeout[0].(map[string]interface{})
-
-				listenerTimeout := &appmesh.ListenerTimeout{}
-
-				if vGrpcTimeout, ok := mTimeout["grpc"].([]interface{}); ok {
-					listenerTimeout.Grpc = expandAppmeshGrpcTimeout(vGrpcTimeout)
-				}
-
-				if vHttpTimeout, ok := mTimeout["http"].([]interface{}); ok {
-					listenerTimeout.Http = expandAppmeshHttpTimeout(vHttpTimeout)
-				}
-
-				if vHttp2Timeout, ok := mTimeout["http2"].([]interface{}); ok {
-					listenerTimeout.Http2 = expandAppmeshHttpTimeout(vHttp2Timeout)
-				}
-
-				if vTcpTimeout, ok := mTimeout["tcp"].([]interface{}); ok {
-					listenerTimeout.Tcp = expandAppmeshTcpTimeout(vTcpTimeout)
-				}
-
-				listener.Timeout = listenerTimeout
 			}
 
 			listeners = append(listeners, listener)
@@ -4988,6 +5047,41 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 		// Per schema definition, set at most 1 Listener
 		listener := spec.Listeners[0]
 		mListener := map[string]interface{}{}
+
+		if connectionPool := listener.ConnectionPool; connectionPool != nil {
+			mConnectionPool := map[string]interface{}{}
+
+			if grpcConnectionPool := connectionPool.Grpc; grpcConnectionPool != nil {
+				mGrpcConnectionPool := map[string]interface{}{
+					"max_requests": int(aws.Int64Value(grpcConnectionPool.MaxRequests)),
+				}
+				mConnectionPool["grpc"] = []interface{}{mGrpcConnectionPool}
+			}
+
+			if httpConnectionPool := connectionPool.Http; httpConnectionPool != nil {
+				mHttpConnectionPool := map[string]interface{}{
+					"max_connections":      int(aws.Int64Value(httpConnectionPool.MaxConnections)),
+					"max_pending_requests": int(aws.Int64Value(httpConnectionPool.MaxPendingRequests)),
+				}
+				mConnectionPool["http"] = []interface{}{mHttpConnectionPool}
+			}
+
+			if http2ConnectionPool := connectionPool.Http2; http2ConnectionPool != nil {
+				mHttp2ConnectionPool := map[string]interface{}{
+					"max_requests": int(aws.Int64Value(http2ConnectionPool.MaxRequests)),
+				}
+				mConnectionPool["http2"] = []interface{}{mHttp2ConnectionPool}
+			}
+
+			if tcpConnectionPool := connectionPool.Tcp; tcpConnectionPool != nil {
+				mTcpConnectionPool := map[string]interface{}{
+					"max_connections": int(aws.Int64Value(tcpConnectionPool.MaxConnections)),
+				}
+				mConnectionPool["tcp"] = []interface{}{mTcpConnectionPool}
+			}
+
+			mListener["connection_pool"] = []interface{}{mConnectionPool}
+		}
 
 		if healthCheck := listener.HealthCheck; healthCheck != nil {
 			mHealthCheck := map[string]interface{}{
