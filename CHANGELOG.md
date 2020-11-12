@@ -11,6 +11,7 @@ ENHANCEMENTS
 * resource/aws_kinesis_firehose_delivery_stream: Add `http_endpoint_configuration` configuration block [GH-15356]
 * resource/aws_lb: Support `load_balancer_type` argument value of `gateway` [GH-16131]
 * resource/aws_lb_target_group: Support `protocol` argument value of `GENEVE` [GH-16131]
+* resource/aws_rds_cluster: Add `restore_to_point_in_time` argument [GH-7031]
 * resource/aws_route: Add `vpc_endpoint_id` argument [GH-16131]
 * resource/aws_route_table: Add `route` configuration block `vpc_endpoint_id` argument [GH-16131]
 * resource/aws_vpc_endpoint: Support `vpc_endpoint_type` argument value `GatewayLoadBalancer` [GH-16131]
