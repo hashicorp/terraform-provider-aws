@@ -39,7 +39,6 @@
         - [Hardcoded Partition in ARN](#hardcoded-partition-in-arn)
         - [Hardcoded Region](#hardcoded-region)
         - [Hardcoded Spot Price](#hardcoded-spot-price)
-        - [Hardcoded State Hash](#hardcoded-state-hash)
 
 Terraform includes an acceptance test harness that does most of the repetitive
 work involved in testing a resource. For additional information about testing
@@ -1161,7 +1160,8 @@ The below are style-based items that _may_ be noted during review and are recomm
 - [ ] __Implements Default and Zero Value Validation__: The basic test for a resource (typically named `TestAccAws{SERVICE}{RESOURCE}_basic`) should utilize available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify default and zero values in the Terraform state for all attributes. Empty/missing configuration blocks can be verified with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.#", "0")` and empty maps with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.%", "0")`
 
 ### Avoiding Hard Coding
-Avoid hard coding key values in acceptance tests for consistency and testing flexibility. Resource testing is expected to pass across multiple AWS environments supported by the Terraform AWS Provider (e.g. AWS Standard and AWS GovCloud (US)). Contributors are not expected or required to perform testing outside of AWS Standard, e.g. running only in the `us-west-2` region is perfectly acceptable. However, contributors are expected to avoid hard coding with these guidelines.
+
+Avoid hard coding values in acceptance test checks and configurations for consistency and testing flexibility. Resource testing is expected to pass across multiple AWS environments supported by the Terraform AWS Provider (e.g. AWS Standard and AWS GovCloud (US)). Contributors are not expected or required to perform testing outside of AWS Standard, e.g. running only in the `us-west-2` region is perfectly acceptable. However, contributors are expected to avoid hard coding with these guidelines.
 
 #### Hardcoded Account IDs
 
@@ -1170,7 +1170,9 @@ Avoid hard coding key values in acceptance tests for consistency and testing fle
     - [`aws_canonical_user_id` data source](https://www.terraform.io/docs/providers/aws/d/canonical_user_id.html),
     - [`aws_billing_service_account` data source](https://www.terraform.io/docs/providers/aws/d/billing_service_account.html), and
     - [`aws_sagemaker_prebuilt_ecr_image` data source](https://www.terraform.io/docs/providers/aws/d/sagemaker_prebuilt_ecr_image.html).
-- [ ] __Uses testAccCheckResourceAttrAccountID()__: Tests should utilize the available AWS Account ID check function, `testAccCheckResourceAttrAccountID()` to validate account ID attribute values in the Terraform state over `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`
+- [ ] __Uses Account Test Checks__: Any check required to verify an AWS Account ID of the current testing account or another account should use one of the following available helper functions over the usage of `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`:
+    - `testAccCheckResourceAttrAccountID()`: Validates the state value equals the AWS Account ID of the current account running the test. This is the most common implementation.
+    - `testAccMatchResourceAttrAccountID()`: Validates the state value matches any AWS Account ID (e.g. a 12 digit number). This is typically only used in data source testing of AWS managed components.
 
 Here's an example of using `aws_caller_identity`:
 
@@ -1186,7 +1188,12 @@ resource "aws_backup_selection" "test" {
 
 #### Hardcoded AMI IDs
 
-- [ ] __Uses aws_ami Data Source__: Any hardcoded AMI ID configuration, e.g. `ami-12345678`, should be replaced with the [`aws_ami` data source](https://www.terraform.io/docs/providers/aws/d/ami.html) pointing to an Amazon Linux image. Use the convenience function called `testAccLatestAmazonLinuxHvmEbsAmiConfig()` (defined in `resource_aws_instance_test.go`) to declare `data "aws_ami" "amzn-ami-minimal-hvm-ebs" {...}`. Other convenience functions are also available including `testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig()`, `testAccLatestAmazonLinuxPvEbsAmiConfig()`, `testAccLatestAmazonLinuxPvInstanceStoreAmiConfig`, and `testAccLatestWindowsServer2016CoreAmiConfig()`.
+- [ ] __Uses aws_ami Data Source__: Any hardcoded AMI ID configuration, e.g. `ami-12345678`, should be replaced with the [`aws_ami` data source](https://www.terraform.io/docs/providers/aws/d/ami.html) pointing to an Amazon Linux image. The codebase includes test configuration helper functions to simplify these lookups:
+    - `testAccLatestAmazonLinuxHvmEbsAmiConfig()`: The recommended AMI for most situations, using Amazon Linux, HVM virtualization, and EBS storage. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`.
+    - `testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig()`: AMI lookup using Amazon Linux, HVM virtualization, and Instance Store storage. Should only be used in testing that requires Instance Store storage rather than EBS. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-hvm-instance-store.id`.
+    - `testAccLatestAmazonLinuxPvEbsAmiConfig()`: AMI lookup using Amazon Linux, Paravirtual virtualization, and EBS storage. Should only be used in testing that requires Paravirtual over Hardware Virtual Machine (HVM) virtualization. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-pv-ebs.id`.
+    - `testAccLatestAmazonLinuxPvInstanceStoreAmiConfig`: AMI lookup using Amazon Linux, Paravirtual virtualization, and Instance Store storage. Should only be used in testing that requires Paravirtual virtualization over HVM and Instance Store storage over EBS. To reference the AMI ID in the test configuration: `data.aws_ami.amzn-ami-minimal-pv-instance-store.id`.
+    - `testAccLatestWindowsServer2016CoreAmiConfig()`: AMI lookup using Windows Server 2016 Core, HVM virtualization, and EBS storage. Should only be used in testing that requires Windows. To reference the AMI ID in the test configuration: `data.aws_ami.win2016core-ami.id`.
 
 Here's an example of using `testAccLatestAmazonLinuxHvmEbsAmiConfig()` and `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`:
 
@@ -1253,8 +1260,8 @@ resource "aws_db_instance" "bar" {
 
 - [ ] __Uses Instance Type Data Source__: Singular hardcoded instance types and classes, e.g., `t2.micro` and `db.t2.micro`, should be replaced with a list of preferences using a data source. Because offerings vary from region to region and partition to partition, providing a list of preferences dramatically improves the likelihood that one of the options will be available. Depending on the situation, there are several data sources for instance types and classes, including:
     - [`aws_ec2_instance_type_offering` data source](https://www.terraform.io/docs/providers/aws/d/ec2_instance_type_offering.html) - Convenience functions declare configurations that are referenced with `data.aws_ec2_instance_type_offering.available` including:
-        - The `testAccAvailableEc2InstanceTypeForAvailabilityZone()` function (defined in `resource_aws_instance_test.go`) for test configurations using an EC2 Subnet which is inherently within a single Availability Zone
-        - The `testAccAvailableEc2InstanceTypeForRegion()` function (defined in `resource_aws_instance_test.go`) for test configurations that do not include specific Availability Zones
+        - The `testAccAvailableEc2InstanceTypeForAvailabilityZone()` function for test configurations using an EC2 Subnet which is inherently within a single Availability Zone
+        - The `testAccAvailableEc2InstanceTypeForRegion()` function for test configurations that do not include specific Availability Zones
     - [`aws_rds_orderable_db_instance` data source](https://www.terraform.io/docs/providers/aws/d/rds_orderable_db_instance.html),
     - [`aws_neptune_orderable_db_instance` data source](https://www.terraform.io/docs/providers/aws/d/neptune_orderable_db_instance.html), and
     - [`aws_docdb_orderable_db_instance` data source](https://www.terraform.io/docs/providers/aws/d/docdb_orderable_db_instance.html).
@@ -1323,7 +1330,12 @@ POLICY
 #### Hardcoded Partition in ARN
 
 - [ ] __Uses aws_partition Data Source__: Any hardcoded AWS Partition configuration, e.g. the `aws` in a `arn:aws:SERVICE:REGION:ACCOUNT:RESOURCE` ARN, should be replaced with the [`aws_partition` data source](https://www.terraform.io/docs/providers/aws/d/partition.html). A common pattern is declaring `data "aws_partition" "current" {}` and referencing it via `data.aws_partition.current.partition`.
-- [ ] __Uses Builtin ARN Check Functions__: Tests should utilize available ARN check functions, e.g. `testAccMatchResourceAttrRegionalARN()`, to validate ARN attribute values in the Terraform state over `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`.
+- [ ] __Uses Builtin ARN Check Functions__: Tests should utilize available ARN check functions to validate ARN attribute values in the Terraform state over `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`:
+
+    - `testAccCheckResourceAttrRegionalARN()` verifies an ARN matches the account ID and region of the test execution and an exact resource value
+    - `testAccMatchResourceAttrRegionalARN()` verifies an ARN matches the account ID and region of the test execution and a regular expression of the resource value
+    - `testAccCheckResourceAttrGlobalARN()` verifies an ARN matches the account ID of the test execution and an exact resource value
+    - `testAccMatchResourceAttrGlobalARN()` verifies an ARN matches the account ID of the test execution and a regular expression of the resource value
 
 Here's an example of using `aws_partition` and `data.aws_partition.current.partition`:
 
