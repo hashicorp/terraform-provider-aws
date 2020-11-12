@@ -656,6 +656,7 @@ func Provider() *schema.Provider {
 			"aws_glue_catalog_table":                                  resourceAwsGlueCatalogTable(),
 			"aws_glue_classifier":                                     resourceAwsGlueClassifier(),
 			"aws_glue_connection":                                     resourceAwsGlueConnection(),
+			"aws_glue_dev_endpoint":                                   resourceAwsGlueDevEndpoint(),
 			"aws_glue_crawler":                                        resourceAwsGlueCrawler(),
 			"aws_glue_data_catalog_encryption_settings":               resourceAwsGlueDataCatalogEncryptionSettings(),
 			"aws_glue_job":                                            resourceAwsGlueJob(),
