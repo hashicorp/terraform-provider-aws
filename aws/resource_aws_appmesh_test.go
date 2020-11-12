@@ -51,6 +51,7 @@ func TestAccAWSAppmesh_serial(t *testing.T) {
 			"backendDefaults":          testAccAwsAppmeshVirtualNode_backendDefaults,
 			"cloudMapServiceDiscovery": testAccAwsAppmeshVirtualNode_cloudMapServiceDiscovery,
 			"listenerConnectionPool":   testAccAwsAppmeshVirtualNode_listenerConnectionPool,
+			"listenerOutlierDetection": testAccAwsAppmeshVirtualNode_listenerOutlierDetection,
 			"listenerHealthChecks":     testAccAwsAppmeshVirtualNode_listenerHealthChecks,
 			"listenerTimeout":          testAccAwsAppmeshVirtualNode_listenerTimeout,
 			"listenerTls":              testAccAwsAppmeshVirtualNode_listenerTls,

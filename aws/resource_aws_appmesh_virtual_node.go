@@ -259,6 +259,70 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 										},
 									},
 
+									"outlier_detection": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 0,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"base_ejection_duration": {
+													Type:     schema.TypeList,
+													Required: true,
+													MinItems: 1,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"unit": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+															},
+
+															"value": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+														},
+													},
+												},
+
+												"interval": {
+													Type:     schema.TypeList,
+													Required: true,
+													MinItems: 1,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"unit": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
+															},
+
+															"value": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+														},
+													},
+												},
+
+												"max_ejection_percent": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntBetween(0, 100),
+												},
+
+												"max_server_errors": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntAtLeast(1),
+												},
+											},
+										},
+									},
+
 									"port_mapping": {
 										Type:     schema.TypeList,
 										Required: true,

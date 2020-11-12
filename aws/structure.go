@@ -4837,6 +4837,29 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 				listener.HealthCheck = healthCheck
 			}
 
+			if vOutlierDetection, ok := mListener["outlier_detection"].([]interface{}); ok && len(vOutlierDetection) > 0 && vOutlierDetection[0] != nil {
+				outlierDetection := &appmesh.OutlierDetection{}
+
+				mOutlierDetection := vOutlierDetection[0].(map[string]interface{})
+
+				if vMaxEjectionPercent, ok := mOutlierDetection["max_ejection_percent"].(int); ok && vMaxEjectionPercent > 0 {
+					outlierDetection.MaxEjectionPercent = aws.Int64(int64(vMaxEjectionPercent))
+				}
+				if vMaxServerErrors, ok := mOutlierDetection["max_server_errors"].(int); ok && vMaxServerErrors > 0 {
+					outlierDetection.MaxServerErrors = aws.Int64(int64(vMaxServerErrors))
+				}
+
+				if vBaseEjectionDuration, ok := mOutlierDetection["base_ejection_duration"].([]interface{}); ok {
+					outlierDetection.BaseEjectionDuration = expandAppmeshDuration(vBaseEjectionDuration)
+				}
+
+				if vInterval, ok := mOutlierDetection["interval"].([]interface{}); ok {
+					outlierDetection.Interval = expandAppmeshDuration(vInterval)
+				}
+
+				listener.OutlierDetection = outlierDetection
+			}
+
 			if vPortMapping, ok := mListener["port_mapping"].([]interface{}); ok && len(vPortMapping) > 0 && vPortMapping[0] != nil {
 				portMapping := &appmesh.PortMapping{}
 
@@ -5094,6 +5117,16 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 				"unhealthy_threshold": int(aws.Int64Value(healthCheck.UnhealthyThreshold)),
 			}
 			mListener["health_check"] = []interface{}{mHealthCheck}
+		}
+
+		if outlierDetection := listener.OutlierDetection; outlierDetection != nil {
+			mOutlierDetection := map[string]interface{}{
+				"base_ejection_duration": flattenAppmeshDuration(outlierDetection.BaseEjectionDuration),
+				"interval":               flattenAppmeshDuration(outlierDetection.Interval),
+				"max_ejection_percent":   int(aws.Int64Value(outlierDetection.MaxEjectionPercent)),
+				"max_server_errors":      int(aws.Int64Value(outlierDetection.MaxServerErrors)),
+			}
+			mListener["outlier_detection"] = []interface{}{mOutlierDetection}
 		}
 
 		if portMapping := listener.PortMapping; portMapping != nil {

@@ -196,6 +196,7 @@ func testAccAwsAppmeshVirtualNode_backendClientPolicyAcm(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
@@ -266,6 +267,7 @@ func testAccAwsAppmeshVirtualNode_backendClientPolicyFile(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
@@ -308,6 +310,7 @@ func testAccAwsAppmeshVirtualNode_backendClientPolicyFile(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
@@ -590,6 +593,7 @@ func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.protocol", "http2"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.timeout_millis", "2000"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.unhealthy_threshold", "5"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "grpc"),
@@ -634,6 +638,7 @@ func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.protocol", "tcp"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.timeout_millis", "3000"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.unhealthy_threshold", "9"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
@@ -643,6 +648,99 @@ func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb1.simpleapp.local"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAwsAppmeshVirtualNode_listenerOutlierDetection(t *testing.T) {
+	var vn appmesh.VirtualNodeData
+	resourceName := "aws_appmesh_virtual_node.test"
+	meshName := acctest.RandomWithPrefix("tf-acc-test")
+	vnName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppmeshVirtualNodeConfig_listenerOutlierDetection(meshName, vnName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					resource.TestCheckResourceAttr(resourceName, "name", vnName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
+						"virtual_service.#":                      "1",
+						"virtual_service.0.virtual_service_name": "servicea.simpleapp.local",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.0.base_ejection_duration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.0.base_ejection_duration.0.unit", "ms"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.0.base_ejection_duration.0.value", "250000"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.0.interval.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.0.interval.0.unit", "s"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.0.interval.0.value", "10"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.0.max_ejection_percent", "50"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.0.max_server_errors", "5"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "tcp"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb.simpleapp.local"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
+				),
+			},
+			{
+				Config: testAccAppmeshVirtualNodeConfig_listenerOutlierDetectionUpdated(meshName, vnName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+					resource.TestCheckResourceAttr(resourceName, "name", vnName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
+						"virtual_service.#":                      "1",
+						"virtual_service.0.virtual_service_name": "servicea.simpleapp.local",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.0.base_ejection_duration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.0.base_ejection_duration.0.unit", "s"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.0.base_ejection_duration.0.value", "6"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.0.interval.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.0.interval.0.unit", "ms"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.0.interval.0.value", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.0.max_ejection_percent", "60"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.0.max_server_errors", "6"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb.simpleapp.local"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
@@ -785,6 +883,7 @@ func testAccAwsAppmeshVirtualNode_listenerTls(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
@@ -837,6 +936,7 @@ func testAccAwsAppmeshVirtualNode_listenerTls(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
@@ -1280,6 +1380,96 @@ resource "aws_appmesh_virtual_node" "test" {
     service_discovery {
       dns {
         hostname = "serviceb1.simpleapp.local"
+      }
+    }
+  }
+}
+`, vnName))
+}
+
+func testAccAppmeshVirtualNodeConfig_listenerOutlierDetection(meshName, vnName string) string {
+	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+resource "aws_appmesh_virtual_node" "test" {
+  name      = %[1]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    backend {
+      virtual_service {
+        virtual_service_name = "servicea.simpleapp.local"
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "tcp"
+      }
+
+      outlier_detection {
+        base_ejection_duration {
+          unit  = "ms"
+          value = 250000
+        }
+
+        interval {
+          unit  = "s"
+          value = 10
+        }
+
+        max_ejection_percent = 50
+        max_server_errors    = 5
+      }
+    }
+
+    service_discovery {
+      dns {
+        hostname = "serviceb.simpleapp.local"
+      }
+    }
+  }
+}
+`, vnName))
+}
+
+func testAccAppmeshVirtualNodeConfig_listenerOutlierDetectionUpdated(meshName, vnName string) string {
+	return composeConfig(testAccAppmeshVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+resource "aws_appmesh_virtual_node" "test" {
+  name      = %[1]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    backend {
+      virtual_service {
+        virtual_service_name = "servicea.simpleapp.local"
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+
+      outlier_detection {
+        base_ejection_duration {
+          unit  = "s"
+          value = 6
+        }
+
+        interval {
+          unit  = "ms"
+          value = 10000
+        }
+
+        max_ejection_percent = 60
+        max_server_errors    = 6
+      }
+    }
+
+    service_discovery {
+      dns {
+        hostname = "serviceb.simpleapp.local"
       }
     }
   }
