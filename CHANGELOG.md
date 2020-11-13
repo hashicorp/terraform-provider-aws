@@ -11,6 +11,7 @@ BUG FIXES
 
 * resource/aws_backup_plan - `lifecycle` block in `copy_action` is optional [GH-16116]
 * resource/aws_organizations_organization: Prevent recreation when `feature_set` is updated to `ALL` [GH-15473]
+* resource/aws_s3_bucket_object: Correctly updates `version_id` when certain configuration keys are changed [GH-14900]
 
 ## 3.15.0 (November 12, 2020)
 
