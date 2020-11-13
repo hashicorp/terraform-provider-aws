@@ -414,7 +414,7 @@ resource "aws_imagebuilder_component" "test" {
   change_description = %[2]q
   data = yamlencode({
     phases = [{
-      name  = "build"
+      name = "build"
       steps = [{
         action = "ExecuteBash"
         inputs = {
@@ -438,7 +438,7 @@ func testAccAwsImageBuilderComponentConfigDescription(rName string, description 
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({
     phases = [{
-      name  = "build"
+      name = "build"
       steps = [{
         action = "ExecuteBash"
         inputs = {
@@ -467,7 +467,7 @@ resource "aws_kms_key" "test" {
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({
     phases = [{
-      name  = "build"
+      name = "build"
       steps = [{
         action = "ExecuteBash"
         inputs = {
@@ -492,7 +492,7 @@ func testAccAwsImageBuilderComponentConfigName(rName string) string {
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({
     phases = [{
-      name  = "build"
+      name = "build"
       steps = [{
         action = "ExecuteBash"
         inputs = {
@@ -516,7 +516,7 @@ func testAccAwsImageBuilderComponentConfigPlatformWindows(rName string) string {
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({
     phases = [{
-      name  = "build"
+      name = "build"
       steps = [{
         action = "ExecutePowerShell"
         inputs = {
@@ -540,7 +540,7 @@ func testAccAwsImageBuilderComponentConfigSupportedOsVersions(rName string) stri
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({
     phases = [{
-      name  = "build"
+      name = "build"
       steps = [{
         action = "ExecuteBash"
         inputs = {
@@ -565,7 +565,7 @@ func testAccAwsImageBuilderComponentConfigTags1(rName string, tagKey1 string, ta
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({
     phases = [{
-      name  = "build"
+      name = "build"
       steps = [{
         action = "ExecuteBash"
         inputs = {
@@ -593,7 +593,7 @@ func testAccAwsImageBuilderComponentConfigTags2(rName string, tagKey1 string, ta
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({
     phases = [{
-      name  = "build"
+      name = "build"
       steps = [{
         action = "ExecuteBash"
         inputs = {
@@ -627,7 +627,7 @@ resource "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.test.bucket
   content = yamlencode({
     phases = [{
-      name  = "build"
+      name = "build"
       steps = [{
         action = "ExecuteBash"
         inputs = {

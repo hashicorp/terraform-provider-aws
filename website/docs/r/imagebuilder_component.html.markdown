@@ -18,7 +18,7 @@ Manages an Image Builder Component.
 resource "aws_imagebuilder_component" "example" {
   data = yamlencode({
     phases = [{
-      name  = "build"
+      name = "build"
       steps = [{
         action = "ExecuteBash"
         inputs = {
