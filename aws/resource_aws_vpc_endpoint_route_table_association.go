@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func resourceAwsVpcEndpointRouteTableAssociation() *schema.Resource {
@@ -55,7 +55,7 @@ func resourceAwsVpcEndpointRouteTableAssociationCreate(d *schema.ResourceData, m
 		return fmt.Errorf("Error creating VPC Endpoint/Route Table association: %s", err.Error())
 	}
 
-	d.SetId(vpcEndpointIdRouteTableIdHash(endpointId, rtId))
+	d.SetId(tfec2.VpcEndpointRouteTableAssociationCreateID(endpointId, rtId))
 
 	return resourceAwsVpcEndpointRouteTableAssociationRead(d, meta)
 }
@@ -134,7 +134,7 @@ func resourceAwsVpcEndpointRouteTableAssociationImport(d *schema.ResourceData, m
 	rtId := parts[1]
 	log.Printf("[DEBUG] Importing VPC Endpoint (%s) Route Table (%s) association", vpceId, rtId)
 
-	d.SetId(vpcEndpointIdRouteTableIdHash(vpceId, rtId))
+	d.SetId(tfec2.VpcEndpointRouteTableAssociationCreateID(vpceId, rtId))
 	d.Set("vpc_endpoint_id", vpceId)
 	d.Set("route_table_id", rtId)
 
@@ -154,8 +154,4 @@ func findResourceVpcEndpoint(conn *ec2.EC2, id string) (*ec2.VpcEndpoint, error)
 	}
 
 	return resp.VpcEndpoints[0], nil
-}
-
-func vpcEndpointIdRouteTableIdHash(endpointId, rtId string) string {
-	return fmt.Sprintf("a-%s%d", endpointId, hashcode.String(rtId))
 }
