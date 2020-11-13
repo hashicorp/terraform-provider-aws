@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -9,9 +10,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-func dataSourceAwsImageBuilderRecipe() *schema.Resource {
+func dataSourceAwsImageBuilderImageRecipe() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsImageBuilderRecipeRead,
+		Read: dataSourceAwsImageBuilderImageRecipeRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -113,7 +114,7 @@ func dataSourceAwsImageBuilderRecipe() *schema.Resource {
 	}
 }
 
-func dataSourceAwsImageBuilderRecipeRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsImageBuilderImageRecipeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
@@ -126,8 +127,8 @@ func dataSourceAwsImageBuilderRecipeRead(d *schema.ResourceData, meta interface{
 	}
 
 	d.SetId(*resp.ImageRecipe.Arn)
-	d.Set("block_device_mappings", flattenImageBuilderRecipeBlockDeviceMappings(resp.ImageRecipe.BlockDeviceMappings))
-	d.Set("components", flattenImageBuilderRecipeComponents(resp.ImageRecipe.Components))
+	d.Set("block_device_mappings", flattenImageBuilderImageRecipeBlockDeviceMappings(resp.ImageRecipe.BlockDeviceMappings))
+	d.Set("components", flattenImageBuilderImageRecipeComponents(resp.ImageRecipe.Components))
 	d.Set("datecreated", resp.ImageRecipe.DateCreated)
 	d.Set("description", resp.ImageRecipe.Description)
 	d.Set("name", resp.ImageRecipe.Name)

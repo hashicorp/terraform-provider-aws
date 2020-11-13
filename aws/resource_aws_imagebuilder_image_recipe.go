@@ -2,21 +2,22 @@ package aws
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"log"
 )
 
-func resourceAwsImageBuilderRecipe() *schema.Resource {
+func resourceAwsImageBuilderImageRecipe() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsImageBuilderRecipeCreate,
-		Read:   resourceAwsImageBuilderRecipeRead,
-		Update: resourceAwsImageBuilderRecipeUpdate,
-		Delete: resourceAwsImageBuilderRecipeDelete,
+		Create: resourceAwsImageBuilderImageRecipeCreate,
+		Read:   resourceAwsImageBuilderImageRecipeRead,
+		Update: resourceAwsImageBuilderImageRecipeUpdate,
+		Delete: resourceAwsImageBuilderImageRecipeDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -156,16 +157,16 @@ func resourceAwsImageBuilderRecipe() *schema.Resource {
 	}
 }
 
-func resourceAwsImageBuilderRecipeCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsImageBuilderImageRecipeCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
 
 	input := &imagebuilder.CreateImageRecipeInput{
 		ClientToken:         aws.String(resource.UniqueId()),
-		Components:          expandImageBuilderRecipeComponents(d.Get("components").([]interface{})),
+		Components:          expandImageBuilderImageRecipeComponents(d.Get("components").([]interface{})),
 		Name:                aws.String(d.Get("name").(string)),
 		ParentImage:         aws.String(d.Get("parent_image").(string)),
 		SemanticVersion:     aws.String(d.Get("semantic_version").(string)),
-		BlockDeviceMappings: expandImageBuilderRecipeBlockDeviceMappings(d),
+		BlockDeviceMappings: expandImageBuilderImageRecipeBlockDeviceMappings(d),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -184,10 +185,10 @@ func resourceAwsImageBuilderRecipeCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(aws.StringValue(resp.ImageRecipeArn))
 
-	return resourceAwsImageBuilderRecipeRead(d, meta)
+	return resourceAwsImageBuilderImageRecipeRead(d, meta)
 }
 
-func resourceAwsImageBuilderRecipeRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsImageBuilderImageRecipeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
@@ -206,8 +207,8 @@ func resourceAwsImageBuilderRecipeRead(d *schema.ResourceData, meta interface{})
 	}
 
 	d.Set("arn", resp.ImageRecipe.Arn)
-	d.Set("block_device_mappings", flattenImageBuilderRecipeBlockDeviceMappings(resp.ImageRecipe.BlockDeviceMappings))
-	d.Set("components", flattenImageBuilderRecipeComponents(resp.ImageRecipe.Components))
+	d.Set("block_device_mappings", flattenImageBuilderImageRecipeBlockDeviceMappings(resp.ImageRecipe.BlockDeviceMappings))
+	d.Set("components", flattenImageBuilderImageRecipeComponents(resp.ImageRecipe.Components))
 	d.Set("description", resp.ImageRecipe.Description)
 	d.Set("name", resp.ImageRecipe.Name)
 	d.Set("owner", resp.ImageRecipe.Owner)
@@ -226,7 +227,7 @@ func resourceAwsImageBuilderRecipeRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAwsImageBuilderRecipeUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsImageBuilderImageRecipeUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
 
 	// tags are the only thing we can update!
@@ -237,10 +238,10 @@ func resourceAwsImageBuilderRecipeUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	return resourceAwsImageBuilderRecipeRead(d, meta)
+	return resourceAwsImageBuilderImageRecipeRead(d, meta)
 }
 
-func resourceAwsImageBuilderRecipeDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsImageBuilderImageRecipeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
 
 	_, err := conn.DeleteImageRecipe(&imagebuilder.DeleteImageRecipeInput{
@@ -258,7 +259,7 @@ func resourceAwsImageBuilderRecipeDelete(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func expandImageBuilderRecipeComponents(comps []interface{}) []*imagebuilder.ComponentConfiguration {
+func expandImageBuilderImageRecipeComponents(comps []interface{}) []*imagebuilder.ComponentConfiguration {
 	var configs []*imagebuilder.ComponentConfiguration
 
 	for _, line := range comps {
@@ -270,7 +271,7 @@ func expandImageBuilderRecipeComponents(comps []interface{}) []*imagebuilder.Com
 	return configs
 }
 
-func flattenImageBuilderRecipeComponents(comps []*imagebuilder.ComponentConfiguration) []interface{} {
+func flattenImageBuilderImageRecipeComponents(comps []*imagebuilder.ComponentConfiguration) []interface{} {
 	if len(comps) == 0 {
 		return nil
 	}
@@ -284,7 +285,7 @@ func flattenImageBuilderRecipeComponents(comps []*imagebuilder.ComponentConfigur
 	return res
 }
 
-func expandImageBuilderRecipeBlockDeviceMappings(d *schema.ResourceData) []*imagebuilder.InstanceBlockDeviceMapping {
+func expandImageBuilderImageRecipeBlockDeviceMappings(d *schema.ResourceData) []*imagebuilder.InstanceBlockDeviceMapping {
 	var bdmres []*imagebuilder.InstanceBlockDeviceMapping
 
 	v, ok := d.GetOk("block_device_mappings")
@@ -305,7 +306,7 @@ func expandImageBuilderRecipeBlockDeviceMappings(d *schema.ResourceData) []*imag
 	return bdmres
 }
 
-func flattenImageBuilderRecipeBlockDeviceMappings(blockdevs []*imagebuilder.InstanceBlockDeviceMapping) []map[string]interface{} {
+func flattenImageBuilderImageRecipeBlockDeviceMappings(blockdevs []*imagebuilder.InstanceBlockDeviceMapping) []map[string]interface{} {
 	if len(blockdevs) == 0 {
 		return nil
 	}
