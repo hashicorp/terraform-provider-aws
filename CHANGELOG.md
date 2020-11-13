@@ -8,6 +8,7 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* resource/aws_backup_plan - `lifecycle` block in `copy_action` is optional [GH-16116]
 * resource/aws_organizations_organization: Prevent recreation when `feature_set` is updated to `ALL` [GH-15473]
 
 ## 3.15.0 (November 12, 2020)
