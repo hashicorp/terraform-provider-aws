@@ -814,11 +814,9 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccAWSEksClusterConfig_NetworkConfig_ServiceIpv4Cidr(rName string, serviceIpv4Cidr string) string {
-	return fmt.Sprintf(`
-%[1]s
-
+	return composeConfig(testAccAWSEksClusterConfig_Base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
-  name     = %[2]q
+  name     = %q
   role_arn = aws_iam_role.test.arn
 
   vpc_config {
@@ -831,5 +829,5 @@ resource "aws_eks_cluster" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
-`, testAccAWSEksClusterConfig_Base(rName), rName, serviceIpv4Cidr)
+`, rName, serviceIpv4Cidr)
 }
