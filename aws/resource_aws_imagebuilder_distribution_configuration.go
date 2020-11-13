@@ -2,14 +2,16 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"regexp"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"log"
-	"regexp"
 )
 
 func resourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
@@ -40,21 +42,21 @@ func resourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"distributions": {
+			"distribution": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ami_distribution_configuration": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ami_tags": tagsSchema(),
 									"description": {
 										Type:         schema.TypeString,
-										Required:     true,
+										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 1024),
 									},
 									"kms_key_id": {
@@ -81,28 +83,39 @@ func resourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
-														ValidateFunc: validation.StringLenBetween(1, 1024),
+														ValidateFunc: validateAwsAccountId,
 													},
+													MaxItems: 50,
 												},
 											},
 										},
 									},
 									"name": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 127),
 											validation.StringMatch(regexp.MustCompile(`^[-_A-Za-z0-9{][-_A-Za-z0-9\s:{}]+[-_A-Za-z0-9}]$`), "must contain only alphanumeric characters, periods, underscores, and hyphens"),
 										),
 									},
+									"target_account_ids": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validateAwsAccountId,
+										},
+										MaxItems: 50,
+									},
 								},
 							},
 						},
-						"license_configuration_arn": {
+						"license_configuration_arns": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Schema{
-								Type: schema.TypeString,
+								Type:         schema.TypeString,
+								ValidateFunc: validateArn,
 							},
 						},
 						"region": {
@@ -128,62 +141,73 @@ func resourceAwsImageBuilderDistributionConfigurationCreate(d *schema.ResourceDa
 	conn := meta.(*AWSClient).imagebuilderconn
 
 	input := &imagebuilder.CreateDistributionConfigurationInput{
-		ClientToken:   aws.String(resource.UniqueId()),
-		Name:          aws.String(d.Get("name").(string)),
-		Distributions: expandAwsImageBuilderDistributions(d),
+		ClientToken: aws.String(resource.UniqueId()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		input.SetDescription(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
-		input.SetTags(keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().ImagebuilderTags())
+	if v, ok := d.GetOk("distribution"); ok && v.(*schema.Set).Len() > 0 {
+		input.Distributions = expandImageBuilderDistributions(v.(*schema.Set).List())
 	}
 
-	log.Printf("[DEBUG] Creating DistributionConfiguration: %#v", input)
+	if v, ok := d.GetOk("name"); ok {
+		input.Name = aws.String(v.(string))
+	}
 
-	resp, err := conn.CreateDistributionConfiguration(input)
+	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
+		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().ImagebuilderTags()
+	}
+
+	output, err := conn.CreateDistributionConfiguration(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating DistributionConfiguration: %s", err)
+		return fmt.Errorf("error creating Image Builder Distribution Configuration: %w", err)
 	}
 
-	d.SetId(aws.StringValue(resp.DistributionConfigurationArn))
+	if output == nil {
+		return fmt.Errorf("error creating Image Builder Distribution Configuration: empty response")
+	}
+
+	d.SetId(aws.StringValue(output.DistributionConfigurationArn))
 
 	return resourceAwsImageBuilderDistributionConfigurationRead(d, meta)
 }
 
 func resourceAwsImageBuilderDistributionConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.GetDistributionConfiguration(&imagebuilder.GetDistributionConfigurationInput{
+	input := &imagebuilder.GetDistributionConfigurationInput{
 		DistributionConfigurationArn: aws.String(d.Id()),
-	})
+	}
 
-	if isAWSErr(err, imagebuilder.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] DistributionConfiguration (%s) not found, removing from state", d.Id())
+	output, err := conn.GetDistributionConfiguration(input)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Image Builder Distribution Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DistributionConfiguration (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting Image Builder Distribution Configuration (%s): %w", d.Id(), err)
 	}
 
-	d.Set("arn", resp.DistributionConfiguration.Arn)
-	d.Set("date_created", resp.DistributionConfiguration.DateCreated)
-	d.Set("date_updated", resp.DistributionConfiguration.DateUpdated)
-	d.Set("description", resp.DistributionConfiguration.Description)
-	d.Set("distributions", flattenAwsImageBuilderDistributions(resp.DistributionConfiguration.Distributions))
-	d.Set("name", resp.DistributionConfiguration.Name)
+	if output == nil || output.DistributionConfiguration == nil {
+		return fmt.Errorf("error getting Image Builder Distribution Configuration (%s): empty response", d.Id())
+	}
 
-	tags, err := keyvaluetags.ImagebuilderListTags(conn, d.Get("arn").(string))
-	if err != nil {
-		return fmt.Errorf("error listing tags for DistributionConfiguration (%s): %s", d.Id(), err)
-	}
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(meta.(*AWSClient).IgnoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
-	}
+	distributionConfiguration := output.DistributionConfiguration
+
+	d.Set("arn", distributionConfiguration.Arn)
+	d.Set("date_created", distributionConfiguration.DateCreated)
+	d.Set("date_updated", distributionConfiguration.DateUpdated)
+	d.Set("description", distributionConfiguration.Description)
+	d.Set("distribution", flattenImageBuilderDistributions(distributionConfiguration.Distributions))
+	d.Set("name", distributionConfiguration.Name)
+	d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(distributionConfiguration.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 
 	return nil
 }
@@ -191,25 +215,33 @@ func resourceAwsImageBuilderDistributionConfigurationRead(d *schema.ResourceData
 func resourceAwsImageBuilderDistributionConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
 
-	upd := imagebuilder.UpdateDistributionConfigurationInput{
-		DistributionConfigurationArn: aws.String(d.Id()),
-		Distributions:                expandAwsImageBuilderDistributions(d),
-	}
+	if d.HasChanges("description", "distribution") {
+		input := &imagebuilder.UpdateDistributionConfigurationInput{
+			DistributionConfigurationArn: aws.String(d.Id()),
+		}
 
-	if description, ok := d.GetOk("description"); ok {
-		upd.Description = aws.String(description.(string))
+		if v, ok := d.GetOk("description"); ok {
+			input.Description = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("distribution"); ok && v.(*schema.Set).Len() > 0 {
+			input.Distributions = expandImageBuilderDistributions(v.(*schema.Set).List())
+		}
+
+		log.Printf("[DEBUG] UpdateDistributionConfiguration: %#v", input)
+		_, err := conn.UpdateDistributionConfiguration(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating Image Builder Distribution Configuration (%s): %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
-		if err := keyvaluetags.ImagebuilderUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags for DistributionConfiguration (%s): %s", d.Id(), err)
-		}
-	}
 
-	_, err := conn.UpdateDistributionConfiguration(&upd)
-	if err != nil {
-		return fmt.Errorf("error updating Distribution Configuration (%s): %s", d.Id(), err)
+		if err := keyvaluetags.ImagebuilderUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags for Image Builder Distribution Configuration (%s): %w", d.Id(), err)
+		}
 	}
 
 	return resourceAwsImageBuilderDistributionConfigurationRead(d, meta)
@@ -218,131 +250,218 @@ func resourceAwsImageBuilderDistributionConfigurationUpdate(d *schema.ResourceDa
 func resourceAwsImageBuilderDistributionConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
 
-	_, err := conn.DeleteDistributionConfiguration(&imagebuilder.DeleteDistributionConfigurationInput{
+	input := &imagebuilder.DeleteDistributionConfigurationInput{
 		DistributionConfigurationArn: aws.String(d.Id()),
-	})
+	}
 
-	if isAWSErr(err, imagebuilder.ErrCodeResourceNotFoundException, "") {
+	_, err := conn.DeleteDistributionConfiguration(input)
+
+	if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Distribution Config (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Image Builder Distribution Config (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func expandAwsImageBuilderDistributions(d *schema.ResourceData) []*imagebuilder.Distribution {
-	configs := d.Get("distributions").(*schema.Set).List()
-
-	if len(configs) == 0 {
+func expandImageBuilderAmiDistributionConfiguration(tfMap map[string]interface{}) *imagebuilder.AmiDistributionConfiguration {
+	if tfMap == nil {
 		return nil
 	}
 
-	distriblist := make([]*imagebuilder.Distribution, 0)
+	apiObject := &imagebuilder.AmiDistributionConfiguration{}
 
-	for _, config := range configs {
-		distrib := expandAwsImageBuilderDistribution(config.(map[string]interface{}))
-		distriblist = append(distriblist, &distrib)
+	if v, ok := tfMap["ami_tags"].(map[string]interface{}); ok && len(v) > 0 {
+		apiObject.AmiTags = stringMapToPointers(v)
 	}
 
-	return distriblist
+	if v, ok := tfMap["description"].(string); ok && v != "" {
+		apiObject.Description = aws.String(v)
+	}
+
+	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
+		apiObject.KmsKeyId = aws.String(v)
+	}
+
+	if v, ok := tfMap["launch_permission"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.LaunchPermission = expandImageBuilderLaunchPermissionConfiguration(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	if v, ok := tfMap["target_account_ids"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.TargetAccountIds = expandStringSet(v)
+	}
+
+	return apiObject
 }
 
-func flattenAwsImageBuilderDistributions(distribs []*imagebuilder.Distribution) []interface{} {
-	if distribs == nil {
+func expandImageBuilderDistribution(tfMap map[string]interface{}) *imagebuilder.Distribution {
+	if tfMap == nil {
 		return nil
 	}
 
-	distriblist := []interface{}{}
+	apiObject := &imagebuilder.Distribution{}
 
-	for _, dist := range distribs {
-		distrib := flattenAwsImageBuilderDistribution(dist)
-		distriblist = append(distriblist, distrib)
+	if v, ok := tfMap["ami_distribution_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AmiDistributionConfiguration = expandImageBuilderAmiDistributionConfiguration(v[0].(map[string]interface{}))
 	}
 
-	return distriblist
+	if v, ok := tfMap["license_configuration_arns"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.LicenseConfigurationArns = expandStringSet(v)
+	}
+
+	if v, ok := tfMap["region"].(string); ok && v != "" {
+		apiObject.Region = aws.String(v)
+	}
+
+	return apiObject
 }
 
-func expandAwsImageBuilderDistribution(data map[string]interface{}) imagebuilder.Distribution {
-	distrib := imagebuilder.Distribution{
-		Region:                   aws.String(data["region"].(string)),
-		LicenseConfigurationArns: expandStringList(data["license_configuration_arn"].(*schema.Set).List()),
+func expandImageBuilderDistributions(tfList []interface{}) []*imagebuilder.Distribution {
+	if len(tfList) == 0 {
+		return nil
 	}
 
-	if v, ok := data["ami_distribution_configuration"]; ok {
-		if len(v.([]interface{})) > 0 {
-			adc := v.([]interface{})[0].(map[string]interface{})
+	var apiObjects []*imagebuilder.Distribution
 
-			amidistconfig := imagebuilder.AmiDistributionConfiguration{
-				Description: aws.String((adc["description"]).(string)),
-				Name:        aws.String(adc["name"].(string)),
-			}
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
 
-			if len(adc["kms_key_id"].(string)) != 0 {
-				amidistconfig.KmsKeyId = aws.String(adc["kms_key_id"].(string))
-			}
-
-			if len(adc["launch_permission"].([]interface{})) > 0 {
-
-				lp := adc["launch_permission"].([]interface{})[0].(map[string]interface{})
-
-				launchperm := imagebuilder.LaunchPermissionConfiguration{
-					UserGroups: aws.StringSlice(sIfTosString(lp["user_groups"].(*schema.Set).List())),
-					UserIds:    aws.StringSlice(sIfTosString(lp["user_ids"].(*schema.Set).List())),
-				}
-				amidistconfig.LaunchPermission = &launchperm
-			}
-
-			tags := adc["ami_tags"].(map[string]interface{})
-			if len(tags) > 0 {
-				amitags := make(map[string]*string, len(tags))
-				for k, v := range tags {
-					amitags[k] = aws.String(v.(string))
-				}
-				amidistconfig.AmiTags = amitags
-			}
-			distrib.AmiDistributionConfiguration = &amidistconfig
+		if !ok {
+			continue
 		}
-	}
 
-	return distrib
-}
+		apiObject := expandImageBuilderDistribution(tfMap)
 
-func flattenAwsImageBuilderDistribution(distribution *imagebuilder.Distribution) map[string]interface{} {
-	distrib := map[string]interface{}{}
-
-	distrib["license_configuration_arn"] = schema.NewSet(schema.HashString, flattenStringList(distribution.LicenseConfigurationArns))
-	distrib["region"] = *distribution.Region
-
-	distribconf := make(map[string]interface{})
-	if distribution.AmiDistributionConfiguration != nil {
-		distribconf["ami_tags"] = keyvaluetags.ImagebuilderKeyValueTags(distribution.AmiDistributionConfiguration.AmiTags)
-		distribconf["description"] = aws.String(*distribution.AmiDistributionConfiguration.Description)
-		distribconf["kms_key_id"] = distribution.AmiDistributionConfiguration.KmsKeyId
-		distribconf["name"] = distribution.AmiDistributionConfiguration.Name
-
-		if distribution.AmiDistributionConfiguration.LaunchPermission != nil {
-			distribconf["launch_permission"] = []interface{}{
-				map[string]interface{}{
-					"user_ids":    distribution.AmiDistributionConfiguration.LaunchPermission.UserIds,
-					"user_groups": distribution.AmiDistributionConfiguration.LaunchPermission.UserGroups,
-				},
-			}
+		if apiObject == nil {
+			continue
 		}
+
+		// Prevent error: InvalidParameter: 1 validation error(s) found.
+		//  - missing required field, UpdateDistributionConfigurationInput.Distributions[0].Region
+		// Reference: https://github.com/hashicorp/terraform-plugin-sdk/issues/588
+		if apiObject.Region == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	distrib["ami_distribution_configuration"] = []interface{}{distribconf}
-
-	return distrib
+	return apiObjects
 }
 
-func sIfTosString(in []interface{}) []string {
-	out := make([]string, len(in))
-	for i, v := range in {
-		out[i] = fmt.Sprint(v)
+func expandImageBuilderLaunchPermissionConfiguration(tfMap map[string]interface{}) *imagebuilder.LaunchPermissionConfiguration {
+	if tfMap == nil {
+		return nil
 	}
 
-	return out
+	apiObject := &imagebuilder.LaunchPermissionConfiguration{}
+
+	if v, ok := tfMap["user_ids"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.UserIds = expandStringSet(v)
+	}
+
+	if v, ok := tfMap["user_groups"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.UserGroups = expandStringSet(v)
+	}
+
+	return apiObject
+}
+
+func flattenImageBuilderAmiDistributionConfiguration(apiObject *imagebuilder.AmiDistributionConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AmiTags; v != nil {
+		tfMap["ami_tags"] = aws.StringValueMap(v)
+	}
+
+	if v := apiObject.Description; v != nil {
+		tfMap["description"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.KmsKeyId; v != nil {
+		tfMap["kms_key_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.LaunchPermission; v != nil {
+		tfMap["launch_permission"] = []interface{}{flattenImageBuilderLaunchPermissionConfiguration(v)}
+	}
+
+	if v := apiObject.Name; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.TargetAccountIds; v != nil {
+		tfMap["target_account_ids"] = aws.StringValueSlice(v)
+	}
+
+	return tfMap
+}
+
+func flattenImageBuilderDistribution(apiObject *imagebuilder.Distribution) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AmiDistributionConfiguration; v != nil {
+		tfMap["ami_distribution_configuration"] = []interface{}{flattenImageBuilderAmiDistributionConfiguration(v)}
+	}
+
+	if v := apiObject.LicenseConfigurationArns; v != nil {
+		tfMap["license_configuration_arns"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.Region; v != nil {
+		tfMap["region"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenImageBuilderDistributions(apiObjects []*imagebuilder.Distribution) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenImageBuilderDistribution(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenImageBuilderLaunchPermissionConfiguration(apiObject *imagebuilder.LaunchPermissionConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.UserGroups; v != nil {
+		tfMap["user_groups"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.UserIds; v != nil {
+		tfMap["user_ids"] = aws.StringValueSlice(v)
+	}
+
+	return tfMap
 }

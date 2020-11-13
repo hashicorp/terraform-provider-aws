@@ -2,11 +2,11 @@ package aws
 
 import (
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"log"
 )
 
 func datasourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
@@ -15,8 +15,9 @@ func datasourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
 			},
 			"date_created": {
 				Type:     schema.TypeString,
@@ -30,7 +31,7 @@ func datasourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"distributions": {
+			"distribution": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -40,7 +41,7 @@ func datasourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ami_tags": tagsSchema(),
+									"ami_tags": tagsSchemaComputed(),
 									"description": {
 										Type:     schema.TypeString,
 										Computed: true,
@@ -75,10 +76,17 @@ func datasourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
+									"target_account_ids": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
 								},
 							},
 						},
-						"license_configuration_arn": {
+						"license_configuration_arns": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem: &schema.Schema{
@@ -103,34 +111,34 @@ func datasourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
 
 func datasourceAwsImageBuilderDistributionConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.GetDistributionConfiguration(&imagebuilder.GetDistributionConfigurationInput{
-		DistributionConfigurationArn: aws.String(d.Get("arn").(string)),
-	})
+	input := &imagebuilder.GetDistributionConfigurationInput{}
 
-	if isAWSErr(err, imagebuilder.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] DistributionConfiguration (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	if v, ok := d.GetOk("arn"); ok {
+		input.DistributionConfigurationArn = aws.String(v.(string))
 	}
+
+	output, err := conn.GetDistributionConfiguration(input)
 
 	if err != nil {
-		return fmt.Errorf("error reading DistributionConfiguration (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting Image Builder Distribution Configuration (%s): %w", d.Id(), err)
 	}
 
-	d.SetId(*resp.DistributionConfiguration.Arn)
-	d.Set("date_created", resp.DistributionConfiguration.DateCreated)
-	d.Set("date_updated", resp.DistributionConfiguration.DateUpdated)
-	d.Set("description", resp.DistributionConfiguration.Description)
-	d.Set("distributions", flattenAwsImageBuilderDistributions(resp.DistributionConfiguration.Distributions))
-	d.Set("name", resp.DistributionConfiguration.Name)
+	if output == nil || output.DistributionConfiguration == nil {
+		return fmt.Errorf("error getting Image Builder Distribution Configuration (%s): empty response", d.Id())
+	}
 
-	if err != nil {
-		return fmt.Errorf("error listing tags for DistributionConfiguration (%s): %s", d.Id(), err)
-	}
-	if err := d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(resp.DistributionConfiguration.Tags).IgnoreAws().IgnoreConfig(meta.(*AWSClient).IgnoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
-	}
+	distributionConfiguration := output.DistributionConfiguration
+
+	d.SetId(aws.StringValue(distributionConfiguration.Arn))
+	d.Set("arn", distributionConfiguration.Arn)
+	d.Set("date_created", distributionConfiguration.DateCreated)
+	d.Set("date_updated", distributionConfiguration.DateUpdated)
+	d.Set("description", distributionConfiguration.Description)
+	d.Set("distribution", flattenImageBuilderDistributions(distributionConfiguration.Distributions))
+	d.Set("name", distributionConfiguration.Name)
+	d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(distributionConfiguration.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 
 	return nil
 }
