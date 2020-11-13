@@ -2,6 +2,10 @@
 
 * **New Resource:** `aws_glue_dev_endpoint` ([#7895](https://github.com/hashicorp/terraform-provider-aws/pull/7895))
 
+ENHANCEMENTS
+
+* resource/aws_storagegateway_smb_file_share: Add `file_share_name` argument ([#16008](https://github.com/hashicorp/terraform-provider-aws/issues/16008))
+
 ## 3.15.0 (November 12, 2020)
 
 ENHANCEMENTS
