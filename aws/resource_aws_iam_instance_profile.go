@@ -246,6 +246,9 @@ func resourceAwsIamInstanceProfileDelete(d *schema.ResourceData, meta interface{
 	}
 	_, err := conn.DeleteInstanceProfile(request)
 	if err != nil {
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			return nil
+		}
 		return fmt.Errorf("Error deleting IAM instance profile %s: %w", d.Id(), err)
 	}
 
