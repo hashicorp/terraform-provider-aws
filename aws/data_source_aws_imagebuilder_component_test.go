@@ -46,7 +46,7 @@ func testAccAwsImageBuilderComponentDataSourceConfigBuildVersionArn(rName string
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({
     phases = [{
-      name  = "build"
+      name = "build"
       steps = [{
         action = "ExecuteBash"
         inputs = {
