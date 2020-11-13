@@ -1,7 +1,7 @@
 on:
   pull_request:
     types: [closed]
-name: Add merged PR and linked issues to current milestone
+name: Add merged PR and linked issues to current milestone of target branch
 jobs:
   AddMergedToCurrentMilestone:
     if: github.event.pull_request.merged
