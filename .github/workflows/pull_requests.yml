@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Add comment to newly raised pull requests
-      if: github.event.action == 'opened' && !contains(fromJSON('["anGie44", "bflad", "breathingdust", "DrFaust92", "ewbankkit", "gdavison", "maryelizbeth", "renovate[bot]", "YakDriver"]'), github.actor)
+      if: github.event.action == 'opened' && !contains(fromJSON('["anGie44", "bflad", "breathingdust", "bill-rich", "DrFaust92", "ewbankkit", "gdavison", "maryelizbeth", "renovate[bot]", "YakDriver"]'), github.actor)
       uses: peter-evans/create-or-update-comment@v1
       with:
         issue-number: ${{ github.event.pull_request.number }}
