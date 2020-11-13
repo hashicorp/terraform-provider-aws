@@ -37,6 +37,27 @@ func TestAccAWSVpcEndpointRouteTableAssociation_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSVpcEndpointRouteTableAssociation_disappears(t *testing.T) {
+	resourceName := "aws_vpc_endpoint_route_table_association.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcEndpointRouteTableAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcEndpointRouteTableAssociationConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcEndpointRouteTableAssociationExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsVpcEndpointRouteTableAssociation(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckVpcEndpointRouteTableAssociationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
