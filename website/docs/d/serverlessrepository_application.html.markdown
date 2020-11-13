@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_serverlessrepository_application
 
-Use this data source to get the source code URL and template URL of an AWS Serverless Application Repository application.
+Use this data source to get information about an AWS Serverless Application Repository application. For example, this can be used to determine the required `capabilities` for an application.
 
 ## Example Usage
 
@@ -17,12 +17,11 @@ data "aws_serverlessrepository_application" "example" {
   application_id = "arn:aws:serverlessrepo:us-east-1:123456789012:applications/ExampleApplication"
 }
 
-resource "aws_cloudformation_stack" "example" {
-  name = "Example"
-
-  capabilities = data.aws_serverlessrepository_application.example.required_capabilities
-
-  template_url = data.aws_serverlessrepository_application.example.template_url
+resource "aws_serverlessrepository_stack" "example" {
+  name             = "Example"
+  application_id   = data.aws_serverlessrepository_application.example.application_id
+  semantic_version = data.aws_serverlessrepository_application.example.semantic_version
+  capabilities     = data.aws_serverlessrepository_application.example.required_capabilities
 }
 ```
 
@@ -34,7 +33,6 @@ resource "aws_cloudformation_stack" "example" {
 ## Attributes Reference
 
 * `application_id` - The ARN of the application.
-* `semantic_version` - The version of the application retrieved.
 * `name` - The name of the application.
 * `required_capabilities` - A list of capabilities describing the permissions needed to deploy the application.
 * `source_code_url` - A URL pointing to the source code of the application version.

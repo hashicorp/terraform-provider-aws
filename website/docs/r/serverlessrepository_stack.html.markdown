@@ -3,7 +3,7 @@ subcategory: "Serverless Application Repository"
 layout: "aws"
 page_title: "AWS: aws_serverlessrepository_stack"
 description: |-
-  Provides a Serverless Application Repository Stack resource.
+  Provides a Serverless Application Repository CloudFormation Stack resource.
 ---
 
 # Resource: aws_serverlessrepository_application
@@ -34,7 +34,7 @@ data "aws_region" "current" {}
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the stack to create. AWS prefixes this name with `serverlessrepo-`
+* `name` - (Required) The name of the stack to create. The resource deployed in AWS will be prefixed with `serverlessrepo-`
 * `application_id` - (Required) The ARN of the application from the Serverless Application Repository.
 * `capabilities` - A list of capabilities.
   Valid values: `CAPABILITY_IAM`, `CAPABILITY_NAMED_IAM`, `CAPABILITY_RESOURCE_POLICY`, or `CAPABILITY_AUTO_EXPAND`
