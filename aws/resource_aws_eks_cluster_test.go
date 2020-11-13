@@ -449,13 +449,9 @@ func TestAccAWSEksCluster_NetworkConfig_ServiceIpv4Cidr(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksClusterConfig_NetworkConfig_ServiceIpv4Cidr(rName, `"10.10.0.0/16"`),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksClusterExists(resourceName, &cluster2),
-					testAccCheckAWSEksClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.service_ipv4_cidr", "10.10.0.0/16"),
-				),
+				Config:   testAccAWSEksClusterConfig_NetworkConfig_ServiceIpv4Cidr(rName, `"10.10.0.0/16"`),
+				PlanOnly: true,
+				ExpectNonEmptyPlan: false,
 			},
 		},
 	})
