@@ -10,51 +10,11 @@ description: |-
 
 Provides a WorkSpaces directory in AWS WorkSpaces Service.
 
+~> **NOTE:** AWS WorkSpaces service requires [`workspaces_DefaultRole`](https://docs.aws.amazon.com/workspaces/latest/adminguide/workspaces-access-control.html#create-default-role) IAM role to operate normally.
+
 ## Example Usage
 
 ```hcl
-resource "aws_vpc" "example" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "example_a" {
-  vpc_id            = aws_vpc.example.id
-  availability_zone = "us-east-1a"
-  cidr_block        = "10.0.0.0/24"
-}
-
-resource "aws_subnet" "example_b" {
-  vpc_id            = aws_vpc.example.id
-  availability_zone = "us-east-1b"
-  cidr_block        = "10.0.1.0/24"
-}
-resource "aws_subnet" "example_c" {
-  vpc_id            = aws_vpc.example.id
-  availability_zone = "us-east-1c"
-  cidr_block        = "10.0.2.0/24"
-}
-
-resource "aws_subnet" "example_d" {
-  vpc_id            = aws_vpc.example.id
-  availability_zone = "us-east-1d"
-  cidr_block        = "10.0.3.0/24"
-}
-
-
-resource "aws_directory_service_directory" "example" {
-  name     = "corp.example.com"
-  password = "#S1ncerely"
-  size     = "Small"
-
-  vpc_settings {
-    vpc_id = aws_vpc.example.id
-    subnet_ids = [
-      aws_subnet.example_a.id,
-      aws_subnet.example_b.id
-    ]
-  }
-}
-
 resource "aws_workspaces_directory" "example" {
   directory_id = aws_directory_service_directory.example.id
   subnet_ids = [
@@ -81,6 +41,78 @@ resource "aws_workspaces_directory" "example" {
     enable_maintenance_mode             = true
     user_enabled_as_local_administrator = true
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.workspaces_default_service_access,
+    aws_iam_role_policy_attachment.workspaces_default_self_service_access
+  ]
+}
+
+resource "aws_directory_service_directory" "example" {
+  name     = "corp.example.com"
+  password = "#S1ncerely"
+  size     = "Small"
+
+  vpc_settings {
+    vpc_id = aws_vpc.example.id
+    subnet_ids = [
+      aws_subnet.example_a.id,
+      aws_subnet.example_b.id
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "workspaces" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["workspaces.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "workspaces_default" {
+  name               = "workspaces_DefaultRole"
+  assume_role_policy = data.aws_iam_policy_document.workspaces.json
+}
+
+resource "aws_iam_role_policy_attachment" "workspaces_default_service_access" {
+  role       = aws_iam_role.workspaces_default.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "workspaces_default_self_service_access" {
+  role       = aws_iam_role.workspaces_default.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonWorkSpacesSelfServiceAccess"
+}
+
+resource "aws_vpc" "example" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "example_a" {
+  vpc_id            = aws_vpc.example.id
+  availability_zone = "us-east-1a"
+  cidr_block        = "10.0.0.0/24"
+}
+
+resource "aws_subnet" "example_b" {
+  vpc_id            = aws_vpc.example.id
+  availability_zone = "us-east-1b"
+  cidr_block        = "10.0.1.0/24"
+}
+resource "aws_subnet" "example_c" {
+  vpc_id            = aws_vpc.example.id
+  availability_zone = "us-east-1c"
+  cidr_block        = "10.0.2.0/24"
+}
+
+resource "aws_subnet" "example_d" {
+  vpc_id            = aws_vpc.example.id
+  availability_zone = "us-east-1d"
+  cidr_block        = "10.0.3.0/24"
 }
 ```
 
