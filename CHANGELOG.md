@@ -6,6 +6,10 @@ ENHANCEMENTS
 
 * resource/aws_storagegateway_smb_file_share: Add `file_share_name` argument ([#16008](https://github.com/hashicorp/terraform-provider-aws/issues/16008))
 
+BUG FIXES
+
+* resource/aws_organizations_organization: Prevent recreation when `feature_set` is updated to `ALL` [GH-15473]
+
 ## 3.15.0 (November 12, 2020)
 
 ENHANCEMENTS
