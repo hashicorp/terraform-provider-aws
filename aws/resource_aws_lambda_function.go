@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -684,6 +685,11 @@ func resourceAwsLambdaFunctionDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	_, err := conn.DeleteFunction(params)
+
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error deleting Lambda Function (%s): %w", d.Id(), err)
 	}
