@@ -12,6 +12,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
+// Since aws_serverlessrepository_stack creates CloudFormation stacks,
+// the aws_cloudformation_stack sweeper will clean these up as well.
+
 func TestAccAwsServerlessRepositoryStack_basic(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := acctest.RandomWithPrefix("tf-acc-test")

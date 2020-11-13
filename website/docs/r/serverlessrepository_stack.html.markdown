@@ -3,12 +3,12 @@ subcategory: "Serverless Application Repository"
 layout: "aws"
 page_title: "AWS: aws_serverlessrepository_stack"
 description: |-
-  Provides a Serverless Application Repository CloudFormation Stack resource.
+  Deploys an application from the Serverless Application Repository.
 ---
 
 # Resource: aws_serverlessrepository_application
 
-Provides a Serverless Application Repository CloudFormation Stack resource
+Deploys an application from the Serverless Application Repository.
 
 ## Example Usage
 
