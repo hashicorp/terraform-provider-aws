@@ -26,6 +26,9 @@ func TestAccAWSIAMInstanceProfile_basic(t *testing.T) {
 				Config: testAccAwsIamInstanceProfileConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSInstanceProfileExists(resourceName, &conf),
+					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("instance-profile/test-%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("test-%s", rName)),
 				),
 			},
 			{
