@@ -154,7 +154,7 @@ func testAccCheckAWSInstanceProfileGeneratedNamePrefix(resource, prefix string) 
 }
 
 func testAccCheckAWSInstanceProfileDestroy(s *terraform.State) error {
-	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+	conn := testAccProvider.Meta().(*AWSClient).iamconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_instance_profile" {
@@ -162,7 +162,7 @@ func testAccCheckAWSInstanceProfileDestroy(s *terraform.State) error {
 		}
 
 		// Try to get role
-		_, err := iamconn.GetInstanceProfile(&iam.GetInstanceProfileInput{
+		_, err := conn.GetInstanceProfile(&iam.GetInstanceProfileInput{
 			InstanceProfileName: aws.String(rs.Primary.ID),
 		})
 		if err == nil {
@@ -190,9 +190,9 @@ func testAccCheckAWSInstanceProfileExists(n string, res *iam.GetInstanceProfileO
 			return fmt.Errorf("No Instance Profile name is set")
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		conn := testAccProvider.Meta().(*AWSClient).iamconn
 
-		resp, err := iamconn.GetInstanceProfile(&iam.GetInstanceProfileInput{
+		resp, err := conn.GetInstanceProfile(&iam.GetInstanceProfileInput{
 			InstanceProfileName: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
