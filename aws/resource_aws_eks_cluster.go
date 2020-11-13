@@ -118,12 +118,14 @@ func resourceAwsEksCluster() *schema.Resource {
 			"kubernetes_network_config": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"service_ipv4_cidr": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
 							ValidateFunc: validation.All(
 								validation.IsCIDRNetwork(12, 24),
