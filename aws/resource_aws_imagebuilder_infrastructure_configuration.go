@@ -2,14 +2,17 @@ package aws
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"log"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsImageBuilderInfrastructureConfiguration() *schema.Resource {
@@ -90,6 +93,7 @@ func resourceAwsImageBuilderInfrastructureConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"resource_tags": tagsSchema(),
 			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -99,19 +103,19 @@ func resourceAwsImageBuilderInfrastructureConfiguration() *schema.Resource {
 			"sns_topic_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
+				ValidateFunc: validateArn,
 			},
 			"subnet_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
+			"tags": tagsSchema(),
 			"terminate_instance_on_failure": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"tags": tagsSchema(),
 		},
 	}
 }
@@ -119,44 +123,88 @@ func resourceAwsImageBuilderInfrastructureConfiguration() *schema.Resource {
 func resourceAwsImageBuilderInfrastructureConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
 
-	securityIdSet := d.Get("security_group_ids").(*schema.Set)
-	securityIds := expandStringList(securityIdSet.List())
-	instanceIdSet := d.Get("instance_types").(*schema.Set)
-	instanceIds := expandStringList(instanceIdSet.List())
-
 	input := &imagebuilder.CreateInfrastructureConfigurationInput{
-		ClientToken:         aws.String(resource.UniqueId()),
-		Name:                aws.String(d.Get("name").(string)),
-		InstanceProfileName: aws.String(d.Get("instance_profile_name").(string)),
-		SecurityGroupIds:    securityIds,
-		InstanceTypes:       instanceIds,
-		Logging:             expandAwsImageBuilderLogsConfig(d),
+		ClientToken: aws.String(resource.UniqueId()),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		input.SetDescription(v.(string))
+		input.Description = aws.String(v.(string))
 	}
+
+	if v, ok := d.GetOk("instance_profile_name"); ok {
+		input.InstanceProfileName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("instance_types"); ok && v.(*schema.Set).Len() > 0 {
+		input.InstanceTypes = expandStringSet(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("key_pair"); ok {
-		input.SetKeyPair(v.(string))
+		input.KeyPair = aws.String(v.(string))
 	}
+
+	if v, ok := d.GetOk("name"); ok {
+		input.Name = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("logging"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Logging = expandImageBuilderLogging(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("resource_tags"); ok && len(v.(map[string]interface{})) > 0 {
+		input.ResourceTags = keyvaluetags.New(v.(map[string]interface{})).ImagebuilderTags()
+	}
+
+	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		input.SecurityGroupIds = expandStringSet(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("sns_topic_arn"); ok {
-		input.SetSnsTopicArn(v.(string))
+		input.SnsTopicArn = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("subnet_id"); ok {
-		input.SetSubnetId(v.(string))
-	}
-	if v, ok := d.GetOk("tags"); ok {
-		input.SetTags(keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().ImagebuilderTags())
+		input.SubnetId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Infrastructure Configuration: %#v", input)
+	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
+		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().ImagebuilderTags()
+	}
 
-	resp, err := conn.CreateInfrastructureConfiguration(input)
+	if v, ok := d.GetOk("terminate_instance_on_failure"); ok {
+		input.TerminateInstanceOnFailure = aws.Bool(v.(bool))
+	}
+
+	var output *imagebuilder.CreateInfrastructureConfigurationOutput
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+		var err error
+
+		output, err = conn.CreateInfrastructureConfiguration(input)
+
+		if tfawserr.ErrMessageContains(err, imagebuilder.ErrCodeInvalidParameterValueException, "instance profile does not exist") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		output, err = conn.CreateInfrastructureConfiguration(input)
+	}
+
 	if err != nil {
-		return fmt.Errorf("error creating Component: %s", err)
+		return fmt.Errorf("error creating Image Builder Infrastructure Configuration: %w", err)
 	}
 
-	d.SetId(aws.StringValue(resp.InfrastructureConfigurationArn))
+	if output == nil {
+		return fmt.Errorf("error creating Image Builder Infrastructure Configuration: empty response")
+	}
+
+	d.SetId(aws.StringValue(output.InfrastructureConfigurationArn))
 
 	return resourceAwsImageBuilderInfrastructureConfigurationRead(d, meta)
 }
@@ -165,41 +213,47 @@ func resourceAwsImageBuilderInfrastructureConfigurationRead(d *schema.ResourceDa
 	conn := meta.(*AWSClient).imagebuilderconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.GetInfrastructureConfiguration(&imagebuilder.GetInfrastructureConfigurationInput{
+	input := &imagebuilder.GetInfrastructureConfigurationInput{
 		InfrastructureConfigurationArn: aws.String(d.Id()),
-	})
+	}
 
-	if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] Infrastructure Configuration (%s) not found, removing from state", d.Id())
+	output, err := conn.GetInfrastructureConfiguration(input)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Image Builder Infrastructure Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Infrastructure Configuration (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting Image Builder Infrastructure Configuration (%s): %w", d.Id(), err)
 	}
 
-	d.Set("arn", resp.InfrastructureConfiguration.Arn)
-	d.Set("date_created", resp.InfrastructureConfiguration.DateCreated)
-	d.Set("date_updated", resp.InfrastructureConfiguration.DateUpdated)
-	d.Set("description", resp.InfrastructureConfiguration.Description)
-	d.Set("instance_profile_name", resp.InfrastructureConfiguration.InstanceProfileName)
-	d.Set("instance_types", resp.InfrastructureConfiguration.InstanceTypes)
-	d.Set("key_pair", resp.InfrastructureConfiguration.KeyPair)
-	d.Set("logging", flattenAwsImageBuilderLogsConfig(resp.InfrastructureConfiguration.Logging))
-	d.Set("name", resp.InfrastructureConfiguration.Name)
-	d.Set("security_group_ids", resp.InfrastructureConfiguration.SecurityGroupIds)
-	d.Set("sns_topic_arn", resp.InfrastructureConfiguration.SnsTopicArn)
-	d.Set("subnet_id", resp.InfrastructureConfiguration.SubnetId)
-	d.Set("terminate_instance_on_failure", resp.InfrastructureConfiguration.TerminateInstanceOnFailure)
+	if output == nil || output.InfrastructureConfiguration == nil {
+		return fmt.Errorf("error getting Image Builder Infrastructure Configuration (%s): empty response", d.Id())
+	}
 
-	tags, err := keyvaluetags.ImagebuilderListTags(conn, d.Get("arn").(string))
-	if err != nil {
-		return fmt.Errorf("error listing tags for Infrastructure Configuration (%s): %s", d.Id(), err)
+	infrastructureConfiguration := output.InfrastructureConfiguration
+
+	d.Set("arn", infrastructureConfiguration.Arn)
+	d.Set("date_created", infrastructureConfiguration.DateCreated)
+	d.Set("date_updated", infrastructureConfiguration.DateUpdated)
+	d.Set("description", infrastructureConfiguration.Description)
+	d.Set("instance_profile_name", infrastructureConfiguration.InstanceProfileName)
+	d.Set("instance_types", aws.StringValueSlice(infrastructureConfiguration.InstanceTypes))
+	d.Set("key_pair", infrastructureConfiguration.KeyPair)
+	if infrastructureConfiguration.Logging != nil {
+		d.Set("logging", []interface{}{flattenImageBuilderLogging(infrastructureConfiguration.Logging)})
+	} else {
+		d.Set("logging", nil)
 	}
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
-	}
+	d.Set("name", infrastructureConfiguration.Name)
+	d.Set("resource_tags", keyvaluetags.ImagebuilderKeyValueTags(infrastructureConfiguration.ResourceTags).Map())
+	d.Set("security_group_ids", aws.StringValueSlice(infrastructureConfiguration.SecurityGroupIds))
+	d.Set("sns_topic_arn", infrastructureConfiguration.SnsTopicArn)
+	d.Set("subnet_id", infrastructureConfiguration.SubnetId)
+	d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(infrastructureConfiguration.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
+	d.Set("terminate_instance_on_failure", infrastructureConfiguration.TerminateInstanceOnFailure)
 
 	return nil
 }
@@ -207,63 +261,91 @@ func resourceAwsImageBuilderInfrastructureConfigurationRead(d *schema.ResourceDa
 func resourceAwsImageBuilderInfrastructureConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
 
-	// Despite not being required by the API, if it's not sent then certain things get wiped to null
-	upd := imagebuilder.UpdateInfrastructureConfigurationInput{
-		InfrastructureConfigurationArn: aws.String(d.Id()),
-		InstanceProfileName:            aws.String(d.Get("instance_profile_name").(string)),
-		Logging:                        expandAwsImageBuilderLogsConfig(d),
-	}
-
-	if description, ok := d.GetOk("description"); ok {
-		upd.Description = aws.String(description.(string))
-	}
-
-	if key_pair, ok := d.GetOk("key_pair"); ok {
-		upd.KeyPair = aws.String(key_pair.(string))
-	}
-
-	if subnet_id, ok := d.GetOk("subnet_id"); ok {
-		upd.SubnetId = aws.String(subnet_id.(string))
-	}
-
-	if attr := d.Get("instance_types").(*schema.Set); attr.Len() > 0 {
-		upd.InstanceTypes = expandStringList(attr.List())
-	}
-
-	if d.HasChange("instance_profile_name") {
-		upd.InstanceProfileName = aws.String(d.Get("instance_profile_name").(string))
-	}
-
-	if v, ok := d.GetOk("security_group_ids"); ok {
-		if attr := v.(*schema.Set); attr.Len() > 0 {
-			upd.SecurityGroupIds = expandStringList(attr.List())
+	if d.HasChanges(
+		"description",
+		"instance_profile_name",
+		"instance_types",
+		"key_pair",
+		"logging",
+		"resource_tags",
+		"security_group_ids",
+		"sns_topic_arn",
+		"subnet_id",
+		"terminate_instance_on_failure",
+	) {
+		input := &imagebuilder.UpdateInfrastructureConfigurationInput{
+			InfrastructureConfigurationArn: aws.String(d.Id()),
 		}
-	}
 
-	if sns_topic_arn, ok := d.GetOk("sns_topic_arn"); ok {
-		upd.SnsTopicArn = aws.String(sns_topic_arn.(string))
-	}
+		if v, ok := d.GetOk("description"); ok {
+			input.Description = aws.String(v.(string))
+		}
 
-	if terminate_instance_on_failure, ok := d.GetOk("terminate_instance_on_failure"); ok {
-		upd.TerminateInstanceOnFailure = aws.Bool(terminate_instance_on_failure.(bool))
-	}
+		if v, ok := d.GetOk("instance_profile_name"); ok {
+			input.InstanceProfileName = aws.String(v.(string))
+		}
 
-	if d.HasChange("security_group_ids") {
-		if attr := d.Get("security_group_ids").(*schema.Set); attr.Len() > 0 {
-			upd.SecurityGroupIds = expandStringList(attr.List())
+		if v, ok := d.GetOk("instance_types"); ok && v.(*schema.Set).Len() > 0 {
+			input.InstanceTypes = expandStringSet(v.(*schema.Set))
+		}
+
+		if v, ok := d.GetOk("key_pair"); ok {
+			input.KeyPair = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("logging"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.Logging = expandImageBuilderLogging(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		if v, ok := d.GetOk("resource_tags"); ok && len(v.(map[string]interface{})) > 0 {
+			input.ResourceTags = keyvaluetags.New(v.(map[string]interface{})).ImagebuilderTags()
+		}
+
+		if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+			input.SecurityGroupIds = expandStringSet(v.(*schema.Set))
+		}
+
+		if v, ok := d.GetOk("sns_topic_arn"); ok {
+			input.SnsTopicArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("subnet_id"); ok {
+			input.SubnetId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("terminate_instance_on_failure"); ok {
+			input.TerminateInstanceOnFailure = aws.Bool(v.(bool))
+		}
+
+		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+			_, err := conn.UpdateInfrastructureConfiguration(input)
+
+			if tfawserr.ErrMessageContains(err, imagebuilder.ErrCodeInvalidParameterValueException, "instance profile does not exist") {
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if tfresource.TimedOut(err) {
+			_, err = conn.UpdateInfrastructureConfiguration(input)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error updating Image Builder Infrastructure Configuration (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
-		if err := keyvaluetags.ImagebuilderUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags for Infrastructure Configuration (%s): %s", d.Id(), err)
-		}
-	}
 
-	_, err := conn.UpdateInfrastructureConfiguration(&upd)
-	if err != nil {
-		return fmt.Errorf("error updating Infrastructure Configuration (%s): %s", d.Id(), err)
+		if err := keyvaluetags.ImagebuilderUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags for Image Builder Infrastructure Configuration (%s): %w", d.Id(), err)
+		}
 	}
 
 	return resourceAwsImageBuilderInfrastructureConfigurationRead(d, meta)
@@ -272,73 +354,83 @@ func resourceAwsImageBuilderInfrastructureConfigurationUpdate(d *schema.Resource
 func resourceAwsImageBuilderInfrastructureConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
 
-	_, err := conn.DeleteInfrastructureConfiguration(&imagebuilder.DeleteInfrastructureConfigurationInput{
+	input := &imagebuilder.DeleteInfrastructureConfigurationInput{
 		InfrastructureConfigurationArn: aws.String(d.Id()),
-	})
+	}
 
-	if isAWSErr(err, imagebuilder.ErrCodeResourceNotFoundException, "") {
+	_, err := conn.DeleteInfrastructureConfiguration(input)
+
+	if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Infrastructure Configuration (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Image Builder Infrastructure Configuration (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func flattenAwsImageBuilderLogsConfig(logsConfig *imagebuilder.Logging) []interface{} {
-	if logsConfig == nil || logsConfig.S3Logs == nil {
-		return []interface{}{}
-	}
-
-	values := map[string]interface{}{}
-
-	// If more logging options are added, add more ifs!
-	values["s3_logs"] = flattenAwsImageBuilderS3Logs(logsConfig.S3Logs)
-
-	return []interface{}{values}
-}
-
-func flattenAwsImageBuilderS3Logs(s3LogsConfig *imagebuilder.S3Logs) []interface{} {
-	values := map[string]interface{}{}
-
-	values["s3_key_prefix"] = aws.StringValue(s3LogsConfig.S3KeyPrefix)
-	values["s3_bucket_name"] = aws.StringValue(s3LogsConfig.S3BucketName)
-
-	return []interface{}{values}
-}
-
-func expandAwsImageBuilderLogsConfig(d *schema.ResourceData) *imagebuilder.Logging {
-	logsConfig := &imagebuilder.Logging{}
-
-	if v, ok := d.GetOk("logging"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		configList := v.([]interface{})
-		data := configList[0].(map[string]interface{})
-
-		if v, ok := data["s3_logs"]; ok {
-			logsConfig.S3Logs = expandAwsImageBuilderS3LogsConfig(v.([]interface{}))
-		}
-	}
-
-	return logsConfig
-}
-
-func expandAwsImageBuilderS3LogsConfig(configList []interface{}) *imagebuilder.S3Logs {
-	if len(configList) == 0 || configList[0] == nil {
+func expandImageBuilderLogging(tfMap map[string]interface{}) *imagebuilder.Logging {
+	if tfMap == nil {
 		return nil
 	}
 
-	data := configList[0].(map[string]interface{})
+	apiObject := &imagebuilder.Logging{}
 
-	s3LogsConfig := &imagebuilder.S3Logs{}
-
-	if v, ok := data["s3_bucket_name"]; ok {
-		s3LogsConfig.S3BucketName = aws.String(v.(string))
-	}
-	if v, ok := data["s3_key_prefix"]; ok {
-		s3LogsConfig.S3KeyPrefix = aws.String(v.(string))
+	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3Logs = expandImageBuilderS3Logs(v[0].(map[string]interface{}))
 	}
 
-	return s3LogsConfig
+	return apiObject
+}
+
+func expandImageBuilderS3Logs(tfMap map[string]interface{}) *imagebuilder.S3Logs {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &imagebuilder.S3Logs{}
+
+	if v, ok := tfMap["s3_bucket_name"].(string); ok && v != "" {
+		apiObject.S3BucketName = aws.String(v)
+	}
+
+	if v, ok := tfMap["s3_key_prefix"].(string); ok && v != "" {
+		apiObject.S3KeyPrefix = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenImageBuilderLogging(apiObject *imagebuilder.Logging) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.S3Logs; v != nil {
+		tfMap["s3_logs"] = []interface{}{flattenImageBuilderS3Logs(v)}
+	}
+
+	return tfMap
+}
+
+func flattenImageBuilderS3Logs(apiObject *imagebuilder.S3Logs) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.S3BucketName; v != nil {
+		tfMap["s3_bucket_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.S3KeyPrefix; v != nil {
+		tfMap["s3_key_prefix"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }

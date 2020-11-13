@@ -266,6 +266,7 @@ func Provider() *schema.Provider {
 			"aws_iam_role":                                   dataSourceAwsIAMRole(),
 			"aws_iam_server_certificate":                     dataSourceAwsIAMServerCertificate(),
 			"aws_iam_user":                                   dataSourceAwsIAMUser(),
+			"aws_imagebuilder_infrastructure_configuration":  datasourceAwsImageBuilderInfrastructureConfiguration(),
 			"aws_internet_gateway":                           dataSourceAwsInternetGateway(),
 			"aws_iot_endpoint":                               dataSourceAwsIotEndpoint(),
 			"aws_inspector_rules_packages":                   dataSourceAwsInspectorRulesPackages(),
