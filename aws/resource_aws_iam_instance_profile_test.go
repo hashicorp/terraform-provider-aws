@@ -92,6 +92,50 @@ func TestAccAWSIAMInstanceProfile_namePrefix(t *testing.T) {
 	})
 }
 
+func TestAccAWSIAMInstanceProfile_disappears(t *testing.T) {
+	var conf iam.GetInstanceProfileOutput
+	resourceName := "aws_iam_instance_profile.test"
+	rName := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsIamInstanceProfileConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSInstanceProfileExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsIamInstanceProfile(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMInstanceProfile_disappears_role(t *testing.T) {
+	var conf iam.GetInstanceProfileOutput
+	resourceName := "aws_iam_instance_profile.test"
+	rName := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsIamInstanceProfileConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSInstanceProfileExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsIamRole(), "aws_iam_role.test"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSInstanceProfileGeneratedNamePrefix(resource, prefix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		r, ok := s.RootModule().Resources[resource]
@@ -125,7 +169,7 @@ func testAccCheckAWSInstanceProfileDestroy(s *terraform.State) error {
 			return fmt.Errorf("still exist.")
 		}
 
-		if isAWSErr(err, "NoSuchEntity", "") {
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 

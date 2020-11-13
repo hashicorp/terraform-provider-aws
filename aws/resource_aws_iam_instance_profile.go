@@ -129,7 +129,7 @@ func instanceProfileAddRole(iamconn *iam.IAM, profileName, roleName string) erro
 		// IAM unfortunately does not provide a better error code or message for eventual consistency
 		// InvalidParameterValue: Value (XXX) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
 		// NoSuchEntity: The request was rejected because it referenced an entity that does not exist. The error message describes the entity. HTTP Status Code: 404
-		if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile name") || isAWSErr(err, "NoSuchEntity", "The role with name") {
+		if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile name") || isAWSErr(err, iam.ErrCodeNoSuchEntityException, "The role with name") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -154,7 +154,7 @@ func instanceProfileRemoveRole(iamconn *iam.IAM, profileName, roleName string) e
 	}
 
 	_, err := iamconn.RemoveRoleFromInstanceProfile(request)
-	if isAWSErr(err, "NoSuchEntity", "") {
+	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 		return nil
 	}
 	return err
@@ -203,7 +203,7 @@ func resourceAwsIamInstanceProfileRead(d *schema.ResourceData, meta interface{})
 	}
 
 	result, err := iamconn.GetInstanceProfile(request)
-	if isAWSErr(err, "NoSuchEntity", "") {
+	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 		log.Printf("[WARN] IAM Instance Profile %s is already gone", d.Id())
 		d.SetId("")
 		return nil
@@ -212,7 +212,26 @@ func resourceAwsIamInstanceProfileRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error reading IAM instance profile %s: %s", d.Id(), err)
 	}
 
-	return instanceProfileReadResult(d, result.InstanceProfile)
+	instanceProfile := result.InstanceProfile
+	if instanceProfile.Roles != nil && len(instanceProfile.Roles) > 0 {
+
+		roleName := aws.StringValue(instanceProfile.Roles[0].RoleName)
+		input := &iam.GetRoleInput{
+			RoleName: aws.String(roleName),
+		}
+
+		_, err := iamconn.GetRole(input)
+		if err != nil {
+			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+				log.Printf("[WARN] IAM Role %q attcahed to IAM Instance Profile %q not found, removing from state", roleName, d.Id())
+				d.SetId("")
+				return nil
+			}
+			return fmt.Errorf("Error reading IAM Role %s attcahed to IAM Instance Profile %s: %w", roleName, d.Id(), err)
+		}
+	}
+
+	return instanceProfileReadResult(d, instanceProfile)
 }
 
 func resourceAwsIamInstanceProfileDelete(d *schema.ResourceData, meta interface{}) error {
