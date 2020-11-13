@@ -43,6 +43,6 @@ jobs:
 
           Upvotes on the Pull Request and/or Issue are the primary way we decide which pull requests to review, but we also look at security, bug severity, and usability issues as drivers for inclusion.
 
-          Once we have prioritized your contribution for review, we will let you know when to expect an engineer to review.  If changes are required, we will ask in the pull request. If you are unable to find the time, just let us know, and we will make the necessary changes required in order to merge.
+          Once we have prioritized your contribution for review, we will let you know when to expect an engineer to get in touch.  If changes are required, we will ask in the pull request. If you are unable to find the time, just let us know, and we will make the necessary changes required in order to merge.
 
           Thanks again for your contribution! We apologize that some pull requests may sit idle for quite some time, but the scale of the provider and its contributions means that we are unable to respond to each pull request as quickly as we would like.
