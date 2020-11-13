@@ -154,3 +154,18 @@ func resourceAwsVpcEndpointSubnetAssociationDelete(d *schema.ResourceData, meta 
 func vpcEndpointSubnetAssociationId(endpointId, snId string) string {
 	return fmt.Sprintf("a-%s%d", endpointId, hashcode.String(snId))
 }
+
+func findResourceVpcEndpoint(conn *ec2.EC2, id string) (*ec2.VpcEndpoint, error) {
+	resp, err := conn.DescribeVpcEndpoints(&ec2.DescribeVpcEndpointsInput{
+		VpcEndpointIds: aws.StringSlice([]string{id}),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.VpcEndpoints == nil || len(resp.VpcEndpoints) == 0 {
+		return nil, fmt.Errorf("No VPC Endpoints were found for %s", id)
+	}
+
+	return resp.VpcEndpoints[0], nil
+}

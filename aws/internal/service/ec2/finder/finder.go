@@ -91,6 +91,45 @@ func SecurityGroupByID(conn *ec2.EC2, id string) (*ec2.SecurityGroup, error) {
 	return result.SecurityGroups[0], nil
 }
 
+// VpcEndpointByID returns the VPC endpoint corresponding to the specified identifier.
+// Returns nil and potentially an error if no VPC endpoint is found.
+func VpcEndpointByID(conn *ec2.EC2, id string) (*ec2.VpcEndpoint, error) {
+	input := &ec2.DescribeVpcEndpointsInput{
+		VpcEndpointIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeVpcEndpoints(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.VpcEndpoints) == 0 {
+		return nil, nil
+	}
+
+	return output.VpcEndpoints[0], nil
+}
+
+// VpcEndpointRouteTableAssociation returns whether the specified VPC endpoint and route table are associated.
+func VpcEndpointRouteTableAssociation(conn *ec2.EC2, vpcEndpointID, routeTableID string) (bool, error) {
+	vpcEndpoint, err := VpcEndpointByID(conn, vpcEndpointID)
+	if err != nil {
+		return false, err
+	}
+
+	if vpcEndpoint == nil {
+		return false, nil
+	}
+
+	for _, id := range vpcEndpoint.RouteTableIds {
+		if aws.StringValue(id) == routeTableID {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 // VpcPeeringConnectionByID returns the VPC peering connection corresponding to the specified identifier.
 // Returns nil and potentially an error if no VPC peering connection is found.
 func VpcPeeringConnectionByID(conn *ec2.EC2, id string) (*ec2.VpcPeeringConnection, error) {
