@@ -101,7 +101,7 @@ resource "aws_ec2_fleet" "example" {
 
 ### maintenance_strategies
 
-* `capacity_rebalance` - (Optional) Nested argument containing the capacity rebalnce for your fleet request. Defined below.
+* `capacity_rebalance` - (Optional) Nested argument containing the capacity rebalance for your fleet request. Defined below.
 
 ### capacity_rebalance
 

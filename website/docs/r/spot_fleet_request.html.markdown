@@ -222,7 +222,7 @@ The `launch_template_config` block supports the following:
 
 ### spot_maintenance_strategies
 
-* `capacity_rebalance` - (Optional) Nested argument containing the capacity rebalnce for your fleet request. Defined below.
+* `capacity_rebalance` - (Optional) Nested argument containing the capacity rebalance for your fleet request. Defined below.
 
 ### capacity_rebalance
 
