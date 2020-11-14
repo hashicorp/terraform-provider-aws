@@ -229,6 +229,8 @@ The `target_tracking_scaling_policy_configuration` `predefined_metric_specificat
 
 ## Attributes Reference
 
+In addition to all arguments above, the following attributes are exported:
+
 * `arn` - The ARN assigned by AWS to the scaling policy.
 * `name` - The scaling policy's name.
 * `policy_type` - The scaling policy's type.

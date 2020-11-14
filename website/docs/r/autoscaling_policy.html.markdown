@@ -39,9 +39,9 @@ resource "aws_autoscaling_group" "bar" {
 }
 ```
 
-## Argument Reference
+## Attributes Reference
 
-The following arguments are supported:
+In addition to all arguments above, the following attributes are exported:
 
 * `name` - (Required) The name of the policy.
 * `autoscaling_group_name` - (Required) The name of the autoscaling group.
