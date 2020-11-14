@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 )
 
 func resourceAwsVpcEndpointRouteTableAssociation() *schema.Resource {
@@ -62,6 +63,12 @@ func resourceAwsVpcEndpointRouteTableAssociationCreate(d *schema.ResourceData, m
 	}
 
 	d.SetId(tfec2.VpcEndpointRouteTableAssociationCreateID(vpcEndpointID, routeTableID))
+
+	err = waiter.VpcEndpointRouteTableAssociationCreated(conn, vpcEndpointID, routeTableID)
+
+	if err != nil {
+		return fmt.Errorf("error waiting for VPC Endpoint/Route Table association (%s) to be created: %w", d.Id(), err)
+	}
 
 	return resourceAwsVpcEndpointRouteTableAssociationRead(d, meta)
 }

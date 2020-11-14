@@ -1,11 +1,14 @@
 package waiter
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -247,6 +250,44 @@ func SecurityGroupCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2
 	}
 
 	return nil, err
+}
+
+const (
+	VpcEndpointRouteTableAssociationCreatedTimeout = 2 * time.Minute
+)
+
+func VpcEndpointRouteTableAssociationCreated(conn *ec2.EC2, vpcEndpointID, routeTableID string) error {
+	associated := false
+
+	err := resource.Retry(VpcEndpointRouteTableAssociationCreatedTimeout, func() *resource.RetryError {
+		var err error
+
+		associated, err = finder.VpcEndpointRouteTableAssociation(conn, vpcEndpointID, routeTableID)
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		if !associated {
+			return resource.RetryableError(fmt.Errorf("VPC Endpoint (%s) not associated with Route Table (%s)", vpcEndpointID, routeTableID))
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		associated, err = finder.VpcEndpointRouteTableAssociation(conn, vpcEndpointID, routeTableID)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if !associated {
+		return fmt.Errorf("VPC Endpoint (%s) not associated with Route Table (%s)", vpcEndpointID, routeTableID)
+	}
+
+	return nil
 }
 
 const (
