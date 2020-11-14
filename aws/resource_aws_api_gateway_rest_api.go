@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -34,6 +35,12 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+
+			"disable_execute_api_endpoint": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 
 			"api_key_source": {
@@ -167,6 +174,10 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 		params.MinimumCompressionSize = aws.Int64(int64(minimumCompressionSize))
 	}
 
+	if d.Get("disable_execute_api_endpoint").(bool) {
+		params.DisableExecuteApiEndpoint = aws.Bool(true)
+	}
+
 	gateway, err := conn.CreateRestApi(params)
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway: %s", err)
@@ -225,6 +236,7 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("name", api.Name)
 	d.Set("description", api.Description)
+	d.Set("disable_execute_api_endpoint", api.DisableExecuteApiEndpoint)
 	d.Set("api_key_source", api.ApiKeySource)
 
 	// The API returns policy as an escaped JSON string
@@ -298,6 +310,14 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/description"),
 			Value: aws.String(d.Get("description").(string)),
+		})
+	}
+
+	if d.HasChange("disable_execute_api_endpoint") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String(apigateway.OpReplace),
+			Path:  aws.String("/disableExecuteApiEndpoint"),
+			Value: aws.String(strings.Title(strconv.FormatBool(d.Get("disable_execute_api_endpoint").(bool)))),
 		})
 	}
 

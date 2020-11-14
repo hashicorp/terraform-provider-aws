@@ -81,8 +81,10 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/+.`)),
 					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, rName),
 					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttribute(&conf, 0),
+					testAccCheckAWSAPIGatewayRestAPIDisableExecuteApiEndpointAttribute(&conf, false),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "HEADER"),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
@@ -104,8 +106,10 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, rName),
 					testAccCheckAWSAPIGatewayRestAPIDescriptionAttribute(&conf, "test"),
 					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttribute(&conf, 10485760),
+					testAccCheckAWSAPIGatewayRestAPIDisableExecuteApiEndpointAttribute(&conf, true),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "true"),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "10485760"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_arn"),
@@ -119,8 +123,46 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttributeIsNil(&conf),
+					testAccCheckAWSAPIGatewayRestAPIDisableExecuteApiEndpointAttribute(&conf, false),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayRestApi_create_disable_execute_api_endpoint(t *testing.T) {
+	var conf apigateway.RestApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_api_gateway_rest_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayRestAPIDisableExecutionAPIEndpoint(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/+.`)),
+					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, rName),
+					testAccCheckAWSAPIGatewayRestAPIDisableExecuteApiEndpointAttribute(&conf, true),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "true"),
+					resource.TestCheckResourceAttr(resourceName, "api_key_source", "HEADER"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "execution_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "binary_media_types"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -491,8 +533,10 @@ func TestAccAWSAPIGatewayRestApi_openapi(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, rName),
 					testAccCheckAWSAPIGatewayRestAPIRoutes(&conf, []string{"/", "/test"}),
+					testAccCheckAWSAPIGatewayRestAPIDisableExecuteApiEndpointAttribute(&conf, false),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "binary_media_types"),
@@ -556,6 +600,20 @@ func testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttributeIsNil(conf *
 	return func(s *terraform.State) error {
 		if conf.MinimumCompressionSize != nil {
 			return fmt.Errorf("MinimumCompressionSize should be nil: %d", *conf.MinimumCompressionSize)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSAPIGatewayRestAPIDisableExecuteApiEndpointAttribute(conf *apigateway.RestApi, disableExecuteApiEndpoint bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+
+		if conf.DisableExecuteApiEndpoint == nil {
+			return fmt.Errorf("DisableExecuteApiEndpoint should not be nil")
+		}
+		if *conf.DisableExecuteApiEndpoint != disableExecuteApiEndpoint {
+			return fmt.Errorf("Wrong DisableExecuteApiEndpoint: %t", *conf.DisableExecuteApiEndpoint)
 		}
 
 		return nil
@@ -926,10 +984,11 @@ EOF
 func testAccAWSAPIGatewayRestAPIUpdateConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name                     = "%s"
-  description              = "test"
-  binary_media_types       = ["application/octet-stream"]
-  minimum_compression_size = 10485760
+  name                         = "%s"
+  description                  = "test"
+  binary_media_types           = ["application/octet-stream"]
+  minimum_compression_size     = 10485760
+  disable_execute_api_endpoint = true
 }
 `, rName)
 }
@@ -941,6 +1000,15 @@ resource "aws_api_gateway_rest_api" "test" {
   description              = "test"
   binary_media_types       = ["application/octet-stream"]
   minimum_compression_size = -1
+}
+`, rName)
+}
+
+func testAccAWSAPIGatewayRestAPIDisableExecutionAPIEndpoint(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name                         = "%s"
+  disable_execute_api_endpoint = true
 }
 `, rName)
 }

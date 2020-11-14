@@ -41,6 +41,9 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the REST API
 * `description` - (Optional) The description of the REST API
+* `disable_execute_api_endpoint` - (Optional) Whether clients can invoke the API by using the default `execute-api` endpoint.
+By default, clients can invoke the API with the default `{api_id}.execute-api.{region}.amazonaws.com endpoint`.
+To require that clients use a custom domain name to invoke the API, disable the default endpoint.
 * `endpoint_configuration` - (Optional) Nested argument defining API endpoint configuration including endpoint type. Defined below.
 * `binary_media_types` - (Optional) The list of binary media types supported by the RestApi. By default, the RestApi supports only UTF-8-encoded text payloads.
 * `minimum_compression_size` - (Optional) Minimum response size to compress for the REST API. Integer between -1 and 10485760 (10MB). Setting a value greater than -1 will enable compression, -1 disables compression (default).
