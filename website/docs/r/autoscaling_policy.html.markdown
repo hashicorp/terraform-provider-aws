@@ -39,9 +39,7 @@ resource "aws_autoscaling_group" "bar" {
 }
 ```
 
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
+## Arguments Reference
 
 * `name` - (Required) The name of the policy.
 * `autoscaling_group_name` - (Required) The name of the autoscaling group.
@@ -160,6 +158,8 @@ The following arguments are supported:
 * `value` - (Required) The value of the dimension.
 
 ## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN assigned by AWS to the scaling policy.
 * `name` - The scaling policy's name.
