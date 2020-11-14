@@ -800,6 +800,7 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 	if d.HasChange("auth_token") {
 		params.AuthToken = aws.String(d.Get("auth_token").(string))
 		params.AuthTokenUpdateStrategy = aws.String("ROTATE")
+		requestUpdate = true
 	}
 
 	if requestUpdate {

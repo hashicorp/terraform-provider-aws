@@ -276,6 +276,45 @@ func TestAccAWSElasticacheReplicationGroup_updateParameterGroup(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticacheReplicationGroup_updateAuthToken(t *testing.T) {
+	var rg elasticache.ReplicationGroup
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheReplicationGroup_EnableAuthTokenTransitEncryptionConfig(1, "one", acctest.RandString(16)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(
+						resourceName, "transit_encryption_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token", "availability_zones"},
+			},
+			{
+				Config: testAccAWSElasticacheReplicationGroupUpdateAuthToken(1, "one", acctest.RandString(16)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token", "availability_zones"},
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticacheReplicationGroup_vpc(t *testing.T) {
 	var rg elasticache.ReplicationGroup
 	resourceName := "aws_elasticache_replication_group.test"
@@ -1025,6 +1064,74 @@ resource "aws_elasticache_replication_group" "test" {
   apply_immediately             = true
 }
 `, rName)
+}
+
+func testAccAWSElasticacheReplicationGroupUpdateAuthToken(rInt int, rString10 string, rString16 string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "192.168.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-elasticache-replication-group-auth-token-transit-encryption"
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "192.168.0.0/20"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = "tf-acc-elasticache-replication-group-auth-token-transit-encryption"
+  }
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  name        = "tf-test-cache-subnet-%03d"
+  description = "tf-test-cache-subnet-group-descr"
+
+  subnet_ids = [
+    aws_subnet.test.id,
+  ]
+}
+
+resource "aws_security_group" "test" {
+  name        = "tf-test-security-group-%03d"
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = "tf-%s"
+  replication_group_description = "test description"
+  node_type                     = "cache.t2.micro"
+  number_cache_clusters         = "1"
+  port                          = 6379
+  subnet_group_name             = aws_elasticache_subnet_group.test.name
+  security_group_ids            = [aws_security_group.test.id]
+  parameter_group_name          = "default.redis3.2"
+  availability_zones            = [data.aws_availability_zones.available.names[0]]
+  engine_version                = "3.2.6"
+  transit_encryption_enabled    = true
+  auth_token                    = "%s"
+}
+`, rInt, rInt, rString10, rString16)
 }
 
 var testAccAWSElasticacheReplicationGroupInVPCConfig = fmt.Sprintf(`
