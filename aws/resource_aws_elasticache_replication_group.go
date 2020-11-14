@@ -44,7 +44,7 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				ForceNew:     true,
+				ForceNew:     false,
 				ValidateFunc: validateAwsElastiCacheReplicationGroupAuthToken,
 			},
 			"auto_minor_version_upgrade": {
@@ -795,6 +795,11 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 	if d.HasChange("node_type") {
 		params.CacheNodeType = aws.String(d.Get("node_type").(string))
 		requestUpdate = true
+	}
+
+	if d.HasChange("auth_token") {
+		params.AuthToken = aws.String(d.Get("auth_token").(string))
+		params.AuthTokenUpdateStrategy = aws.String("ROTATE")
 	}
 
 	if requestUpdate {
