@@ -797,12 +797,6 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 		requestUpdate = true
 	}
 
-	if d.HasChange("auth_token") {
-		params.AuthToken = aws.String(d.Get("auth_token").(string))
-		params.AuthTokenUpdateStrategy = aws.String("ROTATE")
-		requestUpdate = true
-	}
-
 	if requestUpdate {
 		_, err := conn.ModifyReplicationGroup(params)
 		if err != nil {
@@ -812,6 +806,20 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 		err = waitForModifyElasticacheReplicationGroup(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for Elasticache Replication Group (%s) to be updated: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("auth_token") {
+		params := &elasticache.ModifyReplicationGroupInput{
+			ApplyImmediately:        aws.Bool(true),
+			ReplicationGroupId:      aws.String(d.Id()),
+			AuthTokenUpdateStrategy: aws.String("ROTATE"),
+			AuthToken:               aws.String(d.Get("auth_token").(string)),
+		}
+
+		_, err := conn.ModifyReplicationGroup(params)
+		if err != nil {
+			return fmt.Errorf("error changing auth_token for Elasticache Replication Group (%s): %w", d.Id(), err)
 		}
 	}
 
