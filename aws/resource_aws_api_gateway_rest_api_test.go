@@ -84,6 +84,7 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "HEADER"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", `false`),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_arn"),
@@ -106,6 +107,7 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttribute(&conf, 10485760),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", `false`),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "10485760"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_arn"),
@@ -406,7 +408,7 @@ func TestAccAWSAPIGatewayRestApi_api_key_source(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -431,6 +433,42 @@ func TestAccAWSAPIGatewayRestApi_api_key_source(t *testing.T) {
 				Config: testAccAWSAPIGatewayRestAPIConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", expectedAPIKeySource),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayRestApi_disable_execute_api_endpoint(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_api_gateway_rest_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfig_DisableExecuteApiEndpoint(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", `false`),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfig_DisableExecuteApiEndpoint(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", `true`),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfig_DisableExecuteApiEndpoint(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", `false`),
 				),
 			},
 		},
@@ -674,6 +712,15 @@ resource "aws_api_gateway_rest_api" "test" {
   }
 }
 `, rName, endpointType)
+}
+
+func testAccAWSAPIGatewayRestAPIConfig_DisableExecuteApiEndpoint(rName string, disabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name                         = "%s"
+  disable_execute_api_endpoint = %t
+}
+`, rName, disabled)
 }
 
 func testAccAWSAPIGatewayRestAPIConfig_Name(rName string) string {

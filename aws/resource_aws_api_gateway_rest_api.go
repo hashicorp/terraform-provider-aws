@@ -64,6 +64,12 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 				Optional: true,
 			},
 
+			"disable_execute_api_endpoint": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"minimum_compression_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -149,6 +155,10 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 		params.ApiKeySource = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("disable_execute_api_endpoint"); ok {
+		params.DisableExecuteApiEndpoint = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("policy"); ok {
 		params.Policy = aws.String(v.(string))
 	}
@@ -226,6 +236,7 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("name", api.Name)
 	d.Set("description", api.Description)
 	d.Set("api_key_source", api.ApiKeySource)
+	d.Set("disable_execute_api_endpoint", api.DisableExecuteApiEndpoint)
 
 	// The API returns policy as an escaped JSON string
 	// {\\\"Version\\\":\\\"2012-10-17\\\",...}
@@ -306,6 +317,15 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/apiKeySource"),
 			Value: aws.String(d.Get("api_key_source").(string)),
+		})
+	}
+
+	if d.HasChange("disable_execute_api_endpoint") {
+		value := strconv.FormatBool(d.Get("disable_execute_api_endpoint").(bool))
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String(apigateway.OpReplace),
+			Path:  aws.String("/disableExecuteApiEndpoint"),
+			Value: aws.String(value),
 		})
 	}
 
