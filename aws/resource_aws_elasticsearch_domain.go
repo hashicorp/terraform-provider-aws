@@ -151,6 +151,20 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 								elasticsearch.TLSSecurityPolicyPolicyMinTls12201907,
 							}, false),
 						},
+						"custom_endpoint_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"custom_endpoint": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+						},
+						"custom_endpoint_certificate_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 			},
