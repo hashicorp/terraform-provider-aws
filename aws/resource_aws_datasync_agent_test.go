@@ -209,6 +209,34 @@ func TestAccAWSDataSyncAgent_Tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSDataSyncAgent_VpcEndpointId(t *testing.T) {
+	var agent datasync.DescribeAgentOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_datasync_agent.test"
+	vpcEndpointResourceName := "aws_vpc_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDataSyncAgentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDataSyncAgentConfigVpcEndpointId(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDataSyncAgentExists(resourceName, &agent),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_id", vpcEndpointResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"activation_key", "ip_address", "private_link_ip"},
+			},
+		},
+	})
+}
+
 func testAccCheckAWSDataSyncAgentDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).datasyncconn
 
@@ -287,17 +315,11 @@ func testAccCheckAWSDataSyncAgentNotRecreated(i, j *datasync.DescribeAgentOutput
 	}
 }
 
-// testAccAWSDataSyncAgentConfigAgentBase uses the "thinstaller" AMI
 func testAccAWSDataSyncAgentConfigAgentBase() string {
 	return `
-data "aws_ami" "aws-thinstaller" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["aws-thinstaller-*"]
-  }
+# Reference: https://docs.aws.amazon.com/datasync/latest/userguide/deploy-agents.html
+data "aws_ssm_parameter" "aws_service_datasync_ami" {
+  name = "/aws/service/datasync/ami"
 }
 
 resource "aws_vpc" "test" {
@@ -368,7 +390,7 @@ resource "aws_security_group" "test" {
 resource "aws_instance" "test" {
   depends_on = [aws_internet_gateway.test]
 
-  ami                         = data.aws_ami.aws-thinstaller.id
+  ami                         = data.aws_ssm_parameter.aws_service_datasync_ami.value
   associate_public_ip_address = true
 
   # Default instance type from sync.sh
@@ -423,4 +445,31 @@ resource "aws_datasync_agent" "test" {
   }
 }
 `, key1, value1, key2, value2)
+}
+
+func testAccAWSDataSyncAgentConfigVpcEndpointId(rName string) string {
+	return testAccAWSDataSyncAgentConfigAgentBase() + fmt.Sprintf(`
+resource "aws_datasync_agent" "test" {
+  name                  = %q
+  security_group_arns   = [aws_security_group.test.arn]
+  subnet_arns           = [aws_subnet.test.arn]
+  vpc_endpoint_id       = aws_vpc_endpoint.test.id
+  ip_address            = aws_instance.test.public_ip
+  private_link_endpoint = data.aws_network_interface.test.private_ip
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  service_name       = "com.amazonaws.${data.aws_region.current.name}.datasync"
+  vpc_id             = aws_vpc.test.id
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = [aws_subnet.test.id]
+  vpc_endpoint_type  = "Interface"
+}
+
+data "aws_network_interface" "test" {
+  id = tolist(aws_vpc_endpoint.test.network_interface_ids)[0]
+}
+`, rName)
 }

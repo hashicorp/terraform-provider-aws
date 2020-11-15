@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsDataSyncAgent() *schema.Resource {
@@ -37,7 +38,7 @@ func resourceAwsDataSyncAgent() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"ip_address"},
+				ConflictsWith: []string{"ip_address", "private_link_endpoint"},
 			},
 			"ip_address": {
 				Type:          schema.TypeString,
@@ -46,12 +47,35 @@ func resourceAwsDataSyncAgent() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"activation_key"},
 			},
+			"private_link_endpoint": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"activation_key"},
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"security_group_arns": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"subnet_arns": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
+			"vpc_endpoint_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 
 		CustomizeDiff: SetTagsDiff,
@@ -81,6 +105,10 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		requestURL := fmt.Sprintf("http://%s/?gatewayType=SYNC&activationRegion=%s", agentIpAddress, region)
+		if v, ok := d.GetOk("private_link_endpoint"); ok {
+			requestURL = fmt.Sprintf("http://%s/?gatewayType=SYNC&activationRegion=%s&endpointType=PRIVATE_LINK&privateLinkEndpoint=%s", agentIpAddress, region, v.(string))
+		}
+
 		log.Printf("[DEBUG] Creating HTTP request: %s", requestURL)
 		request, err := http.NewRequest("GET", requestURL, nil)
 		if err != nil {
@@ -99,29 +127,39 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 				}
 				return resource.NonRetryableError(fmt.Errorf("error making HTTP request: %s", err))
 			}
+
+			if response == nil {
+				return resource.NonRetryableError(fmt.Errorf("Error retrieving response for activation key request: %s", err))
+			}
+
+			log.Printf("[DEBUG] Received HTTP response: %#v", response)
+			if response.StatusCode != 302 {
+				return resource.NonRetryableError(fmt.Errorf("expected HTTP status code 302, received: %d", response.StatusCode))
+			}
+
+			redirectURL, err := response.Location()
+			if err != nil {
+				return resource.NonRetryableError(fmt.Errorf("error extracting HTTP Location header: %s", err))
+			}
+
+			errorType := redirectURL.Query().Get("errorType")
+			if errorType == "PRIVATE_LINK_ENDPOINT_UNREACHABLE" {
+				errMessage := fmt.Errorf("got error during activation: %s", errorType)
+				log.Printf("[DEBUG] retryable %s", errMessage)
+				return resource.RetryableError(errMessage)
+			}
+
+			activationKey = redirectURL.Query().Get("activationKey")
 			return nil
 		})
-		if isResourceTimeoutError(err) {
-			response, err = client.Do(request)
+
+		if tfresource.TimedOut(err) {
+			return fmt.Errorf("timeout retrieving activation key from IP Address (%s): %s", agentIpAddress, err)
 		}
+
 		if err != nil {
 			return fmt.Errorf("error retrieving activation key from IP Address (%s): %s", agentIpAddress, err)
 		}
-		if response == nil {
-			return fmt.Errorf("Error retrieving response for activation key request: %s", err)
-		}
-
-		log.Printf("[DEBUG] Received HTTP response: %#v", response)
-		if response.StatusCode != 302 {
-			return fmt.Errorf("expected HTTP status code 302, received: %d", response.StatusCode)
-		}
-
-		redirectURL, err := response.Location()
-		if err != nil {
-			return fmt.Errorf("error extracting HTTP Location header: %s", err)
-		}
-
-		activationKey = redirectURL.Query().Get("activationKey")
 
 		if activationKey == "" {
 			return fmt.Errorf("empty activationKey received from IP Address: %s", agentIpAddress)
@@ -135,6 +173,18 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 
 	if v, ok := d.GetOk("name"); ok {
 		input.AgentName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("vpc_endpoint_id"); ok {
+		input.VpcEndpointId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("security_group_arns"); ok {
+		input.SecurityGroupArns = expandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("subnet_arns"); ok {
+		input.SubnetArns = expandStringSet(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Creating DataSync Agent: %s", input)
@@ -196,6 +246,14 @@ func resourceAwsDataSyncAgentRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("arn", output.AgentArn)
 	d.Set("name", output.Name)
+
+	if output.PrivateLinkConfig != nil {
+		plc := output.PrivateLinkConfig
+		d.Set("private_link_endpoint", plc.PrivateLinkEndpoint)
+		d.Set("security_group_arns", flattenStringList(plc.SecurityGroupArns))
+		d.Set("subnet_arns", flattenStringList(plc.SubnetArns))
+		d.Set("vpc_endpoint_id", plc.VpcEndpointId)
+	}
 
 	tags, err := keyvaluetags.DatasyncListTags(conn, d.Id())
 
