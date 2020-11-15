@@ -242,10 +242,12 @@ func TestAccAWSDefaultRouteTable_IPv4_To_TransitGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultRouteTable_Route_VpcEndpointId(t *testing.T) {
-	var routeTable1 ec2.RouteTable
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+func TestAccAWSDefaultRouteTable_IPv4_To_VpcEndpoint(t *testing.T) {
+	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
+	vpceResourceName := "aws_vpc_endpoint.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "0.0.0.0/0"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -253,9 +255,12 @@ func TestAccAWSDefaultRouteTable_Route_VpcEndpointId(t *testing.T) {
 		CheckDestroy: testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDefaultRouteTableConfigRouteVpcEndpointId(rName),
+				Config: testAccDefaultRouteTableConfigIpv4VpcEndpoint(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(resourceName, &routeTable1),
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckDefaultRouteTableRoute(resourceName, "cidr_block", destinationCidr, "vpc_endpoint_id", vpceResourceName, "id"),
 				),
 			},
 			{
@@ -268,9 +273,9 @@ func TestAccAWSDefaultRouteTable_Route_VpcEndpointId(t *testing.T) {
 			// VPC Endpoints will not delete unless the route is removed prior, otherwise will error:
 			// InvalidParameter: Endpoint must be removed from route table before deletion
 			{
-				Config: testAccAWSDefaultRouteTableConfigRouteVpcEndpointIdNoRoute(rName),
+				Config: testAccDefaultRouteTableConfigIpv4VpcEndpointNoRoute(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(resourceName, &routeTable1),
+					testAccCheckRouteTableExists(resourceName, &routeTable),
 				),
 			},
 		},
@@ -652,7 +657,7 @@ resource "aws_default_route_table" "test" {
 `, rName, destinationCidr))
 }
 
-func testAccAWSDefaultRouteTableConfigRouteVpcEndpointId(rName string) string {
+func testAccDefaultRouteTableConfigIpv4VpcEndpoint(rName, destinationCidr string) string {
 	return composeConfig(
 		testAccAvailableAZsNoOptInConfig(),
 		fmt.Sprintf(`
@@ -662,13 +667,17 @@ resource "aws_vpc" "test" {
   cidr_block = "10.10.10.0/25"
 
   tags = {
-    Name = "tf-acc-test-load-balancer"
+    Name = %[1]q
   }
 }
 
 # Another route destination for update
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -677,7 +686,7 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-load-balancer"
+    Name = %[1]q
   }
 }
 
@@ -694,6 +703,10 @@ resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
   allowed_principals         = [data.aws_caller_identity.current.arn]
   gateway_load_balancer_arns = [aws_lb.test.arn]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_endpoint" "test" {
@@ -701,20 +714,28 @@ resource "aws_vpc_endpoint" "test" {
   subnet_ids        = [aws_subnet.test.id]
   vpc_endpoint_type = aws_vpc_endpoint_service.test.service_type
   vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_default_route_table" "test" {
   default_route_table_id = aws_vpc.test.default_route_table_id
 
   route {
-    cidr_block      = "0.0.0.0/0"
+    cidr_block      = %[2]q
     vpc_endpoint_id = aws_vpc_endpoint.test.id
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, rName))
+`, rName, destinationCidr))
 }
 
-func testAccAWSDefaultRouteTableConfigRouteVpcEndpointIdNoRoute(rName string) string {
+func testAccDefaultRouteTableConfigIpv4VpcEndpointNoRoute(rName string) string {
 	return composeConfig(
 		testAccAvailableAZsNoOptInConfig(),
 		fmt.Sprintf(`
@@ -724,13 +745,17 @@ resource "aws_vpc" "test" {
   cidr_block = "10.10.10.0/25"
 
   tags = {
-    Name = "tf-acc-test-load-balancer"
+    Name = %[1]q
   }
 }
 
 # Another route destination for update
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -739,7 +764,7 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-load-balancer"
+    Name = %[1]q
   }
 }
 
@@ -756,6 +781,10 @@ resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
   allowed_principals         = [data.aws_caller_identity.current.arn]
   gateway_load_balancer_arns = [aws_lb.test.arn]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_endpoint" "test" {
@@ -763,6 +792,10 @@ resource "aws_vpc_endpoint" "test" {
   subnet_ids        = [aws_subnet.test.id]
   vpc_endpoint_type = aws_vpc_endpoint_service.test.service_type
   vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_default_route_table" "test" {
@@ -771,6 +804,10 @@ resource "aws_default_route_table" "test" {
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 `, rName))
