@@ -469,10 +469,12 @@ func TestAccAWSRouteTable_IPv4_To_TransitGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRouteTable_Route_VpcEndpointId(t *testing.T) {
-	var routeTable1 ec2.RouteTable
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+func TestAccAWSRouteTable_IPv4_To_VpcEndpoint(t *testing.T) {
+	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
+	vpceResourceName := "aws_vpc_endpoint.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "0.0.0.0/0"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
@@ -480,9 +482,16 @@ func TestAccAWSRouteTable_Route_VpcEndpointId(t *testing.T) {
 		CheckDestroy: testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteTableConfigRouteVpcEndpointId(rName),
+				Config: testAccAWSRouteTableConfigRouteIpv4VpcEndpointId(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(resourceName, &routeTable1),
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "vpc_endpoint_id", vpceResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -1517,7 +1526,7 @@ resource "aws_route_table" "test" {
 `, rName, destinationCidr))
 }
 
-func testAccAWSRouteTableConfigRouteVpcEndpointId(rName string) string {
+func testAccAWSRouteTableConfigRouteIpv4VpcEndpointId(rName, destinationCidr string) string {
 	return composeConfig(
 		testAccAvailableAZsNoOptInConfig(),
 		fmt.Sprintf(`
@@ -1527,7 +1536,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.10.10.0/25"
 
   tags = {
-    Name = "tf-acc-test-load-balancer"
+    Name = %[1]q
   }
 }
 
@@ -1537,7 +1546,7 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-load-balancer"
+    Name = %[1]q
   }
 }
 
@@ -1554,6 +1563,10 @@ resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
   allowed_principals         = [data.aws_caller_identity.current.arn]
   gateway_load_balancer_arns = [aws_lb.test.arn]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_endpoint" "test" {
@@ -1561,17 +1574,25 @@ resource "aws_vpc_endpoint" "test" {
   subnet_ids        = [aws_subnet.test.id]
   vpc_endpoint_type = aws_vpc_endpoint_service.test.service_type
   vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
 
   route {
-    cidr_block      = "0.0.0.0/0"
+    cidr_block      = %[2]q
     vpc_endpoint_id = aws_vpc_endpoint.test.id
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, rName))
+`, rName, destinationCidr))
 }
 
 func testAccAWSRouteTableConfigRouteIpv4LocalGateway(rName, destinationCidr string) string {
