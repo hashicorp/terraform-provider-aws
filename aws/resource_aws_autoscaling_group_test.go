@@ -866,7 +866,7 @@ func TestAccAWSAutoScalingGroup_ALB_TargetGroups(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/256
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/256
 func TestAccAWSAutoScalingGroup_TargetGroupArns(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
@@ -1435,7 +1435,7 @@ func TestAccAWSAutoScalingGroup_LaunchTemplate_IAMInstanceProfile(t *testing.T) 
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/256
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/256
 func TestAccAWSAutoScalingGroup_LoadBalancers(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"

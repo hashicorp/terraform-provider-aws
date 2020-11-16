@@ -934,7 +934,7 @@ func TestAccAWSSecurityGroupRule_Description_AllPorts_NonZeroPorts(t *testing.T)
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6416
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6416
 func TestAccAWSSecurityGroupRule_MultipleRuleSearching_AllProtocolCrash(t *testing.T) {
 	var group ec2.SecurityGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")

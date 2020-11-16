@@ -49,11 +49,11 @@ The following arguments are supported:
 the slot type can take. Each value can have a list of synonyms, which are additional values that help
 train the machine learning model about the values that it resolves for a slot. Attributes are
 documented under [enumeration_value](#enumeration_value).
-* `name` - (Required) The name of the slot type. The name is not case sensitive.
+* `name` - (Required) The name of the slot type. The name is not case sensitive. Must be less than or equal to 100 characters in length.
 * `create_version` - (Optional)
 Determines if a new slot type version is created when the initial resource is created and on each
 update. Defaults to `false`.
-* `description` - (Optional) A description of the slot type.
+* `description` - (Optional) A description of the slot type. Must be less than or equal to 200 characters in length.
 * `value_selection_strategy` - (Optional) Determines the slot resolution strategy that Amazon Lex
 uses to return slot type values. `ORIGINAL_VALUE` returns the value entered by the user if the user
 value is similar to the slot value. `TOP_RESOLUTION` returns the first value in the resolution list
@@ -67,8 +67,8 @@ can take.
 For example, a pizza ordering bot could have a slot type that specifies the type of crust that the
 pizza should have. The slot type could include the values: thick, thin, stuffed.
 
-* `synonyms` - (Optional) Additional values related to the slot type value.
-* `value` - (Required) The value of the slot type.
+* `synonyms` - (Optional) Additional values related to the slot type value. Each item must be less than or equal to 140 characters in length.
+* `value` - (Required) The value of the slot type. Must be less than or equal to 140 characters in length.
 
 ### Timeouts
 

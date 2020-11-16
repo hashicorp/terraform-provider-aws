@@ -90,7 +90,7 @@ The following arguments are supported:
 * `triggers` - (Optional) A map of arbitrary keys and values that, when changed, will trigger a redeployment. To force a redeployment without changing these keys/values, use the [`terraform taint` command](/docs/commands/taint.html).
 * `variables` - (Optional) A map that defines variables for the stage
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

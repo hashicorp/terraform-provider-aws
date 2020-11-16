@@ -360,7 +360,7 @@ func resourceAwsApiGatewayV2StageUpdate(d *schema.ResourceData, meta interface{}
 		}
 		if d.HasChange("stage_variables") {
 			o, n := d.GetChange("stage_variables")
-			add, del := diffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
+			add, del, _ := diffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
 			// Variables are removed by setting the associated value to "".
 			for k := range del {
 				del[k] = aws.String("")

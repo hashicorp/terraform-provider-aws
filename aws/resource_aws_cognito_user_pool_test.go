@@ -138,7 +138,7 @@ func TestAccAWSCognitoUserPool_withAdminCreateUserConfiguration(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/11858
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11858
 func TestAccAWSCognitoUserPool_withAdminCreateUserConfigurationAndPasswordPolicy(t *testing.T) {
 	name := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool.test"

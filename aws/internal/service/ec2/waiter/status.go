@@ -2,6 +2,7 @@ package waiter
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -203,6 +204,43 @@ func SecurityGroupStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 		}
 
 		return group, SecurityGroupStatusCreated, nil
+	}
+}
+
+const (
+	vpcPeeringConnectionStatusNotFound = "NotFound"
+	vpcPeeringConnectionStatusUnknown  = "Unknown"
+)
+
+// VpcPeeringConnectionStatus fetches the VPC peering connection and its status
+func VpcPeeringConnectionStatus(conn *ec2.EC2, vpcPeeringConnectionID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		vpcPeeringConnection, err := finder.VpcPeeringConnectionByID(conn, vpcPeeringConnectionID)
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVpcPeeringConnectionIDNotFound) {
+			return nil, vpcPeeringConnectionStatusNotFound, nil
+		}
+		if err != nil {
+			return nil, vpcPeeringConnectionStatusUnknown, err
+		}
+
+		// Sometimes AWS just has consistency issues and doesn't see
+		// our peering connection yet. Return an empty state.
+		if vpcPeeringConnection == nil || vpcPeeringConnection.Status == nil {
+			return nil, vpcPeeringConnectionStatusNotFound, nil
+		}
+
+		statusCode := aws.StringValue(vpcPeeringConnection.Status.Code)
+
+		// https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-lifecycle
+		switch statusCode {
+		case ec2.VpcPeeringConnectionStateReasonCodeFailed:
+			log.Printf("[WARN] VPC Peering Connection (%s): %s: %s", vpcPeeringConnectionID, statusCode, aws.StringValue(vpcPeeringConnection.Status.Message))
+			fallthrough
+		case ec2.VpcPeeringConnectionStateReasonCodeDeleted, ec2.VpcPeeringConnectionStateReasonCodeExpired, ec2.VpcPeeringConnectionStateReasonCodeRejected:
+			return nil, vpcPeeringConnectionStatusNotFound, nil
+		}
+
+		return vpcPeeringConnection, statusCode, nil
 	}
 }
 

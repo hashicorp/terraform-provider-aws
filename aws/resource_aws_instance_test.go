@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"os"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -204,27 +203,21 @@ func TestAccAWSInstance_inDefaultVpcBySgId(t *testing.T) {
 
 func TestAccAWSInstance_inEc2Classic(t *testing.T) {
 	resourceName := "aws_instance.test"
-	rInt := acctest.RandInt()
 	var v ec2.Instance
 
-	// EC2 Classic enabled
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigInEc2Classic(rInt),
+				Config: testAccInstanceConfigInEc2Classic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
+					testAccCheckInstanceEc2ClassicExists(resourceName, &v),
 				),
 			},
 			{
-				Config:                  testAccInstanceConfigInEc2Classic(rInt),
+				Config:                  testAccInstanceConfigInEc2Classic(),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -333,7 +326,7 @@ func TestAccAWSInstance_EbsBlockDevice_KmsKeyArn(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/12667
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
 func TestAccAWSInstance_EbsBlockDevice_InvalidIopsForVolumeType(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -455,7 +448,7 @@ func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
 
 // TestAccAWSInstance_GP2WithIopsValue updated in v3.0.0
 // to account for apply-time validation of the root_block_device.iops attribute for supported volume types
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/pull/14310
+// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/14310
 func TestAccAWSInstance_GP2WithIopsValue(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1293,7 +1286,7 @@ func TestAccAWSInstance_associatePublicIPAndPrivateIP(t *testing.T) {
 }
 
 // Allow Empty Private IP
-// https://github.com/terraform-providers/terraform-provider-aws/issues/13626
+// https://github.com/hashicorp/terraform-provider-aws/issues/13626
 func TestAccAWSInstance_Empty_PrivateIP(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -2039,7 +2032,7 @@ func TestAccAWSInstance_addSecurityGroupNetworkInterface(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/7063
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7063
 func TestAccAWSInstance_NewNetworkInterface_PublicIPAndSecondaryPrivateIPs(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -2077,7 +2070,7 @@ func TestAccAWSInstance_NewNetworkInterface_PublicIPAndSecondaryPrivateIPs(t *te
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/7063
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7063
 func TestAccAWSInstance_NewNetworkInterface_EmptyPrivateIPAndSecondaryPrivateIPs(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -2106,7 +2099,7 @@ func TestAccAWSInstance_NewNetworkInterface_EmptyPrivateIPAndSecondaryPrivateIPs
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/7063
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7063
 func TestAccAWSInstance_NewNetworkInterface_EmptyPrivateIPAndSecondaryPrivateIPsUpdate(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -2152,7 +2145,7 @@ func TestAccAWSInstance_NewNetworkInterface_EmptyPrivateIPAndSecondaryPrivateIPs
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/7063
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7063
 func TestAccAWSInstance_NewNetworkInterface_PrivateIPAndSecondaryPrivateIPs(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -2182,7 +2175,7 @@ func TestAccAWSInstance_NewNetworkInterface_PrivateIPAndSecondaryPrivateIPs(t *t
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/7063
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7063
 func TestAccAWSInstance_NewNetworkInterface_PrivateIPAndSecondaryPrivateIPsUpdate(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -2229,7 +2222,7 @@ func TestAccAWSInstance_NewNetworkInterface_PrivateIPAndSecondaryPrivateIPsUpdat
 	})
 }
 
-// https://github.com/terraform-providers/terraform-provider-aws/issues/227
+// https://github.com/hashicorp/terraform-provider-aws/issues/227
 func TestAccAWSInstance_associatePublic_defaultPrivate(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -2257,7 +2250,7 @@ func TestAccAWSInstance_associatePublic_defaultPrivate(t *testing.T) {
 	})
 }
 
-// https://github.com/terraform-providers/terraform-provider-aws/issues/227
+// https://github.com/hashicorp/terraform-provider-aws/issues/227
 func TestAccAWSInstance_associatePublic_defaultPublic(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -2285,7 +2278,7 @@ func TestAccAWSInstance_associatePublic_defaultPublic(t *testing.T) {
 	})
 }
 
-// https://github.com/terraform-providers/terraform-provider-aws/issues/227
+// https://github.com/hashicorp/terraform-provider-aws/issues/227
 func TestAccAWSInstance_associatePublic_explicitPublic(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -2313,7 +2306,7 @@ func TestAccAWSInstance_associatePublic_explicitPublic(t *testing.T) {
 	})
 }
 
-// https://github.com/terraform-providers/terraform-provider-aws/issues/227
+// https://github.com/hashicorp/terraform-provider-aws/issues/227
 func TestAccAWSInstance_associatePublic_explicitPrivate(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -2341,7 +2334,7 @@ func TestAccAWSInstance_associatePublic_explicitPrivate(t *testing.T) {
 	})
 }
 
-// https://github.com/terraform-providers/terraform-provider-aws/issues/227
+// https://github.com/hashicorp/terraform-provider-aws/issues/227
 func TestAccAWSInstance_associatePublic_overridePublic(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -2369,7 +2362,7 @@ func TestAccAWSInstance_associatePublic_overridePublic(t *testing.T) {
 	})
 }
 
-// https://github.com/terraform-providers/terraform-provider-aws/issues/227
+// https://github.com/hashicorp/terraform-provider-aws/issues/227
 func TestAccAWSInstance_associatePublic_overridePrivate(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -2496,7 +2489,7 @@ func TestAccAWSInstance_CreditSpecification_Empty_NonBurstable(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/10203
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10203
 func TestAccAWSInstance_CreditSpecification_UnspecifiedToEmpty_NonBurstable(t *testing.T) {
 	var instance ec2.Instance
 	resourceName := "aws_instance.test"
@@ -3172,6 +3165,10 @@ func testAccCheckInstanceExists(n string, i *ec2.Instance) resource.TestCheckFun
 	return testAccCheckInstanceExistsWithProvider(n, i, func() *schema.Provider { return testAccProvider })
 }
 
+func testAccCheckInstanceEc2ClassicExists(n string, i *ec2.Instance) resource.TestCheckFunc {
+	return testAccCheckInstanceExistsWithProvider(n, i, func() *schema.Provider { return testAccProviderEc2Classic })
+}
+
 func testAccCheckInstanceExistsWithProvider(n string, i *ec2.Instance, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -3357,25 +3354,17 @@ resource "aws_instance" "test" {
 `, rName)
 }
 
-func testAccInstanceConfigInEc2Classic(rInt int) string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
-resource "aws_security_group" "sg" {
-  name        = "tf_acc_test_%d"
-  description = "Test security group"
-}
-
+func testAccInstanceConfigInEc2Classic() string {
+	return composeConfig(
+		testAccEc2ClassicRegionProviderConfig(),
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t1.micro", "m3.medium", "m3.large", "c3.large", "r3.large"),
+		`
 resource "aws_instance" "test" {
-  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-
-  # tflint-ignore: aws_instance_previous_type
-  instance_type   = "m3.medium"
-  security_groups = [aws_security_group.sg.name]
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 }
-`, rInt))
+`)
 }
 
 func testAccInstanceConfigBasic() string {

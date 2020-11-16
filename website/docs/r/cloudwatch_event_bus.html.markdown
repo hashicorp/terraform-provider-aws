@@ -1,14 +1,17 @@
 ---
-subcategory: "CloudWatch"
+subcategory: "EventBridge (CloudWatch Events)"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_bus"
 description: |-
-  Provides a CloudWatch Events/EventBridge event bus resource.
+  Provides an EventBridge event bus resource.
 ---
 
 # Resource: aws_cloudwatch_event_bus
 
-Provides a CloudWatch Events/EventBridge event bus resource.
+Provides an EventBridge event bus resource.
+
+~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
+
 
 ## Example Usage
 
@@ -36,7 +39,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudwatch Events event buses can be imported using the `name`, e.g.
+EventBridge event buses can be imported using the `name`, e.g.
 
 ```console
 $ terraform import aws_cloudwatch_event_bus.messenger chat-messages

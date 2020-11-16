@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -27,6 +28,7 @@ var routeTableValidTargets = []string{
 	"nat_gateway_id",
 	"local_gateway_id",
 	"transit_gateway_id",
+	"vpc_endpoint_id",
 	"vpc_peering_connection_id",
 	"network_interface_id",
 }
@@ -109,6 +111,11 @@ func resourceAwsRouteTable() *schema.Resource {
 						},
 
 						"transit_gateway_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
+						"vpc_endpoint_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -228,7 +235,11 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 			m["egress_only_gateway_id"] = aws.StringValue(r.EgressOnlyInternetGatewayId)
 		}
 		if r.GatewayId != nil {
-			m["gateway_id"] = aws.StringValue(r.GatewayId)
+			if strings.HasPrefix(aws.StringValue(r.GatewayId), "vpce-") {
+				m["vpc_endpoint_id"] = aws.StringValue(r.GatewayId)
+			} else {
+				m["gateway_id"] = aws.StringValue(r.GatewayId)
+			}
 		}
 		if r.NatGatewayId != nil {
 			m["nat_gateway_id"] = aws.StringValue(r.NatGatewayId)
@@ -381,6 +392,10 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 
 			if s, ok := m["transit_gateway_id"].(string); ok && s != "" {
 				opts.TransitGatewayId = aws.String(s)
+			}
+
+			if s, ok := m["vpc_endpoint_id"].(string); ok && s != "" {
+				opts.VpcEndpointId = aws.String(s)
 			}
 
 			if s, ok := m["vpc_peering_connection_id"].(string); ok && s != "" {
@@ -565,6 +580,10 @@ func resourceAwsRouteTableHash(v interface{}) int {
 	}
 
 	if v, ok := m["local_gateway_id"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["vpc_endpoint_id"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 

@@ -338,7 +338,7 @@ func testAccPreCheckAWSEksFargateProfile(t *testing.T) {
 The allowed regions are hardcoded in the acceptance testing since dynamically determining the
 functionality requires creating and destroying a real EKS Cluster, which is a lengthy process.
 If this check is out of date, please create an issue in the Terraform AWS Provider
-repository (https://github.com/terraform-providers/terraform-provider-aws) or submit a PR to update the
+repository (https://github.com/hashicorp/terraform-provider-aws) or submit a PR to update the
 check itself (testAccPreCheckAWSEksFargateProfile).
 
 For the most up to date supported region information, see the EKS User Guide:

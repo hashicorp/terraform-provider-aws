@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -117,7 +116,7 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 	// IOPs are only valid, and required for, storage type io1 and io2. The current minimum
 	// is 100. Hard validation in place to return an error if IOPs are provided
 	// for an unsupported storage type.
-	// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/12667
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
 	var t string
 	if value, ok := d.GetOk("type"); ok {
 		t = value.(string)

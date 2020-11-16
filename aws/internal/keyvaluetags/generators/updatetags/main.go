@@ -37,6 +37,7 @@ var serviceNames = []string{
 	"cloudwatch",
 	"cloudwatchevents",
 	"cloudwatchlogs",
+	"codeartifact",
 	"codecommit",
 	"codedeploy",
 	"codepipeline",

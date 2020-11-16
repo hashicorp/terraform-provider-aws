@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -276,13 +275,14 @@ resource "aws_transfer_server" "foo" {
     NAME = "tf-acc-test-transfer-server"
   }
 }
+
+data "aws_partition" "current" {}
 `
 
 func testAccAWSTransferUserConfig_basic(rName string) string {
-	return testAccAWSTransferUserConfig_base + fmt.Sprintf(`
-
+	return composeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
 resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-user-iam-role-%s"
+  name = "tf-test-transfer-user-iam-role-%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -291,7 +291,7 @@ resource "aws_iam_role" "foo" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "transfer.amazonaws.com"
+        "Service": "transfer.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -301,7 +301,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-user-iam-policy-%s"
+  name = "tf-test-transfer-user-iam-policy-%[1]s"
   role = aws_iam_role.foo.id
 
   policy = <<POLICY
@@ -326,12 +326,11 @@ resource "aws_transfer_user" "foo" {
   user_name = "tftestuser"
   role      = aws_iam_role.foo.arn
 }
-`, rName, rName)
+`, rName))
 }
 
 func testAccAWSTransferUserName_validation(rName string) string {
-	return testAccAWSTransferUserConfig_base + fmt.Sprintf(`
-
+	return composeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
 resource "aws_transfer_user" "foo" {
   server_id = aws_transfer_server.foo.id
   user_name = "%s"
@@ -348,7 +347,7 @@ resource "aws_iam_role" "foo" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "transfer.amazonaws.com"
+        "Service": "transfer.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -356,14 +355,13 @@ resource "aws_iam_role" "foo" {
 }
 EOF
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSTransferUserConfig_options(rName string) string {
-	return testAccAWSTransferUserConfig_base + fmt.Sprintf(`
-
+	return composeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
 resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-user-iam-role-%s"
+  name = "tf-test-transfer-user-iam-role-%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -372,7 +370,7 @@ resource "aws_iam_role" "foo" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "transfer.amazonaws.com"
+        "Service": "transfer.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -382,7 +380,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-user-iam-policy-%s"
+  name = "tf-test-transfer-user-iam-policy-%[1]s"
   role = aws_iam_role.foo.id
 
   policy = <<POLICY
@@ -411,7 +409,7 @@ data "aws_iam_policy_document" "foo" {
     ]
 
     resources = [
-      "arn:aws:s3:::&{transfer:HomeBucket}",
+      "arn:${data.aws_partition.current.partition}:s3:::&{transfer:HomeBucket}",
     ]
   }
 
@@ -440,7 +438,7 @@ data "aws_iam_policy_document" "foo" {
     ]
 
     resources = [
-      "arn:aws:s3:::&{transfer:HomeDirectory}*",
+      "arn:${data.aws_partition.current.partition}:s3:::&{transfer:HomeDirectory}*",
     ]
   }
 }
@@ -458,14 +456,13 @@ resource "aws_transfer_user" "foo" {
     ADMIN = "test"
   }
 }
-`, rName, rName)
+`, rName))
 }
 
 func testAccAWSTransferUserConfig_modify(rName string) string {
-	return testAccAWSTransferUserConfig_base + fmt.Sprintf(`
-
+	return composeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
 resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-user-iam-role-%s"
+  name = "tf-test-transfer-user-iam-role-%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -474,7 +471,7 @@ resource "aws_iam_role" "foo" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "transfer.amazonaws.com"
+        "Service": "transfer.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -484,7 +481,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-user-iam-policy-%s"
+  name = "tf-test-transfer-user-iam-policy-%[1]s"
   role = aws_iam_role.foo.id
 
   policy = <<POLICY
@@ -513,7 +510,7 @@ data "aws_iam_policy_document" "foo" {
     ]
 
     resources = [
-      "arn:aws:s3:::&{transfer:HomeBucket}",
+      "arn:${data.aws_partition.current.partition}:s3:::&{transfer:HomeBucket}",
     ]
   }
 
@@ -540,7 +537,7 @@ data "aws_iam_policy_document" "foo" {
     ]
 
     resources = [
-      "arn:aws:s3:::&{transfer:HomeDirectory}*",
+      "arn:${data.aws_partition.current.partition}:s3:::&{transfer:HomeDirectory}*",
     ]
   }
 }
@@ -557,14 +554,13 @@ resource "aws_transfer_user" "foo" {
     TEST = "test2"
   }
 }
-`, rName, rName)
+`, rName))
 }
 
 func testAccAWSTransferUserConfig_forceNew(rName string) string {
-	return testAccAWSTransferUserConfig_base + fmt.Sprintf(`
-
+	return composeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
 resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-user-iam-role-%s"
+  name = "tf-test-transfer-user-iam-role-%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -573,7 +569,7 @@ resource "aws_iam_role" "foo" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "transfer.amazonaws.com"
+        "Service": "transfer.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -583,7 +579,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-user-iam-policy-%s"
+  name = "tf-test-transfer-user-iam-policy-%[1]s"
   role = aws_iam_role.foo.id
 
   policy = <<POLICY
@@ -612,7 +608,7 @@ data "aws_iam_policy_document" "foo" {
     ]
 
     resources = [
-      "arn:aws:s3:::&{transfer:HomeBucket}",
+      "arn:${data.aws_partition.current.partition}:s3:::&{transfer:HomeBucket}",
     ]
   }
 
@@ -641,7 +637,7 @@ data "aws_iam_policy_document" "foo" {
     ]
 
     resources = [
-      "arn:aws:s3:::&{transfer:HomeDirectory}*",
+      "arn:${data.aws_partition.current.partition}:s3:::&{transfer:HomeDirectory}*",
     ]
   }
 }
@@ -658,7 +654,7 @@ resource "aws_transfer_user" "foo" {
     TEST = "test2"
   }
 }
-`, rName, rName)
+`, rName))
 }
 
 func testAccAWSTransferUserConfig_homeDirectoryMappings(rName string) string {
@@ -675,7 +671,7 @@ resource "aws_iam_role" "foo" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "transfer.amazonaws.com"
+        "Service": "transfer.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -733,7 +729,7 @@ resource "aws_iam_role" "foo" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "transfer.amazonaws.com"
+        "Service": "transfer.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	testing "github.com/mitchellh/go-testing-interface"
 
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/addrs"
@@ -295,6 +296,11 @@ type TestCase struct {
 	//    # ...
 	//  }
 	ProviderFactories map[string]func() (*schema.Provider, error)
+
+	// ProtoV5ProviderFactories serves the same purpose as ProviderFactories,
+	// but for protocol v5 providers defined using the terraform-plugin-go
+	// ProviderServer interface.
+	ProtoV5ProviderFactories map[string]func() (tfprotov5.ProviderServer, error)
 
 	// Providers is the ResourceProvider that will be under test.
 	//

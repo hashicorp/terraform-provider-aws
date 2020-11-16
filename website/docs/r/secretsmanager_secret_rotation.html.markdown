@@ -45,7 +45,7 @@ The following arguments are supported:
 
 * `automatically_after_days` - (Required) Specifies the number of days between automatic scheduled rotations of the secret.
 
-## Attribute Reference
+## Attributes Reference
 
 * `id` - Amazon Resource Name (ARN) of the secret.
 * `arn` - Amazon Resource Name (ARN) of the secret.

@@ -73,7 +73,7 @@ Use the [`aws_acm_certificate`](/docs/providers/aws/r/acm_certificate.html) reso
 * `hosted_zone_id` - (Computed) The Amazon Route 53 Hosted Zone ID of the endpoint.
 * `target_domain_name` - (Computed) The target domain name.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

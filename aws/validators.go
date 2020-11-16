@@ -1081,6 +1081,18 @@ func validateOnceADayWindowFormat(v interface{}, k string) (ws []string, errors 
 	return
 }
 
+// validateUTCTimestamp validates a string in UTC Format required by APIs including:
+// https://docs.aws.amazon.com/iot/latest/apireference/API_CloudwatchMetricAction.html
+// https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceToPointInTime.html
+func validateUTCTimestamp(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	_, err := time.Parse(time.RFC3339, value)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("%q must be in RFC3339 time format %q. Example: %s", k, time.RFC3339, err))
+	}
+	return
+}
+
 // Validates that ECS Placement Constraints are set correctly
 // Takes type, and expression as strings
 func validateAwsEcsPlacementConstraint(constType, constExpr string) error {
@@ -1517,8 +1529,8 @@ func validateAwsKmsGrantName(v interface{}, k string) (ws []string, es []error) 
 
 func validateCognitoIdentityPoolName(v interface{}, k string) (ws []string, errors []error) {
 	val := v.(string)
-	if !regexp.MustCompile(`^[\w _]+$`).MatchString(val) {
-		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters and spaces", k))
+	if !regexp.MustCompile(`^[\w\s+=,.@-]+$`).MatchString(val) {
+		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, underscores and hyphens", k))
 	}
 
 	return
@@ -1956,16 +1968,6 @@ func validateIoTTopicRuleCloudWatchAlarmStateValue(v interface{}, s string) ([]s
 	return nil, []error{fmt.Errorf("State must be one of OK, ALARM, or INSUFFICIENT_DATA")}
 }
 
-func validateIoTTopicRuleCloudWatchMetricTimestamp(v interface{}, s string) ([]string, []error) {
-	dateString := v.(string)
-
-	// https://docs.aws.amazon.com/iot/latest/apireference/API_CloudwatchMetricAction.html
-	if _, err := time.Parse(time.RFC3339, dateString); err != nil {
-		return nil, []error{err}
-	}
-	return nil, nil
-}
-
 func validateIoTTopicRuleElasticSearchEndpoint(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
@@ -2111,7 +2113,7 @@ func validateAmazonSideAsn(v interface{}, k string) (ws []string, errors []error
 		return
 	}
 
-	// https://github.com/terraform-providers/terraform-provider-aws/issues/5263
+	// https://github.com/hashicorp/terraform-provider-aws/issues/5263
 	isLegacyAsn := func(a int64) bool {
 		return a == 7224 || a == 9059 || a == 10124 || a == 17493
 	}
@@ -2460,6 +2462,11 @@ var validateCloudWatchEventCustomEventBusName = validation.All(
 	validation.StringDoesNotMatch(regexp.MustCompile(`^default$`), "cannot be 'default'"),
 )
 
+var validateCloudWatchEventBusName = validation.All(
+	validation.StringLenBetween(1, 256),
+	validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._\-]+$`), ""),
+)
+
 var validateServiceDiscoveryNamespaceName = validation.All(
 	validation.StringLenBetween(1, 1024),
 	validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z._-]+$`), ""),
@@ -2482,4 +2489,38 @@ func validateNestedExactlyOneOf(m map[string]interface{}, valid []string) error 
 		return fmt.Errorf("only one of `%s` can be specified, but `%s` were specified.", strings.Join(valid, ", "), strings.Join(specified, ", "))
 	}
 	return nil
+}
+
+func MapMaxItems(max int) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) (warnings []string, errors []error) {
+		m, ok := i.(map[string]interface{})
+		if !ok {
+			errors = append(errors, fmt.Errorf("expected type of %s to be map", k))
+			return warnings, errors
+		}
+
+		if len(m) > max {
+			errors = append(errors, fmt.Errorf("expected number of items in %s to be less than or equal to %d, got %d", k, max, len(m)))
+		}
+
+		return warnings, errors
+	}
+}
+
+func MapKeysDoNotMatch(r *regexp.Regexp, message string) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) (warnings []string, errors []error) {
+		m, ok := i.(map[string]interface{})
+		if !ok {
+			errors = append(errors, fmt.Errorf("expected type of %s to be map", k))
+			return warnings, errors
+		}
+
+		for key := range m {
+			if ok := r.MatchString(key); ok {
+				errors = append(errors, fmt.Errorf("%s: %s: %s", k, message, key))
+			}
+		}
+
+		return warnings, errors
+	}
 }

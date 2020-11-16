@@ -392,6 +392,66 @@ func TestAccAwsBackupPlan_Rule_CopyAction_SameRegion(t *testing.T) {
 	})
 }
 
+func TestAccAwsBackupPlan_Rule_CopyAction_NoLifecycle(t *testing.T) {
+	var plan backup.GetBackupPlanOutput
+	resourceName := "aws_backup_plan.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsBackupPlanConfigRuleCopyActionNoLifecycle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists(resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"rule_name":     rName,
+						"lifecycle.#":   "0",
+						"copy_action.#": "1",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAwsBackupPlanConfigRuleCopyAction(rName, 60, 365),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists(resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"rule_name":                      rName,
+						"lifecycle.#":                    "1",
+						"lifecycle.0.cold_storage_after": "30",
+						"lifecycle.0.delete_after":       "180",
+						"copy_action.#":                  "1",
+					}),
+				),
+			},
+			{
+				Config: testAccAwsBackupPlanConfigRuleCopyActionNoLifecycle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists(resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"rule_name":     rName,
+						"lifecycle.#":   "0",
+						"copy_action.#": "1",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAwsBackupPlan_Rule_CopyAction_Multiple(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
@@ -436,10 +496,9 @@ func TestAccAwsBackupPlan_Rule_CopyAction_CrossRegion(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSBackup(t)
-			testAccMultipleRegionsPreCheck(t)
-			testAccAlternateRegionPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -801,7 +860,7 @@ resource "aws_backup_plan" "test" {
 `, rName)
 }
 
-func testAccAwsBackupPlanConfigRuleCopyAction(rName string, coldStorageAfter int, deleteAfter int) string {
+func testAccAwsBackupPlanConfigRuleCopyAction(rName string, coldStorageAfter, deleteAfter int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
   name = "%[1]s-1"
@@ -916,6 +975,32 @@ resource "aws_backup_plan" "test" {
         delete_after       = 180
       }
 
+      destination_vault_arn = aws_backup_vault.test2.arn
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAwsBackupPlanConfigRuleCopyActionNoLifecycle(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = "%[1]s-1"
+}
+
+resource "aws_backup_vault" "test2" {
+  name = "%[1]s-2"
+}
+
+resource "aws_backup_plan" "test" {
+  name = %[1]q
+
+  rule {
+    rule_name         = %[1]q
+    target_vault_name = aws_backup_vault.test.name
+    schedule          = "cron(0 12 * * ? *)"
+
+    copy_action {
       destination_vault_arn = aws_backup_vault.test2.arn
     }
   }

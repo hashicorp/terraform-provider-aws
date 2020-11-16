@@ -57,7 +57,7 @@ Files and folders stored as Amazon S3 objects in S3 buckets don't, by default, h
   to first refresh that directory's contents from the Amazon S3 bucket. Valid Values: 300 to 2,592,000 seconds (5 minutes to 30 days)
 
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

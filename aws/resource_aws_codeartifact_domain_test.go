@@ -71,7 +71,7 @@ func TestAccAWSCodeArtifactDomain_basic(t *testing.T) {
 	resourceName := "aws_codeartifact_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("codeartifact", t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codeartifact.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
 		Steps: []resource.TestStep{
@@ -86,6 +86,7 @@ func TestAccAWSCodeArtifactDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_key", "aws_kms_key.test", "arn"),
 					testAccCheckResourceAttrAccountID(resourceName, "owner"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -97,12 +98,54 @@ func TestAccAWSCodeArtifactDomain_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeArtifactDomain_disappears(t *testing.T) {
+func TestAccAWSCodeArtifactDomain_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codeartifact_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("codeartifact", t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeArtifactDomainConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeArtifactDomainExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodeArtifactDomainConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeArtifactDomainExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSCodeArtifactDomainConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeArtifactDomainExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2")),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeArtifactDomain_disappears(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codeartifact_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codeartifact.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
 		Steps: []resource.TestStep{
@@ -191,4 +234,41 @@ resource "aws_codeartifact_domain" "test" {
   encryption_key = aws_kms_key.test.arn
 }
 `, rName)
+}
+
+func testAccAWSCodeArtifactDomainConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_codeartifact_domain" "test" {
+  domain         = %[1]q
+  encryption_key = aws_kms_key.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSCodeArtifactDomainConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_codeartifact_domain" "test" {
+  domain         = %[1]q
+  encryption_key = aws_kms_key.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
