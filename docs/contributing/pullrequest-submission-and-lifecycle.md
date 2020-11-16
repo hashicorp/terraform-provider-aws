@@ -196,11 +196,11 @@ We use the [go-changelog](https://github.com/hashicorp/go-changelog) to generate
 
 The changelog format requires an entry in the following format, where HEADER corresponds to the changelog category, and the entry is the changelog entry itself. The entry should be included in a file in the `.changelog` directory in the format `{PR-NUMBER}.txt`.
 
-~~~
-```release-note:{HEADER}
-{ENTRY}
 ```
-~~~
+    ```release-note:{HEADER}
+    {ENTRY}
+    ```
+```
 
 ### Pull Request Types to CHANGELOG
 
@@ -212,61 +212,61 @@ The CHANGELOG is intended to show operator-impacting changes to the codebase for
 
 A new resource entry should only contain the name of the resource, and use the `new-resource` header.
 
-~~~
-```release-note:new-resource
-aws_secretsmanager_secret_policy
 ```
-~~~
+    ```release-note:new-resource
+    aws_secretsmanager_secret_policy
+    ```
+```
 
 ##### New data source
 
 A new datasource entry should only contain the name of the datasource, and use the `new-datasource` header.
 
-~~~
-```release-note:new-datasource
-aws_workspaces_workspace
 ```
-~~~
+    ```release-note:new-datasource
+    aws_workspaces_workspace
+    ```
+```
 
 ##### New full-length documentation guides (e.g. EKS Getting Started Guide, IAM Policy Documents with Terraform)
 
 A new full length documentation entry describe the guide being added, and use the `enhancements` header.
 
-~~~
-```release-note:enhancements
-Added full length Custom Service Endpoint Configuration guide
 ```
-~~~
+    ```release-note:enhancements
+    Added full length Custom Service Endpoint Configuration guide
+    ```
+```
 
 ##### Resource and provider bug fixes
 
 A new bug entry should have a prefix indicating the resource or datasource it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level fixes.
 
-~~~
-```release-note:bug
-resource/aws_glue_classifier: Fix quote_symbol being optional
 ```
-~~~
+    ```release-note:bug
+    resource/aws_glue_classifier: Fix quote_symbol being optional
+    ```
+```
 
 ##### Resource and provider enhancements
 
 A new enhancement entry should have a prefix indicating the resource or datasource it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level enchancements.
 
-~~~
-```release-note:enhancements
-resource/aws_eip: Add network_border_group argument
 ```
-~~~
+    ```release-note:enhancements
+    resource/aws_eip: Add network_border_group argument
+    ```
+```
 
 ##### Deprecations, removals or breaking changes
 
 A breaking-change entry should have a prefix indicating the resource or datasource it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level changes.
 
-~~~
-```release-note:breaking-change
-resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
 ```
-~~~
+    ```release-note:breaking-change
+    resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
+    ```
+```
 
 #### Changes that may have a CHANGELOG entry
 
@@ -274,11 +274,11 @@ Dependency updates: If the update contains relevant bug fixes or enhancements th
 Any changes which do not fit into the above categories but warrant highlighting.
 Use resource/datasource/provider prefixes where appropriate.
 
-~~~
-```release-note:notes
-resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
 ```
-~~~
+    ```release-note:notes
+    resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
+    ```
+```
 
 #### Changes that should _not_ have a CHANGELOG entry
 
