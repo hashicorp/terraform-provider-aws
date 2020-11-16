@@ -84,7 +84,7 @@ func resourceAwsSagemakerImageCreate(d *schema.ResourceData, meta interface{}) e
 		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SagemakerTags()
 	}
 
-	// for some reason even if the operation is retried the same response is given even though the role is valid. a short sleep before creation solves it.
+	// for some reason even if the operation is retried the same error response is given even though the role is valid. a short sleep before creation solves it.
 	time.Sleep(1 * time.Minute)
 	log.Printf("[DEBUG] sagemaker Image create config: %#v", *input)
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
