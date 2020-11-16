@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -16,18 +15,18 @@ func dataSourceAwsImageBuilderImageRecipe() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
 			},
-			"block_device_mappings": {
-				Type:     schema.TypeList,
+			"block_device_mapping": {
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"device_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1024),
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"ebs": {
 							Type:     schema.TypeList,
@@ -76,12 +75,19 @@ func dataSourceAwsImageBuilderImageRecipe() *schema.Resource {
 					},
 				},
 			},
-			"components": {
-				Type:     schema.TypeList,
+			"component": {
+				Type:     schema.TypeSet,
 				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"component_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
-			"datecreated": {
+			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,11 +111,11 @@ func dataSourceAwsImageBuilderImageRecipe() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"semantic_version": {
+			"tags": tagsSchema(),
+			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
 		},
 	}
 }
@@ -118,28 +124,36 @@ func dataSourceAwsImageBuilderImageRecipeRead(d *schema.ResourceData, meta inter
 	conn := meta.(*AWSClient).imagebuilderconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.GetImageRecipe(&imagebuilder.GetImageRecipeInput{
-		ImageRecipeArn: aws.String(d.Get("arn").(string)),
-	})
+	input := &imagebuilder.GetImageRecipeInput{}
+
+	if v, ok := d.GetOk("arn"); ok {
+		input.ImageRecipeArn = aws.String(v.(string))
+	}
+
+	output, err := conn.GetImageRecipe(input)
 
 	if err != nil {
-		return fmt.Errorf("error reading Recipe (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading Image Builder Image Recipe (%s): %w", aws.StringValue(input.ImageRecipeArn), err)
 	}
 
-	d.SetId(*resp.ImageRecipe.Arn)
-	d.Set("block_device_mappings", flattenImageBuilderImageRecipeBlockDeviceMappings(resp.ImageRecipe.BlockDeviceMappings))
-	d.Set("components", flattenImageBuilderImageRecipeComponents(resp.ImageRecipe.Components))
-	d.Set("datecreated", resp.ImageRecipe.DateCreated)
-	d.Set("description", resp.ImageRecipe.Description)
-	d.Set("name", resp.ImageRecipe.Name)
-	d.Set("owner", resp.ImageRecipe.Owner)
-	d.Set("parent_image", resp.ImageRecipe.ParentImage)
-	d.Set("platform", resp.ImageRecipe.Platform)
-	d.Set("semantic_version", resp.ImageRecipe.Version)
-
-	if err := d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(resp.ImageRecipe.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	if output == nil || output.ImageRecipe == nil {
+		return fmt.Errorf("error reading Image Builder Image Recipe (%s): empty response", aws.StringValue(input.ImageRecipeArn))
 	}
+
+	imageRecipe := output.ImageRecipe
+
+	d.SetId(aws.StringValue(imageRecipe.Arn))
+	d.Set("arn", imageRecipe.Arn)
+	d.Set("block_device_mapping", flattenImageBuilderInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings))
+	d.Set("component", flattenImageBuilderComponentConfigurations(imageRecipe.Components))
+	d.Set("date_created", imageRecipe.DateCreated)
+	d.Set("description", imageRecipe.Description)
+	d.Set("name", imageRecipe.Name)
+	d.Set("owner", imageRecipe.Owner)
+	d.Set("parent_image", imageRecipe.ParentImage)
+	d.Set("platform", imageRecipe.Platform)
+	d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(imageRecipe.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
+	d.Set("version", imageRecipe.Version)
 
 	return nil
 }
