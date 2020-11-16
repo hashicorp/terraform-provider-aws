@@ -24,22 +24,7 @@ jobs:
             Welcome @${{github.actor}} :wave:
             
             It looks like this is your first Pull Request submission to the [Terraform AWS Provider](https://github.com/terraform-providers/terraform-provider-aws)! If you haven’t already done so please make sure you have checked out our [CONTRIBUTING](https://github.com/terraform-providers/terraform-provider-aws/blob/master/docs/CONTRIBUTING.md) guide and [FAQ](https://github.com/terraform-providers/terraform-provider-aws/blob/master/docs/FAQ.md) to make sure your contribution is adhering to best practice and has all the necessary elements in place for a successful approval.
+
+            Also take a look at our [FAQ](https://github.com/terraform-providers/terraform-provider-aws/blob/master/docs/FAQ.md) which details how we prioritize Pull Requests for inclusion.
             
             Thanks again, and welcome to the community! :smiley:         
-      - name: Add comment to newly raised pull requests
-        if: github.event.action == 'opened' && !contains(fromJSON('["anGie44", "bflad", "breathingdust", "bill-rich", "DrFaust92", "ewbankkit", "gdavison", "maryelizbeth", "renovate[bot]", "YakDriver"]'), github.actor)
-        uses: peter-evans/create-or-update-comment@v1
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |-
-            Hi @${{github.actor}}, thanks for your contribution! :tada:
-
-            What happens from here:
-
-            We have a large backlog of pull requests to get through and the team are moving through them as quick as we can. All pull requests must be reviewed by a HashiCorp engineer before inclusion. This is to ensure that the design of the addition fits with what provider users have come to expect, and to ensure that testing and best practices are adhered to. This is particularly important for such a large codebase, to ensure that we sustain its maintainability as its grows.
-
-            Upvotes on the Pull Request and/or Issue are the primary way we decide which pull requests to review, but we also look at security, bug severity, and usability issues as drivers for inclusion.
-
-            Once we have prioritized your contribution for review, we will let you know when to expect an engineer to get in touch.  If changes are required, we will ask in the pull request. If you are unable to find the time, just let us know, and we will make the necessary changes required in order to merge.
-
-            Thanks again for your contribution! We apologize that some pull requests may sit idle for quite some time, but the scale of the provider and its contributions means that we are unable to respond to each pull request as quickly as we would like.
