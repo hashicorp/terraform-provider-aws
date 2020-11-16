@@ -218,7 +218,7 @@ aws_secretsmanager_secret_policy
 ```
 ~~~
 
-##### New data source:
+##### New data source
 
 A new datasource entry should only contain the name of the datasource, and use the `new-datasource` header.
 
@@ -234,7 +234,7 @@ A new full length documentation entry describe the guide being added, and use th
 
 ~~~
 ```release-note:enhancements
-Added full length Custom Service Endpoint Configuration guide 
+Added full length Custom Service Endpoint Configuration guide
 ```
 ~~~
 
@@ -244,7 +244,7 @@ A new bug entry should have a prefix indicating the resource or datasource it co
 
 ~~~
 ```release-note:bug
-resource/aws_glue_classifier: Fix quote_symbol being optional 
+resource/aws_glue_classifier: Fix quote_symbol being optional
 ```
 ~~~
 
@@ -254,7 +254,7 @@ A new enhancement entry should have a prefix indicating the resource or datasour
 
 ~~~
 ```release-note:enhancements
-resource/aws_eip: Add network_border_group argument 
+resource/aws_eip: Add network_border_group argument
 ```
 ~~~
 
