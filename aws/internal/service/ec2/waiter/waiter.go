@@ -257,18 +257,18 @@ const (
 )
 
 func VpcEndpointRouteTableAssociationCreated(conn *ec2.EC2, vpcEndpointID, routeTableID string) error {
-	associated := false
+	found := false
 
 	err := resource.Retry(VpcEndpointRouteTableAssociationCreatedTimeout, func() *resource.RetryError {
 		var err error
 
-		associated, err = finder.VpcEndpointRouteTableAssociation(conn, vpcEndpointID, routeTableID)
+		found, err = finder.VpcEndpointRouteTableAssociationExists(conn, vpcEndpointID, routeTableID)
 
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 
-		if !associated {
+		if !found {
 			return resource.RetryableError(fmt.Errorf("VPC Endpoint (%s) not associated with Route Table (%s)", vpcEndpointID, routeTableID))
 		}
 
@@ -276,14 +276,14 @@ func VpcEndpointRouteTableAssociationCreated(conn *ec2.EC2, vpcEndpointID, route
 	})
 
 	if tfresource.TimedOut(err) {
-		associated, err = finder.VpcEndpointRouteTableAssociation(conn, vpcEndpointID, routeTableID)
+		found, err = finder.VpcEndpointRouteTableAssociationExists(conn, vpcEndpointID, routeTableID)
 	}
 
 	if err != nil {
 		return err
 	}
 
-	if !associated {
+	if !found {
 		return fmt.Errorf("VPC Endpoint (%s) not associated with Route Table (%s)", vpcEndpointID, routeTableID)
 	}
 

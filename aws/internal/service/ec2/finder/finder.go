@@ -110,8 +110,8 @@ func VpcEndpointByID(conn *ec2.EC2, id string) (*ec2.VpcEndpoint, error) {
 	return output.VpcEndpoints[0], nil
 }
 
-// VpcEndpointRouteTableAssociation returns whether the specified VPC endpoint and route table are associated.
-func VpcEndpointRouteTableAssociation(conn *ec2.EC2, vpcEndpointID, routeTableID string) (bool, error) {
+// VpcEndpointRouteTableAssociationExists returns whether the specified VPC endpoint/route table association exists.
+func VpcEndpointRouteTableAssociationExists(conn *ec2.EC2, vpcEndpointID, routeTableID string) (bool, error) {
 	vpcEndpoint, err := VpcEndpointByID(conn, vpcEndpointID)
 	if err != nil {
 		return false, err

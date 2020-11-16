@@ -66,14 +66,14 @@ func testAccCheckVpcEndpointRouteTableAssociationDestroy(s *terraform.State) err
 			continue
 		}
 
-		associated, err := finder.VpcEndpointRouteTableAssociation(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["route_table_id"])
+		found, err := finder.VpcEndpointRouteTableAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["route_table_id"])
 		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVpcEndpointIdNotFound) {
 			continue
 		}
 		if err != nil {
 			return err
 		}
-		if associated {
+		if found {
 			return fmt.Errorf("VPC Endpoint/Route Table association still exists")
 		}
 	}
@@ -93,11 +93,11 @@ func testAccCheckVpcEndpointRouteTableAssociationExists(n string) resource.TestC
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		associated, err := finder.VpcEndpointRouteTableAssociation(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["route_table_id"])
+		found, err := finder.VpcEndpointRouteTableAssociationExists(conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["route_table_id"])
 		if err != nil {
 			return err
 		}
-		if associated {
+		if found {
 			return nil
 		}
 

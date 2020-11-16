@@ -76,10 +76,13 @@ func resourceAwsVpcEndpointRouteTableAssociationCreate(d *schema.ResourceData, m
 func resourceAwsVpcEndpointRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	associated, err := finder.VpcEndpointRouteTableAssociation(conn, d.Get("vpc_endpoint_id").(string), d.Get("route_table_id").(string))
+	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
+	routeTableID := d.Get("route_table_id").(string)
+
+	found, err := finder.VpcEndpointRouteTableAssociationExists(conn, vpcEndpointID, routeTableID)
 
 	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVpcEndpointIdNotFound) {
-		log.Printf("[WARN] VPC Endpoint not found, removing VPC Endpoint/Route Table association (%s) from state", d.Id())
+		log.Printf("[WARN] VPC Endpoint (%s) not found, removing VPC Endpoint/Route Table association (%s) from state", vpcEndpointID, d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -88,7 +91,7 @@ func resourceAwsVpcEndpointRouteTableAssociationRead(d *schema.ResourceData, met
 		return fmt.Errorf("error reading VPC Endpoint/Route Table association (%s): %w", d.Id(), err)
 	}
 
-	if !associated {
+	if !found {
 		log.Printf("[WARN] VPC Endpoint/Route Table association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
