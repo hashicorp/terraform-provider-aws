@@ -278,9 +278,10 @@ func testAccCheckAWSSagemakerImageExists(n string, image *sagemaker.DescribeImag
 
 func testAccAWSSagemakerImageConfigBase(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name               = %[1]q
-  path               = "/"
   assume_role_policy = data.aws_iam_policy_document.test.json
 }
 
@@ -290,7 +291,7 @@ data "aws_iam_policy_document" "test" {
 
     principals {
       type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
+      identifiers = ["sagemaker.${data.aws_partition.current.dns_suffix}"]
     }
   }
 }

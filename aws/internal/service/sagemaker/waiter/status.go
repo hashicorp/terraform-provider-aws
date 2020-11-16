@@ -1,6 +1,8 @@
 package waiter
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
@@ -47,7 +49,7 @@ func ImageStatus(conn *sagemaker.SageMaker, name string) resource.StateRefreshFu
 
 		output, err := conn.DescribeImage(input)
 
-		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "No Image with the name") {
 			return nil, SagemakerImageStatusNotFound, nil
 		}
 
@@ -57,6 +59,10 @@ func ImageStatus(conn *sagemaker.SageMaker, name string) resource.StateRefreshFu
 
 		if output == nil {
 			return nil, SagemakerImageStatusNotFound, nil
+		}
+
+		if aws.StringValue(output.ImageStatus) == sagemaker.ImageStatusCreateFailed {
+			return output, sagemaker.ImageStatusCreateFailed, fmt.Errorf("%s", aws.StringValue(output.FailureReason))
 		}
 
 		return output, aws.StringValue(output.ImageStatus), nil

@@ -4,9 +4,12 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -42,6 +45,7 @@ func resourceAwsSagemakerImage() *schema.Resource {
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
 			"display_name": {
@@ -80,16 +84,34 @@ func resourceAwsSagemakerImageCreate(d *schema.ResourceData, meta interface{}) e
 		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SagemakerTags()
 	}
 
+	// for some reason even if the operation is retried the same response is given even though the role is valid. a short sleep before creation solves it.
+	time.Sleep(1 * time.Minute)
 	log.Printf("[DEBUG] sagemaker Image create config: %#v", *input)
-	_, err := conn.CreateImage(input)
-	if err != nil {
-		return fmt.Errorf("error creating SageMaker Image: %w", err)
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		_, err = conn.CreateImage(input)
+		if err != nil {
+			return resource.NonRetryableError(fmt.Errorf("error creating SageMaker Image: %w", err))
+		}
+
+		d.SetId(name)
+
+		out, err := waiter.ImageCreated(conn, d.Id())
+
+		if strings.Contains(aws.StringValue(out.FailureReason), "Unable to assume role with RoleArn") {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(fmt.Errorf("error waiting for SageMaker Image (%s) to create: %w", d.Id(), err))
+		}
+		return nil
+	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.CreateImage(input)
+		_, err = waiter.ImageCreated(conn, d.Id())
 	}
-
-	d.SetId(name)
-
-	if _, err := waiter.ImageCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for SageMaker Image (%s) to create: %w", d.Id(), err)
+	if err != nil {
+		return fmt.Errorf("error creating SageMaker Image %s: %w", name, err)
 	}
 
 	return resourceAwsSagemakerImageRead(d, meta)
@@ -139,10 +161,6 @@ func resourceAwsSagemakerImageUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	var deleteProperties []*string
-
-	if d.HasChange("role_arn") {
-		input.RoleArn = aws.String(d.Get("role_arn").(string))
-	}
 
 	if d.HasChange("description") {
 		if v, ok := d.GetOk("description"); ok {
