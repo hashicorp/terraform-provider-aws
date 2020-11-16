@@ -328,9 +328,11 @@ func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("destination_prefix_list_id", route.DestinationPrefixListId)
 	// VPC Endpoint ID is returned in Gateway ID field
 	if strings.HasPrefix(aws.StringValue(route.GatewayId), "vpce-") {
+		d.Set("gateway_id", "")
 		d.Set("vpc_endpoint_id", route.GatewayId)
 	} else {
 		d.Set("gateway_id", route.GatewayId)
+		d.Set("vpc_endpoint_id", "")
 	}
 	d.Set("egress_only_gateway_id", route.EgressOnlyInternetGatewayId)
 	d.Set("nat_gateway_id", route.NatGatewayId)

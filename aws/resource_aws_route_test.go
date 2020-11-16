@@ -46,7 +46,7 @@ func TestAccAWSRoute_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -136,7 +136,7 @@ func TestAccAWSRoute_IPv6_To_EgressOnlyInternetGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -184,7 +184,7 @@ func TestAccAWSRoute_IPv6_To_InternetGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -227,7 +227,7 @@ func TestAccAWSRoute_IPv6_To_Instance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -272,7 +272,7 @@ func TestAccAWSRoute_IPv6_To_NetworkInterface_Unattached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateBlackhole),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -315,7 +315,7 @@ func TestAccAWSRoute_IPv6_To_VpcPeeringConnection(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_peering_connection_id", pcxResourceName, "id"),
 				),
 			},
@@ -358,7 +358,7 @@ func TestAccAWSRoute_IPv6_To_VpnGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -401,7 +401,7 @@ func TestAccAWSRoute_IPv4_To_VpnGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -444,7 +444,7 @@ func TestAccAWSRoute_IPv4_To_Instance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -489,7 +489,7 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_Unattached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateBlackhole),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -535,7 +535,7 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_Attached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -582,7 +582,7 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_TwoAttachments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -603,7 +603,7 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_TwoAttachments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -646,7 +646,7 @@ func TestAccAWSRoute_IPv4_To_VpcPeeringConnection(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_peering_connection_id", pcxResourceName, "id"),
 				),
 			},
@@ -689,7 +689,7 @@ func TestAccAWSRoute_IPv4_To_NatGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -762,7 +762,7 @@ func TestAccAWSRoute_IPv4_To_TransitGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", tgwResourceName, "id"),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -805,7 +805,7 @@ func TestAccAWSRoute_IPv6_To_TransitGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", tgwResourceName, "id"),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -848,7 +848,7 @@ func TestAccAWSRoute_IPv4_To_LocalGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -891,7 +891,7 @@ func TestAccAWSRoute_IPv6_To_LocalGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -953,6 +953,7 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 	pcxResourceName := "aws_vpc_peering_connection.test"
 	ngwResourceName := "aws_nat_gateway.test"
 	tgwResourceName := "aws_ec2_transit_gateway.test"
+	vpcEndpointResourceName := "aws_vpc_endpoint.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr := "10.3.0.0/16"
 
@@ -978,7 +979,7 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -999,7 +1000,7 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1020,7 +1021,7 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1041,7 +1042,7 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1063,7 +1064,7 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateBlackhole),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1084,7 +1085,28 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", tgwResourceName, "id"),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
+				),
+			},
+			{
+				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "vpc_endpoint_id", vpcEndpointResourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_id", vpcEndpointResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1105,7 +1127,7 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_peering_connection_id", pcxResourceName, "id"),
 				),
 			},
@@ -1153,7 +1175,7 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1174,7 +1196,7 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1195,7 +1217,7 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1216,7 +1238,7 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1237,7 +1259,7 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateBlackhole),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
 			},
@@ -1258,7 +1280,7 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_peering_connection_id", pcxResourceName, "id"),
 				),
 			},
@@ -1292,7 +1314,7 @@ func TestAccAWSRoute_IPv4_To_VpcEndpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
-					// TODO resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
@@ -2583,6 +2605,38 @@ resource "aws_nat_gateway" "test" {
   }
 
   depends_on = [aws_internet_gateway.test]
+}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_lb" "test" {
+  load_balancer_type = "gateway"
+  name               = %[1]q
+
+  subnet_mapping {
+    subnet_id = aws_subnet.test.id
+  }
+}
+
+resource "aws_vpc_endpoint_service" "test" {
+  acceptance_required        = false
+  allowed_principals         = [data.aws_caller_identity.current.arn]
+  gateway_load_balancer_arns = [aws_lb.test.arn]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  service_name      = aws_vpc_endpoint_service.test.service_name
+  subnet_ids        = [aws_subnet.test.id]
+  vpc_endpoint_type = aws_vpc_endpoint_service.test.service_type
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "test" {
