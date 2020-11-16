@@ -806,6 +806,56 @@ func TestAccAWSLambdaFunction_FileSystemConfig(t *testing.T) {
 	})
 }
 
+func TestAccAWSLambdaFunction_imageConfig(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+	resourceName := "aws_lambda_function.test"
+
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			// Ensure a function with lambda file system configuration can be created
+			{
+				Config: testAccAWSLambdaImageConfig(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
+				),
+			},
+			// Ensure configuration can be imported
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			// Ensure lambda image code can be updated
+			{
+				Config: testAccAWSLambdaImageConfigUpdateCode(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+				),
+			},
+			// Ensure lambda image config can be updated
+			{
+				Config: testAccAWSLambdaImageConfigUpdateConfig(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLambdaFunction_tracingConfig(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
@@ -2217,6 +2267,42 @@ resource "aws_lambda_function" "test" {
   }
 
   depends_on = [aws_efs_mount_target.mount_target_az2]
+}
+`, funcName)
+}
+
+func testAccAWSLambdaImageConfig(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "test" {
+  image_uri     = "373534280245.dkr.ecr.sa-east-1.amazonaws.com/lambda-image-function:latest"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  package_type  = "Image"
+}
+`, funcName)
+}
+
+func testAccAWSLambdaImageConfigUpdateCode(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "test" {
+  image_uri     = "373534280245.dkr.ecr.sa-east-1.amazonaws.com/lambda-image-function:v1"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  package_type  = "Image"
+}
+`, funcName)
+}
+
+func testAccAWSLambdaImageConfigUpdateConfig(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "test" {
+  image_uri     = "373534280245.dkr.ecr.sa-east-1.amazonaws.com/lambda-image-function:v2"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  package_type  = "Image"
+  image_config {
+	command = ["app.another_handler"]
+  }
 }
 `, funcName)
 }
