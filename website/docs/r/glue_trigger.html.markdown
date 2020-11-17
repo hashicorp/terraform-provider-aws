@@ -20,12 +20,12 @@ resource "aws_glue_trigger" "example" {
   type = "CONDITIONAL"
 
   actions {
-    job_name = "${aws_glue_job.example1.name}"
+    job_name = aws_glue_job.example1.name
   }
 
   predicate {
     conditions {
-      job_name = "${aws_glue_job.example2.name}"
+      job_name = aws_glue_job.example2.name
       state    = "SUCCEEDED"
     }
   }
@@ -40,7 +40,7 @@ resource "aws_glue_trigger" "example" {
   type = "ON_DEMAND"
 
   actions {
-    job_name = "${aws_glue_job.example.name}"
+    job_name = aws_glue_job.example.name
   }
 }
 ```
@@ -54,7 +54,7 @@ resource "aws_glue_trigger" "example" {
   type     = "SCHEDULED"
 
   actions {
-    job_name = "${aws_glue_job.example.name}"
+    job_name = aws_glue_job.example.name
   }
 }
 ```
@@ -69,19 +69,19 @@ resource "aws_glue_trigger" "example" {
   type = "CONDITIONAL"
 
   actions {
-    crawler_name = "${aws_glue_crawler.example1.name}"
+    crawler_name = aws_glue_crawler.example1.name
   }
 
   predicate {
     conditions {
-      job_name = "${aws_glue_job.example2.name}"
+      job_name = aws_glue_job.example2.name
       state    = "SUCCEEDED"
     }
   }
 }
 ```
 
-### Conditional Trigger with Crawler Condition 
+### Conditional Trigger with Crawler Condition
 
 **Note:** Triggers can have both a crawler action and a crawler condition, just no example provided.
 
@@ -91,12 +91,12 @@ resource "aws_glue_trigger" "example" {
   type = "CONDITIONAL"
 
   actions {
-    job_name = "${aws_glue_job.example1.name}"
+    job_name = aws_glue_job.example1.name
   }
 
   predicate {
     conditions {
-      crawler_name = "${aws_glue_crawler.example2.name}"
+      crawler_name = aws_glue_crawler.example2.name
       crawl_state  = "SUCCEEDED"
     }
   }
@@ -123,6 +123,12 @@ The following arguments are supported:
 * `crawler_name` - (Optional) The name of the crawler to be executed. Conflicts with `job_name`.
 * `job_name` - (Optional) The name of a job to be executed. Conflicts with `crawler_name`.
 * `timeout` - (Optional) The job run timeout in minutes. It overrides the timeout value of the job.
+* `security_configuration` - (Optional) The name of the Security Configuration structure to be used with this action.
+* `notification_property` - (Optional) Specifies configuration properties of a job run notification. see [Notification Property](#notification-property) details below.
+
+#### Notification Property
+
+* `notify_delay_after` - (Optional) After a job run starts, the number of minutes to wait before sending a job run delay notification.
 
 ### predicate Argument Reference
 

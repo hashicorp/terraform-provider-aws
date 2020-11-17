@@ -6,13 +6,12 @@ import (
 	"testing"
 	"time"
 
-	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
+	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -175,8 +174,8 @@ resource "aws_route53_resolver_rule" "example" {
 
 resource "aws_route53_resolver_rule_association" "example" {
   name             = %[1]q
-  resolver_rule_id = "${aws_route53_resolver_rule.example.id}"
-  vpc_id           = "${aws_vpc.example.id}"
+  resolver_rule_id = aws_route53_resolver_rule.example.id
+  vpc_id           = aws_vpc.example.id
 }
 `, name)
 }

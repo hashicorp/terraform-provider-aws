@@ -3,12 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -61,6 +60,7 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 
 func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).acmconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	params := &acm.ListCertificatesInput{}
 
@@ -168,7 +168,7 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("No certificate for domain %q found in this region", target)
 	}
 
-	d.SetId(time.Now().UTC().String())
+	d.SetId(aws.StringValue(matchedCertificate.CertificateArn))
 	d.Set("arn", matchedCertificate.CertificateArn)
 
 	tags, err := keyvaluetags.AcmListTags(conn, aws.StringValue(matchedCertificate.CertificateArn))
@@ -177,7 +177,7 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error listing tags for ACM Certificate (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

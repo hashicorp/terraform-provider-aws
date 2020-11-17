@@ -3,7 +3,7 @@ package aws
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // See http://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region
@@ -19,6 +19,7 @@ var elasticBeanstalkHostedZoneIds = map[string]string{
 	"ca-central-1":   "ZJFCZL7SSZB5I",
 	"eu-central-1":   "Z1FRNW7UH4DEZJ",
 	"eu-north-1":     "Z23GO28BZ5AETM",
+	"eu-south-1":     "Z10VDYYOA2JFKM",
 	"eu-west-1":      "Z2NYPWQ7DFZAZH",
 	"eu-west-2":      "Z1GKAAAUGATPF1",
 	"eu-west-3":      "Z5WN6GAYWG5OB",

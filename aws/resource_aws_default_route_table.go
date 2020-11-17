@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -17,6 +17,12 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 		Read:   resourceAwsDefaultRouteTableRead,
 		Update: resourceAwsRouteTableUpdate,
 		Delete: resourceAwsDefaultRouteTableDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("vpc_id", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"default_route_table_id": {
@@ -45,15 +51,21 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cidr_block": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.IsCIDR,
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.Any(
+								validation.StringIsEmpty,
+								validateIpv4CIDRNetworkAddress,
+							),
 						},
 
 						"ipv6_cidr_block": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.IsCIDR,
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.Any(
+								validation.StringIsEmpty,
+								validateIpv6CIDRNetworkAddress,
+							),
 						},
 
 						"egress_only_gateway_id": {
@@ -77,6 +89,11 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 						},
 
 						"transit_gateway_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
+						"vpc_endpoint_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},

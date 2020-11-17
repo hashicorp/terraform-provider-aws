@@ -1,0 +1,95 @@
+rules:
+  - id: aws-sdk-go-multiple-service-imports
+    languages: [go]
+    message: Resources should not implement multiple AWS service functionality
+    paths:
+      exclude:
+        - aws/config.go
+        - aws/structure.go
+        - aws/validators.go
+        - aws/*wafregional*.go
+        - aws/*_test.go
+        - aws/internal/keyvaluetags/
+        - aws/internal/service/wafregional/
+        # Legacy resource handling
+        - aws/resource_aws_autoscaling_group.go
+        - aws/resource_aws_efs_mount_target.go
+        - aws/resource_aws_elastic_beanstalk_environment.go
+        - aws/resource_aws_elb.go
+        - aws/resource_aws_iam_server_certificate.go
+        - aws/resource_aws_lambda_event_source_mapping.go
+        - aws/resource_aws_launch_configuration.go
+        - aws/resource_aws_lb.go
+        - aws/resource_aws_s3_bucket_object.go
+      include:
+        - aws/
+    patterns:
+      - pattern: |
+          import ("$X")
+          import ("$Y")
+      - metavariable-regex:
+          metavariable: '$X'
+          regex: '^"github.com/aws/aws-sdk-go/service/[^/]+"$'
+      - metavariable-regex:
+          metavariable: '$Y'
+          regex: '^"github.com/aws/aws-sdk-go/service/[^/]+"$'
+    severity: WARNING
+
+  - id: helper-schema-ResourceData-GetOk-with-extraneous-conditional
+    languages: [go]
+    message: Zero value conditional check after `d.GetOk()` is extraneous
+    paths:
+      include:
+        - aws/
+    patterns:
+      - pattern-either:
+        - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(bool) { $BODY }
+        - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(int) != 0 { $BODY }
+        - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(int) > 0 { $BODY }
+        - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(string) != "" { $BODY }
+        - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && len($VALUE.(string)) > 0 { $BODY }
+    severity: WARNING
+
+  - id: helper-schema-resource-Retry-without-TimeoutError-check
+    languages: [go]
+    message: Check resource.Retry() errors with tfresource.TimedOut()
+    paths:
+      exclude:
+        - "*_test.go"
+      include:
+        - aws/
+    patterns:
+      - pattern-either:
+        - pattern: |
+            $ERR := resource.Retry(...)
+            ...
+            return ...
+        - pattern: |
+            $ERR = resource.Retry(...)
+            ...
+            return ...
+      - pattern-not: |
+          $ERR := resource.Retry(...)
+          ...
+          if isResourceTimeoutError($ERR) { ... }
+          ...
+          return ...
+      - pattern-not: |
+          $ERR = resource.Retry(...)
+          ...
+          if isResourceTimeoutError($ERR) { ... }
+          ...
+          return ...
+      - pattern-not: |
+          $ERR := resource.Retry(...)
+          ...
+          if tfresource.TimedOut($ERR) { ... }
+          ...
+          return ...
+      - pattern-not: |
+          $ERR = resource.Retry(...)
+          ...
+          if tfresource.TimedOut($ERR) { ... }
+          ...
+          return ...
+    severity: WARNING

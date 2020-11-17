@@ -10,9 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -38,7 +39,7 @@ func resourceAwsDbInstance() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(40 * time.Minute),
 			Update: schema.DefaultTimeout(80 * time.Minute),
-			Delete: schema.DefaultTimeout(40 * time.Minute),
+			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -190,6 +191,11 @@ func resourceAwsDbInstance() *schema.Resource {
 				Optional: true,
 			},
 
+			"latest_restorable_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"license_model": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -270,6 +276,44 @@ func resourceAwsDbInstance() *schema.Resource {
 						es = append(es, fmt.Errorf("%q cannot end in a hyphen", k))
 					}
 					return
+				},
+			},
+
+			"restore_to_point_in_time": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				ForceNew: true,
+				ConflictsWith: []string{
+					"s3_import",
+					"snapshot_identifier",
+					"replicate_source_db",
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"restore_time": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ValidateFunc:  validateUTCTimestamp,
+							ConflictsWith: []string{"restore_to_point_in_time.0.use_latest_restorable_time"},
+						},
+
+						"source_db_instance_identifier": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
+						"source_dbi_resource_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
+						"use_latest_restorable_time": {
+							Type:          schema.TypeBool,
+							Optional:      true,
+							ConflictsWith: []string{"restore_to_point_in_time.0.restore_time"},
+						},
+					},
 				},
 			},
 
@@ -437,7 +481,7 @@ func resourceAwsDbInstance() *schema.Resource {
 			},
 
 			"enabled_cloudwatch_logs_exports": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -571,8 +615,8 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.DBSubnetGroupName = aws.String(attr.(string))
 		}
 
-		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
-			opts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
+			opts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOk("iam_database_authentication_enabled"); ok {
@@ -905,8 +949,8 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.DomainIAMRoleName = aws.String(attr.(string))
 		}
 
-		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
-			opts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
+			opts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOk("engine"); ok {
@@ -1035,6 +1079,95 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		if err != nil {
 			return fmt.Errorf("Error creating DB Instance: %s", err)
 		}
+	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok {
+		if input := expandRestoreToPointInTime(v.([]interface{})); input != nil {
+			input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+			input.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+			input.DBInstanceClass = aws.String(d.Get("instance_class").(string))
+			input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+			input.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
+			input.Tags = tags
+			input.TargetDBInstanceIdentifier = aws.String(d.Get("identifier").(string))
+
+			if v, ok := d.GetOk("availability_zone"); ok {
+				input.AvailabilityZone = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("domain"); ok {
+				input.Domain = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("domain_iam_role_name"); ok {
+				input.DomainIAMRoleName = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
+				input.EnableCloudwatchLogsExports = expandStringSet(v.(*schema.Set))
+			}
+
+			if v, ok := d.GetOk("engine"); ok {
+				input.Engine = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
+				input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
+			}
+
+			if v, ok := d.GetOk("iops"); ok {
+				input.Iops = aws.Int64(int64(v.(int)))
+			}
+
+			if v, ok := d.GetOk("license_model"); ok {
+				input.LicenseModel = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("max_allocated_storage"); ok {
+				input.MaxAllocatedStorage = aws.Int64(int64(v.(int)))
+			}
+
+			if v, ok := d.GetOk("multi_az"); ok {
+				input.MultiAZ = aws.Bool(v.(bool))
+			}
+
+			if v, ok := d.GetOk("name"); ok {
+				input.DBName = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("option_group_name"); ok {
+				input.OptionGroupName = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("parameter_group_name"); ok {
+				input.DBParameterGroupName = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("port"); ok {
+				input.Port = aws.Int64(int64(v.(int)))
+			}
+
+			if v, ok := d.GetOk("storage_type"); ok {
+				input.StorageType = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("subnet_group_name"); ok {
+				input.DBSubnetGroupName = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("tde_credential_arn"); ok {
+				input.TdeCredentialArn = aws.String(v.(string))
+			}
+
+			if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+				input.VpcSecurityGroupIds = expandStringSet(v.(*schema.Set))
+			}
+
+			log.Printf("[DEBUG] DB Instance restore to point in time configuration: %s", input)
+
+			_, err := conn.RestoreDBInstanceToPointInTime(input)
+			if err != nil {
+				return fmt.Errorf("error creating DB Instance: %w", err)
+			}
+		}
 	} else {
 		if _, ok := d.GetOk("allocated_storage"); !ok {
 			return fmt.Errorf(`provider.aws: aws_db_instance: %s: "allocated_storage": required field is not set`, d.Get("name").(string))
@@ -1116,8 +1249,8 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.DBSubnetGroupName = aws.String(attr.(string))
 		}
 
-		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
-			opts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
+			opts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOk("iops"); ok {
@@ -1257,7 +1390,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	v, err := resourceAwsDbInstanceRetrieve(d.Id(), meta.(*AWSClient).rdsconn)
+	conn := meta.(*AWSClient).rdsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
+	v, err := resourceAwsDbInstanceRetrieve(d.Id(), conn)
 
 	if err != nil {
 		return err
@@ -1283,6 +1419,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("availability_zone", v.AvailabilityZone)
 	d.Set("backup_retention_period", v.BackupRetentionPeriod)
 	d.Set("backup_window", v.PreferredBackupWindow)
+	d.Set("latest_restorable_time", aws.TimeValue(v.LatestRestorableTime).Format(time.RFC3339))
 	d.Set("license_model", v.LicenseModel)
 	d.Set("maintenance_window", v.PreferredMaintenanceWindow)
 	d.Set("max_allocated_storage", v.MaxAllocatedStorage)
@@ -1338,10 +1475,6 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("domain_iam_role_name", v.DomainMemberships[0].IAMRoleName)
 	}
 
-	// list tags for resource
-	// set tags
-	conn := meta.(*AWSClient).rdsconn
-
 	arn := aws.StringValue(v.DBInstanceArn)
 	d.Set("arn", arn)
 
@@ -1351,7 +1484,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for RDS DB Instance (%s): %s", d.Get("arn").(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -1413,6 +1546,10 @@ func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] DB Instance destroy configuration: %v", opts)
 	_, err := conn.DeleteDBInstance(&opts)
 
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
+		return nil
+	}
+
 	// InvalidDBInstanceState: Instance XXX is already being deleted.
 	if err != nil && !isAWSErr(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
 		return fmt.Errorf("error deleting Database Instance %q: %s", d.Id(), err)
@@ -1461,7 +1598,7 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	requestUpdate := false
-	if d.HasChange("allocated_storage") || d.HasChange("iops") {
+	if d.HasChanges("allocated_storage", "iops") {
 		req.Iops = aws.Int64(int64(d.Get("iops").(int)))
 		req.AllocatedStorage = aws.Int64(int64(d.Get("allocated_storage").(int)))
 		requestUpdate = true
@@ -1585,7 +1722,17 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("enabled_cloudwatch_logs_exports") {
-		req.CloudwatchLogsExportConfiguration = buildCloudwatchLogsExportConfiguration(d)
+		oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
+		o := oraw.(*schema.Set)
+		n := nraw.(*schema.Set)
+
+		enable := n.Difference(o)
+		disable := o.Difference(n)
+
+		req.CloudwatchLogsExportConfiguration = &rds.CloudwatchLogsExportConfiguration{
+			EnableLogTypes:  expandStringSet(enable),
+			DisableLogTypes: expandStringSet(disable),
+		}
 		requestUpdate = true
 	}
 
@@ -1594,13 +1741,13 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		requestUpdate = true
 	}
 
-	if d.HasChange("domain") || d.HasChange("domain_iam_role_name") {
+	if d.HasChanges("domain", "domain_iam_role_name") {
 		req.Domain = aws.String(d.Get("domain").(string))
 		req.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
 		requestUpdate = true
 	}
 
-	if d.HasChange("performance_insights_enabled") || d.HasChange("performance_insights_kms_key_id") || d.HasChange("performance_insights_retention_period") {
+	if d.HasChanges("performance_insights_enabled", "performance_insights_kms_key_id", "performance_insights_retention_period") {
 		req.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
 
 		if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
@@ -1739,20 +1886,6 @@ func resourceAwsDbInstanceStateRefreshFunc(id string, conn *rds.RDS) resource.St
 	}
 }
 
-func buildCloudwatchLogsExportConfiguration(d *schema.ResourceData) *rds.CloudwatchLogsExportConfiguration {
-
-	oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
-	o := oraw.([]interface{})
-	n := nraw.([]interface{})
-
-	create, disable := diffCloudwatchLogsExportConfiguration(o, n)
-
-	return &rds.CloudwatchLogsExportConfiguration{
-		EnableLogTypes:  expandStringList(create),
-		DisableLogTypes: expandStringList(disable),
-	}
-}
-
 func diffCloudwatchLogsExportConfiguration(old, new []interface{}) ([]interface{}, []interface{}) {
 	create := make([]interface{}, 0)
 	disable := make([]interface{}, 0)
@@ -1820,4 +1953,38 @@ var resourceAwsDbInstanceUpdatePendingStates = []string{
 	"stopping",
 	"storage-full",
 	"upgrading",
+}
+
+func expandRestoreToPointInTime(l []interface{}) *rds.RestoreDBInstanceToPointInTimeInput {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	input := &rds.RestoreDBInstanceToPointInTimeInput{}
+
+	if v, ok := tfMap["restore_time"].(string); ok && v != "" {
+		parsedTime, err := time.Parse(time.RFC3339, v)
+		if err == nil {
+			input.RestoreTime = aws.Time(parsedTime)
+		}
+	}
+
+	if v, ok := tfMap["source_db_instance_identifier"].(string); ok && v != "" {
+		input.SourceDBInstanceIdentifier = aws.String(v)
+	}
+
+	if v, ok := tfMap["source_dbi_resource_id"].(string); ok && v != "" {
+		input.SourceDbiResourceId = aws.String(v)
+	}
+
+	if v, ok := tfMap["use_latest_restorable_time"].(bool); ok && v {
+		input.UseLatestRestorableTime = aws.Bool(v)
+	}
+
+	return input
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // See http://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html
@@ -24,6 +24,7 @@ var cloudTrailServiceAccountPerRegionMap = map[string]string{
 	"cn-northwest-1": "681348832753",
 	"eu-central-1":   "035351147821",
 	"eu-north-1":     "829690693026",
+	"eu-south-1":     "669305197877",
 	"eu-west-1":      "859597730677",
 	"eu-west-2":      "282025262664",
 	"eu-west-3":      "262312530599",

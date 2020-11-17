@@ -20,6 +20,7 @@ var hostedZoneIDsMap = map[string]string{
 	"ca-central-1":   "Z1QDHH18159H29",
 	"eu-central-1":   "Z21DNDUVLTQW6Q",
 	"eu-north-1":     "Z3BAZG2TWCNX0D",
+	"eu-south-1":     "Z3IXVV8C73GIO3",
 	"eu-west-1":      "Z1BKCTXD74EZPE",
 	"eu-west-2":      "Z3GKZC51ZF0DB4",
 	"eu-west-3":      "Z3R1K369G5AVDG",

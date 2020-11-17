@@ -16,8 +16,8 @@ Provides a resource to manage EC2 Fleets.
 resource "aws_ec2_fleet" "example" {
   launch_template_config {
     launch_template_specification {
-      launch_template_id = "${aws_launch_template.example.id}"
-      version            = "${aws_launch_template.example.latest_version}"
+      launch_template_id = aws_launch_template.example.id
+      version            = aws_launch_template.example.latest_version
     }
   }
 
@@ -104,7 +104,7 @@ resource "aws_ec2_fleet" "example" {
 * `on_demand_target_capacity` - (Optional) The number of On-Demand units to request.
 * `spot_target_capacity` - (Optional) The number of Spot units to request.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

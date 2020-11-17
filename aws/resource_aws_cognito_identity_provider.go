@@ -8,8 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsCognitoIdentityProvider() *schema.Resource {
@@ -49,6 +49,7 @@ func resourceAwsCognitoIdentityProvider() *schema.Resource {
 			"provider_details": {
 				Type:     schema.TypeMap,
 				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"provider_name": {

@@ -19,7 +19,7 @@ resource "aws_lambda_layer_version" "lambda_layer" {
   filename   = "lambda_layer_payload.zip"
   layer_name = "lambda_layer_name"
 
-  compatible_runtimes = ["nodejs8.10"]
+  compatible_runtimes = ["nodejs12.x"]
 }
 ```
 
@@ -48,6 +48,8 @@ large files efficiently.
 * `source_code_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `${filebase64sha256("file.zip")}` (Terraform 0.11.12 or later) or `${base64sha256(file("file.zip"))}` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda layer source archive.
 
 ## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the Lambda Layer with version.
 * `layer_arn` - The Amazon Resource Name (ARN) of the Lambda Layer without version.
