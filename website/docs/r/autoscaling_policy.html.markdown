@@ -39,7 +39,7 @@ resource "aws_autoscaling_group" "bar" {
 }
 ```
 
-## Arguments Reference
+## Argument Reference
 
 * `name` - (Required) The name of the policy.
 * `autoscaling_group_name` - (Required) The name of the autoscaling group.
