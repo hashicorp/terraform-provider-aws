@@ -12,6 +12,7 @@ ENHANCEMENTS
 
 * resource/aws_msk_cluster: Support in-place `kafka_version` upgrade [GH-13654]
 * resource/aws_storagegateway_smb_file_share: Add `file_share_name` argument ([#16008](https://github.com/hashicorp/terraform-provider-aws/issues/16008))
+* resource_aws_storagegateway_nfs_file_share: Add `file_share_name` argument ([#16072](https://github.com/hashicorp/terraform-provider-aws/issues/16072))
 
 BUG FIXES
 
