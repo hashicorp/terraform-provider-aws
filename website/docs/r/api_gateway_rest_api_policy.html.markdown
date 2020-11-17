@@ -22,7 +22,7 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_rest_api_policy" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
 
   policy = <<EOF
 {
