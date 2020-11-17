@@ -55,6 +55,7 @@ func resourceAwsWorkspacesDirectory() *schema.Resource {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
+				Optional: true,
 			},
 			"registration_code": {
 				Type:     schema.TypeString,
@@ -200,6 +201,19 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 		log.Printf("[DEBUG] WorkSpaces Directory %q creation properties are set", directoryId)
 	}
 
+	if v, ok := d.GetOk("ip_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		ipGroupIds := v.(*schema.Set)
+		log.Printf("[DEBUG] Associate WorkSpaces Directory %q with IP Groups %s...", directoryId, ipGroupIds.List())
+		_, err := conn.AssociateIpGroups(&workspaces.AssociateIpGroupsInput{
+			DirectoryId: aws.String(directoryId),
+			GroupIds:    expandStringSet(ipGroupIds),
+		})
+		if err != nil {
+			return fmt.Errorf("error asassociating ip groups: %s", err)
+		}
+		log.Printf("[DEBUG] WorkSpaces Directory %q IP Groups are set", directoryId)
+	}
+
 	return resourceAwsWorkspacesDirectoryRead(d, meta)
 }
 
@@ -286,6 +300,34 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("error updating creation properties: %s", err)
 		}
 		log.Printf("[DEBUG] WorkSpaces Directory %q creation properties are set", d.Id())
+	}
+
+	if d.HasChange("ip_group_ids") {
+		o, n := d.GetChange("ip_group_ids")
+		old := o.(*schema.Set)
+		new := n.(*schema.Set)
+		added := new.Difference(old)
+		removed := old.Difference(new)
+
+		log.Printf("[DEBUG] Associate IP Groups %s from WorkSpaces Directory %q...", added.GoString(), d.Id())
+		_, err := conn.AssociateIpGroups(&workspaces.AssociateIpGroupsInput{
+			DirectoryId: aws.String(d.Id()),
+			GroupIds:    expandStringSet(added),
+		})
+		if err != nil {
+			return fmt.Errorf("error asassociating ip groups: %s", err)
+		}
+
+		log.Printf("[DEBUG] Disassociate IP Groups %s from WorkSpaces Directory %q...", removed.GoString(), d.Id())
+		_, err = conn.DisassociateIpGroups(&workspaces.DisassociateIpGroupsInput{
+			DirectoryId: aws.String(d.Id()),
+			GroupIds:    expandStringSet(removed),
+		})
+		if err != nil {
+			return fmt.Errorf("error disasassociating ip groups: %s", err)
+		}
+
+		log.Printf("[DEBUG] WorkSpaces Directory %q IP Groups are set", d.Id())
 	}
 
 	if d.HasChange("tags") {

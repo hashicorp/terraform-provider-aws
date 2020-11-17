@@ -148,13 +148,49 @@ func resourceAwsWorkspacesIpGroupUpdate(d *schema.ResourceData, meta interface{}
 func resourceAwsWorkspacesIpGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).workspacesconn
 
-	log.Printf("[INFO] Deleting Workspaces IP Group")
-	_, err := conn.DeleteIpGroup(&workspaces.DeleteIpGroupInput{
+	var directoryID *string
+
+	log.Printf("[DEBUG] Finding directory associated with Workspaces IP Group %q", d.Id())
+	err := conn.DescribeWorkspaceDirectoriesPages(nil,
+		func(page *workspaces.DescribeWorkspaceDirectoriesOutput, lastPage bool) bool {
+			for _, dir := range page.Directories {
+				for _, ipg := range dir.IpGroupIds {
+					if aws.StringValue(ipg) == d.Id() {
+						directoryID = dir.DirectoryId
+						return true
+					}
+				}
+			}
+			return !lastPage
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("error describing Workspaces IP Groups: %s", err)
+	}
+
+	if directoryID == nil {
+		log.Printf("[DEBUG] Workspaces IP Group %q is not associated with any Directory", d.Id())
+	} else {
+		log.Printf("[DEBUG] Workspaces IP Group %q is associated with Directory %q", d.Id(), aws.StringValue(directoryID))
+		log.Printf("[INFO] Disassociating Workspaces IP Group %q from Directory %q", d.Id(), aws.StringValue(directoryID))
+		_, err = conn.DisassociateIpGroups(&workspaces.DisassociateIpGroupsInput{
+			DirectoryId: directoryID,
+			GroupIds:    aws.StringSlice([]string{d.Id()}),
+		})
+		if err != nil {
+			return fmt.Errorf("error disassociating Workspaces IP Group: %s", err)
+		}
+		log.Printf("[INFO] Workspaces IP Group %q has been successfully disassociated from Directory %q", d.Id(), aws.StringValue(directoryID))
+	}
+
+	log.Printf("[INFO] Deleting Workspaces IP Group %q", d.Id())
+	_, err = conn.DeleteIpGroup(&workspaces.DeleteIpGroupInput{
 		GroupId: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("Error Deleting Workspaces IP Group: %s", err)
+		return fmt.Errorf("error deleting Workspaces IP Group: %s", err)
 	}
+	log.Printf("[INFO] Workspaces IP Group %q has been successfully deleted", d.Id())
 
 	return nil
 }
