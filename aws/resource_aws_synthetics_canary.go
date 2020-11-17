@@ -285,7 +285,7 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 	resp, err := conn.GetCanary(input)
 	if err != nil {
 		if isAWSErr(err, synthetics.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] CodeCommit Repository (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] Synthetics Canary (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
