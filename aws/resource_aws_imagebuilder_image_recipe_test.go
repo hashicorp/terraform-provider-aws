@@ -540,7 +540,7 @@ data "aws_partition" "current" {}
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({
     phases = [{
-      name  = "build"
+      name = "build"
       steps = [{
         action = "ExecuteBash"
         inputs = {
