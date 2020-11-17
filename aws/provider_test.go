@@ -1767,7 +1767,7 @@ provider "aws" {
 }
 
 data "aws_caller_identity" "current" {}
-`
+` //lintignore:AT004
 
 // composeConfig can be called to concatenate multiple strings to build test configurations
 func composeConfig(config ...string) string {
