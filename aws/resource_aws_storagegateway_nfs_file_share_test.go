@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSStorageGatewayNfsFileShare_basic(t *testing.T) {
@@ -32,7 +31,7 @@ func TestAccAWSStorageGatewayNfsFileShare_basic(t *testing.T) {
 					testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName, &nfsFileShare),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`share/share-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "client_list.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "0.0.0.0/0"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "default_storage_class", "S3_STANDARD"),
 					resource.TestMatchResourceAttr(resourceName, "fileshare_id", regexp.MustCompile(`^share-`)),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
@@ -157,7 +156,7 @@ func TestAccAWSStorageGatewayNfsFileShare_ClientList(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName, &nfsFileShare),
 					resource.TestCheckResourceAttr(resourceName, "client_list.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "1.1.1.1/32"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "1.1.1.1/32"),
 				),
 			},
 			{
@@ -165,8 +164,8 @@ func TestAccAWSStorageGatewayNfsFileShare_ClientList(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName, &nfsFileShare),
 					resource.TestCheckResourceAttr(resourceName, "client_list.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "2.2.2.2/32"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "3.3.3.3/32"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "2.2.2.2/32"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "3.3.3.3/32"),
 				),
 			},
 			{
@@ -174,7 +173,7 @@ func TestAccAWSStorageGatewayNfsFileShare_ClientList(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName, &nfsFileShare),
 					resource.TestCheckResourceAttr(resourceName, "client_list.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "4.4.4.4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "4.4.4.4"),
 				),
 			},
 			{
