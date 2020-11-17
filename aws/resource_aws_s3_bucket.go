@@ -30,14 +30,18 @@ const s3BucketCreationTimeout = 2 * time.Minute
 
 // These should be defined in the AWS SDK for Go. There is an open issue https://github.com/aws/aws-sdk-go/issues/2683
 const (
-	BucketCannedACLAwsExecRead      = "aws-exec-read"
-	BucketCannedACLLogDeliveryWrite = "log-delivery-write"
+	BucketCannedACLAwsExecRead            = "aws-exec-read"
+	BucketCannedACLLogDeliveryWrite       = "log-delivery-write"
+	BucketCannedACLBucketOwnerRead        = "bucket-owner-read"
+	BucketCannedACLBucketOwnerFullControl = "bucket-owner-full-control"
 )
 
 func BucketCannedACL_Values() []string {
 	result := s3.BucketCannedACL_Values()
 	result = appendUniqueString(result, BucketCannedACLAwsExecRead)
 	result = appendUniqueString(result, BucketCannedACLLogDeliveryWrite)
+	result = appendUniqueString(result, BucketCannedACLBucketOwnerRead)
+	result = appendUniqueString(result, BucketCannedACLBucketOwnerFullControl)
 	return result
 }
 
