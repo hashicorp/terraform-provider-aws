@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSAPIGatewayV2Stage_basicWebSocket(t *testing.T) {
@@ -640,14 +639,14 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettingsWebSocket(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexp.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", testAccGetRegion(), rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
 						"data_trace_enabled":       "false",
 						"detailed_metrics_enabled": "false",
 						"route_key":                "$default",
 						"throttling_burst_limit":   "0",
 						"throttling_rate_limit":    "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
 						"data_trace_enabled":       "true",
 						"detailed_metrics_enabled": "true",
 						"logging_level":            "ERROR",
@@ -679,14 +678,14 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettingsWebSocket(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexp.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", testAccGetRegion(), rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "3"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
 						"data_trace_enabled":       "false",
 						"detailed_metrics_enabled": "false",
 						"route_key":                "$default",
 						"throttling_burst_limit":   "1111",
 						"throttling_rate_limit":    "9999",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
 						"data_trace_enabled":       "false",
 						"detailed_metrics_enabled": "false",
 						"logging_level":            "INFO",
@@ -694,7 +693,7 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettingsWebSocket(t *testing.T) {
 						"throttling_burst_limit":   "0",
 						"throttling_rate_limit":    "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
 						"data_trace_enabled":       "false",
 						"detailed_metrics_enabled": "false",
 						"route_key":                "$disconnect",
@@ -767,7 +766,7 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettingsHttp(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexp.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", testAccGetRegion(), rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
 						"data_trace_enabled":       "false",
 						"detailed_metrics_enabled": "true",
 						"route_key":                "$default",
@@ -798,7 +797,7 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettingsHttp(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexp.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", testAccGetRegion(), rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
 						"data_trace_enabled":       "false",
 						"detailed_metrics_enabled": "false",
 						"route_key":                "$default",
