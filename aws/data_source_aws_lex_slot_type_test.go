@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccDataSourceAwsLexSlotType_basic(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	rName := acctest.RandString(8)
 	dataSourceName := "data.aws_lex_slot_type.test"
 	resourceName := "aws_lex_slot_type.test"
 
@@ -38,7 +38,7 @@ func TestAccDataSourceAwsLexSlotType_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsLexSlotType_withVersion(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	rName := acctest.RandString(8)
 	dataSourceName := "data.aws_lex_slot_type.test"
 	resourceName := "aws_lex_slot_type.test"
 

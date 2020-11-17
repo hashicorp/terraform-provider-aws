@@ -66,7 +66,7 @@ func TestAccAWSIAMRolePolicy_basic(t *testing.T) {
 
 func TestAccAWSIAMRolePolicy_disappears(t *testing.T) {
 	var out iam.GetRolePolicyOutput
-	suffix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	suffix := acctest.RandString(10)
 	roleResourceName := fmt.Sprintf("aws_iam_role.role_%s", suffix)
 	rolePolicyResourceName := fmt.Sprintf("aws_iam_role_policy.test_%s", suffix)
 

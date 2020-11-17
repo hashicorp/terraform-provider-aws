@@ -17,7 +17,7 @@ import (
 func TestAccAwsLexBotAlias_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	resourceName := "aws_lex_bot_alias.test"
-	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotAliasID := "test_bot_alias" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -56,7 +56,7 @@ func TestAccAwsLexBotAlias_basic(t *testing.T) {
 func testAccAwsLexBotAlias_botVersion(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	resourceName := "aws_lex_bot_alias.test"
-	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotAliasID := "test_bot_alias" + acctest.RandString(8)
 
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
 	resource.Test(t, resource.TestCase{
@@ -102,8 +102,8 @@ func testAccAwsLexBotAlias_botVersion(t *testing.T) {
 
 func TestAccAwsLexBotAlias_conversationLogsText(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + acctest.RandString(8)
+	testBotAliasID := "test_bot_alias" + acctest.RandString(8)
 
 	resourceName := "aws_lex_bot_alias.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -147,8 +147,8 @@ func TestAccAwsLexBotAlias_conversationLogsText(t *testing.T) {
 
 func TestAccAwsLexBotAlias_conversationLogsAudio(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	testBotAliasID := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + acctest.RandString(8)
+	testBotAliasID := acctest.RandString(8)
 
 	resourceName := "aws_lex_bot_alias.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -193,8 +193,8 @@ func TestAccAwsLexBotAlias_conversationLogsAudio(t *testing.T) {
 
 func TestAccAwsLexBotAlias_conversationLogsBoth(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	testBotAliasID := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + acctest.RandString(8)
+	testBotAliasID := acctest.RandString(8)
 
 	resourceName := "aws_lex_bot_alias.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -246,7 +246,7 @@ func TestAccAwsLexBotAlias_conversationLogsBoth(t *testing.T) {
 func TestAccAwsLexBotAlias_description(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	resourceName := "aws_lex_bot_alias.test"
-	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotAliasID := "test_bot_alias" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -291,7 +291,7 @@ func TestAccAwsLexBotAlias_description(t *testing.T) {
 func TestAccAwsLexBotAlias_disappears(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	resourceName := "aws_lex_bot_alias.test"
-	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotAliasID := "test_bot_alias" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },

@@ -16,7 +16,7 @@ import (
 func TestAccAwsLexSlotType_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -57,7 +57,7 @@ func TestAccAwsLexSlotType_basic(t *testing.T) {
 func TestAccAwsLexSlotType_createVersion(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -99,7 +99,7 @@ func TestAccAwsLexSlotType_createVersion(t *testing.T) {
 func TestAccAwsLexSlotType_description(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -139,7 +139,7 @@ func TestAccAwsLexSlotType_description(t *testing.T) {
 func TestAccAwsLexSlotType_enumerationValues(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -184,8 +184,8 @@ func TestAccAwsLexSlotType_enumerationValues(t *testing.T) {
 func TestAccAwsLexSlotType_name(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID1 := "test_slot_type_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	testSlotTypeID2 := "test_slot_type_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testSlotTypeID1 := "test_slot_type_" + acctest.RandString(8)
+	testSlotTypeID2 := "test_slot_type_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -225,7 +225,7 @@ func TestAccAwsLexSlotType_name(t *testing.T) {
 func TestAccAwsLexSlotType_valueSelectionStrategy(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -265,7 +265,7 @@ func TestAccAwsLexSlotType_valueSelectionStrategy(t *testing.T) {
 func TestAccAwsLexSlotType_disappears(t *testing.T) {
 	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
-	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testSlotTypeID := "test_slot_type_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },

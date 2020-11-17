@@ -14,7 +14,7 @@ import (
 )
 
 func TestAccAWSLoadBalancerListenerPolicy_basic(t *testing.T) {
-	rChar := acctest.RandStringFromCharSet(6, acctest.CharSetAlpha)
+	rChar := acctest.RandString(6)
 	lbName := rChar
 	mcName := rChar
 	resource.ParallelTest(t, resource.TestCase{

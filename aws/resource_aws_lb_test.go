@@ -721,7 +721,7 @@ func TestAccAWSLB_noSecurityGroup(t *testing.T) {
 func TestAccAWSLB_ALB_AccessLogs(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
-	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandString(4))
 	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -809,7 +809,7 @@ func TestAccAWSLB_ALB_AccessLogs(t *testing.T) {
 func TestAccAWSLB_ALB_AccessLogs_Prefix(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
-	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandString(4))
 	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -879,7 +879,7 @@ func TestAccAWSLB_ALB_AccessLogs_Prefix(t *testing.T) {
 func TestAccAWSLB_NLB_AccessLogs(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
-	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandString(4))
 	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -967,7 +967,7 @@ func TestAccAWSLB_NLB_AccessLogs(t *testing.T) {
 func TestAccAWSLB_NLB_AccessLogs_Prefix(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	bucketName := fmt.Sprintf("tf-test-access-logs-%s", acctest.RandStringFromCharSet(6, acctest.CharSetAlphaNum))
-	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlpha))
+	lbName := fmt.Sprintf("testaccawslbaccesslog-%s", acctest.RandString(4))
 	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{

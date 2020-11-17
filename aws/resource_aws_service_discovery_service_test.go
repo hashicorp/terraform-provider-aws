@@ -221,7 +221,7 @@ func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
 }
 
 func TestAccAWSServiceDiscoveryService_http(t *testing.T) {
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlpha))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -248,7 +248,7 @@ func TestAccAWSServiceDiscoveryService_http(t *testing.T) {
 }
 
 func TestAccAWSServiceDiscoveryService_disappears(t *testing.T) {
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlpha))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -269,7 +269,7 @@ func TestAccAWSServiceDiscoveryService_disappears(t *testing.T) {
 }
 
 func TestAccAWSServiceDiscoveryService_Tags(t *testing.T) {
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlpha))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{

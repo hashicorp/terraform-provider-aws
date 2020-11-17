@@ -95,7 +95,7 @@ func testSweepServiceDiscoveryHttpNamespaces(region string) error {
 
 func TestAccAWSServiceDiscoveryHttpNamespace_basic(t *testing.T) {
 	resourceName := "aws_service_discovery_http_namespace.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlpha))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
@@ -124,7 +124,7 @@ func TestAccAWSServiceDiscoveryHttpNamespace_basic(t *testing.T) {
 
 func TestAccAWSServiceDiscoveryHttpNamespace_disappears(t *testing.T) {
 	resourceName := "aws_service_discovery_http_namespace.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlpha))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
@@ -145,7 +145,7 @@ func TestAccAWSServiceDiscoveryHttpNamespace_disappears(t *testing.T) {
 
 func TestAccAWSServiceDiscoveryHttpNamespace_Description(t *testing.T) {
 	resourceName := "aws_service_discovery_http_namespace.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlpha))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
@@ -170,7 +170,7 @@ func TestAccAWSServiceDiscoveryHttpNamespace_Description(t *testing.T) {
 
 func TestAccAWSServiceDiscoveryHttpNamespace_Tags(t *testing.T) {
 	resourceName := "aws_service_discovery_http_namespace.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlpha))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },

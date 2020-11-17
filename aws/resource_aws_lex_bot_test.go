@@ -15,7 +15,7 @@ import (
 func TestAccAwsLexBot_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -82,7 +82,7 @@ func TestAccAwsLexBot_version_serial(t *testing.T) {
 func testAccAwsLexBot_createVersion(t *testing.T) {
 	var v1, v2 lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + acctest.RandString(8)
 
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
 	resource.Test(t, resource.TestCase{
@@ -126,7 +126,7 @@ func testAccAwsLexBot_createVersion(t *testing.T) {
 func TestAccAwsLexBot_abortStatement(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -182,7 +182,7 @@ func TestAccAwsLexBot_abortStatement(t *testing.T) {
 func TestAccAwsLexBot_clarificationPrompt(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -234,7 +234,7 @@ func TestAccAwsLexBot_clarificationPrompt(t *testing.T) {
 func TestAccAwsLexBot_childDirected(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -277,7 +277,7 @@ func TestAccAwsLexBot_childDirected(t *testing.T) {
 func TestAccAwsLexBot_description(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -320,7 +320,7 @@ func TestAccAwsLexBot_description(t *testing.T) {
 func TestAccAwsLexBot_detectSentiment(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -363,7 +363,7 @@ func TestAccAwsLexBot_detectSentiment(t *testing.T) {
 func TestAccAwsLexBot_enableModelImprovements(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -407,7 +407,7 @@ func TestAccAwsLexBot_enableModelImprovements(t *testing.T) {
 func TestAccAwsLexBot_idleSessionTtlInSeconds(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -450,7 +450,7 @@ func TestAccAwsLexBot_idleSessionTtlInSeconds(t *testing.T) {
 func TestAccAwsLexBot_intents(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -493,7 +493,7 @@ func TestAccAwsLexBot_intents(t *testing.T) {
 func TestAccAwsLexBot_locale(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -536,7 +536,7 @@ func TestAccAwsLexBot_locale(t *testing.T) {
 func TestAccAwsLexBot_voiceId(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -579,7 +579,7 @@ func TestAccAwsLexBot_voiceId(t *testing.T) {
 func TestAccAwsLexBot_disappears(t *testing.T) {
 	var v lexmodelbuildingservice.GetBotOutput
 	rName := "aws_lex_bot.test"
-	testBotID := "test_bot_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },

@@ -198,7 +198,7 @@ func TestAccAWSVpnConnection_tunnelOptions(t *testing.T) {
 				ExpectError: regexp.MustCompile(`expected length of \w+ to be in the range \(8 - 64\)`),
 			},
 			{
-				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rBgpAsn, acctest.RandStringFromCharSet(65, acctest.CharSetAlpha), "169.254.254.0/30"),
+				Config:      testAccAwsVpnConnectionConfigSingleTunnelOptions(rBgpAsn, acctest.RandString(65), "169.254.254.0/30"),
 				ExpectError: regexp.MustCompile(`expected length of \w+ to be in the range \(8 - 64\)`),
 			},
 			{

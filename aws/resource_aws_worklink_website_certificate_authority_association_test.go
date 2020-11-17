@@ -14,7 +14,7 @@ import (
 )
 
 func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *testing.T) {
-	suffix := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	suffix := acctest.RandString(20)
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -42,10 +42,10 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *t
 }
 
 func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_DisplayName(t *testing.T) {
-	suffix := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	suffix := acctest.RandString(20)
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
-	displayName1 := fmt.Sprintf("tf-website-certificate-%s", acctest.RandStringFromCharSet(5, acctest.CharSetAlpha))
-	displayName2 := fmt.Sprintf("tf-website-certificate-%s", acctest.RandStringFromCharSet(5, acctest.CharSetAlpha))
+	displayName1 := fmt.Sprintf("tf-website-certificate-%s", acctest.RandString(5))
+	displayName2 := fmt.Sprintf("tf-website-certificate-%s", acctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		Providers:    testAccProviders,
@@ -75,7 +75,7 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_DisplayNam
 }
 
 func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_Disappears(t *testing.T) {
-	suffix := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	suffix := acctest.RandString(20)
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{

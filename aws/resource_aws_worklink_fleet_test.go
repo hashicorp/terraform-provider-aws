@@ -14,7 +14,7 @@ import (
 )
 
 func TestAccAWSWorkLinkFleet_basic(t *testing.T) {
-	suffix := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	suffix := acctest.RandString(20)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -41,7 +41,7 @@ func TestAccAWSWorkLinkFleet_basic(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_DisplayName(t *testing.T) {
-	suffix := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	suffix := acctest.RandString(20)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -73,7 +73,7 @@ func TestAccAWSWorkLinkFleet_DisplayName(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_OptimizeForEndUserLocation(t *testing.T) {
-	suffix := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	suffix := acctest.RandString(20)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -105,7 +105,7 @@ func TestAccAWSWorkLinkFleet_OptimizeForEndUserLocation(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_AuditStreamArn(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	rName := acctest.RandString(20)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -130,7 +130,7 @@ func TestAccAWSWorkLinkFleet_AuditStreamArn(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_Network(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	rName := acctest.RandString(20)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -172,7 +172,7 @@ func TestAccAWSWorkLinkFleet_Network(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_DeviceCaCertificate(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	rName := acctest.RandString(20)
 	resourceName := "aws_worklink_fleet.test"
 	fName := "test-fixtures/worklink-device-ca-certificate.pem"
 
@@ -205,7 +205,7 @@ func TestAccAWSWorkLinkFleet_DeviceCaCertificate(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_IdentityProvider(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	rName := acctest.RandString(20)
 	resourceName := "aws_worklink_fleet.test"
 	fName := "test-fixtures/saml-metadata.xml"
 
@@ -236,7 +236,7 @@ func TestAccAWSWorkLinkFleet_IdentityProvider(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_Disappears(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
+	rName := acctest.RandString(20)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{

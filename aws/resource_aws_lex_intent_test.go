@@ -17,7 +17,7 @@ import (
 func TestAccAwsLexIntent_basic(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
-	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testIntentID := "test_intent_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -62,7 +62,7 @@ func TestAccAwsLexIntent_basic(t *testing.T) {
 func TestAccAwsLexIntent_createVersion(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
-	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testIntentID := "test_intent_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -103,7 +103,7 @@ func TestAccAwsLexIntent_createVersion(t *testing.T) {
 func TestAccAwsLexIntent_conclusionStatement(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
-	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testIntentID := "test_intent_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -155,7 +155,7 @@ func TestAccAwsLexIntent_conclusionStatement(t *testing.T) {
 func TestAccAwsLexIntent_confirmationPromptAndRejectionStatement(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
-	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testIntentID := "test_intent_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -217,7 +217,7 @@ func TestAccAwsLexIntent_confirmationPromptAndRejectionStatement(t *testing.T) {
 func TestAccAwsLexIntent_dialogCodeHook(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
-	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testIntentID := "test_intent_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -249,7 +249,7 @@ func TestAccAwsLexIntent_dialogCodeHook(t *testing.T) {
 func TestAccAwsLexIntent_followUpPrompt(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
-	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testIntentID := "test_intent_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -317,7 +317,7 @@ func TestAccAwsLexIntent_followUpPrompt(t *testing.T) {
 func TestAccAwsLexIntent_fulfillmentActivity(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
-	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testIntentID := "test_intent_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -351,7 +351,7 @@ func TestAccAwsLexIntent_fulfillmentActivity(t *testing.T) {
 func TestAccAwsLexIntent_sampleUtterances(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
-	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testIntentID := "test_intent_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -392,7 +392,7 @@ func TestAccAwsLexIntent_sampleUtterances(t *testing.T) {
 func TestAccAwsLexIntent_slots(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
-	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testIntentID := "test_intent_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -444,7 +444,7 @@ func TestAccAwsLexIntent_slots(t *testing.T) {
 func TestAccAwsLexIntent_slotsCustom(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
-	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testIntentID := "test_intent_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -487,7 +487,7 @@ func TestAccAwsLexIntent_slotsCustom(t *testing.T) {
 func TestAccAwsLexIntent_disappears(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
-	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testIntentID := "test_intent_" + acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
@@ -509,7 +509,7 @@ func TestAccAwsLexIntent_disappears(t *testing.T) {
 func TestAccAwsLexIntent_updateWithExternalChange(t *testing.T) {
 	var v lexmodelbuildingservice.GetIntentOutput
 	rName := "aws_lex_intent.test"
-	testIntentID := "test_intent_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testIntentID := "test_intent_" + acctest.RandString(8)
 
 	testAccCheckAwsLexIntentUpdateDescription := func(provider *schema.Provider, _ *schema.Resource, resourceName string) resource.TestCheckFunc {
 		return func(s *terraform.State) error {

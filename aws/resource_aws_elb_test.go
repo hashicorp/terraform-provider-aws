@@ -972,7 +972,7 @@ func TestResourceAWSELB_validateHealthCheckTarget(t *testing.T) {
 		},
 		{
 			Value: fmt.Sprintf("HTTP:8080/%s%s",
-				acctest.RandStringFromCharSet(512, acctest.CharSetAlpha), randomRunes(512)),
+				acctest.RandString(512), randomRunes(512)),
 			ErrCount: 1,
 		},
 	}

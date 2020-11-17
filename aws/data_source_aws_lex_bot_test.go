@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccDataSourceAwsLexBot_basic(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	rName := acctest.RandString(8)
 	dataSourceName := "data.aws_lex_bot.test"
 	resourceName := "aws_lex_bot.test"
 
@@ -46,7 +46,7 @@ func TestAccDataSourceAwsLexBot_basic(t *testing.T) {
 }
 
 func testAccDataSourceAwsLexBot_withVersion(t *testing.T) {
-	rName := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	rName := acctest.RandString(8)
 	dataSourceName := "data.aws_lex_bot.test"
 	resourceName := "aws_lex_bot.test"
 

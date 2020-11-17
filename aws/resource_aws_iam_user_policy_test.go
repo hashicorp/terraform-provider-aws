@@ -62,7 +62,7 @@ func TestAccAWSIAMUserPolicy_basic(t *testing.T) {
 
 func TestAccAWSIAMUserPolicy_disappears(t *testing.T) {
 	var out iam.GetUserPolicyOutput
-	suffix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	suffix := acctest.RandString(10)
 	resourceName := fmt.Sprintf("aws_iam_user_policy.foo_%s", suffix)
 
 	resource.ParallelTest(t, resource.TestCase{
