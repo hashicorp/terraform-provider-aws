@@ -55,7 +55,7 @@ func resourceAwsIamSamlProviderCreate(d *schema.ResourceData, meta interface{}) 
 
 	out, err := conn.CreateSAMLProvider(input)
 	if err != nil {
-		return fmt.Errorf("[ERROR] failed to create IAM SAML Provider: %w", err)
+		return fmt.Errorf("error creating IAM SAML Provider: %w", err)
 	}
 
 	d.SetId(aws.StringValue(out.SAMLProviderArn))
@@ -76,7 +76,7 @@ func resourceAwsIamSamlProviderRead(d *schema.ResourceData, meta interface{}) er
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("[ERROR] failed to read IAM SAML Provider (%q): %w", d.Id(), err)
+		return fmt.Errorf("error reading IAM SAML Provider (%q): %w", d.Id(), err)
 	}
 
 	d.Set("arn", d.Id())
@@ -100,7 +100,7 @@ func resourceAwsIamSamlProviderUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	_, err := conn.UpdateSAMLProvider(input)
 	if err != nil {
-		return fmt.Errorf("[ERROR] failed to update IAM SAML Provider (%q): %w", d.Id(), err)
+		return fmt.Errorf("error updating IAM SAML Provider (%q): %w", d.Id(), err)
 	}
 
 	return resourceAwsIamSamlProviderRead(d, meta)
@@ -117,7 +117,7 @@ func resourceAwsIamSamlProviderDelete(d *schema.ResourceData, meta interface{}) 
 		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 			return nil
 		}
-		return fmt.Errorf("[ERROR] failed to delete IAM SAML Provider (%q): %w", d.Id(), err)
+		return fmt.Errorf("error deleting IAM SAML Provider (%q): %w", d.Id(), err)
 	}
 
 	return nil
