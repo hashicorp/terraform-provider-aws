@@ -1,11 +1,11 @@
 ## 3.16.0 (Unreleased)
 
-* **New Resource:** `aws_api_gateway_rest_api_policy` [GH-13619]
 * **New Resource:** `aws_backup_vault_policy` [GH-16112]
 * **New Resource:** `aws_glue_dev_endpoint` ([#7895](https://github.com/hashicorp/terraform-provider-aws/pull/7895))
 
 ENHANCEMENTS
 
+* resource/aws_msk_cluster: Support in-place `kafka_version` upgrade [GH-13654]
 * resource/aws_storagegateway_smb_file_share: Add `file_share_name` argument ([#16008](https://github.com/hashicorp/terraform-provider-aws/issues/16008))
 
 BUG FIXES
