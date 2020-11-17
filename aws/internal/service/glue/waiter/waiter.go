@@ -73,3 +73,41 @@ func TriggerDeleted(conn *glue.Glue, triggerName string) (*glue.GetTriggerOutput
 
 	return nil, err
 }
+
+// GlueDevEndpointCreated waits for a Glue Dev Endpoint to become available.
+func GlueDevEndpointCreated(conn *glue.Glue, devEndpointId string) (*glue.GetDevEndpointOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			"PROVISIONING",
+		},
+		Target:  []string{"READY"},
+		Refresh: GlueDevEndpointStatus(conn, devEndpointId),
+		Timeout: 15 * time.Minute,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*glue.GetDevEndpointOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// GlueDevEndpointDeleted waits for a Glue Dev Endpoint to become terminated.
+func GlueDevEndpointDeleted(conn *glue.Glue, devEndpointId string) (*glue.GetDevEndpointOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"TERMINATING"},
+		Target:  []string{},
+		Refresh: GlueDevEndpointStatus(conn, devEndpointId),
+		Timeout: 15 * time.Minute,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*glue.GetDevEndpointOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}

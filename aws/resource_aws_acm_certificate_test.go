@@ -107,12 +107,13 @@ func testAccAwsAcmCertificateDomainFromEnv(t *testing.T) string {
 }
 
 // ACM domain names cannot be longer than 64 characters
+// Other resources, e.g. Cognito User Pool Domains, limit this to 63
 func testAccAwsAcmCertificateRandomSubDomain(rootDomain string) string {
-	// Max length (64)
+	// Max length (63)
 	// Subtract "tf-acc-" prefix (7)
 	// Subtract "." between prefix and root domain (1)
 	// Subtract length of root domain
-	return fmt.Sprintf("tf-acc-%s.%s", acctest.RandString(56-len(rootDomain)), rootDomain)
+	return fmt.Sprintf("tf-acc-%s.%s", acctest.RandString(55-len(rootDomain)), rootDomain)
 }
 
 func TestAccAWSAcmCertificate_emailValidation(t *testing.T) {

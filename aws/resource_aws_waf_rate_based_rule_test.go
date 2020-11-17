@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/waf/lister"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -200,7 +199,7 @@ func TestAccAWSWafRateBasedRule_changePredicates(t *testing.T) {
 					testAccCheckAWSWafRateBasedRuleExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
 						"negated": "false",
 						"type":    "IPMatch",
 					}),
@@ -213,7 +212,7 @@ func TestAccAWSWafRateBasedRule_changePredicates(t *testing.T) {
 					testAccCheckAWSWafRateBasedRuleExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
 						"negated": "true",
 						"type":    "ByteMatch",
 					}),
@@ -248,7 +247,7 @@ func TestAccAWSWafRateBasedRule_changeRateLimit(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "rate_limit", "4000"),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
 						"negated": "false",
 						"type":    "IPMatch",
 					}),
@@ -262,7 +261,7 @@ func TestAccAWSWafRateBasedRule_changeRateLimit(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "rate_limit", "3000"),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
 						"negated": "false",
 						"type":    "IPMatch",
 					}),
