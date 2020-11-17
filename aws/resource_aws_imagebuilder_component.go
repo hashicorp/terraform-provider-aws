@@ -211,7 +211,7 @@ func resourceAwsImageBuilderComponentRead(d *schema.ResourceData, meta interface
 	d.Set("supported_os_versions", aws.StringValueSlice(component.SupportedOsVersions))
 
 	if err := d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(component.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	d.Set("type", component.Type)
