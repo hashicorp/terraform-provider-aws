@@ -1,7 +1,10 @@
 ## 3.16.0 (Unreleased)
 
+* **New Data Source:** `aws_imagebuilder_component` [GH-16159]
+* **New Resource:** `aws_api_gateway_rest_api_policy` [GH-13619]
 * **New Resource:** `aws_backup_vault_policy` [GH-16112]
 * **New Resource:** `aws_glue_dev_endpoint` ([#7895](https://github.com/hashicorp/terraform-provider-aws/pull/7895))
+* **New Resource:** `aws_imagebuilder_component` [GH-16159]
 
 ENHANCEMENTS
 
