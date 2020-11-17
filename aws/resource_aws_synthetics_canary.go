@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/synthetics/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/synthetics/waiter"
 )
 
@@ -282,11 +283,7 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).syntheticsconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	input := &synthetics.GetCanaryInput{
-		Name: aws.String(d.Id()),
-	}
-
-	resp, err := conn.GetCanary(input)
+	resp, err := finder.CanaryByName(conn, d.Id())
 	if err != nil {
 		if isAWSErr(err, synthetics.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Synthetics Canary (%s) not found, removing from state", d.Id())

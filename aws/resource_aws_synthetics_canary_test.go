@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/synthetics/finder"
 )
 
 func init() {
@@ -494,11 +495,7 @@ func testAccCheckAwsSyntheticsCanaryDestroy(s *terraform.State) error {
 		}
 
 		name := rs.Primary.ID
-		input := &synthetics.GetCanaryInput{
-			Name: aws.String(name),
-		}
-
-		_, err := conn.GetCanary(input)
+		_, err := finder.CanaryByName(conn, name)
 		if err != nil {
 			if isAWSErr(err, synthetics.ErrCodeResourceNotFoundException, "") {
 				return nil
@@ -524,11 +521,7 @@ func testAccCheckAwsSyntheticsCanaryExists(n string, canary *synthetics.Canary) 
 		name := rs.Primary.ID
 		conn := testAccProvider.Meta().(*AWSClient).syntheticsconn
 
-		input := &synthetics.GetCanaryInput{
-			Name: aws.String(name),
-		}
-
-		out, err := conn.GetCanary(input)
+		out, err := finder.CanaryByName(conn, name)
 		if err != nil {
 			return fmt.Errorf("syntherics Canary %s not found in AWS", name)
 		}
