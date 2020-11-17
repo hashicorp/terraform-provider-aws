@@ -1,14 +1,25 @@
 ## 3.16.0 (Unreleased)
 
+* **New Data Source:** `aws_imagebuilder_component` [GH-16159]
+* **New Data Source:** `aws_imagebuilder_distribution_configuration` [GH-16180]
+* **New Resource:** `aws_api_gateway_rest_api_policy` [GH-13619]
+* **New Resource:** `aws_backup_vault_policy` [GH-16112]
 * **New Resource:** `aws_glue_dev_endpoint` ([#7895](https://github.com/hashicorp/terraform-provider-aws/pull/7895))
+* **New Resource:** `aws_imagebuilder_component` [GH-16159]
+* **New Resource:** `aws_imagebuilder_distribution_configuration` [GH-16180]
 
 ENHANCEMENTS
 
+* resource/aws_msk_cluster: Support in-place `kafka_version` upgrade [GH-13654]
 * resource/aws_storagegateway_smb_file_share: Add `file_share_name` argument ([#16008](https://github.com/hashicorp/terraform-provider-aws/issues/16008))
 
 BUG FIXES
 
+* data-source/aws_s3_bucket: Use provider credentials when getting the bucket region (fix AWS China non-ICP S3 Buckets and other restrictive environments) [GH-15481]
+* resource/aws_backup_plan - `lifecycle` block in `copy_action` is optional [GH-16116]
 * resource/aws_organizations_organization: Prevent recreation when `feature_set` is updated to `ALL` [GH-15473]
+* resource/aws_s3_bucket: Use provider credentials when getting the bucket region (fix AWS China non-ICP S3 Buckets and other restrictive environments) [GH-15481]
+* resource/aws_s3_bucket_object: Correctly updates `version_id` when certain configuration keys are changed [GH-14900]
 
 ## 3.15.0 (November 12, 2020)
 

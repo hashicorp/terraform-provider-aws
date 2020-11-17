@@ -222,10 +222,13 @@ func resourceAwsGlueDevEndpointCreate(d *schema.ResourceData, meta interface{}) 
 		_, err := conn.CreateDevEndpoint(input)
 		if err != nil {
 			// Retry for IAM eventual consistency
-			if isAWSErr(err, glue.ErrCodeInvalidInputException, "should be given assume role permissions for Glue Service") {
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "should be given assume role permissions for Glue Service") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, glue.ErrCodeInvalidInputException, "S3 endpoint and NAT validation has failed for subnetId") {
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "is not authorized to perform") {
+				return resource.RetryableError(err)
+			}
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "S3 endpoint and NAT validation has failed for subnetId") {
 				return resource.RetryableError(err)
 			}
 

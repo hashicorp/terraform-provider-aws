@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/waf/lister"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -106,7 +105,7 @@ func TestAccAWSWafSqlInjectionMatchSet_basic(t *testing.T) {
 					testAccCheckAWSWafSqlInjectionMatchSetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "sql_injection_match_tuples.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "sql_injection_match_tuples.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sql_injection_match_tuples.*", map[string]string{
 						"field_to_match.#":      "1",
 						"field_to_match.0.data": "",
 						"field_to_match.0.type": "QUERY_STRING",
@@ -197,7 +196,7 @@ func TestAccAWSWafSqlInjectionMatchSet_changeTuples(t *testing.T) {
 					testAccCheckAWSWafSqlInjectionMatchSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "sql_injection_match_tuples.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "sql_injection_match_tuples.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sql_injection_match_tuples.*", map[string]string{
 						"field_to_match.#":      "1",
 						"field_to_match.0.data": "",
 						"field_to_match.0.type": "QUERY_STRING",
