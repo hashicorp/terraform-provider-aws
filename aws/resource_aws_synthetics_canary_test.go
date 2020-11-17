@@ -870,6 +870,8 @@ resource "aws_s3_bucket_object" "test" {
 
 func testAccAWSSyntheticsCanaryVPCConfigBase(rName string) string {
 	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -915,7 +917,7 @@ resource "aws_security_group" "test2" {
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
   role       = aws_iam_role.test.name
 }
 `, rName)
