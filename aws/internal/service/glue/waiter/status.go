@@ -1,6 +1,8 @@
 package waiter
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
@@ -68,8 +70,12 @@ func GlueDevEndpointStatus(conn *glue.Glue, name string) resource.StateRefreshFu
 			return nil, "", err
 		}
 
-		if endpoint == nil {
+		if endpoint == nil || endpoint.DevEndpoint == nil {
 			return nil, "", nil
+		}
+
+		if aws.StringValue(endpoint.DevEndpoint.Status) == "FAILED" && endpoint.DevEndpoint.FailureReason != nil {
+			return endpoint, aws.StringValue(endpoint.DevEndpoint.Status), fmt.Errorf("%s", aws.StringValue(endpoint.DevEndpoint.FailureReason))
 		}
 
 		return endpoint, aws.StringValue(endpoint.DevEndpoint.Status), nil

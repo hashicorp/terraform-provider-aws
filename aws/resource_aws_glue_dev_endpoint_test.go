@@ -649,26 +649,9 @@ data "aws_iam_policy_document" "service" {
 
     principals {
       type        = "Service"
-      identifiers = ["glue.amazonaws.com"]
+      identifiers = ["glue.${data.aws_partition.current.dns_suffix}"]
     }
   }
-}
-
-resource "aws_iam_policy" "test" {
-  name   = %[1]q
-  policy = data.aws_iam_policy_document.test.json
-}
-
-data "aws_iam_policy_document" "test" {
-  statement {
-    actions   = ["ec2:DescribeSecurityGroups", "ec2:DescribeSubnets"]
-    resources = ["*"]
-  }
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = aws_iam_policy.test.arn
 }
 
 resource "aws_iam_role_policy_attachment" "glue_service_role" {
@@ -848,7 +831,8 @@ resource "aws_vpc_endpoint" "s3" {
 }
 
 data "aws_vpc_endpoint_service" "s3" {
-  service = "s3"
+  service      = "s3"
+  service_type = "Gateway"
 }
 
 resource "aws_vpc_endpoint_route_table_association" "test" {
@@ -857,7 +841,9 @@ resource "aws_vpc_endpoint_route_table_association" "test" {
 }
 
 resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
 
   tags = {
     Name = %[1]q
