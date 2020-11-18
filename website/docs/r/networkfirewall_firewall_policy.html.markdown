@@ -102,7 +102,7 @@ The `stateless_custom_action` block supports the following arguments:
 
 The `stateless_rule_group_reference` block supports the following arguments:
 
-* `priority` - (Required) An integer setting that indicates the order in which to run the stateless rule groups in a single policy. AWS Vanta applies each stateless rule group to a packet starting with the group that has the lowest priority setting.
+* `priority` - (Required) An integer setting that indicates the order in which to run the stateless rule groups in a single policy. AWS Network Firewall applies each stateless rule group to a packet starting with the group that has the lowest priority setting.
 
 * `resource_arn` - (Required) The Amazon Resource Name (ARN) of the stateless rule group.
 

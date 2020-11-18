@@ -234,7 +234,7 @@ The `rules_source_list` block supports the following arguments:
 
 The `stateful_rule` block supports the following arguments:
 
-* `action` - (Required) Action to take with packets in a traffic flow when the flow matches the stateful rule criteria. For all actions, AWS Vanta performs the specified action and discontinues stateful inspection of the traffic flow. Valid values: `ALERT`, `DROP` or `PASS`.
+* `action` - (Required) Action to take with packets in a traffic flow when the flow matches the stateful rule criteria. For all actions, AWS Network Firewall performs the specified action and discontinues stateful inspection of the traffic flow. Valid values: `ALERT`, `DROP` or `PASS`.
 
 * `header` - (Required) A configuration block containing the stateful 5-tuple inspection criteria for the rule, used to inspect traffic flows. See [Header](#header) below for details.
 
@@ -286,7 +286,7 @@ The `custom_action` block supports the following arguments:
 
 The `stateless_rule` block supports the following arguments:
 
-* `priority` - (Required) A setting that indicates the order in which to run this rule relative to all of the rules that are defined for a stateless rule group. AWS Vanta evaluates the rules in a rule group starting with the lowest priority setting.
+* `priority` - (Required) A setting that indicates the order in which to run this rule relative to all of the rules that are defined for a stateless rule group. AWS Network Firewall evaluates the rules in a rule group starting with the lowest priority setting.
 
 * `rule_definition` - (Required) A configuration block defining the stateless 5-tuple packet inspection criteria and the action to take on a packet that matches the criteria. See [Rule Definition](#rule-definition) below for details.
 
@@ -296,7 +296,7 @@ The `rule_definition` block supports the following arguments:
 
 * `actions` - (Required) Set of actions to take on a packet that matches one of the stateless rule definition's `match_attributes`. For every rule you must specify 1 standard action, and you can add custom actions. Standard actions include: `aws:pass`, `aws:drop`, `aws:forward_to_sfe`.
 
-* `match_attributes` - (Required) A configuration block containing criteria for AWS Vanta to use to inspect an individual packet in stateless rule inspection. See [Match Attributes](#match-attributes) below for details.
+* `match_attributes` - (Required) A configuration block containing criteria for AWS Network Firewall to use to inspect an individual packet in stateless rule inspection. See [Match Attributes](#match-attributes) below for details.
 
 ### Match Attributes
 
@@ -336,7 +336,7 @@ The `dimension` block supports the following argument:
 
 The `destination` block supports the following argument:
 
-* `address_definition` - (Optional)  An IP address or a block of IP addresses in CIDR notation. AWS Vanta supports all address ranges for IPv4.
+* `address_definition` - (Optional)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
 
 ### Destination Port
 
@@ -350,7 +350,7 @@ The `destination_port` block supports the following arguments:
 
 The `source` block supports the following argument:
 
-* `address_definition` - (Optional)  An IP address or a block of IP addresses in CIDR notation. AWS Vanta supports all address ranges for IPv4.
+* `address_definition` - (Optional)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
 
 ### Source Port
 
@@ -364,7 +364,7 @@ The `source_port` block supports the following arguments:
 
 The `tcp_flag` block supports the following arguments:
 
-* `flags` - (Required) Set of flags to look for in a packet. AWS Vanta checks only the part of the packet specified in `masks`.
+* `flags` - (Required) Set of flags to look for in a packet. AWS Network Firewall checks only the part of the packet specified in `masks`.
 Valid values: `FIN`, `SYN`, `RST`, `PSH`, `ACK`, `URG`, `ECE`, `CWR`.
 
 * `masks` - (Optional) Set of values describing the part of the packet that you want to check for the flags. To inspect the entire packet, leave this empty.

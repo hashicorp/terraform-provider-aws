@@ -44,11 +44,11 @@ The following arguments are supported:
 
 * `subnet_change_protection` - (Optional) A boolean flag indicating whether it is possible to change the associated subnet(s). Defaults to `false`.
 
-* `subnet_mapping` - (Required) Set of configuration blocks describing the public subnets. Each subnet must belong to a different Availability Zone in the VPC. AWS Vanta creates a firewall endpoint in each subnet. See [Subnet Mapping](#subnet-mapping) below for details.
+* `subnet_mapping` - (Required) Set of configuration blocks describing the public subnets. Each subnet must belong to a different Availability Zone in the VPC. AWS Network Firewall creates a firewall endpoint in each subnet. See [Subnet Mapping](#subnet-mapping) below for details.
 
 * `tags` - (Optional) The key:value pairs to associate with the resource.
 
-* `vpc_id` - (Required, Forces new resource) The unique identifier of the VPC where AWS Vanta should create the firewall.
+* `vpc_id` - (Required, Forces new resource) The unique identifier of the VPC where AWS Network Firewall should create the firewall.
 
 ### Subnet Mapping
 
