@@ -344,7 +344,7 @@ func resourceAwsGlueCatalogTableRead(d *schema.ResourceData, meta interface{}) e
 	}
 	partOut, err := conn.GetPartitionIndexes(partIndexInput)
 	if err != nil {
-		return fmt.Errorf("error getting glue partition indexes: %w", err)
+		return fmt.Errorf("error getting Glue Partition Indexes: %w", err)
 	}
 
 	if partOut != nil && len(partOut.PartitionIndexDescriptorList) > 0 {
