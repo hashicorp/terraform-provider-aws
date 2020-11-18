@@ -691,10 +691,6 @@ func resourceAwsLambdaFunctionDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-type resourceDiffer interface {
-	HasChange(string) bool
-}
-
 func needsFunctionCodeUpdate(d resourceDiffer) bool {
 	return d.HasChange("filename") ||
 		d.HasChange("source_code_hash") ||

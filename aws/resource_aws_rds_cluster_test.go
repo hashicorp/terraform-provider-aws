@@ -364,6 +364,31 @@ func TestAccAWSRDSCluster_s3Restore(t *testing.T) {
 	})
 }
 
+func TestAccAWSRDSCluster_PointInTimeRestore(t *testing.T) {
+	var v rds.DBCluster
+	var c rds.DBCluster
+
+	parentId := acctest.RandomWithPrefix("tf-acc-point-in-time-restore-seed-test")
+	restoredId := acctest.RandomWithPrefix("tf-acc-point-in-time-restored-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterConfig_pointInTimeRestoreSource(parentId, restoredId),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists("aws_rds_cluster.test", &v),
+					testAccCheckAWSClusterExists("aws_rds_cluster.restored_pit", &c),
+					resource.TestCheckResourceAttr("aws_rds_cluster.restored_pit", "cluster_identifier", restoredId),
+					resource.TestCheckResourceAttrPair("aws_rds_cluster.restored_pit", "engine", "aws_rds_cluster.test", "engine"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRDSCluster_generatedName(t *testing.T) {
 	var v rds.DBCluster
 	resourceName := "aws_rds_cluster.test"
@@ -2632,6 +2657,52 @@ resource "aws_rds_cluster" "default" {
   skip_final_snapshot = true
 }
 `, n)
+}
+
+func testAccAWSClusterConfig_pointInTimeRestoreSource(parentId, childId string) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier   = "%[1]s"
+  master_username      = "root"
+  master_password      = "password"
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  skip_final_snapshot  = true
+  engine               = "aurora-mysql"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+  tags = {
+    Name = "%[1]s-vpc"
+  }
+}
+
+resource "aws_subnet" "subnets" {
+  count             = length(data.aws_availability_zones.available.names)
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.${count.index}.0/24"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  tags = {
+    Name = "%[1]s-subnet-${count.index}"
+  }
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = "%[1]s-db-subnet-group"
+  subnet_ids = aws_subnet.subnets[*].id
+}
+
+resource "aws_rds_cluster" "restored_pit" {
+  cluster_identifier  = "%s"
+  skip_final_snapshot = true
+  engine              = aws_rds_cluster.test.engine
+  restore_to_point_in_time {
+    source_cluster_identifier  = aws_rds_cluster.test.cluster_identifier
+    restore_type               = "full-copy"
+    use_latest_restorable_time = true
+  }
+}
+`, parentId, childId))
 }
 
 func testAccAWSClusterConfigTags1(rName, tagKey1, tagValue1 string) string {

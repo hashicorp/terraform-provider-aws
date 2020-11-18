@@ -72,6 +72,7 @@ var sliceServiceNames = []string{
 	"lightsail",
 	"mediastore",
 	"neptune",
+	"networkfirewall",
 	"networkmanager",
 	"organizations",
 	"quicksight",

@@ -91,7 +91,7 @@ func TestAccAWSVpcEndpointService_basic(t *testing.T) {
 		CheckDestroy: testAccCheckVpcEndpointServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointServiceConfig_basic(rName1, rName2),
+				Config: testAccVpcEndpointServiceConfig_NetworkLoadBalancerArns(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "acceptance_required", "false"),
@@ -167,12 +167,45 @@ func TestAccAWSVpcEndpointService_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckVpcEndpointServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointServiceConfig_basic(rName1, rName2),
+				Config: testAccVpcEndpointServiceConfig_NetworkLoadBalancerArns(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsVpcEndpointService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSVpcEndpointService_GatewayLoadBalancerArns(t *testing.T) {
+	var svcCfg ec2.ServiceConfiguration
+	resourceName := "aws_vpc_endpoint_service.test"
+	rName := acctest.RandomWithPrefix("tfacctest") // 32 character limit
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcEndpointServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcEndpointServiceConfig_GatewayLoadBalancerArns(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
+					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVpcEndpointServiceConfig_GatewayLoadBalancerArns(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
+					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", "2"),
+				),
 			},
 		},
 	})
@@ -359,7 +392,47 @@ data "aws_caller_identity" "current" {}
 `, rName1, rName2)
 }
 
-func testAccVpcEndpointServiceConfig_basic(rName1, rName2 string) string {
+func testAccVpcEndpointServiceConfig_GatewayLoadBalancerArns(rName string, count int) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.10.0/25"
+
+  tags = {
+    Name = "tf-acc-test-load-balancer"
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 0)
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-test-load-balancer"
+  }
+}
+
+resource "aws_lb" "test" {
+  count = %[2]d
+
+  load_balancer_type = "gateway"
+  name               = "%[1]s-${count.index}"
+
+  subnet_mapping {
+    subnet_id = aws_subnet.test.id
+  }
+}
+
+resource "aws_vpc_endpoint_service" "test" {
+  acceptance_required        = false
+  gateway_load_balancer_arns = aws_lb.test[*].arn
+}
+`, rName, count))
+}
+
+func testAccVpcEndpointServiceConfig_NetworkLoadBalancerArns(rName1, rName2 string) string {
 	return composeConfig(
 		testAccVpcEndpointServiceConfig_base(rName1, rName2),
 		`
