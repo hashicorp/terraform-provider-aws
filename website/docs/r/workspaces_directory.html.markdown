@@ -116,12 +116,29 @@ resource "aws_subnet" "example_d" {
 }
 ```
 
+### IP Groups
+
+```hcl
+resource "aws_workspaces_directory" "example" {
+  directory_id = aws_directory_service_directory.example.id
+
+  ip_group_ids = [
+    aws_workspaces_ip_group.example.id,
+  ]
+}
+
+resource "aws_workspaces_ip_group" "example" {
+  name = "example"
+}
+```
+
 ## Arguments Reference
 
 The following arguments are supported:
 
 * `directory_id` - (Required) The directory identifier for registration in WorkSpaces service.
-* `subnet_ids` - (Optional) The subnets identifiers where the workspaces are created.
+* `subnet_ids` - (Optional) The identifiers of the subnets where the directory resides.
+* `ip_group_ids` - The identifiers of the IP access control groups associated with the directory.
 * `tags` – (Optional) A map of tags assigned to the WorkSpaces directory.
 * `self_service_permissions` – (Optional) Permissions to enable or disable self-service capabilities. Defined below.
 * `workspace_creation_properties` – (Optional) Default properties that are used for creating WorkSpaces. Defined below.
