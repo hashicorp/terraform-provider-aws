@@ -751,7 +751,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_network" "test" {
+resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
 
   tags = {
