@@ -831,7 +831,7 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_secretsmanager_secret" "test" {
-  name       = "AmazonMSK_%[1]q"
+  name       = "AmazonMSK_%[1]s"
   kms_key_id = aws_kms_key.test.key_id
 }
 
@@ -844,7 +844,7 @@ resource "aws_msk_scram_secret_association" "test" {
   cluster_arn     = aws_msk_cluster.test.arn
   secret_arn_list = [aws_secretsmanager_secret.test.arn]
 
-  depends_on      = [aws_secretsmanager_secret_version.test]
+  depends_on = [aws_secretsmanager_secret_version.test]
 }
 
 resource "aws_msk_cluster" "test" {

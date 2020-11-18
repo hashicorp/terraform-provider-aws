@@ -186,16 +186,16 @@ The following arguments are supported:
 
 ### client_authentication Argument Reference
 
-* `tls` - (Optional) Configuration block for specifying TLS client authentication. See below.
 * `sasl` - (Optional) Configuration block for specifying Sasl client authentication. See below.
-
-#### client_authentication tls Argument Reference
-
-* `certificate_authority_arns` - (Optional) List of ACM Certificate Authority Amazon Resource Names (ARNs).
+* `tls` - (Optional) Configuration block for specifying TLS client authentication. See below.
 
 #### client_authentication sasl Argument Reference
 
 * `scram` - (Optional) Enables scram client authentication via AWS Secrets Manager. Defaults to `false`.
+
+#### client_authentication tls Argument Reference
+
+* `certificate_authority_arns` - (Optional) List of ACM Certificate Authority Amazon Resource Names (ARNs).
 
 ### configuration_info Argument Reference
 

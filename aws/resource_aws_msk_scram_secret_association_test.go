@@ -197,12 +197,12 @@ resource "aws_msk_cluster" "test" {
 
 resource "aws_kms_key" "test" {
   count       = %[2]d
-  description = "%[1]s-${count.index+1}"
+  description = "%[1]s-${count.index + 1}"
 }
 
 resource "aws_secretsmanager_secret" "test" {
   count      = %[2]d
-  name       = "AmazonMSK_%[1]s-${count.index+1}"
+  name       = "AmazonMSK_%[1]s-${count.index + 1}"
   kms_key_id = aws_kms_key.test[count.index].id
 }
 
@@ -241,7 +241,7 @@ resource "aws_msk_scram_secret_association" "test" {
   cluster_arn     = aws_msk_cluster.test.arn
   secret_arn_list = aws_secretsmanager_secret.test[*].arn
 
-  depends_on      = [aws_secretsmanager_secret_version.test]
+  depends_on = [aws_secretsmanager_secret_version.test]
 }
 `)
 }

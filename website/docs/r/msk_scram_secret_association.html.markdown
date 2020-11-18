@@ -19,8 +19,8 @@ resource "aws_msk_scram_secret_association" "example" {
 }
 
 resource "aws_msk_cluster" "example" {
-  cluster_name           = "example"
-  kafka_version          = "2.4.1"
+  cluster_name  = "example"
+  kafka_version = "2.4.1"
   # ... other configuration...
   client_authentication {
     sasl {
@@ -30,7 +30,7 @@ resource "aws_msk_cluster" "example" {
 }
 
 resource "aws_secretsmanager_secret" "example" {
-  name       = "AmazonMSK_example"
+  name = "AmazonMSK_example"
 }
 
 resource "aws_secretsmanager_secret_policy" "msk" {
@@ -66,7 +66,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Amazon Resource Name (ARN) of the MSK cluster.
 
 
-## Import 
+## Import
 
 MSK Scram Secret Associations can be imported using the `id` e.g.
 
