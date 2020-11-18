@@ -152,9 +152,8 @@ func testAccCheckAwsNetworkFirewallResourcePolicyExists(n string) resource.TestC
 
 func testAccNetworkFirewallResourcePolicyFirewallPolicyBaseConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_user" "test" {
-  name = %[1]q
-  path = "/"
+data "aws_caller_identity" "alternate" {
+  provider = "awsalternate"
 }
 
 resource "aws_networkfirewall_firewall_policy" "test" {
@@ -180,7 +179,7 @@ resource "aws_ram_resource_association" "test" {
 }
 
 resource "aws_ram_principal_association" "test" {
-  principal          = aws_iam_user.test.arn
+  principal          = data.aws_caller_identity.alternate.account_id
   resource_share_arn = aws_ram_resource_share.test.id
 }
 `, rName)
@@ -190,7 +189,7 @@ func testAccNetworkFirewallResourcePolicy_firewallPolicy(rName string) string {
 	return composeConfig(
 		testAccNetworkFirewallResourcePolicyFirewallPolicyBaseConfig(rName), `
 resource "aws_networkfirewall_resource_policy" "test" {
-  resource_arn = aws_iam_user.test.arn
+  resource_arn = data.aws_caller_identity.alternate.arn
   policy       = <<POLICY
 {
   "Version": "2012-10-17",
@@ -214,7 +213,7 @@ func testAccNetworkFirewallResourcePolicy_firewallPolicy_updatePolicy(rName stri
 	return composeConfig(
 		testAccNetworkFirewallResourcePolicyFirewallPolicyBaseConfig(rName), `
 resource "aws_networkfirewall_resource_policy" "test" {
-  resource_arn = aws_iam_user.test.arn
+  resource_arn = data.aws_caller_identity.alternate.arn
   policy       = <<POLICY
 {
   "Version": "2012-10-17",
@@ -239,9 +238,8 @@ POLICY
 func testAccNetworkFirewallResourcePolicyRuleGroupBaseConfig(rName string) string {
 	return composeConfig(
 		fmt.Sprintf(`
-resource "aws_iam_user" "test" {
-  name = %[1]q
-  path = "/"
+data "aws_caller_identity" "alternate" {
+  provider = "awsalternate"
 }
 
 resource "aws_ram_resource_share" "test" {
@@ -274,7 +272,7 @@ resource "aws_ram_resource_association" "test" {
 }
 
 resource "aws_ram_principal_association" "test" {
-  principal          = aws_iam_user.test.arn
+  principal          = data.aws_caller_identity.alternate.account_id
   resource_share_arn = aws_ram_resource_share.test.id
 }
 `, rName))
@@ -284,7 +282,7 @@ func testAccNetworkFirewallResourcePolicy_ruleGroup(rName string) string {
 	return composeConfig(
 		testAccNetworkFirewallResourcePolicyRuleGroupBaseConfig(rName), `
 resource "aws_networkfirewall_resource_policy" "test" {
-  resource_arn = aws_iam_user.test.arn
+  resource_arn = data.aws_caller_identity.alternate.arn
   policy       = <<POLICY
 {
   "Version": "2012-10-17",
@@ -308,7 +306,7 @@ func testAccNetworkFirewallResourcePolicy_ruleGroup_updatePolicy(rName string) s
 	return composeConfig(
 		testAccNetworkFirewallResourcePolicyRuleGroupBaseConfig(rName), `
 resource "aws_networkfirewall_resource_policy" "test" {
-  resource_arn = aws_iam_user.test.arn
+  resource_arn = data.aws_caller_identity.alternate.arn
   policy       = <<POLICY
 {
   "Version": "2012-10-17",
