@@ -1482,13 +1482,13 @@ func flattenESVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) []map[string]inter
 	m := map[string]interface{}{}
 
 	if o.AvailabilityZones != nil {
-		m["availability_zones"] = schema.NewSet(schema.HashString, flattenStringList(o.AvailabilityZones))
+		m["availability_zones"] = flattenStringSet(o.AvailabilityZones)
 	}
 	if o.SecurityGroupIds != nil {
-		m["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(o.SecurityGroupIds))
+		m["security_group_ids"] = flattenStringSet(o.SecurityGroupIds)
 	}
 	if o.SubnetIds != nil {
-		m["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(o.SubnetIds))
+		m["subnet_ids"] = flattenStringSet(o.SubnetIds)
 	}
 	if o.VPCId != nil {
 		m["vpc_id"] = *o.VPCId
@@ -1540,7 +1540,7 @@ func flattenConfigRecordingGroup(g *configservice.RecordingGroup) []map[string]i
 	}
 
 	if g.ResourceTypes != nil && len(g.ResourceTypes) > 0 {
-		m["resource_types"] = schema.NewSet(schema.HashString, flattenStringList(g.ResourceTypes))
+		m["resource_types"] = flattenStringSet(g.ResourceTypes)
 	}
 
 	return []map[string]interface{}{m}
@@ -1694,8 +1694,8 @@ func flattenLambdaVpcConfigResponse(s *lambda.VpcConfigResponse) []map[string]in
 		return nil
 	}
 
-	settings["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(s.SubnetIds))
-	settings["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(s.SecurityGroupIds))
+	settings["subnet_ids"] = flattenStringSet(s.SubnetIds)
+	settings["security_group_ids"] = flattenStringSet(s.SecurityGroupIds)
 	if s.VpcId != nil {
 		settings["vpc_id"] = *s.VpcId
 	}
@@ -2243,7 +2243,7 @@ func flattenConfigRuleScope(scope *configservice.Scope) []interface{} {
 		m["compliance_resource_id"] = *scope.ComplianceResourceId
 	}
 	if scope.ComplianceResourceTypes != nil {
-		m["compliance_resource_types"] = schema.NewSet(schema.HashString, flattenStringList(scope.ComplianceResourceTypes))
+		m["compliance_resource_types"] = flattenStringSet(scope.ComplianceResourceTypes)
 	}
 	if scope.TagKey != nil {
 		m["tag_key"] = *scope.TagKey
@@ -3403,8 +3403,8 @@ func flattenWorkLinkNetworkConfigResponse(c *worklink.DescribeCompanyNetworkConf
 		return nil
 	}
 
-	config["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(c.SubnetIds))
-	config["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(c.SecurityGroupIds))
+	config["subnet_ids"] = flattenStringSet(c.SubnetIds)
+	config["security_group_ids"] = flattenStringSet(c.SecurityGroupIds)
 	config["vpc_id"] = aws.StringValue(c.VpcId)
 
 	return []map[string]interface{}{config}
@@ -3655,7 +3655,7 @@ func flattenMqUsers(users []*mq.User, cfgUsers []interface{}) *schema.Set {
 			m["console_access"] = *u.ConsoleAccess
 		}
 		if len(u.Groups) > 0 {
-			m["groups"] = schema.NewSet(schema.HashString, flattenStringList(u.Groups))
+			m["groups"] = flattenStringSet(u.Groups)
 		}
 		out = append(out, m)
 	}
