@@ -109,11 +109,11 @@ func resourceAwsWorkspacesIpGroupRead(d *schema.ResourceData, meta interface{}) 
 
 	tags, err := keyvaluetags.WorkspacesListTags(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error listing tags for Workspaces IP Group (%q): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for Workspaces IP Group (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -138,7 +138,7 @@ func resourceAwsWorkspacesIpGroupUpdate(d *schema.ResourceData, meta interface{}
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.WorkspacesUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
 
@@ -165,7 +165,7 @@ func resourceAwsWorkspacesIpGroupDelete(d *schema.ResourceData, meta interface{}
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("error describing Workspaces IP Groups: %s", err)
+		return fmt.Errorf("error describing Workspaces IP Groups: %w", err)
 	}
 
 	if directoryID == nil {
@@ -178,7 +178,7 @@ func resourceAwsWorkspacesIpGroupDelete(d *schema.ResourceData, meta interface{}
 			GroupIds:    aws.StringSlice([]string{d.Id()}),
 		})
 		if err != nil {
-			return fmt.Errorf("error disassociating Workspaces IP Group: %s", err)
+			return fmt.Errorf("error disassociating Workspaces IP Group: %w", err)
 		}
 		log.Printf("[INFO] Workspaces IP Group %q has been successfully disassociated from Directory %q", d.Id(), aws.StringValue(directoryID))
 	}
@@ -188,7 +188,7 @@ func resourceAwsWorkspacesIpGroupDelete(d *schema.ResourceData, meta interface{}
 		GroupId: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("error deleting Workspaces IP Group: %s", err)
+		return fmt.Errorf("error deleting Workspaces IP Group: %w", err)
 	}
 	log.Printf("[INFO] Workspaces IP Group %q has been successfully deleted", d.Id())
 

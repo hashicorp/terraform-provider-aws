@@ -136,7 +136,7 @@ func testAccCheckAwsWorkspacesIpGroupDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error Describing Workspaces IP Group: %s", err)
+			return fmt.Errorf("error Describing Workspaces IP Group: %w", err)
 		}
 
 		// Return nil if the IP Group is already destroyed (does not exist)

@@ -147,12 +147,12 @@ func resourceAwsWorkspacesDirectory() *schema.Resource {
 
 func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).workspacesconn
-	directoryId := d.Get("directory_id").(string)
+	directoryID := d.Get("directory_id").(string)
 
 	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().WorkspacesTags()
 
 	input := &workspaces.RegisterWorkspaceDirectoryInput{
-		DirectoryId:       aws.String(directoryId),
+		DirectoryId:       aws.String(directoryID),
 		EnableSelfService: aws.Bool(false), // this is handled separately below
 		EnableWorkDocs:    aws.Bool(false),
 		Tenancy:           aws.String(workspaces.TenancyShared),
@@ -163,55 +163,55 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 		input.SubnetIds = expandStringSet(v.(*schema.Set))
 	}
 
-	log.Printf("[DEBUG] Regestering WorkSpaces Directory...\n%#v\n", *input)
+	log.Printf("[DEBUG] Registering WorkSpaces Directory: %s", *input)
 	_, err := conn.RegisterWorkspaceDirectory(input)
 	if err != nil {
 		return err
 	}
-	d.SetId(directoryId)
+	d.SetId(directoryID)
 
-	log.Printf("[DEBUG] Waiting for WorkSpaces Directory %q to become registered...", directoryId)
-	_, err = waiter.DirectoryRegistered(conn, directoryId)
+	log.Printf("[DEBUG] Waiting for WorkSpaces Directory (%s) to be registered", directoryID)
+	_, err = waiter.DirectoryRegistered(conn, directoryID)
 	if err != nil {
-		return fmt.Errorf("error registering directory: %s", err)
+		return fmt.Errorf("error registering WorkSpaces Directory (%s): %w", directoryID, err)
 	}
-	log.Printf("[DEBUG] WorkSpaces Directory %q is registered", directoryId)
+	log.Printf("[INFO] WorkSpaces Directory (%s) registered", directoryID)
 
 	if v, ok := d.GetOk("self_service_permissions"); ok {
-		log.Printf("[DEBUG] Modifying WorkSpaces Directory %q self-service permissions...", directoryId)
+		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) self-service permissions", directoryID)
 		_, err := conn.ModifySelfservicePermissions(&workspaces.ModifySelfservicePermissionsInput{
-			ResourceId:             aws.String(directoryId),
+			ResourceId:             aws.String(directoryID),
 			SelfservicePermissions: expandSelfServicePermissions(v.([]interface{})),
 		})
 		if err != nil {
-			return fmt.Errorf("error setting self service permissions: %s", err)
+			return fmt.Errorf("error setting WorkSpaces Directory (%s) self service permissions: %w", directoryID, err)
 		}
-		log.Printf("[DEBUG] WorkSpaces Directory %q self-service permissions are set", directoryId)
+		log.Printf("[INFO] Modified WorkSpaces Directory (%s) self-service permissions", directoryID)
 	}
 
 	if v, ok := d.GetOk("workspace_creation_properties"); ok {
-		log.Printf("[DEBUG] Modifying WorkSpaces Directory %q creation properties...", directoryId)
+		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) creation properties", directoryID)
 		_, err := conn.ModifyWorkspaceCreationProperties(&workspaces.ModifyWorkspaceCreationPropertiesInput{
-			ResourceId:                  aws.String(directoryId),
+			ResourceId:                  aws.String(directoryID),
 			WorkspaceCreationProperties: expandWorkspaceCreationProperties(v.([]interface{})),
 		})
 		if err != nil {
-			return fmt.Errorf("error setting creation properties: %s", err)
+			return fmt.Errorf("error setting WorkSpaces Directory (%s) creation properties: %w", directoryID, err)
 		}
-		log.Printf("[DEBUG] WorkSpaces Directory %q creation properties are set", directoryId)
+		log.Printf("[INFO] Modified WorkSpaces Directory (%s) creation properties", directoryID)
 	}
 
 	if v, ok := d.GetOk("ip_group_ids"); ok && v.(*schema.Set).Len() > 0 {
 		ipGroupIds := v.(*schema.Set)
-		log.Printf("[DEBUG] Associate WorkSpaces Directory %q with IP Groups %s...", directoryId, ipGroupIds.List())
+		log.Printf("[DEBUG] Associating WorkSpaces Directory (%s) with IP Groups %s", directoryID, ipGroupIds.List())
 		_, err := conn.AssociateIpGroups(&workspaces.AssociateIpGroupsInput{
-			DirectoryId: aws.String(directoryId),
+			DirectoryId: aws.String(directoryID),
 			GroupIds:    expandStringSet(ipGroupIds),
 		})
 		if err != nil {
-			return fmt.Errorf("error asassociating ip groups: %s", err)
+			return fmt.Errorf("error asassociating WorkSpaces Directory (%s) ip groups: %w", directoryID, err)
 		}
-		log.Printf("[DEBUG] WorkSpaces Directory %q IP Groups are set", directoryId)
+		log.Printf("[INFO] Associated WorkSpaces Directory (%s) IP Groups", directoryID)
 	}
 
 	return resourceAwsWorkspacesDirectoryRead(d, meta)
@@ -223,7 +223,7 @@ func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}
 
 	rawOutput, state, err := waiter.DirectoryState(conn, d.Id())()
 	if err != nil {
-		return fmt.Errorf("error getting WorkSpaces Directory (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting WorkSpaces Directory (%s): %w", d.Id(), err)
 	}
 	if state == workspaces.WorkspaceDirectoryStateDeregistered {
 		log.Printf("[WARN] WorkSpaces Directory (%s) not found, removing from state", d.Id())
@@ -234,7 +234,7 @@ func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}
 	directory := rawOutput.(*workspaces.WorkspaceDirectory)
 	d.Set("directory_id", directory.DirectoryId)
 	if err := d.Set("subnet_ids", flattenStringSet(directory.SubnetIds)); err != nil {
-		return fmt.Errorf("error setting subnet_ids: %s", err)
+		return fmt.Errorf("error setting subnet_ids: %w", err)
 	}
 	d.Set("workspace_security_group_id", directory.WorkspaceSecurityGroupId)
 	d.Set("iam_role_id", directory.IamRoleId)
@@ -244,28 +244,28 @@ func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}
 	d.Set("alias", directory.Alias)
 
 	if err := d.Set("self_service_permissions", flattenSelfServicePermissions(directory.SelfservicePermissions)); err != nil {
-		return fmt.Errorf("error setting self_service_permissions: %s", err)
+		return fmt.Errorf("error setting self_service_permissions: %w", err)
 	}
 
 	if err := d.Set("workspace_creation_properties", flattenWorkspaceCreationProperties(directory.WorkspaceCreationProperties)); err != nil {
-		return fmt.Errorf("error setting workspace_creation_properties: %s", err)
+		return fmt.Errorf("error setting workspace_creation_properties: %w", err)
 	}
 
 	if err := d.Set("ip_group_ids", flattenStringSet(directory.IpGroupIds)); err != nil {
-		return fmt.Errorf("error setting ip_group_ids: %s", err)
+		return fmt.Errorf("error setting ip_group_ids: %w", err)
 	}
 
 	if err := d.Set("dns_ip_addresses", flattenStringSet(directory.DnsIpAddresses)); err != nil {
-		return fmt.Errorf("error setting dns_ip_addresses: %s", err)
+		return fmt.Errorf("error setting dns_ip_addresses: %w", err)
 	}
 
 	tags, err := keyvaluetags.WorkspacesListTags(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error listing tags: %s", err)
+		return fmt.Errorf("error listing tags: %w", err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -275,7 +275,7 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).workspacesconn
 
 	if d.HasChange("self_service_permissions") {
-		log.Printf("[DEBUG] Modifying WorkSpaces Directory %q self-service permissions...", d.Id())
+		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) self-service permissions", d.Id())
 		permissions := d.Get("self_service_permissions").([]interface{})
 
 		_, err := conn.ModifySelfservicePermissions(&workspaces.ModifySelfservicePermissionsInput{
@@ -283,13 +283,13 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 			SelfservicePermissions: expandSelfServicePermissions(permissions),
 		})
 		if err != nil {
-			return fmt.Errorf("error updating self service permissions: %s", err)
+			return fmt.Errorf("error updating WorkSpaces Directory (%s) self service permissions: %w", d.Id(), err)
 		}
-		log.Printf("[DEBUG] WorkSpaces Directory %q self-service permissions are set", d.Id())
+		log.Printf("[INFO] Modified WorkSpaces Directory (%s) self-service permissions", d.Id())
 	}
 
 	if d.HasChange("workspace_creation_properties") {
-		log.Printf("[DEBUG] Modifying WorkSpaces Directory %q creation properties...", d.Id())
+		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) creation properties", d.Id())
 		properties := d.Get("workspace_creation_properties").([]interface{})
 
 		_, err := conn.ModifyWorkspaceCreationProperties(&workspaces.ModifyWorkspaceCreationPropertiesInput{
@@ -297,9 +297,9 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 			WorkspaceCreationProperties: expandWorkspaceCreationProperties(properties),
 		})
 		if err != nil {
-			return fmt.Errorf("error updating creation properties: %s", err)
+			return fmt.Errorf("error updating WorkSpaces Directory (%s) creation properties: %w", d.Id(), err)
 		}
-		log.Printf("[DEBUG] WorkSpaces Directory %q creation properties are set", d.Id())
+		log.Printf("[INFO] Modified WorkSpaces Directory (%s) creation properties", d.Id())
 	}
 
 	if d.HasChange("ip_group_ids") {
@@ -309,31 +309,31 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 		added := new.Difference(old)
 		removed := old.Difference(new)
 
-		log.Printf("[DEBUG] Associate IP Groups %s from WorkSpaces Directory %q...", added.GoString(), d.Id())
+		log.Printf("[DEBUG] Associating WorkSpaces Directory (%s) with IP Groups %s", d.Id(), added.GoString())
 		_, err := conn.AssociateIpGroups(&workspaces.AssociateIpGroupsInput{
 			DirectoryId: aws.String(d.Id()),
 			GroupIds:    expandStringSet(added),
 		})
 		if err != nil {
-			return fmt.Errorf("error asassociating ip groups: %s", err)
+			return fmt.Errorf("error asassociating WorkSpaces Directory (%s) IP Groups: %w", d.Id(), err)
 		}
 
-		log.Printf("[DEBUG] Disassociate IP Groups %s from WorkSpaces Directory %q...", removed.GoString(), d.Id())
+		log.Printf("[DEBUG] Disassociating WorkSpaces Directory (%s) with IP Groups %s", d.Id(), removed.GoString())
 		_, err = conn.DisassociateIpGroups(&workspaces.DisassociateIpGroupsInput{
 			DirectoryId: aws.String(d.Id()),
 			GroupIds:    expandStringSet(removed),
 		})
 		if err != nil {
-			return fmt.Errorf("error disasassociating ip groups: %s", err)
+			return fmt.Errorf("error disasassociating WorkSpaces Directory (%s) IP Groups: %w", d.Id(), err)
 		}
 
-		log.Printf("[DEBUG] WorkSpaces Directory %q IP Groups are set", d.Id())
+		log.Printf("[INFO] Updated WorkSpaces Directory (%s) IP Groups", d.Id())
 	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.WorkspacesUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
 
@@ -345,27 +345,27 @@ func resourceAwsWorkspacesDirectoryDelete(d *schema.ResourceData, meta interface
 
 	err := workspacesDirectoryDelete(d.Id(), conn)
 	if err != nil {
-		return fmt.Errorf("error deleting WorkSpaces Directory (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting WorkSpaces Directory (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
 func workspacesDirectoryDelete(id string, conn *workspaces.WorkSpaces) error {
-	log.Printf("[DEBUG] Deregistering WorkSpaces Directory %q", id)
+	log.Printf("[DEBUG] Deregistering WorkSpaces Directory (%s)", id)
 	_, err := conn.DeregisterWorkspaceDirectory(&workspaces.DeregisterWorkspaceDirectoryInput{
 		DirectoryId: aws.String(id),
 	})
 	if err != nil {
-		return fmt.Errorf("error deregistering WorkSpaces Directory %q: %w", id, err)
+		return fmt.Errorf("error deregistering WorkSpaces Directory (%s): %w", id, err)
 	}
 
-	log.Printf("[DEBUG] Waiting for WorkSpaces Directory %q to be deregistered", id)
+	log.Printf("[DEBUG] Waiting for WorkSpaces Directory (%s) to be deregistered", id)
 	_, err = waiter.DirectoryDeregistered(conn, id)
 	if err != nil {
-		return fmt.Errorf("error waiting for WorkSpaces Directory %q to be deregistered: %w", id, err)
+		return fmt.Errorf("error waiting for WorkSpaces Directory (%s) to be deregistered: %w", id, err)
 	}
-	log.Printf("[DEBUG] WorkSpaces Directory %q is deregistered", id)
+	log.Printf("[INFO] WorkSpaces Directory (%s) deregistered", id)
 
 	return nil
 }

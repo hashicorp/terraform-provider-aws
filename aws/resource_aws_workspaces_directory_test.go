@@ -38,7 +38,6 @@ func testSweepWorkspacesDirectories(region string) error {
 			if err != nil {
 				errors = multierror.Append(errors, err)
 			}
-
 		}
 		return true
 	})
@@ -47,7 +46,7 @@ func testSweepWorkspacesDirectories(region string) error {
 		return errors // In case we have completed some pages, but had errors
 	}
 	if err != nil {
-		errors = multierror.Append(errors, fmt.Errorf("error listing Workspace Directories: %s", err))
+		errors = multierror.Append(errors, fmt.Errorf("error listing WorkSpaces Directories: %w", err))
 	}
 
 	return errors
@@ -90,6 +89,7 @@ func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.switch_running_mode", "false"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					// resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.custom_security_group_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.default_ou", ""),
@@ -565,8 +565,7 @@ resource "aws_directory_service_directory" "main" {
 
 func testAccWorkspacesDirectoryConfig(rName string) string {
 	return composeConfig(
-		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
-		`
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName), `
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 }
@@ -579,8 +578,7 @@ data "aws_iam_role" "workspaces-default" {
 
 func testAccWorkspacesDirectory_selfServicePermissions(rName string) string {
 	return composeConfig(
-		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
-		`
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName), `
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
@@ -597,8 +595,7 @@ resource "aws_workspaces_directory" "main" {
 
 func testAccWorkspacesDirectoryConfig_subnetIds(rName string) string {
 	return composeConfig(
-		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
-		`
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName), `
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
   subnet_ids   = [aws_subnet.primary.id, aws_subnet.secondary.id]
