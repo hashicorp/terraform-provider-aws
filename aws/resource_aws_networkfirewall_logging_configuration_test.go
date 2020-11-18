@@ -261,7 +261,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_bucketName(t
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":          "1",
-						"log_destination.bucketName": rName,
+						"log_destination.bucketName": bucketName,
 					}),
 				),
 			},
@@ -343,7 +343,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_prefix(t *te
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":          "1",
-						"log_destination.bucketName": rName,
+						"log_destination.bucketName": bucketName,
 					}),
 				),
 			},
@@ -354,7 +354,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_prefix(t *te
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":          "2",
-						"log_destination.bucketName": rName,
+						"log_destination.bucketName": bucketName,
 						"log_destination.prefix":     "update-prefix",
 					}),
 				),
@@ -422,7 +422,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_updateLogDestinationType(t *t
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":        "1",
-						"log_destination.logGroup": rName,
+						"log_destination.logGroup": logGroupName,
 						"log_destination_type":     networkfirewall.LogDestinationTypeCloudWatchLogs,
 						"log_type":                 networkfirewall.LogTypeFlow,
 					}),
@@ -435,7 +435,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_updateLogDestinationType(t *t
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":              "1",
-						"log_destination.deliveryStream": rName,
+						"log_destination.deliveryStream": streamName,
 						"log_destination_type":           networkfirewall.LogDestinationTypeKinesisDataFirehose,
 						"log_type":                       networkfirewall.LogTypeFlow,
 					}),
