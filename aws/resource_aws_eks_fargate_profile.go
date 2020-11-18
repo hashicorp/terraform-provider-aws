@@ -110,7 +110,13 @@ func resourceAwsEksFargateProfileCreate(d *schema.ResourceData, meta interface{}
 		input.Tags = keyvaluetags.New(v).IgnoreAws().EksTags()
 	}
 
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	// mutex lock for creation/deletion serialization
+	mutexKey := fmt.Sprintf("%s-fargate-profiles", d.Get("cluster_name").(string))
+	awsMutexKV.Lock(mutexKey)
+	defer awsMutexKV.Unlock(mutexKey)
+
+	// Creation of profiles must be serialized, and can take a while, increase the timeout to a long time.
+	err := resource.Retry(30*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateFargateProfile(input)
 
 		// Retry for IAM eventual consistency on error:
@@ -232,6 +238,11 @@ func resourceAwsEksFargateProfileDelete(d *schema.ResourceData, meta interface{}
 		FargateProfileName: aws.String(fargateProfileName),
 	}
 
+	// mutex lock for creation/deletion serialization
+	mutexKey := fmt.Sprintf("%s-fargate-profiles", d.Get("cluster_name").(string))
+	awsMutexKV.Lock(mutexKey)
+	defer awsMutexKV.Unlock(mutexKey)
+
 	_, err = conn.DeleteFargateProfile(input)
 
 	if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
@@ -239,7 +250,7 @@ func resourceAwsEksFargateProfileDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EKS Fargate Profile (%s): %s", d.Id(), err)
+		return fmt.Errorf("error Deleting EKS Fargate Profile (%s): %s", d.Id(), err)
 	}
 
 	if err := waitForEksFargateProfileDeletion(conn, clusterName, fargateProfileName, d.Timeout(schema.TimeoutDelete)); err != nil {
