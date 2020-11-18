@@ -922,8 +922,12 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if d.HasChange("capacity_rebalance") {
+		// If the capacity rebalance field is set to null, we need to explicitly set
+		// it back to "false", or the API won't reset it for us.
 		if v, ok := d.GetOk("capacity_rebalance"); ok {
 			opts.CapacityRebalance = aws.Bool(v.(bool))
+		} else {
+			opts.CapacityRebalance = aws.Bool(false)
 		}
 	}
 
