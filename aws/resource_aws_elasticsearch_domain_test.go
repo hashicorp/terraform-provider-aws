@@ -1432,17 +1432,17 @@ resource "aws_elasticsearch_domain" "example" {
 func testAccESDomainConfig_CustomEndpoint(randInt int, enforceHttps bool, tlsSecurityPolicy string, customEndpointEnabled bool, customEndpoint string, certKey string, certBody string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "example" {
-	private_key      = "%[6]s"
-	certificate_body = "%[7]s"
+  private_key      = "%[6]s"
+  certificate_body = "%[7]s"
 }
 
 resource "aws_elasticsearch_domain" "example" {
   domain_name = "tf-test-%[1]d"
 
   domain_endpoint_options {
-	enforce_https                   = %[2]t
-	tls_security_policy             = %[3]q
-	custom_endpoint_enabled         = %[4]t
+    enforce_https                   = %[2]t
+    tls_security_policy             = %[3]q
+    custom_endpoint_enabled         = %[4]t
     custom_endpoint                 = "%[5]s"
     custom_endpoint_certificate_arn = aws_acm_certificate.example.arn
   }
