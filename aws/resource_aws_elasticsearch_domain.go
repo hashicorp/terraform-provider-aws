@@ -140,7 +140,8 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"enforce_https": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Optional: true,
+							Default:  true,
 						},
 						"tls_security_policy": {
 							Type:     schema.TypeString,
