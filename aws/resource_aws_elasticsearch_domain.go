@@ -157,13 +157,22 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							Default:  false,
 						},
 						"custom_endpoint": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
-						},
-						"custom_endpoint_certificate_arn": {
 							Type:     schema.TypeString,
 							Optional: true,
+							StateFunc: func(v interface{}) string {
+								// AWS Provider aws_acm_certification.domain_validation_options.resource_record_name
+								// references (and perhaps others) contain a trailing period, requiring a custom StateFunc
+								// to trim the string to prevent Route53 API error
+								value := strings.TrimSuffix(v.(string), ".")
+								return strings.ToLower(value)
+							},
+							DiffSuppressFunc: isCustomEndpointDisabled,
+						},
+						"custom_endpoint_certificate_arn": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateFunc:     validateArn,
+							DiffSuppressFunc: isCustomEndpointDisabled,
 						},
 					},
 				},
@@ -1047,6 +1056,15 @@ func isDedicatedMasterDisabled(k, old, new string, d *schema.ResourceData) bool 
 	if ok {
 		clusterConfig := v.([]interface{})[0].(map[string]interface{})
 		return !clusterConfig["dedicated_master_enabled"].(bool)
+	}
+	return false
+}
+
+func isCustomEndpointDisabled(k, old, new string, d *schema.ResourceData) bool {
+	v, ok := d.GetOk("domain_endpoint_options")
+	if ok {
+		domainEndpointOptions := v.([]interface{})[0].(map[string]interface{})
+		return !domainEndpointOptions["custom_endpoint_enabled"].(bool)
 	}
 	return false
 }
