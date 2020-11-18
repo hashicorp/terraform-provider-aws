@@ -306,7 +306,7 @@ func resourceAwsNetworkFirewallFirewallUpdate(ctx context.Context, d *schema.Res
 			}
 
 			_, err := conn.DisassociateSubnetsWithContext(ctx, input)
-			if err != nil {
+			if err != nil && !tfawserr.ErrMessageContains(err, networkfirewall.ErrCodeInvalidRequestException, "inaccessible") {
 				return diag.FromErr(fmt.Errorf("error disassociating NetworkFirewall Firewall (%s) subnet: %w", arn, err))
 			}
 
