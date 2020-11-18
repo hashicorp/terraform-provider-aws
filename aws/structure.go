@@ -1376,16 +1376,18 @@ func expandESDomainEndpointOptions(l []interface{}) *elasticsearch.DomainEndpoin
 		domainEndpointOptions.TLSSecurityPolicy = aws.String(v)
 	}
 
-	if v, ok := m["custom_endpoint_enabled"].(bool); ok {
-		domainEndpointOptions.CustomEndpointEnabled = aws.Bool(v)
-	}
+	if customEndpointEnabled, ok := m["custom_endpoint_enabled"]; ok {
+		domainEndpointOptions.CustomEndpointEnabled = aws.Bool(customEndpointEnabled.(bool))
 
-	if v, ok := m["custom_endpoint"].(string); ok {
-		domainEndpointOptions.CustomEndpoint = aws.String(v)
-	}
+		if customEndpointEnabled.(bool) {
+			if v, ok := m["custom_endpoint"].(string); ok && v != "" {
+				domainEndpointOptions.CustomEndpoint = aws.String(v)
+			}
 
-	if v, ok := m["custom_endpoint_certificate_arn"].(string); ok {
-		domainEndpointOptions.CustomEndpointCertificateArn = aws.String(v)
+			if v, ok := m["custom_endpoint_certificate_arn"].(string); ok && v != "" {
+				domainEndpointOptions.CustomEndpointCertificateArn = aws.String(v)
+			}
+		}
 	}
 
 	return domainEndpointOptions
@@ -1397,11 +1399,17 @@ func flattenESDomainEndpointOptions(domainEndpointOptions *elasticsearch.DomainE
 	}
 
 	m := map[string]interface{}{
-		"enforce_https":                   aws.BoolValue(domainEndpointOptions.EnforceHTTPS),
-		"tls_security_policy":             aws.StringValue(domainEndpointOptions.TLSSecurityPolicy),
-		"custom_endpoint_enabled":         aws.BoolValue(domainEndpointOptions.CustomEndpointEnabled),
-		"custom_endpoint":                 aws.StringValue(domainEndpointOptions.CustomEndpoint),
-		"custom_endpoint_certificate_arn": aws.StringValue(domainEndpointOptions.CustomEndpointCertificateArn),
+		"enforce_https":           aws.BoolValue(domainEndpointOptions.EnforceHTTPS),
+		"tls_security_policy":     aws.StringValue(domainEndpointOptions.TLSSecurityPolicy),
+		"custom_endpoint_enabled": aws.BoolValue(domainEndpointOptions.CustomEndpointEnabled),
+	}
+	if aws.BoolValue(domainEndpointOptions.CustomEndpointEnabled) {
+		if domainEndpointOptions.CustomEndpoint != nil {
+			m["custom_endpoint"] = aws.StringValue(domainEndpointOptions.CustomEndpoint)
+		}
+		if domainEndpointOptions.CustomEndpointCertificateArn != nil {
+			m["custom_endpoint_certificate_arn"] = aws.StringValue(domainEndpointOptions.CustomEndpointCertificateArn)
+		}
 	}
 
 	return []interface{}{m}
