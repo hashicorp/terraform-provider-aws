@@ -120,7 +120,7 @@ The following arguments are supported:
 * `maximum_execution_frequency` - (Optional) The maximum frequency with which AWS Config runs evaluations for a rule.
 * `scope` - (Optional) Scope defines which resources can trigger an evaluation for the rule as documented below.
 * `source` - (Required) Source specifies the rule owner, the rule identifier, and the notifications that cause
-	the function to evaluate your AWS resources as documented below.
+ the function to evaluate your AWS resources as documented below.
 * `tags` - (Optional) A map of tags to assign to the resource.
 
 ### `scope`
@@ -129,12 +129,12 @@ Defines which resources can trigger an evaluation for the rule.
 If you do not specify a scope, evaluations are triggered when any resource in the recording group changes.
 
 * `compliance_resource_id` - (Optional) The IDs of the only AWS resource that you want to trigger an evaluation for the rule.
-	If you specify a resource ID, you must specify one resource type for `compliance_resource_types`.
+ If you specify a resource ID, you must specify one resource type for `compliance_resource_types`.
 * `compliance_resource_types` - (Optional) A list of resource types of only those AWS resources that you want to trigger an
-	evaluation for the rule. e.g. `AWS::EC2::Instance`. You can only specify one type if you also specify
-	a resource ID for `compliance_resource_id`. See [relevant part of AWS Docs](http://docs.aws.amazon.com/config/latest/APIReference/API_ResourceIdentifier.html#config-Type-ResourceIdentifier-resourceType) for available types.
+ evaluation for the rule. e.g. `AWS::EC2::Instance`. You can only specify one type if you also specify
+ a resource ID for `compliance_resource_id`. See [relevant part of AWS Docs](http://docs.aws.amazon.com/config/latest/APIReference/API_ResourceIdentifier.html#config-Type-ResourceIdentifier-resourceType) for available types.
 * `tag_key` - (Optional, Required if `tag_value` is specified) The tag key that is applied to only those AWS resources that you want you
-	want to trigger an evaluation for the rule.
+ want to trigger an evaluation for the rule.
 * `tag_value` - (Optional) The tag value applied to only those AWS resources that you want to trigger an evaluation for the rule.
 
 ### `source`
@@ -145,20 +145,20 @@ Provides the rule owner (AWS or customer), the rule identifier, and the notifica
 * `source_identifier` - (Required) For AWS Config managed rules, a predefined identifier, e.g `IAM_PASSWORD_POLICY`. For custom Lambda rules, the identifier is the ARN of the Lambda Function, such as `arn:aws:lambda:us-east-1:123456789012:function:custom_rule_name` or the [`arn` attribute of the `aws_lambda_function` resource](/docs/providers/aws/r/lambda_function.html#arn).
 * `source_detail` - (Optional) Provides the source and type of the event that causes AWS Config to evaluate your AWS resources. Only valid if `owner` is `CUSTOM_LAMBDA`.
     * `event_source` - (Optional) The source of the event, such as an AWS service, that triggers AWS Config
-		to evaluate your AWS resources. This defaults to `aws.config` and is the only valid value.
+  to evaluate your AWS resources. This defaults to `aws.config` and is the only valid value.
     * `maximum_execution_frequency` - (Optional) The frequency that you want AWS Config to run evaluations for a rule that
-		is triggered periodically. If specified, requires `message_type` to be `ScheduledNotification`.
+  is triggered periodically. If specified, requires `message_type` to be `ScheduledNotification`.
     * `message_type` - (Optional) The type of notification that triggers AWS Config to run an evaluation for a rule. You can specify the following notification types:
         * `ConfigurationItemChangeNotification` - Triggers an evaluation when AWS
-	    	Config delivers a configuration item as a result of a resource change.
+      Config delivers a configuration item as a result of a resource change.
         * `OversizedConfigurationItemChangeNotification` - Triggers an evaluation
-	    	when AWS Config delivers an oversized configuration item. AWS Config may
-	    	generate this notification type when a resource changes and the notification
-	    	exceeds the maximum size allowed by Amazon SNS.
+      when AWS Config delivers an oversized configuration item. AWS Config may
+      generate this notification type when a resource changes and the notification
+      exceeds the maximum size allowed by Amazon SNS.
         * `ScheduledNotification` - Triggers a periodic evaluation at the frequency
-	    	specified for `maximum_execution_frequency`.
+      specified for `maximum_execution_frequency`.
         * `ConfigurationSnapshotDeliveryCompleted` - Triggers a periodic evaluation
-	    	when AWS Config delivers a configuration snapshot.
+      when AWS Config delivers a configuration snapshot.
 
 ## Attributes Reference
 

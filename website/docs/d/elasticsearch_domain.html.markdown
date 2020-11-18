@@ -60,7 +60,7 @@ The following attributes are exported:
     * `volume_type` - The type of EBS volumes attached to data nodes.
     * `volume_size` - The size of EBS volumes attached to data nodes (in GB).
     * `iops` - The baseline input/output (I/O) performance of EBS volumes
-	attached to data nodes.
+ attached to data nodes.
 * `elasticsearch_version` – ElasticSearch version for the domain.
 * `encryption_at_rest` - Domain encryption at rest related options.
     * `enabled` - Whether encryption at rest is enabled in the domain.
@@ -76,7 +76,7 @@ The following attributes are exported:
 * `processing` – Status of a configuration change in the domain.
 * `snapshot_options` – Domain snapshot related options.
     * `automated_snapshot_start_hour` - Hour during which the service takes an automated daily
-	snapshot of the indices in the domain.
+ snapshot of the indices in the domain.
 * `tags` - The tags assigned to the domain.
 * `vpc_options` - VPC Options for private Elasticsearch domains.
     * `availability_zones` - The availability zones used by the domain.

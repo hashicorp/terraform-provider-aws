@@ -88,8 +88,8 @@ The following arguments are supported:
 ### `snapshot_delivery_properties`
 
 * `delivery_frequency` - (Optional) - The frequency with which AWS Config recurringly delivers configuration snapshots.
-	e.g. `One_Hour` or `Three_Hours`.
-	Valid values are listed [here](https://docs.aws.amazon.com/config/latest/APIReference/API_ConfigSnapshotDeliveryProperties.html#API_ConfigSnapshotDeliveryProperties_Contents).
+ e.g. `One_Hour` or `Three_Hours`.
+ Valid values are listed [here](https://docs.aws.amazon.com/config/latest/APIReference/API_ConfigSnapshotDeliveryProperties.html#API_ConfigSnapshotDeliveryProperties_Contents).
 
 ## Attributes Reference
 

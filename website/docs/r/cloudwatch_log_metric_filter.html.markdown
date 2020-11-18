@@ -39,7 +39,7 @@ The following arguments are supported:
   for extracting metric data out of ingested log events.
 * `log_group_name` - (Required) The name of the log group to associate the metric filter with.
 * `metric_transformation` - (Required) A block defining collection of information
-	needed to define how metric data gets emitted. See below.
+ needed to define how metric data gets emitted. See below.
 
 The `metric_transformation` block supports the following arguments:
 
