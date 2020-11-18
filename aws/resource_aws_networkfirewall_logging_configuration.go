@@ -222,7 +222,7 @@ func expandNetworkFirewallLoggingConfiguration(l []interface{}) []*networkfirewa
 	loggingConfigs := make([]*networkfirewall.LoggingConfiguration, 0)
 	if tfSet, ok := tfMap["log_destination_config"].(*schema.Set); ok && tfSet.Len() > 0 {
 		tfList := tfSet.List()
-		for i, tfMapRaw := range tfList {
+		for _, tfMapRaw := range tfList {
 			tfMap, ok := tfMapRaw.(map[string]interface{})
 			if !ok {
 				continue
@@ -243,8 +243,8 @@ func expandNetworkFirewallLoggingConfiguration(l []interface{}) []*networkfirewa
 				continue
 			}
 			loggingConfig := &networkfirewall.LoggingConfiguration{}
-			// include all (max 2) "log_destination_config"
-			if i == 1 {
+			// include all (max 2) "log_destination_config" i.e. prepend the already-expanded loggingConfig
+			if len(loggingConfigs) == 1 && len(loggingConfigs[0].LogDestinationConfigs) == 1 {
 				loggingConfig.LogDestinationConfigs = append(loggingConfig.LogDestinationConfigs, loggingConfigs[0].LogDestinationConfigs[0])
 			}
 			loggingConfig.LogDestinationConfigs = append(loggingConfig.LogDestinationConfigs, config)
