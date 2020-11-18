@@ -82,6 +82,7 @@ MediaConvert
 MediaPackage
 MediaStore
 Neptune
+Network Firewall
 OpsWorks
 Organizations
 Outposts
