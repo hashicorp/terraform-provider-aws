@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsEksFargateProfile() *schema.Resource {
@@ -115,8 +116,7 @@ func resourceAwsEksFargateProfileCreate(d *schema.ResourceData, meta interface{}
 	awsMutexKV.Lock(mutexKey)
 	defer awsMutexKV.Unlock(mutexKey)
 
-	// Creation of profiles must be serialized, and can take a while, increase the timeout to a long time.
-	err := resource.Retry(30*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateFargateProfile(input)
 
 		// Retry for IAM eventual consistency on error:
@@ -250,7 +250,7 @@ func resourceAwsEksFargateProfileDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	if err != nil {
-		return fmt.Errorf("error Deleting EKS Fargate Profile (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting EKS Fargate Profile (%s): %s", d.Id(), err)
 	}
 
 	if err := waitForEksFargateProfileDeletion(conn, clusterName, fargateProfileName, d.Timeout(schema.TimeoutDelete)); err != nil {

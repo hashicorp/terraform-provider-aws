@@ -134,10 +134,11 @@ func TestAccAWSEksFargateProfile_disappears(t *testing.T) {
 	})
 }
 
-// Quick test to stand up a cluster, with two fargate profiles, and delete them.
 func TestAccAWSEksFargateProfile_Multi_Profile(t *testing.T) {
 	var fargateProfile eks.FargateProfile
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName1 := "aws_eks_fargate_profile.test.0"
+	resourceName2 := "aws_eks_fargate_profile.test.1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksFargateProfile(t) },
@@ -145,16 +146,11 @@ func TestAccAWSEksFargateProfile_Multi_Profile(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEksFargateProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksFargateProfileConfigBase(rName) + testAccAWSEksFargateProfileConfigFargateProfileNameMultiple("tf_acc_test1") + testAccAWSEksFargateProfileConfigFargateProfileNameMultiple("tf_acc_test2"),
+				Config: testAccAWSEksFargateProfileConfigFargateProfileMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEksFargateProfileExists("aws_eks_fargate_profile.tf_acc_test1", &fargateProfile),
-					testAccCheckAWSEksFargateProfileExists("aws_eks_fargate_profile.tf_acc_test2", &fargateProfile),
+					testAccCheckAWSEksFargateProfileExists(resourceName1, &fargateProfile),
+					testAccCheckAWSEksFargateProfileExists(resourceName2, &fargateProfile),
 				),
-			},
-			{
-				ResourceName:      "aws_eks_fargate_profile.tf_acc_test2",
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -550,14 +546,15 @@ resource "aws_eks_fargate_profile" "test" {
 `, rName)
 }
 
-// similar to above, but allows the name for the resource to be passed in and
-// sets the terraform resource name and the profile name to the same.  Allows
-// multiple profiles to be created.
-func testAccAWSEksFargateProfileConfigFargateProfileNameMultiple(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_eks_fargate_profile" %[1]q {
+func testAccAWSEksFargateProfileConfigFargateProfileMultiple(rName string) string {
+	return composeConfig(
+		testAccAWSEksFargateProfileConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_eks_fargate_profile" "test" {
+  count = 2
+
   cluster_name           = aws_eks_cluster.test.name
-  fargate_profile_name   = %[1]q
+  fargate_profile_name   = "%[1]s-${count.index}"
   pod_execution_role_arn = aws_iam_role.pod.arn
   subnet_ids             = aws_subnet.private[*].id
 
@@ -570,7 +567,7 @@ resource "aws_eks_fargate_profile" %[1]q {
     aws_route_table_association.private,
   ]
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSEksFargateProfileConfigSelectorLabels1(rName, labelKey1, labelValue1 string) string {
