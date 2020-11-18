@@ -200,7 +200,8 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Scram(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "true"),
 				),
 			},
 			{
@@ -825,23 +826,25 @@ resource "aws_msk_cluster" "test" {
 
 func testAccMskClusterConfigClientAuthenticationSaslScram(rName string) string {
 	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description = %[1]q
+}
+
 resource "aws_secretsmanager_secret" "test" {
-  name       = "AmazonMSK_test"
+  name       = "AmazonMSK_%[1]q"
   kms_key_id = aws_kms_key.test.key_id
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
   secret_id     = aws_secretsmanager_secret.test.id
-  secret_string = jsonencode({ username = "%s", password = "foobar" })
+  secret_string = jsonencode({ username = "user", password = "pass" })
 }
 
-resource "aws_kms_key" "test" {
-  description = "test"
-}
-
-resource "aws_msk_sasl_scram_secret" "test" {
+resource "aws_msk_scram_secret_association" "test" {
   cluster_arn     = aws_msk_cluster.test.arn
   secret_arn_list = [aws_secretsmanager_secret.test.arn]
+
+  depends_on      = [aws_secretsmanager_secret_version.test]
 }
 
 resource "aws_msk_cluster" "test" {

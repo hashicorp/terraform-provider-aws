@@ -113,11 +113,14 @@ func resourceAwsMskCluster() *schema.Resource {
 						"sasl": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"scram": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -723,11 +726,14 @@ func expandMskClusterScram(l []interface{}) *kafka.Sasl {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
 
 	sasl := &kafka.Sasl{
 		Scram: &kafka.Scram{
-			Enabled: aws.Bool(m["scram"].(bool)),
+			Enabled: aws.Bool(tfMap["scram"].(bool)),
 		},
 	}
 

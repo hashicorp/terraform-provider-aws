@@ -758,7 +758,7 @@ func Provider() *schema.Provider {
 			"aws_media_store_container_policy":                        resourceAwsMediaStoreContainerPolicy(),
 			"aws_msk_cluster":                                         resourceAwsMskCluster(),
 			"aws_msk_configuration":                                   resourceAwsMskConfiguration(),
-			"aws_msk_sasl_scram_secret":                               resourceAwsMskScramSecret(),
+			"aws_msk_scram_secret_association":                        resourceAwsMskScramSecretAssociation(),
 			"aws_nat_gateway":                                         resourceAwsNatGateway(),
 			"aws_network_acl":                                         resourceAwsNetworkAcl(),
 			"aws_default_network_acl":                                 resourceAwsDefaultNetworkAcl(),
