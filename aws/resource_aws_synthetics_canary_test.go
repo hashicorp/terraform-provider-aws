@@ -24,7 +24,7 @@ func init() {
 		F:    testSweepSyntheticsCanaries,
 		Dependencies: []string{
 			"aws_lambda_function",
-			"aws_lambda_layer_version",
+			"aws_lambda_layer",
 			"aws_cloudwatch_log_group",
 		},
 	})
@@ -863,8 +863,6 @@ resource "aws_s3_bucket_object" "test" {
 
 func testAccAWSSyntheticsCanaryVPCConfigBase(rName string) string {
 	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
-data "aws_partition" "current" {}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
