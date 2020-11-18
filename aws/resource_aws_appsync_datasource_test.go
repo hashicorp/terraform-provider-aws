@@ -183,7 +183,7 @@ func TestAccAwsAppsyncDatasource_HTTPConfig_AuthorizationConfig(t *testing.T) {
 	resourceName := "aws_appsync_datasource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncDatasourceDestroy,
 		Steps: []resource.TestStep{
