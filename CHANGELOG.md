@@ -20,6 +20,7 @@ BUG FIXES
 
 * data-source/aws_s3_bucket: Use provider credentials when getting the bucket region (fix AWS China non-ICP S3 Buckets and other restrictive environments) [GH-15481]
 * resource/aws_backup_plan - `lifecycle` block in `copy_action` is optional [GH-16116]
+* resource/aws_eks_fargate_profile: Serialize multiple profile creation and deletion to prevent `ResourceInUseException` errors [GH-14020]
 * resource/aws_organizations_organization: Prevent recreation when `feature_set` is updated to `ALL` [GH-15473]
 * resource/aws_s3_bucket: Use provider credentials when getting the bucket region (fix AWS China non-ICP S3 Buckets and other restrictive environments) [GH-15481]
 * resource/aws_s3_bucket_object: Correctly updates `version_id` when certain configuration keys are changed [GH-14900]
