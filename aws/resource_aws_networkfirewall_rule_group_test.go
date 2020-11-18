@@ -628,14 +628,14 @@ resource "aws_networkfirewall_rule_group" "test" {
   name     = %[1]q
   type     = "STATEFUL"
   rule_group {
-  	rule_variables {
+    rule_variables {
       ip_sets {
-	    key = "example"
-		ip_set {
-		  definition = ["10.0.0.0/16", "10.0.1.0/24"]
-		}
-	  }
-	}
+        key = "example"
+        ip_set {
+          definition = ["10.0.0.0/16", "10.0.1.0/24"]
+        }
+      }
+    }
     rules_source {
       rules_source_list {
         generated_rules_type = "ALLOWLIST"
