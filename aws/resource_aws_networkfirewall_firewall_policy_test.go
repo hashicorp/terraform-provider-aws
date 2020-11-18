@@ -83,7 +83,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_basic(t *testing.T) {
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -117,7 +117,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_statefulRuleGroupReference(t *testi
 	ruleGroupResourceName := "aws_networkfirewall_rule_group.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -145,7 +145,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_updateStatefulRuleGroupReference(t 
 	ruleGroupResourceName := "aws_networkfirewall_rule_group.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -186,7 +186,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_multipleStatefulRuleGroupReferences
 	ruleGroupResourceName2 := "aws_networkfirewall_rule_group.test.1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -224,7 +224,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_statelessRuleGroupReference(t *test
 	ruleGroupResourceName := "aws_networkfirewall_rule_group.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -266,7 +266,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_updateStatelessRuleGroupReference(t
 	ruleGroupResourceName := "aws_networkfirewall_rule_group.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -311,7 +311,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_multipleStatelessRuleGroupReference
 	ruleGroupResourceName2 := "aws_networkfirewall_rule_group.test.1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -357,7 +357,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_statelessCustomAction(t *testing.T)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -371,7 +371,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_statelessCustomAction(t *testing.T)
 						"action_definition.#":                                     "1",
 						"action_definition.0.publish_metric_action.#":             "1",
 						"action_definition.0.publish_metric_action.0.dimension.#": "1",
-						"action_name": rName,
+						"action_name": "CustomAction",
 					}),
 				),
 			},
@@ -389,7 +389,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_updateStatelessCustomAction(t *test
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -406,7 +406,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_updateStatelessCustomAction(t *test
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
-						"action_name":         rName,
+						"action_name":         "CustomAction",
 						"action_definition.#": "1",
 						"action_definition.0.publish_metric_action.#":             "1",
 						"action_definition.0.publish_metric_action.0.dimension.#": "1",
@@ -448,7 +448,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_multipleStatelessCustomActions(t *t
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -459,13 +459,13 @@ func TestAccAwsNetworkFirewallFirewallPolicy_multipleStatelessCustomActions(t *t
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "2"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
-						"action_name":         rName,
+						"action_name":         "CustomAction",
 						"action_definition.#": "1",
 						"action_definition.0.publish_metric_action.#":             "1",
 						"action_definition.0.publish_metric_action.0.dimension.#": "1",
 					}),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
-						"action_name":         "CustomAction",
+						"action_name":         "CustomAction2",
 						"action_definition.#": "1",
 						"action_definition.0.publish_metric_action.#":             "1",
 						"action_definition.0.publish_metric_action.0.dimension.#": "1",
@@ -479,7 +479,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_multipleStatelessCustomActions(t *t
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
-						"action_name":         rName,
+						"action_name":         "CustomAction",
 						"action_definition.#": "1",
 						"action_definition.0.publish_metric_action.#":             "1",
 						"action_definition.0.publish_metric_action.0.dimension.#": "1",
@@ -501,7 +501,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceAndCustom
 	ruleGroupResourceName := "aws_networkfirewall_rule_group.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -513,7 +513,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceAndCustom
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
 					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, "arn"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
-						"action_name":         rName,
+						"action_name":         "CustomAction",
 						"action_definition.#": "1",
 						"action_definition.0.publish_metric_action.#":             "1",
 						"action_definition.0.publish_metric_action.0.dimension.#": "1",
@@ -543,7 +543,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_tags(t *testing.T) {
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -585,7 +585,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_disappears(t *testing.T) {
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -868,7 +868,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
     stateless_custom_action {
-      action_name = %[1]q
+      action_name = "CustomAction"
       action_definition {
         publish_metric_action {
           dimension {
@@ -919,7 +919,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
           }
         }
       }
-      action_name = %[1]q
+      action_name = "CustomAction"
     }
     stateless_custom_action {
       action_definition {
@@ -929,7 +929,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
           }
         }
       }
-      action_name = "CustomAction"
+      action_name = "CustomAction2"
     }
   }
 }
@@ -956,7 +956,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
           }
         }
       }
-      action_name = %[1]q
+      action_name = "CustomAction"
     }
   }
 }

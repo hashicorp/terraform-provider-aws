@@ -83,7 +83,7 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_rulesSourceList(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -120,7 +120,7 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_statefulRule(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -163,7 +163,7 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_statelessRule(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -205,7 +205,7 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_rules(t *testing.T) {
 	rules := `alert http any any -> any any (http_response_line; content:"403 Forbidden"; sid:1;)`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -226,9 +226,10 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_rules(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"rules"}, // argument not returned in RuleGroup API response
 			},
 		},
 	})
@@ -239,7 +240,7 @@ func TestAccAwsNetworkFirewallRuleGroup_statelessRuleWithCustomAction(t *testing
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -286,7 +287,7 @@ func TestAccAwsNetworkFirewallRuleGroup_updateRulesSourceList(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -325,12 +326,88 @@ func TestAccAwsNetworkFirewallRuleGroup_updateRulesSourceList(t *testing.T) {
 	})
 }
 
+func TestAccAwsNetworkFirewallRuleGroup_rulesSourceAndRuleVariables(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_networkfirewall_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetworkFirewallRuleGroup_rulesSourceList_ruleVariables(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsNetworkFirewallRuleGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rule_variables.0.ip_sets.*", map[string]string{
+						"key":                   "example",
+						"ip_set.#":              "1",
+						"ip_set.0.definition.#": "2",
+					}),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "10.0.0.0/16"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "10.0.1.0/24"),
+				),
+			},
+			{
+				Config: testAccNetworkFirewallRuleGroup_rulesSourceList_updateRuleVariables(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsNetworkFirewallRuleGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.0.port_sets.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rule_variables.0.ip_sets.*", map[string]string{
+						"key":                   "example",
+						"ip_set.#":              "1",
+						"ip_set.0.definition.#": "3",
+					}),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "10.0.0.0/16"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "10.0.1.0/24"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "192.168.0.0/16"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rule_variables.0.ip_sets.*", map[string]string{
+						"key":                   "example2",
+						"ip_set.#":              "1",
+						"ip_set.0.definition.#": "1",
+					}),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "1.2.3.4/32"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rule_variables.0.port_sets.*", map[string]string{
+						"key":                     "example",
+						"port_set.#":              "1",
+						"port_set.0.definition.#": "2",
+					}),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.port_sets.*.port_set.0.definition.*", "443"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.port_sets.*.port_set.0.definition.*", "80"),
+				),
+			},
+			{
+				Config: testAccNetworkFirewallRuleGroup_basic_rulesSourceList(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsNetworkFirewallRuleGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsNetworkFirewallRuleGroup_updateStatefulRule(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -372,7 +449,7 @@ func TestAccAwsNetworkFirewallRuleGroup_updateStatelessRule(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -420,7 +497,7 @@ func TestAccAwsNetworkFirewallRuleGroup_tags(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -462,7 +539,7 @@ func TestAccAwsNetworkFirewallRuleGroup_disappears(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "AWSPrivatePreviewRoleForVPCFirewall") },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -532,6 +609,72 @@ resource "aws_networkfirewall_rule_group" "test" {
   name     = %q
   type     = "STATEFUL"
   rule_group {
+    rules_source {
+      rules_source_list {
+        generated_rules_type = "ALLOWLIST"
+        target_types         = ["HTTP_HOST"]
+        targets              = ["test.example.com"]
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccNetworkFirewallRuleGroup_rulesSourceList_ruleVariables(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_networkfirewall_rule_group" "test" {
+  capacity = 100
+  name     = %[1]q
+  type     = "STATEFUL"
+  rule_group {
+  	rule_variables {
+      ip_sets {
+	    key = "example"
+		ip_set {
+		  definition = ["10.0.0.0/16", "10.0.1.0/24"]
+		}
+	  }
+	}
+    rules_source {
+      rules_source_list {
+        generated_rules_type = "ALLOWLIST"
+        target_types         = ["HTTP_HOST"]
+        targets              = ["test.example.com"]
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccNetworkFirewallRuleGroup_rulesSourceList_updateRuleVariables(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_networkfirewall_rule_group" "test" {
+  capacity = 100
+  name     = %[1]q
+  type     = "STATEFUL"
+  rule_group {
+    rule_variables {
+      ip_sets {
+        key = "example"
+        ip_set {
+          definition = ["10.0.0.0/16", "10.0.1.0/24", "192.168.0.0/16"]
+        }
+      }
+      ip_sets {
+        key = "example2"
+        ip_set {
+          definition = ["1.2.3.4/32"]
+        }
+      }
+      port_sets {
+        key = "example"
+        port_set {
+          definition = ["443", "80"]
+        }
+      }
+    }
     rules_source {
       rules_source_list {
         generated_rules_type = "ALLOWLIST"

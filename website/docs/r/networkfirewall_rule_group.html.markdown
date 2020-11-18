@@ -166,7 +166,45 @@ The following arguments are supported:
 
 The `rule_group` block supports the following argument:
 
+* `rule_variables` - (Optional) A configuration block that defines additional settings available to use in the rules defined in the rule group. See [Rule Variables](#rule-variables) below for details.
+
 * `rules_source` - (Required) A configuration block that defines the stateful or stateless rules for the rule group. See [Rules Source](#rules-source) below for details.
+
+### Rule Variables
+
+The `rule_variables` block supports the following arguments:
+
+* `ip_sets` - (Optional) Set of configuration blocks that define IP address information. See [IP Sets](#ip-sets) below for details.
+
+* `port_sets` - (Optional) Set of configuration blocks that define port range information. See [Port Sets](#port-sets) below for details.
+
+### IP Sets
+
+The `ip_sets` block supports the following arguments:
+
+* `key` - (Required) A unique alphanumeric string to identify the `ip_set`.
+
+* `ip_set` - (Required) A configuration block that defines a set of IP addresses. See [IP Set](#ip-set) below for details.
+
+### IP Set
+
+The `ip_set` configuration block supports the following argument:
+
+* `definition` - (Required) Set of IP addresses and address ranges, in CIDR notation.
+
+### Port Sets
+
+The `port_sets` block supports the following arguments:
+
+* `key` - (Required) An unique alphanumeric string to identify the `port_set`.
+
+* `port_set` - (Required) A configuration block that defines a set of port ranges. See [Port Set](#port-set) below for details.
+
+### Port Set
+
+The `port_set` configuration block suppports the following argument:
+
+* `definition` - (Required) Set of port ranges.
 
 ### Rules Source
 

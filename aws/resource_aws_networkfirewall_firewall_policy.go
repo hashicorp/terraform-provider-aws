@@ -240,10 +240,16 @@ func resourceAwsNetworkFirewallFirewallPolicyDelete(ctx context.Context, d *sche
 	}
 
 	if err != nil {
+		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
+			return nil
+		}
 		return diag.FromErr(fmt.Errorf("error deleting NetworkFirewall Firewall Policy (%s): %w", d.Id(), err))
 	}
 
 	if _, err := waiter.FirewallPolicyDeleted(ctx, conn, d.Id()); err != nil {
+		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
+			return nil
+		}
 		return diag.FromErr(fmt.Errorf("error waiting for NetworkFirewall Firewall Policy (%s) to delete: %w", d.Id(), err))
 	}
 

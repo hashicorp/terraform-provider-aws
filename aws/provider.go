@@ -774,7 +774,6 @@ func Provider() *schema.Provider {
 			"aws_networkfirewall_firewall":                            resourceAwsNetworkFirewallFirewall(),
 			"aws_networkfirewall_firewall_policy":                     resourceAwsNetworkFirewallFirewallPolicy(),
 			"aws_networkfirewall_logging_configuration":               resourceAwsNetworkFirewallLoggingConfiguration(),
-			"aws_networkfirewall_resource_policy":                     resourceAwsNetworkFirewallResourcePolicy(),
 			"aws_networkfirewall_rule_group":                          resourceAwsNetworkFirewallRuleGroup(),
 			"aws_opsworks_application":                                resourceAwsOpsworksApplication(),
 			"aws_opsworks_stack":                                      resourceAwsOpsworksStack(),

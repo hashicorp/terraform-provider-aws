@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
@@ -17,11 +18,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/networkfirewall/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
-
-var RuleGroupTypes = map[string]string{
-	"stateful-rulegroup":  networkfirewall.RuleGroupTypeStateful,
-	"stateless-rulegroup": networkfirewall.RuleGroupTypeStateless,
-}
 
 func resourceAwsNetworkFirewallRuleGroup() *schema.Resource {
 	return &schema.Resource{
@@ -60,6 +56,80 @@ func resourceAwsNetworkFirewallRuleGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"rule_variables": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ip_sets": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"key": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(1, 32),
+														validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+														validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_]+$`), "must contain only alphanumeric and underscore characters"),
+													),
+												},
+												"ip_set": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"definition": {
+																Type:     schema.TypeSet,
+																Required: true,
+																Elem: &schema.Schema{
+																	Type:         schema.TypeString,
+																	ValidateFunc: validateIpv4CIDRNetworkAddress,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"port_sets": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"key": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(1, 32),
+														validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+														validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_]+$`), "must contain only alphanumeric and underscore characters"),
+													),
+												},
+												"port_set": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"definition": {
+																Type:     schema.TypeSet,
+																Required: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"rules_source": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -402,7 +472,7 @@ func resourceAwsNetworkFirewallRuleGroupRead(ctx context.Context, d *schema.Reso
 	d.Set("capacity", resp.Capacity)
 	d.Set("description", resp.Description)
 	d.Set("name", resp.RuleGroupName)
-	d.Set("type", RuleGroupTypes[aws.StringValue(resp.Type)])
+	d.Set("type", resp.Type)
 	d.Set("update_token", output.UpdateToken)
 
 	if err := d.Set("rule_group", flattenNetworkFirewallRuleGroup(ruleGroup)); err != nil {
@@ -484,10 +554,16 @@ func resourceAwsNetworkFirewallRuleGroupDelete(ctx context.Context, d *schema.Re
 	}
 
 	if err != nil {
+		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
+			return nil
+		}
 		return diag.FromErr(fmt.Errorf("error deleting NetworkFirewall Rule Group (%s): %w", d.Id(), err))
 	}
 
 	if _, err := waiter.RuleGroupDeleted(ctx, conn, d.Id()); err != nil {
+		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
+			return nil
+		}
 		return diag.FromErr(fmt.Errorf("error waiting for NetworkFirewall Rule Group (%s) to delete: %w", d.Id(), err))
 	}
 
@@ -609,28 +685,100 @@ func expandNetworkFirewallRuleGroup(l []interface{}) *networkfirewall.RuleGroup 
 		return nil
 	}
 	ruleGroup := &networkfirewall.RuleGroup{}
+	if tfList, ok := tfMap["rule_variables"].([]interface{}); ok && len(tfList) > 0 && tfList[0] != nil {
+		ruleVariables := &networkfirewall.RuleVariables{}
+		rvMap, ok := tfList[0].(map[string]interface{})
+		if ok {
+			if v, ok := rvMap["ip_sets"].(*schema.Set); ok && v.Len() > 0 {
+				ruleVariables.IPSets = expandNetworkFirewallIPSets(v.List())
+			}
+			if v, ok := rvMap["port_sets"].(*schema.Set); ok && v.Len() > 0 {
+				ruleVariables.PortSets = expandNetworkFirewallPortSets(v.List())
+			}
+			ruleGroup.RuleVariables = ruleVariables
+		}
+	}
 	if tfList, ok := tfMap["rules_source"].([]interface{}); ok && len(tfList) > 0 && tfList[0] != nil {
 		rulesSource := &networkfirewall.RulesSource{}
 		rsMap, ok := tfList[0].(map[string]interface{})
-		if !ok {
-			return nil
+		if ok {
+			if v, ok := rsMap["rules_source_list"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				rulesSource.RulesSourceList = expandNetworkFirewallRulesSourceList(v)
+			}
+			if v, ok := rsMap["rules_string"].(string); ok && v != "" {
+				rulesSource.RulesString = aws.String(v)
+			}
+			if v, ok := rsMap["stateful_rule"].(*schema.Set); ok && v.Len() > 0 {
+				rulesSource.StatefulRules = expandNetworkFirewallStatefulRules(v.List())
+			}
+			if v, ok := rsMap["stateless_rules_and_custom_actions"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				rulesSource.StatelessRulesAndCustomActions = expandNetworkFirewallStatelessRulesAndCustomActions(v)
+			}
+			ruleGroup.RulesSource = rulesSource
 		}
-		if v, ok := rsMap["rules_source_list"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rulesSource.RulesSourceList = expandNetworkFirewallRulesSourceList(v)
-		}
-		if v, ok := rsMap["rules_string"].(string); ok && v != "" {
-			rulesSource.RulesString = aws.String(v)
-		}
-		if v, ok := rsMap["stateful_rule"].(*schema.Set); ok && v.Len() > 0 {
-			rulesSource.StatefulRules = expandNetworkFirewallStatefulRules(v.List())
-		}
-		if v, ok := rsMap["stateless_rules_and_custom_actions"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rulesSource.StatelessRulesAndCustomActions = expandNetworkFirewallStatelessRulesAndCustomActions(v)
-		}
-		ruleGroup.RulesSource = rulesSource
 	}
 
 	return ruleGroup
+}
+
+func expandNetworkFirewallIPSets(l []interface{}) map[string]*networkfirewall.IPSet {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := make(map[string]*networkfirewall.IPSet)
+	for _, tfMapRaw := range l {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		if key, ok := tfMap["key"].(string); ok && key != "" {
+			if tfList, ok := tfMap["ip_set"].([]interface{}); ok && len(tfList) > 0 && tfList[0] != nil {
+				tfMap, ok := tfList[0].(map[string]interface{})
+				if ok {
+					if tfSet, ok := tfMap["definition"].(*schema.Set); ok && tfSet.Len() > 0 {
+						ipSet := &networkfirewall.IPSet{
+							Definition: expandStringSet(tfSet),
+						}
+						m[key] = ipSet
+					}
+				}
+			}
+		}
+	}
+
+	return m
+}
+
+func expandNetworkFirewallPortSets(l []interface{}) map[string]*networkfirewall.PortSet {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := make(map[string]*networkfirewall.PortSet)
+	for _, tfMapRaw := range l {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		if key, ok := tfMap["key"].(string); ok && key != "" {
+			if tfList, ok := tfMap["port_set"].([]interface{}); ok && len(tfList) > 0 && tfList[0] != nil {
+				tfMap, ok := tfList[0].(map[string]interface{})
+				if ok {
+					if tfSet, ok := tfMap["definition"].(*schema.Set); ok && tfSet.Len() > 0 {
+						ipSet := &networkfirewall.PortSet{
+							Definition: expandStringSet(tfSet),
+						}
+						m[key] = ipSet
+					}
+				}
+			}
+		}
+	}
+
+	return m
 }
 
 func expandNetworkFirewallAddresses(l []interface{}) []*networkfirewall.Address {
@@ -795,7 +943,74 @@ func flattenNetworkFirewallRuleGroup(r *networkfirewall.RuleGroup) []interface{}
 	}
 
 	m := map[string]interface{}{
-		"rules_source": flattenNetworkFirewallRulesSource(r.RulesSource),
+		"rule_variables": flattenNetworkFirewallRuleVariables(r.RuleVariables),
+		"rules_source":   flattenNetworkFirewallRulesSource(r.RulesSource),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenNetworkFirewallRuleVariables(rv *networkfirewall.RuleVariables) []interface{} {
+	if rv == nil {
+		return []interface{}{}
+	}
+	m := map[string]interface{}{
+		"ip_sets":   flattenNetworkFirewallIPSets(rv.IPSets),
+		"port_sets": flattenNetworkFirewallPortSets(rv.PortSets),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenNetworkFirewallIPSets(m map[string]*networkfirewall.IPSet) []interface{} {
+	if m == nil {
+		return []interface{}{}
+	}
+	sets := make([]interface{}, 0, len(m))
+	for k, v := range m {
+		tfMap := map[string]interface{}{
+			"key":    k,
+			"ip_set": flattenNetworkFirewallIPSet(v),
+		}
+		sets = append(sets, tfMap)
+	}
+
+	return sets
+}
+
+func flattenNetworkFirewallPortSets(m map[string]*networkfirewall.PortSet) []interface{} {
+	if m == nil {
+		return []interface{}{}
+	}
+	sets := make([]interface{}, 0, len(m))
+	for k, v := range m {
+		tfMap := map[string]interface{}{
+			"key":      k,
+			"port_set": flattenNetworkFirewallPortSet(v),
+		}
+		sets = append(sets, tfMap)
+	}
+
+	return sets
+}
+
+func flattenNetworkFirewallIPSet(i *networkfirewall.IPSet) []interface{} {
+	if i == nil {
+		return []interface{}{}
+	}
+	m := map[string]interface{}{
+		"definition": flattenStringSet(i.Definition),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenNetworkFirewallPortSet(p *networkfirewall.PortSet) []interface{} {
+	if p == nil {
+		return []interface{}{}
+	}
+	m := map[string]interface{}{
+		"definition": flattenStringSet(p.Definition),
 	}
 
 	return []interface{}{m}

@@ -1,9 +1,12 @@
 package aws
 
 import (
+	"regexp"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func customActionSchema() *schema.Schema {
@@ -43,9 +46,10 @@ func customActionSchema() *schema.Schema {
 					},
 				},
 				"action_name": {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]+$`), "must contain only alphanumeric characters"),
 				},
 			},
 		},

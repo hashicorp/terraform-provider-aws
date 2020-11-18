@@ -158,6 +158,7 @@ func resourceAwsNetworkFirewallFirewallRead(ctx context.Context, d *schema.Resou
 	arn := aws.StringValue(firewall.FirewallArn)
 
 	d.Set("arn", arn)
+	d.Set("delete_protection", firewall.DeleteProtection)
 	d.Set("description", firewall.Description)
 	d.Set("name", firewall.FirewallName)
 	d.Set("firewall_policy_arn", firewall.FirewallPolicyArn)
@@ -309,16 +310,11 @@ func resourceAwsNetworkFirewallFirewallUpdate(ctx context.Context, d *schema.Res
 				return diag.FromErr(fmt.Errorf("error disassociating NetworkFirewall Firewall (%s) subnet: %w", arn, err))
 			}
 
-			respToken, err := waiter.FirewallUpdated(ctx, conn, arn)
+			_, err = waiter.FirewallUpdated(ctx, conn, arn)
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("error waiting for NetworkFirewall Firewall (%s) to be updated: %w", d.Id(), err))
 
 			}
-			if respToken == nil {
-				return diag.FromErr(fmt.Errorf("error disassociating NetworkFirewall Firewall (%s) subnet: empty update_token", arn))
-			}
-
-			updateToken = respToken
 		}
 	}
 
@@ -343,10 +339,16 @@ func resourceAwsNetworkFirewallFirewallDelete(ctx context.Context, d *schema.Res
 
 	_, err := conn.DeleteFirewallWithContext(ctx, input)
 	if err != nil {
+		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
+			return nil
+		}
 		return diag.FromErr(fmt.Errorf("error deleting NetworkFirewall Firewall (%s): %w", d.Id(), err))
 	}
 
 	if _, err := waiter.FirewallDeleted(ctx, conn, d.Id()); err != nil {
+		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
+			return nil
+		}
 		return diag.FromErr(fmt.Errorf("error waiting for NetworkFirewall Firewall (%s) to delete: %w", d.Id(), err))
 	}
 

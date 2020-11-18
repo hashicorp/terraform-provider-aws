@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -77,38 +76,6 @@ func testSweepNetworkFirewallLoggingConfigurations(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-// Note: Number of Firewalls limited to 5 (total) at the time of writing;
-// 		thus, tests are set to run serially with the help of testAccNetworkFirewallFirewallSemaphore
-// TODO: remove (experimental) serialization
-func TestAccAwsNetworkFirewallLoggingConfiguration_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"cloudwatchLogDestination_logGroup":           TestAccAwsNetworkFirewallLoggingConfiguration_cloudwatchLogDestination_logGroup,
-		"cloudwatchLogDestination_logType":            TestAccAwsNetworkFirewallLoggingConfiguration_cloudwatchLogDestination_logType,
-		"kinesisLogDestination_deliveryStream":        TestAccAwsNetworkFirewallLoggingConfiguration_kinesisLogDestination_deliveryStream,
-		"kinesisLogDestination_logType":               TestAccAwsNetworkFirewallLoggingConfiguration_kinesisLogDestination_logType,
-		"s3LogDestination_bucketName":                 TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_bucketName,
-		"s3LogDestination_logType":                    TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_logType,
-		"s3LogDestination_prefix":                     TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_prefix,
-		"updateFirewallArn":                           TestAccAwsNetworkFirewallLoggingConfiguration_updateFirewallArn,
-		"updateLogDestinationType":                    TestAccAwsNetworkFirewallLoggingConfiguration_updateLogDestinationType,
-		"updateToMultipleLogDestinationConfigs":       TestAccAwsNetworkFirewallLoggingConfiguration_updateToMultipleLogDestinationConfigs,
-		"updateToSingleAlertTypeLogDestinationConfig": TestAccAwsNetworkFirewallLoggingConfiguration_updateToSingleAlertTypeLogDestinationConfig,
-		"updateToSingleFlowTypeLogDestinationConfig":  TestAccAwsNetworkFirewallLoggingConfiguration_updateToSingleFlowTypeLogDestinationConfig,
-	}
-
-	t.Parallel()
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			t.Cleanup(func() {
-				if os.Getenv(resource.TestEnvVar) != "" {
-					testAccNetworkFirewallFirewallSemaphore.Notify()
-				}
-			})
-			tc(t)
-		})
-	}
-}
-
 func TestAccAwsNetworkFirewallLoggingConfiguration_cloudwatchLogDestination_logGroup(t *testing.T) {
 	logGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	updatedLogGroupName := fmt.Sprintf("%s-updated", logGroupName)
@@ -116,7 +83,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_cloudwatchLogDestination_logG
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -159,7 +126,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_cloudwatchLogDestination_logT
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -199,7 +166,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_kinesisLogDestination_deliver
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -242,7 +209,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_kinesisLogDestination_logType
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -282,7 +249,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_bucketName(t
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -324,7 +291,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_logType(t *t
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -364,7 +331,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_s3LogDestination_prefix(t *te
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -408,7 +375,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_updateFirewallArn(t *testing.
 	firewallResourceName := "aws_networkfirewall_firewall.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -444,7 +411,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_updateLogDestinationType(t *t
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -501,7 +468,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_updateToMultipleLogDestinatio
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -555,7 +522,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_updateToSingleAlertTypeLogDes
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -609,7 +576,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_updateToSingleFlowTypeLogDest
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -662,7 +629,7 @@ func TestAccAwsNetworkFirewallLoggingConfiguration_disappears(t *testing.T) {
 	resourceName := "aws_networkfirewall_logging_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -735,7 +702,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_network" "test" {
+resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
 
   tags = {
@@ -745,8 +712,8 @@ resource "aws_network" "test" {
 
 resource "aws_subnet" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = cidrsubnet(aws_network.test.cidr_block, 8, 0)
-  network_id        = aws_network.test.id
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -764,7 +731,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 resource "aws_networkfirewall_firewall" "test" {
   name                = %[1]q
   firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
-  network_id          = aws_network.test.id
+  vpc_id              = aws_vpc.test.id
 
   subnet_mapping {
     subnet_id = aws_subnet.test.id
@@ -794,8 +761,8 @@ resource "aws_network" "test" {
 
 resource "aws_subnet" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = cidrsubnet(aws_network.test.cidr_block, 8, 0)
-  network_id        = aws_network.test.id
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -813,7 +780,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 resource "aws_networkfirewall_firewall" "test" {
   name                = "%[1]s-updated"
   firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
-  network_id          = aws_network.test.id
+  vpc_id              = aws_vpc.test.id
 
   subnet_mapping {
     subnet_id = aws_subnet.test.id
@@ -899,8 +866,8 @@ resource "aws_iam_role_policy" "test" {
         "s3:PutObject"
       ],
       "Resource": [
-        "${aws_s3_bucket.test.arn}",
-        "${aws_s3_bucket.test.arn}/*"
+        "${aws_s3_bucket.logs.arn}",
+        "${aws_s3_bucket.logs.arn}/*"
       ]
     },
     {

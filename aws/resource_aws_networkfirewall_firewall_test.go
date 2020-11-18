@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,19 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/experimental/sync"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/networkfirewall/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
-
-// Limit the number of parallel tests given the firewall quota limit
-const networkFirewallFirewallLimit = 5
-
-var testAccNetworkFirewallFirewallSemaphore sync.Semaphore
-
-func init() {
-	testAccNetworkFirewallFirewallSemaphore = sync.InitializeSemaphore("AWS_NETWORK_FIREWALL_FIREWALL_LIMIT", networkFirewallFirewallLimit)
-}
 
 func init() {
 	resource.AddTestSweepers("aws_networkfirewall_firewall", &resource.Sweeper{
@@ -88,30 +77,6 @@ func testSweepNetworkFirewallFirewalls(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAwsNetworkFirewallFirewall_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":                 TestAccAwsNetworkFirewallFirewall_basic,
-		"deleteProtection":      TestAccAwsNetworkFirewallFirewall_deleteProtection,
-		"description":           TestAccAwsNetworkFirewallFirewall_description,
-		"disappears":            TestAccAwsNetworkFirewallFirewall_disappears,
-		"tags":                  TestAccAwsNetworkFirewallFirewall_tags,
-		"updateSubnet":          TestAccAwsNetworkFirewallFirewall_subnetMappings_updateSubnet,
-		"updateMultipleSubnets": TestAccAwsNetworkFirewallFirewall_subnetMappings_updateMultipleSubnets,
-	}
-
-	t.Parallel()
-	for name, tc := range testCases {
-		t.Run(name, func(t *testing.T) {
-			t.Cleanup(func() {
-				if os.Getenv(resource.TestEnvVar) != "" {
-					testAccNetworkFirewallFirewallSemaphore.Notify()
-				}
-			})
-			tc(t)
-		})
-	}
-}
-
 func TestAccAwsNetworkFirewallFirewall_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_firewall.test"
@@ -120,7 +85,7 @@ func TestAccAwsNetworkFirewallFirewall_basic(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallDestroy,
 		Steps: []resource.TestStep{
@@ -153,7 +118,7 @@ func TestAccAwsNetworkFirewallFirewall_description(t *testing.T) {
 	resourceName := "aws_networkfirewall_firewall.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallDestroy,
 		Steps: []resource.TestStep{
@@ -192,7 +157,7 @@ func TestAccAwsNetworkFirewallFirewall_deleteProtection(t *testing.T) {
 	resourceName := "aws_networkfirewall_firewall.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallDestroy,
 		Steps: []resource.TestStep{
@@ -234,7 +199,7 @@ func TestAccAwsNetworkFirewallFirewall_subnetMappings_updateSubnet(t *testing.T)
 	updateSubnetResourceName := "aws_subnet.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallDestroy,
 		Steps: []resource.TestStep{
@@ -271,7 +236,7 @@ func TestAccAwsNetworkFirewallFirewall_subnetMappings_updateMultipleSubnets(t *t
 	updateSubnetResourceName := "aws_subnet.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallDestroy,
 		Steps: []resource.TestStep{
@@ -313,7 +278,7 @@ func TestAccAwsNetworkFirewallFirewall_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_firewall.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallDestroy,
 		Steps: []resource.TestStep{
@@ -355,7 +320,7 @@ func TestAccAwsNetworkFirewallFirewall_disappears(t *testing.T) {
 	resourceName := "aws_networkfirewall_firewall.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckNetworkFirewallSynchronize(t); testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallFirewallDestroy,
 		Steps: []resource.TestStep{
@@ -369,10 +334,6 @@ func TestAccAwsNetworkFirewallFirewall_disappears(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccPreCheckNetworkFirewallSynchronize(t *testing.T) {
-	sync.TestAccPreCheckSyncronize(t, testAccNetworkFirewallFirewallSemaphore, "Network Firewall")
 }
 
 func testAccCheckAwsNetworkFirewallFirewallDestroy(s *terraform.State) error {

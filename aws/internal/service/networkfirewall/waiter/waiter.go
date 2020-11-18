@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	// Maximum amount of time to wait for a Firewall to be created
-	FirewallTimeout = 15 * time.Minute
+	// Maximum amount of time to wait for a Firewall to be created, updated, or deleted
+	FirewallTimeout = 20 * time.Minute
 	// Maximum amount of time to wait for a Firewall Policy to be deleted
 	FirewallPolicyTimeout = 10 * time.Minute
 	// Maximum amount of time to wait for a Rule Group to be deleted
@@ -57,7 +57,7 @@ func FirewallDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall,
 		Pending: []string{networkfirewall.FirewallStatusValueDeleting},
 		Target:  []string{ResourceStatusDeleted},
 		Refresh: FirewallDeletedStatus(ctx, conn, arn),
-		Timeout: FirewallPolicyTimeout,
+		Timeout: FirewallTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
