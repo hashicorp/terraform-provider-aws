@@ -772,6 +772,7 @@ func Provider() *schema.Provider {
 			"aws_network_acl_rule":                                    resourceAwsNetworkAclRule(),
 			"aws_network_interface":                                   resourceAwsNetworkInterface(),
 			"aws_network_interface_attachment":                        resourceAwsNetworkInterfaceAttachment(),
+			"aws_networkfirewall_resource_policy":                     resourceAwsNetworkFirewallResourcePolicy(),
 			"aws_opsworks_application":                                resourceAwsOpsworksApplication(),
 			"aws_opsworks_stack":                                      resourceAwsOpsworksStack(),
 			"aws_opsworks_java_app_layer":                             resourceAwsOpsworksJavaAppLayer(),
