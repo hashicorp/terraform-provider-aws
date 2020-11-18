@@ -986,7 +986,7 @@ func testAccNetworkFirewallLoggingConfiguration_kinesis(streamName, rName, desti
 		testAccNetworkFirewallLoggingConfiguration_kinesisDependenciesConfig(rName, streamName),
 		fmt.Sprintf(`
 resource "aws_networkfirewall_logging_configuration" "test" {
-  firewall_arn = aws_networkfirewall_firewall_policy.test.arn
+  firewall_arn = aws_networkfirewall_firewall.test.arn
 
   logging_configuration {
     log_destination_config {
@@ -1007,7 +1007,7 @@ func testAccNetworkFirewallLoggingConfiguration_cloudwatch(logGroupName, rName, 
 		testAccNetworkFirewallLoggingConfigurationCloudWatchDependencyConfig(logGroupName),
 		fmt.Sprintf(`
 resource "aws_networkfirewall_logging_configuration" "test" {
-  firewall_arn = aws_networkfirewall_firewall_policy.test.arn
+  firewall_arn = aws_networkfirewall_firewall.test.arn
 
   logging_configuration {
     log_destination_config {
@@ -1029,7 +1029,7 @@ func testAccNetworkFirewallLoggingConfiguration_s3AndKinesis(bucketName, streamN
 		testAccNetworkFirewallLoggingConfigurationBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_networkfirewall_logging_configuration" "test" {
-  firewall_arn = aws_networkfirewall_firewall_policy.test.arn
+  firewall_arn = aws_networkfirewall_firewall.test.arn
 
   logging_configuration {
     log_destination_config {
@@ -1059,7 +1059,7 @@ func testAccNetworkFirewallLoggingConfiguration_s3AndCloudWatch(bucketName, logG
 		testAccNetworkFirewallLoggingConfigurationCloudWatchDependencyConfig(logGroupName),
 		fmt.Sprintf(`
 resource "aws_networkfirewall_logging_configuration" "test" {
-  firewall_arn = aws_networkfirewall_firewall_policy.test.arn
+  firewall_arn = aws_networkfirewall_firewall.test.arn
 
   logging_configuration {
     log_destination_config {
