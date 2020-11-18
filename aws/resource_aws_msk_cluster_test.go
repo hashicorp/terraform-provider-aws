@@ -1154,16 +1154,16 @@ func testAccMskClusterConfigLoggingInfo(rName string, cloudwatchLogsEnabled bool
 
 	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
-  name = "msk_broker_logs"
+  name = %[1]q
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = "msk-broker-logs-test-bucket"
+  bucket = %[1]q
   acl    = "private"
 }
 
 resource "aws_iam_role" "firehose_role" {
-  name = "firehose_test_role"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -1183,7 +1183,7 @@ EOF
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  name        = "terraform-kinesis-firehose-msk-test-stream"
+  name        = %[1]q
   destination = "s3"
 
   s3_configuration {
