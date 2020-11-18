@@ -9,6 +9,10 @@
 * **New Resource:** `aws_imagebuilder_component` [GH-16159]
 * **New Resource:** `aws_imagebuilder_distribution_configuration` [GH-16180]
 * **New Resource:** `aws_imagebuilder_infrastructure_configuration` [GH-16186]
+* **New Resource:** `aws_networkfirewall_firewall` [GH-16277]
+* **New Resource:** `aws_networkfirewall_firewall_policy` [GH-16277]
+* **New Resource:** `aws_networkfirewall_logging_configuration` [GH-16277]
+* **New Resource:** `aws_networkfirewall_rule_group` [GH-16277]
 
 ENHANCEMENTS
 
