@@ -870,7 +870,7 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettingsHttp_WithRoute(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexp.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", testAccGetRegion(), rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
 						"data_trace_enabled":       "false",
 						"detailed_metrics_enabled": "false",
 						"route_key":                "GET /first",
@@ -901,7 +901,7 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettingsHttp_WithRoute(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexp.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", testAccGetRegion(), rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
 						"data_trace_enabled":       "false",
 						"detailed_metrics_enabled": "false",
 						"route_key":                "POST /second",
