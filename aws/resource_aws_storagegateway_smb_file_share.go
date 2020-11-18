@@ -63,6 +63,11 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"file_share_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"gateway_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -191,6 +196,10 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 		input.AuditDestinationARN = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("file_share_name"); ok {
+		input.FileShareName = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("smb_acl_enabled"); ok {
 		input.SMBACLEnabled = aws.Bool(v.(bool))
 	}
@@ -255,6 +264,7 @@ func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta inte
 	d.Set("authentication", fileshare.Authentication)
 	d.Set("default_storage_class", fileshare.DefaultStorageClass)
 	d.Set("fileshare_id", fileshare.FileShareId)
+	d.Set("file_share_name", fileshare.FileShareName)
 	d.Set("gateway_arn", fileshare.GatewayARN)
 	d.Set("guess_mime_type_enabled", fileshare.GuessMIMETypeEnabled)
 	d.Set("case_sensitivity", fileshare.CaseSensitivity)
@@ -306,7 +316,7 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 	if d.HasChanges("admin_user_list", "default_storage_class", "guess_mime_type_enabled", "invalid_user_list",
 		"kms_encrypted", "object_acl", "read_only", "requester_pays", "requester_pays",
 		"valid_user_list", "kms_key_arn", "audit_destination_arn", "smb_acl_enabled", "cache_attributes",
-		"case_sensitivity") {
+		"case_sensitivity", "file_share_name") {
 		input := &storagegateway.UpdateSMBFileShareInput{
 			DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),
 			FileShareARN:         aws.String(d.Id()),
@@ -328,6 +338,10 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("audit_destination_arn"); ok {
 			input.AuditDestinationARN = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("file_share_name"); ok {
+			input.FileShareName = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("cache_attributes"); ok {

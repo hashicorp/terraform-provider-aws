@@ -109,6 +109,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediastoredata"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
@@ -302,6 +303,7 @@ type AWSClient struct {
 	mediastoredataconn                  *mediastoredata.MediaStoreData
 	mqconn                              *mq.MQ
 	neptuneconn                         *neptune.Neptune
+	networkfirewallconn                 *networkfirewall.NetworkFirewall
 	networkmanagerconn                  *networkmanager.NetworkManager
 	opsworksconn                        *opsworks.OpsWorks
 	organizationsconn                   *organizations.Organizations
@@ -535,6 +537,7 @@ func (c *Config) Client() (interface{}, error) {
 		mediastoredataconn:                  mediastoredata.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediastoredata"])})),
 		mqconn:                              mq.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mq"])})),
 		neptuneconn:                         neptune.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["neptune"])})),
+		networkfirewallconn:                 networkfirewall.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["networkfirewall"])})),
 		networkmanagerconn:                  networkmanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["networkmanager"])})),
 		opsworksconn:                        opsworks.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["opsworks"])})),
 		organizationsconn:                   organizations.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["organizations"])})),

@@ -1,41 +1,76 @@
-## 3.15.0 (Unreleased)
+## 3.16.0 (November 18, 2020)
+
+* **New Data Source:** `aws_imagebuilder_component` ([#16159](https://github.com/hashicorp/terraform-provider-aws/issues/16159))
+* **New Data Source:** `aws_imagebuilder_distribution_configuration` ([#16180](https://github.com/hashicorp/terraform-provider-aws/issues/16180))
+* **New Data Source:** `aws_imagebuilder_infrastructure_configuration` ([#16186](https://github.com/hashicorp/terraform-provider-aws/issues/16186))
+* **New Resource:** `aws_api_gateway_rest_api_policy` ([#13619](https://github.com/hashicorp/terraform-provider-aws/issues/13619))
+* **New Resource:** `aws_backup_vault_policy` ([#16112](https://github.com/hashicorp/terraform-provider-aws/issues/16112))
+* **New Resource:** `aws_glue_dev_endpoint` ([#7895](https://github.com/hashicorp/terraform-provider-aws/pull/7895))
+* **New Resource:** `aws_imagebuilder_component` ([#16159](https://github.com/hashicorp/terraform-provider-aws/issues/16159))
+* **New Resource:** `aws_imagebuilder_distribution_configuration` ([#16180](https://github.com/hashicorp/terraform-provider-aws/issues/16180))
+* **New Resource:** `aws_imagebuilder_infrastructure_configuration` ([#16186](https://github.com/hashicorp/terraform-provider-aws/issues/16186))
+* **New Resource:** `aws_networkfirewall_firewall` ([#16277](https://github.com/hashicorp/terraform-provider-aws/issues/16277))
+* **New Resource:** `aws_networkfirewall_firewall_policy` ([#16277](https://github.com/hashicorp/terraform-provider-aws/issues/16277))
+* **New Resource:** `aws_networkfirewall_logging_configuration` ([#16277](https://github.com/hashicorp/terraform-provider-aws/issues/16277))
+* **New Resource:** `aws_networkfirewall_rule_group` ([#16277](https://github.com/hashicorp/terraform-provider-aws/issues/16277))
 
 ENHANCEMENTS
 
-* data-source/aws_ec2_transit_gateway_route_table: Add `arn` attribute [GH-13921]
-* data-source/aws_ec2_transit_gateway_vpc_attachment: Add `appliance_mode_support` attribute [GH-16159]
-* data-source/aws_route_table: Add `route` `vpc_endpoint_id` attribute [GH-16131]
-* resource/aws_db_instance: Add `restore_to_point_in_time` argument and `latest_restorable_time` attribute [GH-15969]
-* resource/aws_default_route_table: Add `route` configuration block `vpc_endpoint_id` argument [GH-16131]
-* resource/aws_ec2_transit_gateway: Support in-place updates for most arguments [GH-15556]
-* resource/aws_ec2_transit_gateway_route_table: Add `arn` attribute [GH-13921]
-* resource/aws_ec2_transit_gateway_vpc_attachment: Add `appliance_mode_support` argument [GH-16159]
-* resource/aws_ec2_transit_gateway_vpc_attachment_accepter: Add `appliance_mode_support` attribute [GH-16159]
-* resource/aws_kinesis_firehose_delivery_stream: Add `http_endpoint_configuration` configuration block [GH-15356]
-* resource/aws_lb: Support `load_balancer_type` argument value of `gateway` [GH-16131]
-* resource/aws_lb_target_group: Support `protocol` argument value of `GENEVE` [GH-16131]
-* resource/aws_rds_cluster: Add `restore_to_point_in_time` argument [GH-7031]
-* resource/aws_route: Add `vpc_endpoint_id` argument [GH-16131]
-* resource/aws_route_table: Add `route` configuration block `vpc_endpoint_id` argument [GH-16131]
-* resource/aws_vpc_endpoint: Support `vpc_endpoint_type` argument value `GatewayLoadBalancer` [GH-16131]
-* resource/aws_vpc_endpoint_service: Add `gateway_load_balancer_arns` argument [GH-16131]
-* resource/aws_workspaces_workspace: Add configurable timeouts [GH-15479]
+* resource/aws_globalaccelerator_endpoint_group: Add `arn` and `port_override` attributes ([#16121](https://github.com/hashicorp/terraform-provider-aws/issues/16121))
+* resource/aws_glue_catalog_table: Add support for `parameters` argument to `storage_descriptor.columns` block ([#16052](https://github.com/hashicorp/terraform-provider-aws/issues/16052))
+* resource/aws_glue_catalog_table: Add plan time validation for `description`, `name`, `partition_keys.name`, `partition_keys.comment`, `partition_keys.type`, `retention`, `view_original_text`, `view_expanded_text`, `storage_descriptor.name`, `storage_descriptor.comment`, `storage_descriptor.type`, `storage_descriptor.bucket_columns`, `storage_descriptor.ser_de_info.name`, `storage_descriptor.skewed_info.skewed_column_names`, `storage_descriptor.sort_columns.column`, `storage_descriptor.sort_columns.sort_order` ([#16052](https://github.com/hashicorp/terraform-provider-aws/issues/16052))
+* resource/aws_msk_cluster: Support in-place `kafka_version` upgrade ([#13654](https://github.com/hashicorp/terraform-provider-aws/issues/13654))
+* resource/aws_storagegateway_smb_file_share: Add `file_share_name` argument ([#16008](https://github.com/hashicorp/terraform-provider-aws/issues/16008))
+* resource_aws_storagegateway_nfs_file_share: Add `file_share_name` argument ([#16072](https://github.com/hashicorp/terraform-provider-aws/issues/16072))
 
 BUG FIXES
 
-* data-source/aws_network_interface: Prevent crash with ENI attachments missing DeviceIndex or AttachmentID [GH-15567]
-* resource/aws_cognito_identity_pool: Update `identity_pool_name` argument validation to include additional characters supported by the API [GH-15773]
-* resource/aws_db_instance: Ignore `DBInstanceNotFound` error during deletion [GH-15942]
-* resource/aws_ecs_service: Properly remove resource from Terraform state with `ClusterNotFoundException` error [GH-15927]
-* resource/aws_eip: In EC2-Classic, wait until Instance returns as associated during create or update [GH-16032]
-* resource/aws_eip_association: Retry on additional EC2 Address eventual consistency errors on creation [GH-16032]
-* resource/aws_eip_association: In EC2-Classic, wait until Instance returns as associated during creation [GH-16032]
-* resource/aws_kinesis_analytics_application: Handle IAM role eventual consistency issues [GH-16125]
-* resource/aws_kinesisanalyticsv2_application: Handle IAM role eventual consistency issues [GH-16125]
-* resource/aws_lb_target_group: Allow invalid configurations that were allowed prior to 3.10. [GH-15613]
-* resource/aws_network_interface: Prevent crash with ENI attachments missing DeviceIndex or AttachmentID [GH-15567]
-* resource/aws_s3_bucket: Add plan-time validation to `acl` [GH-15327]
-* resource/aws_workspaces_bundle: Fix empty (private) owner [GH-14535]
+* data-source/aws_s3_bucket: Use provider credentials when getting the bucket region (fix AWS China non-ICP S3 Buckets and other restrictive environments) ([#15481](https://github.com/hashicorp/terraform-provider-aws/issues/15481))
+* resource/aws_apigatewayv2_stage: Correctly handle deletion of route_settings ([#16133](https://github.com/hashicorp/terraform-provider-aws/issues/16133))
+* resource/aws_backup_plan - `lifecycle` block in `copy_action` is optional ([#16116](https://github.com/hashicorp/terraform-provider-aws/issues/16116))
+* resource/aws_eks_fargate_profile: Serialize multiple profile creation and deletion to prevent `ResourceInUseException` errors ([#14020](https://github.com/hashicorp/terraform-provider-aws/issues/14020))
+* resource/aws_organizations_organization: Prevent recreation when `feature_set` is updated to `ALL` ([#15473](https://github.com/hashicorp/terraform-provider-aws/issues/15473))
+* resource/aws_s3_bucket: Use provider credentials when getting the bucket region (fix AWS China non-ICP S3 Buckets and other restrictive environments) ([#15481](https://github.com/hashicorp/terraform-provider-aws/issues/15481))
+* resource/aws_s3_bucket_object: Correctly updates `version_id` when certain configuration keys are changed ([#14900](https://github.com/hashicorp/terraform-provider-aws/issues/14900))
+
+## 3.15.0 (November 12, 2020)
+
+ENHANCEMENTS
+
+* data-source/aws_ec2_transit_gateway_route_table: Add `arn` attribute ([#13921](https://github.com/hashicorp/terraform-provider-aws/issues/13921))
+* data-source/aws_ec2_transit_gateway_vpc_attachment: Add `appliance_mode_support` attribute ([#16159](https://github.com/hashicorp/terraform-provider-aws/issues/16159))
+* data-source/aws_route_table: Add `route` `vpc_endpoint_id` attribute ([#16131](https://github.com/hashicorp/terraform-provider-aws/issues/16131))
+* resource/aws_db_instance: Add `restore_to_point_in_time` argument and `latest_restorable_time` attribute ([#15969](https://github.com/hashicorp/terraform-provider-aws/issues/15969))
+* resource/aws_default_route_table: Add `route` configuration block `vpc_endpoint_id` argument ([#16131](https://github.com/hashicorp/terraform-provider-aws/issues/16131))
+* resource/aws_ec2_transit_gateway: Support in-place updates for most arguments ([#15556](https://github.com/hashicorp/terraform-provider-aws/issues/15556))
+* resource/aws_ec2_transit_gateway_route_table: Add `arn` attribute ([#13921](https://github.com/hashicorp/terraform-provider-aws/issues/13921))
+* resource/aws_ec2_transit_gateway_vpc_attachment: Add `appliance_mode_support` argument ([#16159](https://github.com/hashicorp/terraform-provider-aws/issues/16159))
+* resource/aws_ec2_transit_gateway_vpc_attachment_accepter: Add `appliance_mode_support` attribute ([#16159](https://github.com/hashicorp/terraform-provider-aws/issues/16159))
+* resource/aws_kinesis_firehose_delivery_stream: Add `http_endpoint_configuration` configuration block ([#15356](https://github.com/hashicorp/terraform-provider-aws/issues/15356))
+* resource/aws_lb: Support `load_balancer_type` argument value of `gateway` ([#16131](https://github.com/hashicorp/terraform-provider-aws/issues/16131))
+* resource/aws_lb_target_group: Support `protocol` argument value of `GENEVE` ([#16131](https://github.com/hashicorp/terraform-provider-aws/issues/16131))
+* resource/aws_rds_cluster: Add `restore_to_point_in_time` argument ([#7031](https://github.com/hashicorp/terraform-provider-aws/issues/7031))
+* resource/aws_route: Add `vpc_endpoint_id` argument ([#16131](https://github.com/hashicorp/terraform-provider-aws/issues/16131))
+* resource/aws_route_table: Add `route` configuration block `vpc_endpoint_id` argument ([#16131](https://github.com/hashicorp/terraform-provider-aws/issues/16131))
+* resource/aws_vpc_endpoint: Support `vpc_endpoint_type` argument value `GatewayLoadBalancer` ([#16131](https://github.com/hashicorp/terraform-provider-aws/issues/16131))
+* resource/aws_vpc_endpoint_service: Add `gateway_load_balancer_arns` argument ([#16131](https://github.com/hashicorp/terraform-provider-aws/issues/16131))
+* resource/aws_workspaces_workspace: Add configurable timeouts ([#15479](https://github.com/hashicorp/terraform-provider-aws/issues/15479))
+
+BUG FIXES
+
+* data-source/aws_network_interface: Prevent crash with ENI attachments missing DeviceIndex or AttachmentID ([#15567](https://github.com/hashicorp/terraform-provider-aws/issues/15567))
+* resource/aws_cognito_identity_pool: Update `identity_pool_name` argument validation to include additional characters supported by the API ([#15773](https://github.com/hashicorp/terraform-provider-aws/issues/15773))
+* resource/aws_db_instance: Ignore `DBInstanceNotFound` error during deletion ([#15942](https://github.com/hashicorp/terraform-provider-aws/issues/15942))
+* resource/aws_ecs_service: Properly remove resource from Terraform state with `ClusterNotFoundException` error ([#15927](https://github.com/hashicorp/terraform-provider-aws/issues/15927))
+* resource/aws_eip: In EC2-Classic, wait until Instance returns as associated during create or update ([#16032](https://github.com/hashicorp/terraform-provider-aws/issues/16032))
+* resource/aws_eip_association: Retry on additional EC2 Address eventual consistency errors on creation ([#16032](https://github.com/hashicorp/terraform-provider-aws/issues/16032))
+* resource/aws_eip_association: In EC2-Classic, wait until Instance returns as associated during creation ([#16032](https://github.com/hashicorp/terraform-provider-aws/issues/16032))
+* resource/aws_kinesis_analytics_application: Handle IAM role eventual consistency issues ([#16125](https://github.com/hashicorp/terraform-provider-aws/issues/16125))
+* resource/aws_kinesisanalyticsv2_application: Handle IAM role eventual consistency issues ([#16125](https://github.com/hashicorp/terraform-provider-aws/issues/16125))
+* resource/aws_lb_target_group: Allow invalid configurations that were allowed prior to 3.10. ([#15613](https://github.com/hashicorp/terraform-provider-aws/issues/15613))
+* resource/aws_network_interface: Prevent crash with ENI attachments missing DeviceIndex or AttachmentID ([#15567](https://github.com/hashicorp/terraform-provider-aws/issues/15567))
+* resource/aws_s3_bucket: Add plan-time validation to `acl` ([#15327](https://github.com/hashicorp/terraform-provider-aws/issues/15327))
+* resource/aws_workspaces_bundle: Fix empty (private) owner ([#14535](https://github.com/hashicorp/terraform-provider-aws/issues/14535))
 
 ## 3.14.1 (November 06, 2020)
 

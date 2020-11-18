@@ -432,6 +432,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/neptune" = [
       "aws_neptune_",
     ],
+    "service/networkfirewall" = [
+      "aws_networkfirewall_",
+    ],
     "service/networkmanager" = [
       "aws_networkmanager_",
     ],
@@ -1241,6 +1244,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/neptune/**/*",
       "**/*_neptune_*",
       "**/neptune_*"
+    ]
+    "service/networkfirewall" = [
+      "aws/internal/service/networkfirewall/**/*",
+      "**/*_networkfirewall_*",
+      "**/networkfirewall_*",
     ]
     "service/networkmanager" = [
       "aws/internal/service/networkmanager/**/*",

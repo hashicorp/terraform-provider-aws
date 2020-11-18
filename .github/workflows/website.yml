@@ -77,7 +77,7 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: cd tools && go install github.com/katbyte/terrafmt
-      - run: terrafmt diff ./website --check --pattern '*.markdown' --quiet
+      - run: terrafmt diff ./website --check --pattern '*.markdown'
   validate-terraform:
     runs-on: ubuntu-latest
     steps:
