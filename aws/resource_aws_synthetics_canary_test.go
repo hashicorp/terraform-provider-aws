@@ -269,7 +269,7 @@ func TestAccAWSSyntheticsCanary_s3(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+				ImportStateVerifyIgnore: []string{"s3_bucket", "s3_key", "s3_version", "start_canary"},
 			},
 		},
 	})
