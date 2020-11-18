@@ -2,6 +2,7 @@
 
 ENHANCEMENTS
 
+* resource/aws_accessanalyzer_analyzer: Adds plan time validation to `analyzer_name` [GH-16265]
 * resource/aws_workspaces_directory: Allows assigning IP group [GH-14451]
 
 ## 3.16.0 (November 18, 2020)
