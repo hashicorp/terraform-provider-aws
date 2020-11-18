@@ -1,5 +1,9 @@
 ## 3.17.0 (Unreleased)
 
+ENHANCEMENTS
+
+* resource/aws_workspaces_directory: Allows assigning IP group [GH-14451]
+
 ## 3.16.0 (November 18, 2020)
 
 * **New Data Source:** `aws_imagebuilder_component` ([#16159](https://github.com/hashicorp/terraform-provider-aws/issues/16159))
