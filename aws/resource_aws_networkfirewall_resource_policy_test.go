@@ -151,7 +151,9 @@ func testAccCheckAwsNetworkFirewallResourcePolicyExists(n string) resource.TestC
 }
 
 func testAccNetworkFirewallResourcePolicyFirewallPolicyBaseConfig(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccAlternateAccountProviderConfig(),
+		fmt.Sprintf(`
 data "aws_caller_identity" "alternate" {
   provider = "awsalternate"
 }
@@ -177,12 +179,7 @@ resource "aws_ram_resource_association" "test" {
   resource_arn       = aws_networkfirewall_firewall_policy.test.arn
   resource_share_arn = aws_ram_resource_share.test.id
 }
-
-resource "aws_ram_principal_association" "test" {
-  principal          = data.aws_caller_identity.alternate.account_id
-  resource_share_arn = aws_ram_resource_share.test.id
-}
-`, rName)
+`, rName))
 }
 
 func testAccNetworkFirewallResourcePolicy_firewallPolicy(rName string) string {
@@ -204,7 +201,7 @@ resource "aws_networkfirewall_resource_policy" "test" {
 }
 POLICY
 
-  depends_on = [aws_ram_principal_association.test, aws_ram_resource_association.test]
+  depends_on = [aws_ram_resource_association.test]
 }
 `)
 }
@@ -231,12 +228,13 @@ resource "aws_networkfirewall_resource_policy" "test" {
 }
 POLICY
 }
-  depends_on = [aws_ram_principal_association.test, aws_ram_resource_association.test]
+  depends_on = [aws_ram_resource_association.test]
 `)
 }
 
 func testAccNetworkFirewallResourcePolicyRuleGroupBaseConfig(rName string) string {
 	return composeConfig(
+		testAccAlternateAccountProviderConfig(),
 		fmt.Sprintf(`
 data "aws_caller_identity" "alternate" {
   provider = "awsalternate"
@@ -270,11 +268,6 @@ resource "aws_ram_resource_association" "test" {
   resource_arn       = aws_networkfirewall_rule_group.test.arn
   resource_share_arn = aws_ram_resource_share.test.id
 }
-
-resource "aws_ram_principal_association" "test" {
-  principal          = data.aws_caller_identity.alternate.account_id
-  resource_share_arn = aws_ram_resource_share.test.id
-}
 `, rName))
 }
 
@@ -297,7 +290,7 @@ resource "aws_networkfirewall_resource_policy" "test" {
 }
 POLICY
 
-  depends_on = [aws_ram_principal_association.test, aws_ram_resource_association.test]
+  depends_on = [aws_ram_resource_association.test]
 }
 `)
 }
@@ -324,7 +317,7 @@ resource "aws_networkfirewall_resource_policy" "test" {
 }
 POLICY
 
-  depends_on = [aws_ram_principal_association.test, aws_ram_resource_association.test]
+  depends_on = [aws_ram_resource_association.test]
 }
 `)
 }
