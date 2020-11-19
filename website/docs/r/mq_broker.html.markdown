@@ -12,7 +12,7 @@ Provides an MQ Broker Resource. This resources also manages users for the broker
 
 For more information on Amazon MQ, see [Amazon MQ documentation](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/welcome.html).
 
-Changes to an MQ Broker can occur when you change a
+For brokers with ActiveMQ as engine type: changes to an MQ Broker can occur when you change a
 parameter, such as `configuration` or `user`, and are reflected in the next maintenance
 window. Because of this, Terraform may report a difference in its planning
 phase because a modification has not yet taken place. You can use the
@@ -56,18 +56,18 @@ The following arguments are supported:
   are applied immediately, or during the next maintenance window. Default is `false`.
 * `auto_minor_version_upgrade` - (Optional) Enables automatic upgrades to new minor versions for brokers, as Apache releases the versions.
 * `broker_name` - (Required) The name of the broker.
-* `configuration` - (Optional) Configuration of the broker. See below.
+* `configuration` - (Optional) Configuration of the broker. See below. (Applies to `ActiveMQ` only)
 * `deployment_mode` - (Optional) The deployment mode of the broker. Supported: `SINGLE_INSTANCE` and `ACTIVE_STANDBY_MULTI_AZ`. Defaults to `SINGLE_INSTANCE`.
 * `encryption_options` - (Optional) Configuration block containing encryption options. See below.
-* `engine_type` - (Required) The type of broker engine. Currently, Amazon MQ supports only `ActiveMQ`.
+* `engine_type` - (Required) The type of broker engine. Currently, Amazon MQ supports `ActiveMQ` and `RabbitMQ`.
 * `engine_version` - (Required) The version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions.
 * `host_instance_type` - (Required) The broker's instance type. e.g. `mq.t2.micro` or `mq.m4.large`
 * `publicly_accessible` - (Optional) Whether to enable connections from applications outside of the VPC that hosts the broker's subnets.
 * `security_groups` - (Required) The list of security group IDs assigned to the broker.
 * `subnet_ids` - (Optional) The list of subnet IDs in which to launch the broker. A `SINGLE_INSTANCE` deployment requires one subnet. An `ACTIVE_STANDBY_MULTI_AZ` deployment requires two subnets.
 * `maintenance_window_start_time` - (Optional) Maintenance window start time. See below.
-* `logs` - (Optional) Logging configuration of the broker. See below.
-* `user` - (Required) The list of all ActiveMQ usernames for the specified broker. See below.
+* `logs` - (Optional) Logging configuration of the broker. See below. (Applies to `ActiveMQ` only)
+* `user` - (Optional) The list of all broker usernames for the specified broker. See below. RabbitMQ users can only be specified in the creation of the resource. Updates to users can only be in the RabbitMQ UI.
 * `tags` - (Optional) A map of tags to assign to the resource.
 
 ### Nested Fields
@@ -97,10 +97,12 @@ The following arguments are supported:
 
 #### `user`
 
-* `console_access` - (Optional) Whether to enable access to the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) for the user.
-* `groups` - (Optional) The list of groups (20 maximum) to which the ActiveMQ user belongs.
+* `console_access` - (Optional) Whether to enable access to the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) for the user. (Applies to `ActiveMQ` only)
+* `groups` - (Optional) The list of groups (20 maximum) to which the ActiveMQ user belongs. (Applies to `ActiveMQ` only)
 * `password` - (Required) The password of the user. It must be 12 to 250 characters long, at least 4 unique characters, and must not contain commas.
 * `username` - (Required) The username of the user.
+
+~> **NOTE:** AWS currently does not support updating the RabbitMQ users beyond resource creation. Updates to users can only be in the RabbitMQ UI.
 
 ## Attributes Reference
 
@@ -112,11 +114,14 @@ In addition to all arguments above, the following attributes are exported:
     * `instances.0.console_url` - The URL of the broker's [ActiveMQ Web Console](http://activemq.apache.org/web-console.html).
     * `instances.0.ip_address` - The IP Address of the broker.
     * `instances.0.endpoints` - The broker's wire-level protocol endpoints in the following order & format referenceable e.g. as `instances.0.endpoints.0` (SSL):
-        * `ssl://broker-id.mq.us-west-2.amazonaws.com:61617`
-        * `amqp+ssl://broker-id.mq.us-west-2.amazonaws.com:5671`
-        * `stomp+ssl://broker-id.mq.us-west-2.amazonaws.com:61614`
-        * `mqtt+ssl://broker-id.mq.us-west-2.amazonaws.com:8883`
-        * `wss://broker-id.mq.us-west-2.amazonaws.com:61619`
+        * For `ActiveMQ`:
+            * `ssl://broker-id.mq.us-west-2.amazonaws.com:61617`
+            * `amqp+ssl://broker-id.mq.us-west-2.amazonaws.com:5671`
+            * `stomp+ssl://broker-id.mq.us-west-2.amazonaws.com:61614`
+            * `mqtt+ssl://broker-id.mq.us-west-2.amazonaws.com:8883`
+            * `wss://broker-id.mq.us-west-2.amazonaws.com:61619`
+        * For `RabbitMQ`:
+            * `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`
 
 ## Import
 

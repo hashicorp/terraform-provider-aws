@@ -815,6 +815,40 @@ func TestAccAWSMqBroker_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSMqBroker_rabbitmq(t *testing.T) {
+	var broker mq.DescribeBrokerResponse
+	sgName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	brokerName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_mq_broker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMqBrokerConfigRabbit(sgName, brokerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqBrokerExists(resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.8.6"),
+					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
+					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexp.MustCompile(`^amqps://[a-z0-9-\.]+:5671$`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
+
 func testAccCheckAwsMqBrokerDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).mqconn
 
@@ -1368,4 +1402,25 @@ resource "aws_mq_broker" "test" {
   }
 }
 `, sgName, sgName, brokerName)
+}
+
+func testAccMqBrokerConfigRabbit(sgName, brokerName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = "%s"
+}
+
+resource "aws_mq_broker" "test" {
+  broker_name        = "%s"
+  engine_type        = "RabbitMQ"
+  engine_version     = "3.8.6"
+  host_instance_type = "mq.t3.micro"
+  security_groups    = [aws_security_group.test.id]
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+}
+`, sgName, brokerName)
 }

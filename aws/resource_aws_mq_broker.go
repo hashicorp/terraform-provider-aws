@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -72,6 +73,7 @@ func resourceAwsMqBroker() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					mq.DeploymentModeSingleInstance,
 					mq.DeploymentModeActiveStandbyMultiAz,
+					mq.DeploymentModeClusterMultiAz,
 				}, true),
 			},
 			"encryption_options": {
@@ -104,6 +106,7 @@ func resourceAwsMqBroker() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					mq.EngineTypeActivemq,
+					mq.EngineTypeRabbitmq,
 				}, true),
 			},
 			"engine_version": {
@@ -192,10 +195,24 @@ func resourceAwsMqBroker() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"user": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Set:      resourceAwsMqUserHash,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// AWS currently does not support updating the RabbitMQ users beyond resource creation.
+					// User list is not returned back after creation.
+					// Updates to users can only be in the RabbitMQ UI.
+					if v := d.Get("engine_type").(string); strings.EqualFold(v, mq.EngineTypeRabbitmq) && d.Get("arn").(string) != "" {
+						return true
+					}
+
+					return false
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"console_access": {
@@ -226,10 +243,6 @@ func resourceAwsMqBroker() *schema.Resource {
 						},
 					},
 				},
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"instances": {
 				Type:     schema.TypeList,
@@ -375,9 +388,11 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting logs: %s", err)
 	}
 
-	err = d.Set("configuration", flattenMqConfigurationId(out.Configurations.Current))
-	if err != nil {
-		return err
+	if out.Configurations != nil {
+		err = d.Set("configuration", flattenMqConfigurationId(out.Configurations.Current))
+		if err != nil {
+			return err
+		}
 	}
 
 	rawUsers := make([]*mq.User, len(out.Users))
