@@ -47,7 +47,9 @@ In addition to all arguments above, the following attributes are exported:
 * `qualified_arn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) Amazon Resource Name (ARN) identifying your Lambda Function. See also `arn`.
 * `reserved_concurrent_executions` - The amount of reserved concurrent executions for this lambda function or `-1` if unreserved.
 * `role` - IAM role attached to the Lambda Function.
-* `runtime` - The runtime environment for the Lambda function..
+* `runtime` - The runtime environment for the Lambda function.
+* `signing_job_arn` - The Amazon Resource Name (ARN) of a signing job.
+* `signing_profile_version_arn` - The Amazon Resource Name (ARN) for a signing profile version.
 * `source_code_hash` - Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `source_code_size` - The size in bytes of the function .zip file.
 * `timeout` - The function execution time at which Lambda should terminate the function.

@@ -169,6 +169,14 @@ func dataSourceAwsLambdaFunction() *schema.Resource {
 				Computed: true,
 			},
 			"tags": tagsSchemaComputed(),
+			"signing_profile_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"signing_job_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -242,6 +250,16 @@ func dataSourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) e
 
 	d.Set("memory_size", function.MemorySize)
 	d.Set("qualified_arn", qualifiedARN)
+
+	// Add Signing Profile Version ARN
+	if err := d.Set("signing_profile_version_arn", function.SigningProfileVersionArn); err != nil {
+		return fmt.Errorf("Error setting signing profile version arn for Lambda Function: %s", err)
+	}
+
+	// Add Signing Job ARN
+	if err := d.Set("signing_job_arn", function.SigningJobArn); err != nil {
+		return fmt.Errorf("Error setting signing job arn for Lambda Function: %s", err)
+	}
 
 	reservedConcurrentExecutions := int64(-1)
 	if output.Concurrency != nil {
