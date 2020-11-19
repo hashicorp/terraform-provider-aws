@@ -1860,15 +1860,15 @@ resource "aws_route53_record" "test" {
 func testAccRoute53RecordConfigTXT(txtRecord string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
-		name = "notexample.com"
-	}
-	
-	resource "aws_route53_record" "default" {
-	zone_id = "/hostedzone/${aws_route53_zone.test.zone_id}"
-	name    = "subdomain"
-	type    = "TXT"
-	ttl     = "30"
-	records = [%s]
+  name = "notexample.com"
+}
+
+resource "aws_route53_record" "default" {
+  zone_id = "/hostedzone/${aws_route53_zone.test.zone_id}"
+  name    = "subdomain"
+  type    = "TXT"
+  ttl     = "30"
+  records = [%s]
 }
 `, txtRecord)
 }

@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 )
 
@@ -232,6 +231,8 @@ func resourceAwsRoute53Record() *schema.Resource {
 			"records": {
 				Type:          schema.TypeSet,
 				ConflictsWith: []string{"alias"},
+				Optional: true,
+				Set:      schema.HashString,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.Any(
@@ -240,8 +241,6 @@ func resourceAwsRoute53Record() *schema.Resource {
 						validation.StringLenBetween(1, 255),
 					),
 				},
-				Optional: true,
-				Set:      schema.HashString,
 			},
 
 			"allow_overwrite": {
