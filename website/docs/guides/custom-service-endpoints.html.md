@@ -84,6 +84,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>codecommit</code></li>
   <li><code>codedeploy</code></li>
   <li><code>codepipeline</code></li>
+  <li><code>codestarconnections</code></li>
   <li><code>codestarnotifications</code></li>
   <li><code>cognitoidentity</code></li>
   <li><code>cognitoidp</code></li>
@@ -151,6 +152,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>mediastoredata</code></li>
   <li><code>mq</code></li>
   <li><code>neptune</code></li>
+  <li><code>networkfirewall</code></li>
   <li><code>networkmanager</code></li>
   <li><code>opsworks</code></li>
   <li><code>organizations</code></li>

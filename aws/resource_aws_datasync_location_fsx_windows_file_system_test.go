@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
+	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -85,7 +86,7 @@ func TestAccAWSDataSyncLocationFsxWindows_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck("fsx", t)
+			testAccPartitionHasServicePreCheck(fsx.EndpointsID, t)
 			testAccPreCheckAWSDataSync(t)
 		},
 		Providers:    testAccProviders,
@@ -121,7 +122,7 @@ func TestAccAWSDataSyncLocationFsxWindows_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck("fsx", t)
+			testAccPartitionHasServicePreCheck(fsx.EndpointsID, t)
 			testAccPreCheckAWSDataSync(t)
 		},
 		Providers:    testAccProviders,
@@ -146,7 +147,7 @@ func TestAccAWSDataSyncLocationFsxWindows_subdirectory(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck("fsx", t)
+			testAccPartitionHasServicePreCheck(fsx.EndpointsID, t)
 			testAccPreCheckAWSDataSync(t)
 		},
 		Providers:    testAccProviders,
@@ -177,7 +178,7 @@ func TestAccAWSDataSyncLocationFsxWindows_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck("fsx", t)
+			testAccPartitionHasServicePreCheck(fsx.EndpointsID, t)
 			testAccPreCheckAWSDataSync(t)
 		},
 		Providers:    testAccProviders,

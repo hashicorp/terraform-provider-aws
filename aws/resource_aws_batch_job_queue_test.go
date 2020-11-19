@@ -107,7 +107,7 @@ func TestAccAWSBatchJobQueue_disappears(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/8083
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8083
 func TestAccAWSBatchJobQueue_ComputeEnvironments_ExternalOrderUpdate(t *testing.T) {
 	var jobQueue1 batch.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"

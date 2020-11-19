@@ -41,7 +41,7 @@ The following arguments are supported:
 * `blackhole` - (Optional) Indicates whether to drop traffic that matches this route (default to `false`).
 * `transit_gateway_route_table_id` - (Required) Identifier of EC2 Transit Gateway Route Table.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

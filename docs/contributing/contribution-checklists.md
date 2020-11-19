@@ -236,7 +236,7 @@ Implementing tagging support for Terraform AWS Provider resources requires the f
 - [ ] _Resource Tagging Acceptance Testing Implementation_: In the resource acceptance testing (e.g. `aws/resource_aws_service_thing_test.go`), implementation of new acceptance test function and configurations to exercise new tagging logic.
 - [ ] _Resource Tagging Documentation Implementation_: In the resource documentation (e.g. `website/docs/r/service_thing.html.markdown`), addition of `tags` argument
 
-See also a [full example pull request for implementing EKS tagging](https://github.com/terraform-providers/terraform-provider-aws/pull/10307).
+See also a [full example pull request for implementing EKS tagging](https://github.com/hashicorp/terraform-provider-aws/pull/10307).
 
 ### Adding Service to Tag Generating Code
 

@@ -92,7 +92,7 @@ Information to join the gateway to an Active Directory domain for Server Message
 * `password` - (Required) The password of the user who has permission to add the gateway to the Active Directory domain.
 * `username` - (Required) The user name of user who has permission to add the gateway to the Active Directory domain.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

@@ -23,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
@@ -78,6 +79,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
@@ -432,6 +434,23 @@ func CloudwatchlogsListTags(conn *cloudwatchlogs.CloudWatchLogs, identifier stri
 	}
 
 	return CloudwatchlogsKeyValueTags(output.Tags), nil
+}
+
+// CodeartifactListTags lists codeartifact service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CodeartifactListTags(conn *codeartifact.CodeArtifact, identifier string) (KeyValueTags, error) {
+	input := &codeartifact.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return CodeartifactKeyValueTags(output.Tags), nil
 }
 
 // CodecommitListTags lists codecommit service tags.
@@ -1372,6 +1391,23 @@ func NeptuneListTags(conn *neptune.Neptune, identifier string) (KeyValueTags, er
 	}
 
 	return NeptuneKeyValueTags(output.TagList), nil
+}
+
+// NetworkfirewallListTags lists networkfirewall service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func NetworkfirewallListTags(conn *networkfirewall.NetworkFirewall, identifier string) (KeyValueTags, error) {
+	input := &networkfirewall.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return NetworkfirewallKeyValueTags(output.Tags), nil
 }
 
 // NetworkmanagerListTags lists networkmanager service tags.

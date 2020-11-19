@@ -6,7 +6,9 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -76,9 +78,16 @@ func testAccGetEc2ClassicRegion() string {
 	return testAccGetRegion()
 }
 
-// testAccProviderFactoriesEc2Classic initializes providers for EC2-Classic testing.
-//
-// Deprecated: This will be replaced with testAccProviderFactories when it only returns the "aws" provider
-func testAccProviderFactoriesEc2Classic() map[string]func() (*schema.Provider, error) {
-	return testAccProviderFactoriesInit(nil, []string{ProviderNameAws})
+// testAccCheckResourceAttrRegionalARNEc2Classic ensures the Terraform state exactly matches a formatted ARN with EC2-Classic region
+func testAccCheckResourceAttrRegionalARNEc2Classic(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attributeValue := arn.ARN{
+			AccountID: testAccGetAccountID(),
+			Partition: testAccGetPartition(),
+			Region:    testAccGetEc2ClassicRegion(),
+			Resource:  arnResource,
+			Service:   arnService,
+		}.String()
+		return resource.TestCheckResourceAttr(resourceName, attributeName, attributeValue)(s)
+	}
 }

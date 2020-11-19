@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -42,11 +43,6 @@ const (
 
 	// Provider name for third configuration testing
 	ProviderNameAwsThird = "awsthird"
-
-	// Provider name for hardcoded us-east-1 configuration testing
-	//
-	// Deprecated: This will be replaced with service specific providers
-	ProviderNameAwsUsEast1 = "awsus-east-1"
 )
 
 const rfc3339RegexPattern = `^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?([Zz]|([+-]([01][0-9]|2[0-3]):[0-5][0-9]))$`
@@ -59,7 +55,7 @@ var TestAccSkip = func(t *testing.T, message string) {
 	t.Skip(message)
 }
 
-// testAccProviders is a static map of provider types and their associated provider instance.
+// testAccProviders is a static map containing only the main provider instance.
 //
 // Deprecated: Terraform Plugin SDK version 2 uses TestCase.ProviderFactories
 // but supports this value in TestCase.Providers for backwards compatibility.
@@ -67,14 +63,11 @@ var TestAccSkip = func(t *testing.T, message string) {
 // ProviderFactories: testAccProviderFactories
 var testAccProviders map[string]*schema.Provider
 
-// testAccProviderFactories initializes and returns Provider slice elements of a provider type and function that returns the provider instance
+// testAccProviderFactories is a static map containing only the main provider instance
 //
-// Using this function will initialize all listed provider types as gRPC
-// plugins for every test, which is inefficient and can cause ulimit issues.
-//
-// Deprecated: Use specific ProviderFactories functions such as testAccProviderFactoriesEc2Classic instead.
-// In the future this will be changed to return only the aws provider and not accept a parameter.
-var testAccProviderFactories func(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error)
+// Use other testAccProviderFactories functions, such as testAccProviderFactoriesAlternate,
+// for tests requiring special provider configurations.
+var testAccProviderFactories map[string]func() (*schema.Provider, error)
 
 // testAccProvider is the "main" provider instance
 //
@@ -84,29 +77,26 @@ var testAccProviderFactories func(providers *[]*schema.Provider) map[string]func
 // testAccPreCheck(t) must be called before using this provider instance.
 var testAccProvider *schema.Provider
 
-// testAccProviderFunc is a function that returns the "main" provider instance
+// testAccProviderConfigure ensures testAccProvider is only configured once
 //
-// Deprecated: Use testAccAwsRegionProviderFunc instead.
-// In the future this will be changed to be compatible with ProviderFactories.
-var testAccProviderFunc func() *schema.Provider
+// The testAccPreCheck(t) function is invoked for every test and this prevents
+// extraneous reconfiguration to the same values each time. However, this does
+// not prevent reconfiguration that may happen should the address of
+// testAccProvider be errantly reused in ProviderFactories.
+var testAccProviderConfigure sync.Once
 
 func init() {
 	testAccProvider = Provider()
+
 	testAccProviders = map[string]*schema.Provider{
 		ProviderNameAws: testAccProvider,
 	}
-	testAccProviderFactories = func(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
-		return testAccProviderFactoriesInit(providers, []string{
-			ProviderNameAws,
-			ProviderNameAwsAlternate,
-			ProviderNameAwsAlternateAccountAlternateRegion,
-			ProviderNameAwsAlternateAccountSameRegion,
-			ProviderNameAwsSameAccountAlternateRegion,
-			ProviderNameAwsThird,
-			ProviderNameAwsUsEast1,
-		})
+
+	// Always allocate a new provider instance each invocation, otherwise gRPC
+	// ProviderConfigure() can overwrite configuration during concurrent testing.
+	testAccProviderFactories = map[string]func() (*schema.Provider, error){
+		ProviderNameAws: func() (*schema.Provider, error) { return Provider(), nil }, //nolint:unparam
 	}
-	testAccProviderFunc = func() *schema.Provider { return testAccProvider }
 }
 
 // testAccProviderFactoriesInit creates ProviderFactories for the provider under testing.
@@ -128,6 +118,56 @@ func testAccProviderFactoriesInit(providers *[]*schema.Provider, providerNames [
 	return factories
 }
 
+// testAccProviderFactoriesInternal creates ProviderFactories for provider configuration testing
+//
+// This should only be used for TestAccAWSProvider_ tests which need to
+// reference the provider instance itself. Other testing should use
+// testAccProviderFactories or other related functions.
+func testAccProviderFactoriesInternal(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
+	return testAccProviderFactoriesInit(providers, []string{ProviderNameAws})
+}
+
+// testAccProviderFactoriesAlternate creates ProviderFactories for cross-account and cross-region configurations
+//
+// For cross-region testing: Typically paired with testAccMultipleRegionPreCheck and testAccAlternateRegionProviderConfig.
+//
+// For cross-account testing: Typically paired with testAccAlternateAccountPreCheck and testAccAlternateAccountProviderConfig.
+func testAccProviderFactoriesAlternate(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
+	return testAccProviderFactoriesInit(providers, []string{
+		ProviderNameAws,
+		ProviderNameAwsAlternate,
+	})
+}
+
+// testAccProviderFactoriesAlternateAccountAndAlternateRegion creates ProviderFactories for cross-account and cross-region configurations
+//
+// Usage typically paired with testAccMultipleRegionPreCheck, testAccAlternateAccountPreCheck,
+// and testAccAlternateAccountAndAlternateRegionProviderConfig.
+func testAccProviderFactoriesAlternateAccountAndAlternateRegion(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
+	return testAccProviderFactoriesInit(providers, []string{
+		ProviderNameAws,
+		ProviderNameAwsAlternateAccountAlternateRegion,
+		ProviderNameAwsAlternateAccountSameRegion,
+		ProviderNameAwsSameAccountAlternateRegion,
+	})
+}
+
+// testAccProviderFactoriesMultipleRegion creates ProviderFactories for the number of region configurations
+//
+// Usage typically paired with testAccMultipleRegionPreCheck and testAccMultipleRegionProviderConfig.
+func testAccProviderFactoriesMultipleRegion(providers *[]*schema.Provider, regions int) map[string]func() (*schema.Provider, error) {
+	providerNames := []string{
+		ProviderNameAws,
+		ProviderNameAwsAlternate,
+	}
+
+	if regions >= 3 {
+		providerNames = append(providerNames, ProviderNameAwsThird)
+	}
+
+	return testAccProviderFactoriesInit(providers, providerNames)
+}
+
 func TestProvider(t *testing.T) {
 	if err := Provider().InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
@@ -138,23 +178,41 @@ func TestProvider_impl(t *testing.T) {
 	var _ *schema.Provider = Provider()
 }
 
+// testAccPreCheck verifies and sets required provider testing configuration
+//
+// This PreCheck function should be present in every acceptance test. It allows
+// test configurations to omit a provider configuration with region and ensures
+// testing functions that attempt to call AWS APIs are previously configured.
+//
+// These verifications and configuration are preferred at this level to prevent
+// provider developers from experiencing less clear errors for every test.
 func testAccPreCheck(t *testing.T) {
-	if os.Getenv("AWS_PROFILE") == "" && os.Getenv("AWS_ACCESS_KEY_ID") == "" {
-		t.Fatal("AWS_ACCESS_KEY_ID or AWS_PROFILE must be set for acceptance tests")
-	}
+	// Since we are outside the scope of the Terraform configuration we must
+	// call Configure() to properly initialize the provider configuration.
+	testAccProviderConfigure.Do(func() {
+		if os.Getenv("AWS_PROFILE") == "" && os.Getenv("AWS_ACCESS_KEY_ID") == "" {
+			t.Fatal("AWS_ACCESS_KEY_ID or AWS_PROFILE must be set for acceptance tests")
+		}
 
-	if os.Getenv("AWS_ACCESS_KEY_ID") != "" && os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
-		t.Fatal("AWS_SECRET_ACCESS_KEY must be set for acceptance tests")
-	}
+		if os.Getenv("AWS_ACCESS_KEY_ID") != "" && os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
+			t.Fatal("AWS_SECRET_ACCESS_KEY must be set for acceptance tests")
+		}
 
-	region := testAccGetRegion()
-	log.Printf("[INFO] Test: Using %s as test region", region)
-	os.Setenv("AWS_DEFAULT_REGION", region)
+		// Setting the AWS_DEFAULT_REGION environment variable here allows all tests to omit
+		// a provider configuration with a region. This defaults to us-west-2 for provider
+		// developer simplicity and has been in the codebase for a very long time.
+		//
+		// This handling must be preserved until either:
+		//   * AWS_DEFAULT_REGION is required and checked above (should mention us-west-2 default)
+		//   * Region is automatically handled via shared AWS configuration file and still verified
+		region := testAccGetRegion()
+		os.Setenv("AWS_DEFAULT_REGION", region)
 
-	err := testAccProvider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil))
-	if err != nil {
-		t.Fatal(err)
-	}
+		err := testAccProvider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil))
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
 }
 
 // testAccAwsProviderAccountID returns the account ID of an AWS provider
@@ -261,6 +319,13 @@ func testAccCheckResourceAttrHostnameWithPort(resourceName, attributeName, servi
 		hostname := fmt.Sprintf("%s.%s.%s:%d", hostnamePrefix, serviceName, testAccGetPartitionDNSSuffix(), port)
 
 		return resource.TestCheckResourceAttr(resourceName, attributeName, hostname)(s)
+	}
+}
+
+// testAccMatchResourceAttrAccountID ensures the Terraform state regexp matches an account ID
+func testAccMatchResourceAttrAccountID(resourceName, attributeName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return resource.TestMatchResourceAttr(resourceName, attributeName, regexp.MustCompile(`^\d{12}$`))(s)
 	}
 }
 
@@ -575,17 +640,6 @@ func testAccAlternateAccountPreCheck(t *testing.T) {
 	}
 }
 
-// Deprecated: Use testAccMultipleRegionPreCheck instead
-func testAccAlternateRegionPreCheck(t *testing.T) {
-	if testAccGetRegion() == testAccGetAlternateRegion() {
-		t.Fatal("AWS_DEFAULT_REGION and AWS_ALTERNATE_REGION must be set to different values for acceptance tests")
-	}
-
-	if testAccGetPartition() != testAccGetAlternateRegionPartition() {
-		t.Fatalf("AWS_ALTERNATE_REGION partition (%s) does not match AWS_DEFAULT_REGION partition (%s)", testAccGetAlternateRegionPartition(), testAccGetPartition())
-	}
-}
-
 func testAccEC2VPCOnlyPreCheck(t *testing.T) {
 	client := testAccProvider.Meta().(*AWSClient)
 	platforms := client.supportedplatforms
@@ -634,19 +688,17 @@ func testAccMultipleRegionPreCheck(t *testing.T, regions int) {
 	}
 }
 
-// Deprecated: Use testAccMultipleRegionPreCheck instead.
-func testAccMultipleRegionsPreCheck(t *testing.T) {
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
-		if len(partition.Regions()) < 2 {
-			t.Skip("skipping tests; partition only includes a single region")
-		}
-	}
-}
-
 // testAccRegionPreCheck checks that the test region is the specified region.
 func testAccRegionPreCheck(t *testing.T, region string) {
 	if testAccGetRegion() != region {
 		t.Skipf("skipping tests; AWS_DEFAULT_REGION (%s) does not equal %s", testAccGetRegion(), region)
+	}
+}
+
+// testAccPartitionPreCheck checks that the test partition is the specified partition.
+func testAccPartitionPreCheck(partition string, t *testing.T) {
+	if testAccGetPartition() != partition {
+		t.Skipf("skipping tests; current partition (%s) does not equal %s", testAccGetPartition(), partition)
 	}
 }
 
@@ -816,18 +868,6 @@ provider "aws" {
 `, region)
 }
 
-// Provider configuration hardcoded for us-east-1.
-// This should only be necessary for testing ACM Certificates with CloudFront
-// related infrastucture such as API Gateway Domain Names for EDGE endpoints,
-// CloudFront Distribution Viewer Certificates, and Cognito User Pool Domains.
-// Other valid usage is for services only available in us-east-1 such as the
-// Cost and Usage Reporting and Pricing services.
-//
-// Deprecated: This will be replaced with service specific provider configurations.
-func testAccUsEast1RegionProviderConfig() string {
-	return testAccNamedRegionalProviderConfig(ProviderNameAwsUsEast1, endpoints.UsEast1RegionID)
-}
-
 func testAccAwsRegionProviderFunc(region string, providers *[]*schema.Provider) func() *schema.Provider {
 	return func() *schema.Provider {
 		if region == "" {
@@ -935,6 +975,9 @@ func testAccPreCheckSkipError(err error) bool {
 	if isAWSErr(err, "InvalidInputException", "Unknown operation") {
 		return true
 	}
+	if isAWSErr(err, "InvalidAction", "Unavailable Operation") {
+		return true
+	}
 	return false
 }
 
@@ -991,7 +1034,7 @@ func TestAccAWSProvider_Endpoints(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
@@ -1009,7 +1052,7 @@ func TestAccAWSProvider_IgnoreTags_EmptyConfigurationBlock(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
@@ -1028,7 +1071,7 @@ func TestAccAWSProvider_IgnoreTags_KeyPrefixes_None(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
@@ -1046,7 +1089,7 @@ func TestAccAWSProvider_IgnoreTags_KeyPrefixes_One(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
@@ -1064,7 +1107,7 @@ func TestAccAWSProvider_IgnoreTags_KeyPrefixes_Multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
@@ -1082,7 +1125,7 @@ func TestAccAWSProvider_IgnoreTags_Keys_None(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
@@ -1100,7 +1143,7 @@ func TestAccAWSProvider_IgnoreTags_Keys_One(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
@@ -1118,7 +1161,7 @@ func TestAccAWSProvider_IgnoreTags_Keys_Multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
@@ -1136,7 +1179,7 @@ func TestAccAWSProvider_Region_AwsChina(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
@@ -1156,7 +1199,7 @@ func TestAccAWSProvider_Region_AwsCommercial(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
@@ -1176,7 +1219,7 @@ func TestAccAWSProvider_Region_AwsGovCloudUs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
@@ -1196,7 +1239,7 @@ func TestAccAWSProvider_AssumeRole_Empty(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
@@ -1724,7 +1767,7 @@ provider "aws" {
 }
 
 data "aws_caller_identity" "current" {}
-`
+` //lintignore:AT004
 
 // composeConfig can be called to concatenate multiple strings to build test configurations
 func composeConfig(config ...string) string {

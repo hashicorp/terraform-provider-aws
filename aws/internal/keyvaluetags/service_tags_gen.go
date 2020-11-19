@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
@@ -59,6 +60,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/quicksight"
@@ -905,6 +907,33 @@ func (tags KeyValueTags) CloudwatcheventsTags() []*cloudwatchevents.Tag {
 
 // CloudwatcheventsKeyValueTags creates KeyValueTags from cloudwatchevents service tags.
 func CloudwatcheventsKeyValueTags(tags []*cloudwatchevents.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// CodeartifactTags returns codeartifact service tags.
+func (tags KeyValueTags) CodeartifactTags() []*codeartifact.Tag {
+	result := make([]*codeartifact.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &codeartifact.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// CodeartifactKeyValueTags creates KeyValueTags from codeartifact service tags.
+func CodeartifactKeyValueTags(tags []*codeartifact.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -2044,6 +2073,33 @@ func (tags KeyValueTags) NeptuneTags() []*neptune.Tag {
 
 // NeptuneKeyValueTags creates KeyValueTags from neptune service tags.
 func NeptuneKeyValueTags(tags []*neptune.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// NetworkfirewallTags returns networkfirewall service tags.
+func (tags KeyValueTags) NetworkfirewallTags() []*networkfirewall.Tag {
+	result := make([]*networkfirewall.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &networkfirewall.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// NetworkfirewallKeyValueTags creates KeyValueTags from networkfirewall service tags.
+func NetworkfirewallKeyValueTags(tags []*networkfirewall.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {

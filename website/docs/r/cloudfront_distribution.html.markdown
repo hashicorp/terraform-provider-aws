@@ -516,7 +516,7 @@ The arguments of `geo_restriction` are:
     `acm_certificate_arn` or `iam_certificate_id`. **NOTE:** `vip` causes
     CloudFront to use a dedicated IP address and may incur extra charges.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
