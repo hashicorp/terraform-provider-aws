@@ -2,18 +2,69 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_ec2_carrier_gateway", &resource.Sweeper{
+		Name: "aws_ec2_carrier_gateway",
+		F:    testSweepEc2CarrierGateway,
+	})
+}
+
+func testSweepEc2CarrierGateway(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+	input := &ec2.DescribeCarrierGatewaysInput{}
+	var sweeperErrs *multierror.Error
+
+	err = conn.DescribeCarrierGatewaysPages(input, func(page *ec2.DescribeCarrierGatewaysOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, carrierGateway := range page.CarrierGateways {
+			r := resourceAwsEc2CarrierGateway()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(carrierGateway.CarrierGatewayId))
+			err = r.Delete(d, client)
+
+			if err != nil {
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
+				continue
+			}
+		}
+
+		return !isLast
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Carrier Gateway sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EC2 Carrier Gateways: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSEc2CarrierGateway_basic(t *testing.T) {
 	var v ec2.CarrierGateway
@@ -31,7 +82,7 @@ func TestAccAWSEc2CarrierGateway_basic(t *testing.T) {
 				Config: testAccEc2CarrierGatewayConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2CarrierGatewayExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`carrier-gateway/cgw-.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`carrier-gateway/cagw-.+`)),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
