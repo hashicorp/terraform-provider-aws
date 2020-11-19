@@ -186,20 +186,3 @@ resource "aws_lb_cookie_stickiness_policy" "foo" {
 }
 `, rName))
 }
-
-// attempt to destroy the policy, but we'll delete the LB in the PreConfig
-func testAccLBCookieStickinessPolicyConfigDestroy(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
-resource "aws_elb" "lb" {
-  name               = "%s"
-  availability_zones = [data.aws_availability_zones.available.names[0]]
-
-  listener {
-    instance_port     = 8000
-    instance_protocol = "http"
-    lb_port           = 80
-    lb_protocol       = "http"
-  }
-}
-`, rName))
-}
