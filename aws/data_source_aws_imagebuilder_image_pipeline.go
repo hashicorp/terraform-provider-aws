@@ -15,8 +15,9 @@ func dataSourceAwsImageBuilderImagePipeline() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
 			},
 			"date_created": {
 				Type:     schema.TypeString,

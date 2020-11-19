@@ -72,7 +72,7 @@ resource "aws_iam_role" "role" {
 resource "aws_imagebuilder_component" "test" {
   data = yamlencode({
     phases = [{
-      name  = "build"
+      name = "build"
       steps = [{
         action = "ExecuteBash"
         inputs = {
