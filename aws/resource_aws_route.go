@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 var routeValidDestinations = []string{
@@ -243,7 +244,7 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.CreateRoute(input)
 	}
 
@@ -267,7 +268,7 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		route, err = routeFinder(conn, routeTableID, destination)
 	}
 
@@ -457,7 +458,7 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 		return resource.NonRetryableError(err)
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		log.Printf("[DEBUG] Deleting Route (%s)", d.Id())
 		_, err = conn.DeleteRoute(input)
 	}
