@@ -365,6 +365,53 @@ func TestAccAWSSyntheticsCanary_runConfigTracing(t *testing.T) {
 	})
 }
 
+func TestAccAWSSyntheticsCanary_runConfigEnvVars(t *testing.T) {
+	var conf synthetics.Canary
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_synthetics_canary.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSyntheticsCanaryRunConfigEnvVarConfig1(rName, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "run_config.0.environment_variables"},
+			},
+			{
+				Config: testAccAWSSyntheticsCanaryRunConfigEnvVarConfig2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSSyntheticsCanaryRunConfigEnvVarConfig1(rName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
 	var conf synthetics.Canary
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
@@ -762,6 +809,57 @@ resource "aws_synthetics_canary" "test" {
   }
 }
 `, rName, tracing)
+}
+
+func testAccAWSSyntheticsCanaryRunConfigEnvVarConfig1(rName, key1, value1 string) string {
+	return testAccAWSSyntheticsCanaryConfigBase(rName) + fmt.Sprintf(`
+resource "aws_synthetics_canary" "test" {
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
+  runtime_version      = "syn-nodejs-2.0"
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
+
+  run_config {
+	timeout_in_seconds = 60
+	
+    environment_variables = {
+      %[2]q = %[3]q
+    }
+  }
+}
+`, rName, key1, value1)
+}
+
+func testAccAWSSyntheticsCanaryRunConfigEnvVarConfig2(rName, key1, value1, key2, value2 string) string {
+	return testAccAWSSyntheticsCanaryConfigBase(rName) + fmt.Sprintf(`
+resource "aws_synthetics_canary" "test" {
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
+  runtime_version      = "syn-nodejs-2.0"
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
+
+  run_config {
+	timeout_in_seconds = 60
+	
+    environment_variables = {
+	  %[2]q = %[3]q
+      %[4]q = %[5]q
+    }
+  }
+}
+`, rName, key1, value1, key2, value2)
 }
 
 func testAccAWSSyntheticsCanaryBasicConfig(rName string) string {
