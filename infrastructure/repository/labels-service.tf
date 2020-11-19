@@ -137,6 +137,7 @@ variable "service_labels" {
     "mobile",
     "mq",
     "neptune",
+    "networkfirewall",
     "networkmanager",
     "opsworks",
     "organizations",

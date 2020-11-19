@@ -163,6 +163,12 @@ func resourceAwsStorageGatewayNfsFileShare() *schema.Resource {
 					"RootSquash",
 				}, false),
 			},
+			"file_share_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -190,6 +196,10 @@ func resourceAwsStorageGatewayNfsFileShareCreate(d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("kms_key_arn"); ok {
 		input.KMSKey = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("file_share_name"); ok {
+		input.FileShareName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("cache_attributes"); ok {
@@ -261,6 +271,7 @@ func resourceAwsStorageGatewayNfsFileShareRead(d *schema.ResourceData, meta inte
 	d.Set("kms_encrypted", fileshare.KMSEncrypted)
 	d.Set("kms_key_arn", fileshare.KMSKey)
 	d.Set("location_arn", fileshare.LocationARN)
+	d.Set("file_share_name", fileshare.FileShareName)
 
 	if err := d.Set("nfs_file_share_defaults", flattenStorageGatewayNfsFileShareDefaults(fileshare.NFSFileShareDefaults)); err != nil {
 		return fmt.Errorf("error setting nfs_file_share_defaults: %w", err)
@@ -296,7 +307,7 @@ func resourceAwsStorageGatewayNfsFileShareUpdate(d *schema.ResourceData, meta in
 
 	if d.HasChanges("client_list", "default_storage_class", "guess_mime_type_enabled", "kms_encrypted",
 		"nfs_file_share_defaults", "object_acl", "read_only", "requester_pays", "squash", "kms_key_arn",
-		"cache_attributes") {
+		"cache_attributes", "file_share_name") {
 
 		input := &storagegateway.UpdateNFSFileShareInput{
 			ClientList:           expandStringSet(d.Get("client_list").(*schema.Set)),
@@ -313,6 +324,10 @@ func resourceAwsStorageGatewayNfsFileShareUpdate(d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("kms_key_arn"); ok {
 			input.KMSKey = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("file_share_name"); ok {
+			input.FileShareName = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("cache_attributes"); ok {
