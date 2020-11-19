@@ -168,7 +168,7 @@ func TestAccAWSLB_LoadBalancerType_Gateway(t *testing.T) {
 	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
@@ -200,7 +200,7 @@ func TestAccAWSLB_LoadBalancerType_Gateway_EnableCrossZoneLoadBalancing(t *testi
 	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
@@ -1202,6 +1202,38 @@ func testAccCheckAWSLBDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccPreCheckElbv2GatewayLoadBalancer(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+
+	input := &elbv2.DescribeAccountLimitsInput{}
+
+	output, err := conn.DescribeAccountLimits(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected ELBv2 Gateway Load Balancer PreCheck error: %s", err)
+	}
+
+	if output == nil {
+		t.Fatal("unexpected ELBv2 Gateway Load Balancer PreCheck error: empty response")
+	}
+
+	for _, limit := range output.Limits {
+		if limit == nil {
+			continue
+		}
+
+		if aws.StringValue(limit.Name) == "gateway-load-balancers" {
+			return
+		}
+	}
+
+	t.Skip("skipping acceptance testing: region does not support ELBv2 Gateway Load Balancers")
 }
 
 func testAccAWSLBConfigWithIpAddressTypeUpdated(lbName string) string {
