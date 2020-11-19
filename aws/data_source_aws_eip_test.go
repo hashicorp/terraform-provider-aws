@@ -219,10 +219,6 @@ data "aws_eip" "test" {
 `
 
 const testAccDataSourceAwsEipConfigPublicIpEc2Classic = `
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_eip" "test" {}
 
 data "aws_eip" "test" {

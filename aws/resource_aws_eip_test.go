@@ -763,10 +763,6 @@ resource "aws_eip" "test" {
 
 func testAccAWSEIPConfig_tags_Ec2Classic(rName, testName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_eip" "test" {
   tags = {
     RandomName = "%[1]s"
