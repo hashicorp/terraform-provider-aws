@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 )
 
@@ -231,9 +232,16 @@ func resourceAwsRoute53Record() *schema.Resource {
 			"records": {
 				Type:          schema.TypeSet,
 				ConflictsWith: []string{"alias"},
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				Optional:      true,
-				Set:           schema.HashString,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.Any(
+						// This ensures that strings longer than 255 chars include escaped quote marks
+						validation.StringMatch(regexp.MustCompile(`^[^"]{1,255}((("{1,2}|" ")[^"]{1,255})+)?"?$`), `To specify a single record value longer than 255 characters, add \"\" or \" \" inside the Terraform configuration string (e.g. records = ["first255characters\" \"morecharacters"]).`),
+						validation.StringLenBetween(1, 255),
+					),
+				},
+				Optional: true,
+				Set:      schema.HashString,
 			},
 
 			"allow_overwrite": {
@@ -511,7 +519,7 @@ func resourceAwsRoute53RecordRead(d *schema.ResourceData, meta interface{}) erro
 		//we check that we have parsed the id into the correct number of segments
 		//we need at least 3 segments!
 		if parts[0] == "" || parts[1] == "" || parts[2] == "" {
-			return fmt.Errorf("Error Importing aws_route_53 record. Please make sure the record ID is in the form ZONEID_RECORDNAME_TYPE_SET-IDENTIFIER (e.g. Z4KAPRWWNC7JR_dev.example.com_NS_dev), where SET-IDENTIFIER is optional")
+			return fmt.Errorf("Error Importing aws_route_53 record. Please make sure the record ID is in the form ZONEID_RECORDNAME_TYPE (i.e. Z4KAPRWWNC7JR_dev_A")
 		}
 
 		d.Set("zone_id", parts[0])
