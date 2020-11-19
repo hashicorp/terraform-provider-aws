@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -16,6 +17,22 @@ func dataSourceAwsImageBuilderImagePipeline() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"date_created": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"date_last_run": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"date_next_run": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"date_updated": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -81,7 +98,7 @@ func dataSourceAwsImageBuilderImagePipeline() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
@@ -89,31 +106,53 @@ func dataSourceAwsImageBuilderImagePipeline() *schema.Resource {
 func dataSourceAwsImageBuilderImagePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
 
-	resp, err := conn.GetImagePipeline(&imagebuilder.GetImagePipelineInput{
-		ImagePipelineArn: aws.String(d.Get("arn").(string)),
-	})
+	input := &imagebuilder.GetImagePipelineInput{}
+
+	if v, ok := d.GetOk("arn"); ok {
+		input.ImagePipelineArn = aws.String(v.(string))
+	}
+
+	output, err := conn.GetImagePipeline(input)
 
 	if err != nil {
-		return fmt.Errorf("error reading Image Pipeline (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting Image Builder Image Pipeline: %w", err)
 	}
 
-	d.SetId(*resp.ImagePipeline.Arn)
-	d.Set("description", resp.ImagePipeline.Description)
-	d.Set("distribution_configuration_arn", resp.ImagePipeline.DistributionConfigurationArn)
-	d.Set("enhanced_image_metadata_enabled", resp.ImagePipeline.EnhancedImageMetadataEnabled)
-	d.Set("image_recipe_arn", resp.ImagePipeline.ImageRecipeArn)
-	d.Set("image_tests_configuration", flattenAwsImageBuilderTestConfiguration(resp.ImagePipeline.ImageTestsConfiguration))
-	d.Set("infrastructure_configuration_arn", resp.ImagePipeline.InfrastructureConfigurationArn)
-	d.Set("name", resp.ImagePipeline.Name)
-	d.Set("platform", resp.ImagePipeline.Platform)
-	if resp.ImagePipeline.Schedule != nil {
-		d.Set("schedule", flattenAwsImageBuilderPipelineSchedule(resp.ImagePipeline.Schedule))
+	if output == nil || output.ImagePipeline == nil {
+		return fmt.Errorf("error getting Image Builder Image Pipeline: empty response")
 	}
-	d.Set("status", resp.ImagePipeline.Status)
 
-	if err := d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(resp.ImagePipeline.Tags).IgnoreAws().IgnoreConfig(meta.(*AWSClient).IgnoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	imagePipeline := output.ImagePipeline
+
+	d.SetId(aws.StringValue(imagePipeline.Arn))
+	d.Set("arn", imagePipeline.Arn)
+	d.Set("date_created", imagePipeline.DateCreated)
+	d.Set("date_last_run", imagePipeline.DateLastRun)
+	d.Set("date_next_run", imagePipeline.DateNextRun)
+	d.Set("date_updated", imagePipeline.DateUpdated)
+	d.Set("description", imagePipeline.Description)
+	d.Set("distribution_configuration_arn", imagePipeline.DistributionConfigurationArn)
+	d.Set("enhanced_image_metadata_enabled", imagePipeline.EnhancedImageMetadataEnabled)
+	d.Set("image_recipe_arn", imagePipeline.ImageRecipeArn)
+
+	if imagePipeline.ImageTestsConfiguration != nil {
+		d.Set("image_tests_configuration", []interface{}{flattenImageBuilderImageTestsConfiguration(imagePipeline.ImageTestsConfiguration)})
+	} else {
+		d.Set("image_tests_configuration", nil)
 	}
+
+	d.Set("infrastructure_configuration_arn", imagePipeline.InfrastructureConfigurationArn)
+	d.Set("name", imagePipeline.Name)
+	d.Set("platform", imagePipeline.Platform)
+
+	if imagePipeline.Schedule != nil {
+		d.Set("schedule", []interface{}{flattenImageBuilderSchedule(imagePipeline.Schedule)})
+	} else {
+		d.Set("schedule", nil)
+	}
+
+	d.Set("status", imagePipeline.Status)
+	d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(imagePipeline.Tags).IgnoreAws().IgnoreConfig(meta.(*AWSClient).IgnoreTagsConfig).Map())
 
 	return nil
 }
