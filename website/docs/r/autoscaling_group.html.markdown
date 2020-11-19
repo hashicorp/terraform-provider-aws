@@ -134,6 +134,7 @@ resource "aws_autoscaling_group" "example" {
 
 ### Mixed Instances Policy with Instance level LaunchTemplateSpecification Overrides
 Some instance types might require a launch template with a different AMI (Graviton).
+
 ```hcl
 resource "aws_launch_template" "example" {
   name_prefix   = "example"
@@ -142,8 +143,8 @@ resource "aws_launch_template" "example" {
 }
 
 resource "aws_launch_template" "example2" {
-  name_prefix   = "example2"
-  image_id      = data.aws_ami.example2.id
+  name_prefix = "example2"
+  image_id    = data.aws_ami.example2.id
 }
 
 resource "aws_autoscaling_group" "example" {
@@ -164,7 +165,7 @@ resource "aws_autoscaling_group" "example" {
       }
 
       override {
-        instance_type     = "c6g.large"
+        instance_type = "c6g.large"
         launch_template_specification {
           launch_template_id = aws_launch_template.example2.id
         }
