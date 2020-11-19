@@ -247,6 +247,31 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 409600),
 			},
+			"partition_index": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 3,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"index_name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 255),
+						},
+						"keys": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MinItems: 1,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"index_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -266,9 +291,10 @@ func resourceAwsGlueCatalogTableCreate(d *schema.ResourceData, meta interface{})
 	name := d.Get("name").(string)
 
 	input := &glue.CreateTableInput{
-		CatalogId:    aws.String(catalogID),
-		DatabaseName: aws.String(dbName),
-		TableInput:   expandGlueTableInput(d),
+		CatalogId:        aws.String(catalogID),
+		DatabaseName:     aws.String(dbName),
+		TableInput:       expandGlueTableInput(d),
+		PartitionIndexes: expandGlueTablePartitionIndexes(d.Get("partition_index").([]interface{})),
 	}
 
 	log.Printf("[DEBUG] Glue catalog table input: %#v", input)
@@ -339,6 +365,22 @@ func resourceAwsGlueCatalogTableRead(d *schema.ResourceData, meta interface{}) e
 
 	if err := d.Set("parameters", aws.StringValueMap(table.Parameters)); err != nil {
 		return fmt.Errorf("error setting parameters: %w", err)
+	}
+
+	partIndexInput := &glue.GetPartitionIndexesInput{
+		CatalogId:    out.Table.CatalogId,
+		TableName:    out.Table.Name,
+		DatabaseName: out.Table.DatabaseName,
+	}
+	partOut, err := conn.GetPartitionIndexes(partIndexInput)
+	if err != nil {
+		return fmt.Errorf("error getting Glue Partition Indexes: %w", err)
+	}
+
+	if partOut != nil && len(partOut.PartitionIndexDescriptorList) > 0 {
+		if err := d.Set("partition_index", flattenGluePartitionIndexes(partOut.PartitionIndexDescriptorList)); err != nil {
+			return fmt.Errorf("error setting partition_index: %w", err)
+		}
 	}
 
 	return nil
@@ -427,6 +469,25 @@ func expandGlueTableInput(d *schema.ResourceData) *glue.TableInput {
 	}
 
 	return tableInput
+}
+
+func expandGlueTablePartitionIndexes(a []interface{}) []*glue.PartitionIndex {
+	partitionIndexes := make([]*glue.PartitionIndex, 0, len(a))
+
+	for _, m := range a {
+		partitionIndexes = append(partitionIndexes, expandGlueTablePartitionIndex(m.(map[string]interface{})))
+	}
+
+	return partitionIndexes
+}
+
+func expandGlueTablePartitionIndex(m map[string]interface{}) *glue.PartitionIndex {
+	partitionIndex := &glue.PartitionIndex{
+		IndexName: aws.String(m["index_name"].(string)),
+		Keys:      expandStringSet(m["keys"].(*schema.Set)),
+	}
+
+	return partitionIndex
 }
 
 func expandGlueStorageDescriptor(l []interface{}) *glue.StorageDescriptor {
@@ -644,6 +705,43 @@ func flattenGlueColumn(c *glue.Column) map[string]interface{} {
 	}
 
 	return column
+}
+
+func flattenGluePartitionIndexes(cs []*glue.PartitionIndexDescriptor) []map[string]interface{} {
+	partitionIndexSlice := make([]map[string]interface{}, len(cs))
+	if len(cs) > 0 {
+		for i, v := range cs {
+			partitionIndexSlice[i] = flattenGluePartitionIndex(v)
+		}
+	}
+
+	return partitionIndexSlice
+}
+
+func flattenGluePartitionIndex(c *glue.PartitionIndexDescriptor) map[string]interface{} {
+	partitionIndex := make(map[string]interface{})
+
+	if c == nil {
+		return partitionIndex
+	}
+
+	if v := aws.StringValue(c.IndexName); v != "" {
+		partitionIndex["index_name"] = v
+	}
+
+	if v := aws.StringValue(c.IndexStatus); v != "" {
+		partitionIndex["index_status"] = v
+	}
+
+	if c.Keys != nil {
+		names := make([]*string, 0, len(c.Keys))
+		for _, key := range c.Keys {
+			names = append(names, key.Name)
+		}
+		partitionIndex["keys"] = flattenStringSet(names)
+	}
+
+	return partitionIndex
 }
 
 func flattenGlueSerDeInfo(s *glue.SerDeInfo) []map[string]interface{} {
