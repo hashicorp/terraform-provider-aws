@@ -231,8 +231,8 @@ func resourceAwsRoute53Record() *schema.Resource {
 			"records": {
 				Type:          schema.TypeSet,
 				ConflictsWith: []string{"alias"},
-				Optional: true,
-				Set:      schema.HashString,
+				Optional:      true,
+				Set:           schema.HashString,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.Any(
