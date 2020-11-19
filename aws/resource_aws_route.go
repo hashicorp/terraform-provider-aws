@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -227,11 +228,11 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		_, err = conn.CreateRoute(input)
 
-		if isAWSErr(err, tfec2.ErrCodeInvalidParameterException, "") {
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidParameterException) {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, tfec2.ErrCodeInvalidTransitGatewayIDNotFound, "") {
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidTransitGatewayIDNotFound) {
 			return resource.RetryableError(err)
 		}
 
@@ -307,7 +308,7 @@ func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 
 	route, err := routeFinder(conn, routeTableID, destination)
 
-	if isAWSErr(err, tfec2.ErrCodeInvalidRouteTableIDNotFound, "") {
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteTableIDNotFound) {
 		log.Printf("[WARN] Route Table (%s) not found, removing from state", routeTableID)
 		d.SetId("")
 		return nil
@@ -440,16 +441,16 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		if isAWSErr(err, tfec2.ErrCodeInvalidRouteNotFound, "") {
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteNotFound) {
 			return nil
 		}
 
 		// Local routes (which may have been imported) cannot be deleted. Remove from state.
-		if isAWSErr(err, tfec2.ErrCodeInvalidParameterValue, "cannot remove local route") {
+		if tfawserr.ErrMessageContains(err, tfec2.ErrCodeInvalidParameterValue, "cannot remove local route") {
 			return nil
 		}
 
-		if isAWSErr(err, tfec2.ErrCodeInvalidParameterException, "") {
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidParameterException) {
 			return resource.RetryableError(err)
 		}
 
@@ -461,7 +462,7 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.DeleteRoute(input)
 	}
 
-	if isAWSErr(err, tfec2.ErrCodeInvalidRouteNotFound, "") {
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteNotFound) {
 		return nil
 	}
 
