@@ -2246,12 +2246,12 @@ func TestBucketRegionalDomainName(t *testing.T) {
 		{
 			Region:           endpoints.UsWest2RegionID,
 			ExpectedErrCount: 0,
-			ExpectedOutput:   bucket + fmt.Sprintf(".s3.%s.amazonaws.com", endpoints.UsWest2RegionID),
+			ExpectedOutput:   bucket + fmt.Sprintf(".s3.%s.%s", endpoints.UsWest2RegionID, testAccGetPartitionDNSSuffix()),
 		},
 		{
 			Region:           endpoints.UsGovWest1RegionID,
 			ExpectedErrCount: 0,
-			ExpectedOutput:   bucket + fmt.Sprintf(".s3.%s.amazonaws.com", endpoints.UsGovWest1RegionID),
+			ExpectedOutput:   bucket + fmt.Sprintf(".s3.%s.%s", endpoints.UsGovWest1RegionID, testAccGetPartitionDNSSuffix()),
 		},
 		{
 			Region:           endpoints.CnNorth1RegionID,
@@ -2287,7 +2287,7 @@ func TestWebsiteEndpoint(t *testing.T) {
 				region:    endpoints.UsEast1RegionID,
 			},
 			LocationConstraint: "",
-			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.amazonaws.com", endpoints.UsEast1RegionID),
+			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", endpoints.UsEast1RegionID, testAccGetPartitionDNSSuffix()),
 		},
 		{
 			AWSClient: &AWSClient{
@@ -2295,7 +2295,7 @@ func TestWebsiteEndpoint(t *testing.T) {
 				region:    endpoints.UsWest2RegionID,
 			},
 			LocationConstraint: endpoints.UsWest2RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.amazonaws.com", endpoints.UsWest2RegionID),
+			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", endpoints.UsWest2RegionID, testAccGetPartitionDNSSuffix()),
 		},
 		{
 			AWSClient: &AWSClient{
@@ -2303,7 +2303,7 @@ func TestWebsiteEndpoint(t *testing.T) {
 				region:    endpoints.UsWest1RegionID,
 			},
 			LocationConstraint: endpoints.UsWest1RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.amazonaws.com", endpoints.UsWest1RegionID),
+			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", endpoints.UsWest1RegionID, testAccGetPartitionDNSSuffix()),
 		},
 		{
 			AWSClient: &AWSClient{
@@ -2311,7 +2311,7 @@ func TestWebsiteEndpoint(t *testing.T) {
 				region:    endpoints.EuWest1RegionID,
 			},
 			LocationConstraint: endpoints.EuWest1RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.amazonaws.com", endpoints.EuWest1RegionID),
+			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", endpoints.EuWest1RegionID, testAccGetPartitionDNSSuffix()),
 		},
 		{
 			AWSClient: &AWSClient{
@@ -2319,14 +2319,15 @@ func TestWebsiteEndpoint(t *testing.T) {
 				region:    endpoints.EuWest3RegionID,
 			},
 			LocationConstraint: endpoints.EuWest3RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.amazonaws.com", endpoints.EuWest3RegionID)},
+			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.%s", endpoints.EuWest3RegionID, testAccGetPartitionDNSSuffix()),
+		},
 		{
 			AWSClient: &AWSClient{
 				dnsSuffix: "amazonaws.com",
 				region:    endpoints.EuCentral1RegionID,
 			},
 			LocationConstraint: endpoints.EuCentral1RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.amazonaws.com", endpoints.EuCentral1RegionID),
+			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.%s", endpoints.EuCentral1RegionID, testAccGetPartitionDNSSuffix()),
 		},
 		{
 			AWSClient: &AWSClient{
@@ -2334,7 +2335,7 @@ func TestWebsiteEndpoint(t *testing.T) {
 				region:    endpoints.ApSouth1RegionID,
 			},
 			LocationConstraint: endpoints.ApSouth1RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.amazonaws.com", endpoints.ApSouth1RegionID),
+			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.%s", endpoints.ApSouth1RegionID, testAccGetPartitionDNSSuffix()),
 		},
 		{
 			AWSClient: &AWSClient{
@@ -2342,7 +2343,7 @@ func TestWebsiteEndpoint(t *testing.T) {
 				region:    endpoints.ApSoutheast1RegionID,
 			},
 			LocationConstraint: endpoints.ApSoutheast1RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.amazonaws.com", endpoints.ApSoutheast1RegionID),
+			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", endpoints.ApSoutheast1RegionID, testAccGetPartitionDNSSuffix()),
 		},
 		{
 			AWSClient: &AWSClient{
@@ -2350,7 +2351,7 @@ func TestWebsiteEndpoint(t *testing.T) {
 				region:    endpoints.ApNortheast1RegionID,
 			},
 			LocationConstraint: endpoints.ApNortheast1RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.amazonaws.com", endpoints.ApNortheast1RegionID),
+			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", endpoints.ApNortheast1RegionID, testAccGetPartitionDNSSuffix()),
 		},
 		{
 			AWSClient: &AWSClient{
@@ -2358,7 +2359,7 @@ func TestWebsiteEndpoint(t *testing.T) {
 				region:    endpoints.ApSoutheast2RegionID,
 			},
 			LocationConstraint: endpoints.ApSoutheast2RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.amazonaws.com", endpoints.ApSoutheast2RegionID),
+			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", endpoints.ApSoutheast2RegionID, testAccGetPartitionDNSSuffix()),
 		},
 		{
 			AWSClient: &AWSClient{
@@ -2366,7 +2367,7 @@ func TestWebsiteEndpoint(t *testing.T) {
 				region:    endpoints.ApNortheast2RegionID,
 			},
 			LocationConstraint: endpoints.ApNortheast2RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.amazonaws.com", endpoints.ApNortheast2RegionID),
+			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.%s", endpoints.ApNortheast2RegionID, testAccGetPartitionDNSSuffix()),
 		},
 		{
 			AWSClient: &AWSClient{
@@ -2374,7 +2375,7 @@ func TestWebsiteEndpoint(t *testing.T) {
 				region:    endpoints.SaEast1RegionID,
 			},
 			LocationConstraint: endpoints.SaEast1RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.amazonaws.com", endpoints.SaEast1RegionID),
+			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", endpoints.SaEast1RegionID, testAccGetPartitionDNSSuffix()),
 		},
 		{
 			AWSClient: &AWSClient{
@@ -2382,7 +2383,7 @@ func TestWebsiteEndpoint(t *testing.T) {
 				region:    endpoints.UsGovEast1RegionID,
 			},
 			LocationConstraint: endpoints.UsGovEast1RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.amazonaws.com", endpoints.UsGovEast1RegionID),
+			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.%s", endpoints.UsGovEast1RegionID, testAccGetPartitionDNSSuffix()),
 		},
 		{
 			AWSClient: &AWSClient{
@@ -2390,7 +2391,7 @@ func TestWebsiteEndpoint(t *testing.T) {
 				region:    endpoints.UsGovWest1RegionID,
 			},
 			LocationConstraint: endpoints.UsGovWest1RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.amazonaws.com", endpoints.UsGovWest1RegionID),
+			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", endpoints.UsGovWest1RegionID, testAccGetPartitionDNSSuffix()),
 		},
 		{
 			AWSClient: &AWSClient{
