@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
 )
 
 func resourceAwsStorageGatewayNfsFileShare() *schema.Resource {
@@ -38,7 +40,13 @@ func resourceAwsStorageGatewayNfsFileShare() *schema.Resource {
 				Required: true,
 				MinItems: 1,
 				MaxItems: 100,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.Any(
+						validateIpv4CIDRNetworkAddress,
+						validation.IsIPv4Address,
+					),
+				},
 			},
 			"default_storage_class": {
 				Type:     schema.TypeString,
@@ -67,9 +75,10 @@ func resourceAwsStorageGatewayNfsFileShare() *schema.Resource {
 				Default:  true,
 			},
 			"kms_encrypted": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:         schema.TypeBool,
+				Optional:     true,
+				Default:      false,
+				RequiredWith: []string{"kms_key_arn"},
 			},
 			"kms_key_arn": {
 				Type:         schema.TypeString,
@@ -89,26 +98,28 @@ func resourceAwsStorageGatewayNfsFileShare() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"directory_mode": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "0777",
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "0777",
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-7]{4}$`), ""),
 						},
 						"file_mode": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "0666",
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "0666",
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-7]{4}$`), ""),
 						},
 						"group_id": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      65534,
-							ValidateFunc: validation.IntAtLeast(0),
+							ValidateFunc: validation.IntBetween(0, 4294967294),
 						},
 						"owner_id": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      65534,
-							ValidateFunc: validation.IntAtLeast(0),
+							ValidateFunc: validation.IntBetween(0, 4294967294),
 						},
 					},
 				},
@@ -169,6 +180,15 @@ func resourceAwsStorageGatewayNfsFileShare() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
+			"notification_policy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "{}",
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
+					validation.StringLenBetween(2, 100),
+				),
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -198,6 +218,10 @@ func resourceAwsStorageGatewayNfsFileShareCreate(d *schema.ResourceData, meta in
 		input.KMSKey = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("notification_policy"); ok {
+		input.NotificationPolicy = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("file_share_name"); ok {
 		input.FileShareName = aws.String(v.(string))
 	}
@@ -214,17 +238,8 @@ func resourceAwsStorageGatewayNfsFileShareCreate(d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(output.FileShareARN))
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"CREATING", "MISSING"},
-		Target:     []string{"AVAILABLE"},
-		Refresh:    storageGatewayNfsFileShareRefreshFunc(d.Id(), conn),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("error waiting for Storage Gateway NFS File Share creation: %w", err)
+	if _, err = waiter.NfsFileShareAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for Storage Gateway NFS File Share (%q) to be Available: %w", d.Id(), err)
 	}
 
 	return resourceAwsStorageGatewayNfsFileShareRead(d, meta)
@@ -287,6 +302,7 @@ func resourceAwsStorageGatewayNfsFileShareRead(d *schema.ResourceData, meta inte
 	d.Set("requester_pays", fileshare.RequesterPays)
 	d.Set("role_arn", fileshare.Role)
 	d.Set("squash", fileshare.Squash)
+	d.Set("notification_policy", fileshare.NotificationPolicy)
 
 	if err := d.Set("tags", keyvaluetags.StoragegatewayKeyValueTags(fileshare.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
@@ -307,7 +323,7 @@ func resourceAwsStorageGatewayNfsFileShareUpdate(d *schema.ResourceData, meta in
 
 	if d.HasChanges("client_list", "default_storage_class", "guess_mime_type_enabled", "kms_encrypted",
 		"nfs_file_share_defaults", "object_acl", "read_only", "requester_pays", "squash", "kms_key_arn",
-		"cache_attributes", "file_share_name") {
+		"cache_attributes", "file_share_name", "notification_policy") {
 
 		input := &storagegateway.UpdateNFSFileShareInput{
 			ClientList:           expandStringSet(d.Get("client_list").(*schema.Set)),
@@ -326,6 +342,10 @@ func resourceAwsStorageGatewayNfsFileShareUpdate(d *schema.ResourceData, meta in
 			input.KMSKey = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("notification_policy"); ok {
+			input.NotificationPolicy = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("file_share_name"); ok {
 			input.FileShareName = aws.String(v.(string))
 		}
@@ -340,17 +360,8 @@ func resourceAwsStorageGatewayNfsFileShareUpdate(d *schema.ResourceData, meta in
 			return fmt.Errorf("error updating Storage Gateway NFS File Share: %w", err)
 		}
 
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"UPDATING"},
-			Target:     []string{"AVAILABLE"},
-			Refresh:    storageGatewayNfsFileShareRefreshFunc(d.Id(), conn),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			Delay:      5 * time.Second,
-			MinTimeout: 5 * time.Second,
-		}
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf("error waiting for Storage Gateway NFS File Share update: %w", err)
+		if _, err = waiter.NfsFileShareAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for Storage Gateway NFS File Share (%q) to be Available: %w", d.Id(), err)
 		}
 	}
 
@@ -373,49 +384,14 @@ func resourceAwsStorageGatewayNfsFileShareDelete(d *schema.ResourceData, meta in
 		return fmt.Errorf("error deleting Storage Gateway NFS File Share: %w", err)
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:        []string{"AVAILABLE", "DELETING", "FORCE_DELETING"},
-		Target:         []string{"MISSING"},
-		Refresh:        storageGatewayNfsFileShareRefreshFunc(d.Id(), conn),
-		Timeout:        d.Timeout(schema.TimeoutDelete),
-		Delay:          5 * time.Second,
-		MinTimeout:     5 * time.Second,
-		NotFoundChecks: 1,
-	}
-	_, err = stateConf.WaitForState()
-	if err != nil {
+	if _, err = waiter.NfsFileShareNotFound(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		if isResourceNotFoundError(err) {
 			return nil
 		}
-		return fmt.Errorf("error waiting for Storage Gateway NFS File Share deletion: %w", err)
+		return fmt.Errorf("error waiting for Storage Gateway NFS File Share (%q) to be deleted: %w", d.Id(), err)
 	}
 
 	return nil
-}
-
-func storageGatewayNfsFileShareRefreshFunc(fileShareArn string, conn *storagegateway.StorageGateway) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &storagegateway.DescribeNFSFileSharesInput{
-			FileShareARNList: []*string{aws.String(fileShareArn)},
-		}
-
-		log.Printf("[DEBUG] Reading Storage Gateway NFS File Share: %s", input)
-		output, err := conn.DescribeNFSFileShares(input)
-		if err != nil {
-			if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
-				return nil, "MISSING", nil
-			}
-			return nil, "ERROR", fmt.Errorf("error reading Storage Gateway NFS File Share: %w", err)
-		}
-
-		if output == nil || len(output.NFSFileShareInfoList) == 0 || output.NFSFileShareInfoList[0] == nil {
-			return nil, "MISSING", nil
-		}
-
-		fileshare := output.NFSFileShareInfoList[0]
-
-		return fileshare, aws.StringValue(fileshare.FileShareStatus), nil
-	}
 }
 
 func expandStorageGatewayNfsFileShareDefaults(l []interface{}) *storagegateway.NFSFileShareDefaults {
