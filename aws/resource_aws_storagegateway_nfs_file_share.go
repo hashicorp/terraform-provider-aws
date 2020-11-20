@@ -75,10 +75,9 @@ func resourceAwsStorageGatewayNfsFileShare() *schema.Resource {
 				Default:  true,
 			},
 			"kms_encrypted": {
-				Type:         schema.TypeBool,
-				Optional:     true,
-				Default:      false,
-				RequiredWith: []string{"kms_key_arn"},
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"kms_key_arn": {
 				Type:         schema.TypeString,
