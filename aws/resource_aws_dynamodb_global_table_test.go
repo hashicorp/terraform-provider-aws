@@ -15,7 +15,6 @@ import (
 )
 
 func TestAccAWSDynamoDbGlobalTable_basic(t *testing.T) {
-	var providers []*schema.Provider
 	resourceName := "aws_dynamodb_global_table.test"
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
@@ -23,10 +22,9 @@ func TestAccAWSDynamoDbGlobalTable_basic(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSDynamodbGlobalTable(t)
-			testAccAlternateRegionPreCheck(t)
 			testAccDynamoDBGlobalTablePreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsDynamoDbGlobalTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -68,11 +66,10 @@ func TestAccAWSDynamoDbGlobalTable_multipleRegions(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSDynamodbGlobalTable(t)
-			testAccMultipleRegionsPreCheck(t)
-			testAccAlternateRegionPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
 			testAccDynamoDBGlobalTablePreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDynamoDbGlobalTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -272,16 +269,14 @@ resource "aws_dynamodb_global_table" "test" {
 }
 
 func testAccDynamoDbGlobalTableConfig_invalidName(tableName string) string {
-	return composeConfig(testAccAlternateRegionProviderConfig(), fmt.Sprintf(`
-data "aws_region" "alternate" {
-  provider = "awsalternate"
-}
+	return composeConfig(fmt.Sprintf(`
+data "aws_region" "current" {}
 
 resource "aws_dynamodb_global_table" "test" {
   name = "%s"
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = data.aws_region.current.name
   }
 }
 `, tableName))

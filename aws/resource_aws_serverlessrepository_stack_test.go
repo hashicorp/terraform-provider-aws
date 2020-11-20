@@ -31,11 +31,11 @@ func TestAccAwsServerlessRepositoryStack_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerlessRepositoryStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "name", stackName),
-					resource.TestCheckResourceAttr(resourceName, "application_id", "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"),
+					testAccCheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "application_id", "serverlessrepo", "applications/SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttrSet(resourceName, "semantic_version"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.functionName", fmt.Sprintf("func-%s", stackName)),
-					resource.TestCheckResourceAttr(resourceName, "parameters.endpoint", "secretsmanager.us-west-2.amazonaws.com"), // FIXME
+					testAccCheckResourceAttrRegionalHostnameService(resourceName, "parameters.endpoint", "secretsmanager"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "outputs.RotationLambdaARN"),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "2"),
@@ -76,8 +76,8 @@ func TestAccAwsServerlessRepositoryStack_versioned(t *testing.T) {
 	stackName := acctest.RandomWithPrefix("tf-acc-test")
 
 	const (
-		version1 = "1.0.15"
-		version2 = "1.1.78"
+		version1 = "1.0.13"
+		version2 = "1.1.36"
 	)
 
 	resourceName := "aws_serverlessrepository_stack.postgres-rotator"
@@ -124,7 +124,7 @@ func TestAccAwsServerlessRepositoryStack_paired(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := acctest.RandomWithPrefix("tf-acc-test")
 
-	const version = "1.1.78"
+	const version = "1.1.36"
 
 	resourceName := "aws_serverlessrepository_stack.postgres-rotator"
 
@@ -203,7 +203,7 @@ func TestAccAwsServerlessRepositoryStack_update(t *testing.T) {
 				Config: testAccAWSServerlessRepositoryStackConfig_updateInitial(stackName, initialName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerlessRepositoryStackExists(resourceName, &stack),
-					resource.TestCheckResourceAttr(resourceName, "application_id", "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"),
+					testAccCheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "application_id", "serverlessrepo", "applications/SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.functionName", initialName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key", "value"),
@@ -248,10 +248,12 @@ func testAccCheckServerlessRepositoryStackExists(n string, stack *cloudformation
 }
 
 func testAccAwsServerlessRepositoryStackConfig(stackName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication,
+		fmt.Sprintf(`
 resource "aws_serverlessrepository_stack" "postgres-rotator" {
   name           = "%[1]s"
-  application_id = "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
+  application_id = local.postgres_single_user_rotator_arn
   capabilities = [
     "CAPABILITY_IAM",
     "CAPABILITY_RESOURCE_POLICY",
@@ -262,16 +264,17 @@ resource "aws_serverlessrepository_stack" "postgres-rotator" {
   }
 }
 
-data "aws_partition" "current" {}
 data "aws_region" "current" {}
-`, stackName)
+`, stackName))
 }
 
 func testAccAWSServerlessRepositoryStackConfig_updateInitial(stackName, functionName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication,
+		fmt.Sprintf(`
 resource "aws_serverlessrepository_stack" "postgres-rotator" {
   name           = "%[1]s"
-  application_id = "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
+  application_id = local.postgres_single_user_rotator_arn
   capabilities = [
     "CAPABILITY_IAM",
     "CAPABILITY_RESOURCE_POLICY",
@@ -285,16 +288,17 @@ resource "aws_serverlessrepository_stack" "postgres-rotator" {
   }
 }
 
-data "aws_partition" "current" {}
 data "aws_region" "current" {}
-`, stackName, functionName)
+`, stackName, functionName))
 }
 
 func testAccAWSServerlessRepositoryStackConfig_updateUpdated(stackName, functionName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication,
+		fmt.Sprintf(`
 resource "aws_serverlessrepository_stack" "postgres-rotator" {
   name           = "%[1]s"
-  application_id = "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
+  application_id = local.postgres_single_user_rotator_arn
   capabilities = [
     "CAPABILITY_IAM",
     "CAPABILITY_RESOURCE_POLICY",
@@ -308,16 +312,17 @@ resource "aws_serverlessrepository_stack" "postgres-rotator" {
   }
 }
 
-data "aws_partition" "current" {}
 data "aws_region" "current" {}
-`, stackName, functionName)
+`, stackName, functionName))
 }
 
 func testAccAWSServerlessRepositoryStackConfig_versioned(stackName, version string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication,
+		fmt.Sprintf(`
 resource "aws_serverlessrepository_stack" "postgres-rotator" {
   name             = "%[1]s"
-  application_id   = "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
+  application_id   = local.postgres_single_user_rotator_arn
   semantic_version = "%[2]s"
   parameters = {
     functionName = "func-%[1]s"
@@ -325,16 +330,17 @@ resource "aws_serverlessrepository_stack" "postgres-rotator" {
   }
 }
 
-data "aws_partition" "current" {}
 data "aws_region" "current" {}
-`, stackName, version)
+`, stackName, version))
 }
 
 func testAccAWSServerlessRepositoryStackConfig_versioned2(stackName, version string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication,
+		fmt.Sprintf(`
 resource "aws_serverlessrepository_stack" "postgres-rotator" {
   name           = "%[1]s"
-  application_id = "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
+  application_id = local.postgres_single_user_rotator_arn
   capabilities = [
     "CAPABILITY_IAM",
     "CAPABILITY_RESOURCE_POLICY",
@@ -346,13 +352,14 @@ resource "aws_serverlessrepository_stack" "postgres-rotator" {
   }
 }
 
-data "aws_partition" "current" {}
 data "aws_region" "current" {}
-`, stackName, version)
+`, stackName, version))
 }
 
 func testAccAWSServerlessRepositoryStackConfig_versionedPaired(stackName, version string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication,
+		fmt.Sprintf(`
 resource "aws_serverlessrepository_stack" "postgres-rotator" {
   name             = "%[1]s"
   application_id   = data.aws_serverlessrepository_application.secrets_manager_postgres_single_user_rotator.application_id
@@ -365,20 +372,21 @@ resource "aws_serverlessrepository_stack" "postgres-rotator" {
 }
 
 data "aws_serverlessrepository_application" "secrets_manager_postgres_single_user_rotator" {
-  application_id   = "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
+  application_id   = local.postgres_single_user_rotator_arn
   semantic_version = "%[2]s"
 }
 
-data "aws_partition" "current" {}
 data "aws_region" "current" {}
-`, stackName, version)
+`, stackName, version))
 }
 
 func testAccAwsServerlessRepositoryStackConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication,
+		fmt.Sprintf(`
 resource "aws_serverlessrepository_stack" "postgres-rotator" {
   name           = "%[1]s"
-  application_id = "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
+  application_id = local.postgres_single_user_rotator_arn
   capabilities = [
     "CAPABILITY_IAM",
     "CAPABILITY_RESOURCE_POLICY",
@@ -392,16 +400,17 @@ resource "aws_serverlessrepository_stack" "postgres-rotator" {
   }
 }
 
-data "aws_partition" "current" {}
 data "aws_region" "current" {}
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccAwsServerlessRepositoryStackConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication,
+		fmt.Sprintf(`
 resource "aws_serverlessrepository_stack" "postgres-rotator" {
   name           = "%[1]s"
-  application_id = "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
+  application_id = local.postgres_single_user_rotator_arn
   capabilities = [
     "CAPABILITY_IAM",
     "CAPABILITY_RESOURCE_POLICY",
@@ -416,7 +425,26 @@ resource "aws_serverlessrepository_stack" "postgres-rotator" {
   }
 }
 
-data "aws_partition" "current" {}
 data "aws_region" "current" {}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
+
+const testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication = `
+data "aws_partition" "current" {}
+
+locals {
+  postgres_single_user_rotator_arn = "arn:${data.aws_partition.current.partition}:serverlessrepo:${local.application_region}:${local.application_account}:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
+
+  application_region  = local.security_manager_regions[data.aws_partition.current.partition]
+  application_account = local.security_manager_accounts[data.aws_partition.current.partition]
+
+  security_manager_regions = {
+    "aws"        = "us-east-1",
+    "aws-us-gov" = "us-gov-west-1",
+  }
+  security_manager_accounts = {
+    "aws"        = "297356227824",
+    "aws-us-gov" = "023102451235",
+  }
+}
+`

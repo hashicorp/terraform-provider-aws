@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"testing"
 
@@ -69,12 +68,6 @@ func testSweepRoute53QueryLogs(region string) error {
 }
 
 func TestAccAWSRoute53QueryLog_basic(t *testing.T) {
-	// The underlying resources are sensitive to where they are located
-	// Use us-east-1 for testing
-	oldRegion := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldRegion)
-
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 	resourceName := "aws_route53_query_log.test"
 	route53ZoneResourceName := "aws_route53_zone.test"
@@ -82,9 +75,9 @@ func TestAccAWSRoute53QueryLog_basic(t *testing.T) {
 
 	var queryLoggingConfig route53.QueryLoggingConfig
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRoute53QueryLogDestroy,
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckRoute53QueryLog(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckRoute53QueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName),
@@ -105,7 +98,7 @@ func TestAccAWSRoute53QueryLog_basic(t *testing.T) {
 
 func testAccCheckRoute53QueryLogExists(pr string, queryLoggingConfig *route53.QueryLoggingConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).r53conn
+		conn := testAccProviderRoute53QueryLog.Meta().(*AWSClient).r53conn
 		rs, ok := s.RootModule().Resources[pr]
 		if !ok {
 			return fmt.Errorf("Not found: %s", pr)
@@ -132,7 +125,7 @@ func testAccCheckRoute53QueryLogExists(pr string, queryLoggingConfig *route53.Qu
 }
 
 func testAccCheckRoute53QueryLogDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).r53conn
+	conn := testAccProviderRoute53QueryLog.Meta().(*AWSClient).r53conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_query_log" {
@@ -155,7 +148,9 @@ func testAccCheckRoute53QueryLogDestroy(s *terraform.State) error {
 }
 
 func testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccRoute53QueryLogRegionProviderConfig(),
+		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name              = "/aws/route53/${aws_route53_zone.test.name}"
   retention_in_days = 1
@@ -194,5 +189,5 @@ resource "aws_route53_query_log" "test" {
   cloudwatch_log_group_arn = aws_cloudwatch_log_group.test.arn
   zone_id                  = aws_route53_zone.test.zone_id
 }
-`, rName)
+`, rName))
 }

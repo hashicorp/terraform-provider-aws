@@ -55,6 +55,12 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(sagemaker.InstanceType_Values(), false),
 			},
+			"additional_code_repositories": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 3,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 
 			"volume_size": {
 				Type:     schema.TypeInt,
@@ -108,7 +114,14 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
+			"url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"network_interface_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -156,6 +169,10 @@ func resourceAwsSagemakerNotebookInstanceCreate(d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("tags"); ok {
 		createOpts.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SagemakerTags()
+	}
+
+	if v, ok := d.GetOk("additional_code_repositories"); ok && v.(*schema.Set).Len() > 0 {
+		createOpts.AdditionalCodeRepositories = expandStringSet(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] sagemaker notebook instance create config: %#v", *createOpts)
@@ -236,6 +253,18 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error setting default_code_repository for sagemaker notebook instance (%s): %s", d.Id(), err)
 	}
 
+	if err := d.Set("url", notebookInstance.Url); err != nil {
+		return fmt.Errorf("error setting url for sagemaker notebook instance (%s): %w", d.Id(), err)
+	}
+
+	if err := d.Set("network_interface_id", notebookInstance.NetworkInterfaceId); err != nil {
+		return fmt.Errorf("error setting network_interface_id for sagemaker notebook instance (%s): %w", d.Id(), err)
+	}
+
+	if err := d.Set("additional_code_repositories", flattenStringSet(notebookInstance.AdditionalCodeRepositories)); err != nil {
+		return fmt.Errorf("error setting additional_code_repositories for sagemaker notebook instance (%s): %s", d.Id(), err)
+	}
+
 	tags, err := keyvaluetags.SagemakerListTags(conn, aws.StringValue(notebookInstance.NotebookInstanceArn))
 
 	if err != nil {
@@ -301,6 +330,15 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 
 	if d.HasChange("root_access") {
 		updateOpts.RootAccess = aws.String(d.Get("root_access").(string))
+		hasChanged = true
+	}
+
+	if d.HasChange("additional_code_repositories") {
+		if v, ok := d.GetOk("additional_code_repositories"); ok {
+			updateOpts.AdditionalCodeRepositories = expandStringSet(v.(*schema.Set))
+		} else {
+			updateOpts.DisassociateAdditionalCodeRepositories = aws.Bool(true)
+		}
 		hasChanged = true
 	}
 

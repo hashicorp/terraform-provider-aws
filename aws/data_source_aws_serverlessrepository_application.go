@@ -47,7 +47,7 @@ func dataSourceAwsServerlessRepositoryApplication() *schema.Resource {
 }
 
 func dataSourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).serverlessapprepositoryconn
+	conn := meta.(*AWSClient).serverlessapplicationrepositoryconn
 
 	applicationID := d.Get("application_id").(string)
 

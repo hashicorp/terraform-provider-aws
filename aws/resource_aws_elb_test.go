@@ -1411,7 +1411,7 @@ resource "aws_elb" "test" {
   }
 }
 
-# See https://github.com/terraform-providers/terraform-provider-aws/issues/2498
+# See https://github.com/hashicorp/terraform-provider-aws/issues/2498
 output "lb_name" {
   value = aws_elb.test.name
 }
