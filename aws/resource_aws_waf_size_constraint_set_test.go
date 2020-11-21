@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/waf/lister"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -109,13 +108,13 @@ func TestAccAWSWafSizeConstraintSet_basic(t *testing.T) {
 					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`sizeconstraintset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", sizeConstraintSet),
 					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
 						"comparison_operator": "EQ",
 						"field_to_match.#":    "1",
 						"size":                "4096",
 						"text_transformation": "NONE",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*.field_to_match.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*.field_to_match.*", map[string]string{
 						"data": "",
 						"type": "BODY",
 					}),
@@ -204,13 +203,13 @@ func TestAccAWSWafSizeConstraintSet_changeConstraints(t *testing.T) {
 					testAccCheckAWSWafSizeConstraintSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", setName),
 					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
 						"comparison_operator": "EQ",
 						"field_to_match.#":    "1",
 						"size":                "4096",
 						"text_transformation": "NONE",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*.field_to_match.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*.field_to_match.*", map[string]string{
 						"data": "",
 						"type": "BODY",
 					}),
@@ -222,13 +221,13 @@ func TestAccAWSWafSizeConstraintSet_changeConstraints(t *testing.T) {
 					testAccCheckAWSWafSizeConstraintSetExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", setName),
 					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
 						"comparison_operator": "GE",
 						"field_to_match.#":    "1",
 						"size":                "1024",
 						"text_transformation": "NONE",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*.field_to_match.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*.field_to_match.*", map[string]string{
 						"data": "",
 						"type": "BODY",
 					}),

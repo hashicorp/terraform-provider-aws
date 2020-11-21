@@ -1,12 +1,14 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,6 +24,11 @@ func resourceAwsMskCluster() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ForceNewIfChange("kafka_version", func(_ context.Context, old, new, meta interface{}) bool {
+				return new.(string) < old.(string)
+			}),
+		),
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -198,7 +205,6 @@ func resourceAwsMskCluster() *schema.Resource {
 			"kafka_version": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 			"number_of_broker_nodes": {
@@ -563,7 +569,7 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if d.HasChange("configuration_info") {
+	if d.HasChange("configuration_info") && !d.HasChange("kafka_version") {
 		input := &kafka.UpdateClusterConfigurationInput{
 			ClusterArn:        aws.String(d.Id()),
 			ConfigurationInfo: expandMskClusterConfigurationInfo(d.Get("configuration_info").([]interface{})),
@@ -584,6 +590,34 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 		if err := waitForMskClusterOperation(conn, clusterOperationARN); err != nil {
 			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		}
+	}
+
+	if d.HasChange("kafka_version") {
+		input := &kafka.UpdateClusterKafkaVersionInput{
+			ClusterArn:         aws.String(d.Id()),
+			CurrentVersion:     aws.String(d.Get("current_version").(string)),
+			TargetKafkaVersion: aws.String(d.Get("kafka_version").(string)),
+		}
+
+		if d.HasChange("configuration_info") {
+			input.ConfigurationInfo = expandMskClusterConfigurationInfo(d.Get("configuration_info").([]interface{}))
+		}
+
+		output, err := conn.UpdateClusterKafkaVersion(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating MSK Cluster (%s) kafka version: %w", d.Id(), err)
+		}
+
+		if output == nil {
+			return fmt.Errorf("error updating MSK Cluster (%s) kafka version: empty response", d.Id())
+		}
+
+		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
+
+		if err := waitForMskClusterOperation(conn, clusterOperationARN); err != nil {
+			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %w", d.Id(), clusterOperationARN, err)
 		}
 	}
 
@@ -1110,7 +1144,7 @@ func waitForMskClusterOperation(conn *kafka.Kafka, clusterOperationARN string) e
 		Pending: []string{"PENDING", "UPDATE_IN_PROGRESS"},
 		Target:  []string{"UPDATE_COMPLETE"},
 		Refresh: mskClusterOperationRefreshFunc(conn, clusterOperationARN),
-		Timeout: 60 * time.Minute,
+		Timeout: 2 * time.Hour,
 	}
 
 	log.Printf("[DEBUG] Waiting for MSK Cluster Operation (%s) completion", clusterOperationARN)
