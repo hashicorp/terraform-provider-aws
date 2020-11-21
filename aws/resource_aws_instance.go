@@ -576,6 +576,22 @@ func resourceAwsInstance() *schema.Resource {
 					},
 				},
 			},
+
+			"enclave_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Default:  false,
+							Optional: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -625,6 +641,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		CpuOptions:                        instanceOpts.CpuOptions,
 		HibernationOptions:                instanceOpts.HibernationOptions,
 		MetadataOptions:                   instanceOpts.MetadataOptions,
+		EnclaveOptions:                    instanceOpts.EnclaveOptions,
 		TagSpecifications:                 tagSpecifications,
 	}
 
@@ -778,6 +795,10 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("metadata_options", flattenEc2InstanceMetadataOptions(instance.MetadataOptions)); err != nil {
 		return fmt.Errorf("error setting metadata_options: %s", err)
+	}
+
+	if err := d.Set("enclave_options", flattenEc2EnclaveOptions(instance.EnclaveOptions)); err != nil {
+		return fmt.Errorf("error setting enclave_options: %s", err)
 	}
 
 	d.Set("ami", instance.ImageId)
@@ -2150,6 +2171,7 @@ type awsInstanceOpts struct {
 	CpuOptions                        *ec2.CpuOptionsRequest
 	HibernationOptions                *ec2.HibernationOptionsRequest
 	MetadataOptions                   *ec2.InstanceMetadataOptionsRequest
+	EnclaveOptions                    *ec2.EnclaveOptionsRequest
 }
 
 func buildAwsInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOpts, error) {
@@ -2162,6 +2184,7 @@ func buildAwsInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanc
 		ImageID:               aws.String(d.Get("ami").(string)),
 		InstanceType:          aws.String(instanceType),
 		MetadataOptions:       expandEc2InstanceMetadataOptions(d.Get("metadata_options").([]interface{})),
+		EnclaveOptions:        expandEc2EnclaveOptions(d.Get("enclave_options").([]interface{})),
 	}
 
 	// Set default cpu_credits as Unlimited for T3 instance type
@@ -2465,6 +2488,20 @@ func expandEc2InstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOpti
 	return opts
 }
 
+func expandEc2EnclaveOptions(l []interface{}) *ec2.EnclaveOptionsRequest {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	opts := &ec2.EnclaveOptionsRequest{
+		Enabled: aws.Bool(m["enabled"].(bool)),
+	}
+
+	return opts
+}
+
 //Expands an array of secondary Private IPs into a ec2 Private IP Address Spec
 func expandSecondaryPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddressSpecification {
 	specs := make([]*ec2.PrivateIpAddressSpecification, 0, len(ips))
@@ -2487,6 +2524,18 @@ func flattenEc2InstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse
 		"http_endpoint":               aws.StringValue(opts.HttpEndpoint),
 		"http_put_response_hop_limit": aws.Int64Value(opts.HttpPutResponseHopLimit),
 		"http_tokens":                 aws.StringValue(opts.HttpTokens),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenEc2EnclaveOptions(opts *ec2.EnclaveOptions) []interface{} {
+	if opts == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"enabled": aws.BoolValue(opts.Enabled),
 	}
 
 	return []interface{}{m}
