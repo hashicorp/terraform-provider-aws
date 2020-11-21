@@ -217,6 +217,8 @@ resource "aws_launch_template" "test" {
 
 data "aws_launch_template" "test" {
   name = aws_launch_template.test.name
+
+  depends_on = [aws_launch_template.test]
 }
 `, rName)
 }
@@ -232,6 +234,8 @@ data "aws_launch_template" "test" {
     name   = "launch-template-name"
     values = [aws_launch_template.test.name]
   }
+
+  depends_on = [aws_launch_template.test]
 }
 `, rName)
 }
@@ -252,6 +256,8 @@ data "aws_launch_template" "test" {
     Name     = aws_launch_template.test.tags["Name"]
     TestSeed = "%[2]d"
   }
+
+  depends_on = [aws_launch_template.test]
 }
 `, rName, rInt)
 }
@@ -270,6 +276,8 @@ resource "aws_launch_template" "test" {
 
 data "aws_launch_template" "test" {
   name = aws_launch_template.test.name
+
+  depends_on = [aws_launch_template.test]
 }
 `, rName)
 }
@@ -286,6 +294,8 @@ resource "aws_launch_template" "test" {
 
 data "aws_launch_template" "test" {
   name = aws_launch_template.test.name
+
+  depends_on = [aws_launch_template.test]
 }
 `, rName, associatePublicIPAddress)
 }
@@ -302,6 +312,8 @@ resource "aws_launch_template" "test" {
 
 data "aws_launch_template" "test" {
   name = aws_launch_template.test.name
+
+  depends_on = [aws_launch_template.test]
 }
 `, rName, deleteOnTermination)
 }
