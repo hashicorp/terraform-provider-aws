@@ -383,7 +383,7 @@ func resourceAwsStorageGatewayNfsFileShareDelete(d *schema.ResourceData, meta in
 		return fmt.Errorf("error deleting Storage Gateway NFS File Share: %w", err)
 	}
 
-	if _, err = waiter.NfsFileShareNotFound(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err = waiter.NfsFileShareDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		if isResourceNotFoundError(err) {
 			return nil
 		}

@@ -10,7 +10,7 @@ import (
 const (
 	StoredIscsiVolumeAvailableTimeout = 5 * time.Minute
 	NfsFileShareAvailableDelay        = 5 * time.Second
-	NfsFileShareNotFoundDelay         = 5 * time.Second
+	NfsFileShareDeletedDelay          = 5 * time.Second
 )
 
 // StoredIscsiVolumeAvailable waits for a StoredIscsiVolume to return Available
@@ -50,13 +50,13 @@ func NfsFileShareAvailable(conn *storagegateway.StorageGateway, fileShareArn str
 	return nil, err
 }
 
-func NfsFileShareNotFound(conn *storagegateway.StorageGateway, fileShareArn string, timeout time.Duration) (*storagegateway.NFSFileShareInfo, error) {
+func NfsFileShareDeleted(conn *storagegateway.StorageGateway, fileShareArn string, timeout time.Duration) (*storagegateway.NFSFileShareInfo, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:        []string{"AVAILABLE", "DELETING", "FORCE_DELETING"},
-		Target:         []string{"NotFound"},
+		Target:         []string{},
 		Refresh:        NfsFileShareStatus(conn, fileShareArn),
 		Timeout:        timeout,
-		Delay:          NfsFileShareNotFoundDelay,
+		Delay:          NfsFileShareDeletedDelay,
 		NotFoundChecks: 1,
 	}
 
