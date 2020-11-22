@@ -357,11 +357,14 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 * `input_template` - (Required) Template to customize data sent to the target. Must be valid JSON. To send a string value, the string value must include double quotes. Values must be escaped for both JSON and Terraform, e.g. `"\"Your string goes here.\\nA new line.\""`
 
 `dead_letter_config` support the following:
+
 * `arn` - (Required) The ARN of the SQS queue specified as the target for the dead-letter queue.
 
 `retry_policy` support the following:
+
 * `maximum_retry_attempts` - (Optional) The maximum amount of time, in seconds, to continue to make retry attempts.
 * `maximum_event_age_in_seconds` - (Optional) The maximum number of retry attempts to make before the request fails.
+
 ## Import
 
 EventBridge Targets can be imported using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used).
