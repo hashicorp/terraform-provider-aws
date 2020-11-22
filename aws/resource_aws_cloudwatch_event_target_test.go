@@ -252,12 +252,14 @@ func TestAccAWSCloudWatchEventTarget_GeneratedTargetId(t *testing.T) {
 func TestAccAWSCloudWatchEventTarget_full(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	kinesisStreamResourceName := "aws_kinesis_stream.test"
+	deadLetterSQSResourceName := "aws_sqs_queue.test"
+
 	var v events.Target
 
 	ruleName := acctest.RandomWithPrefix("tf-acc-cw-event-rule-full")
 	ssmDocumentName := acctest.RandomWithPrefix("tf_ssm_Document")
 	targetID := acctest.RandomWithPrefix("tf-acc-cw-target-full")
-	deadLetterConfigARN := acctest.RandomWithPrefix("tf_dlq_sqs_arn")
+
 	maximumRetryAttempts := acctest.RandIntRange(1, 10)
 	maximumEventAgeInSeconds := acctest.RandIntRange(60, 360)
 
@@ -267,7 +269,7 @@ func TestAccAWSCloudWatchEventTarget_full(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventTargetConfig_full(ruleName, targetID, ssmDocumentName, deadLetterConfigARN, maximumRetryAttempts, maximumEventAgeInSeconds),
+				Config: testAccAWSCloudWatchEventTargetConfig_full(ruleName, targetID, ssmDocumentName, maximumRetryAttempts, maximumEventAgeInSeconds),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
@@ -275,7 +277,9 @@ func TestAccAWSCloudWatchEventTarget_full(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "arn", kinesisStreamResourceName, "arn"),
 					testAccCheckResourceAttrEquivalentJSON(resourceName, "input", `{"source": ["aws.cloudtrail"]}`),
 					resource.TestCheckResourceAttr(resourceName, "input_path", ""),
-					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.0.arn", deadLetterConfigARN),
+					resource.TestCheckResourceAttrPair(resourceName, "dead_letter_config.0.arn", deadLetterSQSResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "retry_policy.0.maximum_retry_attempts", fmt.Sprint(maximumRetryAttempts)),
+					resource.TestCheckResourceAttr(resourceName, "retry_policy.0.maximum_event_age_in_seconds", fmt.Sprint(maximumEventAgeInSeconds)),
 				),
 			},
 			{
@@ -736,7 +740,7 @@ resource "aws_sns_topic" "test" {
 `, ruleName, snsTopicName)
 }
 
-func testAccAWSCloudWatchEventTargetConfig_full(ruleName, targetName, rName string, deadLetterConfigARN string, maximumRetryAttempts int, maximumEventAgeInSeconds int) string {
+func testAccAWSCloudWatchEventTargetConfig_full(ruleName, targetName, rName string, maximumRetryAttempts int, maximumEventAgeInSeconds int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name                = %[1]q
@@ -790,12 +794,12 @@ EOF
 resource "aws_cloudwatch_event_target" "test" {
   rule      = aws_cloudwatch_event_rule.test.name
   target_id = %[3]q
-  dead_letter_config = {
-	  arn = %[4]q
+  dead_letter_config {
+	  arn = aws_sqs_queue.test.arn
   }
-  retry_policy = {
-	maximum_retry_attempts = %[5]d
-	maximum_event_age_in_seconds= %[6]d
+  retry_policy {
+	maximum_retry_attempts = %[4]d
+	maximum_event_age_in_seconds= %[5]d
   } 	
   input = <<INPUT
 { "source": ["aws.cloudtrail"] }
@@ -809,8 +813,12 @@ resource "aws_kinesis_stream" "test" {
   shard_count = 1
 }
 
+resource "aws_sqs_queue" "test" {
+	name        = "%[2]s_sqs_test"
+}
+
 data "aws_partition" "current" {}
-`, ruleName, rName, targetName, deadLetterConfigARN, maximumRetryAttempts, maximumEventAgeInSeconds)
+`, ruleName, rName, targetName, maximumRetryAttempts, maximumEventAgeInSeconds)
 }
 
 func testAccAWSCloudWatchEventTargetConfigSsmDocument(rName string) string {
