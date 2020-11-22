@@ -74,14 +74,11 @@ func resourceAwsLb() *schema.Resource {
 			},
 
 			"load_balancer_type": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-				Default:  elbv2.LoadBalancerTypeEnumApplication,
-				ValidateFunc: validation.StringInSlice([]string{
-					elbv2.LoadBalancerTypeEnumApplication,
-					elbv2.LoadBalancerTypeEnumNetwork,
-				}, false),
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Optional:     true,
+				Default:      elbv2.LoadBalancerTypeEnumApplication,
+				ValidateFunc: validation.StringInSlice(elbv2.LoadBalancerTypeEnum_Values(), false),
 			},
 
 			"security_groups": {
@@ -428,7 +425,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 			})
 		}
 
-	case elbv2.LoadBalancerTypeEnumNetwork:
+	case elbv2.LoadBalancerTypeEnumGateway, elbv2.LoadBalancerTypeEnumNetwork:
 		if d.HasChange("enable_cross_zone_load_balancing") || d.IsNewResource() {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("load_balancing.cross_zone.enabled"),

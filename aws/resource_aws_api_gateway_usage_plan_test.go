@@ -423,7 +423,7 @@ func TestAccAWSAPIGatewayUsagePlan_apiStages_multiple(t *testing.T) {
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{

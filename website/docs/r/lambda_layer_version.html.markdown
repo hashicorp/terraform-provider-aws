@@ -49,6 +49,8 @@ large files efficiently.
 
 ## Attributes Reference
 
+In addition to all arguments above, the following attributes are exported:
+
 * `arn` - The Amazon Resource Name (ARN) of the Lambda Layer with version.
 * `layer_arn` - The Amazon Resource Name (ARN) of the Lambda Layer without version.
 * `created_date` - The date this resource was created.

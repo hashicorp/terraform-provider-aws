@@ -79,6 +79,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
@@ -1390,6 +1391,23 @@ func NeptuneListTags(conn *neptune.Neptune, identifier string) (KeyValueTags, er
 	}
 
 	return NeptuneKeyValueTags(output.TagList), nil
+}
+
+// NetworkfirewallListTags lists networkfirewall service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func NetworkfirewallListTags(conn *networkfirewall.NetworkFirewall, identifier string) (KeyValueTags, error) {
+	input := &networkfirewall.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return NetworkfirewallKeyValueTags(output.Tags), nil
 }
 
 // NetworkmanagerListTags lists networkmanager service tags.
