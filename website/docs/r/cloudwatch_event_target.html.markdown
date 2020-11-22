@@ -308,6 +308,8 @@ The following arguments are supported:
 * `kinesis_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Kinesis Stream. Documented below. A maximum of 1 are allowed.
 * `sqs_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SQS Queue. Documented below. A maximum of 1 are allowed.
 * `input_transformer` - (Optional) Parameters used when you are providing a custom input to a target based on certain event data. Conflicts with `input` and `input_path`.
+* `dead_letter_config` -  (Optional) The target queue to send dead-letter queue events to.
+* `retry_policy` -  (Optional) The retry policy configuration to use for the dead-letter queue.
 
 `run_command_targets` support the following:
 
@@ -355,6 +357,12 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 * `input_template` - (Required) Template to customize data sent to the target. Must be valid JSON. To send a string value, the string value must include double quotes. Values must be escaped for both JSON and Terraform, e.g. `"\"Your string goes here.\\nA new line.\""`
 
+`dead_letter_config` support the following:
+* `arn` - (Required) The ARN of the SQS queue specified as the target for the dead-letter queue.
+
+`retry_policy` support the following:
+* `maximum_retry_attempts` - (Optional) The maximum amount of time, in seconds, to continue to make retry attempts.
+* `maximum_event_age_in_seconds` - (Optional) The maximum number of retry attempts to make before the request fails.
 ## Import
 
 EventBridge Targets can be imported using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used).
