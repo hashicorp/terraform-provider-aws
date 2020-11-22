@@ -798,8 +798,8 @@ resource "aws_cloudwatch_event_target" "test" {
     arn = aws_sqs_queue.test.arn
   }
   retry_policy {
-    maximum_retry_attempts = %[4]d
-    maximum_event_age_in_seconds= %[5]d
+    maximum_retry_attempts       = %[4]d
+    maximum_event_age_in_seconds = %[5]d
   } 	
   input = <<INPUT
 { "source": ["aws.cloudtrail"] }
@@ -814,7 +814,7 @@ resource "aws_kinesis_stream" "test" {
 }
 
 resource "aws_sqs_queue" "test" {
-  name        = "%[2]s_sqs_test"
+  name = "%[2]s_sqs_test"
 }
 
 data "aws_partition" "current" {}
