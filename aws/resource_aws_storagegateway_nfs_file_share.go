@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -100,25 +101,25 @@ func resourceAwsStorageGatewayNfsFileShare() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "0777",
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-7]{4}$`), ""),
+							ValidateFunc: validateLinuxFileMode,
 						},
 						"file_mode": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "0666",
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-7]{4}$`), ""),
+							ValidateFunc: validateLinuxFileMode,
 						},
 						"group_id": {
-							Type:         schema.TypeInt,
+							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      65534,
-							ValidateFunc: validation.IntBetween(0, 4294967294),
+							Default:      "65534",
+							ValidateFunc: validate4ByteAsn,
 						},
 						"owner_id": {
-							Type:         schema.TypeInt,
+							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      65534,
-							ValidateFunc: validation.IntBetween(0, 4294967294),
+							Default:      "65534",
+							ValidateFunc: validate4ByteAsn,
 						},
 					},
 				},
@@ -196,6 +197,11 @@ func resourceAwsStorageGatewayNfsFileShare() *schema.Resource {
 func resourceAwsStorageGatewayNfsFileShareCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).storagegatewayconn
 
+	fileShareDefaults, err := expandStorageGatewayNfsFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
+	if err != nil {
+		return err
+	}
+
 	input := &storagegateway.CreateNFSFileShareInput{
 		ClientList:           expandStringSet(d.Get("client_list").(*schema.Set)),
 		ClientToken:          aws.String(resource.UniqueId()),
@@ -204,7 +210,7 @@ func resourceAwsStorageGatewayNfsFileShareCreate(d *schema.ResourceData, meta in
 		GuessMIMETypeEnabled: aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
 		KMSEncrypted:         aws.Bool(d.Get("kms_encrypted").(bool)),
 		LocationARN:          aws.String(d.Get("location_arn").(string)),
-		NFSFileShareDefaults: expandStorageGatewayNfsFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{})),
+		NFSFileShareDefaults: fileShareDefaults,
 		ObjectACL:            aws.String(d.Get("object_acl").(string)),
 		ReadOnly:             aws.Bool(d.Get("read_only").(bool)),
 		RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
@@ -324,13 +330,18 @@ func resourceAwsStorageGatewayNfsFileShareUpdate(d *schema.ResourceData, meta in
 		"nfs_file_share_defaults", "object_acl", "read_only", "requester_pays", "squash", "kms_key_arn",
 		"cache_attributes", "file_share_name", "notification_policy") {
 
+		fileShareDefaults, err := expandStorageGatewayNfsFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
+		if err != nil {
+			return err
+		}
+
 		input := &storagegateway.UpdateNFSFileShareInput{
 			ClientList:           expandStringSet(d.Get("client_list").(*schema.Set)),
 			DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),
 			FileShareARN:         aws.String(d.Id()),
 			GuessMIMETypeEnabled: aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
 			KMSEncrypted:         aws.Bool(d.Get("kms_encrypted").(bool)),
-			NFSFileShareDefaults: expandStorageGatewayNfsFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{})),
+			NFSFileShareDefaults: fileShareDefaults,
 			ObjectACL:            aws.String(d.Get("object_acl").(string)),
 			ReadOnly:             aws.Bool(d.Get("read_only").(bool)),
 			RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
@@ -354,7 +365,7 @@ func resourceAwsStorageGatewayNfsFileShareUpdate(d *schema.ResourceData, meta in
 		}
 
 		log.Printf("[DEBUG] Updating Storage Gateway NFS File Share: %s", input)
-		_, err := conn.UpdateNFSFileShare(input)
+		_, err = conn.UpdateNFSFileShare(input)
 		if err != nil {
 			return fmt.Errorf("error updating Storage Gateway NFS File Share: %w", err)
 		}
@@ -393,21 +404,31 @@ func resourceAwsStorageGatewayNfsFileShareDelete(d *schema.ResourceData, meta in
 	return nil
 }
 
-func expandStorageGatewayNfsFileShareDefaults(l []interface{}) *storagegateway.NFSFileShareDefaults {
+func expandStorageGatewayNfsFileShareDefaults(l []interface{}) (*storagegateway.NFSFileShareDefaults, error) {
 	if len(l) == 0 || l[0] == nil {
-		return nil
+		return nil, nil
 	}
 
 	m := l[0].(map[string]interface{})
 
+	groupID, err := strconv.ParseInt(m["group_id"].(string), 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	ownerID, err := strconv.ParseInt(m["owner_id"].(string), 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
 	nfsFileShareDefaults := &storagegateway.NFSFileShareDefaults{
 		DirectoryMode: aws.String(m["directory_mode"].(string)),
 		FileMode:      aws.String(m["file_mode"].(string)),
-		GroupId:       aws.Int64(int64(m["group_id"].(int))),
-		OwnerId:       aws.Int64(int64(m["owner_id"].(int))),
+		GroupId:       aws.Int64(groupID),
+		OwnerId:       aws.Int64(ownerID),
 	}
 
-	return nfsFileShareDefaults
+	return nfsFileShareDefaults, nil
 }
 
 func flattenStorageGatewayNfsFileShareDefaults(nfsFileShareDefaults *storagegateway.NFSFileShareDefaults) []interface{} {
@@ -418,8 +439,8 @@ func flattenStorageGatewayNfsFileShareDefaults(nfsFileShareDefaults *storagegate
 	m := map[string]interface{}{
 		"directory_mode": aws.StringValue(nfsFileShareDefaults.DirectoryMode),
 		"file_mode":      aws.StringValue(nfsFileShareDefaults.FileMode),
-		"group_id":       int(aws.Int64Value(nfsFileShareDefaults.GroupId)),
-		"owner_id":       int(aws.Int64Value(nfsFileShareDefaults.OwnerId)),
+		"group_id":       strconv.Itoa(int(aws.Int64Value(nfsFileShareDefaults.GroupId))),
+		"owner_id":       strconv.Itoa(int(aws.Int64Value(nfsFileShareDefaults.OwnerId))),
 	}
 
 	return []interface{}{m}

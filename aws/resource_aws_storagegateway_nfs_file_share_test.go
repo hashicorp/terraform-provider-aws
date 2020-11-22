@@ -665,7 +665,7 @@ func testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName string, nfsFil
 func testAccAWSStorageGateway_S3FileShareBase(rName string) string {
 	return testAccAWSStorageGateway_FileGatewayBase(rName) + fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = %q
+  name = %[1]q
 
   assume_role_policy = <<POLICY
 {
@@ -683,6 +683,9 @@ resource "aws_iam_role" "test" {
 }
 POLICY
 
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -709,7 +712,7 @@ POLICY
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket        = %q
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -717,11 +720,15 @@ resource "aws_storagegateway_gateway" "test" {
   depends_on = [aws_iam_role_policy.test]
 
   gateway_ip_address = aws_instance.test.public_ip
-  gateway_name       = %q
+  gateway_name       = %[1]q
   gateway_timezone   = "GMT"
   gateway_type       = "FILE_S3"
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, rName, rName, rName)
+`, rName)
 }
 
 func testAccAWSStorageGatewayNfsFileShareConfig_Required(rName string) string {
