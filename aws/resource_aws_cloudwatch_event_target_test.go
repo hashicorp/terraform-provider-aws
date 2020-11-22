@@ -800,7 +800,7 @@ resource "aws_cloudwatch_event_target" "test" {
   retry_policy {
     maximum_retry_attempts       = %[4]d
     maximum_event_age_in_seconds = %[5]d
-  } 	
+  }
   input = <<INPUT
 { "source": ["aws.cloudtrail"] }
 INPUT
