@@ -15,7 +15,11 @@ func TestAccAwsBackupRegionSettings_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_backup_region_settings.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		PreCheck:     func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(fsx.EndpointsID, t)
+			testAccPreCheckAWSBackup(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
