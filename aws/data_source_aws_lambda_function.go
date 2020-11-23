@@ -311,7 +311,7 @@ func dataSourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) e
 
 	getCodeSigningConfigOutput, err := conn.GetFunctionCodeSigningConfig(codeSigningConfigInput)
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting Lambda Function (%s) Code Signing Config: %w", aws.StringValue(function.FunctionName), err)
 	}
 
 	if getCodeSigningConfigOutput == nil || getCodeSigningConfigOutput.CodeSigningConfigArn == nil {

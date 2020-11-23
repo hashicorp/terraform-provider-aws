@@ -17,7 +17,7 @@ func TestAccDataSourceAWSLambdaCodeSigningConfig_basic(t *testing.T) {
 				Config: testAccDataSourceAWSLambdaCodeSigningConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "allowed_publishers.0.signing_profile_version_arns.*", resourceName, "allowed_publishers.0.signing_profile_version_arns.*"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "allowed_publishers.0.signing_profile_version_arns.#", resourceName, "allowed_publishers.0.signing_profile_version_arns.#"),
 				),
 			},
 		},
@@ -35,7 +35,7 @@ func TestAccDataSourceAWSLambdaCodeSigningConfig_PolicyConfigId(t *testing.T) {
 				Config: testAccDataSourceAWSLambdaCodeSigningConfigConfigurePolicy,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "allowed_publishers.0.signing_profile_version_arns.*", resourceName, "allowed_publishers.0.signing_profile_version_arns.*"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "allowed_publishers.0.signing_profile_version_arns.#", resourceName, "allowed_publishers.0.signing_profile_version_arns.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "policies", resourceName, "policies"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "config_id", resourceName, "config_id"),
 				),
@@ -55,7 +55,7 @@ func TestAccDataSourceAWSLambdaCodeSigningConfig_Description(t *testing.T) {
 				Config: testAccDataSourceAWSLambdaCodeSigningConfigConfigureDescription,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "allowed_publishers.0.signing_profile_version_arns.*", resourceName, "allowed_publishers.0.signing_profile_version_arns.*"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "allowed_publishers.0.signing_profile_version_arns.#", resourceName, "allowed_publishers.0.signing_profile_version_arns.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 				),
 			},
