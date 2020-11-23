@@ -973,19 +973,21 @@ func testAccCheckWithProviders(f func(*terraform.State, *schema.Provider) error,
 	}
 }
 
-// Skip tests based on error messages that indicate unsupported features
-func testAccSkipErrorCheck(err error, t *testing.T) error {
-	if err != nil {
-		if strings.Contains(err.Error(), "Operations related to PublicDNS") {
-			t.Skipf("skipping test; this partition (%s) does not support PublicDNS operations", testAccGetPartition())
+// testAccErrorCheckSkipMessagesContaining skips tests based on error messages that indicate unsupported features
+func testAccErrorCheckSkipMessagesContaining(t *testing.T, messages ...string) resource.ErrorCheckFunc {
+	return func(err error) error {
+		if err == nil {
+			return err
 		}
 
-		if strings.Contains(err.Error(), "Regional control plane current does not support ") {
-			t.Skipf("skipping test; this region (%s) does not support latency health check", testAccGetRegion())
+		for _, message := range messages {
+			if strings.Contains(err.Error(), message) {
+				t.Skipf("skipping test for %s/%s: %s", testAccGetPartition(), testAccGetRegion(), err.Error())
+			}
 		}
+
+		return err
 	}
-
-	return err
 }
 
 // Check service API call error for reasons to skip acceptance testing

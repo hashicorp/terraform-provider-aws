@@ -14,7 +14,7 @@ func TestAccAWSRoute53ZoneAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   func(err error) error { return testAccSkipErrorCheck(err, t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -38,7 +38,7 @@ func TestAccAWSRoute53ZoneAssociation_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   func(err error) error { return testAccSkipErrorCheck(err, t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -60,7 +60,7 @@ func TestAccAWSRoute53ZoneAssociation_disappears_VPC(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   func(err error) error { return testAccSkipErrorCheck(err, t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -82,7 +82,7 @@ func TestAccAWSRoute53ZoneAssociation_disappears_Zone(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   func(err error) error { return testAccSkipErrorCheck(err, t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -110,7 +110,7 @@ func TestAccAWSRoute53ZoneAssociation_CrossAccount(t *testing.T) {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ErrorCheck:        func(err error) error { return testAccSkipErrorCheck(err, t) },
+		ErrorCheck:        testAccErrorCheckSkipRoute53(t),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -142,7 +142,7 @@ func TestAccAWSRoute53ZoneAssociation_CrossRegion(t *testing.T) {
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
-		ErrorCheck:        func(err error) error { return testAccSkipErrorCheck(err, t) },
+		ErrorCheck:        testAccErrorCheckSkipRoute53(t),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{

@@ -18,7 +18,7 @@ func TestAccAWSRoute53ResolverEndpointDataSource_Basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: func(err error) error { return testAccSkipErrorCheck(err, t) },
+		ErrorCheck: testAccErrorCheckSkipRoute53(t),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -47,7 +47,7 @@ func TestAccAWSRoute53ResolverEndpointDataSource_Filter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: func(err error) error { return testAccSkipErrorCheck(err, t) },
+		ErrorCheck: testAccErrorCheckSkipRoute53(t),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

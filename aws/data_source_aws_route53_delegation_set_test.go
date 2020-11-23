@@ -13,7 +13,7 @@ func TestAccAWSRoute53DelegationSetDataSource_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: func(err error) error { return testAccSkipErrorCheck(err, t) },
+		ErrorCheck: testAccErrorCheckSkipRoute53(t),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{

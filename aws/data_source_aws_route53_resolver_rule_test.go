@@ -18,7 +18,7 @@ func TestAccAWSRoute53ResolverRuleDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck: func(err error) error { return testAccSkipErrorCheck(err, t) },
+		ErrorCheck: testAccErrorCheckSkipRoute53(t),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -69,7 +69,7 @@ func TestAccAWSRoute53ResolverRuleDataSource_ResolverEndpointIdWithTags(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		ErrorCheck: func(err error) error { return testAccSkipErrorCheck(err, t) },
+		ErrorCheck: testAccErrorCheckSkipRoute53(t),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -106,7 +106,7 @@ func TestAccAWSRoute53ResolverRuleDataSource_SharedByMe(t *testing.T) {
 			testAccAlternateAccountPreCheck(t)
 			testAccPreCheckAWSRoute53Resolver(t)
 		},
-		ErrorCheck:        func(err error) error { return testAccSkipErrorCheck(err, t) },
+		ErrorCheck:        testAccErrorCheckSkipRoute53(t),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		Steps: []resource.TestStep{
 			{
@@ -144,7 +144,7 @@ func TestAccAWSRoute53ResolverRuleDataSource_SharedWithMe(t *testing.T) {
 			testAccAlternateAccountPreCheck(t)
 			testAccPreCheckAWSRoute53Resolver(t)
 		},
-		ErrorCheck:        func(err error) error { return testAccSkipErrorCheck(err, t) },
+		ErrorCheck:        testAccErrorCheckSkipRoute53(t),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		Steps: []resource.TestStep{
 			{
