@@ -2,18 +2,24 @@
 
 FEATURES
 
+* **New Data Source:** `aws_lambda_code_signing_config` [GH-16384]
 * **New Data Source:** `aws_signer_signing_job` [GH-16383]
 * **New Data Source:** `aws_signer_signing_profile` [GH-16383]
+* **New Resource:** `aws_lambda_code_signing_config` [GH-16384]
 * **New Resource:** `aws_signer_signing_job` [GH-16383]
 * **New Resource:** `aws_signer_signing_profile` [GH-16383]
 * **New Resource:** `aws_signer_signing_profile_permission` [GH-16383]
 
 ENHANCEMENTS
 
+* data-source/aws_lambda_function: Add `code_signing_config_arn`, `signing_profile_version_arn`, and `signing_job_arn` attributes [GH-16384]
+* data-source/aws_lambda_layer_version: Add `signing_profile_version_arn` and `signing_job_arn` attributes [GH-16384]
 * resource/aws_accessanalyzer_analyzer: Adds plan time validation to `analyzer_name` [GH-16265]
 * resource/aws_accessanalyzer_analyzer: Adds plan time validation to `analyzer_name` [GH-16265]
 * resource/aws_fsx_windows_file_system: Support updating `throughput_capacity` and `storage_capacity` [GH-15582]
 * resource/aws_glue_catalog_table: Add partition index support [GH-16194]
+* resource/aws_lambda_function: Add `code_signing_config_arn` argument and `signing_profile_version_arn` and `signing_job_arn` attributes [GH-16384]
+* resource/aws_lambda_layer_version: Add `signing_profile_version_arn` and `signing_job_arn` attributes [GH-16384]
 * resource/aws_workspaces_directory: Allows assigning IP group [GH-14451]
 
 BUG FIXES
