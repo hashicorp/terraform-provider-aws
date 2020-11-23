@@ -208,7 +208,7 @@ func TestAccAWSLambdaFunctionCodeSigningConfig(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "code_signing_config_arn"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				Config: testAccAWSLambdaConfigCSCUpdate(roleName, funcName),
@@ -223,7 +223,7 @@ func TestAccAWSLambdaFunctionCodeSigningConfig(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "code_signing_config_arn"},
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
 				Config: testAccAWSLambdaConfigCSCDelete(roleName, funcName),

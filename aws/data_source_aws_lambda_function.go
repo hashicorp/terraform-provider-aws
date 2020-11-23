@@ -177,6 +177,10 @@ func dataSourceAwsLambdaFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"code_signing_config_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -297,6 +301,23 @@ func dataSourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) e
 
 	if err := d.Set("file_system_config", flattenLambdaFileSystemConfigs(function.FileSystemConfigs)); err != nil {
 		return fmt.Errorf("error setting file_system_config: %s", err)
+	}
+
+	// Get Code Signing Config Output
+	// If code signing config output exists, set it to that value, otherwise set it empty.
+	codeSigningConfigInput := &lambda.GetFunctionCodeSigningConfigInput{
+		FunctionName: aws.String(d.Get("function_name").(string)),
+	}
+
+	getCodeSigningConfigOutput, err := conn.GetFunctionCodeSigningConfig(codeSigningConfigInput)
+	if err != nil {
+		return err
+	}
+
+	if getCodeSigningConfigOutput == nil || getCodeSigningConfigOutput.CodeSigningConfigArn == nil {
+		d.Set("code_signing_config_arn", "")
+	} else {
+		d.Set("code_signing_config_arn", getCodeSigningConfigOutput.CodeSigningConfigArn)
 	}
 
 	d.SetId(aws.StringValue(function.FunctionName))

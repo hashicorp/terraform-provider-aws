@@ -5,7 +5,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func dataSourceAwsLambdaCodeSigningConfig() *schema.Resource {
@@ -25,12 +24,9 @@ func dataSourceAwsLambdaCodeSigningConfig() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"signing_profile_version_arns": {
 							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 20,
+							Computed: true,
 							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validateArn,
+								Type: schema.TypeString,
 							},
 							Set: schema.HashString,
 						},
@@ -44,11 +40,7 @@ func dataSourceAwsLambdaCodeSigningConfig() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"untrusted_artifact_on_deployment": {
 							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								lambda.CodeSigningPolicyWarn,
-								lambda.CodeSigningPolicyEnforce},
-								false),
+							Computed: true,
 						},
 					},
 				},

@@ -41,6 +41,7 @@ func TestAccDataSourceAWSLambdaFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "version", resourceName, "version"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "signing_profile_version_arn", resourceName, "signing_profile_version_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "signing_job_arn", resourceName, "signing_job_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "code_signing_config_arn", resourceName, "code_signing_config_arn"),
 				),
 			},
 		},

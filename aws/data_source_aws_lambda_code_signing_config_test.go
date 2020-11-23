@@ -64,48 +64,52 @@ func TestAccDataSourceAWSLambdaCodeSigningConfig_Description(t *testing.T) {
 }
 
 const testAccDataSourceAWSLambdaCodeSigningConfigBasic = `
-resource "aws_lambda_code_signing_config" "test"{
-	allowed_publishers {
-		signing_profile_version_arns = [
-			"arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile1/abcde12345",
-			"arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile2/abcde12345"
-		]
-	}
+resource "aws_lambda_code_signing_config" "test" {
+  allowed_publishers {
+    signing_profile_version_arns = [
+      "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile1/abcde12345",
+      "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile2/abcde12345"
+    ]
+  }
 }
+
 data "aws_lambda_code_signing_config" "test" {
-	arn ="${aws_lambda_code_signing_config.test.arn}"
+  arn = aws_lambda_code_signing_config.test.arn
 }
 `
 
 const testAccDataSourceAWSLambdaCodeSigningConfigConfigurePolicy = `
-resource "aws_lambda_code_signing_config" "test"{
-	allowed_publishers {
-		signing_profile_version_arns = [
-			"arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile1/abcde12345",
-			"arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile2/abcde12345"
-		]
-	}
-	policies {
-		untrusted_artifact_on_deployment = "Warn"
-	}
+resource "aws_lambda_code_signing_config" "test" {
+  allowed_publishers {
+    signing_profile_version_arns = [
+      "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile1/abcde12345",
+      "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile2/abcde12345"
+    ]
+  }
+
+  policies {
+    untrusted_artifact_on_deployment = "Warn"
+  }
 }
+
 data "aws_lambda_code_signing_config" "test" {
-	arn = "${aws_lambda_code_signing_config.test.arn}"
+  arn = aws_lambda_code_signing_config.test.arn
 }
 `
 
 const testAccDataSourceAWSLambdaCodeSigningConfigConfigureDescription = `
-resource "aws_lambda_code_signing_config" "test"{
-	allowed_publishers {
-		signing_profile_version_arns = [
-			"arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile1/abcde12345",
-			"arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile2/abcde12345"
-		]
-	}
-	
-	description = "Code Signing Config for app A"
+resource "aws_lambda_code_signing_config" "test" {
+  allowed_publishers {
+    signing_profile_version_arns = [
+      "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile1/abcde12345",
+      "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile2/abcde12345"
+    ]
+  }
+
+  description = "Code Signing Config for app A"
 }
+
 data "aws_lambda_code_signing_config" "test" {
-	arn = "${aws_lambda_code_signing_config.test.arn}"
+  arn = aws_lambda_code_signing_config.test.arn
 }
 `

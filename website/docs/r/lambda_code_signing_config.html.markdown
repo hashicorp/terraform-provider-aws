@@ -18,8 +18,8 @@ For information about Lambda code signing configurations and how to use them, se
 resource "aws_lambda_code_signing_config" "new_csc" {
   allowed_publishers {
     signing_profile_version_arns = [
-      "arn:aws:signer:${var.aws_region}:${var.aws_account}:/signing-profiles/my-profile1/v1",
-      "arn:aws:signer:${var.aws_region}:${var.aws_account}:/signing-profiles/my-profile2/v1"
+      aws_signer_signing_profile.example1.arn,
+      aws_signer_signing_profile.example2.arn,
     ]
   }
 
@@ -33,9 +33,16 @@ resource "aws_lambda_code_signing_config" "new_csc" {
 
 ## Argument Reference
 
-* `allowed_publishers` (Required) List of allowed publishers as signing profiles for this code signing configuration.
-* `policies` (Optional) The code signing policies define the actions to take if the validation checks fail.
+* `allowed_publishers` (Required) A configuration block of allowed publishers as signing profiles for this code signing configuration. Detailed below.
+* `policies` (Optional) A configuration block of code signing policies that define the actions to take if the validation checks fail. Detailed below.
 * `description` - (Optional) Descriptive name for this code signing configuration.
+
+The `allowed_publishers` block supports the following argument:
+ * `signing_profile_version_arns` - (Required) The Amazon Resource Name (ARN) for each of the signing profiles. A signing profile defines a trusted user who can sign a code package.
+ 
+The `policies` block supports the following argument:
+* `untrusted_artifact_on_deployment` - (Required) Code signing configuration policy for deployment validation failure. If you set the policy to Enforce, Lambda blocks the deployment request if code-signing validation checks fail. If you set the policy to Warn, Lambda allows the deployment and creates a CloudWatch log. Valid values: `Warn`, `Enforce`. Default value: `Warn`.
+
 
 ## Attributes Reference
 

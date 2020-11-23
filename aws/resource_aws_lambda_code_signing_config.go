@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -52,9 +53,8 @@ func resourceAwsLambdaCodeSigningConfig() *schema.Resource {
 						"untrusted_artifact_on_deployment": {
 							Type:     schema.TypeString,
 							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								lambda.CodeSigningPolicyWarn,
-								lambda.CodeSigningPolicyEnforce},
+							ValidateFunc: validation.StringInSlice(
+								lambda.CodeSigningPolicy_Values(),
 								false),
 						},
 					},
@@ -107,7 +107,7 @@ func resourceAwsLambdaCodeSigningConfigCreate(d *schema.ResourceData, meta inter
 	if configOutput == nil || configOutput.CodeSigningConfig == nil {
 		return fmt.Errorf("error creating Lambda code signing config: empty output")
 	}
-	d.SetId(*configOutput.CodeSigningConfig.CodeSigningConfigArn)
+	d.SetId(aws.StringValue(configOutput.CodeSigningConfig.CodeSigningConfigArn))
 
 	return resourceAwsLambdaCodeSigningConfigRead(d, meta)
 }
@@ -119,7 +119,7 @@ func resourceAwsLambdaCodeSigningConfigRead(d *schema.ResourceData, meta interfa
 		CodeSigningConfigArn: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Lambda Code Signing Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -154,11 +154,7 @@ func resourceAwsLambdaCodeSigningConfigRead(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error setting lambda code signing config allowed publishers: %s", err)
 	}
 
-	if err := d.Set("policies", []interface{}{
-		map[string]interface{}{
-			"untrusted_artifact_on_deployment": codeSigningConfig.CodeSigningPolicies.UntrustedArtifactOnDeployment,
-		},
-	}); err != nil {
+	if err := d.Set("policies", flattenCodeSigningPolicies(codeSigningConfig.CodeSigningPolicies)); err != nil {
 		return fmt.Errorf("error setting lambda code signing config code signing policies: %s", err)
 	}
 
@@ -210,6 +206,9 @@ func resourceAwsLambdaCodeSigningConfigDelete(d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+			return nil
+		}
 		return fmt.Errorf("error deleting Lambda code signing config (%s): %s", d.Id(), err)
 	}
 
@@ -237,4 +236,15 @@ func flattenLambdaCodeSigningConfigAllowedPublishers(allowedPublishers *lambda.A
 	return []interface{}{map[string]interface{}{
 		"signing_profile_version_arns": flattenStringSet(allowedPublishers.SigningProfileVersionArns),
 	}}
+}
+
+func flattenCodeSigningPolicies(p *lambda.CodeSigningPolicies) []interface{} {
+	if p == nil {
+		return nil
+	}
+	m := map[string]interface{}{
+		"untrusted_artifact_on_deployment": p.UntrustedArtifactOnDeployment,
+	}
+
+	return []interface{}{m}
 }

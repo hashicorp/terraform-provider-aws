@@ -711,6 +711,23 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	invokeArn := lambdaFunctionInvokeArn(*function.FunctionArn, meta)
 	d.Set("invoke_arn", invokeArn)
 
+	// Get Code Signing Config Output
+	// If code signing config output exists, set it to that value, otherwise set it empty.
+	codeSigningConfigInput := &lambda.GetFunctionCodeSigningConfigInput{
+		FunctionName: aws.String(d.Get("function_name").(string)),
+	}
+
+	getCodeSigningConfigOutput, err := conn.GetFunctionCodeSigningConfig(codeSigningConfigInput)
+	if err != nil {
+		return fmt.Errorf("error getting Lambda Function (%s) code signing config %w", d.Id(), err)
+	}
+
+	if getCodeSigningConfigOutput == nil || getCodeSigningConfigOutput.CodeSigningConfigArn == nil {
+		d.Set("code_signing_config_arn", "")
+	} else {
+		d.Set("code_signing_config_arn", getCodeSigningConfigOutput.CodeSigningConfigArn)
+	}
+
 	return nil
 }
 
@@ -767,11 +784,9 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	// If Code Signing Config is updated, calls PutFunctionCodeSigningConfig
 	// If removed, calls DeleteFunctionCodeSigningConfig
 	if d.HasChange("code_signing_config_arn") {
-		n := d.Get("code_signing_config_arn")
-
-		if n != "" {
+		if v, ok := d.GetOk("code_signing_config_arn"); ok {
 			configUpdateInput := &lambda.PutFunctionCodeSigningConfigInput{
-				CodeSigningConfigArn: aws.String(n.(string)),
+				CodeSigningConfigArn: aws.String(v.(string)),
 				FunctionName:         aws.String(d.Id()),
 			}
 
@@ -798,7 +813,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.LambdaUpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Lambda Function (%s) tags: %s", arn, err)
+			return fmt.Errorf("error updating Lambda Function (%s) tags: %w", arn, err)
 		}
 	}
 
