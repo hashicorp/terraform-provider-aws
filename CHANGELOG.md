@@ -1,5 +1,13 @@
 ## 3.17.0 (Unreleased)
 
+FEATURES
+
+* **New Data Source:** `aws_signer_signing_job` [GH-16383]
+* **New Data Source:** `aws_signer_signing_profile` [GH-16383]
+* **New Resource:** `aws_signer_signing_job` [GH-16383]
+* **New Resource:** `aws_signer_signing_profile` [GH-16383]
+* **New Resource:** `aws_signer_signing_profile_permission` [GH-16383]
+
 ENHANCEMENTS
 
 * resource/aws_accessanalyzer_analyzer: Adds plan time validation to `analyzer_name` [GH-16265]
