@@ -98,7 +98,7 @@ In addition to all arguments above, the following attributes are exported:
 `aws_fsx_windows_file_system` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
 configuration options:
 
-* `create` - (Default `30m`) How long to wait for the file system to be created.
+* `create` - (Default `45m`) How long to wait for the file system to be created.
 * `delete` - (Default `30m`) How long to wait for the file system to be deleted.
 
 ## Import

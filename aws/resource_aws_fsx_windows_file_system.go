@@ -29,7 +29,7 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
+			Create: schema.DefaultTimeout(45 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
