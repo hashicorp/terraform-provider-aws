@@ -49,6 +49,8 @@ func TestAccAWSStorageGatewayNfsFileShare_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "squash", "RootSquash"),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "file_share_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "notification_policy", "{}"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -155,6 +157,7 @@ func TestAccAWSStorageGatewayNfsFileShare_ClientList(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName, &nfsFileShare),
 					resource.TestCheckResourceAttr(resourceName, "client_list.#", "1"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "1.1.1.1/32"),
 				),
 			},
 			{
@@ -162,13 +165,16 @@ func TestAccAWSStorageGatewayNfsFileShare_ClientList(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName, &nfsFileShare),
 					resource.TestCheckResourceAttr(resourceName, "client_list.#", "2"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "2.2.2.2/32"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "3.3.3.3/32"),
 				),
 			},
 			{
-				Config: testAccAWSStorageGatewayNfsFileShareConfig_ClientList_Single(rName, "4.4.4.4/32"),
+				Config: testAccAWSStorageGatewayNfsFileShareConfig_ClientList_Single(rName, "4.4.4.4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName, &nfsFileShare),
 					resource.TestCheckResourceAttr(resourceName, "client_list.#", "1"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "client_list.*", "4.4.4.4"),
 				),
 			},
 			{
@@ -493,6 +499,46 @@ func TestAccAWSStorageGatewayNfsFileShare_Squash(t *testing.T) {
 	})
 }
 
+func TestAccAWSStorageGatewayNfsFileShare_notificationPolicy(t *testing.T) {
+	var nfsFileShare storagegateway.NFSFileShareInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_nfs_file_share.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayNfsFileShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayNfsFileShareConfigNotificationPolicy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName, &nfsFileShare),
+					resource.TestCheckResourceAttr(resourceName, "notification_policy", "{\"Upload\": {\"SettlingTimeInSeconds\": 60}}"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSStorageGatewayNfsFileShareConfig_Required(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName, &nfsFileShare),
+					resource.TestCheckResourceAttr(resourceName, "notification_policy", "{}"),
+				),
+			},
+			{
+				Config: testAccAWSStorageGatewayNfsFileShareConfigNotificationPolicy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName, &nfsFileShare),
+					resource.TestCheckResourceAttr(resourceName, "notification_policy", "{\"Upload\": {\"SettlingTimeInSeconds\": 60}}"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSStorageGatewayNfsFileShare_cacheAttributes(t *testing.T) {
 	var nfsFileShare storagegateway.NFSFileShareInfo
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -619,7 +665,7 @@ func testAccCheckAWSStorageGatewayNfsFileShareExists(resourceName string, nfsFil
 func testAccAWSStorageGateway_S3FileShareBase(rName string) string {
 	return testAccAWSStorageGateway_FileGatewayBase(rName) + fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = %q
+  name = %[1]q
 
   assume_role_policy = <<POLICY
 {
@@ -637,6 +683,9 @@ resource "aws_iam_role" "test" {
 }
 POLICY
 
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -663,7 +712,7 @@ POLICY
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket        = %q
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -671,11 +720,15 @@ resource "aws_storagegateway_gateway" "test" {
   depends_on = [aws_iam_role_policy.test]
 
   gateway_ip_address = aws_instance.test.public_ip
-  gateway_name       = %q
+  gateway_name       = %[1]q
   gateway_timezone   = "GMT"
   gateway_type       = "FILE_S3"
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, rName, rName, rName)
+`, rName)
 }
 
 func testAccAWSStorageGatewayNfsFileShareConfig_Required(rName string) string {
@@ -909,4 +962,16 @@ resource "aws_storagegateway_nfs_file_share" "test" {
   }
 }
 `, timeout)
+}
+
+func testAccAWSStorageGatewayNfsFileShareConfigNotificationPolicy(rName string) string {
+	return testAccAWSStorageGateway_S3FileShareBase(rName) + `
+resource "aws_storagegateway_nfs_file_share" "test" {
+  client_list         = ["0.0.0.0/0"]
+  gateway_arn         = aws_storagegateway_gateway.test.arn
+  location_arn        = aws_s3_bucket.test.arn
+  role_arn            = aws_iam_role.test.arn
+  notification_policy = "{\"Upload\": {\"SettlingTimeInSeconds\": 60}}"
+}
+`
 }
