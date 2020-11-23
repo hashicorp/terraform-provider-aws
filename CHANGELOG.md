@@ -11,6 +11,8 @@ FEATURES
 ENHANCEMENTS
 
 * resource/aws_accessanalyzer_analyzer: Adds plan time validation to `analyzer_name` [GH-16265]
+* resource/aws_accessanalyzer_analyzer: Adds plan time validation to `analyzer_name` [GH-16265]
+* resource/aws_fsx_windows_file_system: Support updating `throughput_capacity` and `storage_capacity` [GH-15582]
 * resource/aws_glue_catalog_table: Add partition index support [GH-16194]
 * resource/aws_workspaces_directory: Allows assigning IP group [GH-14451]
 
