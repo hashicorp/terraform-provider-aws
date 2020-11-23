@@ -20,6 +20,7 @@ func TestAccAWSRoute53VpcAssociationAuthorization_basic(t *testing.T) {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
+		ErrorCheck:        func(err error) error { return testAccSkipErrorCheck(err, t) },
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckRoute53VPCAssociationAuthorizationDestroy,
 		Steps: []resource.TestStep{
@@ -48,6 +49,7 @@ func TestAccAWSRoute53VpcAssociationAuthorization_disappears(t *testing.T) {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
+		ErrorCheck:        func(err error) error { return testAccSkipErrorCheck(err, t) },
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckRoute53VPCAssociationAuthorizationDestroy,
 		Steps: []resource.TestStep{

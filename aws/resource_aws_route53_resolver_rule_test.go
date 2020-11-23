@@ -86,6 +86,7 @@ func TestAccAwsRoute53ResolverRule_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   func(err error) error { return testAccSkipErrorCheck(err, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
@@ -115,6 +116,7 @@ func TestAccAwsRoute53ResolverRule_justDotDomainName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   func(err error) error { return testAccSkipErrorCheck(err, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
@@ -144,6 +146,7 @@ func TestAccAwsRoute53ResolverRule_trailingDotDomainName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   func(err error) error { return testAccSkipErrorCheck(err, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
@@ -173,6 +176,7 @@ func TestAccAwsRoute53ResolverRule_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   func(err error) error { return testAccSkipErrorCheck(err, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
@@ -225,6 +229,7 @@ func TestAccAwsRoute53ResolverRule_updateName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   func(err error) error { return testAccSkipErrorCheck(err, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
@@ -265,6 +270,7 @@ func TestAccAwsRoute53ResolverRule_forward(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   func(err error) error { return testAccSkipErrorCheck(err, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
@@ -340,6 +346,7 @@ func TestAccAwsRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   func(err error) error { return testAccSkipErrorCheck(err, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{

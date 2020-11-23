@@ -973,6 +973,26 @@ func testAccCheckWithProviders(f func(*terraform.State, *schema.Provider) error,
 	}
 }
 
+const (
+	// Alternate partitions may not support Public DNS and this error results
+	providerPublicDNSErrorMessage = "Operations related to PublicDNS are not supported in this aws partition"
+)
+
+// Skip tests based on error messages that indicate unsupported features
+func testAccSkipErrorCheck(err error, t *testing.T) error {
+	if err != nil {
+		if strings.Contains(err.Error(), "Operations related to PublicDNS") {
+			t.Skipf("skipping test; this partition (%s) does not support PublicDNS operations", testAccGetPartition())
+		}
+
+		if strings.Contains(err.Error(), "Regional control plane current does not support ") {
+			t.Skipf("skipping test; this region (%s) does not support latency health check", testAccGetRegion())
+		}
+	}
+
+	return err
+}
+
 // Check service API call error for reasons to skip acceptance testing
 // These include missing API endpoints and unsupported API calls
 func testAccPreCheckSkipError(err error) bool {

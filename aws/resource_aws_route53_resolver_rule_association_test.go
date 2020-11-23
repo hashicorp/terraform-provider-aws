@@ -85,6 +85,7 @@ func TestAccAwsRoute53ResolverRuleAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   func(err error) error { return testAccSkipErrorCheck(err, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleAssociationDestroy,
 		Steps: []resource.TestStep{

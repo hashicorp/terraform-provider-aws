@@ -82,6 +82,7 @@ func TestAccAwsRoute53ResolverEndpoint_basicInbound(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   func(err error) error { return testAccSkipErrorCheck(err, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -114,6 +115,7 @@ func TestAccAwsRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   func(err error) error { return testAccSkipErrorCheck(err, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverEndpointDestroy,
 		Steps: []resource.TestStep{
