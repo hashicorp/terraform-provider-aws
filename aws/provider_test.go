@@ -973,11 +973,6 @@ func testAccCheckWithProviders(f func(*terraform.State, *schema.Provider) error,
 	}
 }
 
-const (
-	// Alternate partitions may not support Public DNS and this error results
-	providerPublicDNSErrorMessage = "Operations related to PublicDNS are not supported in this aws partition"
-)
-
 // Skip tests based on error messages that indicate unsupported features
 func testAccSkipErrorCheck(err error, t *testing.T) error {
 	if err != nil {

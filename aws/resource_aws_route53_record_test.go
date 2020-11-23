@@ -1005,6 +1005,36 @@ func TestAccAWSRoute53Record_multivalue_answer_basic(t *testing.T) {
 	})
 }
 
+// Skip tests based on error messages that indicate unsupported features
+func testAccAWSRoute53RecordOverwriteExpectErrorCheck(err error, t *testing.T) error {
+	err = testAccSkipErrorCheck(err, t)
+
+	if err == nil {
+		t.Fatalf("Expected an error but got none")
+	}
+
+	re := regexp.MustCompile(`Tried to create resource record set \[name='www.notexample.com.', type='A'] but it already exists`)
+	if !re.MatchString(err.Error()) {
+		t.Fatalf("Expected an error with pattern, no match on: %s", err)
+	}
+
+	return nil
+}
+
+func TestAccAWSRoute53Record_doNotAllowOverwrite(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   func(err error) error { return testAccAWSRoute53RecordOverwriteExpectErrorCheck(err, t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53RecordConfig_allowOverwrite(false),
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute53Record_allowOverwrite(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.overwriting"
@@ -1015,10 +1045,6 @@ func TestAccAWSRoute53Record_allowOverwrite(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			{
-				Config:      testAccRoute53RecordConfig_allowOverwrite(false),
-				ExpectError: regexp.MustCompile(`Tried to create resource record set \[name='www.notexample.com.', type='A'] but it already exists`),
-			},
 			{
 				Config: testAccRoute53RecordConfig_allowOverwrite(true),
 				Check:  resource.ComposeTestCheckFunc(testAccCheckRoute53RecordExists("aws_route53_record.overwriting", &record1)),
