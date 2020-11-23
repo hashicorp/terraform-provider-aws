@@ -75,7 +75,7 @@ resource "aws_vpc" "foo" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "terraform-testacc-r53-resolver-vpc-%d"
+    Name = "terraform-testacc-r53-resolver-vpc-%[1]d"
   }
 }
 
@@ -85,7 +85,7 @@ resource "aws_subnet" "sn1" {
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
-    Name = "tf-acc-r53-resolver-sn1-%d"
+    Name = "tf-acc-r53-resolver-sn1-%[1]d"
   }
 }
 
@@ -95,7 +95,7 @@ resource "aws_subnet" "sn2" {
   availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
-    Name = "tf-acc-r53-resolver-sn2-%d"
+    Name = "tf-acc-r53-resolver-sn2-%[1]d"
   }
 }
 
@@ -105,28 +105,28 @@ resource "aws_subnet" "sn3" {
   availability_zone = data.aws_availability_zones.available.names[2]
 
   tags = {
-    Name = "tf-acc-r53-resolver-sn3-%d"
+    Name = "tf-acc-r53-resolver-sn3-%[1]d"
   }
 }
 
 resource "aws_security_group" "sg1" {
   vpc_id = aws_vpc.foo.id
-  name   = "tf-acc-r53-resolver-sg1-%d"
+  name   = "tf-acc-r53-resolver-sg1-%[1]d"
 
   tags = {
-    Name = "tf-acc-r53-resolver-sg1-%d"
+    Name = "tf-acc-r53-resolver-sg1-%[1]d"
   }
 }
 
 resource "aws_security_group" "sg2" {
   vpc_id = aws_vpc.foo.id
-  name   = "tf-acc-r53-resolver-sg2-%d"
+  name   = "tf-acc-r53-resolver-sg2-%[1]d"
 
   tags = {
-    Name = "tf-acc-r53-resolver-sg2-%d"
+    Name = "tf-acc-r53-resolver-sg2-%[1]d"
   }
 }
-`, rInt, rInt, rInt, rInt, rInt, rInt, rInt, rInt)
+`, rInt)
 }
 
 func testAccDataSourceRoute53ResolverEndpointConfig_initial(rInt int, direction, name string) string {

@@ -1761,7 +1761,7 @@ resource "aws_route53_record" "test" {
   health_check_id = aws_route53_health_check.test.id
   name            = "test"
   records         = ["127.0.0.1"]
-  set_identifier  = %[1]q
+  set_identifier  = %q
   ttl             = "5"
   type            = "A"
 

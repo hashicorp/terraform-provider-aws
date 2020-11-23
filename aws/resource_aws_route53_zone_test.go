@@ -704,7 +704,7 @@ resource "aws_vpc" "test1" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
@@ -712,12 +712,12 @@ resource "aws_vpc" "test2" {
   cidr_block = "10.2.0.0/16"
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
 resource "aws_route53_zone" "test" {
-  name = "%s."
+  name = "%[2]s."
 
   vpc {
     vpc_id = aws_vpc.test1.id
@@ -727,5 +727,5 @@ resource "aws_route53_zone" "test" {
     vpc_id = aws_vpc.test2.id
   }
 }
-`, rName, rName, zoneName)
+`, rName, zoneName)
 }

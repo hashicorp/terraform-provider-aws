@@ -455,7 +455,7 @@ resource "aws_route53_health_check" "test" {
   invert_healthcheck = true
 
   tags = {
-    %[1]q = %[2]q
+    %q = %q
   }
 }
 `, tag1Key, tag1Value)
@@ -474,8 +474,8 @@ resource "aws_route53_health_check" "test" {
   invert_healthcheck = true
 
   tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
+    %q = %q
+    %q = %q
   }
 }
 `, tag1Key, tag1Value, tagKey2, tagValue2)
@@ -690,7 +690,7 @@ resource "aws_route53_health_check" "test" {
 func testAccRoute53HealthCheckConfigDisabled(disabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_route53_health_check" "test" {
-  disabled          = %[1]t
+  disabled          = %t
   failure_threshold = "2"
   fqdn              = "dev.notexample.com"
   port              = 80
