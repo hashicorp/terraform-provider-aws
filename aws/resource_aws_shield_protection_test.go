@@ -142,7 +142,12 @@ func TestAccAWSShieldProtection_Route53(t *testing.T) {
 	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSShield(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t)
+			testAccPreCheckAWSShield(t)
+		},
+		ErrorCheck:   func(err error) error { return testAccSkipErrorCheck(err, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{

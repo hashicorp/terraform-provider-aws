@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccAWSRoute53DataSourceResolverEndpoint_Basic(t *testing.T) {
+func TestAccAWSRoute53ResolverEndpointDataSource_Basic(t *testing.T) {
 	name := acctest.RandomWithPrefix("tf-acc-test")
 	rInt := acctest.RandInt()
 	direction := "INBOUND"
@@ -38,7 +38,7 @@ func TestAccAWSRoute53DataSourceResolverEndpoint_Basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53DataSourceResolverEndpoint_Filter(t *testing.T) {
+func TestAccAWSRoute53ResolverEndpointDataSource_Filter(t *testing.T) {
 	name := acctest.RandomWithPrefix("tf-acc-test")
 	rInt := acctest.RandInt()
 	direction := "OUTBOUND"

@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccAWSRoute53DataSourceZone_id(t *testing.T) {
+func TestAccAWSRoute53ZoneDataSource_id(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_route53_zone.test"
 	dataSourceName := "data.aws_route53_zone.test"
@@ -33,7 +33,7 @@ func TestAccAWSRoute53DataSourceZone_id(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53DataSourceZone_name(t *testing.T) {
+func TestAccAWSRoute53ZoneDataSource_name(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_route53_zone.test"
 	dataSourceName := "data.aws_route53_zone.test"
@@ -57,7 +57,7 @@ func TestAccAWSRoute53DataSourceZone_name(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53DataSourceZone_tags(t *testing.T) {
+func TestAccAWSRoute53ZoneDataSource_tags(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_route53_zone.test"
 	dataSourceName := "data.aws_route53_zone.test"
@@ -81,7 +81,7 @@ func TestAccAWSRoute53DataSourceZone_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53DataSourceZone_vpc(t *testing.T) {
+func TestAccAWSRoute53ZoneDataSource_vpc(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_route53_zone.test"
 	dataSourceName := "data.aws_route53_zone.test"
@@ -105,7 +105,7 @@ func TestAccAWSRoute53DataSourceZone_vpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53DataSourceZone_serviceDiscovery(t *testing.T) {
+func TestAccAWSRoute53ZoneDataSource_serviceDiscovery(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_service_discovery_private_dns_namespace.test"
 	dataSourceName := "data.aws_route53_zone.test"

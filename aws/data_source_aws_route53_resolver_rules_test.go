@@ -8,12 +8,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccAWSRoute53DataSourceResolverRules_basic(t *testing.T) {
+func TestAccAWSRoute53ResolverRulesDataSource_basic(t *testing.T) {
 	dsResourceName := "data.aws_route53_resolver_rules.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck: func(err error) error { return testAccSkipErrorCheck(err, t) },
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsRoute53ResolverRules_basic,
@@ -26,7 +27,7 @@ func TestAccAWSRoute53DataSourceResolverRules_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53DataSourceResolverRules_ResolverEndpointId(t *testing.T) {
+func TestAccAWSRoute53ResolverRulesDataSource_ResolverEndpointId(t *testing.T) {
 	rName1 := fmt.Sprintf("tf-testacc-r53-resolver-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlphaNum))
 	rName2 := fmt.Sprintf("tf-testacc-r53-resolver-%s", acctest.RandStringFromCharSet(8, acctest.CharSetAlphaNum))
 	ds1ResourceName := "data.aws_route53_resolver_rules.by_resolver_endpoint_id"

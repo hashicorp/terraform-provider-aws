@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccAWSRoute53DataSourceDelegationSet_basic(t *testing.T) {
+func TestAccAWSRoute53DelegationSetDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_route53_delegation_set.dset"
 	resourceName := "aws_route53_delegation_set.dset"
 

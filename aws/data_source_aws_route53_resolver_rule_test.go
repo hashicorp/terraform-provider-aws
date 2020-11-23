@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func TestAccAWSRoute53DataSourceResolverRule_basic(t *testing.T) {
+func TestAccAWSRoute53ResolverRuleDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_resolver_rule.example"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_rule_id"
@@ -62,7 +62,7 @@ func TestAccAWSRoute53DataSourceResolverRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53DataSourceResolverRule_ResolverEndpointIdWithTags(t *testing.T) {
+func TestAccAWSRoute53ResolverRuleDataSource_ResolverEndpointIdWithTags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_resolver_rule.example"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
@@ -94,7 +94,7 @@ func TestAccAWSRoute53DataSourceResolverRule_ResolverEndpointIdWithTags(t *testi
 	})
 }
 
-func TestAccAWSRoute53DataSourceResolverRule_SharedByMe(t *testing.T) {
+func TestAccAWSRoute53ResolverRuleDataSource_SharedByMe(t *testing.T) {
 	var providers []*schema.Provider
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_resolver_rule.example"
@@ -132,7 +132,7 @@ func TestAccAWSRoute53DataSourceResolverRule_SharedByMe(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53DataSourceResolverRule_SharedWithMe(t *testing.T) {
+func TestAccAWSRoute53ResolverRuleDataSource_SharedWithMe(t *testing.T) {
 	var providers []*schema.Provider
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route53_resolver_rule.example"

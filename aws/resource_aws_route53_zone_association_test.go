@@ -110,6 +110,7 @@ func TestAccAWSRoute53ZoneAssociation_CrossAccount(t *testing.T) {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
+		ErrorCheck:        func(err error) error { return testAccSkipErrorCheck(err, t) },
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -141,6 +142,7 @@ func TestAccAWSRoute53ZoneAssociation_CrossRegion(t *testing.T) {
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
+		ErrorCheck:        func(err error) error { return testAccSkipErrorCheck(err, t) },
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
