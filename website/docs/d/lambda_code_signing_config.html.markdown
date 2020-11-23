@@ -34,7 +34,7 @@ In addition to all arguments above, the following attributes are exported:
 * `config_id` - Unique identifier for the code signing configuration.
 * `description` - Code signing configuration description.
 * `last_modified` - The date and time that the code signing configuration was last modified.
-* `policies` - The code signing policy controls the validation failure action for signature mismatch or expiry.
+* `policies` - List of code signing policies that control the validation failure action for signature mismatch or expiry.
 
 `allowed_publishers` is exported with the following attribute:
 
