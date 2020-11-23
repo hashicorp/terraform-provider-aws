@@ -112,6 +112,7 @@ var serviceNames = []string{
 	"securityhub",
 	"servicediscovery",
 	"sfn",
+	"signer",
 	"sns",
 	"sqs",
 	"ssm",
