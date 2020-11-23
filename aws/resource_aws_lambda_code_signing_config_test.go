@@ -14,6 +14,8 @@ import (
 
 func TestAccAWSLambdaCodeSigningConfig_basic(t *testing.T) {
 	resourceName := "aws_lambda_code_signing_config.code_signing_config"
+	signingProfile1 := "aws_signer_signing_profile.test1"
+	signingProfile2 := "aws_signer_signing_profile.test2"
 	var conf lambda.GetCodeSigningConfigOutput
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -27,8 +29,8 @@ func TestAccAWSLambdaCodeSigningConfig_basic(t *testing.T) {
 					testAccCheckAwsCodeSigningConfigExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", "Code Signing Config for test account"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile1/abcde12345"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile2/abcde12345"),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile2, "version_arn"),
 					resource.TestCheckResourceAttr(resourceName, "policies.0.untrusted_artifact_on_deployment", "Warn"),
 				),
 			},
@@ -76,6 +78,8 @@ func TestAccAWSLambdaCodeSigningConfig_UpdatePolicy(t *testing.T) {
 
 func TestAccAWSLambdaCodeSigningConfig_UpdatePublishers(t *testing.T) {
 	resourceName := "aws_lambda_code_signing_config.code_signing_config"
+	signingProfile1 := "aws_signer_signing_profile.test1"
+	signingProfile2 := "aws_signer_signing_profile.test2"
 	var conf lambda.GetCodeSigningConfigOutput
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -89,8 +93,8 @@ func TestAccAWSLambdaCodeSigningConfig_UpdatePublishers(t *testing.T) {
 					testAccCheckAwsCodeSigningConfigExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", "Code Signing Config for test account"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile1/abcde12345"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile2/abcde12345"),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile2, "version_arn"),
 				),
 			},
 			{
@@ -98,7 +102,7 @@ func TestAccAWSLambdaCodeSigningConfig_UpdatePublishers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCodeSigningConfigExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile1/abcde12345"),
+					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
 				),
 			},
 			{
@@ -112,10 +116,18 @@ func TestAccAWSLambdaCodeSigningConfig_UpdatePublishers(t *testing.T) {
 
 func testAccAWSLambdaCodeSigningConfigUpdatePublishers() string {
 	return fmt.Sprintf(`
+resource "aws_signer_signing_profile" "test1" {
+  platform_id = "AWSLambda-SHA384-ECDSA"
+}
+
+resource "aws_signer_signing_profile" "test2" {
+  platform_id = "AWSLambda-SHA384-ECDSA"
+}
+
 resource "aws_lambda_code_signing_config" "code_signing_config" {
   allowed_publishers {
     signing_profile_version_arns = [
-      "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile1/abcde12345"
+      aws_signer_signing_profile.test1.version_arn
     ]
   }
 }`)
@@ -123,11 +135,19 @@ resource "aws_lambda_code_signing_config" "code_signing_config" {
 
 func testAccAWSLambdaCodeSigningConfigUpdatePolicy() string {
 	return fmt.Sprintf(`
+resource "aws_signer_signing_profile" "test1" {
+  platform_id = "AWSLambda-SHA384-ECDSA"
+}
+
+resource "aws_signer_signing_profile" "test2" {
+  platform_id = "AWSLambda-SHA384-ECDSA"
+}
+
 resource "aws_lambda_code_signing_config" "code_signing_config" {
   allowed_publishers {
     signing_profile_version_arns = [
-      "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile1/abcde12345",
-      "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile2/abcde12345"
+      aws_signer_signing_profile.test1.version_arn,
+      aws_signer_signing_profile.test2.version_arn
     ]
   }
 
@@ -139,11 +159,19 @@ resource "aws_lambda_code_signing_config" "code_signing_config" {
 
 func testAccAWSLambdaCodeSigningConfigBasic() string {
 	return fmt.Sprintf(`
+resource "aws_signer_signing_profile" "test1" {
+  platform_id = "AWSLambda-SHA384-ECDSA"
+}
+
+resource "aws_signer_signing_profile" "test2" {
+  platform_id = "AWSLambda-SHA384-ECDSA"
+}
+
 resource "aws_lambda_code_signing_config" "code_signing_config" {
   allowed_publishers {
     signing_profile_version_arns = [
-      "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile1/abcde12345",
-      "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile2/abcde12345"
+      aws_signer_signing_profile.test1.version_arn,
+      aws_signer_signing_profile.test2.version_arn
     ]
   }
 

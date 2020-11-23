@@ -64,11 +64,14 @@ func TestAccDataSourceAWSLambdaCodeSigningConfig_Description(t *testing.T) {
 }
 
 const testAccDataSourceAWSLambdaCodeSigningConfigBasic = `
+resource "aws_signer_signing_profile" "test" {
+  platform_id = "AWSLambda-SHA384-ECDSA"
+}
+
 resource "aws_lambda_code_signing_config" "test" {
   allowed_publishers {
     signing_profile_version_arns = [
-      "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile1/abcde12345",
-      "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile2/abcde12345"
+      aws_signer_signing_profile.test.version_arn
     ]
   }
 }
@@ -80,11 +83,14 @@ data "aws_lambda_code_signing_config" "test" {
 
 const testAccDataSourceAWSLambdaCodeSigningConfigConfigurePolicy = `
 resource "aws_signer_signing_profile" "test" {
-    platform_id = "AWSLambda-SHA384-ECDSA"
+  platform_id = "AWSLambda-SHA384-ECDSA"
 }
+
 resource "aws_lambda_code_signing_config" "test" {
   allowed_publishers {
-    signing_profile_version_arns = ["${aws_signer_signing_profile.test.version_arn}"]
+    signing_profile_version_arns = [
+      aws_signer_signing_profile.test.version_arn
+    ]
   }
 
   policies {
@@ -98,11 +104,14 @@ data "aws_lambda_code_signing_config" "test" {
 `
 
 const testAccDataSourceAWSLambdaCodeSigningConfigConfigureDescription = `
+resource "aws_signer_signing_profile" "test" {
+  platform_id = "AWSLambda-SHA384-ECDSA"
+}
+
 resource "aws_lambda_code_signing_config" "test" {
   allowed_publishers {
     signing_profile_version_arns = [
-      "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile1/abcde12345",
-      "arn:aws:signer:us-east-1:123456789012:signing-profiles/my_profile2/abcde12345"
+      aws_signer_signing_profile.test.version_arn
     ]
   }
 
