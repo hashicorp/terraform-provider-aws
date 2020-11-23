@@ -8,6 +8,7 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* resource/aws_fsx_windows_file_system: Update the default creation timeout from 30 to 45 minutes [GH-16363]
 * resource/aws_lb: Fix `enable_cross_zone_load_balancing` argument handling with Gateway Load Balancers [GH-16314]
 
 ## 3.16.0 (November 18, 2020)
