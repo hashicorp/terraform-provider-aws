@@ -20,6 +20,8 @@ ENHANCEMENTS
 * resource/aws_glue_catalog_table: Add partition index support [GH-16194]
 * resource/aws_lambda_function: Add `code_signing_config_arn` argument and `signing_profile_version_arn` and `signing_job_arn` attributes [GH-16384]
 * resource/aws_lambda_layer_version: Add `signing_profile_version_arn` and `signing_job_arn` attributes [GH-16384]
+* resource/aws_storagegateway_nfs_file_share: Add support for `notification_policy`. [GH-16340]
+* resource/aws_storagegateway_nfs_file_share: Add plan time validation for `client_list`, `nfs_file_share_defaults. directory_mode`, `nfs_file_share_defaults. file_mode`, `nfs_file_share_defaults. group_id`, `nfs_file_share_defaults. owner_id` [GH-16340]
 * resource/aws_workspaces_directory: Allows assigning IP group [GH-14451]
 
 BUG FIXES
