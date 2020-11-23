@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAwsRoute53ResolverEndpoint_Basic(t *testing.T) {
+func TestAccAWSRoute53DataSourceResolverEndpoint_Basic(t *testing.T) {
 	name := acctest.RandomWithPrefix("tf-acc-test")
 	rInt := acctest.RandInt()
 	direction := "INBOUND"
@@ -17,8 +17,9 @@ func TestAccDataSourceAwsRoute53ResolverEndpoint_Basic(t *testing.T) {
 	datasourceName := "data.aws_route53_resolver_endpoint.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: func(err error) error { return testAccSkipErrorCheck(err, t) },
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsRoute53ResolverEndpointConfig_NonExistent,
@@ -37,7 +38,7 @@ func TestAccDataSourceAwsRoute53ResolverEndpoint_Basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsRoute53ResolverEndpoint_Filter(t *testing.T) {
+func TestAccAWSRoute53DataSourceResolverEndpoint_Filter(t *testing.T) {
 	name := acctest.RandomWithPrefix("tf-acc-test")
 	rInt := acctest.RandInt()
 	direction := "OUTBOUND"
@@ -45,8 +46,9 @@ func TestAccDataSourceAwsRoute53ResolverEndpoint_Filter(t *testing.T) {
 	datasourceName := "data.aws_route53_resolver_endpoint.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: func(err error) error { return testAccSkipErrorCheck(err, t) },
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsRoute53ResolverEndpointConfig_NonExistentFilter,
