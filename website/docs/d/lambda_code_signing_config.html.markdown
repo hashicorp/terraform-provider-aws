@@ -38,10 +38,10 @@ In addition to all arguments above, the following attributes are exported:
 
 `allowed_publishers` is exported with the following attribute:
 
- * `signing_profile_version_arns` - The Amazon Resource Name (ARN) for each of the signing profiles. A signing profile defines a trusted user who can sign a code package.
- 
+* `signing_profile_version_arns` - The Amazon Resource Name (ARN) for each of the signing profiles. A signing profile defines a trusted user who can sign a code package.
+
 `policies` is exported with the following attribute:
 
 * `untrusted_artifact_on_deployment` - Code signing configuration policy for deployment validation failure.
- 
+
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-codesigning.html

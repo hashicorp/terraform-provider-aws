@@ -38,9 +38,11 @@ resource "aws_lambda_code_signing_config" "new_csc" {
 * `description` - (Optional) Descriptive name for this code signing configuration.
 
 The `allowed_publishers` block supports the following argument:
- * `signing_profile_version_arns` - (Required) The Amazon Resource Name (ARN) for each of the signing profiles. A signing profile defines a trusted user who can sign a code package.
- 
+
+* `signing_profile_version_arns` - (Required) The Amazon Resource Name (ARN) for each of the signing profiles. A signing profile defines a trusted user who can sign a code package.
+
 The `policies` block supports the following argument:
+
 * `untrusted_artifact_on_deployment` - (Required) Code signing configuration policy for deployment validation failure. If you set the policy to Enforce, Lambda blocks the deployment request if code-signing validation checks fail. If you set the policy to Warn, Lambda allows the deployment and creates a CloudWatch log. Valid values: `Warn`, `Enforce`. Default value: `Warn`.
 
 
