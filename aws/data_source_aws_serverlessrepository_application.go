@@ -2,11 +2,9 @@ package aws
 
 import (
 	"fmt"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	serverlessrepository "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/serverlessrepository/finder"
 )
 
 func dataSourceAwsServerlessRepositoryApplication() *schema.Resource {
@@ -50,20 +48,15 @@ func dataSourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, me
 	conn := meta.(*AWSClient).serverlessapplicationrepositoryconn
 
 	applicationID := d.Get("application_id").(string)
+	semanticVersion := d.Get("semantic_version").(string)
 
-	input := &serverlessrepository.GetApplicationInput{
-		ApplicationId: aws.String(applicationID),
-	}
-
-	if v, ok := d.GetOk("semantic_version"); ok {
-		version := v.(string)
-		input.SemanticVersion = aws.String(version)
-	}
-	log.Printf("[DEBUG] Reading Serverless Application Repository application with request: %s", input)
-
-	output, err := conn.GetApplication(input)
+	output, err := finder.Application(conn, applicationID, semanticVersion)
 	if err != nil {
-		return fmt.Errorf("error reading Serverless Application Repository application (%s): %w", applicationID, err)
+		descriptor := applicationID
+		if semanticVersion != "" {
+			descriptor += fmt.Sprintf(", version %s", semanticVersion)
+		}
+		return fmt.Errorf("error getting Serverless Application Repository application (%s): %w", descriptor, err)
 	}
 
 	d.SetId(applicationID)

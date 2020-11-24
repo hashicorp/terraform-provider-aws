@@ -1,11 +1,13 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	serverlessrepository "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
@@ -13,9 +15,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	cffinder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/finder"
 	cfwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/serverlessrepository/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/serverlessrepository/waiter"
 )
+
+const serverlessRepositoryStackNamePrefix = "serverlessrepo-"
 
 func resourceAwsServerlessRepositoryStack() *schema.Resource {
 	return &schema.Resource{
@@ -25,7 +31,7 @@ func resourceAwsServerlessRepositoryStack() *schema.Resource {
 		Delete: resourceAwsServerlessRepositoryStackDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceAwsServerlessRepositoryStackImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -138,53 +144,44 @@ func resourceAwsServerlessRepositoryStackRead(d *schema.ResourceData, meta inter
 	cfConn := meta.(*AWSClient).cfconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	getApplicationInput := &serverlessrepository.GetApplicationInput{
-		ApplicationId: aws.String(d.Get("application_id").(string)),
+	applicationID := d.Get("application_id").(string)
+	semanticVersion := d.Get("semantic_version").(string)
+	descriptor := applicationID
+	if semanticVersion != "" {
+		descriptor += fmt.Sprintf(", version %s", semanticVersion)
 	}
 
-	_, ok := d.GetOk("semantic_version")
-	if !ok {
-		getApplicationOutput, err := serverlessConn.GetApplication(getApplicationInput)
-		if err != nil {
-			return err
-		}
-		d.Set("semantic_version", getApplicationOutput.Version.SemanticVersion)
+	getApplicationOutput, err := finder.Application(serverlessConn, applicationID, semanticVersion)
+	if err != nil {
+		return fmt.Errorf("error getting Serverless Application Repository application (%s): %w", descriptor, err)
 	}
 
-	input := &cloudformation.DescribeStacksInput{
-		StackName: aws.String(d.Id()),
+	if getApplicationOutput.Version == nil {
+		return fmt.Errorf("error getting Serverless Application Repository application (%s): returned empty version record", descriptor)
 	}
-	resp, err := cfConn.DescribeStacks(input)
-	if tfawserr.ErrCodeEquals(err, "ValidationError") {
+
+	version := getApplicationOutput.Version
+	d.Set("semantic_version", version.SemanticVersion)
+
+	parameterDefinitions := flattenServerlessRepositoryParameterDefinitions(version.ParameterDefinitions)
+
+	stack, err := cffinder.Stack(cfConn, d.Id())
+	var e *resource.NotFoundError
+	if errors.As(err, &e) {
 		log.Printf("[WARN] CloudFormation stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return err
-	}
-
-	stacks := resp.Stacks
-	if len(stacks) < 1 {
-		log.Printf("[WARN] CloudFormation stack (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	stack := stacks[0]
-	if aws.StringValue(stack.StackStatus) == cloudformation.StackStatusDeleteComplete {
-		log.Printf("[WARN] CloudFormation stack (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return fmt.Errorf("error describing CloudFormation Stack (%s): %w", d.Id(), err)
 	}
 
 	// Serverless Application Repo prefixes the stack name with "serverlessrepo-",
 	// so remove it from the saved string
-	stackName := strings.TrimPrefix(aws.StringValue(stack.StackName), "serverlessrepo-")
+	stackName := strings.TrimPrefix(aws.StringValue(stack.StackName), serverlessRepositoryStackNamePrefix)
 	d.Set("name", &stackName)
 
-	originalParams := d.Get("parameters").(map[string]interface{})
-	if err = d.Set("parameters", flattenCloudFormationParameters(stack.Parameters, originalParams)); err != nil {
+	if err = d.Set("parameters", flattenSomeCloudFormationParameters(stack.Parameters, parameterDefinitions)); err != nil {
 		return fmt.Errorf("failed to set parameters: %w", err)
 	}
 
@@ -196,11 +193,31 @@ func resourceAwsServerlessRepositoryStackRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("failed to set outputs: %w", err)
 	}
 
-	if err = d.Set("capabilities", flattenServerlessRepositoryStackCapabilities(d, stack.Capabilities)); err != nil {
+	if err = d.Set("capabilities", flattenServerlessRepositoryStackCapabilities(stack.Capabilities, version.RequiredCapabilities)); err != nil {
 		return fmt.Errorf("failed to set capabilities: %w", err)
 	}
 
 	return nil
+}
+
+func flattenSomeCloudFormationParameters(cfParams []*cloudformation.Parameter, parameterDefinitions map[string]*serverlessrepository.ParameterDefinition) map[string]interface{} {
+	params := make(map[string]interface{}, len(cfParams))
+	for _, p := range cfParams {
+		key := aws.StringValue(p.ParameterKey)
+		value := aws.StringValue(p.ParameterValue)
+		if value != aws.StringValue(parameterDefinitions[key].DefaultValue) {
+			params[key] = value
+		}
+	}
+	return params
+}
+
+func flattenServerlessRepositoryParameterDefinitions(parameterDefinitions []*serverlessrepository.ParameterDefinition) map[string]*serverlessrepository.ParameterDefinition {
+	result := make(map[string]*serverlessrepository.ParameterDefinition, len(parameterDefinitions))
+	for _, p := range parameterDefinitions {
+		result[aws.StringValue(p.Name)] = p
+	}
+	return result
 }
 
 func resourceAwsServerlessRepositoryStackUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -286,6 +303,45 @@ func resourceAwsServerlessRepositoryStackDelete(d *schema.ResourceData, meta int
 	return nil
 }
 
+func resourceAwsServerlessRepositoryStackImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	stackID := d.Id()
+
+	// If this isn't an ARN, it's the stack name
+	if _, err := arn.Parse(stackID); err != nil {
+		if !strings.HasPrefix(stackID, serverlessRepositoryStackNamePrefix) {
+			stackID = serverlessRepositoryStackNamePrefix + stackID
+		}
+	}
+
+	cfConn := meta.(*AWSClient).cfconn
+	stack, err := cffinder.Stack(cfConn, stackID)
+	if err != nil {
+		return nil, fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): %w", stackID, err)
+	}
+
+	tags := stack.Tags
+	var applicationID, semanticVersion string
+	for _, tag := range tags {
+		if aws.StringValue(tag.Key) == "serverlessrepo:applicationId" {
+			applicationID = aws.StringValue(tag.Value)
+		} else if aws.StringValue(tag.Key) == "serverlessrepo:semanticVersion" {
+			semanticVersion = aws.StringValue(tag.Value)
+		}
+		if applicationID != "" && semanticVersion != "" {
+			break
+		}
+	}
+	if applicationID == "" || semanticVersion == "" {
+		return nil, fmt.Errorf("cannot import Serverless Application Repository CloudFormation Stack (%s): tags \"serverlessrepo:applicationId\" and \"serverlessrepo:semanticVersion\" must be defined", stackID)
+	}
+
+	d.SetId(aws.StringValue(stack.StackId))
+	d.Set("application_id", applicationID)
+	d.Set("semantic_version", semanticVersion)
+
+	return []*schema.ResourceData{d}, nil
+}
+
 func expandServerlessRepositoryChangeSetParameters(params map[string]interface{}) []*serverlessrepository.ParameterValue {
 	var appParams []*serverlessrepository.ParameterValue
 	for k, v := range params {
@@ -297,13 +353,15 @@ func expandServerlessRepositoryChangeSetParameters(params map[string]interface{}
 	return appParams
 }
 
-func flattenServerlessRepositoryStackCapabilities(d *schema.ResourceData, c []*string) *schema.Set {
+func flattenServerlessRepositoryStackCapabilities(stackCapabilities []*string, applicationRequiredCapabilities []*string) *schema.Set {
 	// We need to preserve "CAPABILITY_RESOURCE_POLICY" if it has been set. It is not
 	// returned by the CloudFormation APIs.
-	existingCapabilities := d.Get("capabilities").(*schema.Set)
-	capabilities := flattenStringSet(c)
-	if existingCapabilities.Contains(serverlessrepository.CapabilityCapabilityResourcePolicy) {
-		capabilities.Add(serverlessrepository.CapabilityCapabilityResourcePolicy)
+	capabilities := flattenStringSet(stackCapabilities)
+	for _, capability := range applicationRequiredCapabilities {
+		if aws.StringValue(capability) == serverlessrepository.CapabilityCapabilityResourcePolicy {
+			capabilities.Add(serverlessrepository.CapabilityCapabilityResourcePolicy)
+			break
+		}
 	}
 	return capabilities
 }

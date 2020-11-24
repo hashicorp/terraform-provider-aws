@@ -30,7 +30,7 @@ func TestAccDataSourceAwsServerlessRepositoryApplication_Basic(t *testing.T) {
 			},
 			{
 				Config:      testAccCheckAwsServerlessRepositoryApplicationDataSourceConfig_NonExistent,
-				ExpectError: regexp.MustCompile(`error reading Serverless Application Repository application`),
+				ExpectError: regexp.MustCompile(`error getting Serverless Application Repository application`),
 			},
 		},
 	})
@@ -73,7 +73,7 @@ func TestAccDataSourceAwsServerlessRepositoryApplication_Versioned(t *testing.T)
 			},
 			{
 				Config:      testAccCheckAwsServerlessRepositoryApplicationDataSourceConfig_Versioned_NonExistent,
-				ExpectError: regexp.MustCompile(`error reading Serverless Application Repository application`),
+				ExpectError: regexp.MustCompile(`error getting Serverless Application Repository application`),
 			},
 		},
 	})

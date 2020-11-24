@@ -44,6 +44,23 @@ func TestAccAwsServerlessRepositoryStack_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAwsServerlessRepositoryStackNameImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAwsServerlessRepositoryStackNameNoPrefixImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -95,6 +112,11 @@ func TestAccAwsServerlessRepositoryStack_versioned(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "1"),
 					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSServerlessRepositoryStackConfig_versioned2(stackName, version2),
@@ -165,6 +187,11 @@ func TestAccAwsServerlessRepositoryStack_Tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAwsServerlessRepositoryStackConfigTags2(stackName, "key1", "value1updated", "key2", "value2"),
@@ -244,6 +271,28 @@ func testAccCheckServerlessRepositoryStackExists(n string, stack *cloudformation
 		*stack = *resp.Stacks[0]
 
 		return nil
+	}
+}
+
+func testAccAwsServerlessRepositoryStackNameImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s%s", serverlessRepositoryStackNamePrefix, rs.Primary.Attributes["name"]), nil
+	}
+}
+
+func testAccAwsServerlessRepositoryStackNameNoPrefixImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes["name"], nil
 	}
 }
 

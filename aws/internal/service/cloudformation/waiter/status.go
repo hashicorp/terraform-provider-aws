@@ -21,6 +21,12 @@ func ChangeSetStatus(conn *cloudformation.CloudFormation, stackID, changeSetName
 			log.Printf("[ERROR] Failed to describe CloudFormation change set: %s", err)
 			return nil, "", err
 		}
+
+		if resp == nil {
+			log.Printf("[WARN] Describing CloudFormation change set returned no response")
+			return nil, "", nil
+		}
+
 		status := aws.StringValue(resp.Status)
 
 		return resp, status, err
