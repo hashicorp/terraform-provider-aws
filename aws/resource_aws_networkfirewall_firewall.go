@@ -155,9 +155,8 @@ func resourceAwsNetworkFirewallFirewallRead(ctx context.Context, d *schema.Resou
 	}
 
 	firewall := output.Firewall
-	arn := aws.StringValue(firewall.FirewallArn)
 
-	d.Set("arn", arn)
+	d.Set("arn", firewall.FirewallArn)
 	d.Set("delete_protection", firewall.DeleteProtection)
 	d.Set("description", firewall.Description)
 	d.Set("name", firewall.FirewallName)
@@ -171,12 +170,7 @@ func resourceAwsNetworkFirewallFirewallRead(ctx context.Context, d *schema.Resou
 		return diag.FromErr(fmt.Errorf("error setting subnet_mappings: %w", err))
 	}
 
-	tags, err := keyvaluetags.NetworkfirewallListTags(conn, arn)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing tags for NetworkFirewall Firewall (%s): %w", arn, err))
-	}
-
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.NetworkfirewallKeyValueTags(firewall.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
 	}
 

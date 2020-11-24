@@ -115,6 +115,7 @@ Service Discovery
 Service Quotas
 Shield
 SimpleDB
+Signer
 Step Function (SFN)
 Storage Gateway
 Synthetics

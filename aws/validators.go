@@ -2139,6 +2139,15 @@ func validate4ByteAsn(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
+func validateLinuxFileMode(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-7]{4}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only valid linux mode is allowed in %q", k))
+	}
+	return
+}
+
 func validateIotThingTypeName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`[a-zA-Z0-9:_-]+`).MatchString(value) {

@@ -63,6 +63,19 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"filename"},
 			},
+			"code_signing_config_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
+			},
+			"signing_profile_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"signing_job_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -361,6 +374,10 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		Publish:      aws.Bool(d.Get("publish").(bool)),
 	}
 
+	if v, ok := d.GetOk("code_signing_config_arn"); ok {
+		params.CodeSigningConfigArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("layers"); ok && len(v.([]interface{})) > 0 {
 		params.Layers = expandStringList(v.([]interface{}))
 	}
@@ -562,17 +579,60 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	// getFunctionOutput.Configuration which holds metadata.
 
 	function := getFunctionOutput.Configuration
-	d.Set("arn", function.FunctionArn)
-	d.Set("description", function.Description)
-	d.Set("handler", function.Handler)
-	d.Set("memory_size", function.MemorySize)
-	d.Set("last_modified", function.LastModified)
-	d.Set("role", function.Role)
-	d.Set("runtime", function.Runtime)
-	d.Set("timeout", function.Timeout)
-	d.Set("kms_key_arn", function.KMSKeyArn)
-	d.Set("source_code_hash", function.CodeSha256)
-	d.Set("source_code_size", function.CodeSize)
+
+	if err := d.Set("arn", function.FunctionArn); err != nil {
+		return fmt.Errorf("Error setting function arn for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("description", function.Description); err != nil {
+		return fmt.Errorf("Error setting function description for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("handler", function.Handler); err != nil {
+		return fmt.Errorf("Error setting handler for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("memory_size", function.MemorySize); err != nil {
+		return fmt.Errorf("Error setting memory size for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("last_modified", function.LastModified); err != nil {
+		return fmt.Errorf("Error setting last modified time for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("role", function.Role); err != nil {
+		return fmt.Errorf("Error setting role for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("runtime", function.Runtime); err != nil {
+		return fmt.Errorf("Error setting runtime for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("timeout", function.Timeout); err != nil {
+		return fmt.Errorf("Error setting timeout for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("kms_key_arn", function.KMSKeyArn); err != nil {
+		return fmt.Errorf("Error setting KMS key arn for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("source_code_hash", function.CodeSha256); err != nil {
+		return fmt.Errorf("Error setting CodeSha256 for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("source_code_size", function.CodeSize); err != nil {
+		return fmt.Errorf("Error setting code size for Lambda Function: %s", err)
+	}
+
+	// Add Signing Profile Version ARN
+	if err := d.Set("signing_profile_version_arn", function.SigningProfileVersionArn); err != nil {
+		return fmt.Errorf("Error setting signing profile version arn for Lambda Function: %s", err)
+	}
+
+	// Add Signing Job ARN
+	if err := d.Set("signing_job_arn", function.SigningJobArn); err != nil {
+		return fmt.Errorf("Error setting signing job arn for Lambda Function: %s", err)
+	}
 
 	fileSystemConfigs := flattenLambdaFileSystemConfigs(function.FileSystemConfigs)
 	log.Printf("[INFO] Setting Lambda %s file system configs %#v from API", d.Id(), fileSystemConfigs)
@@ -651,6 +711,23 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	invokeArn := lambdaFunctionInvokeArn(*function.FunctionArn, meta)
 	d.Set("invoke_arn", invokeArn)
 
+	// Get Code Signing Config Output
+	// If code signing config output exists, set it to that value, otherwise set it empty.
+	codeSigningConfigInput := &lambda.GetFunctionCodeSigningConfigInput{
+		FunctionName: aws.String(d.Get("function_name").(string)),
+	}
+
+	getCodeSigningConfigOutput, err := conn.GetFunctionCodeSigningConfig(codeSigningConfigInput)
+	if err != nil {
+		return fmt.Errorf("error getting Lambda Function (%s) code signing config %w", d.Id(), err)
+	}
+
+	if getCodeSigningConfigOutput == nil || getCodeSigningConfigOutput.CodeSigningConfigArn == nil {
+		d.Set("code_signing_config_arn", "")
+	} else {
+		d.Set("code_signing_config_arn", getCodeSigningConfigOutput.CodeSigningConfigArn)
+	}
+
 	return nil
 }
 
@@ -704,6 +781,33 @@ func needsFunctionCodeUpdate(d resourceDiffer) bool {
 func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
 
+	// If Code Signing Config is updated, calls PutFunctionCodeSigningConfig
+	// If removed, calls DeleteFunctionCodeSigningConfig
+	if d.HasChange("code_signing_config_arn") {
+		if v, ok := d.GetOk("code_signing_config_arn"); ok {
+			configUpdateInput := &lambda.PutFunctionCodeSigningConfigInput{
+				CodeSigningConfigArn: aws.String(v.(string)),
+				FunctionName:         aws.String(d.Id()),
+			}
+
+			_, err := conn.PutFunctionCodeSigningConfig(configUpdateInput)
+
+			if err != nil {
+				return fmt.Errorf("error updating code signing config arn (Function: %s): %s", d.Id(), err)
+			}
+		} else {
+			configDeleteInput := &lambda.DeleteFunctionCodeSigningConfigInput{
+				FunctionName: aws.String(d.Id()),
+			}
+
+			_, err := conn.DeleteFunctionCodeSigningConfig(configDeleteInput)
+
+			if err != nil {
+				return fmt.Errorf("error deleting code signing config arn (Function: %s): %s", d.Id(), err)
+			}
+		}
+	}
+
 	arn := d.Get("arn").(string)
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
@@ -720,6 +824,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("description") {
 		configReq.Description = aws.String(d.Get("description").(string))
 	}
+
 	if d.HasChange("handler") {
 		configReq.Handler = aws.String(d.Get("handler").(string))
 	}

@@ -432,6 +432,16 @@ func SecurityhubKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// SignerTags returns signer service tags.
+func (tags KeyValueTags) SignerTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// SignerKeyValueTags creates KeyValueTags from signer service tags.
+func SignerKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // SqsTags returns sqs service tags.
 func (tags KeyValueTags) SqsTags() map[string]*string {
 	return aws.StringMap(tags.Map())
