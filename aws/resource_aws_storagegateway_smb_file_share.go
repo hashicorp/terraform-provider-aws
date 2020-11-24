@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
 )
 
 func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
@@ -150,6 +151,7 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 			"access_based_enumeration": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
 			},
 			"valid_user_list": {
 				Type:     schema.TypeSet,
@@ -240,17 +242,8 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(output.FileShareARN))
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"CREATING", "MISSING"},
-		Target:     []string{"AVAILABLE"},
-		Refresh:    storageGatewaySmbFileShareRefreshFunc(d.Id(), conn),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      5 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("error waiting for Storage Gateway SMB File Share creation: %w", err)
+	if _, err = waiter.SmbFileShareAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for Storage Gateway SMB File Share (%q) to be Available: %w", d.Id(), err)
 	}
 
 	return resourceAwsStorageGatewaySmbFileShareRead(d, meta)
@@ -344,18 +337,19 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 		"valid_user_list", "kms_key_arn", "audit_destination_arn", "smb_acl_enabled", "cache_attributes",
 		"case_sensitivity", "file_share_name", "notification_policy", "access_based_enumeration") {
 		input := &storagegateway.UpdateSMBFileShareInput{
-			DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),
-			FileShareARN:         aws.String(d.Id()),
-			GuessMIMETypeEnabled: aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
-			InvalidUserList:      expandStringSet(d.Get("invalid_user_list").(*schema.Set)),
-			KMSEncrypted:         aws.Bool(d.Get("kms_encrypted").(bool)),
-			ObjectACL:            aws.String(d.Get("object_acl").(string)),
-			ReadOnly:             aws.Bool(d.Get("read_only").(bool)),
-			RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
-			ValidUserList:        expandStringSet(d.Get("valid_user_list").(*schema.Set)),
-			AdminUserList:        expandStringSet(d.Get("admin_user_list").(*schema.Set)),
-			SMBACLEnabled:        aws.Bool(d.Get("smb_acl_enabled").(bool)),
-			CaseSensitivity:      aws.String(d.Get("case_sensitivity").(string)),
+			DefaultStorageClass:    aws.String(d.Get("default_storage_class").(string)),
+			FileShareARN:           aws.String(d.Id()),
+			GuessMIMETypeEnabled:   aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
+			InvalidUserList:        expandStringSet(d.Get("invalid_user_list").(*schema.Set)),
+			KMSEncrypted:           aws.Bool(d.Get("kms_encrypted").(bool)),
+			ObjectACL:              aws.String(d.Get("object_acl").(string)),
+			ReadOnly:               aws.Bool(d.Get("read_only").(bool)),
+			RequesterPays:          aws.Bool(d.Get("requester_pays").(bool)),
+			ValidUserList:          expandStringSet(d.Get("valid_user_list").(*schema.Set)),
+			AdminUserList:          expandStringSet(d.Get("admin_user_list").(*schema.Set)),
+			SMBACLEnabled:          aws.Bool(d.Get("smb_acl_enabled").(bool)),
+			CaseSensitivity:        aws.String(d.Get("case_sensitivity").(string)),
+			AccessBasedEnumeration: aws.Bool(d.Get("access_based_enumeration").(bool)),
 		}
 
 		if v, ok := d.GetOk("kms_key_arn"); ok {
@@ -378,27 +372,14 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 			input.CacheAttributes = expandStorageGatewayNfsFileShareCacheAttributes(v.([]interface{}))
 		}
 
-		if v, ok := d.GetOk("access_based_enumeration"); ok {
-			input.AccessBasedEnumeration = aws.Bool(v.(bool))
-		}
-
 		log.Printf("[DEBUG] Updating Storage Gateway SMB File Share: %#v", input)
 		_, err := conn.UpdateSMBFileShare(input)
 		if err != nil {
 			return fmt.Errorf("error updating Storage Gateway SMB File Share: %w", err)
 		}
 
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"UPDATING"},
-			Target:     []string{"AVAILABLE"},
-			Refresh:    storageGatewaySmbFileShareRefreshFunc(d.Id(), conn),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			Delay:      5 * time.Second,
-			MinTimeout: 5 * time.Second,
-		}
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf("error waiting for Storage Gateway SMB File Share update: %w", err)
+		if _, err = waiter.SmbFileShareAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for Storage Gateway SMB File Share (%q) to be Available: %w", d.Id(), err)
 		}
 	}
 
@@ -421,16 +402,9 @@ func resourceAwsStorageGatewaySmbFileShareDelete(d *schema.ResourceData, meta in
 		return fmt.Errorf("error deleting Storage Gateway SMB File Share: %w", err)
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:        []string{"AVAILABLE", "DELETING", "FORCE_DELETING"},
-		Target:         []string{"MISSING"},
-		Refresh:        storageGatewaySmbFileShareRefreshFunc(d.Id(), conn),
-		Timeout:        d.Timeout(schema.TimeoutDelete),
-		Delay:          5 * time.Second,
-		MinTimeout:     5 * time.Second,
-		NotFoundChecks: 1,
+	if _, err = waiter.SmbFileShareDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for Storage Gateway SMB File Share (%q) to be Deleted: %w", d.Id(), err)
 	}
-	_, err = stateConf.WaitForState()
 	if err != nil {
 		if isResourceNotFoundError(err) {
 			return nil
@@ -439,29 +413,4 @@ func resourceAwsStorageGatewaySmbFileShareDelete(d *schema.ResourceData, meta in
 	}
 
 	return nil
-}
-
-func storageGatewaySmbFileShareRefreshFunc(fileShareArn string, conn *storagegateway.StorageGateway) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &storagegateway.DescribeSMBFileSharesInput{
-			FileShareARNList: []*string{aws.String(fileShareArn)},
-		}
-
-		log.Printf("[DEBUG] Reading Storage Gateway SMB File Share: %#v", input)
-		output, err := conn.DescribeSMBFileShares(input)
-		if err != nil {
-			if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
-				return nil, "MISSING", nil
-			}
-			return nil, "ERROR", fmt.Errorf("error reading Storage Gateway SMB File Share: %w", err)
-		}
-
-		if output == nil || len(output.SMBFileShareInfoList) == 0 || output.SMBFileShareInfoList[0] == nil {
-			return nil, "MISSING", nil
-		}
-
-		fileshare := output.SMBFileShareInfoList[0]
-
-		return fileshare, aws.StringValue(fileshare.FileShareStatus), nil
-	}
 }
