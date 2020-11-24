@@ -45,7 +45,6 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_signer_signing_profile" "test" {
   platform_id = "AWSLambda-SHA384-ECDSA"
-  name        = replace(%[1]q, "-", "_")
 }
 
 resource "aws_s3_bucket" "source" {
