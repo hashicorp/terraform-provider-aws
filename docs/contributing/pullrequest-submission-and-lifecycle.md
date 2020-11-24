@@ -26,7 +26,7 @@ expect:
    or adding `[WIP]` to the beginning of the pull request title.
    Please include specific questions or items you'd like feedback on.
 
-1. Create a changelog entry following the process outlined [here]($changelog-process)
+1. Create a changelog entry following the process outlined [here](#changelog-process)
 
 1. Once you believe your pull request is ready to be reviewed, ensure the
    pull request is not a draft pull request by [marking it ready for review](https://help.github.com/en/articles/changing-the-stage-of-a-pull-request)
@@ -194,13 +194,25 @@ We use the [go-changelog](https://github.com/hashicorp/go-changelog) to generate
 
 ### Changelog Format
 
-The changelog format requires an entry in the following format, where HEADER corresponds to the changelog category, and the entry is the changelog entry itself. The entry should be included in a file in the `.changelog` directory in the format `{PR-NUMBER}.txt`.
+The changelog format requires an entry in the following format, where HEADER corresponds to the changelog category, and the entry is the changelog entry itself. The entry should be included in a file in the `.changelog` directory with the naming convention `{PR-NUMBER}.txt`. For example, to create a changelog entry for pull request 1234, there should be a file named `.changelog/1234.txt`.
 
+``````markdown
+```release-note:{HEADER}
+{ENTRY}
 ```
-    ```release-note:{HEADER}
-    {ENTRY}
-    ```
+``````
+
+If a pull request should contain multiple changelog entries, then multiple blocks can be added to the same changelog file. For example:
+
+``````markdown
+```release-notes:notes
+* resource/aws_example_thing: The `broken` attribute has been deprecated. All configurations using `broken` should be updated to use the new `not_broken` attribute instead.
 ```
+
+```release-notes:enhancement
+* resource/aws_example_thing: Add `not_broken` attribute
+```
+``````
 
 ### Pull Request Types to CHANGELOG
 
@@ -210,63 +222,63 @@ The CHANGELOG is intended to show operator-impacting changes to the codebase for
 
 ##### New resource
 
-A new resource entry should only contain the name of the resource, and use the `new-resource` header.
+A new resource entry should only contain the name of the resource, and use the `release-note:new-resource` header.
 
+``````markdown
+```release-note:new-resource
+aws_secretsmanager_secret_policy
 ```
-    ```release-note:new-resource
-    aws_secretsmanager_secret_policy
-    ```
-```
+``````
 
 ##### New data source
 
-A new datasource entry should only contain the name of the datasource, and use the `new-datasource` header.
+A new datasource entry should only contain the name of the datasource, and use the `release-note:new-data-source` header.
 
+``````markdown
+```release-note:new-data-source
+aws_workspaces_workspace
 ```
-    ```release-note:new-datasource
-    aws_workspaces_workspace
-    ```
-```
+``````
 
 ##### New full-length documentation guides (e.g. EKS Getting Started Guide, IAM Policy Documents with Terraform)
 
-A new full length documentation entry describe the guide being added, and use the `enhancements` header.
+A new full length documentation entry describe the guide being added, and use the `release-note:enhancements` header.
 
+``````markdown
+```release-note:enhancements
+Add full length Custom Service Endpoint Configuration guide
 ```
-    ```release-note:enhancements
-    Added full length Custom Service Endpoint Configuration guide
-    ```
-```
+``````
 
 ##### Resource and provider bug fixes
 
-A new bug entry should have a prefix indicating the resource or datasource it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level fixes.
+A new bug entry should use the `release-note:bug` header and have a prefix indicating the resource or datasource it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level fixes.
 
+``````markdown
+```release-note:bug
+resource/aws_glue_classifier: Fix quote_symbol being optional
 ```
-    ```release-note:bug
-    resource/aws_glue_classifier: Fix quote_symbol being optional
-    ```
-```
+``````
 
 ##### Resource and provider enhancements
 
-A new enhancement entry should have a prefix indicating the resource or datasource it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level enchancements.
+A new enhancement entry should use the `release-note:enhancements` header and have a prefix indicating the resource or datasource it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level enchancements.
 
+``````markdown
+```release-note:enhancements
+resource/aws_eip: Add network_border_group argument
 ```
-    ```release-note:enhancements
-    resource/aws_eip: Add network_border_group argument
-    ```
-```
+``````
 
 ##### Deprecations, removals or breaking changes
 
-A breaking-change entry should have a prefix indicating the resource or datasource it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level changes.
+A breaking-change entry should use the `release-note:breaking-change` header and have a prefix indicating the resource or datasource it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level changes.
 
+``````markdown
+```release-note:breaking-change
+resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
 ```
-    ```release-note:breaking-change
-    resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
-    ```
-```
+``````
 
 #### Changes that may have a CHANGELOG entry
 
@@ -274,14 +286,14 @@ Dependency updates: If the update contains relevant bug fixes or enhancements th
 Any changes which do not fit into the above categories but warrant highlighting.
 Use resource/datasource/provider prefixes where appropriate.
 
+``````markdown
+```release-note:note
+resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
 ```
-    ```release-note:notes
-    resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
-    ```
-```
+``````
 
 #### Changes that should _not_ have a CHANGELOG entry
 
 - Resource and provider documentation updates
 - Testing updates
-
+- Code refactoring
