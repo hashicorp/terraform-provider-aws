@@ -16,25 +16,18 @@ Provides an AWS Network Firewall Resource Policy Resource for a rule group or fi
 
 ```hcl
 resource "aws_networkfirewall_resource_policy" "example" {
-  resource_arn = data.aws_iam_user.example.arn
-  policy       = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": [
-        "network-firewall:ListFirewallPolicies",
-        "network-firewall:AssociateFirewallPolicy"
-      ],
-      "Resource": [
-        "${aws_networkfirewall_firewall_policy.example.arn}"
-      ]
-    }
-  ]
-}
-POLICY
+  resource_arn = aws_networkfirewall_firewall_policy.example.arn
+  policy = jsonencode({
+    Statement = [{
+      Action   = "network-firewall:ListFirewallPolicies"
+      Effect   = "Allow"
+      Resource = aws_networkfirewall_firewall_policy.example.arn
+      Principal = {
+        AWS = "arn:aws:iam::1234567890:user/example"
+      }
+    }]
+    Version = "2012-10-17"
+  })
 }
 ```
 
@@ -42,24 +35,18 @@ POLICY
 
 ```hcl
 resource "aws_networkfirewall_resource_policy" "example" {
-  resource_arn = data.aws_iam_user.example.arn
-  policy       = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": [
-        "network-firewall:ListRuleGroups"
-      ],
-      "Resource": [
-        "${aws_networkfirewall_rule_group.example.arn}"
-      ]
-    }
-  ]
-}
-POLICY
+  resource_arn = aws_networkfirewall_rule_group.example.arn
+  policy = jsonencode({
+    Statement = [{
+      Action   = "network-firewall:ListRuleGroups"
+      Effect   = "Allow"
+      Resource = aws_networkfirewall_rule_group.example.arn
+      Principal = {
+        AWS = "arn:aws:iam::1234567890:user/example"
+      }
+    }]
+    Version = "2012-10-17"
+  })
 }
 ```
 
@@ -67,20 +54,20 @@ POLICY
 
 The following arguments are supported:
 
-* `policy` - (Required) JSON formatted policy document that controls access to the Network Firewall resource.
+* `policy` - (Required) JSON formatted policy document that controls access to the Network Firewall resource. The policy must be provided **without whitespaces**.  It is recommended to use [jsonencode](https://www.terraform.io/docs/configuration/functions/jsonencode.html) for formatting as seen in the examples above. For more details, including available policy statement Actions, see the [Policy](https://docs.aws.amazon.com/network-firewall/latest/APIReference/API_PutResourcePolicy.html#API_PutResourcePolicy_RequestSyntax) parameter in the AWS API documentation.
 
-* `resource_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the account that you want to share rule groups and firewall policies with.
+* `resource_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the rule group or firewall policy.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attribute is exported:
 
-* `id` - The Amazon Resource Name (ARN) of the account associated with the resource policy.
+* `id` - The Amazon Resource Name (ARN) of the rule group or firewall policy associated with the resource policy.
 
 ## Import
 
 Network Firewall Resource Policies can be imported using the `resource_arn` e.g.
 
 ```
-$ terraform import aws_networkfirewall_resource_policy.example arn:aws:iam:1234567890:user/example
+$ terraform import aws_networkfirewall_resource_policy.example aws_networkfirewall_rule_group.example arn:aws:network-firewall:us-west-1:123456789012:stateful-rulegroup/example
 ```

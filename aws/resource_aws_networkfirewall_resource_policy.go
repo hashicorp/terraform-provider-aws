@@ -54,7 +54,7 @@ func resourceAwsNetworkFirewallResourcePolicyPut(ctx context.Context, d *schema.
 
 	_, err := conn.PutResourcePolicyWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating NetworkFirewall Resource Policy (for resource: %s): %w", resourceArn, err))
+		return diag.FromErr(fmt.Errorf("error putting NetworkFirewall Resource Policy (for resource: %s): %w", resourceArn, err))
 	}
 
 	d.SetId(resourceArn)
