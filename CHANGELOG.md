@@ -15,6 +15,7 @@ BUG FIXES
 * resource/aws_cloudwatch_event_permission: Prevent `arn: invalid prefix` error during read in some environments [GH-16319]
 * resource/aws_kinesis_analytics_application: Respect the order of 'record_column' attributes [GH-16260]
 * resource/aws_kinesisanalyticsv2_application: Respect the order of 'record_column' attributes [GH-16260]
+* resource/aws_securityhub_member: Prevent `invited` attribute updates due to recent API changes [GH-16404]
 
 ## 3.17.0 (November 24, 2020)
 
