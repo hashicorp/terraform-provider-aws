@@ -112,6 +112,65 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 								},
 							},
 						},
+						"saml_options": {
+							Type:          schema.TypeList,
+							Optional:      true,
+							ForceNew:      false,
+							MaxItems:      1,
+							ConflictsWith: []string{"cognito_options"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
+									"idp": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"entity_id": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"metadata_content": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringIsNotEmpty,
+												},
+											},
+										},
+									},
+									"master_backend_role": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringIsNotEmpty,
+									},
+									"master_user_name": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Sensitive:    true,
+										ValidateFunc: validation.StringIsNotEmpty,
+									},
+									"roles_key": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"session_timeout_minutes": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      60,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"subject_key": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -391,6 +450,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Optional:         true,
 				ForceNew:         false,
 				MaxItems:         1,
+				ConflictsWith:    []string{"advanced_security_options.saml_options"},
 				DiffSuppressFunc: esCognitoOptionsDiffSuppress,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -454,7 +514,7 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("advanced_security_options"); ok {
-		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]interface{}))
+		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]interface{}), true)
 	}
 
 	if v, ok := d.GetOk("ebs_options"); ok {
@@ -807,7 +867,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 	}
 
 	if d.HasChange("advanced_security_options") {
-		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]interface{}))
+		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]interface{}), false)
 	}
 
 	if d.HasChange("domain_endpoint_options") {

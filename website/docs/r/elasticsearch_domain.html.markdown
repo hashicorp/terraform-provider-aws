@@ -235,6 +235,16 @@ The **advanced_security_options** block supports the following attributes:
     * `master_user_arn` - (Optional) ARN for the master user. Only specify if `internal_user_database_enabled` is not set or set to `false`)
     * `master_user_name` - (Optional) The master user's username, which is stored in the Amazon Elasticsearch Service domain's internal database. Only specify if `internal_user_database_enabled` is set to `true`.
     * `master_user_password` - (Optional) The master user's password, which is stored in the Amazon Elasticsearch Service domain's internal database. Only specify if `internal_user_database_enabled` is set to `true`.
+* `saml_options` - (Optional) Credentials for the master user: username and password, or ARN
+    * `enabled` - (Optional) Whether SAML application configuration is enabled.
+    * `idp` - (Optional) Specifies the SAML Identity Provider's information.
+        * `entity_id` - (Optional) The unique Entity ID of the application in the SAML Identity Provider.
+        * `metadata_content` - (Optional) The Metadata of the SAML application in xml format.
+    * `master_backend_role` - (Optional) The backend role to which the SAML master user is mapped to.
+    * `master_user_name` - (Optional) The SAML master username, which is stored in the AMazon Elasticsearch Service domain's internal database.
+    * `roles_key` - (Optional) The key to use for matching the SAML Roles attribute.
+    * `session_timeout_minutes` - (Optional) The duration, in minutes, after which a user session becomes inactive. Acceptable values are between 1 and 1440, and the default value is 60.
+    * `subject_key` - (Optional) The key to use for matching the SAML subject attribute.
 
 **ebs_options** supports the following attributes:
 
