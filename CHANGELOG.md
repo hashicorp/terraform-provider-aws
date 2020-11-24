@@ -7,6 +7,7 @@ FEATURES
 
 ENHANCEMENTS
 
+* resource/aws_db_proxy_default_target_group: Make `connection_pool_config` optional [GH-16303]
 * resource/aws_kinesisanalyticsv2_application: `runtime_environment` now supports `FLINK-1_11` [GH-16389]
 
 BUG FIXES
