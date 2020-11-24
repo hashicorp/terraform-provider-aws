@@ -1,33 +1,33 @@
-## 3.17.0 (Unreleased)
+## 3.17.0 (November 24, 2020)
 
 FEATURES
 
-* **New Data Source:** `aws_lambda_code_signing_config` [GH-16384]
-* **New Data Source:** `aws_signer_signing_job` [GH-16383]
-* **New Data Source:** `aws_signer_signing_profile` [GH-16383]
-* **New Resource:** `aws_lambda_code_signing_config` [GH-16384]
-* **New Resource:** `aws_signer_signing_job` [GH-16383]
-* **New Resource:** `aws_signer_signing_profile` [GH-16383]
-* **New Resource:** `aws_signer_signing_profile_permission` [GH-16383]
+* **New Data Source:** `aws_lambda_code_signing_config` ([#16384](https://github.com/hashicorp/terraform-provider-aws/issues/16384))
+* **New Data Source:** `aws_signer_signing_job` ([#16383](https://github.com/hashicorp/terraform-provider-aws/issues/16383))
+* **New Data Source:** `aws_signer_signing_profile` ([#16383](https://github.com/hashicorp/terraform-provider-aws/issues/16383))
+* **New Resource:** `aws_lambda_code_signing_config` ([#16384](https://github.com/hashicorp/terraform-provider-aws/issues/16384))
+* **New Resource:** `aws_signer_signing_job` ([#16383](https://github.com/hashicorp/terraform-provider-aws/issues/16383))
+* **New Resource:** `aws_signer_signing_profile` ([#16383](https://github.com/hashicorp/terraform-provider-aws/issues/16383))
+* **New Resource:** `aws_signer_signing_profile_permission` ([#16383](https://github.com/hashicorp/terraform-provider-aws/issues/16383))
 
 ENHANCEMENTS
 
-* data-source/aws_lambda_function: Add `code_signing_config_arn`, `signing_profile_version_arn`, and `signing_job_arn` attributes [GH-16384]
-* data-source/aws_lambda_layer_version: Add `signing_profile_version_arn` and `signing_job_arn` attributes [GH-16384]
-* resource/aws_accessanalyzer_analyzer: Adds plan time validation to `analyzer_name` [GH-16265]
-* resource/aws_accessanalyzer_analyzer: Adds plan time validation to `analyzer_name` [GH-16265]
-* resource/aws_fsx_windows_file_system: Support updating `throughput_capacity` and `storage_capacity` [GH-15582]
-* resource/aws_glue_catalog_table: Add partition index support [GH-16194]
-* resource/aws_lambda_function: Add `code_signing_config_arn` argument and `signing_profile_version_arn` and `signing_job_arn` attributes [GH-16384]
-* resource/aws_lambda_layer_version: Add `signing_profile_version_arn` and `signing_job_arn` attributes [GH-16384]
-* resource/aws_storagegateway_nfs_file_share: Add support for `notification_policy`. [GH-16340]
-* resource/aws_storagegateway_nfs_file_share: Add plan time validation for `client_list`, `nfs_file_share_defaults. directory_mode`, `nfs_file_share_defaults. file_mode`, `nfs_file_share_defaults. group_id`, `nfs_file_share_defaults. owner_id` [GH-16340]
-* resource/aws_workspaces_directory: Allows assigning IP group [GH-14451]
+* data-source/aws_lambda_function: Add `code_signing_config_arn`, `signing_profile_version_arn`, and `signing_job_arn` attributes ([#16384](https://github.com/hashicorp/terraform-provider-aws/issues/16384))
+* data-source/aws_lambda_layer_version: Add `signing_profile_version_arn` and `signing_job_arn` attributes ([#16384](https://github.com/hashicorp/terraform-provider-aws/issues/16384))
+* resource/aws_accessanalyzer_analyzer: Adds plan time validation to `analyzer_name` ([#16265](https://github.com/hashicorp/terraform-provider-aws/issues/16265))
+* resource/aws_accessanalyzer_analyzer: Adds plan time validation to `analyzer_name` ([#16265](https://github.com/hashicorp/terraform-provider-aws/issues/16265))
+* resource/aws_fsx_windows_file_system: Support updating `throughput_capacity` and `storage_capacity` ([#15582](https://github.com/hashicorp/terraform-provider-aws/issues/15582))
+* resource/aws_glue_catalog_table: Add partition index support ([#16194](https://github.com/hashicorp/terraform-provider-aws/issues/16194))
+* resource/aws_lambda_function: Add `code_signing_config_arn` argument and `signing_profile_version_arn` and `signing_job_arn` attributes ([#16384](https://github.com/hashicorp/terraform-provider-aws/issues/16384))
+* resource/aws_lambda_layer_version: Add `signing_profile_version_arn` and `signing_job_arn` attributes ([#16384](https://github.com/hashicorp/terraform-provider-aws/issues/16384))
+* resource/aws_storagegateway_nfs_file_share: Add support for `notification_policy`. ([#16340](https://github.com/hashicorp/terraform-provider-aws/issues/16340))
+* resource/aws_storagegateway_nfs_file_share: Add plan time validation for `client_list`, `nfs_file_share_defaults. directory_mode`, `nfs_file_share_defaults. file_mode`, `nfs_file_share_defaults. group_id`, `nfs_file_share_defaults. owner_id` ([#16340](https://github.com/hashicorp/terraform-provider-aws/issues/16340))
+* resource/aws_workspaces_directory: Allows assigning IP group ([#14451](https://github.com/hashicorp/terraform-provider-aws/issues/14451))
 
 BUG FIXES
 
-* resource/aws_fsx_windows_file_system: Update the default creation timeout from 30 to 45 minutes [GH-16363]
-* resource/aws_lb: Fix `enable_cross_zone_load_balancing` argument handling with Gateway Load Balancers [GH-16314]
+* resource/aws_fsx_windows_file_system: Update the default creation timeout from 30 to 45 minutes ([#16363](https://github.com/hashicorp/terraform-provider-aws/issues/16363))
+* resource/aws_lb: Fix `enable_cross_zone_load_balancing` argument handling with Gateway Load Balancers ([#16314](https://github.com/hashicorp/terraform-provider-aws/issues/16314))
 
 ## 3.16.0 (November 18, 2020)
 
