@@ -1,3 +1,19 @@
+## 3.18.0 (Unreleased)
+
+FEATURES
+
+* **New Data Source:** `aws_imagebuilder_image_recipe` [GH-16218]
+* **New Resource:** `aws_imagebuilder_image_recipe` [GH-16218]
+
+ENHANCEMENTS
+
+* resource/aws_kinesisanalyticsv2_application: `runtime_environment` now supports `FLINK-1_11` [GH-16389]
+
+BUG FIXES
+
+* resource/aws_kinesis_analytics_application: Respect the order of 'record_column' attributes [GH-16260]
+* resource/aws_kinesisanalyticsv2_application: Respect the order of 'record_column' attributes [GH-16260]
+
 ## 3.17.0 (November 24, 2020)
 
 FEATURES
