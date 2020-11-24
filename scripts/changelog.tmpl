@@ -12,13 +12,6 @@ NOTES:
 {{ end -}}
 {{- end -}}
 
-{{- if .NotesByType.deprecation -}}
-DEPRECATIONS:
-{{range .NotesByType.deprecation -}}
-{{ template "note" .}}
-{{ end -}}
-{{- end -}}
-
 {{- $features := combineTypes .NotesByType.feature (index .NotesByType "new-resource" ) (index .NotesByType "new-data-source") -}}
 {{- if $features }}
 FEATURES:

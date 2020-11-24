@@ -270,7 +270,17 @@ resource/aws_eip: Add network_border_group argument
 ```
 ``````
 
-##### Deprecations, removals or breaking changes
+##### Deprecations
+
+A breaking-change entry should use the `release-note:note` header and have a prefix indicating the resource or datasource it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level changes.
+
+``````markdown
+```release-note:note
+resource/aws_dx_gateway_association: The vpn_gateway_id attribute is being deprecated in favor of the new associated_gateway_id attribute to support transit gateway associations
+```
+``````
+
+##### Breaking Changes and Removals
 
 A breaking-change entry should use the `release-note:breaking-change` header and have a prefix indicating the resource or datasource it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level changes.
 
