@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -82,6 +83,7 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 			"invalid_user_list": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				MaxItems: 100,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"kms_encrypted": {
@@ -145,9 +147,14 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"access_based_enumeration": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"valid_user_list": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				MaxItems: 100,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"admin_user_list": {
@@ -160,6 +167,15 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 				Optional:     true,
 				Default:      storagegateway.CaseSensitivityClientSpecified,
 				ValidateFunc: validation.StringInSlice(storagegateway.CaseSensitivity_Values(), false),
+			},
+			"notification_policy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "{}",
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
+					validation.StringLenBetween(2, 100),
+				),
 			},
 			"tags": tagsSchema(),
 		},
@@ -204,8 +220,16 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 		input.SMBACLEnabled = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("access_based_enumeration"); ok {
+		input.AccessBasedEnumeration = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("cache_attributes"); ok {
 		input.CacheAttributes = expandStorageGatewayNfsFileShareCacheAttributes(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("notification_policy"); ok {
+		input.NotificationPolicy = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating Storage Gateway SMB File Share: %#v", input)
@@ -287,6 +311,8 @@ func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta inte
 	d.Set("role_arn", fileshare.Role)
 	d.Set("audit_destination_arn", fileshare.AuditDestinationARN)
 	d.Set("smb_acl_enabled", fileshare.SMBACLEnabled)
+	d.Set("access_based_enumeration", fileshare.AccessBasedEnumeration)
+	d.Set("notification_policy", fileshare.NotificationPolicy)
 
 	if err := d.Set("valid_user_list", flattenStringSet(fileshare.ValidUserList)); err != nil {
 		return fmt.Errorf("error setting valid_user_list: %w", err)
@@ -316,7 +342,7 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 	if d.HasChanges("admin_user_list", "default_storage_class", "guess_mime_type_enabled", "invalid_user_list",
 		"kms_encrypted", "object_acl", "read_only", "requester_pays", "requester_pays",
 		"valid_user_list", "kms_key_arn", "audit_destination_arn", "smb_acl_enabled", "cache_attributes",
-		"case_sensitivity", "file_share_name") {
+		"case_sensitivity", "file_share_name", "notification_policy", "access_based_enumeration") {
 		input := &storagegateway.UpdateSMBFileShareInput{
 			DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),
 			FileShareARN:         aws.String(d.Id()),
@@ -336,6 +362,10 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 			input.KMSKey = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("notification_policy"); ok {
+			input.NotificationPolicy = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("audit_destination_arn"); ok {
 			input.AuditDestinationARN = aws.String(v.(string))
 		}
@@ -346,6 +376,10 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("cache_attributes"); ok {
 			input.CacheAttributes = expandStorageGatewayNfsFileShareCacheAttributes(v.([]interface{}))
+		}
+
+		if v, ok := d.GetOk("access_based_enumeration"); ok {
+			input.AccessBasedEnumeration = aws.Bool(v.(bool))
 		}
 
 		log.Printf("[DEBUG] Updating Storage Gateway SMB File Share: %#v", input)
