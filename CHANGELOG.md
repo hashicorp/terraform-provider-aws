@@ -3,6 +3,7 @@
 FEATURES
 
 * **New Data Source:** `aws_imagebuilder_image_recipe` [GH-16218]
+* **New Resource:** `aws_backup_region_settings` [GH-16114]
 * **New Resource:** `aws_imagebuilder_image_recipe` [GH-16218]
 
 ENHANCEMENTS
