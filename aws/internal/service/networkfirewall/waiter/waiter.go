@@ -40,6 +40,7 @@ func FirewallUpdated(ctx context.Context, conn *networkfirewall.NetworkFirewall,
 		Target:  []string{networkfirewall.FirewallStatusValueReady},
 		Refresh: FirewallUpdatedStatus(ctx, conn, arn),
 		Timeout: FirewallTimeout,
+		Delay:   30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

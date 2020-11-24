@@ -50,6 +50,42 @@ func resourceAwsNetworkFirewallFirewall() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"firewall_status": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"sync_states": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"availability_zone": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"attachment": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"endpoint_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"subnet_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -162,6 +198,7 @@ func resourceAwsNetworkFirewallFirewallRead(ctx context.Context, d *schema.Resou
 	d.Set("name", firewall.FirewallName)
 	d.Set("firewall_policy_arn", firewall.FirewallPolicyArn)
 	d.Set("firewall_policy_change_protection", firewall.FirewallPolicyChangeProtection)
+	d.Set("firewall_status", flattenNetworkFirewallFirewallStatus(output.FirewallStatus))
 	d.Set("subnet_change_protection", firewall.SubnetChangeProtection)
 	d.Set("update_token", output.UpdateToken)
 	d.Set("vpc_id", firewall.VpcId)
@@ -378,6 +415,48 @@ func expandNetworkFirewallSubnetMappingIds(l []interface{}) []string {
 	}
 
 	return ids
+}
+
+func flattenNetworkFirewallFirewallStatus(status *networkfirewall.FirewallStatus) []interface{} {
+	if status == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"sync_states": flattenNetworkFirewallSyncStates(status.SyncStates),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenNetworkFirewallSyncStates(s map[string]*networkfirewall.SyncState) []interface{} {
+	if s == nil {
+		return nil
+	}
+
+	syncStates := make([]interface{}, 0, len(s))
+	for k, v := range s {
+		m := map[string]interface{}{
+			"availability_zone": k,
+			"attachment":        flattenNetworkFirewallSyncStateAttachment(v.Attachment),
+		}
+		syncStates = append(syncStates, m)
+	}
+
+	return syncStates
+}
+
+func flattenNetworkFirewallSyncStateAttachment(a *networkfirewall.Attachment) []interface{} {
+	if a == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"endpoint_id": aws.StringValue(a.EndpointId),
+		"subnet_id":   aws.StringValue(a.SubnetId),
+	}
+
+	return []interface{}{m}
 }
 
 func flattenNetworkFirewallSubnetMappings(sm []*networkfirewall.SubnetMapping) []interface{} {
