@@ -10,12 +10,14 @@ import (
 )
 
 const (
-	SecurityHubMemberStatusCreated  = "Created"
-	SecurityHubMemberStatusInvited  = "Invited"
-	SecurityHubMemberStatusEnabled  = "Enabled"
-	SecurityHubMemberStatusRemoved  = "Removed"
-	SecurityHubMemberStatusResigned = "Resigned"
-	SecurityHubMemberStatusDeleted  = "Deleted"
+	// Associated is the member status naming for regions that do not support Organizations
+	SecurityHubMemberStatusAssociated = "Associated"
+	SecurityHubMemberStatusCreated    = "Created"
+	SecurityHubMemberStatusInvited    = "Invited"
+	SecurityHubMemberStatusEnabled    = "Enabled"
+	SecurityHubMemberStatusRemoved    = "Removed"
+	SecurityHubMemberStatusResigned   = "Resigned"
+	SecurityHubMemberStatusDeleted    = "Deleted"
 )
 
 func resourceAwsSecurityHubMember() *schema.Resource {
