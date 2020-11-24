@@ -117,7 +117,7 @@ func TestAccDataSourceAWSLB_BackwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName1, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "drop_invalid_header_fields", resourceName, "drop_invalid_header_fields"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "enable_http2", resourceName, "enable_http2"),
-					resource.TestCheckResourceAttrPair(dataSourceName1, "enable_waf_fail_open", resourceName, "enable_http2"),
+					resource.TestCheckResourceAttrPair(dataSourceName1, "enable_waf_fail_open", resourceName, "enable_waf_fail_open"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "access_logs.#", resourceName, "access_logs.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "internal", resourceName, "internal"),
