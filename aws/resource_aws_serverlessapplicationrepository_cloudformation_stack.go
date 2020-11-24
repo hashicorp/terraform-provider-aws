@@ -17,27 +17,27 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	cffinder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/finder"
 	cfwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/serverlessrepository/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/serverlessrepository/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/serverlessapplicationrepository/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/serverlessapplicationrepository/waiter"
 )
 
-const serverlessRepositoryStackNamePrefix = "serverlessrepo-"
+const serverlessApplicationRepositoryCloudFormationStackNamePrefix = "serverlessrepo-"
 
-func resourceAwsServerlessRepositoryStack() *schema.Resource {
+func resourceAwsServerlessApplicationRepositoryCloudFormationStack() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServerlessRepositoryStackCreate,
-		Read:   resourceAwsServerlessRepositoryStackRead,
-		Update: resourceAwsServerlessRepositoryStackUpdate,
-		Delete: resourceAwsServerlessRepositoryStackDelete,
+		Create: resourceAwsServerlessApplicationRepositoryCloudFormationStackCreate,
+		Read:   resourceAwsServerlessApplicationRepositoryCloudFormationStackRead,
+		Update: resourceAwsServerlessApplicationRepositoryCloudFormationStackUpdate,
+		Delete: resourceAwsServerlessApplicationRepositoryCloudFormationStackDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsServerlessRepositoryStackImport,
+			State: resourceAwsServerlessApplicationRepositoryCloudFormationStackImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(waiter.StackCreatedDefaultTimeout),
-			Update: schema.DefaultTimeout(waiter.StackUpdatedDefaultTimeout),
-			Delete: schema.DefaultTimeout(waiter.StackDeletedDefaultTimeout),
+			Create: schema.DefaultTimeout(waiter.CloudFormationStackCreatedDefaultTimeout),
+			Update: schema.DefaultTimeout(waiter.CloudFormationStackUpdatedDefaultTimeout),
+			Delete: schema.DefaultTimeout(waiter.CloudFormationStackDeletedDefaultTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -84,7 +84,7 @@ func resourceAwsServerlessRepositoryStack() *schema.Resource {
 	}
 }
 
-func resourceAwsServerlessRepositoryStackCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsServerlessApplicationRepositoryCloudFormationStackCreate(d *schema.ResourceData, meta interface{}) error {
 	serverlessConn := meta.(*AWSClient).serverlessapplicationrepositoryconn
 	cfConn := meta.(*AWSClient).cfconn
 
@@ -100,7 +100,7 @@ func resourceAwsServerlessRepositoryStackCreate(d *schema.ResourceData, meta int
 		changeSetRequest.SemanticVersion = aws.String(version)
 	}
 	if v, ok := d.GetOk("parameters"); ok {
-		changeSetRequest.ParameterOverrides = expandServerlessRepositoryChangeSetParameters(v.(map[string]interface{}))
+		changeSetRequest.ParameterOverrides = expandServerlessRepositoryCloudFormationChangeSetParameters(v.(map[string]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating Serverless Application Repository change set: %s", changeSetRequest)
@@ -136,10 +136,10 @@ func resourceAwsServerlessRepositoryStackCreate(d *schema.ResourceData, meta int
 
 	log.Printf("[INFO] Serverless Application Repository CloudFormation Stack (%s) created", d.Id())
 
-	return resourceAwsServerlessRepositoryStackRead(d, meta)
+	return resourceAwsServerlessApplicationRepositoryCloudFormationStackRead(d, meta)
 }
 
-func resourceAwsServerlessRepositoryStackRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsServerlessApplicationRepositoryCloudFormationStackRead(d *schema.ResourceData, meta interface{}) error {
 	serverlessConn := meta.(*AWSClient).serverlessapplicationrepositoryconn
 	cfConn := meta.(*AWSClient).cfconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
@@ -178,10 +178,10 @@ func resourceAwsServerlessRepositoryStackRead(d *schema.ResourceData, meta inter
 
 	// Serverless Application Repo prefixes the stack name with "serverlessrepo-",
 	// so remove it from the saved string
-	stackName := strings.TrimPrefix(aws.StringValue(stack.StackName), serverlessRepositoryStackNamePrefix)
+	stackName := strings.TrimPrefix(aws.StringValue(stack.StackName), serverlessApplicationRepositoryCloudFormationStackNamePrefix)
 	d.Set("name", &stackName)
 
-	if err = d.Set("parameters", flattenSomeCloudFormationParameters(stack.Parameters, parameterDefinitions)); err != nil {
+	if err = d.Set("parameters", flattenNonDefaultServerlessApplicationCloudFormationParameters(stack.Parameters, parameterDefinitions)); err != nil {
 		return fmt.Errorf("failed to set parameters: %w", err)
 	}
 
@@ -200,7 +200,7 @@ func resourceAwsServerlessRepositoryStackRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func flattenSomeCloudFormationParameters(cfParams []*cloudformation.Parameter, parameterDefinitions map[string]*serverlessrepository.ParameterDefinition) map[string]interface{} {
+func flattenNonDefaultServerlessApplicationCloudFormationParameters(cfParams []*cloudformation.Parameter, parameterDefinitions map[string]*serverlessrepository.ParameterDefinition) map[string]interface{} {
 	params := make(map[string]interface{}, len(cfParams))
 	for _, p := range cfParams {
 		key := aws.StringValue(p.ParameterKey)
@@ -220,7 +220,7 @@ func flattenServerlessRepositoryParameterDefinitions(parameterDefinitions []*ser
 	return result
 }
 
-func resourceAwsServerlessRepositoryStackUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsServerlessApplicationRepositoryCloudFormationStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cfconn
 
 	input := &cloudformation.CreateChangeSetInput{
@@ -273,10 +273,10 @@ func resourceAwsServerlessRepositoryStackUpdate(d *schema.ResourceData, meta int
 
 	log.Printf("[INFO] Serverless Application Repository CloudFormation Stack (%s) updated", d.Id())
 
-	return resourceAwsServerlessRepositoryStackRead(d, meta)
+	return resourceAwsServerlessApplicationRepositoryCloudFormationStackRead(d, meta)
 }
 
-func resourceAwsServerlessRepositoryStackDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsServerlessApplicationRepositoryCloudFormationStackDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cfconn
 
 	requestToken := resource.UniqueId()
@@ -303,13 +303,13 @@ func resourceAwsServerlessRepositoryStackDelete(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceAwsServerlessRepositoryStackImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceAwsServerlessApplicationRepositoryCloudFormationStackImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	stackID := d.Id()
 
 	// If this isn't an ARN, it's the stack name
 	if _, err := arn.Parse(stackID); err != nil {
-		if !strings.HasPrefix(stackID, serverlessRepositoryStackNamePrefix) {
-			stackID = serverlessRepositoryStackNamePrefix + stackID
+		if !strings.HasPrefix(stackID, serverlessApplicationRepositoryCloudFormationStackNamePrefix) {
+			stackID = serverlessApplicationRepositoryCloudFormationStackNamePrefix + stackID
 		}
 	}
 
@@ -342,7 +342,7 @@ func resourceAwsServerlessRepositoryStackImport(d *schema.ResourceData, meta int
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandServerlessRepositoryChangeSetParameters(params map[string]interface{}) []*serverlessrepository.ParameterValue {
+func expandServerlessRepositoryCloudFormationChangeSetParameters(params map[string]interface{}) []*serverlessrepository.ParameterValue {
 	var appParams []*serverlessrepository.ParameterValue
 	for k, v := range params {
 		appParams = append(appParams, &serverlessrepository.ParameterValue{

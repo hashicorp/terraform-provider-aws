@@ -1,19 +1,19 @@
 ---
 subcategory: "Serverless Application Repository"
 layout: "aws"
-page_title: "AWS: aws_serverlessrepository_stack"
+page_title: "AWS: aws_serverlessapplicationrepository_cloudformation_stack"
 description: |-
   Deploys an Application CloudFormation Stack from the Serverless Application Repository.
 ---
 
-# Resource: aws_serverlessrepository_stack
+# Resource: aws_serverlessapplicationrepository_cloudformation_stack
 
 Deploys an Application CloudFormation Stack from the Serverless Application Repository.
 
 ## Example Usage
 
 ```hcl
-resource "aws_serverlessrepository_stack" "postgres-rotator" {
+resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-rotator" {
   name           = "postgres-rotator"
   application_id = "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
   capabilities = [
@@ -54,5 +54,5 @@ In addition to all arguments above, the following attributes are exported:
 Serverless Application Repository Stack can be imported using the CloudFormation Stack name (with or without the `serverlessrepo-` prefix) or the CloudFormation Stack ID, e.g.
 
 ```
-$ terraform import aws_serverlessrepository_stack.example serverlessrepo-postgres-rotator
+$ terraform import aws_serverlessapplicationrepository_cloudformation_stack.example serverlessrepo-postgres-rotator
 ```

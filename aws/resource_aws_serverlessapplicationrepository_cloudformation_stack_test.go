@@ -12,14 +12,14 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
-// Since aws_serverlessrepository_stack creates CloudFormation stacks,
+// Since aws_serverlessapplicationrepository_cloudformation_stack creates CloudFormation stacks,
 // the aws_cloudformation_stack sweeper will clean these up as well.
 
 func TestAccAwsServerlessRepositoryStack_basic(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resourceName := "aws_serverlessrepository_stack.postgres-rotator"
+	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -69,7 +69,7 @@ func TestAccAwsServerlessRepositoryStack_disappears(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resourceName := "aws_serverlessrepository_stack.postgres-rotator"
+	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -80,7 +80,7 @@ func TestAccAwsServerlessRepositoryStack_disappears(t *testing.T) {
 				Config: testAccAwsServerlessRepositoryStackConfig(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerlessRepositoryStackExists(resourceName, &stack),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsServerlessRepositoryStack(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsServerlessApplicationRepositoryCloudFormationStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -97,7 +97,7 @@ func TestAccAwsServerlessRepositoryStack_versioned(t *testing.T) {
 		version2 = "1.1.36"
 	)
 
-	resourceName := "aws_serverlessrepository_stack.postgres-rotator"
+	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -148,7 +148,7 @@ func TestAccAwsServerlessRepositoryStack_paired(t *testing.T) {
 
 	const version = "1.1.36"
 
-	resourceName := "aws_serverlessrepository_stack.postgres-rotator"
+	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -173,7 +173,7 @@ func TestAccAwsServerlessRepositoryStack_Tags(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resourceName := "aws_serverlessrepository_stack.postgres-rotator"
+	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -219,7 +219,7 @@ func TestAccAwsServerlessRepositoryStack_update(t *testing.T) {
 	initialName := acctest.RandomWithPrefix("FuncName1")
 	updatedName := acctest.RandomWithPrefix("FuncName2")
 
-	resourceName := "aws_serverlessrepository_stack.postgres-rotator"
+	resourceName := "aws_serverlessapplicationrepository_cloudformation_stack.postgres-rotator"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -281,7 +281,7 @@ func testAccAwsServerlessRepositoryStackNameImportStateIdFunc(resourceName strin
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s%s", serverlessRepositoryStackNamePrefix, rs.Primary.Attributes["name"]), nil
+		return fmt.Sprintf("%s%s", serverlessApplicationRepositoryCloudFormationStackNamePrefix, rs.Primary.Attributes["name"]), nil
 	}
 }
 
@@ -300,7 +300,7 @@ func testAccAwsServerlessRepositoryStackConfig(stackName string) string {
 	return composeConfig(
 		testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication,
 		fmt.Sprintf(`
-resource "aws_serverlessrepository_stack" "postgres-rotator" {
+resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-rotator" {
   name           = "%[1]s"
   application_id = local.postgres_single_user_rotator_arn
   capabilities = [
@@ -321,7 +321,7 @@ func testAccAWSServerlessRepositoryStackConfig_updateInitial(stackName, function
 	return composeConfig(
 		testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication,
 		fmt.Sprintf(`
-resource "aws_serverlessrepository_stack" "postgres-rotator" {
+resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-rotator" {
   name           = "%[1]s"
   application_id = local.postgres_single_user_rotator_arn
   capabilities = [
@@ -345,7 +345,7 @@ func testAccAWSServerlessRepositoryStackConfig_updateUpdated(stackName, function
 	return composeConfig(
 		testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication,
 		fmt.Sprintf(`
-resource "aws_serverlessrepository_stack" "postgres-rotator" {
+resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-rotator" {
   name           = "%[1]s"
   application_id = local.postgres_single_user_rotator_arn
   capabilities = [
@@ -369,7 +369,7 @@ func testAccAWSServerlessRepositoryStackConfig_versioned(stackName, version stri
 	return composeConfig(
 		testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication,
 		fmt.Sprintf(`
-resource "aws_serverlessrepository_stack" "postgres-rotator" {
+resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-rotator" {
   name             = "%[1]s"
   application_id   = local.postgres_single_user_rotator_arn
   semantic_version = "%[2]s"
@@ -387,7 +387,7 @@ func testAccAWSServerlessRepositoryStackConfig_versioned2(stackName, version str
 	return composeConfig(
 		testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication,
 		fmt.Sprintf(`
-resource "aws_serverlessrepository_stack" "postgres-rotator" {
+resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-rotator" {
   name           = "%[1]s"
   application_id = local.postgres_single_user_rotator_arn
   capabilities = [
@@ -409,18 +409,18 @@ func testAccAWSServerlessRepositoryStackConfig_versionedPaired(stackName, versio
 	return composeConfig(
 		testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication,
 		fmt.Sprintf(`
-resource "aws_serverlessrepository_stack" "postgres-rotator" {
+resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-rotator" {
   name             = "%[1]s"
-  application_id   = data.aws_serverlessrepository_application.secrets_manager_postgres_single_user_rotator.application_id
-  semantic_version = data.aws_serverlessrepository_application.secrets_manager_postgres_single_user_rotator.semantic_version
-  capabilities     = data.aws_serverlessrepository_application.secrets_manager_postgres_single_user_rotator.required_capabilities
+  application_id   = data.aws_serverlessapplicationrepository_application.secrets_manager_postgres_single_user_rotator.application_id
+  semantic_version = data.aws_serverlessapplicationrepository_application.secrets_manager_postgres_single_user_rotator.semantic_version
+  capabilities     = data.aws_serverlessapplicationrepository_application.secrets_manager_postgres_single_user_rotator.required_capabilities
   parameters = {
     functionName = "func-%[1]s"
     endpoint     = "secretsmanager.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
   }
 }
 
-data "aws_serverlessrepository_application" "secrets_manager_postgres_single_user_rotator" {
+data "aws_serverlessapplicationrepository_application" "secrets_manager_postgres_single_user_rotator" {
   application_id   = local.postgres_single_user_rotator_arn
   semantic_version = "%[2]s"
 }
@@ -433,7 +433,7 @@ func testAccAwsServerlessRepositoryStackConfigTags1(rName, tagKey1, tagValue1 st
 	return composeConfig(
 		testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication,
 		fmt.Sprintf(`
-resource "aws_serverlessrepository_stack" "postgres-rotator" {
+resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-rotator" {
   name           = "%[1]s"
   application_id = local.postgres_single_user_rotator_arn
   capabilities = [
@@ -457,7 +457,7 @@ func testAccAwsServerlessRepositoryStackConfigTags2(rName, tagKey1, tagValue1, t
 	return composeConfig(
 		testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication,
 		fmt.Sprintf(`
-resource "aws_serverlessrepository_stack" "postgres-rotator" {
+resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-rotator" {
   name           = "%[1]s"
   application_id = local.postgres_single_user_rotator_arn
   capabilities = [

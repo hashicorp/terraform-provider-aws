@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/serverlessrepository/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/serverlessapplicationrepository/finder"
 )
 
-func dataSourceAwsServerlessRepositoryApplication() *schema.Resource {
+func dataSourceAwsServerlessApplicationRepositoryApplication() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsServerlessRepositoryApplicationRead,
 

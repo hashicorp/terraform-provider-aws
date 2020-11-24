@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccDataSourceAwsServerlessRepositoryApplication_Basic(t *testing.T) {
-	datasourceName := "data.aws_serverlessrepository_application.secrets_manager_postgres_single_user_rotator"
+	datasourceName := "data.aws_serverlessapplicationrepository_application.secrets_manager_postgres_single_user_rotator"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -36,7 +36,7 @@ func TestAccDataSourceAwsServerlessRepositoryApplication_Basic(t *testing.T) {
 	})
 }
 func TestAccDataSourceAwsServerlessRepositoryApplication_Versioned(t *testing.T) {
-	datasourceName := "data.aws_serverlessrepository_application.secrets_manager_postgres_single_user_rotator"
+	datasourceName := "data.aws_serverlessapplicationrepository_application.secrets_manager_postgres_single_user_rotator"
 
 	const (
 		version1 = "1.0.13"
@@ -94,13 +94,13 @@ func testAccCheckAwsServerlessRepositoryApplicationDataSourceID(n string) resour
 }
 
 const testAccCheckAwsServerlessRepositoryApplicationDataSourceConfig = testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication + `
-data "aws_serverlessrepository_application" "secrets_manager_postgres_single_user_rotator" {
+data "aws_serverlessapplicationrepository_application" "secrets_manager_postgres_single_user_rotator" {
   application_id = local.postgres_single_user_rotator_arn
 }
 `
 
 const testAccCheckAwsServerlessRepositoryApplicationDataSourceConfig_NonExistent = `
-data "aws_serverlessrepository_application" "no_such_function" {
+data "aws_serverlessapplicationrepository_application" "no_such_function" {
   application_id = "arn:${data.aws_partition.current.partition}:serverlessrepo:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:applications/ThisFunctionDoesNotExist"
 }
 
@@ -113,7 +113,7 @@ func testAccCheckAwsServerlessRepositoryApplicationDataSourceConfig_Versioned(ve
 	return composeConfig(
 		testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication,
 		fmt.Sprintf(`
-data "aws_serverlessrepository_application" "secrets_manager_postgres_single_user_rotator" {
+data "aws_serverlessapplicationrepository_application" "secrets_manager_postgres_single_user_rotator" {
   application_id   = local.postgres_single_user_rotator_arn
   semantic_version = "%[1]s"
 }
@@ -121,7 +121,7 @@ data "aws_serverlessrepository_application" "secrets_manager_postgres_single_use
 }
 
 const testAccCheckAwsServerlessRepositoryApplicationDataSourceConfig_Versioned_NonExistent = testAccCheckAwsServerlessRepositoryPostgresSingleUserRotatorApplication + `
-data "aws_serverlessrepository_application" "secrets_manager_postgres_single_user_rotator" {
+data "aws_serverlessapplicationrepository_application" "secrets_manager_postgres_single_user_rotator" {
   application_id   = local.postgres_single_user_rotator_arn
   semantic_version = "42.13.7"
 }

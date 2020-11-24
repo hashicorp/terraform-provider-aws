@@ -1,27 +1,27 @@
 ---
 subcategory: "Serverless Application Repository"
 layout: "aws"
-page_title: "AWS: aws_serverlessrepository_application"
+page_title: "AWS: aws_serverlessapplicationrepository_application"
 description: |-
   Get information on a AWS Serverless Application Repository application
 ---
 
-# Data Source: aws_serverlessrepository_application
+# Data Source: aws_serverlessapplicationrepository_application
 
 Use this data source to get information about an AWS Serverless Application Repository application. For example, this can be used to determine the required `capabilities` for an application.
 
 ## Example Usage
 
 ```hcl
-data "aws_serverlessrepository_application" "example" {
+data "aws_serverlessapplicationrepository_application" "example" {
   application_id = "arn:aws:serverlessrepo:us-east-1:123456789012:applications/ExampleApplication"
 }
 
-resource "aws_serverlessrepository_stack" "example" {
+resource "aws_serverlessapplicationrepository_cloudformation_stack" "example" {
   name             = "Example"
-  application_id   = data.aws_serverlessrepository_application.example.application_id
-  semantic_version = data.aws_serverlessrepository_application.example.semantic_version
-  capabilities     = data.aws_serverlessrepository_application.example.required_capabilities
+  application_id   = data.aws_serverlessapplicationrepository_application.example.application_id
+  semantic_version = data.aws_serverlessapplicationrepository_application.example.semantic_version
+  capabilities     = data.aws_serverlessapplicationrepository_application.example.required_capabilities
 }
 ```
 
