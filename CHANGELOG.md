@@ -1,3 +1,10 @@
+## 3.18.0 (Unreleased)
+
+FEATURES
+
+* **New Data Source:** `aws_imagebuilder_image_recipe` [GH-16218]
+* **New Resource:** `aws_imagebuilder_image_recipe` [GH-16218]
+
 ## 3.17.0 (November 24, 2020)
 
 FEATURES
