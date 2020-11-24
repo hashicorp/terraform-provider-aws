@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"math"
@@ -11,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -42,27 +44,24 @@ func resourceAwsEcsService() *schema.Resource {
 			"capacity_provider_strategy": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"base": {
-							Type:         schema.TypeInt,
-							Optional:     true,
+							Type:     schema.TypeInt,
+							Optional: true,
+
 							ValidateFunc: validation.IntBetween(0, 100000),
-							ForceNew:     true,
 						},
 
 						"capacity_provider": {
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 
 						"weight": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 1000),
-							ForceNew:     true,
 						},
 					},
 				},
@@ -360,6 +359,15 @@ func resourceAwsEcsService() *schema.Resource {
 				Default:  false,
 			},
 		},
+
+		CustomizeDiff: customdiff.All(
+			customdiff.ForceNewIfChange("capacity_provider_strategy", func(_ context.Context, old, new, _ interface{}) bool {
+				ol := old.(*schema.Set).Len()
+				nl := new.(*schema.Set).Len()
+
+				return (ol == 0 && nl > 0) || (ol > 0 && nl == 0)
+			}),
+		),
 	}
 }
 
