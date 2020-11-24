@@ -242,10 +242,10 @@ aws_workspaces_workspace
 
 ##### New full-length documentation guides (e.g. EKS Getting Started Guide, IAM Policy Documents with Terraform)
 
-A new full length documentation entry describe the guide being added, and use the `release-note:enhancements` header.
+A new full length documentation entry describe the guide being added, and use the `release-note:enhancement` header.
 
 ``````markdown
-```release-note:enhancements
+```release-note:enhancement
 Add full length Custom Service Endpoint Configuration guide
 ```
 ``````
@@ -262,10 +262,10 @@ resource/aws_glue_classifier: Fix quote_symbol being optional
 
 ##### Resource and provider enhancements
 
-A new enhancement entry should use the `release-note:enhancements` header and have a prefix indicating the resource or datasource it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level enchancements.
+A new enhancement entry should use the `release-note:enhancement` header and have a prefix indicating the resource or datasource it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level enchancements.
 
 ``````markdown
-```release-note:enhancements
+```release-note:enhancement
 resource/aws_eip: Add network_border_group argument
 ```
 ``````

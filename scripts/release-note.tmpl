@@ -1,3 +1,8 @@
 {{- define "note" -}}
-{{if eq "new-resource" .Type}}**New Resource:** {{else if eq "new-datasource" .Type}}**New Data Source:** {{ end }}{{.Body}} ([GH-{{- .Issue -}}])
-{{- end -}}
+{{- if eq "new-resource" .Type -}}
+* **New Resource:** `{{.Body}}` (https://github.com/hashicorp/terraform-provider-aws/issues/{{- .Issue -}})
+{{- else if eq "new-data-source" .Type -}}
+* **New Data Source:** `{{.Body}}` (https://github.com/hashicorp/terraform-provider-aws/issues/{{- .Issue -}})
+{{- else -}}
+* {{.Body}} (https://github.com/hashicorp/terraform-provider-aws/issues/{{- .Issue -}})
+{{- end -}}{{- end -}}
