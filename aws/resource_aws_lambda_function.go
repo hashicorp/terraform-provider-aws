@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -711,8 +712,13 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	invokeArn := lambdaFunctionInvokeArn(*function.FunctionArn, meta)
 	d.Set("invoke_arn", invokeArn)
 
-	// Get Code Signing Config Output
-	// If code signing config output exists, set it to that value, otherwise set it empty.
+	// Currently, this functionality is only enabled in AWS Commercial partition
+	// and other partitions return ambiguous error codes (e.g. AccessDeniedException
+	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
+	if meta.(*AWSClient).partition != endpoints.AwsPartitionID {
+		return nil
+	}
+
 	codeSigningConfigInput := &lambda.GetFunctionCodeSigningConfigInput{
 		FunctionName: aws.String(d.Get("function_name").(string)),
 	}

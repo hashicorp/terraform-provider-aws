@@ -191,7 +191,7 @@ func TestAccAWSLambdaFunction_codeSigningConfig(t *testing.T) {
 	cscUpdateResourceName := "aws_lambda_code_signing_config.code_signing_config_2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
