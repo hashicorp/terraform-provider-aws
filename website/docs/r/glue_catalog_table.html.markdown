@@ -96,6 +96,12 @@ The following arguments are supported:
 * `view_expanded_text` - (Optional) If the table is a view, the expanded text of the view; otherwise null.
 * `table_type` - (Optional) The type of this table (EXTERNAL_TABLE, VIRTUAL_VIEW, etc.). While optional, some Athena DDL queries such as `ALTER TABLE` and `SHOW CREATE TABLE` will fail if this argument is empty.
 * `parameters` - (Optional) Properties associated with this table, as a list of key-value pairs.
+* `partition_index` - (Optional) A list of partition indexes. see [Partition Index](#partition-index) below.
+
+### Partition Index
+
+* `index_name` - (Required) The name of the partition index.
+* `keys` - (Required) The keys for the partition index.
 
 ### Partition Keys
 

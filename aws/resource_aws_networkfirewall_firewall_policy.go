@@ -159,7 +159,6 @@ func resourceAwsNetworkFirewallFirewallPolicyRead(ctx context.Context, d *schema
 
 	resp := output.FirewallPolicyResponse
 	policy := output.FirewallPolicy
-	arn := aws.StringValue(resp.FirewallPolicyArn)
 
 	d.Set("arn", resp.FirewallPolicyArn)
 	d.Set("description", resp.Description)
@@ -170,12 +169,7 @@ func resourceAwsNetworkFirewallFirewallPolicyRead(ctx context.Context, d *schema
 		return diag.FromErr(fmt.Errorf("error setting firewall_policy: %w", err))
 	}
 
-	tags, err := keyvaluetags.NetworkfirewallListTags(conn, arn)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing tags for NetworkFirewall Firewall Policy (%s): %w", arn, err))
-	}
-
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.NetworkfirewallKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
 	}
 
