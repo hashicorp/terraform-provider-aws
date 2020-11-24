@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -1510,24 +1511,21 @@ func TestAccAWSSecurityGroup_defaultEgressVPC(t *testing.T) {
 func TestAccAWSSecurityGroup_defaultEgressClassic(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSSecurityGroupDestroy,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSSecurityGroupEc2ClassicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityGroupConfigClassic,
+				Config: testAccAWSSecurityGroupConfigClassic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityGroupExists(resourceName, &group),
+					testAccCheckAWSSecurityGroupEc2ClassicExists(resourceName, &group),
 				),
 			},
 			{
+				Config:                  testAccAWSSecurityGroupConfigClassic(rName),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -1819,21 +1817,17 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGsVPC(t *testing.T) {
 func TestAccAWSSecurityGroup_ingressWithCidrAndSGsClassic(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSSecurityGroupEc2ClassicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityGroupConfig_ingressWithCidrAndSGs_classic,
+				Config: testAccAWSSecurityGroupConfig_ingressWithCidrAndSGs_classic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityGroupExists(resourceName, &group),
-					testAccCheckAWSSecurityGroupSGandCidrAttributes(&group),
+					testAccCheckAWSSecurityGroupEc2ClassicExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
@@ -1850,6 +1844,7 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGsClassic(t *testing.T) {
 				),
 			},
 			{
+				Config:                  testAccAWSSecurityGroupConfig_ingressWithCidrAndSGs_classic(rName),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -2112,6 +2107,38 @@ func testAccCheckAWSSecurityGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccCheckAWSSecurityGroupEc2ClassicDestroy(s *terraform.State) error {
+	conn := testAccProviderEc2Classic.Meta().(*AWSClient).ec2conn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_security_group" {
+			continue
+		}
+
+		input := &ec2.DescribeSecurityGroupsInput{
+			GroupIds: []*string{aws.String(rs.Primary.ID)},
+		}
+
+		output, err := conn.DescribeSecurityGroups(input)
+
+		if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("error describing EC2 Security Group (%s): %w", rs.Primary.ID, err)
+		}
+
+		for _, sg := range output.SecurityGroups {
+			if aws.StringValue(sg.GroupId) == rs.Primary.ID {
+				return fmt.Errorf("EC2 Security Group (%s) still exists", rs.Primary.ID)
+			}
+		}
+	}
+
+	return nil
+}
+
 func testAccCheckAWSSecurityGroupExists(n string, group *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -2138,6 +2165,40 @@ func testAccCheckAWSSecurityGroupExists(n string, group *ec2.SecurityGroup) reso
 		}
 
 		return fmt.Errorf("Security Group not found")
+	}
+}
+
+func testAccCheckAWSSecurityGroupEc2ClassicExists(n string, group *ec2.SecurityGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Security Group is set")
+		}
+
+		conn := testAccProviderEc2Classic.Meta().(*AWSClient).ec2conn
+
+		input := &ec2.DescribeSecurityGroupsInput{
+			GroupIds: []*string{aws.String(rs.Primary.ID)},
+		}
+
+		output, err := conn.DescribeSecurityGroups(input)
+
+		if err != nil {
+			return fmt.Errorf("error describing EC2 Security Group (%s): %w", rs.Primary.ID, err)
+		}
+
+		for _, sg := range output.SecurityGroups {
+			if aws.StringValue(sg.GroupId) == rs.Primary.ID {
+				*group = *sg
+				return nil
+			}
+		}
+
+		return fmt.Errorf("EC2 Security Group (%s) not found", rs.Primary.ID)
 	}
 }
 
@@ -3309,12 +3370,16 @@ resource "aws_security_group" "test" {
 }
 `
 
-const testAccAWSSecurityGroupConfigClassic = `
+func testAccAWSSecurityGroupConfigClassic(rName string) string {
+	return composeConfig(
+		testAccEc2ClassicRegionProviderConfig(),
+		fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_example_1"
+  name        = %[1]q
   description = "Used in the terraform acceptance tests"
 }
-`
+`, rName))
+}
 
 func testAccAWSSecurityGroupPrefixNameConfig(namePrefix string) string {
 	return fmt.Sprintf(`
@@ -3600,9 +3665,12 @@ resource "aws_security_group" "test" {
 }
 `
 
-const testAccAWSSecurityGroupConfig_ingressWithCidrAndSGs_classic = `
+func testAccAWSSecurityGroupConfig_ingressWithCidrAndSGs_classic(rName string) string {
+	return composeConfig(
+		testAccEc2ClassicRegionProviderConfig(),
+		fmt.Sprintf(`
 resource "aws_security_group" "test2" {
-  name        = "tf_other_acc_tests"
+  name        = "%[1]s-2"
   description = "Used in the terraform acceptance tests"
 
   tags = {
@@ -3611,7 +3679,7 @@ resource "aws_security_group" "test2" {
 }
 
 resource "aws_security_group" "test" {
-  name        = "terraform_acceptance_test_example"
+  name        = %[1]q
   description = "Used in the terraform acceptance tests"
 
   ingress {
@@ -3636,7 +3704,8 @@ resource "aws_security_group" "test" {
     Name = "tf-acc-test"
   }
 }
-`
+`, rName))
+}
 
 // fails to apply in one pass with the error "diffs didn't match during apply"
 // GH-2027

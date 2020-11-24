@@ -1081,6 +1081,18 @@ func validateOnceADayWindowFormat(v interface{}, k string) (ws []string, errors 
 	return
 }
 
+// validateUTCTimestamp validates a string in UTC Format required by APIs including:
+// https://docs.aws.amazon.com/iot/latest/apireference/API_CloudwatchMetricAction.html
+// https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceToPointInTime.html
+func validateUTCTimestamp(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	_, err := time.Parse(time.RFC3339, value)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("%q must be in RFC3339 time format %q. Example: %s", k, time.RFC3339, err))
+	}
+	return
+}
+
 // Validates that ECS Placement Constraints are set correctly
 // Takes type, and expression as strings
 func validateAwsEcsPlacementConstraint(constType, constExpr string) error {
@@ -1517,8 +1529,8 @@ func validateAwsKmsGrantName(v interface{}, k string) (ws []string, es []error) 
 
 func validateCognitoIdentityPoolName(v interface{}, k string) (ws []string, errors []error) {
 	val := v.(string)
-	if !regexp.MustCompile(`^[\w _]+$`).MatchString(val) {
-		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters and spaces", k))
+	if !regexp.MustCompile(`^[\w\s+=,.@-]+$`).MatchString(val) {
+		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, underscores and hyphens", k))
 	}
 
 	return
@@ -1956,16 +1968,6 @@ func validateIoTTopicRuleCloudWatchAlarmStateValue(v interface{}, s string) ([]s
 	return nil, []error{fmt.Errorf("State must be one of OK, ALARM, or INSUFFICIENT_DATA")}
 }
 
-func validateIoTTopicRuleCloudWatchMetricTimestamp(v interface{}, s string) ([]string, []error) {
-	dateString := v.(string)
-
-	// https://docs.aws.amazon.com/iot/latest/apireference/API_CloudwatchMetricAction.html
-	if _, err := time.Parse(time.RFC3339, dateString); err != nil {
-		return nil, []error{err}
-	}
-	return nil, nil
-}
-
 func validateIoTTopicRuleElasticSearchEndpoint(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
@@ -2133,6 +2135,15 @@ func validate4ByteAsn(v interface{}, k string) (ws []string, errors []error) {
 
 	if asn < 0 || asn > 4294967295 {
 		errors = append(errors, fmt.Errorf("%q (%q) must be in the range 0 to 4294967295", k, v))
+	}
+	return
+}
+
+func validateLinuxFileMode(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-7]{4}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only valid linux mode is allowed in %q", k))
 	}
 	return
 }

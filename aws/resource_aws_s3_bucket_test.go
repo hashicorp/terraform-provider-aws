@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -286,7 +287,7 @@ func TestAccAWSS3Bucket_tagsWithSystemTags(t *testing.T) {
 	resourceName := "aws_s3_bucket.bucket"
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
 
-	var stackId string
+	var stackID string
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -297,16 +298,18 @@ func TestAccAWSS3Bucket_tagsWithSystemTags(t *testing.T) {
 				// Tear down CF stack.
 				conn := testAccProvider.Meta().(*AWSClient).cfconn
 
+				requestToken := resource.UniqueId()
 				req := &cloudformation.DeleteStackInput{
-					StackName: aws.String(stackId),
+					StackName:          aws.String(stackID),
+					ClientRequestToken: aws.String(requestToken),
 				}
 
-				log.Printf("[DEBUG] Deleting CloudFormation stack: %#v", req)
+				log.Printf("[DEBUG] Deleting CloudFormation stack: %s", req)
 				if _, err := conn.DeleteStack(req); err != nil {
-					return fmt.Errorf("Error deleting CloudFormation stack: %s", err)
+					return fmt.Errorf("error deleting CloudFormation stack: %w", err)
 				}
 
-				if err := waitForCloudFormationStackDeletion(conn, stackId, 10*time.Minute); err != nil {
+				if _, err := waiter.StackDeleted(conn, stackID, requestToken, 10*time.Minute); err != nil {
 					return fmt.Errorf("Error waiting for CloudFormation stack deletion: %s", err)
 				}
 
@@ -320,7 +323,7 @@ func TestAccAWSS3Bucket_tagsWithSystemTags(t *testing.T) {
 					testAccCheckAWSS3BucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					testAccCheckAWSS3DestroyBucket(resourceName),
-					testAccCheckAWSS3BucketCreateViaCloudFormation(bucketName, &stackId),
+					testAccCheckAWSS3BucketCreateViaCloudFormation(bucketName, &stackID),
 				),
 			},
 			{
@@ -2570,7 +2573,7 @@ func testAccCheckAWSS3BucketAddObjectsWithLegalHold(n string, keys ...string) re
 }
 
 // Create an S3 bucket via a CF stack so that it has system tags.
-func testAccCheckAWSS3BucketCreateViaCloudFormation(n string, stackId *string) resource.TestCheckFunc {
+func testAccCheckAWSS3BucketCreateViaCloudFormation(n string, stackID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).cfconn
 		stackName := acctest.RandomWithPrefix("tf-acc-test-s3tags")
@@ -2585,26 +2588,29 @@ func testAccCheckAWSS3BucketCreateViaCloudFormation(n string, stackId *string) r
   }
 }`, n)
 
+		requestToken := resource.UniqueId()
 		req := &cloudformation.CreateStackInput{
-			StackName:    aws.String(stackName),
-			TemplateBody: aws.String(templateBody),
+			StackName:          aws.String(stackName),
+			TemplateBody:       aws.String(templateBody),
+			ClientRequestToken: aws.String(requestToken),
 		}
 
-		log.Printf("[DEBUG] Creating CloudFormation stack: %#v", req)
+		log.Printf("[DEBUG] Creating CloudFormation stack: %s", req)
 		resp, err := conn.CreateStack(req)
 		if err != nil {
-			return fmt.Errorf("Error creating CloudFormation stack: %s", err)
+			return fmt.Errorf("error creating CloudFormation stack: %w", err)
 		}
 
-		status, err := waitForCloudFormationStackCreation(conn, aws.StringValue(resp.StackId), 10*time.Minute)
+		stack, err := waiter.StackCreated(conn, aws.StringValue(resp.StackId), requestToken, 10*time.Minute)
 		if err != nil {
-			return fmt.Errorf("Error waiting for CloudFormation stack creation: %s", err)
+			return fmt.Errorf("Error waiting for CloudFormation stack creation: %w", err)
 		}
+		status := aws.StringValue(stack.StackStatus)
 		if status != cloudformation.StackStatusCreateComplete {
 			return fmt.Errorf("Invalid CloudFormation stack creation status: %s", status)
 		}
 
-		*stackId = aws.StringValue(resp.StackId)
+		*stackID = aws.StringValue(resp.StackId)
 		return nil
 	}
 }

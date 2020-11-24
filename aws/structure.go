@@ -1140,8 +1140,12 @@ func flattenAttachment(a *ec2.NetworkInterfaceAttachment) map[string]interface{}
 	if a.InstanceId != nil {
 		att["instance"] = *a.InstanceId
 	}
-	att["device_index"] = *a.DeviceIndex
-	att["attachment_id"] = *a.AttachmentId
+	if a.DeviceIndex != nil {
+		att["device_index"] = *a.DeviceIndex
+	}
+	if a.AttachmentId != nil {
+		att["attachment_id"] = *a.AttachmentId
+	}
 	return att
 }
 

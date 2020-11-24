@@ -2003,6 +2003,8 @@ func TestValidateCognitoIdentityPoolName(t *testing.T) {
 		"foo bar",
 		"foo_bar",
 		"1foo 2bar 3",
+		"foo-bar_123",
+		"foo-bar",
 	}
 
 	for _, s := range validValues {
@@ -2013,11 +2015,10 @@ func TestValidateCognitoIdentityPoolName(t *testing.T) {
 	}
 
 	invalidValues := []string{
-		"1-2-3",
-		"foo!",
-		"foo-bar",
-		"foo-bar",
-		"foo1-bar2",
+		"foo*",
+		"foo:bar",
+		"foo&bar",
+		"foo1^bar2",
 	}
 
 	for _, s := range invalidValues {
@@ -3217,6 +3218,32 @@ func TestValidateServiceDiscoveryNamespaceName(t *testing.T) {
 		_, errors := validateServiceDiscoveryNamespaceName(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid namespace name", v)
+		}
+	}
+}
+
+func TestValidateUTCTimestamp(t *testing.T) {
+	validT := []string{
+		"2006-01-02T15:04:05Z",
+	}
+
+	invalidT := []string{
+		"2015-03-07 23:45:00",
+		"27-03-2019 23:45:00",
+		"Mon, 02 Jan 2006 15:04:05 -0700",
+	}
+
+	for _, f := range validT {
+		_, errors := validateUTCTimestamp(f, "utc_timestamp")
+		if len(errors) > 0 {
+			t.Fatalf("expected the time %q to be in valid format, got error %q", f, errors)
+		}
+	}
+
+	for _, f := range invalidT {
+		_, errors := validateUTCTimestamp(f, "utc_timestamp")
+		if len(errors) == 0 {
+			t.Fatalf("expected the time %q to fail validation", f)
 		}
 	}
 }
