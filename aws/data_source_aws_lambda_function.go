@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -301,6 +302,15 @@ func dataSourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) e
 
 	if err := d.Set("file_system_config", flattenLambdaFileSystemConfigs(function.FileSystemConfigs)); err != nil {
 		return fmt.Errorf("error setting file_system_config: %s", err)
+	}
+
+	// Currently, this functionality is only enabled in AWS Commercial partition
+	// and other partitions return ambiguous error codes (e.g. AccessDeniedException
+	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
+	if meta.(*AWSClient).partition != endpoints.AwsPartitionID {
+		d.SetId(aws.StringValue(function.FunctionName))
+
+		return nil
 	}
 
 	// Get Code Signing Config Output
