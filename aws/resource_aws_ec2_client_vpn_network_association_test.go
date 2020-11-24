@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -255,7 +254,7 @@ func testAccCheckAwsEc2ClientVpnNetworkAssociationExists(name string, assoc *ec2
 
 func testAccCheckAwsEc2ClientVpnNetworkAssociationSecurityGroupID(name, key string, group *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return tfawsresource.TestCheckTypeSetElemAttr(name, key, aws.StringValue(group.GroupId))(s)
+		return resource.TestCheckTypeSetElemAttr(name, key, aws.StringValue(group.GroupId))(s)
 	}
 }
 
@@ -307,7 +306,7 @@ resource "aws_ec2_client_vpn_network_association" "test" {
   subnet_id              = aws_subnet.test.id
   security_groups        = [aws_security_group.test1.id, aws_security_group.test2.id]
 }
-    
+
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%[1]s"
   server_certificate_arn = aws_acm_certificate.test.arn

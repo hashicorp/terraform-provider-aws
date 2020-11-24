@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
@@ -59,6 +60,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/quicksight"
@@ -69,6 +71,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
@@ -426,6 +429,16 @@ func (tags KeyValueTags) SecurityhubTags() map[string]*string {
 
 // SecurityhubKeyValueTags creates KeyValueTags from securityhub service tags.
 func SecurityhubKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
+// SignerTags returns signer service tags.
+func (tags KeyValueTags) SignerTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// SignerKeyValueTags creates KeyValueTags from signer service tags.
+func SignerKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
@@ -904,6 +917,33 @@ func (tags KeyValueTags) CloudwatcheventsTags() []*cloudwatchevents.Tag {
 
 // CloudwatcheventsKeyValueTags creates KeyValueTags from cloudwatchevents service tags.
 func CloudwatcheventsKeyValueTags(tags []*cloudwatchevents.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// CodeartifactTags returns codeartifact service tags.
+func (tags KeyValueTags) CodeartifactTags() []*codeartifact.Tag {
+	result := make([]*codeartifact.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &codeartifact.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// CodeartifactKeyValueTags creates KeyValueTags from codeartifact service tags.
+func CodeartifactKeyValueTags(tags []*codeartifact.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -2052,6 +2092,33 @@ func NeptuneKeyValueTags(tags []*neptune.Tag) KeyValueTags {
 	return New(m)
 }
 
+// NetworkfirewallTags returns networkfirewall service tags.
+func (tags KeyValueTags) NetworkfirewallTags() []*networkfirewall.Tag {
+	result := make([]*networkfirewall.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &networkfirewall.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// NetworkfirewallKeyValueTags creates KeyValueTags from networkfirewall service tags.
+func NetworkfirewallKeyValueTags(tags []*networkfirewall.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
 // NetworkmanagerTags returns networkmanager service tags.
 func (tags KeyValueTags) NetworkmanagerTags() []*networkmanager.Tag {
 	result := make([]*networkmanager.Tag, 0, len(tags))
@@ -2313,6 +2380,33 @@ func (tags KeyValueTags) S3Tags() []*s3.Tag {
 
 // S3KeyValueTags creates KeyValueTags from s3 service tags.
 func S3KeyValueTags(tags []*s3.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// S3controlTags returns s3control service tags.
+func (tags KeyValueTags) S3controlTags() []*s3control.S3Tag {
+	result := make([]*s3control.S3Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &s3control.S3Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// S3controlKeyValueTags creates KeyValueTags from s3control service tags.
+func S3controlKeyValueTags(tags []*s3control.S3Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {

@@ -109,12 +109,12 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_athena_database" "test" {
   name   = "%s"
-  bucket = "${aws_s3_bucket.test.bucket}"
+  bucket = aws_s3_bucket.test.bucket
 }
 
 resource "aws_athena_named_query" "test" {
   name        = "tf-athena-named-query-%s"
-  database    = "${aws_athena_database.test.name}"
+  database    = aws_athena_database.test.name
   query       = "SELECT * FROM ${aws_athena_database.test.name} limit 10;"
   description = "tf test"
 }
@@ -134,13 +134,13 @@ resource "aws_athena_workgroup" "test" {
 
 resource "aws_athena_database" "test" {
   name   = "%s"
-  bucket = "${aws_s3_bucket.test.bucket}"
+  bucket = aws_s3_bucket.test.bucket
 }
 
 resource "aws_athena_named_query" "test" {
   name        = "tf-athena-named-query-%s"
-  workgroup   = "${aws_athena_workgroup.test.id}"
-  database    = "${aws_athena_database.test.name}"
+  workgroup   = aws_athena_workgroup.test.id
+  database    = aws_athena_database.test.name
   query       = "SELECT * FROM ${aws_athena_database.test.name} limit 10;"
   description = "tf test"
 }

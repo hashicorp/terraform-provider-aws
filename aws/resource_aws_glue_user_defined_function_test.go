@@ -214,8 +214,8 @@ resource "aws_glue_user_defined_function" "test" {
   owner_type    = "GROUP"
 
   resource_uris {
-   resource_type = "ARCHIVE"
-   uri           = %[1]q
+    resource_type = "ARCHIVE"
+    uri           = %[1]q
   }
 }
 `, rName)
@@ -236,13 +236,13 @@ resource "aws_glue_user_defined_function" "test" {
   owner_type    = "GROUP"
 
   resource_uris {
-   resource_type = "ARCHIVE"
-   uri           = %[1]q
+    resource_type = "ARCHIVE"
+    uri           = %[1]q
   }
 
   resource_uris {
-   resource_type = "JAR"
-   uri           = %[1]q
+    resource_type = "JAR"
+    uri           = %[1]q
   }
 }
 `, rName)

@@ -70,15 +70,15 @@ The `criterion` block suports the following:
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attribute is exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the GuardDuty filter.
 * `id` - A compound field, consisting of the ID of the GuardDuty detector and the name of the filter.
 
 ## Import
 
-GuardDuty filters can be imported using the detector ID and filter's name separated by underscore, e.g.
+GuardDuty filters can be imported using the detector ID and filter's name separated by a colon, e.g.
 
 ```
-$ terraform import aws_guardduty_filter.MyFilter 00b00fd5aecc0ab60a708659477e9617_MyFilter
+$ terraform import aws_guardduty_filter.MyFilter 00b00fd5aecc0ab60a708659477e9617:MyFilter
 ```

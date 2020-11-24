@@ -1,0 +1,69 @@
+package waiter
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+)
+
+const (
+	StoredIscsiVolumeStatusNotFound = "NotFound"
+	StoredIscsiVolumeStatusUnknown  = "Unknown"
+	NfsFileShareStatusNotFound      = "NotFound"
+	NfsFileShareStatusUnknown       = "Unknown"
+)
+
+// StoredIscsiVolumeStatus fetches the Volume and its Status
+func StoredIscsiVolumeStatus(conn *storagegateway.StorageGateway, volumeARN string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &storagegateway.DescribeStorediSCSIVolumesInput{
+			VolumeARNs: []*string{aws.String(volumeARN)},
+		}
+
+		output, err := conn.DescribeStorediSCSIVolumes(input)
+
+		if tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeVolumeNotFound) ||
+			tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
+			return nil, StoredIscsiVolumeStatusNotFound, nil
+		}
+
+		if err != nil {
+			return nil, StoredIscsiVolumeStatusUnknown, err
+		}
+
+		if output == nil || len(output.StorediSCSIVolumes) == 0 {
+			return nil, StoredIscsiVolumeStatusNotFound, nil
+		}
+
+		return output, aws.StringValue(output.StorediSCSIVolumes[0].VolumeStatus), nil
+	}
+}
+
+func NfsFileShareStatus(conn *storagegateway.StorageGateway, fileShareArn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &storagegateway.DescribeNFSFileSharesInput{
+			FileShareARNList: []*string{aws.String(fileShareArn)},
+		}
+
+		log.Printf("[DEBUG] Reading Storage Gateway NFS File Share: %s", input)
+		output, err := conn.DescribeNFSFileShares(input)
+		if err != nil {
+			if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified file share was not found.") {
+				return nil, NfsFileShareStatusNotFound, nil
+			}
+			return nil, NfsFileShareStatusUnknown, fmt.Errorf("error reading Storage Gateway NFS File Share: %w", err)
+		}
+
+		if output == nil || len(output.NFSFileShareInfoList) == 0 || output.NFSFileShareInfoList[0] == nil {
+			return nil, NfsFileShareStatusNotFound, nil
+		}
+
+		fileshare := output.NFSFileShareInfoList[0]
+
+		return fileshare, aws.StringValue(fileshare.FileShareStatus), nil
+	}
+}

@@ -185,7 +185,7 @@ resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test"
 
   tags = {
-	%q = %q
+    %q = %q
   }
 }
 `, tagKey1, tagValue1)
@@ -197,8 +197,8 @@ resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test"
 
   tags = {
-	%q = %q
-	%q = %q
+    %q = %q
+    %q = %q
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)

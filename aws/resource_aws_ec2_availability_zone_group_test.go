@@ -86,7 +86,7 @@ data "aws_availability_zones" "test" {
   # Filter to one Availability Zone Group per Region as Local Zones become available
   # e.g. ensure there are not two us-west-2-XXX when adding to this list
   filter {
-    name   = "group-name"
+    name = "group-name"
     values = [
       "us-west-2-lax-1",
     ]

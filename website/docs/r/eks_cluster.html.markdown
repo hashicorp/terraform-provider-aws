@@ -27,6 +27,7 @@ resource "aws_eks_cluster" "example" {
   # Otherwise, EKS will not be able to properly delete EKS managed EC2 infrastructure such as Security Groups.
   depends_on = [
     aws_iam_role_policy_attachment.example-AmazonEKSClusterPolicy,
+    aws_iam_role_policy_attachment.example-AmazonEKSVPCResourceController,
   ]
 }
 
@@ -63,6 +64,13 @@ POLICY
 
 resource "aws_iam_role_policy_attachment" "example-AmazonEKSClusterPolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.example.name
+}
+
+# Optionally, enable Security Groups for Pods
+# Reference: https://docs.aws.amazon.com/eks/latest/userguide/security-groups-for-pods.html
+resource "aws_iam_role_policy_attachment" "example-AmazonEKSVPCResourceController" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
   role       = aws_iam_role.example.name
 }
 ```
@@ -105,13 +113,15 @@ resource "aws_eks_cluster" "example" {
   # ... other configuration ...
 }
 
-resource "aws_iam_openid_connect_provider" "example" {
-  client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = []
-  url             = aws_eks_cluster.example.identity[0].oidc[0].issuer
+data "tls_certificate" "example" {
+  url = aws_eks_cluster.example.identity[0].oidc[0].issuer
 }
 
-data "aws_caller_identity" "current" {}
+resource "aws_iam_openid_connect_provider" "example" {
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = [data.tls_certificate.example.certificates[0].sha1_fingerprint]
+  url             = aws_eks_cluster.example.identity[0].oidc[0].issuer
+}
 
 data "aws_iam_policy_document" "example_assume_role_policy" {
   statement {

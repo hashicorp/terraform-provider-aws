@@ -107,6 +107,23 @@ func resourceAwsBackupPlan() *schema.Resource {
 				},
 				Set: backupBackupPlanHash,
 			},
+			"advanced_backup_setting": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"backup_options": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"resource_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -125,8 +142,9 @@ func resourceAwsBackupPlanCreate(d *schema.ResourceData, meta interface{}) error
 
 	input := &backup.CreateBackupPlanInput{
 		BackupPlan: &backup.PlanInput{
-			BackupPlanName: aws.String(d.Get("name").(string)),
-			Rules:          expandBackupPlanRules(d.Get("rule").(*schema.Set)),
+			BackupPlanName:         aws.String(d.Get("name").(string)),
+			Rules:                  expandBackupPlanRules(d.Get("rule").(*schema.Set)),
+			AdvancedBackupSettings: expandBackupPlanAdvancedBackupSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 		},
 		BackupPlanTags: keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().BackupTags(),
 	}
@@ -166,6 +184,12 @@ func resourceAwsBackupPlanRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting rule: %s", err)
 	}
 
+	// AdvancedBackupSettings being read direct from resp and not from under
+	// resp.BackupPlan is deliberate - the latter always contains null
+	if err := d.Set("advanced_backup_setting", flattenBackupPlanAdvancedBackupSettings(resp.AdvancedBackupSettings)); err != nil {
+		return fmt.Errorf("error setting advanced_backup_setting: %s", err)
+	}
+
 	tags, err := keyvaluetags.BackupListTags(conn, d.Get("arn").(string))
 	if err != nil {
 		return fmt.Errorf("error listing tags for Backup Plan (%s): %s", d.Id(), err)
@@ -180,12 +204,13 @@ func resourceAwsBackupPlanRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsBackupPlanUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).backupconn
 
-	if d.HasChange("rule") {
+	if d.HasChanges("rule", "advanced_backup_setting") {
 		input := &backup.UpdateBackupPlanInput{
 			BackupPlanId: aws.String(d.Id()),
 			BackupPlan: &backup.PlanInput{
-				BackupPlanName: aws.String(d.Get("name").(string)),
-				Rules:          expandBackupPlanRules(d.Get("rule").(*schema.Set)),
+				BackupPlanName:         aws.String(d.Get("name").(string)),
+				Rules:                  expandBackupPlanRules(d.Get("rule").(*schema.Set)),
+				AdvancedBackupSettings: expandBackupPlanAdvancedBackupSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 			},
 		}
 
@@ -279,6 +304,27 @@ func expandBackupPlanRules(vRules *schema.Set) []*backup.RuleInput {
 	return rules
 }
 
+func expandBackupPlanAdvancedBackupSettings(vAdvancedBackupSettings *schema.Set) []*backup.AdvancedBackupSetting {
+	advancedBackupSettings := []*backup.AdvancedBackupSetting{}
+
+	for _, vAdvancedBackupSetting := range vAdvancedBackupSettings.List() {
+		advancedBackupSetting := &backup.AdvancedBackupSetting{}
+
+		mAdvancedBackupSetting := vAdvancedBackupSetting.(map[string]interface{})
+
+		if v, ok := mAdvancedBackupSetting["backup_options"].(map[string]interface{}); ok && v != nil {
+			advancedBackupSetting.BackupOptions = stringMapToPointers(v)
+		}
+		if v, ok := mAdvancedBackupSetting["resource_type"].(string); ok && v != "" {
+			advancedBackupSetting.ResourceType = aws.String(v)
+		}
+
+		advancedBackupSettings = append(advancedBackupSettings, advancedBackupSetting)
+	}
+
+	return advancedBackupSettings
+}
+
 func expandBackupPlanCopyActions(actionList []interface{}) []*backup.CopyAction {
 	actions := []*backup.CopyAction{}
 
@@ -287,7 +333,10 @@ func expandBackupPlanCopyActions(actionList []interface{}) []*backup.CopyAction 
 		action := &backup.CopyAction{}
 
 		action.DestinationBackupVaultArn = aws.String(item["destination_vault_arn"].(string))
-		action.Lifecycle = expandBackupPlanLifecycle(item["lifecycle"].([]interface{}))
+
+		if v, ok := item["lifecycle"].([]interface{}); ok && len(v) > 0 {
+			action.Lifecycle = expandBackupPlanLifecycle(v)
+		}
 
 		actions = append(actions, action)
 	}
@@ -341,6 +390,21 @@ func flattenBackupPlanRules(rules []*backup.Rule) *schema.Set {
 	return schema.NewSet(backupBackupPlanHash, vRules)
 }
 
+func flattenBackupPlanAdvancedBackupSettings(advancedBackupSettings []*backup.AdvancedBackupSetting) *schema.Set {
+	vAdvancedBackupSettings := []interface{}{}
+
+	for _, advancedBackupSetting := range advancedBackupSettings {
+		mAdvancedBackupSetting := map[string]interface{}{
+			"backup_options": aws.StringValueMap(advancedBackupSetting.BackupOptions),
+			"resource_type":  aws.StringValue(advancedBackupSetting.ResourceType),
+		}
+
+		vAdvancedBackupSettings = append(vAdvancedBackupSettings, mAdvancedBackupSetting)
+	}
+
+	return schema.NewSet(backupBackupPlanHash, vAdvancedBackupSettings)
+}
+
 func flattenBackupPlanCopyActions(copyActions []*backup.CopyAction) []interface{} {
 	if len(copyActions) == 0 {
 		return nil
@@ -355,7 +419,10 @@ func flattenBackupPlanCopyActions(copyActions []*backup.CopyAction) []interface{
 
 		tfMap := map[string]interface{}{
 			"destination_vault_arn": aws.StringValue(copyAction.DestinationBackupVaultArn),
-			"lifecycle":             flattenBackupPlanCopyActionLifecycle(copyAction.Lifecycle),
+		}
+
+		if copyAction.Lifecycle != nil {
+			tfMap["lifecycle"] = flattenBackupPlanCopyActionLifecycle(copyAction.Lifecycle)
 		}
 
 		tfList = append(tfList, tfMap)

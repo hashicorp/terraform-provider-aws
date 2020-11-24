@@ -1073,11 +1073,11 @@ resource "aws_storagegateway_gateway" "test" {
 func testAccAWSStorageGatewayGatewayBandwidthConfigUpload(rName string, rate int) string {
 	return testAccAWSStorageGateway_TapeAndVolumeGatewayBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
-  gateway_ip_address                          = aws_instance.test.public_ip
-  gateway_name                                = %[1]q
-  gateway_timezone                            = "GMT"
-  gateway_type                                = "CACHED"
-  average_upload_rate_limit_in_bits_per_sec   = %[2]d
+  gateway_ip_address                        = aws_instance.test.public_ip
+  gateway_name                              = %[1]q
+  gateway_timezone                          = "GMT"
+  gateway_type                              = "CACHED"
+  average_upload_rate_limit_in_bits_per_sec = %[2]d
 }
 `, rName, rate)
 }
@@ -1085,11 +1085,11 @@ resource "aws_storagegateway_gateway" "test" {
 func testAccAWSStorageGatewayGatewayBandwidthConfigDownload(rName string, rate int) string {
 	return testAccAWSStorageGateway_TapeAndVolumeGatewayBase(rName) + fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
- gateway_ip_address                          = aws_instance.test.public_ip
- gateway_name                                = %[1]q
- gateway_timezone                            = "GMT"
- gateway_type                                = "CACHED"
- average_download_rate_limit_in_bits_per_sec = %[2]d
+  gateway_ip_address                          = aws_instance.test.public_ip
+  gateway_name                                = %[1]q
+  gateway_timezone                            = "GMT"
+  gateway_type                                = "CACHED"
+  average_download_rate_limit_in_bits_per_sec = %[2]d
 }
 `, rName, rate)
 }

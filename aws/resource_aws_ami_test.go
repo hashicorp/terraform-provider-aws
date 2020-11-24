@@ -339,7 +339,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   size              = %d
 
   tags = {
@@ -348,7 +348,7 @@ resource "aws_ebs_volume" "test" {
 }
 
 resource "aws_ebs_snapshot" "test" {
-  volume_id = "${aws_ebs_volume.test.id}"
+  volume_id = aws_ebs_volume.test.id
 
   tags = {
     Name = "%[2]s"
@@ -368,7 +368,7 @@ resource "aws_ami" "test" {
 
   ebs_block_device {
     device_name = "/dev/sda1"
-    snapshot_id = "${aws_ebs_snapshot.test.id}"
+    snapshot_id = aws_ebs_snapshot.test.id
   }
 }
 `, rName)
@@ -385,7 +385,7 @@ resource "aws_ami" "test" {
 
   ebs_block_device {
     device_name = "/dev/sda1"
-    snapshot_id = "${aws_ebs_snapshot.test.id}"
+    snapshot_id = aws_ebs_snapshot.test.id
   }
 }
 `, rName, desc)
@@ -401,7 +401,7 @@ resource "aws_ami" "test" {
 
   ebs_block_device {
     device_name = "/dev/sda1"
-    snapshot_id = "${aws_ebs_snapshot.test.id}"
+    snapshot_id = aws_ebs_snapshot.test.id
   }
 
   tags = {
@@ -421,7 +421,7 @@ resource "aws_ami" "test" {
 
   ebs_block_device {
     device_name = "/dev/sda1"
-    snapshot_id = "${aws_ebs_snapshot.test.id}"
+    snapshot_id = aws_ebs_snapshot.test.id
   }
 
   tags = {

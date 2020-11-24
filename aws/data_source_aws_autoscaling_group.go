@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
@@ -105,7 +104,6 @@ func dataSourceAwsAutoscalingGroup() *schema.Resource {
 
 func dataSourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).autoscalingconn
-	d.SetId(time.Now().UTC().String())
 
 	groupName := d.Get("name").(string)
 
@@ -142,13 +140,7 @@ func dataSourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[DEBUG] aws_autoscaling_group - Single Auto Scaling Group found: %s", *group.AutoScalingGroupName)
 
-	err1 := groupDescriptionAttributes(d, group)
-	return err1
-}
-
-// Populate group attribute fields with the returned group
-func groupDescriptionAttributes(d *schema.ResourceData, group *autoscaling.Group) error {
-	log.Printf("[DEBUG] Setting attributes: %s", group)
+	d.SetId(aws.StringValue(group.AutoScalingGroupName))
 	d.Set("name", group.AutoScalingGroupName)
 	d.Set("arn", group.AutoScalingGroupARN)
 	if err := d.Set("availability_zones", aws.StringValueSlice(group.AvailabilityZones)); err != nil {

@@ -95,7 +95,11 @@ data "aws_docdb_orderable_db_instance" "test" {
   engine_version = %q
   license_model  = %q
 
-  preferred_instance_classes = ["db.xyz.xlarge", %q, "db.t3.small"]
+  preferred_instance_classes = [
+    "db.xyz.xlarge",
+    %q,
+    "db.t3.small",
+  ]
 }
 `, engine, version, license, preferredOption)
 }

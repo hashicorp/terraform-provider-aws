@@ -2,6 +2,7 @@ package aws
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -12,18 +13,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	homedir "github.com/mitchellh/go-homedir"
-
-	"errors"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 const awsMutexLambdaKey = `aws_lambda_function`
+
+const LambdaFunctionVersionLatest = "$LATEST"
 
 func resourceAwsLambdaFunction() *schema.Resource {
 	return &schema.Resource{
@@ -62,6 +62,19 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"filename"},
+			},
+			"code_signing_config_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
+			},
+			"signing_profile_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"signing_job_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -271,15 +284,35 @@ func resourceAwsLambdaFunction() *schema.Resource {
 }
 
 func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	if needsFunctionCodeUpdate(d) {
+	configChanged := hasConfigChanges(d)
+	functionCodeUpdated := needsFunctionCodeUpdate(d)
+	if functionCodeUpdated {
 		d.SetNewComputed("last_modified")
-		publish := d.Get("publish").(bool)
-		if publish {
-			d.SetNewComputed("version")
-			d.SetNewComputed("qualified_arn")
-		}
+	}
+
+	publish := d.Get("publish").(bool)
+	publishChanged := d.HasChange("publish")
+	if publish && (configChanged || functionCodeUpdated || publishChanged) {
+		d.SetNewComputed("version")
+		d.SetNewComputed("qualified_arn")
 	}
 	return nil
+}
+
+func hasConfigChanges(d resourceDiffer) bool {
+	return d.HasChange("description") ||
+		d.HasChange("handler") ||
+		d.HasChange("file_system_config") ||
+		d.HasChange("memory_size") ||
+		d.HasChange("role") ||
+		d.HasChange("timeout") ||
+		d.HasChange("kms_key_arn") ||
+		d.HasChange("layers") ||
+		d.HasChange("dead_letter_config") ||
+		d.HasChange("tracing_config") ||
+		d.HasChange("vpc_config") ||
+		d.HasChange("runtime") ||
+		d.HasChange("environment")
 }
 
 // resourceAwsLambdaFunction maps to:
@@ -311,7 +344,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		defer awsMutexKV.Unlock(awsMutexLambdaKey)
 		file, err := loadFileContent(filename.(string))
 		if err != nil {
-			return fmt.Errorf("Unable to load %q: %s", filename.(string), err)
+			return fmt.Errorf("Unable to load %q: %w", filename.(string), err)
 		}
 		functionCode = &lambda.FunctionCode{
 			ZipFile: file,
@@ -339,6 +372,10 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		Runtime:      aws.String(d.Get("runtime").(string)),
 		Timeout:      aws.Int64(int64(d.Get("timeout").(int))),
 		Publish:      aws.Bool(d.Get("publish").(bool)),
+	}
+
+	if v, ok := d.GetOk("code_signing_config_arn"); ok {
+		params.CodeSigningConfigArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("layers"); ok && len(v.([]interface{})) > 0 {
@@ -405,7 +442,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	// IAM changes can take some time to propagate in AWS
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 		_, err := conn.CreateFunction(params)
 		if err != nil {
 			log.Printf("[DEBUG] Error creating Lambda Function: %s", err)
@@ -436,8 +473,8 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		return nil
 	})
 	if err != nil {
-		if !isResourceTimeoutError(err) && !isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "Your request has been throttled by EC2") {
-			return fmt.Errorf("Error creating Lambda function: %s", err)
+		if !isResourceTimeoutError(err) && !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
+			return fmt.Errorf("error creating Lambda Function: %w", err)
 		}
 		// Allow additional time for slower uploads or EC2 throttling
 		err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
@@ -458,14 +495,14 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 			_, err = conn.CreateFunction(params)
 		}
 		if err != nil {
-			return fmt.Errorf("Error creating Lambda function: %s", err)
+			return fmt.Errorf("error creating Lambda Function: %w", err)
 		}
 	}
 
 	d.SetId(d.Get("function_name").(string))
 
 	if err := waitForLambdaFunctionCreation(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Lambda Function (%s) creation: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for Lambda Function (%s) creation: %w", d.Id(), err)
 	}
 
 	if reservedConcurrentExecutions >= 0 {
@@ -491,7 +528,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 			_, err = conn.PutFunctionConcurrency(concurrencyParams)
 		}
 		if err != nil {
-			return fmt.Errorf("Error setting concurrency for Lambda %s: %s", functionName, err)
+			return fmt.Errorf("Error setting Lambda Function (%s) concurrency: %w", functionName, err)
 		}
 	}
 
@@ -536,7 +573,7 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	// Tags on aliases and versions are not supported.
 	if !qualifierExistance {
 		if err := d.Set("tags", keyvaluetags.LambdaKeyValueTags(getFunctionOutput.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-			return fmt.Errorf("error setting tags: %s", err)
+			return fmt.Errorf("error setting tags: %w", err)
 		}
 	}
 
@@ -546,35 +583,77 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	// getFunctionOutput.Configuration which holds metadata.
 
 	function := getFunctionOutput.Configuration
-	// TODO error checking / handling on the Set() calls.
-	d.Set("arn", function.FunctionArn)
-	d.Set("description", function.Description)
-	d.Set("handler", function.Handler)
-	d.Set("memory_size", function.MemorySize)
-	d.Set("last_modified", function.LastModified)
-	d.Set("role", function.Role)
-	d.Set("runtime", function.Runtime)
-	d.Set("timeout", function.Timeout)
-	d.Set("kms_key_arn", function.KMSKeyArn)
-	d.Set("source_code_hash", function.CodeSha256)
-	d.Set("source_code_size", function.CodeSize)
+
+	if err := d.Set("arn", function.FunctionArn); err != nil {
+		return fmt.Errorf("Error setting function arn for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("description", function.Description); err != nil {
+		return fmt.Errorf("Error setting function description for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("handler", function.Handler); err != nil {
+		return fmt.Errorf("Error setting handler for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("memory_size", function.MemorySize); err != nil {
+		return fmt.Errorf("Error setting memory size for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("last_modified", function.LastModified); err != nil {
+		return fmt.Errorf("Error setting last modified time for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("role", function.Role); err != nil {
+		return fmt.Errorf("Error setting role for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("runtime", function.Runtime); err != nil {
+		return fmt.Errorf("Error setting runtime for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("timeout", function.Timeout); err != nil {
+		return fmt.Errorf("Error setting timeout for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("kms_key_arn", function.KMSKeyArn); err != nil {
+		return fmt.Errorf("Error setting KMS key arn for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("source_code_hash", function.CodeSha256); err != nil {
+		return fmt.Errorf("Error setting CodeSha256 for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("source_code_size", function.CodeSize); err != nil {
+		return fmt.Errorf("Error setting code size for Lambda Function: %s", err)
+	}
+
+	// Add Signing Profile Version ARN
+	if err := d.Set("signing_profile_version_arn", function.SigningProfileVersionArn); err != nil {
+		return fmt.Errorf("Error setting signing profile version arn for Lambda Function: %s", err)
+	}
+
+	// Add Signing Job ARN
+	if err := d.Set("signing_job_arn", function.SigningJobArn); err != nil {
+		return fmt.Errorf("Error setting signing job arn for Lambda Function: %s", err)
+	}
 
 	fileSystemConfigs := flattenLambdaFileSystemConfigs(function.FileSystemConfigs)
 	log.Printf("[INFO] Setting Lambda %s file system configs %#v from API", d.Id(), fileSystemConfigs)
 	if err := d.Set("file_system_config", fileSystemConfigs); err != nil {
-		return fmt.Errorf("Error setting file system config for Lambda Function (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error setting file system config for Lambda Function (%s): %w", d.Id(), err)
 	}
 
 	layers := flattenLambdaLayers(function.Layers)
 	log.Printf("[INFO] Setting Lambda %s Layers %#v from API", d.Id(), layers)
 	if err := d.Set("layers", layers); err != nil {
-		return fmt.Errorf("Error setting layers for Lambda Function (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error setting layers for Lambda Function (%s): %w", d.Id(), err)
 	}
 
 	config := flattenLambdaVpcConfigResponse(function.VpcConfig)
 	log.Printf("[INFO] Setting Lambda %s VPC config %#v from API", d.Id(), config)
 	if err := d.Set("vpc_config", config); err != nil {
-		return fmt.Errorf("Error setting vpc_config for Lambda Function (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error setting vpc_config for Lambda Function (%s): %w", d.Id(), err)
 	}
 
 	environment := flattenLambdaEnvironment(function.Environment)
@@ -636,6 +715,23 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	invokeArn := lambdaFunctionInvokeArn(*function.FunctionArn, meta)
 	d.Set("invoke_arn", invokeArn)
 
+	// Get Code Signing Config Output
+	// If code signing config output exists, set it to that value, otherwise set it empty.
+	codeSigningConfigInput := &lambda.GetFunctionCodeSigningConfigInput{
+		FunctionName: aws.String(d.Get("function_name").(string)),
+	}
+
+	getCodeSigningConfigOutput, err := conn.GetFunctionCodeSigningConfig(codeSigningConfigInput)
+	if err != nil {
+		return fmt.Errorf("error getting Lambda Function (%s) code signing config %w", d.Id(), err)
+	}
+
+	if getCodeSigningConfigOutput == nil || getCodeSigningConfigOutput.CodeSigningConfigArn == nil {
+		d.Set("code_signing_config_arn", "")
+	} else {
+		d.Set("code_signing_config_arn", getCodeSigningConfigOutput.CodeSigningConfigArn)
+	}
+
 	return nil
 }
 
@@ -670,18 +766,18 @@ func resourceAwsLambdaFunctionDelete(d *schema.ResourceData, meta interface{}) e
 
 	_, err := conn.DeleteFunction(params)
 	if err != nil {
-		return fmt.Errorf("Error deleting Lambda Function: %s", err)
+		return fmt.Errorf("error deleting Lambda Function (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-type resourceDiffer interface {
-	HasChange(string) bool
-}
-
 func needsFunctionCodeUpdate(d resourceDiffer) bool {
-	return d.HasChange("filename") || d.HasChange("source_code_hash") || d.HasChange("s3_bucket") || d.HasChange("s3_key") || d.HasChange("s3_object_version")
+	return d.HasChange("filename") ||
+		d.HasChange("source_code_hash") ||
+		d.HasChange("s3_bucket") ||
+		d.HasChange("s3_key") ||
+		d.HasChange("s3_object_version")
 }
 
 // resourceAwsLambdaFunctionUpdate maps to:
@@ -689,12 +785,39 @@ func needsFunctionCodeUpdate(d resourceDiffer) bool {
 func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
 
+	// If Code Signing Config is updated, calls PutFunctionCodeSigningConfig
+	// If removed, calls DeleteFunctionCodeSigningConfig
+	if d.HasChange("code_signing_config_arn") {
+		if v, ok := d.GetOk("code_signing_config_arn"); ok {
+			configUpdateInput := &lambda.PutFunctionCodeSigningConfigInput{
+				CodeSigningConfigArn: aws.String(v.(string)),
+				FunctionName:         aws.String(d.Id()),
+			}
+
+			_, err := conn.PutFunctionCodeSigningConfig(configUpdateInput)
+
+			if err != nil {
+				return fmt.Errorf("error updating code signing config arn (Function: %s): %s", d.Id(), err)
+			}
+		} else {
+			configDeleteInput := &lambda.DeleteFunctionCodeSigningConfigInput{
+				FunctionName: aws.String(d.Id()),
+			}
+
+			_, err := conn.DeleteFunctionCodeSigningConfig(configDeleteInput)
+
+			if err != nil {
+				return fmt.Errorf("error deleting code signing config arn (Function: %s): %s", d.Id(), err)
+			}
+		}
+	}
+
 	arn := d.Get("arn").(string)
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.LambdaUpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Lambda Function (%s) tags: %s", arn, err)
+			return fmt.Errorf("error updating Lambda Function (%s) tags: %w", arn, err)
 		}
 	}
 
@@ -702,42 +825,34 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		FunctionName: aws.String(d.Id()),
 	}
 
-	configUpdate := false
 	if d.HasChange("description") {
 		configReq.Description = aws.String(d.Get("description").(string))
-		configUpdate = true
 	}
+
 	if d.HasChange("handler") {
 		configReq.Handler = aws.String(d.Get("handler").(string))
-		configUpdate = true
 	}
 	if d.HasChange("file_system_config") {
 		configReq.FileSystemConfigs = make([]*lambda.FileSystemConfig, 0)
 		if v, ok := d.GetOk("file_system_config"); ok && len(v.([]interface{})) > 0 {
 			configReq.FileSystemConfigs = expandLambdaFileSystemConfigs(v.([]interface{}))
 		}
-		configUpdate = true
 	}
 	if d.HasChange("memory_size") {
 		configReq.MemorySize = aws.Int64(int64(d.Get("memory_size").(int)))
-		configUpdate = true
 	}
 	if d.HasChange("role") {
 		configReq.Role = aws.String(d.Get("role").(string))
-		configUpdate = true
 	}
 	if d.HasChange("timeout") {
 		configReq.Timeout = aws.Int64(int64(d.Get("timeout").(int)))
-		configUpdate = true
 	}
 	if d.HasChange("kms_key_arn") {
 		configReq.KMSKeyArn = aws.String(d.Get("kms_key_arn").(string))
-		configUpdate = true
 	}
 	if d.HasChange("layers") {
 		layers := d.Get("layers").([]interface{})
 		configReq.Layers = expandStringList(layers)
-		configUpdate = true
 	}
 	if d.HasChange("dead_letter_config") {
 		dlcMaps := d.Get("dead_letter_config").([]interface{})
@@ -748,7 +863,6 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			dlcMap := dlcMaps[0].(map[string]interface{})
 			configReq.DeadLetterConfig.TargetArn = aws.String(dlcMap["target_arn"].(string))
 		}
-		configUpdate = true
 	}
 	if d.HasChange("tracing_config") {
 		tracingConfig := d.Get("tracing_config").([]interface{})
@@ -757,7 +871,6 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			configReq.TracingConfig = &lambda.TracingConfig{
 				Mode: aws.String(config["mode"].(string)),
 			}
-			configUpdate = true
 		}
 	}
 	if d.HasChange("vpc_config") {
@@ -770,12 +883,10 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			configReq.VpcConfig.SecurityGroupIds = expandStringSet(vpcConfig["security_group_ids"].(*schema.Set))
 			configReq.VpcConfig.SubnetIds = expandStringSet(vpcConfig["subnet_ids"].(*schema.Set))
 		}
-		configUpdate = true
 	}
 
 	if d.HasChange("runtime") {
 		configReq.Runtime = aws.String(d.Get("runtime").(string))
-		configUpdate = true
 	}
 	if d.HasChange("environment") {
 		if v, ok := d.GetOk("environment"); ok {
@@ -791,21 +902,19 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 				configReq.Environment = &lambda.Environment{
 					Variables: aws.StringMap(variables),
 				}
-				configUpdate = true
 			}
 		} else {
 			configReq.Environment = &lambda.Environment{
 				Variables: aws.StringMap(map[string]string{}),
 			}
-			configUpdate = true
 		}
 	}
-
+	configUpdate := hasConfigChanges(d)
 	if configUpdate {
 		log.Printf("[DEBUG] Send Update Lambda Function Configuration request: %#v", configReq)
 
 		// IAM changes can take 1 minute to propagate in AWS
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 			_, err := conn.UpdateFunctionConfiguration(configReq)
 			if err != nil {
 				log.Printf("[DEBUG] Received error modifying Lambda Function Configuration %s: %s", d.Id(), err)
@@ -836,8 +945,8 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			return nil
 		})
 		if err != nil {
-			if !isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "Your request has been throttled by EC2, please make sure you have enough API rate limit.") {
-				return fmt.Errorf("Error modifying Lambda Function Configuration %s: %s", d.Id(), err)
+			if !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2, please make sure you have enough API rate limit.") {
+				return fmt.Errorf("Error modifying Lambda Function (%s) configuration : %w", d.Id(), err)
 			}
 			// Allow 9 more minutes for EC2 throttling
 			err := resource.Retry(9*time.Minute, func() *resource.RetryError {
@@ -857,12 +966,12 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 				_, err = conn.UpdateFunctionConfiguration(configReq)
 			}
 			if err != nil {
-				return fmt.Errorf("Error modifying Lambda Function Configuration %s: %s", d.Id(), err)
+				return fmt.Errorf("Error modifying Lambda Function Configuration %s: %w", d.Id(), err)
 			}
 		}
 
 		if err := waitForLambdaFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Lambda Function (%s) update: %s", d.Id(), err)
+			return fmt.Errorf("error waiting for Lambda Function (%s) update: %w", d.Id(), err)
 		}
 	}
 
@@ -880,7 +989,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			defer awsMutexKV.Unlock(awsMutexLambdaKey)
 			file, err := loadFileContent(v.(string))
 			if err != nil {
-				return fmt.Errorf("Unable to load %q: %s", v.(string), err)
+				return fmt.Errorf("Unable to load %q: %w", v.(string), err)
 			}
 			codeReq.ZipFile = file
 		} else {
@@ -899,7 +1008,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 
 		_, err := conn.UpdateFunctionCode(codeReq)
 		if err != nil {
-			return fmt.Errorf("Error modifying Lambda Function Code %s: %s", d.Id(), err)
+			return fmt.Errorf("error modifying Lambda Function (%s) Code: %w", d.Id(), err)
 		}
 	}
 
@@ -916,7 +1025,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 
 			_, err := conn.PutFunctionConcurrency(concurrencyParams)
 			if err != nil {
-				return fmt.Errorf("Error setting concurrency for Lambda %s: %s", d.Id(), err)
+				return fmt.Errorf("error setting Lambda Function (%s) concurrency: %w", d.Id(), err)
 			}
 		} else {
 			log.Printf("[DEBUG] Removing Concurrency for the Lambda Function %s", d.Id())
@@ -926,20 +1035,20 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			}
 			_, err := conn.DeleteFunctionConcurrency(deleteConcurrencyParams)
 			if err != nil {
-				return fmt.Errorf("Error setting concurrency for Lambda %s: %s", d.Id(), err)
+				return fmt.Errorf("error setting Lambda Function (%s) concurrency: %w", d.Id(), err)
 			}
 		}
 	}
 
 	publish := d.Get("publish").(bool)
-	if publish && (codeUpdate || configUpdate) {
+	if publish && (codeUpdate || configUpdate || d.HasChange("publish")) {
 		versionReq := &lambda.PublishVersionInput{
 			FunctionName: aws.String(d.Id()),
 		}
 
 		_, err := conn.PublishVersion(versionReq)
 		if err != nil {
-			return fmt.Errorf("Error publishing Lambda Function Version %s: %s", d.Id(), err)
+			return fmt.Errorf("Error publishing Lambda Function (%s) version: %w", d.Id(), err)
 		}
 	}
 

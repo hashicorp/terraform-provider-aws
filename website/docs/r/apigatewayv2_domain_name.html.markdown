@@ -60,7 +60,7 @@ resource "aws_route53_record" "example" {
 
 The following arguments are supported:
 
-* `domain_name` - (Required) The domain name.
+* `domain_name` - (Required) The domain name. Must be between 1 and 512 characters in length.
 * `domain_name_configuration` - (Required) The domain name configuration.
 * `tags` - (Optional) A map of tags to assign to the domain name.
 
@@ -73,7 +73,7 @@ Use the [`aws_acm_certificate`](/docs/providers/aws/r/acm_certificate.html) reso
 * `hosted_zone_id` - (Computed) The Amazon Route 53 Hosted Zone ID of the endpoint.
 * `target_domain_name` - (Computed) The target domain name.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
