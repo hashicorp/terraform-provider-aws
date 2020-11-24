@@ -1,5 +1,5 @@
 on:
-  pull_request:
+  pull_request_target:
     types: [closed]
 name: Add merged PR and linked issues to current milestone of target branch
 jobs:
