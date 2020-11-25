@@ -450,7 +450,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Optional:         true,
 				ForceNew:         false,
 				MaxItems:         1,
-				ConflictsWith:    []string{"advanced_security_options.saml_options"},
+				ConflictsWith:    []string{"advanced_security_options.0.saml_options"},
 				DiffSuppressFunc: esCognitoOptionsDiffSuppress,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{

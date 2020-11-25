@@ -1224,13 +1224,13 @@ func testAccCheckAdvancedSecurityOptions(enabled bool, userDbEnabled bool, SAMLE
 				)
 			}
 
-			// if *conf.SAMLOptions.Enabled != SAMLEnabled {
-			// 	return fmt.Errorf(
-			// 		"AdvancedSecurityOptions.SAMLOptions not set properly. Given: %t, Expected: %t",
-			// 		aws.BoolValue(conf.SAMLOptions.Enabled),
-			// 		SAMLEnabled,
-			// 	)
-			// }
+			if conf.SAMLOptions != nil && aws.BoolValue(conf.SAMLOptions.Enabled) != SAMLEnabled {
+				return fmt.Errorf(
+					"AdvancedSecurityOptions.SAMLOptions not set properly. Given: %t, Expected: %t",
+					aws.BoolValue(conf.SAMLOptions.Enabled),
+					SAMLEnabled,
+				)
+			}
 		}
 
 		return nil
