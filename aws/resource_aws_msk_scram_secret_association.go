@@ -12,7 +12,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/msk/finder"
 )
 
-const ScramSecretBatchSize = 10
+const (
+	AssociatingSecret    = "associating"
+	DisassociatingSecret = "disassociating"
+	ScramSecretBatchSize = 10
+)
 
 func resourceAwsMskScramSecretAssociation() *schema.Resource {
 	return &schema.Resource{
@@ -56,7 +60,7 @@ func resourceAwsMskScramSecretAssociationCreate(d *schema.ResourceData, meta int
 	d.SetId(aws.StringValue(output.ClusterArn))
 
 	if len(output.UnprocessedScramSecrets) != 0 {
-		return flattenUnprocessedScramSecrets(output.ClusterArn, output.UnprocessedScramSecrets)
+		return unprocessedScramSecretsError(output.ClusterArn, output.UnprocessedScramSecrets, AssociatingSecret)
 	}
 
 	return resourceAwsMskScramSecretAssociationRead(d, meta)
@@ -98,7 +102,7 @@ func resourceAwsMskScramSecretAssociationUpdate(d *schema.ResourceData, meta int
 			}
 
 			if len(output.UnprocessedScramSecrets) != 0 {
-				return flattenUnprocessedScramSecrets(output.ClusterArn, output.UnprocessedScramSecrets)
+				return unprocessedScramSecretsError(output.ClusterArn, output.UnprocessedScramSecrets, AssociatingSecret)
 			}
 		}
 	}
@@ -111,7 +115,7 @@ func resourceAwsMskScramSecretAssociationUpdate(d *schema.ResourceData, meta int
 			}
 
 			if len(output.UnprocessedScramSecrets) != 0 {
-				return flattenUnprocessedScramSecrets(output.ClusterArn, output.UnprocessedScramSecrets)
+				return unprocessedScramSecretsError(output.ClusterArn, output.UnprocessedScramSecrets, DisassociatingSecret)
 			}
 		}
 	}
@@ -140,7 +144,7 @@ func resourceAwsMskScramSecretAssociationDelete(d *schema.ResourceData, meta int
 			return fmt.Errorf("error disassociating scram secret(s) from MSK cluster (%s): %w", d.Id(), err)
 		}
 		if len(output.UnprocessedScramSecrets) != 0 {
-			return flattenUnprocessedScramSecrets(output.ClusterArn, output.UnprocessedScramSecrets)
+			return unprocessedScramSecretsError(output.ClusterArn, output.UnprocessedScramSecrets, DisassociatingSecret)
 		}
 	}
 
@@ -193,11 +197,13 @@ func disassociateMSKClusterSecrets(conn *kafka.Kafka, clusterArn string, secretA
 	return output, nil
 }
 
-func flattenUnprocessedScramSecrets(clusterArn *string, secrets []*kafka.UnprocessedScramSecret) error {
+func unprocessedScramSecretsError(clusterArn *string, secrets []*kafka.UnprocessedScramSecret, action string) error {
 	var errors *multierror.Error
+
 	for _, s := range secrets {
 		secretArn, errMsg := aws.StringValue(s.SecretArn), aws.StringValue(s.ErrorMessage)
-		errors = multierror.Append(errors, fmt.Errorf("error associating MSK cluster (%s) with scram secret (%s): %s", aws.StringValue(clusterArn), secretArn, errMsg))
+		errors = multierror.Append(errors, fmt.Errorf("error %s MSK cluster (%s) with scram secret (%s): %s", action, aws.StringValue(clusterArn), secretArn, errMsg))
 	}
+
 	return errors.ErrorOrNil()
 }

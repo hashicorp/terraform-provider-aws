@@ -176,6 +176,8 @@ func testAccCheckMskScramSecretAssociationExists(resourceName string) resource.T
 
 func testAccMskScramSecretAssociationBaseConfig(rName string, count int) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.5.1"
@@ -222,7 +224,7 @@ resource "aws_secretsmanager_secret_policy" "test" {
     "Sid": "AWSKafkaResourcePolicy",
     "Effect" : "Allow",
     "Principal" : {
-      "Service" : "kafka.amazonaws.com"
+      "Service" : "kafka.${data.aws_partition.current.dns_suffix}"
     },
     "Action" : "secretsmanager:getSecretValue",
     "Resource" : "${aws_secretsmanager_secret.test[count.index].arn}"

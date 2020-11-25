@@ -71,6 +71,7 @@ func TestAccAWSMskCluster_basic(t *testing.T) {
 					testAccCheckMskClusterExists(resourceName, &cluster),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexp.MustCompile(`cluster/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", regexp.MustCompile(`^(([-\w]+\.){1,}[\w]+:\d+,){2,}([-\w]+\.){1,}[\w]+:\d+$`)),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.az_distribution", kafka.BrokerAZDistributionDefault),
@@ -151,6 +152,59 @@ func TestAccAWSMskCluster_BrokerNodeGroupInfo_EbsVolumeSize(t *testing.T) {
 	})
 }
 
+func TestAccAWSMskCluster_ClientAuthentication_Sasl_Scram(t *testing.T) {
+	var cluster1, cluster2 kafka.ClusterInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_msk_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckMskClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMskClusterConfigClientAuthenticationSaslScram(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster1),
+					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", regexp.MustCompile(`^(([-\w]+\.){1,}[\w]+:\d+,){2,}([-\w]+\.){1,}[\w]+:\d+$`)),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bootstrap_brokers",     // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers_tls", // API may mutate ordering and selection of brokers to return
+				},
+			},
+			{
+				Config: testAccMskClusterConfigClientAuthenticationSaslScram(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster2),
+					testAccCheckMskClusterRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bootstrap_brokers",     // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers_tls", // API may mutate ordering and selection of brokers to return
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *testing.T) {
 	TestAccSkip(t, "Requires the aws_acmpca_certificate_authority resource to support importing the root CA certificate")
 
@@ -170,38 +224,6 @@ func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *t
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_info.0.tls.0.certificate_authority_arns.#", "1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"bootstrap_brokers",     // API may mutate ordering and selection of brokers to return
-					"bootstrap_brokers_tls", // API may mutate ordering and selection of brokers to return
-				},
-			},
-		},
-	})
-}
-
-func TestAccAWSMskCluster_ClientAuthentication_Sasl_Scram(t *testing.T) {
-	var cluster1 kafka.ClusterInfo
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_msk_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckMskClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccMskClusterConfigClientAuthenticationSaslScram(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMskClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "true"),
 				),
 			},
 			{
@@ -956,32 +978,11 @@ resource "aws_msk_cluster" "test" {
 `, rName)
 }
 
-func testAccMskClusterConfigClientAuthenticationSaslScram(rName string) string {
+func testAccMskClusterConfigClientAuthenticationSaslScram(rName string, enabled bool) string {
 	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description = %[1]q
-}
-
-resource "aws_secretsmanager_secret" "test" {
-  name       = "AmazonMSK_%[1]s"
-  kms_key_id = aws_kms_key.test.key_id
-}
-
-resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = aws_secretsmanager_secret.test.id
-  secret_string = jsonencode({ username = "user", password = "pass" })
-}
-
-resource "aws_msk_scram_secret_association" "test" {
-  cluster_arn     = aws_msk_cluster.test.arn
-  secret_arn_list = [aws_secretsmanager_secret.test.arn]
-
-  depends_on = [aws_secretsmanager_secret_version.test]
-}
-
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.2.1"
+  kafka_version          = "2.6.0"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -993,17 +994,11 @@ resource "aws_msk_cluster" "test" {
 
   client_authentication {
     sasl {
-      scram = true
-    }
-  }
-
-  encryption_info {
-    encryption_in_transit {
-      client_broker = "TLS"
+      scram = %t
     }
   }
 }
-`, rName)
+`, rName, enabled)
 }
 
 func testAccMskClusterConfigConfigurationInfoRevision1(rName string) string {
