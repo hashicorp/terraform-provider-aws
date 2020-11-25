@@ -3815,20 +3815,20 @@ resource "aws_launch_template" "test" {
 func testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_Arm_Base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "testarm" {
-	most_recent = true
-	owners      = ["amazon"]
+  most_recent = true
+  owners      = ["amazon"]
 
-	filter {
-		name   = "name"
-		values = ["amzn2-ami-hvm-*-arm64-gp2"]
-	}
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-arm64-gp2"]
+  }
 }
 
 resource "aws_launch_template" "testarm" {
-	image_id      = data.aws_ami.testarm.id
-	instance_type = "t4g.micro"
-	name          = %q
-}	
+  image_id      = data.aws_ami.testarm.id
+  instance_type = "t4g.micro"
+  name          = %q
+}
 `, rName)
 }
 
@@ -4161,10 +4161,10 @@ resource "aws_autoscaling_group" "test" {
         instance_type = "t2.micro"
       }
       override {
-		instance_type = "t4g.micro"
-		launch_template_specification {
-			launch_template_id = aws_launch_template.testarm.id
-		  }
+        instance_type = "t4g.micro"
+        launch_template_specification {
+          launch_template_id = aws_launch_template.testarm.id
+        }
       }
     }
   }
