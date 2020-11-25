@@ -64,6 +64,13 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) that identifies the firewall.
 
+* `firewall_status` - Nested list of information about the current status of the firewall.
+    * `sync_states` - Set of subnets configured for use by the firewall.
+        * `attachment` - Nested list describing the attachment status of the firewall's association with a single VPC subnet.
+            * `endpoint_id` - The identifier of the firewall endpoint that AWS Network Firewall has instantiated in the subnet. You use this to identify the firewall endpoint in the VPC route tables, when you redirect the VPC traffic through the endpoint.
+            * `subnet_id` - The unique identifier of the subnet that you've specified to be used for a firewall endpoint.
+        * `availability_zone` - The Availability Zone where the subnet is configured.
+
 * `update_token` - A string token used when updating a firewall.
 
 ## Import
