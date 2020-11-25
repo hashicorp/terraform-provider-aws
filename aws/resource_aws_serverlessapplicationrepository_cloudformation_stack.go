@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -19,6 +18,7 @@ import (
 	cfwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/serverlessapplicationrepository/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/serverlessapplicationrepository/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const serverlessApplicationRepositoryCloudFormationStackNamePrefix = "serverlessrepo-"
@@ -142,8 +142,7 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackRead(d *schema
 	parameterDefinitions := flattenServerlessRepositoryParameterDefinitions(version.ParameterDefinitions)
 
 	stack, err := cffinder.Stack(cfConn, d.Id())
-	var e *resource.NotFoundError
-	if errors.As(err, &e) {
+	if tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFormation stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
