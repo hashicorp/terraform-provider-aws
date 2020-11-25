@@ -82,6 +82,11 @@ func resourceAwsEbsVolume() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"snapshot_on_delete": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -298,6 +303,25 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsEbsVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	snapshot := d.Get("snapshot_on_delete").(bool)
+
+	if snapshot {
+		fmt.Printf("[DEBUG] creating snapshot prior to ebs volume deletion")
+
+		input := &ec2.CreateSnapshotInput{
+			Description:       aws.String(fmt.Sprintf("automatic snapshot created from deleted volume %v", d.Id())),
+			VolumeId:          aws.String(d.Id()),
+			TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeSnapshot),
+		}
+
+		_, err := conn.CreateSnapshot(input)
+
+		if err != nil {
+			if aerr, ok := err.(awserr.Error); ok {
+				fmt.Println(aerr.Error())
+			}
+		}
+	}
 
 	input := &ec2.DeleteVolumeInput{
 		VolumeId: aws.String(d.Id()),
