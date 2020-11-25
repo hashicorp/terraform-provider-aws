@@ -54,8 +54,7 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStack() *schema.Res
 			},
 			"capabilities": {
 				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Required: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringInSlice(serverlessrepository.Capability_Values(), false),
@@ -72,7 +71,6 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStack() *schema.Res
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"outputs": {
 				Type:     schema.TypeMap,
@@ -85,48 +83,26 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStack() *schema.Res
 }
 
 func resourceAwsServerlessApplicationRepositoryCloudFormationStackCreate(d *schema.ResourceData, meta interface{}) error {
-	serverlessConn := meta.(*AWSClient).serverlessapplicationrepositoryconn
 	cfConn := meta.(*AWSClient).cfconn
 
-	stackName := d.Get("name").(string)
-	changeSetRequest := serverlessrepository.CreateCloudFormationChangeSetRequest{
-		StackName:     aws.String(stackName),
-		ApplicationId: aws.String(d.Get("application_id").(string)),
-		Capabilities:  expandStringSet(d.Get("capabilities").(*schema.Set)),
-		Tags:          keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreServerlessApplicationRepository().ServerlessapplicationrepositoryTags(),
-	}
-	if v, ok := d.GetOk("semantic_version"); ok {
-		version := v.(string)
-		changeSetRequest.SemanticVersion = aws.String(version)
-	}
-	if v, ok := d.GetOk("parameters"); ok {
-		changeSetRequest.ParameterOverrides = expandServerlessRepositoryCloudFormationChangeSetParameters(v.(map[string]interface{}))
-	}
-
-	log.Printf("[DEBUG] Creating Serverless Application Repository change set: %s", changeSetRequest)
-	changeSetResponse, err := serverlessConn.CreateCloudFormationChangeSet(&changeSetRequest)
+	changeSet, err := createServerlessApplicationRepositoryCloudFormationChangeSet(d, meta.(*AWSClient))
 	if err != nil {
-		return fmt.Errorf("error creating Serverless Application Repository change set (%s): %w", stackName, err)
+		return fmt.Errorf("error creating Serverless Application Repository CloudFormation change set: %w", err)
 	}
 
-	d.SetId(aws.StringValue(changeSetResponse.StackId))
+	log.Printf("[INFO] Serverless Application Repository CloudFormation Stack (%s) change set created", d.Id())
 
-	_, err = cfwaiter.ChangeSetCreated(cfConn, d.Id(), aws.StringValue(changeSetResponse.ChangeSetId))
-	if err != nil {
-		return fmt.Errorf("error waiting for Serverless Application Repository change set (%s) creation: %w", stackName, err)
-	}
-
-	log.Printf("[INFO] Serverless Application Repository change set (%s) created", d.Id())
+	d.SetId(aws.StringValue(changeSet.StackId))
 
 	requestToken := resource.UniqueId()
 	executeRequest := cloudformation.ExecuteChangeSetInput{
-		ChangeSetName:      changeSetResponse.ChangeSetId,
+		ChangeSetName:      changeSet.ChangeSetId,
 		ClientRequestToken: aws.String(requestToken),
 	}
-	log.Printf("[DEBUG] Executing Serverless Application Repository change set: %s", executeRequest)
+	log.Printf("[DEBUG] Executing Serverless Application Repository CloudFormation change set: %s", executeRequest)
 	_, err = cfConn.ExecuteChangeSet(&executeRequest)
 	if err != nil {
-		return fmt.Errorf("Executing Serverless Application Repository change set failed: %w", err)
+		return fmt.Errorf("executing Serverless Application Repository CloudFormation Stack (%s) change set failed: %w", d.Id(), err)
 	}
 
 	_, err = cfwaiter.StackCreated(cfConn, d.Id(), requestToken, d.Timeout(schema.TimeoutCreate))
@@ -221,52 +197,27 @@ func flattenServerlessRepositoryParameterDefinitions(parameterDefinitions []*ser
 }
 
 func resourceAwsServerlessApplicationRepositoryCloudFormationStackUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
+	cfConn := meta.(*AWSClient).cfconn
 
-	input := &cloudformation.CreateChangeSetInput{
-		StackName:           aws.String(d.Id()),
-		UsePreviousTemplate: aws.Bool(true),
-		ChangeSetType:       aws.String("UPDATE"),
-	}
-
-	input.ChangeSetName = aws.String(resource.PrefixedUniqueId(d.Get("name").(string)))
-
-	// Parameters must be present whether they are changed or not
-	if v, ok := d.GetOk("parameters"); ok {
-		input.Parameters = expandCloudFormationParameters(v.(map[string]interface{}))
-	}
-
-	if d.HasChange("tags") {
-		if v, ok := d.GetOk("tags"); ok {
-			input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreServerlessApplicationRepository().CloudformationTags()
-		}
-	}
-
-	input.Capabilities = expandServerlessRepositoryStackChangeSetCapabilities(d.Get("capabilities").(*schema.Set))
-
-	log.Printf("[DEBUG] Creating CloudFormation change set: %s", input)
-	changeSetResponse, err := conn.CreateChangeSet(input)
+	changeSet, err := createServerlessApplicationRepositoryCloudFormationChangeSet(d, meta.(*AWSClient))
 	if err != nil {
-		return fmt.Errorf("Creating CloudFormation change set failed: %w", err)
+		return fmt.Errorf("error creating Serverless Application Repository CloudFormation Stack (%s) change set: %w", d.Id(), err)
 	}
 
-	_, err = cfwaiter.ChangeSetCreated(conn, d.Id(), aws.StringValue(changeSetResponse.Id))
-	if err != nil {
-		return fmt.Errorf("error waiting for Serverless Application Repository change set (%s) creation: %w", d.Id(), err)
-	}
+	log.Printf("[INFO] Serverless Application Repository CloudFormation Stack (%s) change set created", d.Id())
 
 	requestToken := resource.UniqueId()
 	executeRequest := cloudformation.ExecuteChangeSetInput{
-		ChangeSetName:      changeSetResponse.Id,
+		ChangeSetName:      changeSet.ChangeSetId,
 		ClientRequestToken: aws.String(requestToken),
 	}
-	log.Printf("[DEBUG] Executing Serverless Application Repository change set: %s", executeRequest)
-	_, err = conn.ExecuteChangeSet(&executeRequest)
+	log.Printf("[DEBUG] Executing Serverless Application Repository CloudFormation change set: %s", executeRequest)
+	_, err = cfConn.ExecuteChangeSet(&executeRequest)
 	if err != nil {
-		return fmt.Errorf("Executing Serverless Application Repository change set failed: %w", err)
+		return fmt.Errorf("executing Serverless Application Repository CloudFormation change set failed: %w", err)
 	}
 
-	_, err = cfwaiter.StackUpdated(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
+	_, err = cfwaiter.StackUpdated(cfConn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("error waiting for Serverless Application Repository CloudFormation Stack (%s) update: %w", d.Id(), err)
 	}
@@ -342,6 +293,33 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackImport(d *sche
 	return []*schema.ResourceData{d}, nil
 }
 
+func createServerlessApplicationRepositoryCloudFormationChangeSet(d *schema.ResourceData, client *AWSClient) (*cloudformation.DescribeChangeSetOutput, error) {
+	serverlessConn := client.serverlessapplicationrepositoryconn
+	cfConn := client.cfconn
+
+	stackName := d.Get("name").(string)
+	changeSetRequest := serverlessrepository.CreateCloudFormationChangeSetRequest{
+		StackName:     aws.String(stackName),
+		ApplicationId: aws.String(d.Get("application_id").(string)),
+		Capabilities:  expandStringSet(d.Get("capabilities").(*schema.Set)),
+		Tags:          keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreServerlessApplicationRepository().ServerlessapplicationrepositoryTags(),
+	}
+	if v, ok := d.GetOk("semantic_version"); ok {
+		changeSetRequest.SemanticVersion = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("parameters"); ok {
+		changeSetRequest.ParameterOverrides = expandServerlessRepositoryCloudFormationChangeSetParameters(v.(map[string]interface{}))
+	}
+
+	log.Printf("[DEBUG] Creating Serverless Application Repository CloudFormation change set: %s", changeSetRequest)
+	changeSetResponse, err := serverlessConn.CreateCloudFormationChangeSet(&changeSetRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return cfwaiter.ChangeSetCreated(cfConn, aws.StringValue(changeSetResponse.StackId), aws.StringValue(changeSetResponse.ChangeSetId))
+}
+
 func expandServerlessRepositoryCloudFormationChangeSetParameters(params map[string]interface{}) []*serverlessrepository.ParameterValue {
 	var appParams []*serverlessrepository.ParameterValue
 	for k, v := range params {
@@ -364,16 +342,4 @@ func flattenServerlessRepositoryStackCapabilities(stackCapabilities []*string, a
 		}
 	}
 	return capabilities
-}
-
-func expandServerlessRepositoryStackChangeSetCapabilities(capabilities *schema.Set) []*string {
-	// Filter the capabilities for the CloudFormation Change Set. CloudFormation supports a
-	// subset of the capabilities supported by Serverless Application Repository.
-	result := make([]*string, 0, capabilities.Len())
-	for _, c := range cloudformation.Capability_Values() {
-		if capabilities.Contains(c) {
-			result = append(result, aws.String(c))
-		}
-	}
-	return result
 }
