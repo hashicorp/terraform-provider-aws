@@ -18,6 +18,7 @@ ENHANCEMENTS
 * resource/aws_kinesisanalyticsv2_application: `runtime_environment` now supports `FLINK-1_11` [GH-16389]
 * resource/aws_msk_cluster: Add `bootstrap_brokers_sasl_scram` attribute [GH-15302]
 * resource/aws_msk_cluster: Add `client_authentication` `sasl` `scram` argument [GH-15302]
+* resource/aws_networkfirewall_firewall: Add `firewall_status` attribute to expose VPC endpoints [GH-16399]
 
 BUG FIXES
 
