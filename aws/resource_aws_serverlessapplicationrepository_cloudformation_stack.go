@@ -21,7 +21,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-const serverlessApplicationRepositoryCloudFormationStackNamePrefix = "serverlessrepo-"
+const (
+	serverlessApplicationRepositoryCloudFormationStackNamePrefix = "serverlessrepo-"
+
+	serverlessApplicationRepositoryCloudFormationStackTagApplicationID   = "serverlessrepo:applicationId"
+	serverlessApplicationRepositoryCloudFormationStackTagSemanticVersion = "serverlessrepo:semanticVersion"
+)
 
 func resourceAwsServerlessApplicationRepositoryCloudFormationStack() *schema.Resource {
 	return &schema.Resource{
@@ -120,52 +125,56 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackRead(d *schema
 	cfConn := meta.(*AWSClient).cfconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	applicationID := d.Get("application_id").(string)
-	semanticVersion := d.Get("semantic_version").(string)
-	descriptor := applicationID
-	if semanticVersion != "" {
-		descriptor += fmt.Sprintf(", version %s", semanticVersion)
-	}
-
-	getApplicationOutput, err := finder.Application(serverlessConn, applicationID, semanticVersion)
-	if err != nil {
-		return fmt.Errorf("error getting Serverless Application Repository application (%s): %w", descriptor, err)
-	}
-
-	if getApplicationOutput.Version == nil {
-		return fmt.Errorf("error getting Serverless Application Repository application (%s): returned empty version record", descriptor)
-	}
-
-	version := getApplicationOutput.Version
-	d.Set("semantic_version", version.SemanticVersion)
-
-	parameterDefinitions := flattenServerlessRepositoryParameterDefinitions(version.ParameterDefinitions)
-
 	stack, err := cffinder.Stack(cfConn, d.Id())
 	if tfresource.NotFound(err) {
-		log.Printf("[WARN] CloudFormation stack (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Serverless Application Repository CloudFormation Stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error describing CloudFormation Stack (%s): %w", d.Id(), err)
+		return fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): %w", d.Id(), err)
 	}
 
-	// Serverless Application Repo prefixes the stack name with "serverlessrepo-",
-	// so remove it from the saved string
+	// Serverless Application Repo prefixes the stack name with "serverlessrepo-", so remove it from the saved string
 	stackName := strings.TrimPrefix(aws.StringValue(stack.StackName), serverlessApplicationRepositoryCloudFormationStackNamePrefix)
 	d.Set("name", &stackName)
 
-	if err = d.Set("parameters", flattenNonDefaultServerlessApplicationCloudFormationParameters(stack.Parameters, parameterDefinitions)); err != nil {
-		return fmt.Errorf("failed to set parameters: %w", err)
+	tags := keyvaluetags.CloudformationKeyValueTags(stack.Tags)
+	var applicationID, semanticVersion string
+	if v, ok := tags[serverlessApplicationRepositoryCloudFormationStackTagApplicationID]; ok {
+		applicationID = aws.StringValue(v.Value)
+		d.Set("application_id", applicationID)
+	} else {
+		return fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): missing required tag \"%s\"", d.Id(), serverlessApplicationRepositoryCloudFormationStackTagApplicationID)
+	}
+	if v, ok := tags[serverlessApplicationRepositoryCloudFormationStackTagSemanticVersion]; ok {
+		semanticVersion = aws.StringValue(v.Value)
+		d.Set("semantic_version", semanticVersion)
+	} else {
+		return fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): missing required tag \"%s\"", d.Id(), serverlessApplicationRepositoryCloudFormationStackTagSemanticVersion)
 	}
 
-	if err = d.Set("tags", keyvaluetags.CloudformationKeyValueTags(stack.Tags).IgnoreServerlessApplicationRepository().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err = d.Set("tags", tags.IgnoreServerlessApplicationRepository().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("failed to set tags: %w", err)
 	}
 
 	if err = d.Set("outputs", flattenCloudFormationOutputs(stack.Outputs)); err != nil {
 		return fmt.Errorf("failed to set outputs: %w", err)
+	}
+
+	getApplicationOutput, err := finder.Application(serverlessConn, applicationID, semanticVersion)
+	if err != nil {
+		return fmt.Errorf("error getting Serverless Application Repository application (%s, v%s): %w", applicationID, semanticVersion, err)
+	}
+
+	if getApplicationOutput == nil || getApplicationOutput.Version == nil {
+		return fmt.Errorf("error getting Serverless Application Repository application (%s, v%s): empty response", applicationID, semanticVersion)
+	}
+
+	version := getApplicationOutput.Version
+
+	if err = d.Set("parameters", flattenNonDefaultServerlessApplicationCloudFormationParameters(stack.Parameters, version.ParameterDefinitions)); err != nil {
+		return fmt.Errorf("failed to set parameters: %w", err)
 	}
 
 	if err = d.Set("capabilities", flattenServerlessRepositoryStackCapabilities(stack.Capabilities, version.RequiredCapabilities)); err != nil {
@@ -175,7 +184,8 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackRead(d *schema
 	return nil
 }
 
-func flattenNonDefaultServerlessApplicationCloudFormationParameters(cfParams []*cloudformation.Parameter, parameterDefinitions map[string]*serverlessrepository.ParameterDefinition) map[string]interface{} {
+func flattenNonDefaultServerlessApplicationCloudFormationParameters(cfParams []*cloudformation.Parameter, rawParameterDefinitions []*serverlessrepository.ParameterDefinition) map[string]interface{} {
+	parameterDefinitions := flattenServerlessRepositoryParameterDefinitions(rawParameterDefinitions)
 	params := make(map[string]interface{}, len(cfParams))
 	for _, p := range cfParams {
 		key := aws.StringValue(p.ParameterKey)
@@ -269,25 +279,7 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackImport(d *sche
 		return nil, fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): %w", stackID, err)
 	}
 
-	tags := stack.Tags
-	var applicationID, semanticVersion string
-	for _, tag := range tags {
-		if aws.StringValue(tag.Key) == "serverlessrepo:applicationId" {
-			applicationID = aws.StringValue(tag.Value)
-		} else if aws.StringValue(tag.Key) == "serverlessrepo:semanticVersion" {
-			semanticVersion = aws.StringValue(tag.Value)
-		}
-		if applicationID != "" && semanticVersion != "" {
-			break
-		}
-	}
-	if applicationID == "" || semanticVersion == "" {
-		return nil, fmt.Errorf("cannot import Serverless Application Repository CloudFormation Stack (%s): tags \"serverlessrepo:applicationId\" and \"serverlessrepo:semanticVersion\" must be defined", stackID)
-	}
-
 	d.SetId(aws.StringValue(stack.StackId))
-	d.Set("application_id", applicationID)
-	d.Set("semantic_version", semanticVersion)
 
 	return []*schema.ResourceData{d}, nil
 }
