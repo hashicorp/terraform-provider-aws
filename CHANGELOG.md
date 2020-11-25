@@ -5,11 +5,15 @@ FEATURES
 * **New Data Source:** `aws_imagebuilder_image_recipe` [GH-16218]
 * **New Resource:** `aws_backup_region_settings` [GH-16114]
 * **New Resource:** `aws_imagebuilder_image_recipe` [GH-16218]
+* **New Resource:** `aws_msk_scram_secret_association` [GH-15302]
 
 ENHANCEMENTS
 
+* data-source/aws_msk_cluster: Add `bootstrap_brokers_sasl_scram` attribute [GH-15302]
 * resource/aws_db_proxy_default_target_group: Make `connection_pool_config` optional [GH-16303]
 * resource/aws_kinesisanalyticsv2_application: `runtime_environment` now supports `FLINK-1_11` [GH-16389]
+* resource/aws_msk_cluster: Add `bootstrap_brokers_sasl_scram` attribute [GH-15302]
+* resource/aws_msk_cluster: Add `client_authentication` `sasl` `scram` argument [GH-15302]
 
 BUG FIXES
 
