@@ -12,6 +12,7 @@ FEATURES
 
 ENHANCEMENTS
 
+* data-source/aws_codeartifact_repository_endpoint: Support `nuget` value in `format` argument plan-time validation [GH-16422]
 * data-source/aws_msk_cluster: Add `bootstrap_brokers_sasl_scram` attribute [GH-15302]
 * resource/aws_db_proxy_default_target_group: Make `connection_pool_config` optional [GH-16303]
 * resource/aws_kinesisanalyticsv2_application: `runtime_environment` now supports `FLINK-1_11` [GH-16389]
