@@ -1760,11 +1760,11 @@ resource "aws_vpc" "test" {
 func testAccAWSLBTargetGroupConfig_GRPC_ProtocolVersion(targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name     = "%s"
-  port     = 80
-  protocol = "HTTP"
+  name             = "%s"
+  port             = 80
+  protocol         = "HTTP"
   protocol_version = "GRPC"
-  vpc_id   = aws_vpc.test2.id
+  vpc_id           = aws_vpc.test2.id
 
   deregistration_delay = 200
 
