@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -58,7 +58,7 @@ func testAccAWSEksClusterDataSourceConfig_Basic(rName string) string {
 %[1]s
 
 data "aws_eks_cluster" "test" {
-  name = "${aws_eks_cluster.test.name}"
+  name = aws_eks_cluster.test.name
 }
 `, testAccAWSEksClusterConfig_Logging(rName, []string{"api", "audit"}))
 }

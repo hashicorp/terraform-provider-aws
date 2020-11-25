@@ -2,10 +2,11 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsWorkspaceBundle_basic(t *testing.T) {
@@ -73,6 +74,33 @@ func TestAccDataSourceAwsWorkspaceBundle_bundleIDAndNameConflict(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAwsWorkspaceBundle_privateOwner(t *testing.T) {
+	dataSourceName := "data.aws_workspaces_bundle.test"
+	bundleName := os.Getenv("AWS_WORKSPACES_BUNDLE_NAME")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccWorkspacesBundlePreCheck(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsWorkspaceBundleConfig_privateOwner(bundleName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "name", bundleName),
+				),
+			},
+		},
+	})
+}
+
+func testAccWorkspacesBundlePreCheck(t *testing.T) {
+	if os.Getenv("AWS_WORKSPACES_BUNDLE_NAME") == "" {
+		t.Skip("AWS_WORKSPACES_BUNDLE_NAME env var must be set for AWS WorkSpaces private bundle acceptance test. This is required until AWS provides bundle creation API.")
+	}
+}
+
 func testAccDataSourceAwsWorkspaceBundleConfig(bundleID string) string {
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
@@ -94,8 +122,16 @@ func testAccDataSourceAwsWorkspaceBundleConfig_bundleIDAndOwnerNameConflict(bund
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
   bundle_id = %q
-  owner = %q
-  name  = %q
+  owner     = %q
+  name      = %q
 }
 `, bundleID, owner, name)
+}
+
+func testAccDataSourceAwsWorkspaceBundleConfig_privateOwner(name string) string {
+	return fmt.Sprintf(`
+data "aws_workspaces_bundle" "test" {
+  name = %q
+}
+`, name)
 }

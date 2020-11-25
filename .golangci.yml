@@ -1,5 +1,9 @@
 issues:
   exclude-rules:
+    - linters:
+        - gosimple
+      text: "S1039:"
+
     # Exclude issues bypassing staticcheck.conf
     - linters:
         - staticcheck
@@ -21,6 +25,7 @@ linters:
     - gosimple
     - ineffassign
     - misspell
+    - nakedret
     - staticcheck
     - structcheck
     - unconvert
@@ -31,8 +36,7 @@ linters:
 
 linters-settings:
   errcheck:
-    ignore: github.com/hashicorp/terraform-plugin-sdk/helper/schema:ForceNew|Set,fmt:.*,io:Close
+    ignore: github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set,fmt:.*,io:Close
 
 run:
-  modules-download-mode: vendor
   timeout: 10m

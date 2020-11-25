@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsVpnGateway_unattached(t *testing.T) {
@@ -70,15 +70,15 @@ resource "aws_vpn_gateway" "test" {
 }
 
 data "aws_vpn_gateway" "test_by_id" {
-  id = "${aws_vpn_gateway.test.id}"
+  id = aws_vpn_gateway.test.id
 }
 
 data "aws_vpn_gateway" "test_by_tags" {
-  tags = "${aws_vpn_gateway.test.tags}"
+  tags = aws_vpn_gateway.test.tags
 }
 
 data "aws_vpn_gateway" "test_by_amazon_side_asn" {
-  amazon_side_asn = "${aws_vpn_gateway.test.amazon_side_asn}"
+  amazon_side_asn = aws_vpn_gateway.test.amazon_side_asn
   state           = "available"
 }
 `, rInt, rInt+1, rInt-1)
@@ -101,12 +101,12 @@ resource "aws_vpn_gateway" "test" {
 }
 
 resource "aws_vpn_gateway_attachment" "test" {
-  vpc_id         = "${aws_vpc.test.id}"
-  vpn_gateway_id = "${aws_vpn_gateway.test.id}"
+  vpc_id         = aws_vpc.test.id
+  vpn_gateway_id = aws_vpn_gateway.test.id
 }
 
 data "aws_vpn_gateway" "test" {
-  attached_vpc_id = "${aws_vpn_gateway_attachment.test.vpc_id}"
+  attached_vpc_id = aws_vpn_gateway_attachment.test.vpc_id
 }
 `, rInt, rInt)
 }

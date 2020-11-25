@@ -29,10 +29,10 @@ For more information on Amazon Aurora, see [Aurora on Amazon RDS][2] in the Amaz
 resource "aws_rds_cluster_instance" "cluster_instances" {
   count              = 2
   identifier         = "aurora-cluster-demo-${count.index}"
-  cluster_identifier = "${aws_rds_cluster.default.id}"
+  cluster_identifier = aws_rds_cluster.default.id
   instance_class     = "db.r4.large"
-  engine             = "${aws_rds_cluster.default.engine}"
-  engine_version     = "${aws_rds_cluster.default.engine_version}"
+  engine             = aws_rds_cluster.default.engine
+  engine_version     = aws_rds_cluster.default.engine_version
 }
 
 resource "aws_rds_cluster" "default" {
@@ -58,7 +58,7 @@ The following arguments are supported:
 For information on the difference between the available Aurora MySQL engines
 see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html)
 in the Amazon RDS User Guide.
-* `engine_version` - (Optional) The database engine version.
+* `engine_version` - (Optional) The database engine version. When managing the engine version in the cluster, it is recommended to add the [lifecycle `ignore_changes` configuration](/docs/configuration/resources.html#ignore_changes) for this argument to prevent Terraform from proposing changes to the instance engine version directly.
 * `instance_class` - (Required) The instance class to use. For details on CPU
 and memory, see [Scaling Aurora DB Instances][4]. Aurora uses `db.*` instance classes/types. Please see [AWS Documentation][7] for currently available instance classes and complete details.
 * `publicly_accessible` - (Optional) Bool to control if instance is publicly accessible.
@@ -94,14 +94,11 @@ In addition to all arguments above, the following attributes are exported:
 * `identifier` - The Instance identifier
 * `id` - The Instance identifier
 * `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
-* `allocated_storage` - The amount of allocated storage
 * `availability_zone` - The availability zone of the instance
 * `endpoint` - The DNS address for this instance. May not be writable
 * `engine` - The database engine
 * `engine_version` - The database engine version
-* `database_name` - The database name
 * `port` - The database port
-* `status` - The RDS instance status
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted.
 * `kms_key_id` - The ARN for the KMS encryption key if one is set to the cluster.
 * `dbi_resource_id` - The region-unique, immutable identifier for the DB instance.

@@ -9,11 +9,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+)
+
+const (
+	// Maximum amount of time to wait for VPC Endpoint creation
+	Ec2VpcEndpointCreationTimeout = 10 * time.Minute
 )
 
 func resourceAwsVpcEndpoint() *schema.Resource {
@@ -122,14 +127,11 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 			},
 			"tags": tagsSchema(),
 			"vpc_endpoint_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  ec2.VpcEndpointTypeGateway,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.VpcEndpointTypeGateway,
-					ec2.VpcEndpointTypeInterface,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      ec2.VpcEndpointTypeGateway,
+				ValidateFunc: validation.StringInSlice(ec2.VpcEndpointType_Values(), false),
 			},
 			"vpc_id": {
 				Type:     schema.TypeString,
@@ -139,7 +141,7 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(Ec2VpcEndpointCreationTimeout),
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},

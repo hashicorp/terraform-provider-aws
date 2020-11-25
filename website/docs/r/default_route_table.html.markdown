@@ -44,7 +44,7 @@ a conflict of rule settings and will overwrite routes.
 
 ```hcl
 resource "aws_default_route_table" "r" {
-  default_route_table_id = "${aws_vpc.foo.default_route_table_id}"
+  default_route_table_id = aws_vpc.foo.default_route_table_id
 
   route {
     # ...
@@ -81,6 +81,7 @@ One of the following target arguments must be supplied:
 * `nat_gateway_id` - (Optional) Identifier of a VPC NAT gateway.
 * `network_interface_id` - (Optional) Identifier of an EC2 network interface.
 * `transit_gateway_id` - (Optional) Identifier of an EC2 Transit Gateway.
+* `vpc_endpoint_id` - (Optional) Identifier of a VPC Endpoint. This route must be removed prior to VPC Endpoint deletion.
 * `vpc_peering_connection_id` - (Optional) Identifier of a VPC peering connection.
 
 Note that the default route, mapping the VPC's CIDR block to "local", is created implicitly and cannot be specified.

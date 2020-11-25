@@ -73,7 +73,6 @@ The following arguments are supported:
 
 * `allow_admin_create_user_only` (Optional) - Set to True if only the administrator is allowed to create user profiles. Set to False if users can sign themselves up via an app.
 * `invite_message_template` (Optional) - The [invite message template structure](#invite-message-template).
-* `unused_account_validity_days` (Optional) - **DEPRECATED** Use password_policy.temporary_password_validity_days instead - The user account expiration limit, in days, after which the account is no longer usable.
 
 ##### Invite Message template
 
@@ -139,11 +138,11 @@ resource "aws_cognito_user_pool" "example" {
     name                     = "<name>"
     attribute_data_type      = "<appropriate type>"
     developer_only_attribute = false
-    mutable                  = true  // false for "sub"
-    required                 = false // true for "sub"
-    string_attribute_constraints {   // if it is a string
-      min_length = 0                 // 10 for "birthdate"
-      max_length = 2048              // 10 for "birthdate"
+    mutable                  = true  # false for "sub"
+    required                 = false # true for "sub"
+    string_attribute_constraints {   # if it is a string
+      min_length = 0                 # 10 for "birthdate"
+      max_length = 2048              # 10 for "birthdate"
     }
   }
 }
@@ -187,7 +186,7 @@ The following arguments are required in the `software_token_mfa_configuration` c
 * `email_subject_by_link` (Optional) - The subject line for the email message template for sending a confirmation link to the user.
 * `sms_message` (Optional) - The SMS message template. Must contain the `{####}` placeholder. Conflicts with `sms_verification_message` argument.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

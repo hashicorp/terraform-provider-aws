@@ -19,8 +19,8 @@ For information about event source mappings, see [CreateEventSourceMapping][2] i
 
 ```hcl
 resource "aws_lambda_event_source_mapping" "example" {
-  event_source_arn  = "${aws_dynamodb_table.example.stream_arn}"
-  function_name     = "${aws_lambda_function.example.arn}"
+  event_source_arn  = aws_dynamodb_table.example.stream_arn
+  function_name     = aws_lambda_function.example.arn
   starting_position = "LATEST"
 }
 ```
@@ -29,8 +29,8 @@ resource "aws_lambda_event_source_mapping" "example" {
 
 ```hcl
 resource "aws_lambda_event_source_mapping" "example" {
-  event_source_arn  = "${aws_kinesis_stream.example.arn}"
-  function_name     = "${aws_lambda_function.example.arn}"
+  event_source_arn  = aws_kinesis_stream.example.arn
+  function_name     = aws_lambda_function.example.arn
   starting_position = "LATEST"
 }
 ```
@@ -39,8 +39,8 @@ resource "aws_lambda_event_source_mapping" "example" {
 
 ```hcl
 resource "aws_lambda_event_source_mapping" "example" {
-  event_source_arn = "${aws_sqs_queue.sqs_queue_test.arn}"
-  function_name    = "${aws_lambda_function.example.arn}"
+  event_source_arn = aws_sqs_queue.sqs_queue_test.arn
+  function_name    = aws_lambda_function.example.arn
 }
 ```
 
@@ -68,6 +68,8 @@ resource "aws_lambda_event_source_mapping" "example" {
 * `destination_arn` - (Required) The Amazon Resource Name (ARN) of the destination resource.
 
 ## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `function_arn` - The the ARN of the Lambda function the event source mapping is sending events to. (Note: this is a computed value that differs from `function_name` above.)
 * `last_modified` - The date this resource was last modified.

@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -73,7 +73,7 @@ func resourceAwsCognitoIdentityPool() *schema.Resource {
 			},
 
 			"openid_connect_provider_arns": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
@@ -130,7 +130,7 @@ func resourceAwsCognitoIdentityPoolCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("openid_connect_provider_arns"); ok {
-		params.OpenIdConnectProviderARNs = expandStringList(v.([]interface{}))
+		params.OpenIdConnectProviderARNs = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
@@ -221,7 +221,7 @@ func resourceAwsCognitoIdentityPoolUpdate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("openid_connect_provider_arns"); ok {
-		params.OpenIdConnectProviderARNs = expandStringList(v.([]interface{}))
+		params.OpenIdConnectProviderARNs = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("saml_provider_arns"); ok {

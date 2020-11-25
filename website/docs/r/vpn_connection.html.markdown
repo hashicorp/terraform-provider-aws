@@ -30,9 +30,9 @@ resource "aws_customer_gateway" "example" {
 }
 
 resource "aws_vpn_connection" "example" {
-  customer_gateway_id = "${aws_customer_gateway.example.id}"
-  transit_gateway_id  = "${aws_ec2_transit_gateway.example.id}"
-  type                = "${aws_customer_gateway.example.type}"
+  customer_gateway_id = aws_customer_gateway.example.id
+  transit_gateway_id  = aws_ec2_transit_gateway.example.id
+  type                = aws_customer_gateway.example.type
 }
 ```
 
@@ -44,7 +44,7 @@ resource "aws_vpc" "vpc" {
 }
 
 resource "aws_vpn_gateway" "vpn_gateway" {
-  vpc_id = "${aws_vpc.vpc.id}"
+  vpc_id = aws_vpc.vpc.id
 }
 
 resource "aws_customer_gateway" "customer_gateway" {
@@ -54,8 +54,8 @@ resource "aws_customer_gateway" "customer_gateway" {
 }
 
 resource "aws_vpn_connection" "main" {
-  vpn_gateway_id      = "${aws_vpn_gateway.vpn_gateway.id}"
-  customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
+  vpn_gateway_id      = aws_vpn_gateway.vpn_gateway.id
+  customer_gateway_id = aws_customer_gateway.customer_gateway.id
   type                = "ipsec.1"
   static_routes_only  = true
 }
@@ -84,7 +84,7 @@ Other arguments:
 
 ~> **Note:** The preshared key must be between 8 and 64 characters in length and cannot start with zero(0). Allowed characters are alphanumeric characters, periods(.) and underscores(_).
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

@@ -14,10 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -285,7 +285,7 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 		elbOpts.Tags = tags
 	}
 
-	if scheme, ok := d.GetOk("internal"); ok && scheme.(bool) {
+	if _, ok := d.GetOk("internal"); ok {
 		elbOpts.Scheme = aws.String("internal")
 	}
 
@@ -899,7 +899,7 @@ func validateHeathCheckTarget(v interface{}, k string) (ws []string, errors []er
 		// Invalid target? Return immediately,
 		// there is no need to collect other
 		// errors.
-		return
+		return ws, errors
 	}
 
 	// Check if the value contains a valid protocol.
@@ -945,7 +945,7 @@ func validateHeathCheckTarget(v interface{}, k string) (ws []string, errors []er
 
 	}
 
-	return
+	return ws, errors
 }
 
 func isValidProtocol(s string) bool {

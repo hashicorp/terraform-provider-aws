@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -386,11 +386,11 @@ resource "aws_docdb_cluster_parameter_group" "bar" {
 const testAccAWSDocDBClusterParameterGroupConfig_namePrefix = `
 resource "aws_docdb_cluster_parameter_group" "test" {
   name_prefix = "tf-test-"
-  family = "docdb3.6"
+  family      = "docdb3.6"
 }
 `
 const testAccAWSDocDBClusterParameterGroupConfig_generatedName = `
 resource "aws_docdb_cluster_parameter_group" "test" {
-	family = "docdb3.6"
+  family = "docdb3.6"
 }
 `
