@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -69,9 +70,12 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 				ConflictsWith: []string{"activation_key"},
 			},
 			"gateway_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.NoZeroValues,
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^[ -\.0-\[\]-~]*[!-\.0-\[\]-~][ -\.0-\[\]-~]*$`), ""),
+					validation.StringLenBetween(2, 255),
+				),
 			},
 			"gateway_timezone": {
 				Type:         schema.TypeString,
@@ -97,6 +101,7 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					"AWS-Gateway-VTL",
 					"STK-L700",
+					"IBM-03584L32-0402",
 				}, false),
 			},
 			"smb_active_directory_settings": {
@@ -109,14 +114,27 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"timeout_in_seconds": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      20,
+							ValidateFunc: validation.IntBetween(0, 3600),
+						},
 						"password": {
 							Type:      schema.TypeString,
 							Required:  true,
 							Sensitive: true,
-						},
+							ValidateFunc: validation.All(
+								validation.StringMatch(regexp.MustCompile(`^[ -~]+$`), ""),
+								validation.StringLenBetween(1, 1024),
+							)},
 						"username": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringMatch(regexp.MustCompile(`^\w[\w\.\- ]*$`), ""),
+								validation.StringLenBetween(1, 1024),
+							),
 						},
 					},
 				},
@@ -155,6 +173,18 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(51200),
+			},
+			"ec2_instance_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"endpoint_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"host_environment": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -269,16 +299,8 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("smb_active_directory_settings"); ok && len(v.([]interface{})) > 0 {
-		m := v.([]interface{})[0].(map[string]interface{})
-
-		input := &storagegateway.JoinDomainInput{
-			DomainName: aws.String(m["domain_name"].(string)),
-			GatewayARN: aws.String(d.Id()),
-			Password:   aws.String(m["password"].(string)),
-			UserName:   aws.String(m["username"].(string)),
-		}
-
-		log.Printf("[DEBUG] Storage Gateway Gateway %q joining Active Directory domain: %s", d.Id(), m["domain_name"].(string))
+		input := expandStorageGatewayGatewayDomain(v.([]interface{}), d.Id())
+		log.Printf("[DEBUG] Storage Gateway Gateway %q joining Active Directory domain: %s", d.Id(), aws.StringValue(input.DomainName))
 		_, err := conn.JoinDomain(input)
 		if err != nil {
 			return fmt.Errorf("error joining Active Directory domain: %w", err)
@@ -449,6 +471,9 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 	d.Set("tape_drive_type", d.Get("tape_drive_type").(string))
 	d.Set("cloudwatch_log_group_arn", output.CloudWatchLogGroupARN)
 	d.Set("smb_security_strategy", smbSettingsOutput.SMBSecurityStrategy)
+	d.Set("ec2_instance_id", output.Ec2InstanceId)
+	d.Set("endpoint_type", output.EndpointType)
+	d.Set("host_environment", output.HostEnvironment)
 
 	bandwidthInput := &storagegateway.DescribeBandwidthRateLimitInput{
 		GatewayARN: aws.String(d.Id()),
@@ -493,17 +518,8 @@ func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interfa
 	}
 
 	if d.HasChange("smb_active_directory_settings") {
-		l := d.Get("smb_active_directory_settings").([]interface{})
-		m := l[0].(map[string]interface{})
-
-		input := &storagegateway.JoinDomainInput{
-			DomainName: aws.String(m["domain_name"].(string)),
-			GatewayARN: aws.String(d.Id()),
-			Password:   aws.String(m["password"].(string)),
-			UserName:   aws.String(m["username"].(string)),
-		}
-
-		log.Printf("[DEBUG] Storage Gateway Gateway %q joining Active Directory domain: %s", d.Id(), m["domain_name"].(string))
+		input := expandStorageGatewayGatewayDomain(d.Get("smb_active_directory_settings").([]interface{}), d.Id())
+		log.Printf("[DEBUG] Storage Gateway Gateway %q joining Active Directory domain: %s", d.Id(), aws.StringValue(input.DomainName))
 		_, err := conn.JoinDomain(input)
 		if err != nil {
 			return fmt.Errorf("error joining Active Directory domain: %w", err)
@@ -606,6 +622,27 @@ func resourceAwsStorageGatewayGatewayDelete(d *schema.ResourceData, meta interfa
 	}
 
 	return nil
+}
+
+func expandStorageGatewayGatewayDomain(l []interface{}, gatewayArn string) *storagegateway.JoinDomainInput {
+	if l == nil || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	domain := &storagegateway.JoinDomainInput{
+		DomainName:       aws.String(tfMap["domain_name"].(string)),
+		GatewayARN:       aws.String(gatewayArn),
+		Password:         aws.String(tfMap["password"].(string)),
+		UserName:         aws.String(tfMap["username"].(string)),
+		TimeoutInSeconds: aws.Int64(int64(tfMap["timeout_in_seconds"].(int))),
+	}
+
+	return domain
 }
 
 // The API returns multiple responses for a missing gateway
