@@ -26,6 +26,7 @@ BUG FIXES
 * resource/aws_kinesis_analytics_application: Respect the order of 'record_column' attributes [GH-16260]
 * resource/aws_kinesisanalyticsv2_application: Respect the order of 'record_column' attributes [GH-16260]
 * resource/aws_lambda_function: Prevent Lambda `GetFunctionCodeSigningConfig` API call error outside AWS Commercial regions [GH-16412]
+* resource/aws_lb_listener: Mark `port` argument as optional and only default `protocol` argument to `HTTP` for Application Load Balancers (Support Gateway Load Balancer) [GH-16306]
 * resource/aws_securityhub_member: Prevent `invited` attribute updates due to recent API changes [GH-16404]
 
 ## 3.17.0 (November 24, 2020)
