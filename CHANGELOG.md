@@ -2,8 +2,10 @@
 
 FEATURES
 
+* **New Data Source:** `aws_imagebuilder_image_pipeline` [GH-16299]
 * **New Data Source:** `aws_imagebuilder_image_recipe` [GH-16218]
 * **New Resource:** `aws_backup_region_settings` [GH-16114]
+* **New Resource:** `aws_imagebuilder_image_pipeline` [GH-16299]
 * **New Resource:** `aws_imagebuilder_image_recipe` [GH-16218]
 * **New Resource:** `aws_msk_scram_secret_association` [GH-15302]
 
