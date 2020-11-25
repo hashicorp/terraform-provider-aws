@@ -518,6 +518,16 @@ func testAccCheckAWSCloudFormationDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccCheckCloudFormationStackNotRecreated(i, j *cloudformation.Stack) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(i.StackId) != aws.StringValue(j.StackId) {
+			return fmt.Errorf("CloudFormation stack recreated")
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckCloudFormationStackDisappears(stack *cloudformation.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).cfconn

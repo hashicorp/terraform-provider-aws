@@ -23,9 +23,15 @@ import (
 )
 
 const (
-	awsAccountIDRegexpPattern = `^(aws|\d{12})$`
-	awsPartitionRegexpPattern = `^aws(-[a-z]+)*$`
-	awsRegionRegexpPattern    = `^[a-z]{2}(-[a-z]+)+-\d$`
+	awsAccountIDRegexpInternalPattern = `(aws|\d{12})`
+	awsPartitionRegexpInternalPattern = `aws(-[a-z]+)*`
+	awsRegionRegexpInternalPattern    = `[a-z]{2}(-[a-z]+)+-\d`
+)
+
+const (
+	awsAccountIDRegexpPattern = "^" + awsAccountIDRegexpInternalPattern + "$"
+	awsPartitionRegexpPattern = "^" + awsPartitionRegexpInternalPattern + "$"
+	awsRegionRegexpPattern    = "^" + awsRegionRegexpInternalPattern + "$"
 )
 
 var awsAccountIDRegexp = regexp.MustCompile(awsAccountIDRegexpPattern)

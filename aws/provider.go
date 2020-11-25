@@ -1046,6 +1046,11 @@ func Provider() *schema.Provider {
 		},
 	}
 
+	// Avoid Go formatting churn and Git conflicts
+	// You probably should not do this
+	provider.DataSourcesMap["aws_serverlessapplicationrepository_application"] = dataSourceAwsServerlessApplicationRepositoryApplication()
+	provider.ResourcesMap["aws_serverlessapplicationrepository_cloudformation_stack"] = resourceAwsServerlessApplicationRepositoryCloudFormationStack()
+
 	provider.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
 		terraformVersion := provider.TerraformVersion
 		if terraformVersion == "" {
