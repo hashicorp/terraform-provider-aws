@@ -11,6 +11,7 @@ const (
 	// Maximum amount of time to wait for an Operation to return Deleted
 	MLTransformDeleteTimeout = 2 * time.Minute
 	RegistryDeleteTimeout    = 2 * time.Minute
+	SchemaDeleteTimeout      = 2 * time.Minute
 	TriggerCreateTimeout     = 2 * time.Minute
 	TriggerDeleteTimeout     = 2 * time.Minute
 )
@@ -45,6 +46,42 @@ func RegistryDeleted(conn *glue.Glue, registryID string) (*glue.GetRegistryOutpu
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*glue.GetRegistryOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// SchemaAvailable waits for a Schema to return Available
+func SchemaAvailable(conn *glue.Glue, registryID string) (*glue.GetSchemaOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{glue.SchemaStatusPending},
+		Target:  []string{glue.SchemaStatusAvailable},
+		Refresh: SchemaStatus(conn, registryID),
+		Timeout: SchemaDeleteTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*glue.GetSchemaOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// SchemaDeleted waits for a Schema to return Deleted
+func SchemaDeleted(conn *glue.Glue, registryID string) (*glue.GetSchemaOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{glue.SchemaStatusDeleting},
+		Target:  []string{},
+		Refresh: SchemaStatus(conn, registryID),
+		Timeout: SchemaDeleteTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*glue.GetSchemaOutput); ok {
 		return output, err
 	}
 

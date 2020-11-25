@@ -18,3 +18,17 @@ func RegistryByID(conn *glue.Glue, id string) (*glue.GetRegistryOutput, error) {
 
 	return output, nil
 }
+
+// SchemaByID returns the Schema corresponding to the specified ID.
+func SchemaByID(conn *glue.Glue, id string) (*glue.GetSchemaOutput, error) {
+	input := &glue.GetSchemaInput{
+		SchemaId: tfglue.CreateAwsGlueSchemaID(id),
+	}
+
+	output, err := conn.GetSchema(input)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}

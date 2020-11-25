@@ -13,6 +13,7 @@ import (
 const (
 	MLTransformStatusUnknown = "Unknown"
 	RegistryStatusUnknown    = "Unknown"
+	SchemaStatusUnknown      = "Unknown"
 	TriggerStatusUnknown     = "Unknown"
 )
 
@@ -50,6 +51,22 @@ func RegistryStatus(conn *glue.Glue, id string) resource.StateRefreshFunc {
 		}
 
 		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+// SchemaStatus fetches the Schema and its Status
+func SchemaStatus(conn *glue.Glue, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.SchemaByID(conn, id)
+		if err != nil {
+			return nil, SchemaStatusUnknown, err
+		}
+
+		if output == nil {
+			return output, SchemaStatusUnknown, nil
+		}
+
+		return output, aws.StringValue(output.SchemaStatus), nil
 	}
 }
 
