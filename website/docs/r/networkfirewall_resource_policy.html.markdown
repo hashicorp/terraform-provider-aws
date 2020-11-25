@@ -42,7 +42,7 @@ resource "aws_networkfirewall_resource_policy" "example" {
       Effect   = "Allow"
       Resource = aws_networkfirewall_rule_group.example.arn
       Principal = {
-        AWS = "arn:aws:iam::1234567890:user/example"
+        AWS = "arn:aws:iam::123456789012:root"
       }
     }]
     Version = "2012-10-17"
