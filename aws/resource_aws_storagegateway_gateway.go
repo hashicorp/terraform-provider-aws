@@ -113,6 +113,10 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 						"domain_name": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringMatch(regexp.MustCompile(`^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`), ""),
+								validation.StringLenBetween(1, 1024),
+							),
 						},
 						"timeout_in_seconds": {
 							Type:         schema.TypeInt,
@@ -127,7 +131,8 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 							ValidateFunc: validation.All(
 								validation.StringMatch(regexp.MustCompile(`^[ -~]+$`), ""),
 								validation.StringLenBetween(1, 1024),
-							)},
+							),
+						},
 						"username": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -136,6 +141,22 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 								validation.StringLenBetween(1, 1024),
 							),
 						},
+						"organizational_unit": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 1024),
+						},
+						"domain_controllers": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.All(
+									validation.StringMatch(regexp.MustCompile(`^(([a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9\-]*[A-Za-z0-9])(:(\d+))?$`), ""),
+									validation.StringLenBetween(6, 1024),
+								),
+							},
+						},
 					},
 				},
 			},
@@ -143,6 +164,10 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^[ -~]+$`), ""),
+					validation.StringLenBetween(6, 512),
+				),
 			},
 			"tape_drive_type": {
 				Type:     schema.TypeString,
@@ -451,6 +476,15 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 			configM := v.([]interface{})[0].(map[string]interface{})
 			m["password"] = configM["password"]
 			m["username"] = configM["username"]
+			m["timeout_in_seconds"] = configM["timeout_in_seconds"]
+
+			if v, ok := configM["organizational_unit"]; ok {
+				m["organizational_unit"] = v
+			}
+
+			if v, ok := configM["domain_controllers"]; ok {
+				m["domain_controllers"] = v
+			}
 		}
 		if err := d.Set("smb_active_directory_settings", []map[string]interface{}{m}); err != nil {
 			return fmt.Errorf("error setting smb_active_directory_settings: %w", err)
@@ -640,6 +674,14 @@ func expandStorageGatewayGatewayDomain(l []interface{}, gatewayArn string) *stor
 		Password:         aws.String(tfMap["password"].(string)),
 		UserName:         aws.String(tfMap["username"].(string)),
 		TimeoutInSeconds: aws.Int64(int64(tfMap["timeout_in_seconds"].(int))),
+	}
+
+	if v, ok := tfMap["organizational_unit"].(string); ok && v != "" {
+		domain.OrganizationalUnit = aws.String(v)
+	}
+
+	if v, ok := tfMap["domain_controllers"].(*schema.Set); ok && v.Len() > 0 {
+		domain.DomainControllers = expandStringSet(v)
 	}
 
 	return domain
