@@ -1,3 +1,10 @@
+## 3.19.0 (Unreleased)
+
+ENHANCEMENTS
+
+* resource/aws_storagegateway_smb_file_share - add support for `notification_policy` and `access_based_enumeration`. [GH-16414]
+* resource/aws_storagegateway_smb_file_share - add plan time validation to `invalid_user_list` and `valid_user_list`. [GH-16414]
+
 ## 3.18.0 (November 25, 2020)
 
 FEATURES
