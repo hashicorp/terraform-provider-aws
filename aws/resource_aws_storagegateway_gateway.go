@@ -334,6 +334,10 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 		if err != nil {
 			return fmt.Errorf("error joining Active Directory domain: %w", err)
 		}
+
+		if _, err = waiter.StorageGatewayGatewayJoinDomainJoined(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for waiting for Storage Gateway Gateway (%q) to be Join domain (%s): %w", d.Id(), aws.StringValue(input.DomainName), err)
+		}
 	}
 
 	if v, ok := d.GetOk("smb_guest_password"); ok && v.(string) != "" {
@@ -562,6 +566,10 @@ func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interfa
 		_, err := conn.JoinDomain(input)
 		if err != nil {
 			return fmt.Errorf("error joining Active Directory domain: %w", err)
+		}
+
+		if _, err = waiter.StorageGatewayGatewayJoinDomainJoined(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for waiting for Storage Gateway Gateway (%q) to be Join domain (%s): %w", d.Id(), aws.StringValue(input.DomainName), err)
 		}
 	}
 

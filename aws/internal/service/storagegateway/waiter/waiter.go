@@ -10,6 +10,7 @@ import (
 const (
 	StorageGatewayGatewayConnectedMinTimeout                = 10 * time.Second
 	StorageGatewayGatewayConnectedContinuousTargetOccurence = 6
+	StorageGatewayGatewayJoinDomainJoinedTimeout            = 5 * time.Minute
 	StoredIscsiVolumeAvailableTimeout                       = 5 * time.Minute
 	NfsFileShareAvailableDelay                              = 5 * time.Second
 	NfsFileShareDeletedDelay                                = 5 * time.Second
@@ -35,6 +36,23 @@ func StorageGatewayGatewayConnected(conn *storagegateway.StorageGateway, gateway
 	default:
 		return nil, err
 	}
+}
+
+func StorageGatewayGatewayJoinDomainJoined(conn *storagegateway.StorageGateway, volumeARN string) (*storagegateway.DescribeSMBSettingsOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{storagegateway.ActiveDirectoryStatusJoining},
+		Target:  []string{storagegateway.ActiveDirectoryStatusJoined},
+		Refresh: StorageGatewayGatewayJoinDomainStatus(conn, volumeARN),
+		Timeout: StorageGatewayGatewayJoinDomainJoinedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*storagegateway.DescribeSMBSettingsOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 // StoredIscsiVolumeAvailable waits for a StoredIscsiVolume to return Available

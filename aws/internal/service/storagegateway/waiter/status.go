@@ -40,6 +40,26 @@ func StorageGatewayGatewayStatus(conn *storagegateway.StorageGateway, gatewayARN
 	}
 }
 
+func StorageGatewayGatewayJoinDomainStatus(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &storagegateway.DescribeSMBSettingsInput{
+			GatewayARN: aws.String(gatewayARN),
+		}
+
+		output, err := conn.DescribeSMBSettings(input)
+
+		if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway is not connected") {
+			return output, storagegateway.ActiveDirectoryStatusUnknownError, nil
+		}
+
+		if err != nil {
+			return output, storagegateway.ActiveDirectoryStatusUnknownError, err
+		}
+
+		return output, aws.StringValue(output.ActiveDirectoryStatus), nil
+	}
+}
+
 // StoredIscsiVolumeStatus fetches the Volume and its Status
 func StoredIscsiVolumeStatus(conn *storagegateway.StorageGateway, volumeARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
