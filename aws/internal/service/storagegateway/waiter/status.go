@@ -11,13 +11,34 @@ import (
 )
 
 const (
-	StoredIscsiVolumeStatusNotFound = "NotFound"
-	StoredIscsiVolumeStatusUnknown  = "Unknown"
-	NfsFileShareStatusNotFound      = "NotFound"
-	NfsFileShareStatusUnknown       = "Unknown"
-	SmbFileShareStatusNotFound      = "NotFound"
-	SmbFileShareStatusUnknown       = "Unknown"
+	StorageGatewayGatewayStatusConnected = "GatewayConnected"
+	StoredIscsiVolumeStatusNotFound      = "NotFound"
+	StoredIscsiVolumeStatusUnknown       = "Unknown"
+	NfsFileShareStatusNotFound           = "NotFound"
+	NfsFileShareStatusUnknown            = "Unknown"
+	SmbFileShareStatusNotFound           = "NotFound"
+	SmbFileShareStatusUnknown            = "Unknown"
 )
+
+func StorageGatewayGatewayStatus(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &storagegateway.DescribeGatewayInformationInput{
+			GatewayARN: aws.String(gatewayARN),
+		}
+
+		output, err := conn.DescribeGatewayInformation(input)
+
+		if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway is not connected") {
+			return output, storagegateway.ErrorCodeGatewayNotConnected, nil
+		}
+
+		if err != nil {
+			return output, "", err
+		}
+
+		return output, StorageGatewayGatewayStatusConnected, nil
+	}
+}
 
 // StoredIscsiVolumeStatus fetches the Volume and its Status
 func StoredIscsiVolumeStatus(conn *storagegateway.StorageGateway, volumeARN string) resource.StateRefreshFunc {

@@ -16,10 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-)
-
-const (
-	StorageGatewayGatewayConnected = "GatewayConnected"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/waiter"
 )
 
 func resourceAwsStorageGatewayGateway() *schema.Resource {
@@ -326,8 +323,8 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(output.GatewayARN))
 
-	if _, err := WaitForStorageGatewayGatewayConnected(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Storage Gateway Gateway activation: %w", err)
+	if _, err = waiter.StorageGatewayGatewayConnected(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for waiting for Storage Gateway Gateway (%q) to be Connected: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("smb_active_directory_settings"); ok && len(v.([]interface{})) > 0 {
@@ -704,44 +701,4 @@ func isAWSErrStorageGatewayGatewayNotFound(err error) bool {
 		return true
 	}
 	return false
-}
-
-func StorageGatewayGatewayConnectedStatus(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &storagegateway.DescribeGatewayInformationInput{
-			GatewayARN: aws.String(gatewayARN),
-		}
-
-		output, err := conn.DescribeGatewayInformation(input)
-
-		if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway is not connected") {
-			return output, storagegateway.ErrorCodeGatewayNotConnected, nil
-		}
-
-		if err != nil {
-			return output, "", err
-		}
-
-		return output, StorageGatewayGatewayConnected, nil
-	}
-}
-
-func WaitForStorageGatewayGatewayConnected(conn *storagegateway.StorageGateway, gatewayARN string, timeout time.Duration) (*storagegateway.DescribeGatewayInformationOutput, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{storagegateway.ErrorCodeGatewayNotConnected},
-		Target:                    []string{StorageGatewayGatewayConnected},
-		Refresh:                   StorageGatewayGatewayConnectedStatus(conn, gatewayARN),
-		Timeout:                   timeout,
-		MinTimeout:                10 * time.Second,
-		ContinuousTargetOccurence: 6, // Gateway activations can take a few seconds and can trigger a reboot of the Gateway
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	switch output := outputRaw.(type) {
-	case *storagegateway.DescribeGatewayInformationOutput:
-		return output, err
-	default:
-		return nil, err
-	}
 }
