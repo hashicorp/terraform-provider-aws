@@ -232,7 +232,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validateRdsIdentifier,
+							ValidateFunc: validateRestoreToPointInTimeSourceClusterIdentifier,
 						},
 
 						"restore_type": {
@@ -1474,4 +1474,16 @@ func waitForRDSClusterDeletion(conn *rds.RDS, id string, timeout time.Duration) 
 	_, err := stateConf.WaitForState()
 
 	return err
+}
+
+func validateRestoreToPointInTimeSourceClusterIdentifier(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	// A source_cluster_identifier in a restore_to_point_in_time block can be a full ARN of the source cluster when cross-account cloning
+	// https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Managing.Clone.html
+	if strings.HasPrefix(value, "arn:") {
+		return validateArn(v, k)
+	}
+
+	return validateRdsIdentifier(v, k)
 }
