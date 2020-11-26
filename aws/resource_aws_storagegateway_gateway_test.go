@@ -86,6 +86,9 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Cached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "smb_guest_password", ""),
 					resource.TestCheckResourceAttr(resourceName, "smb_security_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "tape_drive_type", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "ec2_instance_id", "aws_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "host_environment", "EC2"),
 				),
 			},
 			{
@@ -121,6 +124,9 @@ func TestAccAWSStorageGatewayGateway_GatewayType_FileS3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "smb_guest_password", ""),
 					resource.TestCheckResourceAttr(resourceName, "tape_drive_type", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "ec2_instance_id", "aws_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "host_environment", "EC2"),
 				),
 			},
 			{
@@ -156,6 +162,9 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Stored(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "smb_guest_password", ""),
 					resource.TestCheckResourceAttr(resourceName, "tape_drive_type", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "ec2_instance_id", "aws_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "host_environment", "EC2"),
 				),
 			},
 			{
@@ -191,6 +200,9 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Vtl(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "smb_guest_password", ""),
 					resource.TestCheckResourceAttr(resourceName, "tape_drive_type", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "ec2_instance_id", "aws_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "host_environment", "EC2"),
 				),
 			},
 			{

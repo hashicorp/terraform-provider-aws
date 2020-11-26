@@ -78,9 +78,12 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 				),
 			},
 			"gateway_timezone": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.NoZeroValues,
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.Any(
+					validation.StringMatch(regexp.MustCompile(`^GMT[+-][0-9]{2}:[0-9]{2}\b$`), ""),
+					validation.StringMatch(regexp.MustCompile(`^GMT$`), ""),
+				),
 			},
 			"gateway_type": {
 				Type:     schema.TypeString,
