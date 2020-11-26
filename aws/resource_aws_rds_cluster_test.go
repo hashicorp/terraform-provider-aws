@@ -2698,9 +2698,10 @@ resource "aws_db_subnet_group" "test" {
 }
 
 resource "aws_rds_cluster" "restored_pit" {
-  cluster_identifier  = "%s"
-  skip_final_snapshot = true
-  engine              = aws_rds_cluster.test.engine
+  cluster_identifier              = "%s"
+  skip_final_snapshot             = true
+  engine                          = aws_rds_cluster.test.engine
+  enabled_cloudwatch_logs_exports = ["audit", "error"]
   restore_to_point_in_time {
     source_cluster_identifier  = aws_rds_cluster.test.cluster_identifier
     restore_type               = "full-copy"
