@@ -37,7 +37,7 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(15 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -81,7 +81,7 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.Any(
-					validation.StringMatch(regexp.MustCompile(`^GMT[+-][0-9]{2}:[0-9]{2}\b$`), ""),
+					validation.StringMatch(regexp.MustCompile(`^GMT[+-][0-9]{1,2}:[0-9]{2}$`), ""),
 					validation.StringMatch(regexp.MustCompile(`^GMT$`), ""),
 				),
 			},
@@ -159,6 +159,10 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 									validation.StringLenBetween(6, 1024),
 								),
 							},
+						},
+						"active_directory_status": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -465,7 +469,8 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 		}
 	} else {
 		m := map[string]interface{}{
-			"domain_name": aws.StringValue(smbSettingsOutput.DomainName),
+			"domain_name":             aws.StringValue(smbSettingsOutput.DomainName),
+			"active_directory_status": aws.StringValue(smbSettingsOutput.ActiveDirectoryStatus),
 			// The Storage Gateway API currently provides no way to read these values
 			// "password": ...,
 			// "username": ...,
