@@ -1,5 +1,9 @@
 ## 3.19.0 (Unreleased)
 
+FEATURES
+
+* **New Data Source:** `aws_glue_registry` [GH-16418]
+
 ENHANCEMENTS
 
 * resource/aws_storagegateway_smb_file_share - add support for `notification_policy` and `access_based_enumeration`. [GH-16414]
