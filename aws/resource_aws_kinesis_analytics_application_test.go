@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalytics/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalytics/lister"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -1008,7 +1007,7 @@ func TestAccAWSKinesisAnalyticsApplication_Multiple_Update(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
 						"name":                        "OUTPUT_1",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "CSV",
@@ -1016,8 +1015,8 @@ func TestAccAWSKinesisAnalyticsApplication_Multiple_Update(t *testing.T) {
 						"kinesis_stream.#":            "0",
 						"lambda.#":                    "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.role_arn", iamRole2ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -1063,7 +1062,7 @@ func TestAccAWSKinesisAnalyticsApplication_Multiple_Update(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
 						"name":                        "OUTPUT_2",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "JSON",
@@ -1071,9 +1070,9 @@ func TestAccAWSKinesisAnalyticsApplication_Multiple_Update(t *testing.T) {
 						"kinesis_stream.#":            "1",
 						"lambda.#":                    "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
 						"name":                        "OUTPUT_3",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "CSV",
@@ -1081,8 +1080,8 @@ func TestAccAWSKinesisAnalyticsApplication_Multiple_Update(t *testing.T) {
 						"kinesis_stream.#":            "0",
 						"lambda.#":                    "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.resource_arn", lambdaResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.resource_arn", lambdaResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.role_arn", iamRole1ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.#", "1"),
@@ -1146,7 +1145,7 @@ func TestAccAWSKinesisAnalyticsApplication_Output_Update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
 						"name":                        "OUTPUT_1",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "CSV",
@@ -1154,8 +1153,8 @@ func TestAccAWSKinesisAnalyticsApplication_Output_Update(t *testing.T) {
 						"kinesis_stream.#":            "0",
 						"lambda.#":                    "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -1175,7 +1174,7 @@ func TestAccAWSKinesisAnalyticsApplication_Output_Update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
 						"name":                        "OUTPUT_2",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "JSON",
@@ -1183,9 +1182,9 @@ func TestAccAWSKinesisAnalyticsApplication_Output_Update(t *testing.T) {
 						"kinesis_stream.#":            "1",
 						"lambda.#":                    "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
 						"name":                        "OUTPUT_3",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "CSV",
@@ -1193,8 +1192,8 @@ func TestAccAWSKinesisAnalyticsApplication_Output_Update(t *testing.T) {
 						"kinesis_stream.#":            "0",
 						"lambda.#":                    "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.resource_arn", lambdaResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.resource_arn", lambdaResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.role_arn", iamRole1ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
