@@ -1064,26 +1064,6 @@ resource "aws_storagegateway_gateway" "test" {
 `, rName))
 }
 
-func testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettingsOu(rName string) string {
-	return composeConfig(
-		testAccAWSStorageGatewayGatewayConfigSmbActiveDirectorySettingsBase(rName),
-		fmt.Sprintf(`
-resource "aws_storagegateway_gateway" "test" {
-  gateway_ip_address = aws_instance.test.public_ip
-  gateway_name       = %[1]q
-  gateway_timezone   = "GMT"
-  gateway_type       = "FILE_S3"
-
-  smb_active_directory_settings {
-    domain_name         = aws_directory_service_directory.test.name
-    password            = aws_directory_service_directory.test.password
-	username            = "Administrator"
-	organizational_unit = %[1]q
-  }
-}
-`, rName))
-}
-
 func testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettingsTimeout(rName string, timeout int) string {
 	return composeConfig(
 		testAccAWSStorageGatewayGatewayConfigSmbActiveDirectorySettingsBase(rName),
@@ -1097,8 +1077,8 @@ resource "aws_storagegateway_gateway" "test" {
   smb_active_directory_settings {
     domain_name        = aws_directory_service_directory.test.name
     password           = aws_directory_service_directory.test.password
-	username           = "Administrator"
-	timeout_in_seconds = %[2]d
+    username           = "Administrator"
+    timeout_in_seconds = %[2]d
   }
 }
 `, rName, timeout))
