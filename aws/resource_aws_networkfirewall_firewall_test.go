@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/networkfirewall/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -108,7 +107,7 @@ func TestAccAwsNetworkFirewallFirewall_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
 				),
@@ -218,7 +217,7 @@ func TestAccAwsNetworkFirewallFirewall_subnetMappings_updateSubnet(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallFirewallExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
 				),
 			},
 			{
@@ -233,7 +232,7 @@ func TestAccAwsNetworkFirewallFirewall_subnetMappings_updateSubnet(t *testing.T)
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", updateSubnetResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", updateSubnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", updateSubnetResourceName, "id"),
 				),
 			},
 			{
@@ -261,7 +260,7 @@ func TestAccAwsNetworkFirewallFirewall_subnetMappings_updateMultipleSubnets(t *t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallFirewallExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
 				),
 			},
 			{
@@ -275,8 +274,8 @@ func TestAccAwsNetworkFirewallFirewall_subnetMappings_updateMultipleSubnets(t *t
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.availability_zone", updateSubnetResourceName, "availability_zone"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", updateSubnetResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", updateSubnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", updateSubnetResourceName, "id"),
 				),
 			},
 			{
@@ -291,7 +290,7 @@ func TestAccAwsNetworkFirewallFirewall_subnetMappings_updateMultipleSubnets(t *t
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
 				),
 			},
 			{
