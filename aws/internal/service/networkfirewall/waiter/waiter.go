@@ -40,6 +40,10 @@ func FirewallUpdated(ctx context.Context, conn *networkfirewall.NetworkFirewall,
 		Target:  []string{networkfirewall.FirewallStatusValueReady},
 		Refresh: FirewallUpdatedStatus(ctx, conn, arn),
 		Timeout: FirewallTimeout,
+		// Delay added to account for Associate/DisassociateSubnet calls that return
+		// a READY status immediately after the method is called instead of immediately
+		// returning PROVISIONING
+		Delay: 30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

@@ -174,6 +174,7 @@ variable "service_labels" {
     "sesv2",
     "sfn",
     "shield",
+    "signer",
     "simpledb",
     "sms",
     "snowball",

@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
@@ -66,7 +65,7 @@ func testAccAwsOrganizationsOrganization_AwsServiceAccessPrincipals(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "aws_service_access_principals.*", "config.amazonaws.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "aws_service_access_principals.*", "config.amazonaws.com"),
 				),
 			},
 			{
@@ -79,8 +78,8 @@ func testAccAwsOrganizationsOrganization_AwsServiceAccessPrincipals(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "aws_service_access_principals.*", "config.amazonaws.com"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "aws_service_access_principals.*", "ds.amazonaws.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "aws_service_access_principals.*", "config.amazonaws.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "aws_service_access_principals.*", "ds.amazonaws.com"),
 				),
 			},
 			{
@@ -88,7 +87,7 @@ func testAccAwsOrganizationsOrganization_AwsServiceAccessPrincipals(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "aws_service_access_principals.*", "fms.amazonaws.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "aws_service_access_principals.*", "fms.amazonaws.com"),
 				),
 			},
 		},

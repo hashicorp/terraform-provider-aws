@@ -532,6 +532,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/shield" = [
       "aws_shield_",
     ],
+    "service/signer" = [
+      "aws_signer_",
+    ],
     "service/simpledb" = [
       "aws_simpledb_",
     ],
@@ -1416,6 +1419,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_shield_*",
       "**/shield_*",
     ],
+    "service/signer" = [
+      "**/*_signer_*",
+      "**/signer_*"
+    ]
     "service/simpledb" = [
       "aws/internal/service/simpledb/**/*",
       "**/*_simpledb_*",

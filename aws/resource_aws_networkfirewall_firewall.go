@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -26,6 +27,12 @@ func resourceAwsNetworkFirewallFirewall() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ComputedIf("firewall_status", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("subnet_mapping")
+			}),
+		),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -49,6 +56,42 @@ func resourceAwsNetworkFirewallFirewall() *schema.Resource {
 			"firewall_policy_change_protection": {
 				Type:     schema.TypeBool,
 				Optional: true,
+			},
+			"firewall_status": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"sync_states": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"availability_zone": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"attachment": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"endpoint_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"subnet_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -155,14 +198,14 @@ func resourceAwsNetworkFirewallFirewallRead(ctx context.Context, d *schema.Resou
 	}
 
 	firewall := output.Firewall
-	arn := aws.StringValue(firewall.FirewallArn)
 
-	d.Set("arn", arn)
+	d.Set("arn", firewall.FirewallArn)
 	d.Set("delete_protection", firewall.DeleteProtection)
 	d.Set("description", firewall.Description)
 	d.Set("name", firewall.FirewallName)
 	d.Set("firewall_policy_arn", firewall.FirewallPolicyArn)
 	d.Set("firewall_policy_change_protection", firewall.FirewallPolicyChangeProtection)
+	d.Set("firewall_status", flattenNetworkFirewallFirewallStatus(output.FirewallStatus))
 	d.Set("subnet_change_protection", firewall.SubnetChangeProtection)
 	d.Set("update_token", output.UpdateToken)
 	d.Set("vpc_id", firewall.VpcId)
@@ -171,12 +214,7 @@ func resourceAwsNetworkFirewallFirewallRead(ctx context.Context, d *schema.Resou
 		return diag.FromErr(fmt.Errorf("error setting subnet_mappings: %w", err))
 	}
 
-	tags, err := keyvaluetags.NetworkfirewallListTags(conn, arn)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing tags for NetworkFirewall Firewall (%s): %w", arn, err))
-	}
-
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.NetworkfirewallKeyValueTags(firewall.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
 	}
 
@@ -384,6 +422,48 @@ func expandNetworkFirewallSubnetMappingIds(l []interface{}) []string {
 	}
 
 	return ids
+}
+
+func flattenNetworkFirewallFirewallStatus(status *networkfirewall.FirewallStatus) []interface{} {
+	if status == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"sync_states": flattenNetworkFirewallSyncStates(status.SyncStates),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenNetworkFirewallSyncStates(s map[string]*networkfirewall.SyncState) []interface{} {
+	if s == nil {
+		return nil
+	}
+
+	syncStates := make([]interface{}, 0, len(s))
+	for k, v := range s {
+		m := map[string]interface{}{
+			"availability_zone": k,
+			"attachment":        flattenNetworkFirewallSyncStateAttachment(v.Attachment),
+		}
+		syncStates = append(syncStates, m)
+	}
+
+	return syncStates
+}
+
+func flattenNetworkFirewallSyncStateAttachment(a *networkfirewall.Attachment) []interface{} {
+	if a == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"endpoint_id": aws.StringValue(a.EndpointId),
+		"subnet_id":   aws.StringValue(a.SubnetId),
+	}
+
+	return []interface{}{m}
 }
 
 func flattenNetworkFirewallSubnetMappings(sm []*networkfirewall.SubnetMapping) []interface{} {

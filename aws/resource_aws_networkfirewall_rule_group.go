@@ -466,9 +466,8 @@ func resourceAwsNetworkFirewallRuleGroupRead(ctx context.Context, d *schema.Reso
 
 	resp := output.RuleGroupResponse
 	ruleGroup := output.RuleGroup
-	arn := aws.StringValue(resp.RuleGroupArn)
 
-	d.Set("arn", arn)
+	d.Set("arn", resp.RuleGroupArn)
 	d.Set("capacity", resp.Capacity)
 	d.Set("description", resp.Description)
 	d.Set("name", resp.RuleGroupName)
@@ -479,12 +478,7 @@ func resourceAwsNetworkFirewallRuleGroupRead(ctx context.Context, d *schema.Reso
 		return diag.FromErr(fmt.Errorf("error setting rule_group: %w", err))
 	}
 
-	tags, err := keyvaluetags.NetworkfirewallListTags(conn, arn)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing tags for NetworkFirewall Rule Group (%s): %w", arn, err))
-	}
-
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.NetworkfirewallKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
 	}
 

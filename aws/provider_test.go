@@ -343,7 +343,7 @@ func testAccMatchResourceAttrRegionalARN(resourceName, attributeName, arnService
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %s", arnRegexp, err)
+			return fmt.Errorf("Unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -384,7 +384,7 @@ func testAccMatchResourceAttrRegionalARNAccountID(resourceName, attributeName, a
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %s", arnRegexp, err)
+			return fmt.Errorf("Unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -399,7 +399,7 @@ func testAccMatchResourceAttrRegionalHostname(resourceName, attributeName, servi
 		hostnameRegexp, err := regexp.Compile(hostnameRegexpPattern)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile hostname regexp (%s): %s", hostnameRegexp, err)
+			return fmt.Errorf("Unable to compile hostname regexp (%s): %w", hostnameRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, hostnameRegexp)(s)
@@ -457,7 +457,28 @@ func testAccMatchResourceAttrGlobalARN(resourceName, attributeName, arnService s
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %s", arnRegexp, err)
+			return fmt.Errorf("Unable to compile ARN regexp (%s): %w", arnRegexp, err)
+		}
+
+		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
+	}
+}
+
+// testAccCheckResourceAttrRegionalARNIgnoreRegionAndAccount ensures the Terraform state exactly matches a formatted ARN with region without specifying the region or account
+func testAccCheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		arnRegexp := arn.ARN{
+			AccountID: awsAccountIDRegexpInternalPattern,
+			Partition: testAccGetPartition(),
+			Region:    awsRegionRegexpInternalPattern,
+			Resource:  arnResource,
+			Service:   arnService,
+		}.String()
+
+		attributeMatch, err := regexp.Compile(arnRegexp)
+
+		if err != nil {
+			return fmt.Errorf("Unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
