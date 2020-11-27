@@ -107,7 +107,11 @@ In addition to all arguments above, the following attributes are exported:
 * `ec2_instance_id` - The ID of the Amazon EC2 instance that was used to launch the gateway.
 * `endpoint_type` - The type of endpoint for your gateway.
 * `host_environment` - The type of hypervisor environment used by the host.
+* `gateway_network_interface` - An array that contains descriptions of the gateway network interfaces. See (Gateway Network Interface)[#gateway-network-interface].
 
+### Gateway Network Interface
+
+* `ipv4_address` - The Internet Protocol version 4 (IPv4) address of the interface.
 
 ## Timeouts
 
