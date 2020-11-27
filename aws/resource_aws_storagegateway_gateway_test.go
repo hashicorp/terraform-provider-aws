@@ -416,7 +416,7 @@ func TestAccAWSStorageGatewayGateway_SmbActiveDirectorySettings(t *testing.T) {
 	})
 }
 
-func TestAccAWSStorageGatewayGateway_SmbActiveDirectorySettings_ou(t *testing.T) {
+func TestAccAWSStorageGatewayGateway_SmbActiveDirectorySettings_timeout(t *testing.T) {
 	var gateway storagegateway.DescribeGatewayInformationOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_gateway.test"
@@ -427,12 +427,12 @@ func TestAccAWSStorageGatewayGateway_SmbActiveDirectorySettings_ou(t *testing.T)
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettingsOu(rName),
+				Config: testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettingsTimeout(rName, 50),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.domain_name", "terraformtesting.com"),
-					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.organizational_unit", rName),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.timeout_in_seconds", "50"),
 				),
 			},
 			{
@@ -1076,6 +1076,26 @@ resource "aws_storagegateway_gateway" "test" {
   }
 }
 `, rName))
+}
+
+func testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettingsTimeout(rName string, timeout int) string {
+	return composeConfig(
+		testAccAWSStorageGatewayGatewayConfigSmbActiveDirectorySettingsBase(rName),
+		fmt.Sprintf(`
+resource "aws_storagegateway_gateway" "test" {
+  gateway_ip_address = aws_instance.test.public_ip
+  gateway_name       = %[1]q
+  gateway_timezone   = "GMT"
+  gateway_type       = "FILE_S3"
+
+  smb_active_directory_settings {
+    domain_name        = aws_directory_service_directory.test.name
+    password           = aws_directory_service_directory.test.password
+	username           = "Administrator"
+	timeout_in_seconds = %[2]d
+  }
+}
+`, rName, timeout))
 }
 
 func testAccAWSStorageGatewayGatewayConfig_SmbGuestPassword(rName, smbGuestPassword string) string {
