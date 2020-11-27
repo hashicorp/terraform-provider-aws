@@ -15,12 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscaling/waiter"
 )
 
 const (
@@ -492,11 +494,9 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 							ValidateFunc: validation.IntBetween(0, 100),
 						},
 						"strategy": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice(
-								[]string{autoscaling.RefreshStrategyRolling},
-								false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(autoscaling.RefreshStrategy_Values(), false),
 						},
 					},
 				},
@@ -854,6 +854,7 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
+// TODO: make this a waiter function
 func waitUntilAutoscalingGroupLoadBalancerTargetGroupsRemoved(conn *autoscaling.AutoScaling, asgName string) error {
 	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
 		AutoScalingGroupName: aws.String(asgName),
@@ -861,6 +862,7 @@ func waitUntilAutoscalingGroupLoadBalancerTargetGroupsRemoved(conn *autoscaling.
 	var tgRemoving bool
 
 	for {
+		// TODO: generate Pages function
 		output, err := conn.DescribeLoadBalancerTargetGroups(input)
 
 		if err != nil {
@@ -890,6 +892,7 @@ func waitUntilAutoscalingGroupLoadBalancerTargetGroupsRemoved(conn *autoscaling.
 	return nil
 }
 
+// TODO: make this a waiter function
 func waitUntilAutoscalingGroupLoadBalancerTargetGroupsAdded(conn *autoscaling.AutoScaling, asgName string) error {
 	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
 		AutoScalingGroupName: aws.String(asgName),
@@ -897,6 +900,7 @@ func waitUntilAutoscalingGroupLoadBalancerTargetGroupsAdded(conn *autoscaling.Au
 	var tgAdding bool
 
 	for {
+		// TODO: generate Pages function
 		output, err := conn.DescribeLoadBalancerTargetGroups(input)
 
 		if err != nil {
@@ -962,7 +966,7 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("mixed_instances_policy") {
 		opts.MixedInstancesPolicy = expandAutoScalingMixedInstancesPolicy(d.Get("mixed_instances_policy").([]interface{}))
-		// TODO: probably not
+		// TODO: optional trigger
 		shouldRefreshInstances = true
 	}
 
@@ -991,7 +995,7 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 	// TODO: this probably needs a wait for capacity
 	if d.HasChange("vpc_zone_identifier") {
 		opts.VPCZoneIdentifier = expandVpcZoneIdentifiers(d.Get("vpc_zone_identifier").(*schema.Set).List())
-		// TODO: probably not
+		// TODO: no
 		shouldRefreshInstances = true
 	}
 
@@ -1000,14 +1004,14 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
 			opts.AvailabilityZones = expandStringList(v.(*schema.Set).List())
 		}
-		// TODO: probably not
+		// TODO: no
 		shouldRefreshInstances = true
 	}
 
 	// TODO: does this need a wait for capacity?
 	if d.HasChange("placement_group") {
 		opts.PlacementGroup = aws.String(d.Get("placement_group").(string))
-		// TODO: probably not
+		// TODO: optional trigger
 		shouldRefreshInstances = true
 	}
 
@@ -1293,6 +1297,8 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
+// TODO: make this a finder
+// TODO: this should return a NotFoundError if not found
 func getAwsAutoscalingGroup(asgName string, conn *autoscaling.AutoScaling) (*autoscaling.Group, error) {
 	describeOpts := autoscaling.DescribeAutoScalingGroupsInput{
 		AutoScalingGroupNames: []*string{aws.String(asgName)},
@@ -1753,6 +1759,7 @@ func flattenAutoScalingMixedInstancesPolicy(mixedInstancesPolicy *autoscaling.Mi
 	return []interface{}{m}
 }
 
+// TODO: make this a waiter function
 func waitUntilAutoscalingGroupLoadBalancersAdded(conn *autoscaling.AutoScaling, asgName string) error {
 	input := &autoscaling.DescribeLoadBalancersInput{
 		AutoScalingGroupName: aws.String(asgName),
@@ -1789,6 +1796,7 @@ func waitUntilAutoscalingGroupLoadBalancersAdded(conn *autoscaling.AutoScaling, 
 	return nil
 }
 
+// TODO: make this a waiter function
 func waitUntilAutoscalingGroupLoadBalancersRemoved(conn *autoscaling.AutoScaling, asgName string) error {
 	input := &autoscaling.DescribeLoadBalancersInput{
 		AutoScalingGroupName: aws.String(asgName),
@@ -1796,6 +1804,7 @@ func waitUntilAutoscalingGroupLoadBalancersRemoved(conn *autoscaling.AutoScaling
 	var lbRemoving bool
 
 	for {
+		// TODO: generate Pages function
 		output, err := conn.DescribeLoadBalancers(input)
 
 		if err != nil {
@@ -1853,76 +1862,52 @@ func startAutoscalingInstanceRefresh(d *schema.ResourceData, conn *autoscaling.A
 
 	log.Printf("[DEBUG] Cancelling active refresh in ASG %s, if any...", asgName)
 
-	if err := cancelAutoscalingInstanceRefresh(d, conn); err != nil {
+	if err := cancelAutoscalingInstanceRefresh(conn, asgName); err != nil {
 		// todo: add comment about subsequent ASG updates not picking up the refresh?
-		return fmt.Errorf("failed to cancel previous refresh: %s", err)
+		return fmt.Errorf("failed to cancel previous refresh: %w", err)
 	}
 
 	log.Printf("[DEBUG] Starting instance refresh in ASG %s...", asgName)
 
-	instanceRefreshId := ""
-	switch output, err := conn.StartInstanceRefresh(&input); {
-	case err != nil:
+	output, err := conn.StartInstanceRefresh(&input)
+	if err != nil {
 		return err
-	default:
-		instanceRefreshId = aws.StringValue(output.InstanceRefreshId)
 	}
+	instanceRefreshID := aws.StringValue(output.InstanceRefreshId)
 
-	log.Printf("[INFO] Started instance refresh %s in ASG %s", instanceRefreshId, asgName)
+	log.Printf("[INFO] Started instance refresh %s in ASG %s", instanceRefreshID, asgName)
 
 	return nil
 }
 
-// cancelAutoscalingInstanceRefresh cancels the currently active Instance
-// Refresh of this Auto-Scaling Group, and waits until the refresh reaches a
-// terminal state (usually Cancelled). If there is no active refresh, the
-// function short-circuits without error.
-func cancelAutoscalingInstanceRefresh(d *schema.ResourceData, conn *autoscaling.AutoScaling) error {
-	asgName := d.Id()
+// cancelAutoscalingInstanceRefresh cancels the currently active Instance Refresh
+// of this Auto-Scaling Group, if any, and waits until the refresh is Cancelled.
+func cancelAutoscalingInstanceRefresh(conn *autoscaling.AutoScaling, asgName string) error {
 	input := autoscaling.CancelInstanceRefreshInput{
 		AutoScalingGroupName: aws.String(asgName),
 	}
-
-	_, err := conn.CancelInstanceRefresh(&input)
-	switch {
-	case isAWSErr(err, autoscaling.ErrCodeActiveInstanceRefreshNotFoundFault, ""):
-		log.Printf("[DEBUG] No active Instance Refresh in ASG %s", asgName)
+	log.Printf("[DEBUG] Attempting to cancel Instance Refresh on ASG (%s): %s", asgName, input)
+	output, err := conn.CancelInstanceRefresh(&input)
+	if tfawserr.ErrCodeEquals(err, autoscaling.ErrCodeActiveInstanceRefreshNotFoundFault) {
+		log.Printf("[DEBUG] No active Instance Refresh on ASG (%s)", asgName)
 		return nil
-	case err != nil:
-		return err
+	}
+	if err != nil {
+		return fmt.Errorf("error cancelling Instance Refresh on ASG (%s): %w", asgName, err)
+	}
+	if output == nil {
+		return fmt.Errorf("error cancelling Instance Refresh on ASG (%s): empty result", asgName)
 	}
 
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		input := autoscaling.DescribeInstanceRefreshesInput{
-			AutoScalingGroupName: aws.String(asgName),
-			MaxRecords:           aws.Int64(1),
-		}
+	instanceRefreshID := aws.StringValue(output.InstanceRefreshId)
 
-		output, err := conn.DescribeInstanceRefreshes(&input)
-		switch {
-		case err != nil:
-			return resource.NonRetryableError(err)
-		case len(output.InstanceRefreshes) != 1:
-			return nil
-		}
-
-		switch status := aws.StringValue(output.InstanceRefreshes[0].Status); status {
-		case
-			autoscaling.InstanceRefreshStatusCancelled,
-			autoscaling.InstanceRefreshStatusFailed,
-			autoscaling.InstanceRefreshStatusSuccessful:
-
-			return nil
-		default:
-			return resource.RetryableError(fmt.Errorf("refresh status %s is not terminal", status))
-		}
-	})
-
-	if isResourceTimeoutError(err) {
-		return fmt.Errorf("timed out before the previous refresh reached a terminal state")
+	log.Printf("[DEBUG] Waiting for cancellation of Instance Refresh (%s) on ASG (%s)", instanceRefreshID, asgName)
+	_, err = waiter.InstanceRefreshCancelled(conn, asgName, instanceRefreshID)
+	if err != nil {
+		return fmt.Errorf("error waiting for cancellation of Instance Refresh (%s) on ASG (%s): %w", instanceRefreshID, asgName, err)
 	}
 
-	log.Printf("[INFO] Cancelled active instance refresh in ASG %s", asgName)
+	log.Printf("[INFO] Cancelled Instance Refresh (%s) on ASG (%s)", instanceRefreshID, asgName)
 
 	return nil
 }
