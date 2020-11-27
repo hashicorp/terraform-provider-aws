@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -151,7 +150,7 @@ func TestAccAWSSpotFleetRequest_associatePublicIpAddress(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
 						"associate_public_ip_address": "true",
 					}),
 				),
@@ -578,8 +577,8 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.availability_zone", availabilityZonesDataSource, "names.0"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.availability_zone", availabilityZonesDataSource, "names.1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.availability_zone", availabilityZonesDataSource, "names.0"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.availability_zone", availabilityZonesDataSource, "names.1"),
 				),
 			},
 			{
@@ -640,9 +639,9 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.availability_zone", availabilityZonesDataSource, "names.0"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.instance_type", instanceTypeDataSource, "instance_type"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.availability_zone", availabilityZonesDataSource, "names.0"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.instance_type", instanceTypeDataSource, "instance_type"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
 						"instance_type": "m3.large",
 					}),
 				),
@@ -705,11 +704,11 @@ func TestAccAWSSpotFleetRequest_overriddingSpotPrice(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
 						"spot_price":    "0.05",
 						"instance_type": "m3.large",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.instance_type", instanceTypeDataSourceName, "instance_type"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.instance_type", instanceTypeDataSourceName, "instance_type"),
 				),
 			},
 			{
@@ -844,11 +843,11 @@ func TestAccAWSSpotFleetRequest_withWeightedCapacity(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
 						"weighted_capacity": "3",
 						"instance_type":     "r3.large",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
 						"weighted_capacity": "6",
 						"instance_type":     "m3.large",
 					}),
@@ -961,7 +960,7 @@ func TestAccAWSSpotFleetRequest_withTags(t *testing.T) {
 				Config: testAccAWSSpotFleetRequestTagsConfig(rName, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &config),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
 						"tags.%":      "2",
 						"tags.First":  "TfAccTest",
 						"tags.Second": "Terraform",
