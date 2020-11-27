@@ -89,6 +89,8 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Cached(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_instance_id", "aws_instance.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "host_environment", "EC2"),
+					resource.TestCheckResourceAttr(resourceName, "gateway_network_interface.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_network_interface.0.ipv4_address", "aws_instance.test", "private_ip"),
 				),
 			},
 			{
@@ -127,6 +129,8 @@ func TestAccAWSStorageGatewayGateway_GatewayType_FileS3(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_instance_id", "aws_instance.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "host_environment", "EC2"),
+					resource.TestCheckResourceAttr(resourceName, "gateway_network_interface.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_network_interface.0.ipv4_address", "aws_instance.test", "private_ip"),
 				),
 			},
 			{
@@ -165,6 +169,8 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Stored(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_instance_id", "aws_instance.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "host_environment", "EC2"),
+					resource.TestCheckResourceAttr(resourceName, "gateway_network_interface.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_network_interface.0.ipv4_address", "aws_instance.test", "private_ip"),
 				),
 			},
 			{

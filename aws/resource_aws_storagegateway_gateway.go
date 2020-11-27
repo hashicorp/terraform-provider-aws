@@ -215,6 +215,18 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"gateway_network_interface": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ipv4_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -518,6 +530,10 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 	d.Set("endpoint_type", output.EndpointType)
 	d.Set("host_environment", output.HostEnvironment)
 
+	if err := d.Set("gateway_network_interface", flattenStorageGatewayGatewayNetworkInterfaces(output.GatewayNetworkInterfaces)); err != nil {
+		return fmt.Errorf("error setting gateway_network_interface: %w", err)
+	}
+
 	bandwidthInput := &storagegateway.DescribeBandwidthRateLimitInput{
 		GatewayARN: aws.String(d.Id()),
 	}
@@ -698,6 +714,28 @@ func expandStorageGatewayGatewayDomain(l []interface{}, gatewayArn string) *stor
 	}
 
 	return domain
+}
+
+func flattenStorageGatewayGatewayNetworkInterfaces(nis []*storagegateway.NetworkInterface) []interface{} {
+	if len(nis) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, ni := range nis {
+		if ni == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{
+			"ipv4_address": aws.StringValue(ni.Ipv4Address),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 // The API returns multiple responses for a missing gateway
