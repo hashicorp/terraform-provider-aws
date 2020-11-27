@@ -34,6 +34,7 @@ data "aws_launch_template" "test" {
 The following arguments are supported:
 
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+* `id` - (Optional) The ID of the specific launch template to retrieve.
 * `name` - (Optional) The name of the launch template.
 * `tags` - (Optional) A map of tags, each pair of which must exactly match a pair on the desired Launch Template.
 
