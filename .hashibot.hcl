@@ -609,6 +609,7 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/awserr.go",
       "aws/config.go",
       "aws/*_aws_arn*",
+      "aws/*_aws_credentials*",
       "aws/*_aws_ip_ranges*",
       "aws/*_aws_partition*",
       "aws/*_aws_region*",
@@ -624,6 +625,7 @@ behavior "pull_request_path_labeler" "service_labels" {
       "main.go",
       "website/docs/index.html.markdown",
       "website/**/arn*",
+      "website/**/credentials*",
       "website/**/ip_ranges*",
       "website/**/partition*",
       "website/**/region*"
