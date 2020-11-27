@@ -102,6 +102,29 @@ func TestAccAwsLbListenerCertificate_multiple(t *testing.T) {
 	})
 }
 
+func TestAccAwsLbListenerCertificate_disappears(t *testing.T) {
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	resourceName := "aws_lb_listener_certificate.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLbListenerCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbListenerCertificateConfig(rName, key, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLbListenerCertificateExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsLbListenerCertificate(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAwsLbListenerCertificateDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).elbv2conn
 
