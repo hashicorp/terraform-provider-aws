@@ -2,6 +2,7 @@ package waiter
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -9,6 +10,28 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
+
+func ChangeSetStatus(conn *cloudformation.CloudFormation, stackID, changeSetName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := conn.DescribeChangeSet(&cloudformation.DescribeChangeSetInput{
+			ChangeSetName: aws.String(changeSetName),
+			StackName:     aws.String(stackID),
+		})
+		if err != nil {
+			log.Printf("[ERROR] Failed to describe CloudFormation change set: %s", err)
+			return nil, "", err
+		}
+
+		if resp == nil {
+			log.Printf("[WARN] Describing CloudFormation change set returned no response")
+			return nil, "", nil
+		}
+
+		status := aws.StringValue(resp.Status)
+
+		return resp, status, err
+	}
+}
 
 func StackSetOperationStatus(conn *cloudformation.CloudFormation, stackSetName, operationID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {

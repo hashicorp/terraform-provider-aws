@@ -15,7 +15,7 @@ func TestAccDataSourceAWSSignerSigningProfile_basic(t *testing.T) {
 	profileName := fmt.Sprintf("tf_acc_sp_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

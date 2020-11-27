@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -97,11 +98,19 @@ func TestAccAwsNetworkFirewallFirewall_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "firewall_policy_arn", policyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, "availability_zone"),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
+						"attachment.0.endpoint_id": regexp.MustCompile(`vpce-`),
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
 					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
 				),
 			},
 			{
@@ -216,6 +225,13 @@ func TestAccAwsNetworkFirewallFirewall_subnetMappings_updateSubnet(t *testing.T)
 				Config: testAccNetworkFirewallFirewall_updateSubnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallFirewallExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.availability_zone", updateSubnetResourceName, "availability_zone"),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
+						"attachment.0.endpoint_id": regexp.MustCompile(`vpce-`),
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", updateSubnetResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
 					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", updateSubnetResourceName, "id"),
 				),
@@ -252,6 +268,12 @@ func TestAccAwsNetworkFirewallFirewall_subnetMappings_updateMultipleSubnets(t *t
 				Config: testAccNetworkFirewallFirewall_updateMultipleSubnets(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallFirewallExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, "availability_zone"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.availability_zone", updateSubnetResourceName, "availability_zone"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", updateSubnetResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
 					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
 					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", updateSubnetResourceName, "id"),
@@ -261,6 +283,13 @@ func TestAccAwsNetworkFirewallFirewall_subnetMappings_updateMultipleSubnets(t *t
 				Config: testAccNetworkFirewallFirewall_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallFirewallExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, "availability_zone"),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
+						"attachment.0.endpoint_id": regexp.MustCompile(`vpce-`),
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
 					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
 				),

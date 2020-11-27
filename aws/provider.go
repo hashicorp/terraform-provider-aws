@@ -268,6 +268,8 @@ func Provider() *schema.Provider {
 			"aws_iam_user":                                   dataSourceAwsIAMUser(),
 			"aws_imagebuilder_component":                     dataSourceAwsImageBuilderComponent(),
 			"aws_imagebuilder_distribution_configuration":    datasourceAwsImageBuilderDistributionConfiguration(),
+			"aws_imagebuilder_image_pipeline":                dataSourceAwsImageBuilderImagePipeline(),
+			"aws_imagebuilder_image_recipe":                  dataSourceAwsImageBuilderImageRecipe(),
 			"aws_imagebuilder_infrastructure_configuration":  datasourceAwsImageBuilderInfrastructureConfiguration(),
 			"aws_internet_gateway":                           dataSourceAwsInternetGateway(),
 			"aws_iot_endpoint":                               dataSourceAwsIotEndpoint(),
@@ -462,6 +464,7 @@ func Provider() *schema.Provider {
 			"aws_autoscaling_schedule":                                resourceAwsAutoscalingSchedule(),
 			"aws_autoscalingplans_scaling_plan":                       resourceAwsAutoScalingPlansScalingPlan(),
 			"aws_backup_plan":                                         resourceAwsBackupPlan(),
+			"aws_backup_region_settings":                              resourceAwsBackupRegionSettings(),
 			"aws_backup_selection":                                    resourceAwsBackupSelection(),
 			"aws_backup_vault":                                        resourceAwsBackupVault(),
 			"aws_backup_vault_notifications":                          resourceAwsBackupVaultNotifications(),
@@ -711,6 +714,8 @@ func Provider() *schema.Provider {
 			"aws_iam_user_login_profile":                              resourceAwsIamUserLoginProfile(),
 			"aws_imagebuilder_component":                              resourceAwsImageBuilderComponent(),
 			"aws_imagebuilder_distribution_configuration":             resourceAwsImageBuilderDistributionConfiguration(),
+			"aws_imagebuilder_image_pipeline":                         resourceAwsImageBuilderImagePipeline(),
+			"aws_imagebuilder_image_recipe":                           resourceAwsImageBuilderImageRecipe(),
 			"aws_imagebuilder_infrastructure_configuration":           resourceAwsImageBuilderInfrastructureConfiguration(),
 			"aws_inspector_assessment_target":                         resourceAWSInspectorAssessmentTarget(),
 			"aws_inspector_assessment_template":                       resourceAWSInspectorAssessmentTemplate(),
@@ -773,6 +778,7 @@ func Provider() *schema.Provider {
 			"aws_media_store_container_policy":                        resourceAwsMediaStoreContainerPolicy(),
 			"aws_msk_cluster":                                         resourceAwsMskCluster(),
 			"aws_msk_configuration":                                   resourceAwsMskConfiguration(),
+			"aws_msk_scram_secret_association":                        resourceAwsMskScramSecretAssociation(),
 			"aws_nat_gateway":                                         resourceAwsNatGateway(),
 			"aws_network_acl":                                         resourceAwsNetworkAcl(),
 			"aws_default_network_acl":                                 resourceAwsDefaultNetworkAcl(),
@@ -789,6 +795,7 @@ func Provider() *schema.Provider {
 			"aws_networkfirewall_firewall":                            resourceAwsNetworkFirewallFirewall(),
 			"aws_networkfirewall_firewall_policy":                     resourceAwsNetworkFirewallFirewallPolicy(),
 			"aws_networkfirewall_logging_configuration":               resourceAwsNetworkFirewallLoggingConfiguration(),
+			"aws_networkfirewall_resource_policy":                     resourceAwsNetworkFirewallResourcePolicy(),
 			"aws_networkfirewall_rule_group":                          resourceAwsNetworkFirewallRuleGroup(),
 			"aws_opsworks_application":                                resourceAwsOpsworksApplication(),
 			"aws_opsworks_stack":                                      resourceAwsOpsworksStack(),
@@ -1040,6 +1047,11 @@ func Provider() *schema.Provider {
 			"aws_lb_target_group_attachment":  resourceAwsLbTargetGroupAttachment(),
 		},
 	}
+
+	// Avoid Go formatting churn and Git conflicts
+	// You probably should not do this
+	provider.DataSourcesMap["aws_serverlessapplicationrepository_application"] = dataSourceAwsServerlessApplicationRepositoryApplication()
+	provider.ResourcesMap["aws_serverlessapplicationrepository_cloudformation_stack"] = resourceAwsServerlessApplicationRepositoryCloudFormationStack()
 
 	provider.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
 		terraformVersion := provider.TerraformVersion

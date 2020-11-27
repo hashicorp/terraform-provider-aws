@@ -38,6 +38,10 @@ func resourceAwsMskCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"bootstrap_brokers_sasl_scram": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"bootstrap_brokers_tls": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -94,6 +98,22 @@ func resourceAwsMskCluster() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"sasl": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"scram": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
+							ConflictsWith: []string{"client_authentication.0.tls"},
+						},
 						"tls": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -444,6 +464,7 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", aws.StringValue(cluster.ClusterArn))
 	d.Set("bootstrap_brokers", aws.StringValue(brokerOut.BootstrapBrokerString))
+	d.Set("bootstrap_brokers_sasl_scram", aws.StringValue(brokerOut.BootstrapBrokerStringSaslScram))
 	d.Set("bootstrap_brokers_tls", aws.StringValue(brokerOut.BootstrapBrokerStringTls))
 
 	if err := d.Set("broker_node_group_info", flattenMskBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)); err != nil {
@@ -663,7 +684,8 @@ func expandMskClusterClientAuthentication(l []interface{}) *kafka.ClientAuthenti
 	m := l[0].(map[string]interface{})
 
 	ca := &kafka.ClientAuthentication{
-		Tls: expandMskClusterTls(m["tls"].([]interface{})),
+		Sasl: expandMskClusterScram(m["sasl"].([]interface{})),
+		Tls:  expandMskClusterTls(m["tls"].([]interface{})),
 	}
 
 	return ca
@@ -717,6 +739,25 @@ func expandMskClusterEncryptionInTransit(l []interface{}) *kafka.EncryptionInTra
 	}
 
 	return eit
+}
+
+func expandMskClusterScram(l []interface{}) *kafka.Sasl {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	sasl := &kafka.Sasl{
+		Scram: &kafka.Scram{
+			Enabled: aws.Bool(tfMap["scram"].(bool)),
+		},
+	}
+
+	return sasl
 }
 
 func expandMskClusterTls(l []interface{}) *kafka.Tls {
@@ -892,7 +933,8 @@ func flattenMskClientAuthentication(ca *kafka.ClientAuthentication) []map[string
 	}
 
 	m := map[string]interface{}{
-		"tls": flattenMskTls(ca.Tls),
+		"sasl": flattenMskSasl(ca.Sasl),
+		"tls":  flattenMskTls(ca.Tls),
 	}
 
 	return []map[string]interface{}{m}
@@ -935,6 +977,26 @@ func flattenMskEncryptionInTransit(eit *kafka.EncryptionInTransit) []map[string]
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func flattenMskSasl(sasl *kafka.Sasl) []map[string]interface{} {
+	if sasl == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"scram": flattenMskScram(sasl.Scram),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenMskScram(scram *kafka.Scram) bool {
+	if scram == nil {
+		return false
+	}
+
+	return aws.BoolValue(scram.Enabled)
 }
 
 func flattenMskTls(tls *kafka.Tls) []map[string]interface{} {
