@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"os"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -204,27 +202,21 @@ func TestAccAWSInstance_inDefaultVpcBySgId(t *testing.T) {
 
 func TestAccAWSInstance_inEc2Classic(t *testing.T) {
 	resourceName := "aws_instance.test"
-	rInt := acctest.RandInt()
 	var v ec2.Instance
 
-	// EC2 Classic enabled
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigInEc2Classic(rInt),
+				Config: testAccInstanceConfigInEc2Classic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
+					testAccCheckInstanceEc2ClassicExists(resourceName, &v),
 				),
 			},
 			{
-				Config:                  testAccInstanceConfigInEc2Classic(rInt),
+				Config:                  testAccInstanceConfigInEc2Classic(),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -323,10 +315,10 @@ func TestAccAWSInstance_EbsBlockDevice_KmsKeyArn(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"encrypted": "true",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.kms_key_id", kmsKeyResourceName, "arn"),
 				),
 			},
 		},
@@ -524,33 +516,33 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", rootVolumeSize),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp2"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "3"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"device_name": "/dev/sdb",
 						"volume_size": "9",
 						"volume_type": "gp2",
 					}),
-					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
 						"volume_id": regexp.MustCompile("vol-[a-z0-9]+"),
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"device_name": "/dev/sdc",
 						"volume_size": "10",
 						"volume_type": "io1",
 						"iops":        "100",
 					}),
-					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
 						"volume_id": regexp.MustCompile("vol-[a-z0-9]+"),
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"device_name": "/dev/sdd",
 						"encrypted":   "true",
 						"volume_size": "12",
 					}),
-					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
 						"volume_id": regexp.MustCompile("vol-[a-z0-9]+"),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
 						"device_name":  "/dev/sde",
 						"virtual_name": "ephemeral0",
 					}),
@@ -608,8 +600,8 @@ func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
 			}
 
 			// Check if the root block device exists.
-			if _, ok := blockDevices["/dev/sda1"]; !ok {
-				return fmt.Errorf("block device doesn't exist: /dev/sda1")
+			if _, ok := blockDevices["/dev/xvda"]; !ok {
+				return fmt.Errorf("block device doesn't exist: /dev/xvda")
 			}
 
 			// Check if the secondary block not exists.
@@ -642,11 +634,11 @@ func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp2"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
 						"device_name": "/dev/sdb",
 						"no_device":   "true",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
 						"device_name": "/dev/sdc",
 						"no_device":   "true",
 					}),
@@ -1766,13 +1758,13 @@ func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifySize(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", originalRootVolumeSize),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"volume_size": "9",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"volume_size": "10",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"volume_size": "12",
 					}),
 				),
@@ -1783,13 +1775,13 @@ func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifySize(t *testing
 					testAccCheckInstanceExists(resourceName, &after),
 					testAccCheckInstanceNotRecreated(t, &before, &after),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", updatedRootVolumeSize),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"volume_size": "9",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"volume_size": "10",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"volume_size": "12",
 					}),
 				),
@@ -1819,13 +1811,13 @@ func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifyDeleteOnTermina
 					testAccCheckInstanceExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", rootVolumeSize),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", originalDeleteOnTermination),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"volume_size": "9",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"volume_size": "10",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"volume_size": "12",
 					}),
 				),
@@ -1837,13 +1829,13 @@ func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifyDeleteOnTermina
 					testAccCheckInstanceNotRecreated(t, &before, &after),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", rootVolumeSize),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", updatedDeleteOnTermination),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"volume_size": "9",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"volume_size": "10",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"volume_size": "12",
 					}),
 				),
@@ -1868,7 +1860,7 @@ func TestAccAWSInstance_EbsRootDevice_MultipleDynamicEBSBlockDevices(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "3"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"delete_on_termination": "true",
 						"device_name":           "/dev/sdc",
 						"encrypted":             "false",
@@ -1876,7 +1868,7 @@ func TestAccAWSInstance_EbsRootDevice_MultipleDynamicEBSBlockDevices(t *testing.
 						"volume_size":           "10",
 						"volume_type":           "gp2",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"delete_on_termination": "true",
 						"device_name":           "/dev/sdb",
 						"encrypted":             "false",
@@ -1884,7 +1876,7 @@ func TestAccAWSInstance_EbsRootDevice_MultipleDynamicEBSBlockDevices(t *testing.
 						"volume_size":           "10",
 						"volume_type":           "gp2",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"delete_on_termination": "true",
 						"device_name":           "/dev/sda",
 						"encrypted":             "false",
@@ -3172,6 +3164,10 @@ func testAccCheckInstanceExists(n string, i *ec2.Instance) resource.TestCheckFun
 	return testAccCheckInstanceExistsWithProvider(n, i, func() *schema.Provider { return testAccProvider })
 }
 
+func testAccCheckInstanceEc2ClassicExists(n string, i *ec2.Instance) resource.TestCheckFunc {
+	return testAccCheckInstanceExistsWithProvider(n, i, func() *schema.Provider { return testAccProviderEc2Classic })
+}
+
 func testAccCheckInstanceExistsWithProvider(n string, i *ec2.Instance, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -3357,25 +3353,17 @@ resource "aws_instance" "test" {
 `, rName)
 }
 
-func testAccInstanceConfigInEc2Classic(rInt int) string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
-resource "aws_security_group" "sg" {
-  name        = "tf_acc_test_%d"
-  description = "Test security group"
-}
-
+func testAccInstanceConfigInEc2Classic() string {
+	return composeConfig(
+		testAccEc2ClassicRegionProviderConfig(),
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t1.micro", "m3.medium", "m3.large", "c3.large", "r3.large"),
+		`
 resource "aws_instance" "test" {
-  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-
-  # tflint-ignore: aws_instance_previous_type
-  instance_type   = "m3.medium"
-  security_groups = [aws_security_group.sg.name]
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 }
-`, rInt))
+`)
 }
 
 func testAccInstanceConfigBasic() string {
@@ -3508,28 +3496,12 @@ resource "aws_instance" "test" {
 }
 
 func testAccInstanceConfigNoAMIEphemeralDevices() string {
-	return composeConfig(testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig(), fmt.Sprintf(`
-# This AMI has 2 ephemeral block devices.
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["099720109477"] # Canonical
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-eoan-19.10-amd64-server-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami = data.aws_ami.test.id
-
-  # tflint-ignore: aws_instance_previous_type
-  instance_type = "c3.large"
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
   root_block_device {
     volume_type = "gp2"

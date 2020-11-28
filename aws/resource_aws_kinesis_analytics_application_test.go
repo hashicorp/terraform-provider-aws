@@ -8,12 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalytics/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalytics/lister"
 )
 
 func init() {
@@ -32,23 +33,20 @@ func testSweepKinesisAnalyticsApplications(region string) error {
 	input := &kinesisanalytics.ListApplicationsInput{}
 	var sweeperErrs *multierror.Error
 
-	for {
-		output, err := conn.ListApplications(input)
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Kinesis Analytics Application sweep for %s: %s", region, err)
-			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-		}
-		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Kinesis Analytics Applications: %w", err))
-			return sweeperErrs
+	err = lister.ListApplicationsPages(conn, input, func(page *kinesisanalytics.ListApplicationsOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
 		}
 
-		var name string
-		for _, applicationSummary := range output.ApplicationSummaries {
+		for _, applicationSummary := range page.ApplicationSummaries {
 			arn := aws.StringValue(applicationSummary.ApplicationARN)
-			name = aws.StringValue(applicationSummary.ApplicationName)
+			name := aws.StringValue(applicationSummary.ApplicationName)
 
 			application, err := finder.ApplicationByName(conn, name)
+
+			if tfawserr.ErrMessageContains(err, kinesisanalytics.ErrCodeUnsupportedOperationException, "was created/updated by kinesisanalyticsv2 SDK") {
+				continue
+			}
 
 			if err != nil {
 				sweeperErr := fmt.Errorf("error reading Kinesis Analytics Application (%s): %w", arn, err)
@@ -71,10 +69,16 @@ func testSweepKinesisAnalyticsApplications(region string) error {
 			}
 		}
 
-		if !aws.BoolValue(output.HasMoreApplications) {
-			break
-		}
-		input.ExclusiveStartApplicationName = aws.String(name)
+		return !isLast
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Kinesis Analytics Application sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Kinesis Analytics Applications: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -478,10 +482,8 @@ func TestAccAWSKinesisAnalyticsApplication_Input_Add(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "inputs.0.schema.0.record_columns.*", map[string]string{
-						"name":     "COLUMN_1",
-						"sql_type": "INTEGER",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
@@ -544,10 +546,8 @@ func TestAccAWSKinesisAnalyticsApplication_Input_Update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "inputs.0.schema.0.record_columns.*", map[string]string{
-						"name":     "COLUMN_1",
-						"sql_type": "INTEGER",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
@@ -587,16 +587,12 @@ func TestAccAWSKinesisAnalyticsApplication_Input_Update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "inputs.0.schema.0.record_columns.*", map[string]string{
-						"name":     "COLUMN_2",
-						"sql_type": "VARCHAR(8)",
-						"mapping":  "MAPPING-2",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "inputs.0.schema.0.record_columns.*", map[string]string{
-						"name":     "COLUMN_3",
-						"sql_type": "DOUBLE",
-						"mapping":  "MAPPING-3",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.mapping", "MAPPING-2"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_2"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "VARCHAR(8)"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.1.mapping", "MAPPING-3"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.1.name", "COLUMN_3"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.1.sql_type", "DOUBLE"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", "UTF-8"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
@@ -657,10 +653,8 @@ func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Add(t *t
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "inputs.0.schema.0.record_columns.*", map[string]string{
-						"name":     "COLUMN_1",
-						"sql_type": "INTEGER",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
@@ -700,10 +694,8 @@ func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Add(t *t
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "inputs.0.schema.0.record_columns.*", map[string]string{
-						"name":     "COLUMN_1",
-						"sql_type": "INTEGER",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
@@ -768,10 +760,8 @@ func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Delete(t
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "inputs.0.schema.0.record_columns.*", map[string]string{
-						"name":     "COLUMN_1",
-						"sql_type": "INTEGER",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
@@ -814,10 +804,8 @@ func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Delete(t
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "inputs.0.schema.0.record_columns.*", map[string]string{
-						"name":     "COLUMN_1",
-						"sql_type": "INTEGER",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
@@ -881,10 +869,8 @@ func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Update(t
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "inputs.0.schema.0.record_columns.*", map[string]string{
-						"name":     "COLUMN_1",
-						"sql_type": "INTEGER",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
@@ -927,10 +913,8 @@ func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Update(t
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "inputs.0.schema.0.record_columns.*", map[string]string{
-						"name":     "COLUMN_1",
-						"sql_type": "INTEGER",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
@@ -1001,10 +985,8 @@ func TestAccAWSKinesisAnalyticsApplication_Multiple_Update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "inputs.0.schema.0.record_columns.*", map[string]string{
-						"name":     "COLUMN_1",
-						"sql_type": "INTEGER",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "INTEGER"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", ""),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
@@ -1025,7 +1007,7 @@ func TestAccAWSKinesisAnalyticsApplication_Multiple_Update(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.kinesis_stream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
 						"name":                        "OUTPUT_1",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "CSV",
@@ -1033,8 +1015,8 @@ func TestAccAWSKinesisAnalyticsApplication_Multiple_Update(t *testing.T) {
 						"kinesis_stream.#":            "0",
 						"lambda.#":                    "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.role_arn", iamRole2ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -1058,16 +1040,12 @@ func TestAccAWSKinesisAnalyticsApplication_Multiple_Update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "inputs.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "inputs.0.schema.0.record_columns.*", map[string]string{
-						"name":     "COLUMN_2",
-						"sql_type": "VARCHAR(8)",
-						"mapping":  "MAPPING-2",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "inputs.0.schema.0.record_columns.*", map[string]string{
-						"name":     "COLUMN_3",
-						"sql_type": "DOUBLE",
-						"mapping":  "MAPPING-3",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.mapping", "MAPPING-2"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.name", "COLUMN_2"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.0.sql_type", "VARCHAR(8)"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.1.mapping", "MAPPING-3"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.1.name", "COLUMN_3"),
+					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_columns.1.sql_type", "DOUBLE"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_encoding", "UTF-8"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "inputs.0.schema.0.record_format.0.mapping_parameters.#", "1"),
@@ -1084,7 +1062,7 @@ func TestAccAWSKinesisAnalyticsApplication_Multiple_Update(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "inputs.0.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
 						"name":                        "OUTPUT_2",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "JSON",
@@ -1092,9 +1070,9 @@ func TestAccAWSKinesisAnalyticsApplication_Multiple_Update(t *testing.T) {
 						"kinesis_stream.#":            "1",
 						"lambda.#":                    "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
 						"name":                        "OUTPUT_3",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "CSV",
@@ -1102,15 +1080,13 @@ func TestAccAWSKinesisAnalyticsApplication_Multiple_Update(t *testing.T) {
 						"kinesis_stream.#":            "0",
 						"lambda.#":                    "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.resource_arn", lambdaResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.resource_arn", lambdaResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.role_arn", iamRole1ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "reference_data_sources.0.schema.0.record_columns.*", map[string]string{
-						"name":     "COLUMN_1",
-						"sql_type": "INTEGER",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.sql_type", "INTEGER"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_encoding", ""),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.#", "1"),
@@ -1169,7 +1145,7 @@ func TestAccAWSKinesisAnalyticsApplication_Output_Update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
 						"name":                        "OUTPUT_1",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "CSV",
@@ -1177,8 +1153,8 @@ func TestAccAWSKinesisAnalyticsApplication_Output_Update(t *testing.T) {
 						"kinesis_stream.#":            "0",
 						"lambda.#":                    "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.resource_arn", firehoseResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_firehose.0.role_arn", iamRole1ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -1198,7 +1174,7 @@ func TestAccAWSKinesisAnalyticsApplication_Output_Update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "inputs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
 						"name":                        "OUTPUT_2",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "JSON",
@@ -1206,9 +1182,9 @@ func TestAccAWSKinesisAnalyticsApplication_Output_Update(t *testing.T) {
 						"kinesis_stream.#":            "1",
 						"lambda.#":                    "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.resource_arn", streamsResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.kinesis_stream.0.role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
 						"name":                        "OUTPUT_3",
 						"schema.#":                    "1",
 						"schema.0.record_format_type": "CSV",
@@ -1216,8 +1192,8 @@ func TestAccAWSKinesisAnalyticsApplication_Output_Update(t *testing.T) {
 						"kinesis_stream.#":            "0",
 						"lambda.#":                    "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.resource_arn", lambdaResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.role_arn", iamRole1ResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.resource_arn", lambdaResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "outputs.*.lambda.0.role_arn", iamRole1ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -1299,10 +1275,8 @@ func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Add(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "reference_data_sources.0.schema.0.record_columns.*", map[string]string{
-						"name":     "COLUMN_1",
-						"sql_type": "INTEGER",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.sql_type", "INTEGER"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_encoding", ""),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.#", "1"),
@@ -1359,10 +1333,8 @@ func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Delete(t *testing
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "reference_data_sources.0.schema.0.record_columns.*", map[string]string{
-						"name":     "COLUMN_1",
-						"sql_type": "INTEGER",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.sql_type", "INTEGER"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_encoding", ""),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.#", "1"),
@@ -1439,10 +1411,8 @@ func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Update(t *testing
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "reference_data_sources.0.schema.0.record_columns.*", map[string]string{
-						"name":     "COLUMN_1",
-						"sql_type": "INTEGER",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.name", "COLUMN_1"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.sql_type", "INTEGER"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_encoding", ""),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.#", "1"),
@@ -1478,16 +1448,12 @@ func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Update(t *testing
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "reference_data_sources.0.schema.0.record_columns.*", map[string]string{
-						"name":     "COLUMN_2",
-						"sql_type": "VARCHAR(8)",
-						"mapping":  "MAPPING-2",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "reference_data_sources.0.schema.0.record_columns.*", map[string]string{
-						"name":     "COLUMN_3",
-						"sql_type": "DOUBLE",
-						"mapping":  "MAPPING-3",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.mapping", "MAPPING-2"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.name", "COLUMN_2"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.0.sql_type", "VARCHAR(8)"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.1.mapping", "MAPPING-3"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.1.name", "COLUMN_3"),
+					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_columns.1.sql_type", "DOUBLE"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_encoding", "UTF-8"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reference_data_sources.0.schema.0.record_format.0.mapping_parameters.#", "1"),

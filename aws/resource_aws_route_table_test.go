@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -393,6 +392,31 @@ func TestAccAWSRouteTable_Route_TransitGatewayID(t *testing.T) {
 	})
 }
 
+func TestAccAWSRouteTable_Route_VpcEndpointId(t *testing.T) {
+	var routeTable1 ec2.RouteTable
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_route_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRouteTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteTableConfigRouteVpcEndpointId(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSRouteTable_Route_LocalGatewayID(t *testing.T) {
 	var routeTable1 ec2.RouteTable
 	resourceName := "aws_route_table.test"
@@ -581,7 +605,7 @@ func TestAccAWSRouteTable_ConditionalCidrBlock(t *testing.T) {
 				Config: testAccAWSRouteTableConfigConditionalIpv4Ipv6(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
 						"cidr_block":      "0.0.0.0/0",
 						"ipv6_cidr_block": "",
 					}),
@@ -591,7 +615,7 @@ func TestAccAWSRouteTable_ConditionalCidrBlock(t *testing.T) {
 				Config: testAccAWSRouteTableConfigConditionalIpv4Ipv6(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
 						"cidr_block":      "",
 						"ipv6_cidr_block": "::/0",
 					}),
@@ -1018,6 +1042,63 @@ resource "aws_route_table" "test" {
   }
 }
 `)
+}
+
+func testAccAWSRouteTableConfigRouteVpcEndpointId(rName string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.10.0/25"
+
+  tags = {
+    Name = "tf-acc-test-load-balancer"
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 0)
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-test-load-balancer"
+  }
+}
+
+resource "aws_lb" "test" {
+  load_balancer_type = "gateway"
+  name               = %[1]q
+
+  subnet_mapping {
+    subnet_id = aws_subnet.test.id
+  }
+}
+
+resource "aws_vpc_endpoint_service" "test" {
+  acceptance_required        = false
+  allowed_principals         = [data.aws_caller_identity.current.arn]
+  gateway_load_balancer_arns = [aws_lb.test.arn]
+}
+
+resource "aws_vpc_endpoint" "test" {
+  service_name      = aws_vpc_endpoint_service.test.service_name
+  subnet_ids        = [aws_subnet.test.id]
+  vpc_endpoint_type = aws_vpc_endpoint_service.test.service_type
+  vpc_id            = aws_vpc.test.id
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block      = "0.0.0.0/0"
+    vpc_endpoint_id = aws_vpc_endpoint.test.id
+  }
+}
+`, rName))
 }
 
 func testAccAWSRouteTableConfigRouteLocalGatewayID() string {
