@@ -24,7 +24,7 @@ resource "aws_backup_global_settings" "test" {
 
 The following arguments are supported:
 
-* `resource_type_opt_in_preference` - (Required) A list of resources along with the opt-in preferences for the account.
+* `global_settings` - (Required) A list of resources along with the opt-in preferences for the account.
 
 ## Attributes Reference
 
