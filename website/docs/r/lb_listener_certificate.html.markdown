@@ -46,7 +46,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The `listener_arn` and `certificate_arn` seperated by a `_`.
+* `id` - The `listener_arn` and `certificate_arn` separated by a `_`.
 
 ## Import
 
