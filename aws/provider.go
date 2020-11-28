@@ -462,6 +462,7 @@ func Provider() *schema.Provider {
 			"aws_autoscaling_policy":                                  resourceAwsAutoscalingPolicy(),
 			"aws_autoscaling_schedule":                                resourceAwsAutoscalingSchedule(),
 			"aws_autoscalingplans_scaling_plan":                       resourceAwsAutoScalingPlansScalingPlan(),
+			"aws_backup_global_settings":                              resourceAwsBackupGlobalSettings(),
 			"aws_backup_plan":                                         resourceAwsBackupPlan(),
 			"aws_backup_region_settings":                              resourceAwsBackupRegionSettings(),
 			"aws_backup_selection":                                    resourceAwsBackupSelection(),
