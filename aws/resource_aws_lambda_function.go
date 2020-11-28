@@ -71,8 +71,9 @@ func resourceAwsLambdaFunction() *schema.Resource {
 			"package_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				Default:      lambda.PackageTypeZip,
-				ValidateFunc: validation.StringInSlice([]string{lambda.PackageTypeZip, lambda.PackageTypeImage}, false),
+				ValidateFunc: validation.StringInSlice(lambda.PackageType_Values(), false),
 			},
 			"image_config": {
 				Type:     schema.TypeList,
@@ -402,11 +403,11 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	packageType := aws.String(d.Get("package_type").(string))
+	packageType := d.Get("package_type")
 	handler, handlerOk := d.GetOk("handler")
 	runtime, runtimeOk := d.GetOk("runtime")
 
-	if *packageType == lambda.PackageTypeZip && !handlerOk && !runtimeOk {
+	if packageType == lambda.PackageTypeZip && !handlerOk && !runtimeOk {
 		return errors.New("handler and runtime must be set when PackageType is Zip")
 	}
 
@@ -421,7 +422,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		PackageType:  aws.String(d.Get("package_type").(string)),
 	}
 
-	if *packageType == lambda.PackageTypeZip {
+	if packageType == lambda.PackageTypeZip {
 		params.Handler = aws.String(handler.(string))
 		params.Runtime = aws.String(runtime.(string))
 	}
@@ -593,6 +594,9 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	conn := meta.(*AWSClient).lambdaconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
+	// testing
+	//return errors.New("raise an error for debugging")
+
 	params := &lambda.GetFunctionInput{
 		FunctionName: aws.String(d.Get("function_name").(string)),
 	}
@@ -696,6 +700,18 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Error setting file system config for Lambda Function (%s): %w", d.Id(), err)
 	}
 
+	// Add Package Type
+	if err := d.Set("package_type", function.PackageType); err != nil {
+		return fmt.Errorf("Error setting package type for Lambda Function: %s", err)
+	}
+
+	// Add Image Configuration
+	imageConfig := flattenLambdaImageConfig(function.ImageConfigResponse)
+	log.Printf("[INFO] Setting Lambda %s Image config %#v from API", d.Id(), imageConfig)
+	if err := d.Set("image_config", imageConfig); err != nil {
+		return fmt.Errorf("Error setting image config for Lambda Function: %s", err)
+	}
+
 	layers := flattenLambdaLayers(function.Layers)
 	log.Printf("[INFO] Setting Lambda %s Layers %#v from API", d.Id(), layers)
 	if err := d.Set("layers", layers); err != nil {
@@ -773,15 +789,20 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 		FunctionName: aws.String(d.Get("function_name").(string)),
 	}
 
-	getCodeSigningConfigOutput, err := conn.GetFunctionCodeSigningConfig(codeSigningConfigInput)
-	if err != nil {
-		return fmt.Errorf("error getting Lambda Function (%s) code signing config %w", d.Id(), err)
-	}
+	// Code Signing is only supported on zip packaged lambda functions.
+	if *function.PackageType == lambda.PackageTypeZip {
+		getCodeSigningConfigOutput, err := conn.GetFunctionCodeSigningConfig(codeSigningConfigInput)
+		if err != nil {
+			return fmt.Errorf("error getting Lambda Function (%s) code signing config %w", d.Id(), err)
+		}
 
-	if getCodeSigningConfigOutput == nil || getCodeSigningConfigOutput.CodeSigningConfigArn == nil {
-		d.Set("code_signing_config_arn", "")
+		if getCodeSigningConfigOutput == nil || getCodeSigningConfigOutput.CodeSigningConfigArn == nil {
+			d.Set("code_signing_config_arn", "")
+		} else {
+			d.Set("code_signing_config_arn", getCodeSigningConfigOutput.CodeSigningConfigArn)
+		}
 	} else {
-		d.Set("code_signing_config_arn", getCodeSigningConfigOutput.CodeSigningConfigArn)
+		d.Set("code_signing_config_arn", "")
 	}
 
 	return nil
@@ -1247,6 +1268,17 @@ func expandLambdaFileSystemConfigs(fscMaps []interface{}) []*lambda.FileSystemCo
 		})
 	}
 	return fileSystemConfigs
+}
+
+func flattenLambdaImageConfig(response *lambda.ImageConfigResponse) []map[string]interface{} {
+	settings := make(map[string]interface{})
+	if response != nil && response.Error != nil {
+		settings["command"] = response.ImageConfig.Command
+		settings["entry_point"] = response.ImageConfig.EntryPoint
+		settings["working_directory"] = response.ImageConfig.WorkingDirectory
+	}
+
+	return []map[string]interface{}{settings}
 }
 
 func expandLambdaImageConfigs(imageConfigMaps []interface{}) *lambda.ImageConfig {
