@@ -701,6 +701,7 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	// Add Package Type
+	log.Printf("[INFO] Setting Lambda %s package type %#v from API", d.Id(), function.PackageType)
 	if err := d.Set("package_type", function.PackageType); err != nil {
 		return fmt.Errorf("Error setting package type for Lambda Function: %s", err)
 	}
@@ -710,6 +711,10 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[INFO] Setting Lambda %s Image config %#v from API", d.Id(), imageConfig)
 	if err := d.Set("image_config", imageConfig); err != nil {
 		return fmt.Errorf("Error setting image config for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("image_uri", getFunctionOutput.Code.ImageUri); err != nil {
+		return fmt.Errorf("Error setting image uri for Lambda Function: %s", err)
 	}
 
 	layers := flattenLambdaLayers(function.Layers)
@@ -1272,11 +1277,14 @@ func expandLambdaFileSystemConfigs(fscMaps []interface{}) []*lambda.FileSystemCo
 
 func flattenLambdaImageConfig(response *lambda.ImageConfigResponse) []map[string]interface{} {
 	settings := make(map[string]interface{})
-	if response != nil && response.Error != nil {
-		settings["command"] = response.ImageConfig.Command
-		settings["entry_point"] = response.ImageConfig.EntryPoint
-		settings["working_directory"] = response.ImageConfig.WorkingDirectory
+
+	if response == nil || response.Error != nil {
+		return nil
 	}
+
+	settings["command"] = response.ImageConfig.Command
+	settings["entry_point"] = response.ImageConfig.EntryPoint
+	settings["working_directory"] = response.ImageConfig.WorkingDirectory
 
 	return []map[string]interface{}{settings}
 }

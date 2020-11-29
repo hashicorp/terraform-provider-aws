@@ -868,7 +868,6 @@ func TestAccAWSLambdaFunction_FileSystemConfig(t *testing.T) {
 func TestAccAWSLambdaFunction_imageConfig(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 	resourceName := "aws_lambda_function.test"
-	dataSourceName := "data.aws_lambda_function.test"
 
 	rString := acctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
@@ -890,11 +889,7 @@ func TestAccAWSLambdaFunction_imageConfig(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeImage),
-					resource.TestCheckResourceAttrSet(dataSourceName, "image_uri"),
-					resource.TestCheckResourceAttr(resourceName, "image_config.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "image_config.0.working_directory"),
-					resource.TestCheckResourceAttrSet(resourceName, "image_config.0.command"),
-					resource.TestCheckNoResourceAttr(resourceName, "image_config.0.entry_point"),
+					resource.TestCheckResourceAttrSet(resourceName, "image_uri"),
 				),
 			},
 			// Ensure configuration can be imported
@@ -918,7 +913,7 @@ func TestAccAWSLambdaFunction_imageConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "image_uri", "373534280245.dkr.ecr.sa-east-1.amazonaws.com/lambda-image-function:v2"),
-					resource.TestCheckResourceAttr(resourceName, "image_config.0.command", "app.another_handler"),
+					resource.TestCheckResourceAttr(resourceName, "image_config.0.command.0", "app.another_handler"),
 				),
 			},
 		},
@@ -2454,10 +2449,6 @@ resource "aws_lambda_function" "test" {
   function_name = "%s"
   role          = aws_iam_role.iam_for_lambda.arn
   package_type  = "Image"
-  image_config {
-    command = ["app.another_handler"]
-    working_directory = "/var/task"
-  }
 }
 `, funcName)
 }
