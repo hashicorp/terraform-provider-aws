@@ -210,7 +210,7 @@ The following arguments are required in the `software_token_mfa_configuration` c
 ### Account Recovery Setting
 
 * `recovery_mechanism` (Required) - The list of Account Recovery Options of the following structure:
-    * `name` (Required) - Specifies the recovery method for a user. can be of the following: `verified_email`, `verified_phone_number`, and `admin_only`.
+    * `name` (Required) - Specifies the recovery method for a user. Can be of the following: `verified_email`, `verified_phone_number`, and `admin_only`.
     * `priority` (Required) - A positive integer specifying priority of a method with 1 being the highest priority.
 
 ## Attribute Reference
