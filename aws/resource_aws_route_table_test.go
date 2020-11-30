@@ -1415,7 +1415,8 @@ resource "aws_vpc" "test" {
     Name = %[1]q
   }
 }
-`
+`, rName)
+}
 
 func testAccAWSRouteTableConfigRouteConfigModeNoBlocks(rName string) string {
 	return fmt.Sprintf(`
@@ -1596,7 +1597,7 @@ resource "aws_route_table" "test" {
 }
 
 func testAccAWSRouteTableConfigRouteIpv4LocalGateway(rName, destinationCidr string) string {
-	return `
+	return fmt.Sprintf(`
 data "aws_ec2_local_gateways" "all" {}
 
 data "aws_ec2_local_gateway" "first" {
@@ -1649,7 +1650,7 @@ resource "aws_route_table" "test" {
 
   depends_on = [aws_ec2_local_gateway_route_table_vpc_association.example]
 }
-`
+`, rName, destinationCidr)
 }
 
 func testAccAWSRouteTableConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr string, ipv6Route bool) string {
