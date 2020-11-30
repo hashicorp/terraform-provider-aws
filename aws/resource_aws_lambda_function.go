@@ -595,9 +595,6 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	conn := meta.(*AWSClient).lambdaconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	// testing
-	//return errors.New("raise an error for debugging")
-
 	params := &lambda.GetFunctionInput{
 		FunctionName: aws.String(d.Get("function_name").(string)),
 	}
