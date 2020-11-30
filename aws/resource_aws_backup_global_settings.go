@@ -53,7 +53,9 @@ func resourceAwsBackupGlobalSettingsRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error reading Backup Global Settings (%s): %w", d.Id(), err)
 	}
 
-	d.Set("global_settings", aws.StringValueMap(resp.GlobalSettings))
+	if err := d.Set("global_settings", aws.StringValueMap(resp.GlobalSettings)); err != nil {
+		return fmt.Errorf("error setting global_settings: %w", err)
+	}
 
 	return nil
 }
