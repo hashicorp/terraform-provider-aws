@@ -2472,7 +2472,7 @@ resource "aws_lambda_function" "test" {
   role          = aws_iam_role.iam_for_lambda.arn
   package_type  = "Image"
   image_config {
-	command = ["app.another_handler"]
+    command = ["app.another_handler"]
   }
 }
 `, funcName)
