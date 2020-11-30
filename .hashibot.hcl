@@ -514,6 +514,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/securityhub" = [
       "aws_securityhub_",
     ],
+    "service/serverlessapplicationrepository" = [
+      "aws_serverlessapplicationrepository_",
+    ],
     "service/servicecatalog" = [
       "aws_servicecatalog_",
     ],
@@ -1388,6 +1391,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/securityhub/**/*",
       "**/*_securityhub_*",
       "**/securityhub_*"
+    ]
+    "service/serverlessapplicationrepository" = [
+      "aws/internal/service/serverlessapplicationrepository/**/*",
+      "**/*_serverlessapplicationrepository_*",
+      "**/serverlessapplicationrepository_*"
     ]
     "service/servicecatalog" = [
       "aws/internal/service/servicecatalog/**/*",
