@@ -114,6 +114,19 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"custom_domain": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"domain": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"estimated_number_of_users": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+
 			"auto_verified_attributes": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -318,6 +331,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.Any(
+					validation.StringLenBetween(1, 128),
+					validation.StringMatch(regexp.MustCompile(`[\w\s+=,.@-]+`),
+						`must satisfy regular expression pattern: [\w\s+=,.@-]+`),
+				),
 			},
 			"password_policy": {
 				Type:     schema.TypeList,
@@ -840,6 +858,9 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.Set("arn", resp.UserPool.Arn)
+	d.Set("custom_domain", resp.UserPool.CustomDomain)
+	d.Set("domain", resp.UserPool.Domain)
+	d.Set("estimated_number_of_users", resp.UserPool.EstimatedNumberOfUsers)
 	d.Set("endpoint", fmt.Sprintf("%s/%s", meta.(*AWSClient).RegionalHostname("cognito-idp"), d.Id()))
 	d.Set("auto_verified_attributes", flattenStringSet(resp.UserPool.AutoVerifiedAttributes))
 
@@ -1245,11 +1266,6 @@ func resourceAwsCognitoUserPoolDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return nil
-}
-
-func expandCognitoSmsConfiguration(tfList []interface{}) *cognitoidentityprovider.SmsConfigurationType {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
 	}
 
 	tfMap := tfList[0].(map[string]interface{})
@@ -1531,6 +1547,24 @@ func expandCognitoUserPoolLambdaConfig(config map[string]interface{}) *cognitoid
 		configs.VerifyAuthChallengeResponse = aws.String(v.(string))
 	}
 
+	if v, ok := config["kms_key_id"]; ok && v.(string) != "" {
+		configs.KMSKeyID = aws.String(v.(string))
+	}
+
+	if v, ok := config["custom_sms_sender"].([]interface{}); ok && len(v) > 0 {
+		s, sok := v[0].(map[string]interface{})
+		if sok && s != nil {
+			configs.CustomSMSSender = expandCognitoUserPoolCustomSMSSender(s)
+		}
+	}
+
+	if v, ok := config["custom_email_sender"].([]interface{}); ok && len(v) > 0 {
+		s, sok := v[0].(map[string]interface{})
+		if sok && s != nil {
+			configs.CustomEmailSender = expandCognitoUserPoolCustomEmailSender(s)
+		}
+	}
+
 	return configs
 }
 
@@ -1579,6 +1613,18 @@ func flattenCognitoUserPoolLambdaConfig(s *cognitoidentityprovider.LambdaConfigT
 
 	if s.VerifyAuthChallengeResponse != nil {
 		m["verify_auth_challenge_response"] = aws.StringValue(s.VerifyAuthChallengeResponse)
+	}
+
+	if s.KMSKeyID != nil {
+		m["kms_key_id"] = aws.StringValue(s.KMSKeyID)
+	}
+
+	if s.CustomSMSSender != nil {
+		m["custom_sms_sender"] = flattenCognitoUserPoolCustomSMSSender(s.CustomSMSSender)
+	}
+
+	if s.CustomEmailSender != nil {
+		m["custom_email_sender"] = flattenCognitoUserPoolCustomEmailSender(s.CustomEmailSender)
 	}
 
 	if len(m) > 0 {
@@ -2156,4 +2202,48 @@ func cognitoUserPoolSchemaAttributeMatchesStandardAttribute(input *cognitoidenti
 		}
 	}
 	return false
+}
+
+func expandCognitoUserPoolCustomSMSSender(config map[string]interface{}) *cognitoidentityprovider.CustomSMSLambdaVersionConfigType {
+	usernameConfigurationType := &cognitoidentityprovider.CustomSMSLambdaVersionConfigType{
+		LambdaArn:     aws.String(config["lambda_arn"].(string)),
+		LambdaVersion: aws.String(config["lambda_version"].(string)),
+	}
+
+	return usernameConfigurationType
+}
+
+func flattenCognitoUserPoolCustomSMSSender(u *cognitoidentityprovider.CustomSMSLambdaVersionConfigType) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if u == nil {
+		return nil
+	}
+
+	m["lambda_arn"] = aws.StringValue(u.LambdaArn)
+	m["lambda_version"] = aws.StringValue(u.LambdaArn)
+
+	return []map[string]interface{}{m}
+}
+
+func expandCognitoUserPoolCustomEmailSender(config map[string]interface{}) *cognitoidentityprovider.CustomEmailLambdaVersionConfigType {
+	usernameConfigurationType := &cognitoidentityprovider.CustomEmailLambdaVersionConfigType{
+		LambdaArn:     aws.String(config["lambda_arn"].(string)),
+		LambdaVersion: aws.String(config["lambda_version"].(string)),
+	}
+
+	return usernameConfigurationType
+}
+
+func flattenCognitoUserPoolCustomEmailSender(u *cognitoidentityprovider.CustomEmailLambdaVersionConfigType) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if u == nil {
+		return nil
+	}
+
+	m["lambda_arn"] = aws.StringValue(u.LambdaArn)
+	m["lambda_version"] = aws.StringValue(u.LambdaArn)
+
+	return []map[string]interface{}{m}
 }
