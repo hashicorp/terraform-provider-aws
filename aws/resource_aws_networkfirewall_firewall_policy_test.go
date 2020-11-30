@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/networkfirewall/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -95,9 +94,9 @@ func TestAccAwsNetworkFirewallFirewallPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_fragment_default_actions.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.stateless_fragment_default_actions.*", "aws:drop"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.stateless_fragment_default_actions.*", "aws:drop"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_default_actions.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.stateless_default_actions.*", "aws:pass"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_policy.0.stateless_default_actions.*", "aws:pass"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -127,7 +126,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_statefulRuleGroupReference(t *testi
 					testAccCheckAwsNetworkFirewallFirewallPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, "arn"),
 				),
 			},
 			{
@@ -161,7 +160,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_updateStatefulRuleGroupReference(t 
 					testAccCheckAwsNetworkFirewallFirewallPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, "arn"),
 				),
 			},
 			{
@@ -196,8 +195,8 @@ func TestAccAwsNetworkFirewallFirewallPolicy_multipleStatefulRuleGroupReferences
 					testAccCheckAwsNetworkFirewallFirewallPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName1, "arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName2, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName1, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName2, "arn"),
 				),
 			},
 			{
@@ -206,7 +205,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_multipleStatefulRuleGroupReferences
 					testAccCheckAwsNetworkFirewallFirewallPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName1, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName1, "arn"),
 				),
 			},
 			{
@@ -234,8 +233,8 @@ func TestAccAwsNetworkFirewallFirewallPolicy_statelessRuleGroupReference(t *test
 					testAccCheckAwsNetworkFirewallFirewallPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName, "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
 						"priority": "20",
 					}),
 				),
@@ -246,7 +245,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_statelessRuleGroupReference(t *test
 					testAccCheckAwsNetworkFirewallFirewallPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
 						"priority": "1",
 					}),
 				),
@@ -281,8 +280,8 @@ func TestAccAwsNetworkFirewallFirewallPolicy_updateStatelessRuleGroupReference(t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallFirewallPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName, "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
 						"priority": "20",
 					}),
 				),
@@ -321,12 +320,12 @@ func TestAccAwsNetworkFirewallFirewallPolicy_multipleStatelessRuleGroupReference
 					testAccCheckAwsNetworkFirewallFirewallPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName1, "arn"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName1, "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
 						"priority": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName2, "arn"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName2, "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
 						"priority": "2",
 					}),
 				),
@@ -337,10 +336,10 @@ func TestAccAwsNetworkFirewallFirewallPolicy_multipleStatelessRuleGroupReference
 					testAccCheckAwsNetworkFirewallFirewallPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
 						"priority": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName1, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName1, "arn"),
 				),
 			},
 			{
@@ -367,7 +366,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_statelessCustomAction(t *testing.T)
 					testAccCheckAwsNetworkFirewallFirewallPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
 						"action_definition.#":                                     "1",
 						"action_definition.0.publish_metric_action.#":             "1",
 						"action_definition.0.publish_metric_action.0.dimension.#": "1",
@@ -405,7 +404,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_updateStatelessCustomAction(t *test
 					testAccCheckAwsNetworkFirewallFirewallPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
 						"action_name":         "CustomAction",
 						"action_definition.#": "1",
 						"action_definition.0.publish_metric_action.#":             "1",
@@ -419,7 +418,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_updateStatelessCustomAction(t *test
 					testAccCheckAwsNetworkFirewallFirewallPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
 						"action_name":         "updated",
 						"action_definition.#": "1",
 						"action_definition.0.publish_metric_action.#":             "1",
@@ -458,13 +457,13 @@ func TestAccAwsNetworkFirewallFirewallPolicy_multipleStatelessCustomActions(t *t
 					testAccCheckAwsNetworkFirewallFirewallPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
 						"action_name":         "CustomAction",
 						"action_definition.#": "1",
 						"action_definition.0.publish_metric_action.#":             "1",
 						"action_definition.0.publish_metric_action.0.dimension.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
 						"action_name":         "CustomAction2",
 						"action_definition.#": "1",
 						"action_definition.0.publish_metric_action.#":             "1",
@@ -478,7 +477,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_multipleStatelessCustomActions(t *t
 					testAccCheckAwsNetworkFirewallFirewallPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_custom_action.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
 						"action_name":         "CustomAction",
 						"action_definition.#": "1",
 						"action_definition.0.publish_metric_action.#":             "1",
@@ -511,8 +510,8 @@ func TestAccAwsNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceAndCustom
 					testAccCheckAwsNetworkFirewallFirewallPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_custom_action.*", map[string]string{
 						"action_name":         "CustomAction",
 						"action_definition.#": "1",
 						"action_definition.0.publish_metric_action.#":             "1",
@@ -526,7 +525,7 @@ func TestAccAwsNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceAndCustom
 					testAccCheckAwsNetworkFirewallFirewallPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateful_rule_group_reference.*.resource_arn", ruleGroupResourceName, "arn"),
 				),
 			},
 			{

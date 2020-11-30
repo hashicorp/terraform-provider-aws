@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 // Since aws_serverlessapplicationrepository_cloudformation_stack creates CloudFormation stacks,
@@ -39,8 +38,8 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_basic(t *testi
 					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "outputs.RotationLambdaARN"),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_RESOURCE_POLICY"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_RESOURCE_POLICY"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -110,7 +109,7 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_versioned(t *t
 					testAccCheckServerlessApplicationRepositoryCloudFormationStackExists(resourceName, &stack1),
 					resource.TestCheckResourceAttr(resourceName, "semantic_version", version1),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
 				),
 			},
 			{
@@ -125,8 +124,8 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_versioned(t *t
 					testAccCheckCloudFormationStackNotRecreated(&stack1, &stack2),
 					resource.TestCheckResourceAttr(resourceName, "semantic_version", version2),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_RESOURCE_POLICY"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_RESOURCE_POLICY"),
 				),
 			},
 			{
@@ -137,7 +136,7 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_versioned(t *t
 					testAccCheckCloudFormationStackNotRecreated(&stack2, &stack3),
 					resource.TestCheckResourceAttr(resourceName, "semantic_version", version1),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
 				),
 			},
 		},
@@ -163,8 +162,8 @@ func TestAccAwsServerlessApplicationRepositoryCloudFormationStack_paired(t *test
 					testAccCheckServerlessApplicationRepositoryCloudFormationStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "semantic_version", version),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_RESOURCE_POLICY"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_RESOURCE_POLICY"),
 				),
 			},
 		},

@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccDataSourceAwsServerlessApplicationRepositoryApplication_Basic(t *testing.T) {
@@ -67,8 +66,8 @@ func TestAccDataSourceAwsServerlessApplicationRepositoryApplication_Versioned(t 
 					resource.TestCheckResourceAttrSet(datasourceName, "source_code_url"),
 					resource.TestCheckResourceAttrSet(datasourceName, "template_url"),
 					resource.TestCheckResourceAttr(datasourceName, "required_capabilities.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(datasourceName, "required_capabilities.*", "CAPABILITY_IAM"),
-					tfawsresource.TestCheckTypeSetElemAttr(datasourceName, "required_capabilities.*", "CAPABILITY_RESOURCE_POLICY"),
+					resource.TestCheckTypeSetElemAttr(datasourceName, "required_capabilities.*", "CAPABILITY_IAM"),
+					resource.TestCheckTypeSetElemAttr(datasourceName, "required_capabilities.*", "CAPABILITY_RESOURCE_POLICY"),
 				),
 			},
 			{

@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSLambdaCodeSigningConfig_basic(t *testing.T) {
@@ -29,8 +28,8 @@ func TestAccAWSLambdaCodeSigningConfig_basic(t *testing.T) {
 					testAccCheckAwsCodeSigningConfigExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", "Code Signing Config for test account"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile2, "version_arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile2, "version_arn"),
 					resource.TestCheckResourceAttr(resourceName, "policies.0.untrusted_artifact_on_deployment", "Warn"),
 				),
 			},
@@ -93,8 +92,8 @@ func TestAccAWSLambdaCodeSigningConfig_UpdatePublishers(t *testing.T) {
 					testAccCheckAwsCodeSigningConfigExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", "Code Signing Config for test account"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile2, "version_arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile2, "version_arn"),
 				),
 			},
 			{
@@ -102,7 +101,7 @@ func TestAccAWSLambdaCodeSigningConfig_UpdatePublishers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCodeSigningConfigExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
 				),
 			},
 			{
