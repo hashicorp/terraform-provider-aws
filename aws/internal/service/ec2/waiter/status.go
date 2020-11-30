@@ -32,7 +32,13 @@ func CarrierGatewayState(conn *ec2.EC2, carrierGatewayID string) resource.StateR
 			return nil, carrierGatewayStateNotFound, nil
 		}
 
-		return carrierGateway, aws.StringValue(carrierGateway.State), nil
+		state := aws.StringValue(carrierGateway.State)
+
+		if state == ec2.CarrierGatewayStateDeleted {
+			return nil, carrierGatewayStateNotFound, nil
+		}
+
+		return carrierGateway, state, nil
 	}
 }
 

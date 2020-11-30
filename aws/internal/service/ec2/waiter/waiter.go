@@ -38,7 +38,7 @@ func CarrierGatewayAvailable(conn *ec2.EC2, carrierGatewayID string) (*ec2.Carri
 func CarrierGatewayDeleted(conn *ec2.EC2, carrierGatewayID string) (*ec2.CarrierGateway, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.CarrierGatewayStateDeleting},
-		Target:  []string{ec2.CarrierGatewayStateDeleted},
+		Target:  []string{},
 		Refresh: CarrierGatewayState(conn, carrierGatewayID),
 		Timeout: CarrierGatewayDeletedTimeout,
 	}
