@@ -8,6 +8,7 @@ ENHANCEMENTS
 
 * resource/aws_storagegateway_smb_file_share - add support for `notification_policy` and `access_based_enumeration`. [GH-16414]
 * resource/aws_storagegateway_smb_file_share - add plan time validation to `invalid_user_list` and `valid_user_list`. [GH-16414]
+* resouce_aws_cognito_user_pool: add support for account recovery setting. ([#12444](https://github.com/hashicorp/terraform-provider-aws/pull/12444)
 
 ## 3.18.0 (November 25, 2020)
 
