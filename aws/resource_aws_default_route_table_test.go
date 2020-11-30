@@ -431,7 +431,7 @@ func testAccCheckDefaultRouteTableRoute(resourceName, destinationAttr, destinati
 			return fmt.Errorf("Not found: %s.%s", targetResourceName, targetResourceAttr)
 		}
 
-		return tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+		return resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
 			destinationAttr: destination,
 			targetAttr:      target,
 		})(s)
