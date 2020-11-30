@@ -336,7 +336,7 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 	d.SetId(aws.StringValue(output.GatewayARN))
 
 	if _, err = waiter.StorageGatewayGatewayConnected(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for waiting for Storage Gateway Gateway (%q) to be Connected: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for Storage Gateway Gateway (%q) to be Connected: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("smb_active_directory_settings"); ok && len(v.([]interface{})) > 0 {
@@ -348,7 +348,7 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 		}
 
 		if _, err = waiter.StorageGatewayGatewayJoinDomainJoined(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for waiting for Storage Gateway Gateway (%q) to be Join domain (%s): %w", d.Id(), aws.StringValue(input.DomainName), err)
+			return fmt.Errorf("error waiting for Storage Gateway Gateway (%q) to join domain (%s): %w", d.Id(), aws.StringValue(input.DomainName), err)
 		}
 	}
 
@@ -585,7 +585,7 @@ func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interfa
 		}
 
 		if _, err = waiter.StorageGatewayGatewayJoinDomainJoined(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for waiting for Storage Gateway Gateway (%q) to be Join domain (%s): %w", d.Id(), aws.StringValue(input.DomainName), err)
+			return fmt.Errorf("error waiting for Storage Gateway Gateway (%q) to be Join domain (%s): %w", d.Id(), aws.StringValue(input.DomainName), err)
 		}
 	}
 
