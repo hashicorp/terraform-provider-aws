@@ -5,15 +5,15 @@ import (
 	"strings"
 )
 
-const listnerCertificateIDSeparator = "_"
+const listenerCertificateIDSeparator = "_"
 
-func ListnerCertificateParseID(id string) (string, string, error) {
-	parts := strings.Split(id, listnerCertificateIDSeparator)
+func ListenerCertificateParseID(id string) (string, string, error) {
+	parts := strings.Split(id, listenerCertificateIDSeparator)
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil
 	}
 
 	return "", "",
-		fmt.Errorf("unexpected format for ID (%q), expected listner-arn"+listnerCertificateIDSeparator+
+		fmt.Errorf("unexpected format for ID (%q), expected listener-arn"+listenerCertificateIDSeparator+
 			"certificate-arn", id)
 }

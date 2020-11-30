@@ -41,11 +41,11 @@ func resourceAwsLbListenerCertificate() *schema.Resource {
 func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elbv2conn
 
-	listnerArn := d.Get("listener_arn").(string)
+	listenerArn := d.Get("listener_arn").(string)
 	certificateArn := d.Get("certificate_arn").(string)
 
 	params := &elbv2.AddListenerCertificatesInput{
-		ListenerArn: aws.String(listnerArn),
+		ListenerArn: aws.String(listenerArn),
 		Certificates: []*elbv2.Certificate{
 			{
 				CertificateArn: aws.String(certificateArn),
@@ -53,7 +53,7 @@ func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interfa
 		},
 	}
 
-	log.Printf("[DEBUG] Adding certificate: %s of listener: %s", certificateArn, listnerArn)
+	log.Printf("[DEBUG] Adding certificate: %s of listener: %s", certificateArn, listenerArn)
 
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.AddListenerCertificates(params)
@@ -78,7 +78,7 @@ func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error adding LB Listener Certificate: %w", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s_%s", listnerArn, certificateArn))
+	d.SetId(tfelbv2.ListenerCertificateCreateID(listenerArn, certificateArn))
 
 	return resourceAwsLbListenerCertificateRead(d, meta)
 }
@@ -86,7 +86,7 @@ func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interfa
 func resourceAwsLbListenerCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elbv2conn
 
-	listenerArn, certificateArn, err := tfelbv2.ListnerCertificateParseID(d.Id())
+	listenerArn, certificateArn, err := tfelbv2.ListenerCertificateParseID(d.Id())
 	if err != nil {
 		return err
 	}
