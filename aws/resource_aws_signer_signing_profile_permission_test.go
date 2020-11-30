@@ -22,7 +22,7 @@ func TestAccAWSSignerSigningProfilePermission_basic(t *testing.T) {
 	var sppconf signer.ListProfilePermissionsOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
 		Steps: []resource.TestStep{
@@ -30,7 +30,7 @@ func TestAccAWSSignerSigningProfilePermission_basic(t *testing.T) {
 				Config:  testAccAWSSignerSigningProfilePermissionConfig(profileName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSignerSigningProfileExists(profileResourceName, profileName, &conf),
+					testAccCheckAWSSignerSigningProfileExists(profileResourceName, &conf),
 					testAccCheckAWSSignerSigningProfilePermissionExists(resourceName, profileName, &sppconf),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "statement_id"),
 				),
@@ -55,7 +55,7 @@ func TestAccAWSSignerSigningProfilePermission_GetSigningProfile(t *testing.T) {
 	var sppconf signer.ListProfilePermissionsOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
 		Steps: []resource.TestStep{
@@ -63,7 +63,7 @@ func TestAccAWSSignerSigningProfilePermission_GetSigningProfile(t *testing.T) {
 				Config:  testAccAWSSignerSigningProfilePermissionGetSP(profileName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSignerSigningProfileExists(profileResourceName, profileName, &conf),
+					testAccCheckAWSSignerSigningProfileExists(profileResourceName, &conf),
 					testAccCheckAWSSignerSigningProfilePermissionExists(resourceName, profileName, &sppconf),
 				),
 			},
@@ -77,7 +77,7 @@ func TestAccAWSSignerSigningProfilePermission_GetSigningProfile(t *testing.T) {
 				Config:  testAccAWSSignerSigningProfilePermissionRevokeSignature(profileName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSignerSigningProfileExists(profileResourceName, profileName, &conf),
+					testAccCheckAWSSignerSigningProfileExists(profileResourceName, &conf),
 					testAccCheckAWSSignerSigningProfilePermissionExists(resourceName, profileName, &sppconf),
 				),
 			},
@@ -96,14 +96,14 @@ func TestAccAWSSignerSigningProfilePermission_StartSigningJob_GetSP(t *testing.T
 	var sppconf signer.ListProfilePermissionsOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSignerSigningProfilePermissionStartSigningJobGetSP(profileName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSignerSigningProfileExists(profileResourceName, profileName, &conf),
+					testAccCheckAWSSignerSigningProfileExists(profileResourceName, &conf),
 					testAccCheckAWSSignerSigningProfilePermissionExists(resourceName1, profileName, &sppconf),
 					testAccCheckAWSSignerSigningProfilePermissionExists(resourceName2, profileName, &sppconf),
 				),
@@ -129,7 +129,7 @@ func TestAccAWSSignerSigningProfilePermission_StatementPrefix(t *testing.T) {
 	var sppconf signer.ListProfilePermissionsOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSignerSigningProfileDestroy,
 		Steps: []resource.TestStep{

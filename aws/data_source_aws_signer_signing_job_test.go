@@ -9,17 +9,16 @@ import (
 )
 
 func TestAccDataSourceAWSSignerSigningJob_basic(t *testing.T) {
-	rString := acctest.RandString(48)
-	profileName := fmt.Sprintf("tf_acc_sp_basic_%s", rString)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_signer_signing_job.test"
-	resourceName := "aws_signer_signing_job.job_test"
+	resourceName := "aws_signer_signing_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSSignerSigningJobConfigBasic(profileName),
+				Config: testAccDataSourceAWSSignerSigningJobConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "status", resourceName, "status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "job_owner", resourceName, "job_owner"),
@@ -31,17 +30,16 @@ func TestAccDataSourceAWSSignerSigningJob_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAWSSignerSigningJobConfigBasic(profileName string) string {
+func testAccDataSourceAWSSignerSigningJobConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
-resource "aws_signer_signing_profile" "test_sp" {
+resource "aws_signer_signing_profile" "test" {
   platform_id = "AWSLambda-SHA384-ECDSA"
-  name        = "%s"
 }
 
-resource "aws_s3_bucket" "bucket" {
-  bucket = "tf-signer-signing-bucket"
+resource "aws_s3_bucket" "source" {
+  bucket = "%[1]s-source"
 
   versioning {
     enabled = true
@@ -50,36 +48,37 @@ resource "aws_s3_bucket" "bucket" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket" "dest_bucket" {
-  bucket        = "tf-signer-signing-dest-bucket"
+resource "aws_s3_bucket" "destination" {
+  bucket        = "%[1]s-destination"
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "lambda_signing_code" {
-  bucket = aws_s3_bucket.bucket.bucket
+resource "aws_s3_bucket_object" "source" {
+  bucket = aws_s3_bucket.source.bucket
   key    = "lambdatest.zip"
   source = "test-fixtures/lambdatest.zip"
 }
 
-resource "aws_signer_signing_job" "job_test" {
-  profile_name = aws_signer_signing_profile.test_sp.name
+resource "aws_signer_signing_job" "test" {
+  profile_name = aws_signer_signing_profile.test.name
 
   source {
     s3 {
-      bucket  = aws_s3_bucket.bucket.bucket
-      key     = aws_s3_bucket_object.lambda_signing_code.key
-      version = aws_s3_bucket_object.lambda_signing_code.version_id
+      bucket  = aws_s3_bucket_object.source.bucket
+      key     = aws_s3_bucket_object.source.key
+      version = aws_s3_bucket_object.source.version_id
     }
   }
 
   destination {
     s3 {
-      bucket = aws_s3_bucket.dest_bucket.bucket
+      bucket = aws_s3_bucket.destination.bucket
     }
   }
 }
 
 data "aws_signer_signing_job" "test" {
-  job_id = aws_signer_signing_job.job_test.job_id
-}`, profileName)
+  job_id = aws_signer_signing_job.test.job_id
+}
+`, rName)
 }

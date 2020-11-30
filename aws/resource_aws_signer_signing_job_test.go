@@ -12,23 +12,22 @@ import (
 )
 
 func TestAccAWSSignerSigningJob_basic(t *testing.T) {
-	resourceName := "aws_signer_signing_job.test_job"
-	profileResourceName := "aws_signer_signing_profile.test_sp"
-	rString := acctest.RandString(48)
-	profileName := fmt.Sprintf("tf_acc_sp_basic_%s", rString)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_signer_signing_job.test"
+	profileResourceName := "aws_signer_signing_profile.test"
 
 	var job signer.DescribeSigningJobOutput
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSignerSigningJobConfig(profileName),
+				Config: testAccAWSSignerSigningJobConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSignerSigningProfileExists(profileResourceName, profileName, &conf),
+					testAccCheckAWSSignerSigningProfileExists(profileResourceName, &conf),
 					testAccCheckAWSSignerSigningJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
 					resource.TestCheckResourceAttr(resourceName, "platform_display_name", "AWS Lambda"),
@@ -40,17 +39,16 @@ func TestAccAWSSignerSigningJob_basic(t *testing.T) {
 
 }
 
-func testAccAWSSignerSigningJobConfig(profileName string) string {
+func testAccAWSSignerSigningJobConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
-resource "aws_signer_signing_profile" "test_sp" {
+resource "aws_signer_signing_profile" "test" {
   platform_id = "AWSLambda-SHA384-ECDSA"
-  name        = "%s"
 }
 
-resource "aws_s3_bucket" "bucket" {
-  bucket = "tf-signer-signing-bucket"
+resource "aws_s3_bucket" "source" {
+  bucket = "%[1]s-source"
 
   versioning {
     enabled = true
@@ -59,34 +57,35 @@ resource "aws_s3_bucket" "bucket" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket" "dest_bucket" {
-  bucket        = "tf-signer-signing-dest-bucket"
+resource "aws_s3_bucket" "destination" {
+  bucket        = "%[1]s"
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "lambda_signing_code" {
-  bucket = aws_s3_bucket.bucket.bucket
+resource "aws_s3_bucket_object" "source" {
+  bucket = aws_s3_bucket.source.bucket
   key    = "lambdatest.zip"
   source = "test-fixtures/lambdatest.zip"
 }
 
-resource "aws_signer_signing_job" "test_job" {
-  profile_name = aws_signer_signing_profile.test_sp.name
+resource "aws_signer_signing_job" "test" {
+  profile_name = aws_signer_signing_profile.test.name
 
   source {
     s3 {
-      bucket  = aws_s3_bucket.bucket.bucket
-      key     = aws_s3_bucket_object.lambda_signing_code.key
-      version = aws_s3_bucket_object.lambda_signing_code.version_id
+      bucket  = aws_s3_bucket_object.source.bucket
+      key     = aws_s3_bucket_object.source.key
+      version = aws_s3_bucket_object.source.version_id
     }
   }
 
   destination {
     s3 {
-      bucket = aws_s3_bucket.dest_bucket.bucket
+      bucket = aws_s3_bucket.destination.bucket
     }
   }
-}`, profileName)
+}
+`, rName)
 }
 
 func testAccCheckAWSSignerSigningJobExists(res string, job *signer.DescribeSigningJobOutput) resource.TestCheckFunc {

@@ -110,6 +110,7 @@ SWF
 Sagemaker
 Secrets Manager
 Security Hub
+Serverless Application Repository
 Service Catalog
 Service Discovery
 Service Quotas
