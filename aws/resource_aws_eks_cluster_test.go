@@ -558,7 +558,7 @@ func testAccCheckAWSEksClusterDestroy(s *terraform.State) error {
 func testAccCheckAWSEksClusterRecreated(i, j *eks.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.TimeValue(i.CreatedAt) == aws.TimeValue(j.CreatedAt) {
-			return errors.New("EKS Cluster was recreated")
+			return errors.New("EKS Cluster was not recreated")
 		}
 
 		return nil
