@@ -37,7 +37,7 @@ func resourceAwsBackupGlobalSettingsUpdate(d *schema.ResourceData, meta interfac
 
 	_, err := conn.UpdateGlobalSettings(input)
 	if err != nil {
-		return fmt.Errorf("error setting Backup Global Settings (%s): %w", d.Id(), err)
+		return fmt.Errorf("error setting Backup Global Settings (%s): %w", meta.(*AWSClient).accountid, err)
 	}
 
 	d.SetId(meta.(*AWSClient).accountid)
