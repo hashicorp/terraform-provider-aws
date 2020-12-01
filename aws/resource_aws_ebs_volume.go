@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -83,6 +84,11 @@ func resourceAwsEbsVolume() *schema.Resource {
 				Computed: true,
 			},
 			"tags": tagsSchema(),
+			"throughput": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(125, 1000),
+			},
 		},
 	}
 }
@@ -111,6 +117,9 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 	if value, ok := d.GetOk("outpost_arn"); ok {
 		request.OutpostArn = aws.String(value.(string))
+	}
+	if value, ok := d.GetOk("throughput"); ok {
+		request.Throughput = aws.Int64(int64(value.(int)))
 	}
 
 	// IOPs are only valid, and required for, storage type io1 and io2. The current minimum
@@ -168,27 +177,27 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 func resourceAWSEbsVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	requestUpdate := false
-	params := &ec2.ModifyVolumeInput{
-		VolumeId: aws.String(d.Id()),
-	}
+	if d.HasChangesExcept("tags") {
+		params := &ec2.ModifyVolumeInput{
+			VolumeId: aws.String(d.Id()),
+		}
 
-	if d.HasChange("size") {
-		requestUpdate = true
-		params.Size = aws.Int64(int64(d.Get("size").(int)))
-	}
+		if d.HasChange("size") {
+			params.Size = aws.Int64(int64(d.Get("size").(int)))
+		}
 
-	if d.HasChange("type") {
-		requestUpdate = true
-		params.VolumeType = aws.String(d.Get("type").(string))
-	}
+		if d.HasChange("type") {
+			params.VolumeType = aws.String(d.Get("type").(string))
+		}
 
-	if d.HasChange("iops") {
-		requestUpdate = true
-		params.Iops = aws.Int64(int64(d.Get("iops").(int)))
-	}
+		if d.HasChange("iops") {
+			params.Iops = aws.Int64(int64(d.Get("iops").(int)))
+		}
 
-	if requestUpdate {
+		if d.HasChange("throughput") {
+			params.Throughput = aws.Int64(int64(d.Get("throughput").(int)))
+		}
+
 		result, err := conn.ModifyVolume(params)
 		if err != nil {
 			return err
@@ -286,6 +295,7 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("snapshot_id", aws.StringValue(volume.SnapshotId))
 	d.Set("outpost_arn", aws.StringValue(volume.OutpostArn))
 	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
+	d.Set("throughput", aws.Int64Value(volume.Throughput))
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(volume.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)

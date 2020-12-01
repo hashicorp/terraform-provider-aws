@@ -89,6 +89,7 @@ func TestAccAWSEBSVolume_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
 				),
 			},
 			{
@@ -115,6 +116,7 @@ func TestAccAWSEBSVolume_updateAttachedEbsVolume(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
 				),
 			},
 			{
@@ -127,6 +129,7 @@ func TestAccAWSEBSVolume_updateAttachedEbsVolume(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "size", "20"),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
 				),
 			},
 		},
@@ -148,6 +151,7 @@ func TestAccAWSEBSVolume_updateSize(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
 				),
 			},
 			{
@@ -160,6 +164,7 @@ func TestAccAWSEBSVolume_updateSize(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
 				),
 			},
 		},
@@ -181,6 +186,7 @@ func TestAccAWSEBSVolume_updateType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
 				),
 			},
 			{
@@ -193,6 +199,7 @@ func TestAccAWSEBSVolume_updateType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "type", "sc1"),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
 				),
 			},
 		},
@@ -214,6 +221,7 @@ func TestAccAWSEBSVolume_updateIops_Io1(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
 				),
 			},
 			{
@@ -226,6 +234,7 @@ func TestAccAWSEBSVolume_updateIops_Io1(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iops", "200"),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
 				),
 			},
 		},
@@ -247,6 +256,7 @@ func TestAccAWSEBSVolume_updateIops_Io2(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
 				),
 			},
 			{
@@ -259,6 +269,7 @@ func TestAccAWSEBSVolume_updateIops_Io2(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iops", "200"),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
 				),
 			},
 		},
@@ -284,6 +295,7 @@ func TestAccAWSEBSVolume_kmsKey(t *testing.T) {
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
 				),
 			},
 			{
@@ -308,6 +320,7 @@ func TestAccAWSEBSVolume_NoIops(t *testing.T) {
 				Config: testAccAwsEbsVolumeConfigWithNoIops,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
 				),
 			},
 			{
@@ -378,6 +391,7 @@ func TestAccAWSEBSVolume_multiAttach(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
 				),
 			},
 			{
