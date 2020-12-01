@@ -895,6 +895,43 @@ func TestAccAWSCognitoUserPool_withAliasAttributes(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPool_withUsernameAttributes(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withUsernameAttributes(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "username_attributes.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "username_attributes.*", "phone_number"),
+					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withUsernameAttributesUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "username_attributes.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "username_attributes.*", "email"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "username_attributes.*", "phone_number"),
+					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "auto_verified_attributes.*", "email"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPool_withPasswordPolicy(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool.test"
@@ -1761,6 +1798,27 @@ resource "aws_cognito_user_pool" "test" {
 
   alias_attributes         = ["email", "preferred_username"]
   auto_verified_attributes = ["email"]
+}
+`, rName)
+}
+
+func testAccAWSCognitoUserPoolConfig_withUsernameAttributes(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  username_attributes = ["phone_number"]
+}
+`, rName)
+}
+
+func testAccAWSCognitoUserPoolConfig_withUsernameAttributesUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  username_attributes         = ["email", "phone_number"]
+  auto_verified_attributes    = ["email"]
 }
 `, rName)
 }

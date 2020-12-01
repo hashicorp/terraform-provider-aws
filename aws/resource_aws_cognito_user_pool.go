@@ -69,9 +69,10 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							Optional: true,
 						},
 						"unused_account_validity_days": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  7,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      7,
+							ValidateFunc: validation.IntBetween(0, 365),
 						},
 						"invite_message_template": {
 							Type:     schema.TypeList,
@@ -487,7 +488,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 			"username_attributes": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
@@ -709,7 +710,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("username_attributes"); ok {
-		params.UsernameAttributes = expandStringList(v.([]interface{}))
+		params.UsernameAttributes = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("username_configuration"); ok {
@@ -913,7 +914,7 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if resp.UserPool.UsernameAttributes != nil {
-		d.Set("username_attributes", flattenStringList(resp.UserPool.UsernameAttributes))
+		d.Set("username_attributes", flattenStringSet(resp.UserPool.UsernameAttributes))
 	}
 
 	if err := d.Set("username_configuration", flattenCognitoUserPoolUsernameConfiguration(resp.UserPool.UsernameConfiguration)); err != nil {
@@ -1413,14 +1414,12 @@ func flattenCognitoUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailCo
 }
 
 func expandCognitoUserPoolAdminCreateUserConfig(config map[string]interface{}) *cognitoidentityprovider.AdminCreateUserConfigType {
-	configs := &cognitoidentityprovider.AdminCreateUserConfigType{}
+	configs := &cognitoidentityprovider.AdminCreateUserConfigType{
+		UnusedAccountValidityDays: aws.Int64(int64(config["unused_account_validity_days"].(int))),
+	}
 
 	if v, ok := config["allow_admin_create_user_only"]; ok {
 		configs.AllowAdminCreateUserOnly = aws.Bool(v.(bool))
-	}
-
-	if v, ok := config["unused_account_validity_days"]; ok {
-		configs.UnusedAccountValidityDays = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := config["invite_message_template"]; ok {
