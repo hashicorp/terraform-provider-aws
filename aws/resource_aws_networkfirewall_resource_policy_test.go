@@ -19,7 +19,7 @@ func TestAccAwsNetworkFirewallResourcePolicy_firewallPolicy(t *testing.T) {
 	resourceName := "aws_networkfirewall_resource_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallResourcePolicyDestroy,
 		Steps: []resource.TestStep{
@@ -52,7 +52,7 @@ func TestAccAwsNetworkFirewallResourcePolicy_ruleGroup(t *testing.T) {
 	resourceName := "aws_networkfirewall_resource_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallResourcePolicyDestroy,
 		Steps: []resource.TestStep{
@@ -85,7 +85,7 @@ func TestAccAwsNetworkFirewallResourcePolicy_disappears(t *testing.T) {
 	resourceName := "aws_networkfirewall_resource_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallResourcePolicyDestroy,
 		Steps: []resource.TestStep{
@@ -106,7 +106,7 @@ func TestAccAwsNetworkFirewallResourcePolicy_firewallPolicy_disappears(t *testin
 	resourceName := "aws_networkfirewall_resource_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallResourcePolicyDestroy,
 		Steps: []resource.TestStep{
@@ -127,7 +127,7 @@ func TestAccAwsNetworkFirewallResourcePolicy_ruleGroup_disappears(t *testing.T) 
 	resourceName := "aws_networkfirewall_resource_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallResourcePolicyDestroy,
 		Steps: []resource.TestStep{
