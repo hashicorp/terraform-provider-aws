@@ -12,6 +12,10 @@ ENHANCEMENTS
 * resource/aws_cognito_user_pool: add support for account recovery setting. [GH-12444]
 * resource/aws_eks_cluster: add `kubernetes_network_config` argument [GH-15518]
 
+BUG FIXES
+
+* resource/aws_fsx_windows_file_system: Prevent potential panics, unexpected errors, and use correct operation timeout on update [GH-16488]
+
 ## 3.18.0 (November 25, 2020)
 
 FEATURES
