@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/networkfirewall/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -100,9 +99,9 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_rulesSourceList(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.generated_rules_type", networkfirewall.GeneratedRulesTypeAllowlist),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.*", networkfirewall.TargetTypeHttpHost),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.*", networkfirewall.TargetTypeHttpHost),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.*", "test.example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.*", "test.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -135,7 +134,7 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_statefulRule(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateful_rule.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateful_rule.*", map[string]string{
 						"action":                    networkfirewall.StatefulActionPass,
 						"header.#":                  "1",
 						"header.0.destination":      "124.1.1.24/32",
@@ -178,7 +177,7 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_statelessRule(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*", map[string]string{
 						"priority":                                           "1",
 						"rule_definition.#":                                  "1",
 						"rule_definition.0.actions.#":                        "1",
@@ -186,7 +185,7 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_statelessRule(t *testing.T) {
 						"rule_definition.0.match_attributes.0.destination.#": "1",
 						"rule_definition.0.match_attributes.0.source.#":      "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.actions.*", "aws:drop"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.actions.*", "aws:drop"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -255,7 +254,7 @@ func TestAccAwsNetworkFirewallRuleGroup_statelessRuleWithCustomAction(t *testing
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*", map[string]string{
 						"priority":                                           "1",
 						"rule_definition.#":                                  "1",
 						"rule_definition.0.actions.#":                        "2",
@@ -263,9 +262,9 @@ func TestAccAwsNetworkFirewallRuleGroup_statelessRuleWithCustomAction(t *testing
 						"rule_definition.0.match_attributes.0.destination.#": "1",
 						"rule_definition.0.match_attributes.0.source.#":      "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.actions.*", "aws:pass"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.actions.*", "example"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.custom_action.*", map[string]string{
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.actions.*", "aws:pass"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.actions.*", "example"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.custom_action.*", map[string]string{
 						"action_name":         "example",
 						"action_definition.#": "1",
 						"action_definition.0.publish_metric_action.#":             "1",
@@ -310,11 +309,11 @@ func TestAccAwsNetworkFirewallRuleGroup_updateRulesSourceList(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.generated_rules_type", networkfirewall.GeneratedRulesTypeDenylist),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.*", networkfirewall.TargetTypeHttpHost),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.*", networkfirewall.TargetTypeTlsSni),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.*", networkfirewall.TargetTypeHttpHost),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.*", networkfirewall.TargetTypeTlsSni),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.*", "test.example.com"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.*", "test2.example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.*", "test.example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.*", "test2.example.com"),
 				),
 			},
 			{
@@ -343,13 +342,13 @@ func TestAccAwsNetworkFirewallRuleGroup_rulesSourceAndRuleVariables(t *testing.T
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rule_variables.0.ip_sets.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rule_variables.0.ip_sets.*", map[string]string{
 						"key":                   "example",
 						"ip_set.#":              "1",
 						"ip_set.0.definition.#": "2",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "10.0.0.0/16"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "10.0.1.0/24"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "10.0.0.0/16"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "10.0.1.0/24"),
 				),
 			},
 			{
@@ -361,27 +360,27 @@ func TestAccAwsNetworkFirewallRuleGroup_rulesSourceAndRuleVariables(t *testing.T
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.0.port_sets.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rule_variables.0.ip_sets.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rule_variables.0.ip_sets.*", map[string]string{
 						"key":                   "example",
 						"ip_set.#":              "1",
 						"ip_set.0.definition.#": "3",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "10.0.0.0/16"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "10.0.1.0/24"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "192.168.0.0/16"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rule_variables.0.ip_sets.*", map[string]string{
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "10.0.0.0/16"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "10.0.1.0/24"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "192.168.0.0/16"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rule_variables.0.ip_sets.*", map[string]string{
 						"key":                   "example2",
 						"ip_set.#":              "1",
 						"ip_set.0.definition.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "1.2.3.4/32"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rule_variables.0.port_sets.*", map[string]string{
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "1.2.3.4/32"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rule_variables.0.port_sets.*", map[string]string{
 						"key":                     "example",
 						"port_set.#":              "1",
 						"port_set.0.definition.#": "2",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.port_sets.*.port_set.0.definition.*", "443"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.port_sets.*.port_set.0.definition.*", "80"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.port_sets.*.port_set.0.definition.*", "443"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.port_sets.*.port_set.0.definition.*", "80"),
 				),
 			},
 			{
@@ -422,7 +421,7 @@ func TestAccAwsNetworkFirewallRuleGroup_updateStatefulRule(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallRuleGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateful_rule.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateful_rule.*", map[string]string{
 						"action":                    networkfirewall.StatefulActionDrop,
 						"header.#":                  "1",
 						"header.0.destination":      "1.2.3.4/32",
@@ -463,7 +462,7 @@ func TestAccAwsNetworkFirewallRuleGroup_updateStatelessRule(t *testing.T) {
 				Config: testAccNetworkFirewallRuleGroup_updateStatelessRule(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsNetworkFirewallRuleGroupExists(resourceName),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*", map[string]string{
 						"priority":                                                "10",
 						"rule_definition.#":                                       "1",
 						"rule_definition.0.actions.#":                             "1",
@@ -475,11 +474,11 @@ func TestAccAwsNetworkFirewallRuleGroup_updateStatelessRule(t *testing.T) {
 						"rule_definition.0.match_attributes.0.source_port.#":      "1",
 						"rule_definition.0.match_attributes.0.tcp_flag.#":         "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.actions.*", "aws:pass"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.match_attributes.0.protocols.*", "6"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.match_attributes.0.tcp_flag.*.flags.*", "SYN"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.match_attributes.0.tcp_flag.*.masks.*", "SYN"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.match_attributes.0.tcp_flag.*.masks.*", "ACK"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.actions.*", "aws:pass"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.match_attributes.0.protocols.*", "6"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.match_attributes.0.tcp_flag.*.flags.*", "SYN"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.match_attributes.0.tcp_flag.*.masks.*", "SYN"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.match_attributes.0.tcp_flag.*.masks.*", "ACK"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},

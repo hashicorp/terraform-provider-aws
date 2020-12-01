@@ -5676,6 +5676,7 @@ var awsPartition = partition{
 		"snowball": service{
 
 			Endpoints: endpoints{
+				"af-south-1":     endpoint{},
 				"ap-east-1":      endpoint{},
 				"ap-northeast-1": endpoint{},
 				"ap-northeast-2": endpoint{},
@@ -7336,6 +7337,13 @@ var awscnPartition = partition{
 		"polly": service{
 
 			Endpoints: endpoints{
+				"cn-northwest-1": endpoint{},
+			},
+		},
+		"ram": service{
+
+			Endpoints: endpoints{
+				"cn-north-1":     endpoint{},
 				"cn-northwest-1": endpoint{},
 			},
 		},

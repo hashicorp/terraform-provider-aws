@@ -100,6 +100,7 @@ configuration options:
 
 * `create` - (Default `45m`) How long to wait for the file system to be created.
 * `delete` - (Default `30m`) How long to wait for the file system to be deleted.
+* `update` - (Default `45m`) How long to wait for the file system to be updated.
 
 ## Import
 
