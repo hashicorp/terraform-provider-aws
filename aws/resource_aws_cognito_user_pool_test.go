@@ -907,7 +907,7 @@ func TestAccAWSCognitoUserPool_withUsernameAttributes(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withUsernameAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					testAccCheckAWSCognitoUserPoolExists(resourceName, nil),
 					resource.TestCheckResourceAttr(resourceName, "username_attributes.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "username_attributes.*", "phone_number"),
 					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", "0"),
@@ -1072,6 +1072,84 @@ func testAccCheckAWSCognitoUserPoolNotRecreated(pool1, pool2 *cognitoidentitypro
 		}
 		return nil
 	}
+}
+
+func TestAccAWSCognitoUserPool_withLambdaConfig_emailConfig(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cognito_user_pool.test"
+	lambdaResourceName := "aws_lambda_function.test"
+	lambdaUpdatedResourceName := "aws_lambda_function.second"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolLambdaConfigEmailSenderConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists(resourceName, nil),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_email_sender.0.lambda_arn", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.0.lambda_version", "V1_0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCognitoUserPoolLambdaConfigEmailSenderConfigUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_email_sender.0.lambda_arn", lambdaUpdatedResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.0.lambda_version", "V1_0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCognitoUserPool_withLambdaConfig_smsConfig(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cognito_user_pool.test"
+	lambdaResourceName := "aws_lambda_function.test"
+	lambdaUpdatedResourceName := "aws_lambda_function.second"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolLambdaConfigSMSSenderConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists(resourceName, nil),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_arn", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_version", "V1_0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCognitoUserPoolLambdaConfigSMSSenderConfigUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_arn", lambdaUpdatedResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_version", "V1_0"),
+				),
+			},
+		},
+	})
 }
 
 func TestAccAWSCognitoUserPool_schemaAttributes(t *testing.T) {
@@ -1904,7 +1982,7 @@ resource "aws_cognito_user_pool" "test" {
 `, name)
 }
 
-func testAccAWSCognitoUserPoolConfig_withLambdaConfig(name string) string {
+func testAccAWSCognitoUserPoolConfigLambdaConfigBase(name string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1934,6 +2012,33 @@ resource "aws_lambda_function" "test" {
   runtime       = "nodejs12.x"
 }
 
+resource "aws_kms_key" "test" {
+  description             = "Terraform acc test %[1]s"
+  deletion_window_in_days = 7
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+`, name)
+}
+
+func testAccAWSCognitoUserPoolConfig_withLambdaConfig(name string) string {
+	return testAccAWSCognitoUserPoolConfigLambdaConfigBase(name) + fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
@@ -1954,35 +2059,7 @@ resource "aws_cognito_user_pool" "test" {
 }
 
 func testAccAWSCognitoUserPoolConfig_withLambdaConfigUpdated(name string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  role          = aws_iam_role.test.arn
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-}
-
+	return testAccAWSCognitoUserPoolConfigLambdaConfigBase(name) + fmt.Sprintf(`
 resource "aws_lambda_function" "second" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s_second"
@@ -2005,6 +2082,90 @@ resource "aws_cognito_user_pool" "test" {
     pre_token_generation           = aws_lambda_function.second.arn
     user_migration                 = aws_lambda_function.second.arn
     verify_auth_challenge_response = aws_lambda_function.second.arn
+  }
+}
+`, name)
+}
+
+func testAccAWSCognitoUserPoolLambdaConfigEmailSenderConfig(name string) string {
+	return testAccAWSCognitoUserPoolConfigLambdaConfigBase(name) + fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  lambda_config {
+	kms_key_id = aws_kms_key.test.arn
+
+    custom_email_sender {
+	  lambda_arn     = aws_lambda_function.test.arn
+	  lambda_version = "V1_0"
+ 	}
+  }
+}
+`, name)
+}
+
+func testAccAWSCognitoUserPoolLambdaConfigEmailSenderConfigUpdated(name string) string {
+	return testAccAWSCognitoUserPoolConfigLambdaConfigBase(name) + fmt.Sprintf(`
+resource "aws_lambda_function" "second" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%[1]s_second"
+  role          = aws_iam_role.test.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  lambda_config {
+	kms_key_id = aws_kms_key.test.arn
+
+    custom_email_sender {
+	  lambda_arn     = aws_lambda_function.second.arn
+	  lambda_version = "V1_0"
+ 	}
+  }
+}
+`, name)
+}
+
+func testAccAWSCognitoUserPoolLambdaConfigSMSSenderConfig(name string) string {
+	return testAccAWSCognitoUserPoolConfigLambdaConfigBase(name) + fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  lambda_config {
+	kms_key_id = aws_kms_key.test.arn
+
+    custom_sms_sender {
+	  lambda_arn     = aws_lambda_function.test.arn
+	  lambda_version = "V1_0"
+ 	}
+  }
+}
+`, name)
+}
+
+func testAccAWSCognitoUserPoolLambdaConfigSMSSenderConfigUpdated(name string) string {
+	return testAccAWSCognitoUserPoolConfigLambdaConfigBase(name) + fmt.Sprintf(`
+resource "aws_lambda_function" "second" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%[1]s_second"
+  role          = aws_iam_role.test.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  lambda_config {
+	kms_key_id = aws_kms_key.test.arn
+
+    custom_sms_sender {
+	  lambda_arn     = aws_lambda_function.second.arn
+	  lambda_version = "V1_0"
+ 	}
   }
 }
 `, name)
