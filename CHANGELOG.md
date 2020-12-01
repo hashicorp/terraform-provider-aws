@@ -13,6 +13,7 @@ ENHANCEMENTS
 * resource/aws_storagegateway_smb_file_share - add plan time validation to `invalid_user_list` and `valid_user_list`. [GH-16414]
 * resource/aws_cognito_user_pool: add support for account recovery setting. [GH-12444]
 * resource/aws_eks_cluster: add `kubernetes_network_config` argument [GH-15518]
+* resource/aws_lambda_function: Add support for Container Images [GH-16512]
 
 BUG FIXES
 
