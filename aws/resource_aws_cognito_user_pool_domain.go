@@ -16,7 +16,6 @@ func resourceAwsCognitoUserPoolDomain() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsCognitoUserPoolDomainCreate,
 		Read:   resourceAwsCognitoUserPoolDomainRead,
-		Update: resourceAwsCognitoUserPoolDomainRead,
 		Delete: resourceAwsCognitoUserPoolDomainDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -59,6 +58,7 @@ func resourceAwsCognitoUserPoolDomain() *schema.Resource {
 			"wait_for_deployment": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				ForceNew: true,
 				Default:  true,
 			},
 		},
