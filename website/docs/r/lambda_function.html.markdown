@@ -234,7 +234,7 @@ large files efficiently.
 * `tags` - (Optional) A map of tags to assign to the object.
 * `file_system_config` - (Optional) The connection settings for an EFS file system. Fields documented below. Before creating or updating Lambda functions with `file_system_config`, EFS mount targets much be in available lifecycle state. Use `depends_on` to explicitly declare this dependency. See [Using Amazon EFS with Lambda][12].
 * `code_signing_config_arn` - (Optional) Amazon Resource Name (ARN) for a Code Signing Configuration.
-* `image_config` - (Optional) The Lambda OCI image configurations. Fields documented below. See [Lambda Support for Container Images][13]
+* `image_config` - (Optional) The Lambda OCI image configurations. Fields documented below. See [Using container images with Lambda][13]
 
 **dead_letter_config** is a child block with a single argument:
 
