@@ -68,12 +68,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"unused_account_validity_days": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      7,
-							ValidateFunc: validation.IntBetween(0, 365),
-						},
 						"invite_message_template": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -1416,9 +1410,7 @@ func flattenCognitoUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailCo
 }
 
 func expandCognitoUserPoolAdminCreateUserConfig(config map[string]interface{}) *cognitoidentityprovider.AdminCreateUserConfigType {
-	configs := &cognitoidentityprovider.AdminCreateUserConfigType{
-		UnusedAccountValidityDays: aws.Int64(int64(config["unused_account_validity_days"].(int))),
-	}
+	configs := &cognitoidentityprovider.AdminCreateUserConfigType{}
 
 	if v, ok := config["allow_admin_create_user_only"]; ok {
 		configs.AllowAdminCreateUserOnly = aws.Bool(v.(bool))
@@ -1462,10 +1454,6 @@ func flattenCognitoUserPoolAdminCreateUserConfig(s *cognitoidentityprovider.Admi
 
 	if s.AllowAdminCreateUserOnly != nil {
 		config["allow_admin_create_user_only"] = aws.BoolValue(s.AllowAdminCreateUserOnly)
-	}
-
-	if s.UnusedAccountValidityDays != nil {
-		config["unused_account_validity_days"] = aws.Int64Value(s.UnusedAccountValidityDays)
 	}
 
 	if s.InviteMessageTemplate != nil {

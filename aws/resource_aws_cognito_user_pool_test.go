@@ -93,7 +93,6 @@ func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.allow_admin_create_user_only", "false"),
-					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.unused_account_validity_days", "7"),
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.email_sending_account", "COGNITO_DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.#", "1"),
