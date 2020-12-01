@@ -9,7 +9,7 @@ ENHANCEMENTS
 * data-source/aws_eks_cluster: add `kubernetes_network_config` attribute [GH-15518]
 * resource/aws_storagegateway_smb_file_share - add support for `notification_policy` and `access_based_enumeration`. [GH-16414]
 * resource/aws_storagegateway_smb_file_share - add plan time validation to `invalid_user_list` and `valid_user_list`. [GH-16414]
-* resource/aws_cognito_user_pool: add support for account recovery setting. ([#12444](https://github.com/hashicorp/terraform-provider-aws/pull/12444)
+* resource/aws_cognito_user_pool: add support for account recovery setting. [GH-12444]
 * resource/aws_eks_cluster: add `kubernetes_network_config` argument [GH-15518]
 
 ## 3.18.0 (November 25, 2020)
