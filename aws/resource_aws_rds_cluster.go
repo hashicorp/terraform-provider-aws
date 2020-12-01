@@ -229,10 +229,13 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"source_cluster_identifier": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validateRdsIdentifier,
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+							ValidateFunc: validation.Any(
+								validateArn,
+								validateRdsIdentifier,
+							),
 						},
 
 						"restore_type": {
