@@ -1896,8 +1896,8 @@ func testAccAWSCognitoUserPoolConfig_withUsernameAttributesUpdated(rName string)
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
-  username_attributes         = ["email", "phone_number"]
-  auto_verified_attributes    = ["email"]
+  username_attributes      = ["email", "phone_number"]
+  auto_verified_attributes = ["email"]
 }
 `, rName)
 }
@@ -2092,11 +2092,11 @@ resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
   lambda_config {
-	kms_key_id = aws_kms_key.test.arn
+    kms_key_id = aws_kms_key.test.arn
 
     custom_email_sender {
-	  lambda_arn     = aws_lambda_function.test.arn
-	  lambda_version = "V1_0"
+      lambda_arn     = aws_lambda_function.test.arn
+      lambda_version = "V1_0"
  	}
   }
 }
@@ -2117,11 +2117,11 @@ resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
   lambda_config {
-	kms_key_id = aws_kms_key.test.arn
+    kms_key_id = aws_kms_key.test.arn
 
     custom_email_sender {
-	  lambda_arn     = aws_lambda_function.second.arn
-	  lambda_version = "V1_0"
+      lambda_arn     = aws_lambda_function.second.arn
+      lambda_version = "V1_0"
  	}
   }
 }
@@ -2134,11 +2134,11 @@ resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
   lambda_config {
-	kms_key_id = aws_kms_key.test.arn
+    kms_key_id = aws_kms_key.test.arn
 
     custom_sms_sender {
-	  lambda_arn     = aws_lambda_function.test.arn
-	  lambda_version = "V1_0"
+      lambda_arn     = aws_lambda_function.test.arn
+      lambda_version = "V1_0"
  	}
   }
 }
@@ -2159,11 +2159,11 @@ resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
   lambda_config {
-	kms_key_id = aws_kms_key.test.arn
+    kms_key_id = aws_kms_key.test.arn
 
     custom_sms_sender {
-	  lambda_arn     = aws_lambda_function.second.arn
-	  lambda_version = "V1_0"
+      lambda_arn     = aws_lambda_function.second.arn
+      lambda_version = "V1_0"
  	}
   }
 }
