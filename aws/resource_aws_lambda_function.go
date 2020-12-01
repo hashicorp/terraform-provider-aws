@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"io/ioutil"
 	"log"
 	"regexp"
@@ -315,8 +316,22 @@ func resourceAwsLambdaFunction() *schema.Resource {
 			"tags": tagsSchema(),
 		},
 
-		CustomizeDiff: updateComputedAttributesOnPublish,
+		CustomizeDiff: customdiff.Sequence(
+			checkHandlerRuntimeForZipFunction,
+			updateComputedAttributesOnPublish,
+		),
 	}
+}
+
+func checkHandlerRuntimeForZipFunction(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	packageType := d.Get("package_type")
+	_, handlerOk := d.GetOk("handler")
+	_, runtimeOk := d.GetOk("runtime")
+
+	if packageType == lambda.PackageTypeZip && !handlerOk && !runtimeOk {
+		return fmt.Errorf("handler and runtime must be set when PackageType is Zip")
+	}
+	return nil
 }
 
 func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
