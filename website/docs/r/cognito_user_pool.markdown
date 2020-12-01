@@ -221,7 +221,10 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the user pool.
 * `creation_date` - Date the user pool was created.
+* `custom_domain` - A custom domain name that you provide to Amazon Cognito. This parameter applies only if you use a custom domain to host the sign-up and sign-in pages for your application. For example: `auth.example.com`.
+* `domain` - Holds the domain prefix if the user pool has a domain associated with it.
 * `endpoint` - Endpoint name of the user pool. Example format: `cognito-idp.REGION.amazonaws.com/xxxx_yyyyy`
+* `estimated_number_of_users` - A number estimating the size of the user pool.
 * `id` - ID of the user pool.
 * `last_modified_date` - Date the user pool was last modified.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
