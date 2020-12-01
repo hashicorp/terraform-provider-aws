@@ -123,7 +123,10 @@ func resourceAwsAppmeshVirtualGateway() *schema.Resource {
 																								},
 																							},
 																						},
-																						ConflictsWith: []string{"spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.file"},
+																						ExactlyOneOf: []string{
+																							"spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.acm",
+																							"spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.file",
+																						},
 																					},
 
 																					"file": {
@@ -140,7 +143,10 @@ func resourceAwsAppmeshVirtualGateway() *schema.Resource {
 																								},
 																							},
 																						},
-																						ConflictsWith: []string{"spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.acm"},
+																						ExactlyOneOf: []string{
+																							"spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.acm",
+																							"spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.file",
+																						},
 																					},
 																				},
 																			},
@@ -165,6 +171,85 @@ func resourceAwsAppmeshVirtualGateway() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"connection_pool": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 0,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"grpc": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max_requests": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+													ExactlyOneOf: []string{
+														"spec.0.listener.0.connection_pool.0.grpc",
+														"spec.0.listener.0.connection_pool.0.http",
+														"spec.0.listener.0.connection_pool.0.http2",
+													},
+												},
+
+												"http": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max_connections": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+
+															"max_pending_requests": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+													ExactlyOneOf: []string{
+														"spec.0.listener.0.connection_pool.0.grpc",
+														"spec.0.listener.0.connection_pool.0.http",
+														"spec.0.listener.0.connection_pool.0.http2",
+													},
+												},
+
+												"http2": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max_requests": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+													ExactlyOneOf: []string{
+														"spec.0.listener.0.connection_pool.0.grpc",
+														"spec.0.listener.0.connection_pool.0.http",
+														"spec.0.listener.0.connection_pool.0.http2",
+													},
+												},
+											},
+										},
+									},
+
 									"health_check": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -267,7 +352,10 @@ func resourceAwsAppmeshVirtualGateway() *schema.Resource {
 																		},
 																	},
 																},
-																ConflictsWith: []string{"spec.0.listener.0.tls.0.certificate.0.file"},
+																ExactlyOneOf: []string{
+																	"spec.0.listener.0.tls.0.certificate.0.acm",
+																	"spec.0.listener.0.tls.0.certificate.0.file",
+																},
 															},
 
 															"file": {
@@ -290,7 +378,10 @@ func resourceAwsAppmeshVirtualGateway() *schema.Resource {
 																		},
 																	},
 																},
-																ConflictsWith: []string{"spec.0.listener.0.tls.0.certificate.0.acm"},
+																ExactlyOneOf: []string{
+																	"spec.0.listener.0.tls.0.certificate.0.acm",
+																	"spec.0.listener.0.tls.0.certificate.0.file",
+																},
 															},
 														},
 													},
@@ -410,7 +501,7 @@ func resourceAwsAppmeshVirtualGatewayRead(d *schema.ResourceData, meta interface
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading App Mesh virtual gateway: %w", err)
+		return fmt.Errorf("error reading App Mesh virtual gateway (%s): %w", d.Id(), err)
 	}
 
 	if virtualGateway == nil || aws.StringValue(virtualGateway.Status.Status) == appmesh.VirtualGatewayStatusCodeDeleted {
@@ -439,7 +530,7 @@ func resourceAwsAppmeshVirtualGatewayRead(d *schema.ResourceData, meta interface
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -471,7 +562,7 @@ func resourceAwsAppmeshVirtualGatewayUpdate(d *schema.ResourceData, meta interfa
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.AppmeshUpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating App Mesh virtual gateway (%s) tags: %s", arn, err)
+			return fmt.Errorf("error updating App Mesh virtual gateway (%s) tags: %w", arn, err)
 		}
 	}
 
@@ -492,7 +583,7 @@ func resourceAwsAppmeshVirtualGatewayDelete(d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting App Mesh virtual gateway (%s) : %w", d.Id(), err)
+		return fmt.Errorf("error deleting App Mesh virtual gateway (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -580,6 +671,53 @@ func expandAppmeshVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewa
 				}
 
 				listener.HealthCheck = healthCheck
+			}
+
+			if vConnectionPool, ok := mListener["connection_pool"].([]interface{}); ok && len(vConnectionPool) > 0 && vConnectionPool[0] != nil {
+				mConnectionPool := vConnectionPool[0].(map[string]interface{})
+
+				connectionPool := &appmesh.VirtualGatewayConnectionPool{}
+
+				if vGrpcConnectionPool, ok := mConnectionPool["grpc"].([]interface{}); ok && len(vGrpcConnectionPool) > 0 && vGrpcConnectionPool[0] != nil {
+					mGrpcConnectionPool := vGrpcConnectionPool[0].(map[string]interface{})
+
+					grpcConnectionPool := &appmesh.VirtualGatewayGrpcConnectionPool{}
+
+					if vMaxRequests, ok := mGrpcConnectionPool["max_requests"].(int); ok && vMaxRequests > 0 {
+						grpcConnectionPool.MaxRequests = aws.Int64(int64(vMaxRequests))
+					}
+
+					connectionPool.Grpc = grpcConnectionPool
+				}
+
+				if vHttpConnectionPool, ok := mConnectionPool["http"].([]interface{}); ok && len(vHttpConnectionPool) > 0 && vHttpConnectionPool[0] != nil {
+					mHttpConnectionPool := vHttpConnectionPool[0].(map[string]interface{})
+
+					httpConnectionPool := &appmesh.VirtualGatewayHttpConnectionPool{}
+
+					if vMaxConnections, ok := mHttpConnectionPool["max_connections"].(int); ok && vMaxConnections > 0 {
+						httpConnectionPool.MaxConnections = aws.Int64(int64(vMaxConnections))
+					}
+					if vMaxPendingRequests, ok := mHttpConnectionPool["max_pending_requests"].(int); ok && vMaxPendingRequests > 0 {
+						httpConnectionPool.MaxPendingRequests = aws.Int64(int64(vMaxPendingRequests))
+					}
+
+					connectionPool.Http = httpConnectionPool
+				}
+
+				if vHttp2ConnectionPool, ok := mConnectionPool["http2"].([]interface{}); ok && len(vHttp2ConnectionPool) > 0 && vHttp2ConnectionPool[0] != nil {
+					mHttp2ConnectionPool := vHttp2ConnectionPool[0].(map[string]interface{})
+
+					http2ConnectionPool := &appmesh.VirtualGatewayHttp2ConnectionPool{}
+
+					if vMaxRequests, ok := mHttp2ConnectionPool["max_requests"].(int); ok && vMaxRequests > 0 {
+						http2ConnectionPool.MaxRequests = aws.Int64(int64(vMaxRequests))
+					}
+
+					connectionPool.Http2 = http2ConnectionPool
+				}
+
+				listener.ConnectionPool = connectionPool
 			}
 
 			if vPortMapping, ok := mListener["port_mapping"].([]interface{}); ok && len(vPortMapping) > 0 && vPortMapping[0] != nil {
@@ -768,6 +906,34 @@ func flattenAppmeshVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interf
 		// Per schema definition, set at most 1 Listener
 		listener := spec.Listeners[0]
 		mListener := map[string]interface{}{}
+
+		if connectionPool := listener.ConnectionPool; connectionPool != nil {
+			mConnectionPool := map[string]interface{}{}
+
+			if grpcConnectionPool := connectionPool.Grpc; grpcConnectionPool != nil {
+				mGrpcConnectionPool := map[string]interface{}{
+					"max_requests": int(aws.Int64Value(grpcConnectionPool.MaxRequests)),
+				}
+				mConnectionPool["grpc"] = []interface{}{mGrpcConnectionPool}
+			}
+
+			if httpConnectionPool := connectionPool.Http; httpConnectionPool != nil {
+				mHttpConnectionPool := map[string]interface{}{
+					"max_connections":      int(aws.Int64Value(httpConnectionPool.MaxConnections)),
+					"max_pending_requests": int(aws.Int64Value(httpConnectionPool.MaxPendingRequests)),
+				}
+				mConnectionPool["http"] = []interface{}{mHttpConnectionPool}
+			}
+
+			if http2ConnectionPool := connectionPool.Http2; http2ConnectionPool != nil {
+				mHttp2ConnectionPool := map[string]interface{}{
+					"max_requests": int(aws.Int64Value(http2ConnectionPool.MaxRequests)),
+				}
+				mConnectionPool["http2"] = []interface{}{mHttp2ConnectionPool}
+			}
+
+			mListener["connection_pool"] = []interface{}{mConnectionPool}
+		}
 
 		if healthCheck := listener.HealthCheck; healthCheck != nil {
 			mHealthCheck := map[string]interface{}{
