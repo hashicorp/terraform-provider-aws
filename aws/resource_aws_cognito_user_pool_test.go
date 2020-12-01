@@ -2097,7 +2097,7 @@ resource "aws_cognito_user_pool" "test" {
     custom_email_sender {
       lambda_arn     = aws_lambda_function.test.arn
       lambda_version = "V1_0"
- 	}
+    }
   }
 }
 `, name)
@@ -2122,7 +2122,7 @@ resource "aws_cognito_user_pool" "test" {
     custom_email_sender {
       lambda_arn     = aws_lambda_function.second.arn
       lambda_version = "V1_0"
- 	}
+    }
   }
 }
 `, name)
@@ -2139,7 +2139,7 @@ resource "aws_cognito_user_pool" "test" {
     custom_sms_sender {
       lambda_arn     = aws_lambda_function.test.arn
       lambda_version = "V1_0"
- 	}
+    }
   }
 }
 `, name)
@@ -2164,7 +2164,7 @@ resource "aws_cognito_user_pool" "test" {
     custom_sms_sender {
       lambda_arn     = aws_lambda_function.second.arn
       lambda_version = "V1_0"
- 	}
+    }
   }
 }
 `, name)
