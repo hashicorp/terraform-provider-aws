@@ -429,6 +429,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/mq" = [
       "aws_mq_",
     ],
+    "service/mwaa" = [
+      "aws_mwaa_",
+    ],
     "service/neptune" = [
       "aws_neptune_",
     ],
@@ -1245,6 +1248,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/mq/**/*",
       "**/*_mq_*",
       "**/mq_*"
+    ]
+    "service/mwaa" = [
+      "aws/internal/service/mwaa/**/*",
+      "**/*_mwaa_*",
+      "**/mwaa_*"
     ]
     "service/neptune" = [
       "aws/internal/service/neptune/**/*",

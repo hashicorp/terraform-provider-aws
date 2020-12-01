@@ -1215,6 +1215,7 @@ func init() {
 		"mediastore",
 		"mediastoredata",
 		"mq",
+		"mwaa",
 		"neptune",
 		"networkfirewall",
 		"networkmanager",
