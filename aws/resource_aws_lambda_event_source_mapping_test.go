@@ -1531,7 +1531,7 @@ EOF
 }
 
 resource "aws_sqs_queue" "test" {
-  name        = %q
+  name = %q
 }
 
 resource "aws_lambda_function" "test" {
