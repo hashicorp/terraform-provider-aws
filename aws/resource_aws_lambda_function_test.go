@@ -348,7 +348,7 @@ func TestAccAWSLambdaFunction_expectFilenameAndS3Attributes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSLambdaConfigWithoutFilenameAndS3Attributes(funcName, policyName, roleName, sgName),
-				ExpectError: regexp.MustCompile(`filename or s3_\* attributes must be set`),
+				ExpectError: regexp.MustCompile(`filename, s3_\* or image_uri attributes must be set`),
 			},
 		},
 	})
@@ -902,8 +902,7 @@ func TestAccAWSLambdaFunction_imageConfig(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeImage),
-					resource.TestCheckResourceAttrSet(resourceName, "image_uri"),
-					resource.TestMatchResourceAttr(resourceName, "image_uri", regexp.MustCompile("lambda-image-function:latest$")),
+					resource.TestCheckResourceAttr(resourceName, "image_uri", imageLatestID),
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.entry_point.0", "/bootstrap-with-handler"),
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.command.0", "app.lambda_handler"),
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.working_directory", "/var/task"),
@@ -921,7 +920,7 @@ func TestAccAWSLambdaFunction_imageConfig(t *testing.T) {
 				Config: testAccAWSLambdaImageConfigUpdateCode(funcName, policyName, roleName, sgName, imageV1ID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					resource.TestMatchResourceAttr(resourceName, "image_uri", regexp.MustCompile("lambda-image-function:v1$")),
+					resource.TestCheckResourceAttr(resourceName, "image_uri", imageV1ID),
 				),
 			},
 			// Ensure lambda image config can be updated
@@ -929,7 +928,7 @@ func TestAccAWSLambdaFunction_imageConfig(t *testing.T) {
 				Config: testAccAWSLambdaImageConfigUpdateConfig(funcName, policyName, roleName, sgName, imageV2ID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
-					resource.TestMatchResourceAttr(resourceName, "image_uri", regexp.MustCompile("lambda-image-function:v2$")),
+					resource.TestCheckResourceAttr(resourceName, "image_uri", imageV2ID),
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.command.0", "app.another_handler"),
 				),
 			},
