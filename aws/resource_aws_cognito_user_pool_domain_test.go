@@ -89,10 +89,44 @@ func TestAccAWSCognitoUserPoolDomain_basic(t *testing.T) {
 					testAccCheckAWSCognitoUserPoolDomainExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", userPoolResourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "aws_account_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "cloudfront_distribution_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "s3_bucket"),
-					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					testAccCheckResourceAttrAccountID(resourceName, "aws_account_id"),
+					resource.TestMatchResourceAttr(resourceName, "cloudfront_distribution_arn", regexp.MustCompile(`[a-z0-9]+.cloudfront.net$`)),
+					resource.TestMatchResourceAttr(resourceName, "s3_bucket", regexp.MustCompile(`^.+$`)),
+					resource.TestMatchResourceAttr(resourceName, "version", regexp.MustCompile(`^.+$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"wait_for_deployment",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSCognitoUserPoolDomain_waitForDeployment(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cognito_user_pool_domain.test"
+	userPoolResourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolDomainConfigWaitForDeployment(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolDomainExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "domain", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", userPoolResourceName, "id"),
+					testAccCheckResourceAttrAccountID(resourceName, "aws_account_id"),
+					resource.TestMatchResourceAttr(resourceName, "cloudfront_distribution_arn", regexp.MustCompile(`[a-z0-9]+.cloudfront.net$`)),
+					resource.TestMatchResourceAttr(resourceName, "s3_bucket", regexp.MustCompile(`^.+$`)),
+					resource.TestMatchResourceAttr(resourceName, "version", regexp.MustCompile(`^.+$`)),
 				),
 			},
 			{
