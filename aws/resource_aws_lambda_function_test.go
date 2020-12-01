@@ -2467,8 +2467,8 @@ resource "aws_lambda_function" "test" {
   role          = aws_iam_role.iam_for_lambda.arn
   package_type  = "Image"
   image_config {
-    entry_point = ["/bootstrap-with-handler"]
-    command = ["app.lambda_handler"]
+    entry_point       = ["/bootstrap-with-handler"]
+    command           = ["app.lambda_handler"]
     working_directory = "/var/task"
   }
 }
