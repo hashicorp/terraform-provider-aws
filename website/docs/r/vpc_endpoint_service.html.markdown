@@ -46,6 +46,7 @@ The following arguments are supported:
 * `gateway_load_balancer_arns` - (Optional) Amazon Resource Names (ARNs) of one or more Gateway Load Balancers for the endpoint service.
 * `network_load_balancer_arns` - (Optional) Amazon Resource Names (ARNs) of one or more Network Load Balancers for the endpoint service.
 * `tags` - (Optional) A map of tags to assign to the resource.
+* `private_dns_name` - (Optional) The private DNS name for the service.
 
 ## Attributes Reference
 
@@ -56,10 +57,17 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name (ARN) of the VPC endpoint service.
 * `base_endpoint_dns_names` - The DNS names for the service.
 * `manages_vpc_endpoints` - Whether or not the service manages its VPC endpoints - `true` or `false`.
-* `private_dns_name` - The private DNS name for the service.
 * `service_name` - The service name.
 * `service_type` - The service type, `Gateway` or `Interface`.
 * `state` - The state of the VPC endpoint service.
+* `private_dns_name_config` - The private dns name config when supplying a private dns name.
+
+The `private_dns_name_config` object exports the following attributes:
+
+* `name` - the name of the record subdomain the service provider needs to create
+* `state` - the verification state of the VPC endpoint service
+* `type` - the endpoint service verification type, for example TXT
+* `value` - the value the service provider adds to the private DNS name domain record before verification
 
 ## Import
 

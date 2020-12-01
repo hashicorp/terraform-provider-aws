@@ -79,6 +79,31 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 			"private_dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
+				Optional: true,
+			},
+			"private_dns_name_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"state": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"service_name": {
 				Type:     schema.TypeString,
@@ -103,6 +128,9 @@ func resourceAwsVpcEndpointServiceCreate(d *schema.ResourceData, meta interface{
 	req := &ec2.CreateVpcEndpointServiceConfigurationInput{
 		AcceptanceRequired: aws.Bool(d.Get("acceptance_required").(bool)),
 		TagSpecifications:  ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), "vpc-endpoint-service"),
+	}
+	if v, ok := d.GetOk("private_dns_name"); ok {
+		req.PrivateDnsName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("gateway_load_balancer_arns"); ok {
@@ -214,15 +242,37 @@ func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting allowed_principals: %s", err)
 	}
 
+	err = d.Set("private_dns_name_config", flattenPrivateDnsNameConfiguration(svcCfg.PrivateDnsNameConfiguration))
+	if err != nil {
+		return fmt.Errorf("error setting private_dns_name_config: %w", err)
+	}
+
 	return nil
+}
+
+func flattenPrivateDnsNameConfiguration(privateDnsNameConfiguration *ec2.PrivateDnsNameConfiguration) []interface{} {
+	if privateDnsNameConfiguration == nil {
+		return []interface{}{}
+	}
+	m := map[string]interface{}{
+		"name":  aws.StringValue(privateDnsNameConfiguration.Name),
+		"state": aws.StringValue(privateDnsNameConfiguration.State),
+		"type":  aws.StringValue(privateDnsNameConfiguration.Type),
+		"value": aws.StringValue(privateDnsNameConfiguration.Value),
+	}
+	return []interface{}{m}
 }
 
 func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if d.HasChanges("acceptance_required", "gateway_load_balancer_arns", "network_load_balancer_arns") {
+	if d.HasChanges("acceptance_required", "gateway_load_balancer_arns", "network_load_balancer_arns", "private_dns_name") {
 		modifyCfgReq := &ec2.ModifyVpcEndpointServiceConfigurationInput{
 			ServiceId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("private_dns_name") {
+			modifyCfgReq.PrivateDnsName = aws.String(d.Get("private_dns_name").(string))
 		}
 
 		if d.HasChange("acceptance_required") {
