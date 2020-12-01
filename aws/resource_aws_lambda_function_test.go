@@ -865,9 +865,19 @@ func TestAccAWSLambdaFunction_FileSystemConfig(t *testing.T) {
 	})
 }
 
+func testAccLambdaImagePreCheck(t *testing.T) {
+	if (os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID") == "") || (os.Getenv("AWS_LAMBDA_IMAGE_V1_ID") == "") || (os.Getenv("AWS_LAMBDA_IMAGE_V2_ID") == "") {
+		t.Skip("AWS_LAMBDA_IMAGE_LATEST_ID, AWS_LAMBDA_IMAGE_V1_ID and AWS_LAMBDA_IMAGE_V2_ID env vars must be set for Lambda Container Image Support acceptance tests. ")
+	}
+}
+
 func TestAccAWSLambdaFunction_imageConfig(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 	resourceName := "aws_lambda_function.test"
+
+	imageLatestID := os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID")
+	imageV1ID := os.Getenv("AWS_LAMBDA_IMAGE_V1_ID")
+	imageV2ID := os.Getenv("AWS_LAMBDA_IMAGE_V2_ID")
 
 	rString := acctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
@@ -876,13 +886,16 @@ func TestAccAWSLambdaFunction_imageConfig(t *testing.T) {
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccLambdaImagePreCheck(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
 		Steps: []resource.TestStep{
 			// Ensure a function with lambda image configuration can be created
 			{
-				Config: testAccAWSLambdaImageConfig(funcName, policyName, roleName, sgName),
+				Config: testAccAWSLambdaImageConfig(funcName, policyName, roleName, sgName, imageLatestID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
@@ -905,7 +918,7 @@ func TestAccAWSLambdaFunction_imageConfig(t *testing.T) {
 			},
 			// Ensure lambda image code can be updated
 			{
-				Config: testAccAWSLambdaImageConfigUpdateCode(funcName, policyName, roleName, sgName),
+				Config: testAccAWSLambdaImageConfigUpdateCode(funcName, policyName, roleName, sgName, imageV1ID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
 					resource.TestMatchResourceAttr(resourceName, "image_uri", regexp.MustCompile("lambda-image-function:v1$")),
@@ -913,7 +926,7 @@ func TestAccAWSLambdaFunction_imageConfig(t *testing.T) {
 			},
 			// Ensure lambda image config can be updated
 			{
-				Config: testAccAWSLambdaImageConfigUpdateConfig(funcName, policyName, roleName, sgName),
+				Config: testAccAWSLambdaImageConfigUpdateConfig(funcName, policyName, roleName, sgName, imageV2ID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
 					resource.TestMatchResourceAttr(resourceName, "image_uri", regexp.MustCompile("lambda-image-function:v2$")),
@@ -2446,10 +2459,10 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccAWSLambdaImageConfig(funcName, policyName, roleName, sgName string) string {
+func testAccAWSLambdaImageConfig(funcName, policyName, roleName, sgName, imageID string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-  image_uri     = "373534280245.dkr.ecr.sa-east-1.amazonaws.com/lambda-image-function:latest"
+  image_uri     = "%s"
   function_name = "%s"
   role          = aws_iam_role.iam_for_lambda.arn
   package_type  = "Image"
@@ -2459,24 +2472,24 @@ resource "aws_lambda_function" "test" {
     working_directory = "/var/task"
   }
 }
-`, funcName)
+`, imageID, funcName)
 }
 
-func testAccAWSLambdaImageConfigUpdateCode(funcName, policyName, roleName, sgName string) string {
+func testAccAWSLambdaImageConfigUpdateCode(funcName, policyName, roleName, sgName, imageID string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-  image_uri     = "373534280245.dkr.ecr.sa-east-1.amazonaws.com/lambda-image-function:v1"
+  image_uri     = "%s"
   function_name = "%s"
   role          = aws_iam_role.iam_for_lambda.arn
   package_type  = "Image"
 }
-`, funcName)
+`, imageID, funcName)
 }
 
-func testAccAWSLambdaImageConfigUpdateConfig(funcName, policyName, roleName, sgName string) string {
+func testAccAWSLambdaImageConfigUpdateConfig(funcName, policyName, roleName, sgName, imageID string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-  image_uri     = "373534280245.dkr.ecr.sa-east-1.amazonaws.com/lambda-image-function:v2"
+  image_uri     = "%s"
   function_name = "%s"
   role          = aws_iam_role.iam_for_lambda.arn
   package_type  = "Image"
@@ -2484,7 +2497,7 @@ resource "aws_lambda_function" "test" {
     command = ["app.another_handler"]
   }
 }
-`, funcName)
+`, imageID, funcName)
 }
 
 func testAccAWSLambdaConfigVersionedNodeJs10xRuntime(fileName, funcName, policyName, roleName, sgName string) string {
