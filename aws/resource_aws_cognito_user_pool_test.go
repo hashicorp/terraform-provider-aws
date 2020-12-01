@@ -1014,6 +1014,8 @@ func TestAccAWSCognitoUserPool_withUsernameConfiguration(t *testing.T) {
 func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cognito_user_pool.test"
+	lambdaResourceName := "aws_lambda_function.test"
+	lambdaUpdatedResourceName := "aws_lambda_function.second"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -1026,16 +1028,16 @@ func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolExists(resourceName, nil),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.create_auth_challenge"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.custom_message"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.define_auth_challenge"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.post_authentication"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.post_confirmation"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.pre_authentication"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.pre_sign_up"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.pre_token_generation"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.user_migration"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.verify_auth_challenge_response"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.create_auth_challenge", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_message", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.define_auth_challenge", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.post_authentication", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.post_confirmation", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_authentication", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_sign_up", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_token_generation", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.user_migration", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.verify_auth_challenge_response", lambdaResourceName, "arn"),
 				),
 			},
 			{
@@ -1047,16 +1049,16 @@ func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolConfig_withLambdaConfigUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.create_auth_challenge"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.custom_message"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.define_auth_challenge"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.post_authentication"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.post_confirmation"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.pre_authentication"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.pre_sign_up"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.pre_token_generation"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.user_migration"),
-					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.verify_auth_challenge_response"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.create_auth_challenge", lambdaUpdatedResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_message", lambdaUpdatedResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.define_auth_challenge", lambdaUpdatedResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.post_authentication", lambdaUpdatedResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.post_confirmation", lambdaUpdatedResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_authentication", lambdaUpdatedResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_sign_up", lambdaUpdatedResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_token_generation", lambdaUpdatedResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.user_migration", lambdaUpdatedResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.verify_auth_challenge_response", lambdaUpdatedResourceName, "arn"),
 				),
 			},
 		},
