@@ -551,11 +551,12 @@ func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_SAML(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainConfig_AdvancedSecurityOptionsSAML(userName, domainName, false),
+				Config: testAccESDomainConfig_AdvancedSecurityOptionsSAML(userName, domainName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 					testAccCheckAdvancedSecurityOptions(true, false, false, &domain),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 			{
 				ResourceName:      resourceName,
@@ -566,6 +567,8 @@ func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_SAML(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"advanced_security_options.0.internal_user_database_enabled",
 					"advanced_security_options.0.master_user_options",
+					"advanced_security_options.0.saml_options.0.master_backend_role",
+					"advanced_security_options.0.saml_options.0.master_user_name",
 				},
 			},
 			{
@@ -574,8 +577,6 @@ func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_SAML(t *testing.T) {
 					testAccCheckESDomainExists(resourceName, &domain),
 					testAccCheckAdvancedSecurityOptions(true, false, true, &domain),
 				),
-				// You cannot specify SAML options during domain creation.
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

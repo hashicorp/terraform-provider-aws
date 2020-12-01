@@ -771,7 +771,7 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 	// values from resource; additionally, append MasterUserOptions
 	// from resource as they are not returned from the API
 	if ds.AdvancedSecurityOptions != nil {
-		advSecOpts := flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)
+		advSecOpts := flattenAdvancedSecurityOptions(d, ds.AdvancedSecurityOptions)
 		if !aws.BoolValue(ds.AdvancedSecurityOptions.Enabled) {
 			advSecOpts[0]["internal_user_database_enabled"] = getUserDBEnabled(d)
 		}

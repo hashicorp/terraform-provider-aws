@@ -96,7 +96,7 @@ func expandSAMLOptionsIdp(l []interface{}) *elasticsearch.SAMLIdp {
 	}
 }
 
-func flattenAdvancedSecurityOptions(advancedSecurityOptions *elasticsearch.AdvancedSecurityOptions) []map[string]interface{} {
+func flattenAdvancedSecurityOptions(d *schema.ResourceData, advancedSecurityOptions *elasticsearch.AdvancedSecurityOptions) []map[string]interface{} {
 	if advancedSecurityOptions == nil {
 		return []map[string]interface{}{}
 	}
@@ -106,8 +106,54 @@ func flattenAdvancedSecurityOptions(advancedSecurityOptions *elasticsearch.Advan
 	if aws.BoolValue(advancedSecurityOptions.Enabled) {
 		m["internal_user_database_enabled"] = aws.BoolValue(advancedSecurityOptions.InternalUserDatabaseEnabled)
 	}
+	if advancedSecurityOptions.SAMLOptions != nil {
+		m["saml_options"] = flattenESSAMLOptions(d, advancedSecurityOptions.SAMLOptions)
+	}
 
 	return []map[string]interface{}{m}
+}
+
+func flattenESSAMLOptions(d *schema.ResourceData, samlOptions *elasticsearch.SAMLOptionsOutput) []interface{} {
+	if samlOptions == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"enabled": aws.BoolValue(samlOptions.Enabled),
+		"idp":     flattenESSAMLIdpOptions(samlOptions.Idp),
+	}
+
+	if samlOptions.RolesKey != nil {
+		m["roles_key"] = aws.StringValue(samlOptions.RolesKey)
+	}
+	if samlOptions.SessionTimeoutMinutes != nil {
+		m["session_timeout_minutes"] = aws.Int64Value(samlOptions.SessionTimeoutMinutes)
+	}
+	if samlOptions.SubjectKey != nil {
+		m["subject_key"] = aws.StringValue(samlOptions.SubjectKey)
+	}
+
+	// samlOptions.master_backend_role and samlOptions.master_user_name will be added to the
+	// all_access role in kibana's security manager.  These values cannot be read or
+	// modified by the elasticsearch API.  So, we ignore it on read and let persist
+	// the value already in the state.
+	m["master_backend_role"] = d.Get("advanced_security_options.0.saml_options.0.master_backend_role").(string)
+	m["master_user_name"] = d.Get("advanced_security_options.0.saml_options.0.master_user_name").(string)
+
+	return []interface{}{m}
+}
+
+func flattenESSAMLIdpOptions(SAMLIdp *elasticsearch.SAMLIdp) []interface{} {
+	if SAMLIdp == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"entity_id":        aws.StringValue(SAMLIdp.EntityId),
+		"metadata_content": aws.StringValue(SAMLIdp.MetadataContent),
+	}
+
+	return []interface{}{m}
 }
 
 func getMasterUserOptions(d *schema.ResourceData) []interface{} {
