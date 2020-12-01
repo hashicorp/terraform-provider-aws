@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -47,22 +48,57 @@ func resourceAwsLambdaFunction() *schema.Resource {
 			"filename": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_object_version"},
+				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_object_version", "image_uri"},
 			},
 			"s3_bucket": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"filename"},
+				ConflictsWith: []string{"filename", "image_uri"},
 			},
 			"s3_key": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"filename"},
+				ConflictsWith: []string{"filename", "image_uri"},
 			},
 			"s3_object_version": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"filename"},
+				ConflictsWith: []string{"filename", "image_uri"},
+			},
+			"image_uri": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"filename", "s3_bucket", "s3_key", "s3_object_version"},
+			},
+			"package_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      lambda.PackageTypeZip,
+				ValidateFunc: validation.StringInSlice(lambda.PackageType_Values(), false),
+			},
+			"image_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"entry_point": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"command": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"working_directory": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
 			},
 			"code_signing_config_arn": {
 				Type:         schema.TypeString,
@@ -126,7 +162,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 			},
 			"handler": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"layers": {
@@ -155,7 +191,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 			},
 			"runtime": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: validation.StringInSlice(lambda.Runtime_Values(), false),
 			},
 			"timeout": {
@@ -280,8 +316,22 @@ func resourceAwsLambdaFunction() *schema.Resource {
 			"tags": tagsSchema(),
 		},
 
-		CustomizeDiff: updateComputedAttributesOnPublish,
+		CustomizeDiff: customdiff.Sequence(
+			checkHandlerRuntimeForZipFunction,
+			updateComputedAttributesOnPublish,
+		),
 	}
+}
+
+func checkHandlerRuntimeForZipFunction(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	packageType := d.Get("package_type")
+	_, handlerOk := d.GetOk("handler")
+	_, runtimeOk := d.GetOk("runtime")
+
+	if packageType == lambda.PackageTypeZip && !handlerOk && !runtimeOk {
+		return fmt.Errorf("handler and runtime must be set when PackageType is Zip")
+	}
+	return nil
 }
 
 func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
@@ -304,6 +354,7 @@ func hasConfigChanges(d resourceDiffer) bool {
 	return d.HasChange("description") ||
 		d.HasChange("handler") ||
 		d.HasChange("file_system_config") ||
+		d.HasChange("image_config") ||
 		d.HasChange("memory_size") ||
 		d.HasChange("role") ||
 		d.HasChange("timeout") ||
@@ -331,9 +382,10 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 	s3Bucket, bucketOk := d.GetOk("s3_bucket")
 	s3Key, keyOk := d.GetOk("s3_key")
 	s3ObjectVersion, versionOk := d.GetOk("s3_object_version")
+	imageUri, hasImageUri := d.GetOk("image_uri")
 
-	if !hasFilename && !bucketOk && !keyOk && !versionOk {
-		return errors.New("filename or s3_* attributes must be set")
+	if !hasFilename && !bucketOk && !keyOk && !versionOk && !hasImageUri {
+		return errors.New("filename, s3_* or image_uri attributes must be set")
 	}
 
 	var functionCode *lambda.FunctionCode
@@ -350,6 +402,10 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		functionCode = &lambda.FunctionCode{
 			ZipFile: file,
 		}
+	} else if hasImageUri {
+		functionCode = &lambda.FunctionCode{
+			ImageUri: aws.String(imageUri.(string)),
+		}
 	} else {
 		if !bucketOk || !keyOk {
 			return errors.New("s3_bucket and s3_key must all be set while using S3 code source")
@@ -363,16 +419,28 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
+	packageType := d.Get("package_type")
+	handler, handlerOk := d.GetOk("handler")
+	runtime, runtimeOk := d.GetOk("runtime")
+
+	if packageType == lambda.PackageTypeZip && !handlerOk && !runtimeOk {
+		return errors.New("handler and runtime must be set when PackageType is Zip")
+	}
+
 	params := &lambda.CreateFunctionInput{
 		Code:         functionCode,
 		Description:  aws.String(d.Get("description").(string)),
 		FunctionName: aws.String(functionName),
-		Handler:      aws.String(d.Get("handler").(string)),
 		MemorySize:   aws.Int64(int64(d.Get("memory_size").(int))),
 		Role:         aws.String(iamRole),
-		Runtime:      aws.String(d.Get("runtime").(string)),
 		Timeout:      aws.Int64(int64(d.Get("timeout").(int))),
 		Publish:      aws.Bool(d.Get("publish").(bool)),
+		PackageType:  aws.String(d.Get("package_type").(string)),
+	}
+
+	if packageType == lambda.PackageTypeZip {
+		params.Handler = aws.String(handler.(string))
+		params.Runtime = aws.String(runtime.(string))
 	}
 
 	if v, ok := d.GetOk("code_signing_config_arn"); ok {
@@ -399,6 +467,10 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 
 	if v, ok := d.GetOk("file_system_config"); ok && len(v.([]interface{})) > 0 {
 		params.FileSystemConfigs = expandLambdaFileSystemConfigs(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("image_config"); ok && len(v.([]interface{})) > 0 {
+		params.ImageConfig = expandLambdaImageConfigs(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 {
@@ -641,6 +713,23 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Error setting file system config for Lambda Function (%s): %w", d.Id(), err)
 	}
 
+	// Add Package Type
+	log.Printf("[INFO] Setting Lambda %s package type %#v from API", d.Id(), function.PackageType)
+	if err := d.Set("package_type", function.PackageType); err != nil {
+		return fmt.Errorf("Error setting package type for Lambda Function: %w", err)
+	}
+
+	// Add Image Configuration
+	imageConfig := flattenLambdaImageConfig(function.ImageConfigResponse)
+	log.Printf("[INFO] Setting Lambda %s Image config %#v from API", d.Id(), imageConfig)
+	if err := d.Set("image_config", imageConfig); err != nil {
+		return fmt.Errorf("Error setting image config for Lambda Function: %s", err)
+	}
+
+	if err := d.Set("image_uri", getFunctionOutput.Code.ImageUri); err != nil {
+		return fmt.Errorf("Error setting image uri for Lambda Function: %s", err)
+	}
+
 	layers := flattenLambdaLayers(function.Layers)
 	log.Printf("[INFO] Setting Lambda %s Layers %#v from API", d.Id(), layers)
 	if err := d.Set("layers", layers); err != nil {
@@ -723,15 +812,20 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 		FunctionName: aws.String(d.Get("function_name").(string)),
 	}
 
-	getCodeSigningConfigOutput, err := conn.GetFunctionCodeSigningConfig(codeSigningConfigInput)
-	if err != nil {
-		return fmt.Errorf("error getting Lambda Function (%s) code signing config %w", d.Id(), err)
-	}
+	// Code Signing is only supported on zip packaged lambda functions.
+	if *function.PackageType == lambda.PackageTypeZip {
+		getCodeSigningConfigOutput, err := conn.GetFunctionCodeSigningConfig(codeSigningConfigInput)
+		if err != nil {
+			return fmt.Errorf("error getting Lambda Function (%s) code signing config %w", d.Id(), err)
+		}
 
-	if getCodeSigningConfigOutput == nil || getCodeSigningConfigOutput.CodeSigningConfigArn == nil {
-		d.Set("code_signing_config_arn", "")
+		if getCodeSigningConfigOutput == nil || getCodeSigningConfigOutput.CodeSigningConfigArn == nil {
+			d.Set("code_signing_config_arn", "")
+		} else {
+			d.Set("code_signing_config_arn", getCodeSigningConfigOutput.CodeSigningConfigArn)
+		}
 	} else {
-		d.Set("code_signing_config_arn", getCodeSigningConfigOutput.CodeSigningConfigArn)
+		d.Set("code_signing_config_arn", "")
 	}
 
 	return nil
@@ -779,7 +873,9 @@ func needsFunctionCodeUpdate(d resourceDiffer) bool {
 		d.HasChange("source_code_hash") ||
 		d.HasChange("s3_bucket") ||
 		d.HasChange("s3_key") ||
-		d.HasChange("s3_object_version")
+		d.HasChange("s3_object_version") ||
+		d.HasChange("image_uri")
+
 }
 
 // resourceAwsLambdaFunctionUpdate maps to:
@@ -838,6 +934,12 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		configReq.FileSystemConfigs = make([]*lambda.FileSystemConfig, 0)
 		if v, ok := d.GetOk("file_system_config"); ok && len(v.([]interface{})) > 0 {
 			configReq.FileSystemConfigs = expandLambdaFileSystemConfigs(v.([]interface{}))
+		}
+	}
+	if d.HasChange("image_config") {
+		configReq.ImageConfig = &lambda.ImageConfig{}
+		if v, ok := d.GetOk("image_config"); ok && len(v.([]interface{})) > 0 {
+			configReq.ImageConfig = expandLambdaImageConfigs(v.([]interface{}))
 		}
 	}
 	if d.HasChange("memory_size") {
@@ -990,6 +1092,8 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 				return fmt.Errorf("Unable to load %q: %w", v.(string), err)
 			}
 			codeReq.ZipFile = file
+		} else if v, ok := d.GetOk("image_uri"); ok {
+			codeReq.ImageUri = aws.String(v.(string))
 		} else {
 			s3Bucket, _ := d.GetOk("s3_bucket")
 			s3Key, _ := d.GetOk("s3_key")
@@ -1187,4 +1291,34 @@ func expandLambdaFileSystemConfigs(fscMaps []interface{}) []*lambda.FileSystemCo
 		})
 	}
 	return fileSystemConfigs
+}
+
+func flattenLambdaImageConfig(response *lambda.ImageConfigResponse) []map[string]interface{} {
+	settings := make(map[string]interface{})
+
+	if response == nil || response.Error != nil {
+		return nil
+	}
+
+	settings["command"] = response.ImageConfig.Command
+	settings["entry_point"] = response.ImageConfig.EntryPoint
+	settings["working_directory"] = response.ImageConfig.WorkingDirectory
+
+	return []map[string]interface{}{settings}
+}
+
+func expandLambdaImageConfigs(imageConfigMaps []interface{}) *lambda.ImageConfig {
+	imageConfig := &lambda.ImageConfig{}
+	// only one image_config block is allowed
+	if len(imageConfigMaps) == 1 && imageConfigMaps[0] != nil {
+		config := imageConfigMaps[0].(map[string]interface{})
+		if len(config["entry_point"].([]interface{})) > 0 {
+			imageConfig.EntryPoint = expandStringList(config["entry_point"].([]interface{}))
+		}
+		if len(config["command"].([]interface{})) > 0 {
+			imageConfig.Command = expandStringList(config["command"].([]interface{}))
+		}
+		imageConfig.WorkingDirectory = aws.String(config["working_directory"].(string))
+	}
+	return imageConfig
 }
