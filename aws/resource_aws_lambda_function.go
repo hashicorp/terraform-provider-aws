@@ -701,7 +701,7 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	// Add Package Type
 	log.Printf("[INFO] Setting Lambda %s package type %#v from API", d.Id(), function.PackageType)
 	if err := d.Set("package_type", function.PackageType); err != nil {
-		return fmt.Errorf("Error setting package type for Lambda Function: %s", err)
+		return fmt.Errorf("Error setting package type for Lambda Function: %w", err)
 	}
 
 	// Add Image Configuration
