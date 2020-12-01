@@ -364,9 +364,9 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("Error updating event source mapping: %s", err)
 	}
 
-	if eventSourceArn.Service != "sqs" {
-		params.MaximumBatchingWindowInSeconds = aws.Int64(int64(d.Get("maximum_batching_window_in_seconds").(int)))
+	params.MaximumBatchingWindowInSeconds = aws.Int64(int64(d.Get("maximum_batching_window_in_seconds").(int)))
 
+	if eventSourceArn.Service != "sqs" {
 		if parallelizationFactor, ok := d.GetOk("parallelization_factor"); ok {
 			params.SetParallelizationFactor(int64(parallelizationFactor.(int)))
 		}
