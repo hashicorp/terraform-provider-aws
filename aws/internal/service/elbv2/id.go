@@ -19,5 +19,5 @@ func ListenerCertificateParseID(id string) (string, string, error) {
 }
 
 func ListenerCertificateCreateID(listenerArn, certificateArn string) string {
-	return fmt.Sprintf("%s_%s", listenerArn, certificateArn)
+	return fmt.Sprintf("%s%s%s", listenerArn, listenerCertificateIDSeparator, certificateArn)
 }
