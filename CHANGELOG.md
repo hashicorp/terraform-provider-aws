@@ -1,3 +1,13 @@
+## 3.20.0 (Unreleased)
+
+ENHANCEMENTS
+
+* resource/aws_ssm_maintenance_window_target: Add plan-time validation for `owner_information` and `targets` arguments [GH-16478]
+
+BUG FIXES
+
+* resource/aws_ssm_maintenance_window_target: Remove from state if not found [GH-16478]
+
 ## 3.19.0 (December 01, 2020)
 
 FEATURES
