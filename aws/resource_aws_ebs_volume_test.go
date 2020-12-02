@@ -342,7 +342,7 @@ func TestAccAWSEBSVolume_InvalidIopsForType(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAwsEbsVolumeConfigWithInvalidIopsForType,
-				ExpectError: regexp.MustCompile(`error creating ebs_volume: iops attribute not supported for type gp2`),
+				ExpectError: regexp.MustCompile(`'iops' must not be set when 'type' is`),
 			},
 		},
 	})

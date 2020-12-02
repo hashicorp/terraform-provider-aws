@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -25,6 +26,8 @@ func resourceAwsEbsVolume() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		CustomizeDiff: resourceAwsEbsVolumeCustomizeDiff,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -45,9 +48,6 @@ func resourceAwsEbsVolume() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return (d.Get("type").(string) != ec2.VolumeTypeIo1 && new == "0") || (d.Get("type").(string) != ec2.VolumeTypeIo2 && new == "0")
-				},
 			},
 			"kms_key_id": {
 				Type:         schema.TypeString,
@@ -106,6 +106,9 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 	if value, ok := d.GetOk("encrypted"); ok {
 		request.Encrypted = aws.Bool(value.(bool))
 	}
+	if value, ok := d.GetOk("iops"); ok {
+		request.Iops = aws.Int64(int64(value.(int)))
+	}
 	if value, ok := d.GetOk("kms_key_id"); ok {
 		request.KmsKeyId = aws.String(value.(string))
 	}
@@ -124,28 +127,8 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 	if value, ok := d.GetOk("throughput"); ok {
 		request.Throughput = aws.Int64(int64(value.(int)))
 	}
-
-	// IOPs are only valid, and required for, storage type io1 and io2. The current minimum
-	// is 100. Hard validation in place to return an error if IOPs are provided
-	// for an unsupported storage type.
-	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
-	var t string
 	if value, ok := d.GetOk("type"); ok {
-		t = value.(string)
-		request.VolumeType = aws.String(t)
-	}
-
-	if iops := d.Get("iops").(int); iops > 0 {
-		if t != ec2.VolumeTypeIo1 && t != ec2.VolumeTypeIo2 {
-			if t == "" {
-				// Volume creation would default to gp2
-				t = ec2.VolumeTypeGp2
-			}
-			return fmt.Errorf("error creating ebs_volume: iops attribute not supported for type %s", t)
-		}
-		// We add the iops value without validating it's size, to allow AWS to
-		// enforce a size requirement (currently 100)
-		request.Iops = aws.Int64(int64(iops))
+		request.VolumeType = aws.String(value.(string))
 	}
 
 	log.Printf("[DEBUG] EBS Volume create opts: %s", request)
@@ -381,6 +364,41 @@ func resourceAwsEbsVolumeDelete(d *schema.ResourceData, meta interface{}) error 
 	for _, volume := range output.Volumes {
 		if aws.StringValue(volume.VolumeId) == d.Id() {
 			return fmt.Errorf("EBS Volume (%s) in unexpected state after deletion: %s", d.Id(), aws.StringValue(volume.State))
+		}
+	}
+
+	return nil
+}
+
+func resourceAwsEbsVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	iops := diff.Get("iops").(int)
+	volumeType := diff.Get("type").(string)
+
+	if diff.Id() == "" {
+		// Create.
+
+		// Iops is required for io1 and io2 volumes.
+		// The default for gp3 volumes is 3,000 IOPS.
+		// This parameter is not supported for gp2, st1, sc1, or standard volumes.
+		// Hard validation in place to return an error if IOPs are provided
+		// for an unsupported storage type.
+		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
+		switch volumeType {
+		case ec2.VolumeTypeIo1, ec2.VolumeTypeIo2:
+			if iops == 0 {
+				return fmt.Errorf("'iops' must be set when 'type' is '%s'", volumeType)
+			}
+		case ec2.VolumeTypeGp3:
+		default:
+			if iops != 0 {
+				return fmt.Errorf("'iops' must not be set when 'type' is '%s'", volumeType)
+			}
+		}
+	} else {
+		// Update.
+
+		if diff.HasChange("iops") && volumeType != ec2.VolumeTypeIo1 && volumeType != ec2.VolumeTypeIo2 && iops == 0 {
+			return diff.Clear("iops")
 		}
 	}
 
