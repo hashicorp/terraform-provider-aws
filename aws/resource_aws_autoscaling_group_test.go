@@ -149,12 +149,9 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
 					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.new", &lc),
 					testAccCheckAutoscalingLatestInstanceRefreshState(&group, 0, 0, nil),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "desired_capacity", "5"),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "termination_policies.0", "ClosestToNextInstanceHour"),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "protect_from_scale_in", "true"),
+					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "desired_capacity", "5"),
+					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "termination_policies.0", "ClosestToNextInstanceHour"),
+					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "protect_from_scale_in", "true"),
 					testLaunchConfigurationName("aws_autoscaling_group.bar", &lc),
 					testAccCheckAutoscalingTags(&group.Tags, "FromTags1Changed", map[string]interface{}{
 						"value":               "value1changed",
@@ -4583,5 +4580,144 @@ func testAccCheckAutoscalingLatestInstanceRefreshState(
 			offset,
 			strings.Join(acceptedStatuses, " or "),
 			status)
+	}
+}
+
+func TestCreateAutoScalingGroupInstanceRefreshInput(t *testing.T) {
+	const asgName = "test-asg"
+	testCases := []struct {
+		name     string
+		input    []interface{}
+		expected *autoscaling.StartInstanceRefreshInput
+	}{
+		{
+			name:     "empty list",
+			input:    []interface{}{},
+			expected: nil,
+		},
+		{
+			name:     "nil",
+			input:    []interface{}{nil},
+			expected: nil,
+		},
+		{
+			name: "defaults",
+			input: []interface{}{map[string]interface{}{
+				"strategy":    "Rolling",
+				"preferences": []interface{}{},
+			}},
+			expected: &autoscaling.StartInstanceRefreshInput{
+				AutoScalingGroupName: aws.String(asgName),
+				Strategy:             aws.String("Rolling"),
+				Preferences:          nil,
+			},
+		},
+		{
+			name: "instance_warmup only",
+			input: []interface{}{map[string]interface{}{
+				"strategy": "Rolling",
+				"preferences": []interface{}{
+					map[string]interface{}{
+						"instance_warmup": "60",
+					},
+				},
+			}},
+			expected: &autoscaling.StartInstanceRefreshInput{
+				AutoScalingGroupName: aws.String(asgName),
+				Strategy:             aws.String("Rolling"),
+				Preferences: &autoscaling.RefreshPreferences{
+					InstanceWarmup:       aws.Int64(60),
+					MinHealthyPercentage: nil,
+				},
+			},
+		},
+		{
+			name: "instance_warmup zero",
+			input: []interface{}{map[string]interface{}{
+				"strategy": "Rolling",
+				"preferences": []interface{}{
+					map[string]interface{}{
+						"instance_warmup": "0",
+					},
+				},
+			}},
+			expected: &autoscaling.StartInstanceRefreshInput{
+				AutoScalingGroupName: aws.String(asgName),
+				Strategy:             aws.String("Rolling"),
+				Preferences: &autoscaling.RefreshPreferences{
+					InstanceWarmup:       aws.Int64(0),
+					MinHealthyPercentage: nil,
+				},
+			},
+		},
+		{
+			name: "instance_warmup empty string",
+			input: []interface{}{map[string]interface{}{
+				"strategy": "Rolling",
+				"preferences": []interface{}{
+					map[string]interface{}{
+						"instance_warmup":        "",
+						"min_healthy_percentage": 80,
+					},
+				},
+			}},
+			expected: &autoscaling.StartInstanceRefreshInput{
+				AutoScalingGroupName: aws.String(asgName),
+				Strategy:             aws.String("Rolling"),
+				Preferences: &autoscaling.RefreshPreferences{
+					InstanceWarmup:       nil,
+					MinHealthyPercentage: aws.Int64(80),
+				},
+			},
+		},
+		{
+			name: "min_healthy_percentage only",
+			input: []interface{}{map[string]interface{}{
+				"strategy": "Rolling",
+				"preferences": []interface{}{
+					map[string]interface{}{
+						"min_healthy_percentage": 80,
+					},
+				},
+			}},
+			expected: &autoscaling.StartInstanceRefreshInput{
+				AutoScalingGroupName: aws.String(asgName),
+				Strategy:             aws.String("Rolling"),
+				Preferences: &autoscaling.RefreshPreferences{
+					InstanceWarmup:       nil,
+					MinHealthyPercentage: aws.Int64(80),
+				},
+			},
+		},
+		{
+			name: "preferences",
+			input: []interface{}{map[string]interface{}{
+				"strategy": "Rolling",
+				"preferences": []interface{}{
+					map[string]interface{}{
+						"instance_warmup":        "60",
+						"min_healthy_percentage": 80,
+					},
+				},
+			}},
+			expected: &autoscaling.StartInstanceRefreshInput{
+				AutoScalingGroupName: aws.String(asgName),
+				Strategy:             aws.String("Rolling"),
+				Preferences: &autoscaling.RefreshPreferences{
+					InstanceWarmup:       aws.Int64(60),
+					MinHealthyPercentage: aws.Int64(80),
+				},
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := createAutoScalingGroupInstanceRefreshInput(asgName, testCase.input)
+
+			if !reflect.DeepEqual(got, testCase.expected) {
+				t.Errorf("got %s, expected %s", got, testCase.expected)
+			}
+		})
 	}
 }

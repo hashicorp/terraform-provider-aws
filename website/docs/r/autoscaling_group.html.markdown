@@ -352,10 +352,8 @@ This configuration block supports the following:
 
 * `strategy` - (Required) The strategy to use for instance refresh. The only allowed value is `Rolling`. See [StartInstanceRefresh Action](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_StartInstanceRefresh.html#API_StartInstanceRefresh_RequestParameters) for more information.
 * `preferences` - (Optional) Override default parameters for Instance Refresh.
-    * `instance_warmup_seconds` - (Optional) The number of seconds until a newly launched instance is configured and ready to use. Default behavior (set with `-1` or `null`) is to match the Auto Scaling Group's health check grace period.
-    * `min_healthy_percentage` - (Optional) The amount of capacity in the Auto Scaling group
-  that must remain healthy during an instance refresh to allow the operation to continue,
-  as a percentage of the desired capacity of the Auto Scaling group. Defaults to `90`.
+    * `instance_warmup_seconds` - (Optional) The number of seconds until a newly launched instance is configured and ready to use. Default behavior is to use the Auto Scaling Group's health check grace period.
+    * `min_healthy_percentage` - (Optional) The amount of capacity in the Auto Scaling group that must remain healthy during an instance refresh to allow the operation to continue, as a percentage of the desired capacity of the Auto Scaling group. Defaults to `90`.
   
 ~> **NOTE:** A refresh is only started when any of the following Auto Scaling Group properties change: `launch_configuration`, `launch_template`, `mixed_instances_policy`, `vpc_zone_identifier`, `availability_zones`, `placement_group`, or any `tag` or `tags` configured to propagate at launch.
 

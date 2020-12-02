@@ -12,7 +12,7 @@ const (
 	InstanceRefreshSuccessfulTimeout = 5 * time.Minute
 
 	// Maximum amount of time to wait for an InstanceRefresh to be Cancelled
-	InstanceRefreshCancelledTimeout = 5 * time.Minute
+	InstanceRefreshCancelledTimeout = 10 * time.Minute
 )
 
 func InstanceRefreshSuccessful(conn *autoscaling.AutoScaling, asgName, instanceRefreshId string) (*autoscaling.InstanceRefresh, error) {

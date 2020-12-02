@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/nullable"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscaling/waiter"
 )
 
@@ -493,10 +494,9 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"instance_warmup": {
-										Type:         schema.TypeInt,
+										Type:         nullable.TypeNullableInt,
 										Optional:     true,
-										Default:      -1, // default to health_check_grace_period
-										ValidateFunc: validation.IntAtLeast(-1),
+										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
 									},
 									"min_healthy_percentage": {
 										Type:         schema.TypeInt,
@@ -1843,8 +1843,7 @@ func waitUntilAutoscalingGroupLoadBalancersRemoved(conn *autoscaling.AutoScaling
 	return nil
 }
 
-// TODO: rename
-func expandAutoScalingGroupInstanceRefresh(asgName string, l []interface{}) *autoscaling.StartInstanceRefreshInput {
+func createAutoScalingGroupInstanceRefreshInput(asgName string, l []interface{}) *autoscaling.StartInstanceRefreshInput {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1868,7 +1867,10 @@ func expandAutoScalingGroupInstanceRefreshPreferences(l []interface{}) *autoscal
 	refreshPreferences := &autoscaling.RefreshPreferences{}
 
 	if v, ok := m["instance_warmup"]; ok {
-		refreshPreferences.InstanceWarmup = aws.Int64(int64(v.(int)))
+		i := nullable.Int(v.(string))
+		if v, null, _ := i.Value(); !null {
+			refreshPreferences.InstanceWarmup = aws.Int64(v)
+		}
 	}
 
 	if v, ok := m["min_healthy_percentage"]; ok {
@@ -1880,25 +1882,24 @@ func expandAutoScalingGroupInstanceRefreshPreferences(l []interface{}) *autoscal
 
 // autoScalingGroupRefreshInstances starts a new Instance Refresh in this
 // Auto Scaling Group. If there is already an active refresh, it is cancelled.
-func autoScalingGroupRefreshInstances(conn *autoscaling.AutoScaling, asgName string, d []interface{}) error {
-	input := expandAutoScalingGroupInstanceRefresh(asgName, d)
+func autoScalingGroupRefreshInstances(conn *autoscaling.AutoScaling, asgName string, refreshConfig []interface{}) error {
 
-	log.Printf("[DEBUG] Cancelling active refresh in ASG %s, if any...", asgName)
+	log.Printf("[DEBUG] Cancelling active Instance Refresh in ASG %s, if any...", asgName)
 
 	if err := cancelAutoscalingInstanceRefresh(conn, asgName); err != nil {
 		// todo: add comment about subsequent ASG updates not picking up the refresh?
 		return fmt.Errorf("failed to cancel previous refresh: %w", err)
 	}
 
-	log.Printf("[DEBUG] Starting instance refresh in ASG %s...", asgName)
-
+	input := createAutoScalingGroupInstanceRefreshInput(asgName, refreshConfig)
+	log.Printf("[DEBUG] Starting Instance Refresh on ASG (%s): %s", asgName, input)
 	output, err := conn.StartInstanceRefresh(input)
 	if err != nil {
 		return err
 	}
 	instanceRefreshID := aws.StringValue(output.InstanceRefreshId)
 
-	log.Printf("[INFO] Started instance refresh %s in ASG %s", instanceRefreshID, asgName)
+	log.Printf("[INFO] Started Instance Refresh (%s) on ASG (%s)", instanceRefreshID, asgName)
 
 	return nil
 }
