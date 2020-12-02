@@ -57,13 +57,13 @@ func expandAdvancedSecurityOptions(m []interface{}, create bool) *elasticsearch.
 								if v, ok := SAMLOptions["master_user_name"].(string); ok && v != "" {
 									options.MasterUserName = aws.String(v)
 								}
-								if v, ok := SAMLOptions["roles_key"].(string); ok && v != "" {
+								if v, ok := SAMLOptions["roles_key"].(string); ok {
 									options.RolesKey = aws.String(v)
 								}
 								if v, ok := SAMLOptions["session_timeout_minutes"].(int); ok {
 									options.SessionTimeoutMinutes = aws.Int64(int64(v))
 								}
-								if v, ok := SAMLOptions["subject_key"].(string); ok && v != "" {
+								if v, ok := SAMLOptions["subject_key"].(string); ok {
 									options.SubjectKey = aws.String(v)
 								}
 							}

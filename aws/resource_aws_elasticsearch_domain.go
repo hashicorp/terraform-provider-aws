@@ -162,7 +162,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Default:      60,
-										ValidateFunc: validation.IntAtLeast(1),
+										ValidateFunc: validation.IntBetween(1, 1440),
 									},
 									"subject_key": {
 										Type:     schema.TypeString,
@@ -671,6 +671,52 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	}
 
 	log.Printf("[DEBUG] ElasticSearch domain %q created", d.Id())
+
+	// You cannot specify SAML options during domain creation.  If saml_options is set, run
+	// an update on the newly-created elasticsearch domain.
+	if v, ok := d.GetOk("advanced_security_options"); ok {
+		params := elasticsearch.UpdateElasticsearchDomainConfigInput{
+			DomainName: aws.String(d.Get("domain_name").(string)),
+		}
+		params.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]interface{}), false)
+
+		log.Printf("[DEBUG] Adding SAML Options to ElasticSearch domain %q", d.Id())
+		_, err := conn.UpdateElasticsearchDomainConfig(&params)
+		if err != nil {
+			return err
+		}
+
+		descInput := &elasticsearch.DescribeElasticsearchDomainInput{
+			DomainName: aws.String(d.Get("domain_name").(string)),
+		}
+		var out *elasticsearch.DescribeElasticsearchDomainOutput
+		err = resource.Retry(60*time.Minute, func() *resource.RetryError {
+			out, err = conn.DescribeElasticsearchDomain(descInput)
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			if !aws.BoolValue(out.DomainStatus.Processing) {
+				return nil
+			}
+
+			return resource.RetryableError(
+				fmt.Errorf("%q: Timeout while waiting for changes to be processed", d.Id()))
+		})
+		if isResourceTimeoutError(err) {
+			out, err = conn.DescribeElasticsearchDomain(descInput)
+			if err != nil {
+				return fmt.Errorf("Error describing ElasticSearch domain: %s", err)
+			}
+			if !aws.BoolValue(out.DomainStatus.Processing) {
+				return nil
+			}
+		}
+		if err != nil {
+			return fmt.Errorf("Error waiting for ElasticSearch domain changes to be processed: %s", err)
+		}
+		log.Printf("[DEBUG] SAML Options added to ElasticSearch domain %q", d.Id())
+	}
 
 	return resourceAwsElasticSearchDomainRead(d, meta)
 }
