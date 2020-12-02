@@ -447,7 +447,7 @@ func TestAccAWSEBSVolume_gp3_basic(t *testing.T) {
 					testAccCheckVolumeExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
-					testCheckResourceAttrGreaterThanValue(resourceName, "iops", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
@@ -455,7 +455,7 @@ func TestAccAWSEBSVolume_gp3_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "snapshot_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					testCheckResourceAttrGreaterThanValue(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, "type", "gp3"),
 				),
 			},
@@ -463,6 +463,62 @@ func TestAccAWSEBSVolume_gp3_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEBSVolume_gp3_iops(t *testing.T) {
+	var v ec2.Volume
+	resourceName := "aws_ebs_volume.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVolumeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEbsVolumeConfigGp3Iops(rName, 4000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "4000"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "200"),
+					resource.TestCheckResourceAttr(resourceName, "type", "gp3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAwsEbsVolumeConfigGp3Iops(rName, 5000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "5000"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "200"),
+					resource.TestCheckResourceAttr(resourceName, "type", "gp3"),
+				),
 			},
 		},
 	})
@@ -485,7 +541,7 @@ func TestAccAWSEBSVolume_gp3_throughput(t *testing.T) {
 					testAccCheckVolumeExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
-					testCheckResourceAttrGreaterThanValue(resourceName, "iops", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
@@ -508,7 +564,7 @@ func TestAccAWSEBSVolume_gp3_throughput(t *testing.T) {
 					testAccCheckVolumeExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
-					testCheckResourceAttrGreaterThanValue(resourceName, "iops", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
@@ -1053,4 +1109,22 @@ resource "aws_ebs_volume" "test" {
   }
 }
 `, rName, throughput))
+}
+
+func testAccAwsEbsVolumeConfigGp3Iops(rName string, iops int) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+resource "aws_ebs_volume" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  type              = "gp3"
+  iops              = %[2]d
+  size              = 10
+  throughput        = 200
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, iops))
 }
