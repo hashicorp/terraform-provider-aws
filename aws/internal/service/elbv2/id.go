@@ -17,3 +17,7 @@ func ListenerCertificateParseID(id string) (string, string, error) {
 		fmt.Errorf("unexpected format for ID (%q), expected listener-arn"+listenerCertificateIDSeparator+
 			"certificate-arn", id)
 }
+
+func ListenerCertificateCreateID(listenerArn, certificateArn string) string {
+	return fmt.Sprintf("%s_%s", listenerArn, certificateArn)
+}
