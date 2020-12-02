@@ -3,6 +3,7 @@
 ENHANCEMENTS
 
 * resource/aws_backup_plan: Add plan-time validation for various arguments [GH-16476]
+* resource/aws_lambda_event_source_mapping: Add support for updating `maximum_batching_window_in_seconds` for SQS queue event sources [GH-16518]
 * resource/aws_ssm_maintenance_window_target: Add plan-time validation for `owner_information` and `targets` arguments [GH-16478]
 
 BUG FIXES
