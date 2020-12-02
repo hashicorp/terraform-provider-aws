@@ -1245,7 +1245,7 @@ resource "aws_route53_record" "default" {
 resource "aws_route53_record" "overwriting" {
   depends_on = [aws_route53_record.default]
 
-  allow_overwrite = %t
+  allow_overwrite = %[1]t
   zone_id         = aws_route53_zone.main.zone_id
   name            = "www.notexample.com"
   type            = "A"
@@ -1728,7 +1728,7 @@ resource "aws_route53_zone" "main" {
 }
 
 resource "aws_s3_bucket" "website" {
-  bucket = %q
+  bucket = %[1]q
   acl    = "public-read"
 
   website {
@@ -1771,7 +1771,7 @@ resource "aws_route53_record" "test" {
   health_check_id = aws_route53_health_check.test.id
   name            = "test"
   records         = ["127.0.0.1"]
-  set_identifier  = %q
+  set_identifier  = %[1]q
   ttl             = "5"
   type            = "A"
 
