@@ -4,10 +4,14 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
@@ -36,10 +40,18 @@ func resourceAwsBackupPlan() *schema.Resource {
 						"rule_name": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 50),
+								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_\.]+$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
+							),
 						},
 						"target_vault_name": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(2, 50),
+								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_]+$`), "must contain only alphanumeric characters, hyphens, and underscores"),
+							),
 						},
 						"schedule": {
 							Type:     schema.TypeString,
@@ -66,8 +78,9 @@ func resourceAwsBackupPlan() *schema.Resource {
 										Optional: true,
 									},
 									"delete_after": {
-										Type:     schema.TypeInt,
-										Optional: true,
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntAtLeast(90),
 									},
 								},
 							},
@@ -88,8 +101,9 @@ func resourceAwsBackupPlan() *schema.Resource {
 													Optional: true,
 												},
 												"delete_after": {
-													Type:     schema.TypeInt,
-													Optional: true,
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntAtLeast(90),
 												},
 											},
 										},
@@ -120,6 +134,9 @@ func resourceAwsBackupPlan() *schema.Resource {
 						"resource_type": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"EC2",
+							}, false),
 						},
 					},
 				},
@@ -152,7 +169,7 @@ func resourceAwsBackupPlanCreate(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] Creating Backup Plan: %#v", input)
 	resp, err := conn.CreateBackupPlan(input)
 	if err != nil {
-		return fmt.Errorf("error creating Backup Plan: %s", err)
+		return fmt.Errorf("error creating Backup Plan: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.BackupPlanId))
@@ -173,7 +190,7 @@ func resourceAwsBackupPlanRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading Backup Plan (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading Backup Plan (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", resp.BackupPlanArn)
@@ -181,21 +198,21 @@ func resourceAwsBackupPlanRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("version", resp.VersionId)
 
 	if err := d.Set("rule", flattenBackupPlanRules(resp.BackupPlan.Rules)); err != nil {
-		return fmt.Errorf("error setting rule: %s", err)
+		return fmt.Errorf("error setting rule: %w", err)
 	}
 
 	// AdvancedBackupSettings being read direct from resp and not from under
 	// resp.BackupPlan is deliberate - the latter always contains null
 	if err := d.Set("advanced_backup_setting", flattenBackupPlanAdvancedBackupSettings(resp.AdvancedBackupSettings)); err != nil {
-		return fmt.Errorf("error setting advanced_backup_setting: %s", err)
+		return fmt.Errorf("error setting advanced_backup_setting: %w", err)
 	}
 
 	tags, err := keyvaluetags.BackupListTags(conn, d.Get("arn").(string))
 	if err != nil {
-		return fmt.Errorf("error listing tags for Backup Plan (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for Backup Plan (%s): %w", d.Id(), err)
 	}
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -217,14 +234,14 @@ func resourceAwsBackupPlanUpdate(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[DEBUG] Updating Backup Plan: %#v", input)
 		_, err := conn.UpdateBackupPlan(input)
 		if err != nil {
-			return fmt.Errorf("error updating Backup Plan (%s): %s", d.Id(), err)
+			return fmt.Errorf("error updating Backup Plan (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.BackupUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags for Backup Plan (%s): %s", d.Id(), err)
+			return fmt.Errorf("error updating tags for Backup Plan (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -234,16 +251,34 @@ func resourceAwsBackupPlanUpdate(d *schema.ResourceData, meta interface{}) error
 func resourceAwsBackupPlanDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).backupconn
 
-	log.Printf("[DEBUG] Deleting Backup Plan: %s", d.Id())
-	_, err := conn.DeleteBackupPlan(&backup.DeleteBackupPlanInput{
+	input := &backup.DeleteBackupPlanInput{
 		BackupPlanId: aws.String(d.Id()),
-	})
-	if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+	}
+
+	log.Printf("[DEBUG] Deleting Backup Plan: %s", d.Id())
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteBackupPlan(input)
+
+		if isAWSErr(err, backup.ErrCodeInvalidRequestException, "Related backup plan selections must be deleted prior to backup") {
+			return resource.RetryableError(err)
+		}
+
+		if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+			return nil
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
 		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteBackupPlan(input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Backup Plan (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Backup Plan (%s): %w", d.Id(), err)
 	}
 
 	return nil
