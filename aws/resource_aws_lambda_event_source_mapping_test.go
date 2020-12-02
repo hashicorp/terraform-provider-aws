@@ -362,7 +362,7 @@ func TestAccAWSLambdaEventSourceMapping_StartingPositionTimestamp(t *testing.T) 
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_BatchWindow(t *testing.T) {
+func TestAccAWSLambdaEventSourceMapping_KinesisBatchWindow(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_event_source_mapping.test"
