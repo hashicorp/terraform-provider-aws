@@ -252,18 +252,17 @@ The `stateless_rules_and_custom_actions` block supports the following arguments:
 
 The `header` block supports the following arguments:
 
-* `destination` - (Optional) The destination IP address or address range to inspect for, in CIDR notation. If left empty, this matches with any destination address.
+* `destination` - (Required) The destination IP address or address range to inspect for, in CIDR notation. To match with any address, specify `ANY`.
 
-* `destination_port` - (Optional) The destination port to inspect for. If left empty, this matches with any port.
+* `destination_port` - (Required) The destination port to inspect for. To match with any address, specify `ANY`.
 
 * `direction` - (Required) The direction of traffic flow to inspect. Valid values: `ANY` or `FORWARD`.
 
-* `protocol` - (Optional) The protocol to inspect. If not specified, this matches with any protocol.
-Valid values: `IP`, `TCP`, `UDP`, `ICMP`, `HTTP`, `FTP`, `TLS`, `SMB`, `DNS`, `DCERPC`, `SSH`, `SMTP`, `IMAP`, `MSN`, `KRB5`, `IKEV2`, `TFTP`, `NTP`, `DHCP`.
+* `protocol` - (Required) The protocol to inspect. Valid values: `IP`, `TCP`, `UDP`, `ICMP`, `HTTP`, `FTP`, `TLS`, `SMB`, `DNS`, `DCERPC`, `SSH`, `SMTP`, `IMAP`, `MSN`, `KRB5`, `IKEV2`, `TFTP`, `NTP`, `DHCP`.
 
-* `source` - (Optional) The source IP address or address range for, in CIDR notation. If left empty, this matches with any source address.
+* `source` - (Required) The source IP address or address range for, in CIDR notation. To match with any address, specify `ANY`.
 
-* `source_port` - (Optional) The source port to inspect for. If left empty, this matches with any port.
+* `source_port` - (Required) The source port to inspect for. To match with any address, specify `ANY`.
 
 ### Rule Option
 
@@ -306,7 +305,7 @@ The `match_attributes` block supports the following arguments:
 
 * `destination_port` - (Optional) Set of configuration blocks describing the destination ports to inspect for. If not specified, this matches with any destination port. See [Destination Port](#destination-port) below for details.
 
-* `protocols` - (Optional) Set of protocols to inspect for, specified using the protocol's assigned internet protocol number (IANA).
+* `protocols` - (Optional) Set of protocols to inspect for, specified using the protocol's assigned internet protocol number (IANA). If not specified, this matches with any protocol.
 
 * `source` - (Optional) Set of configuration blocks describing the source IP address and address ranges to inspect for, in CIDR notation. If not specified, this matches with any source address. See [Source](#source) below for details.
 
@@ -336,7 +335,7 @@ The `dimension` block supports the following argument:
 
 The `destination` block supports the following argument:
 
-* `address_definition` - (Optional)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
+* `address_definition` - (Required)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
 
 ### Destination Port
 
@@ -350,7 +349,7 @@ The `destination_port` block supports the following arguments:
 
 The `source` block supports the following argument:
 
-* `address_definition` - (Optional)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
+* `address_definition` - (Required)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
 
 ### Source Port
 
@@ -364,10 +363,10 @@ The `source_port` block supports the following arguments:
 
 The `tcp_flag` block supports the following arguments:
 
-* `flags` - (Required) Set of flags to look for in a packet. AWS Network Firewall checks only the part of the packet specified in `masks`.
+* `flags` - (Required) Set of flags to look for in a packet. This setting can only specify values that are also specified in `masks`.
 Valid values: `FIN`, `SYN`, `RST`, `PSH`, `ACK`, `URG`, `ECE`, `CWR`.
 
-* `masks` - (Optional) Set of values describing the part of the packet that you want to check for the flags. To inspect the entire packet, leave this empty.
+* `masks` - (Optional) Set of flags to consider in the inspection. To inspect all flags, leave this empty.
 Valid values: `FIN`, `SYN`, `RST`, `PSH`, `ACK`, `URG`, `ECE`, `CWR`.
 
 ## Attributes Reference
