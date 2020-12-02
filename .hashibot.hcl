@@ -639,6 +639,7 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "documentation" = [
       "docs/**/*",
+      "website/**/*",
       "*.md",
     ]
     "examples" = [
