@@ -2,10 +2,12 @@
 
 ENHANCEMENTS
 
+* resource/aws_backup_plan: Add plan-time validation for various arguments [GH-16476]
 * resource/aws_ssm_maintenance_window_target: Add plan-time validation for `owner_information` and `targets` arguments [GH-16478]
 
 BUG FIXES
 
+* resource/aws_backup_plan: Retry on eventual consistency error during deletion [GH-16476]
 * resource/aws_ssm_maintenance_window_target: Remove from state if not found [GH-16478]
 
 ## 3.19.0 (December 01, 2020)
