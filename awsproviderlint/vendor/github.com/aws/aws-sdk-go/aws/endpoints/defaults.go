@@ -344,6 +344,20 @@ var awsPartition = partition{
 				"us-west-2":  endpoint{},
 			},
 		},
+		"airflow": service{
+
+			Endpoints: endpoints{
+				"ap-northeast-1": endpoint{},
+				"ap-southeast-1": endpoint{},
+				"ap-southeast-2": endpoint{},
+				"eu-central-1":   endpoint{},
+				"eu-north-1":     endpoint{},
+				"eu-west-1":      endpoint{},
+				"us-east-1":      endpoint{},
+				"us-east-2":      endpoint{},
+				"us-west-2":      endpoint{},
+			},
+		},
 		"api.detective": service{
 			Defaults: endpoint{
 				Protocols: []string{"https"},
@@ -664,6 +678,18 @@ var awsPartition = partition{
 				"us-west-2":      endpoint{},
 			},
 		},
+		"app-integrations": service{
+
+			Endpoints: endpoints{
+				"ap-northeast-1": endpoint{},
+				"ap-southeast-1": endpoint{},
+				"ap-southeast-2": endpoint{},
+				"eu-central-1":   endpoint{},
+				"eu-west-2":      endpoint{},
+				"us-east-1":      endpoint{},
+				"us-west-2":      endpoint{},
+			},
+		},
 		"appflow": service{
 
 			Endpoints: endpoints{
@@ -966,8 +992,7 @@ var awsPartition = partition{
 			PartitionEndpoint: "aws-global",
 			IsRegionalized:    boxedFalse,
 			Defaults: endpoint{
-				SSLCommonName: "service.chime.aws.amazon.com",
-				Protocols:     []string{"https"},
+				Protocols: []string{"https"},
 			},
 			Endpoints: endpoints{
 				"aws-global": endpoint{
@@ -1452,8 +1477,10 @@ var awsPartition = partition{
 						Region: "us-west-2",
 					},
 				},
+				"sa-east-1": endpoint{},
 				"us-east-1": endpoint{},
 				"us-east-2": endpoint{},
+				"us-west-1": endpoint{},
 				"us-west-2": endpoint{},
 			},
 		},
@@ -1489,8 +1516,10 @@ var awsPartition = partition{
 						Region: "us-west-2",
 					},
 				},
+				"sa-east-1": endpoint{},
 				"us-east-1": endpoint{},
 				"us-east-2": endpoint{},
+				"us-west-1": endpoint{},
 				"us-west-2": endpoint{},
 			},
 		},
@@ -1634,6 +1663,14 @@ var awsPartition = partition{
 				"ap-southeast-2": endpoint{},
 				"eu-central-1":   endpoint{},
 				"eu-west-2":      endpoint{},
+				"us-east-1":      endpoint{},
+				"us-west-2":      endpoint{},
+			},
+		},
+		"contact-lens": service{
+
+			Endpoints: endpoints{
+				"ap-southeast-2": endpoint{},
 				"us-east-1":      endpoint{},
 				"us-west-2":      endpoint{},
 			},
@@ -3794,6 +3831,18 @@ var awsPartition = partition{
 				"us-east-2":  endpoint{},
 				"us-west-1":  endpoint{},
 				"us-west-2":  endpoint{},
+			},
+		},
+		"lookoutvision": service{
+
+			Endpoints: endpoints{
+				"ap-northeast-1": endpoint{},
+				"ap-northeast-2": endpoint{},
+				"eu-central-1":   endpoint{},
+				"eu-west-1":      endpoint{},
+				"us-east-1":      endpoint{},
+				"us-east-2":      endpoint{},
+				"us-west-2":      endpoint{},
 			},
 		},
 		"machinelearning": service{
@@ -6290,11 +6339,14 @@ var awsPartition = partition{
 		"transcribestreaming": service{
 
 			Endpoints: endpoints{
+				"ap-northeast-1": endpoint{},
+				"ap-northeast-2": endpoint{},
 				"ap-southeast-2": endpoint{},
 				"ca-central-1":   endpoint{},
 				"eu-central-1":   endpoint{},
 				"eu-west-1":      endpoint{},
 				"eu-west-2":      endpoint{},
+				"sa-east-1":      endpoint{},
 				"us-east-1":      endpoint{},
 				"us-east-2":      endpoint{},
 				"us-west-2":      endpoint{},
@@ -7321,12 +7373,6 @@ var awscnPartition = partition{
 
 			Endpoints: endpoints{
 				"aws-cn-global": endpoint{
-					Hostname: "organizations.cn-northwest-1.amazonaws.com.cn",
-					CredentialScope: credentialScope{
-						Region: "cn-northwest-1",
-					},
-				},
-				"fips-aws-cn-global": endpoint{
 					Hostname: "organizations.cn-northwest-1.amazonaws.com.cn",
 					CredentialScope: credentialScope{
 						Region: "cn-northwest-1",
