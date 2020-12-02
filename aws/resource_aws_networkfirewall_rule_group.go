@@ -187,14 +187,17 @@ func resourceAwsNetworkFirewallRuleGroup() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"destination": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ForceNew:     true,
-																ValidateFunc: validateIpv4CIDRNetworkAddress,
+																Type:     schema.TypeString,
+																Required: true,
+																ForceNew: true,
+																ValidateFunc: validation.Any(
+																	validateIpv4CIDRNetworkAddress,
+																	validation.StringInSlice([]string{networkfirewall.StatefulRuleDirectionAny}, false),
+																),
 															},
 															"destination_port": {
 																Type:     schema.TypeString,
-																Optional: true,
+																Required: true,
 																ForceNew: true,
 															},
 															"direction": {
@@ -205,19 +208,22 @@ func resourceAwsNetworkFirewallRuleGroup() *schema.Resource {
 															},
 															"protocol": {
 																Type:         schema.TypeString,
-																Optional:     true,
+																Required:     true,
 																ForceNew:     true,
 																ValidateFunc: validation.StringInSlice(networkfirewall.StatefulRuleProtocol_Values(), false),
 															},
 															"source": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																ForceNew:     true,
-																ValidateFunc: validateIpv4CIDRNetworkAddress,
+																Type:     schema.TypeString,
+																Required: true,
+																ForceNew: true,
+																ValidateFunc: validation.Any(
+																	validateIpv4CIDRNetworkAddress,
+																	validation.StringInSlice([]string{networkfirewall.StatefulRuleDirectionAny}, false),
+																),
 															},
 															"source_port": {
 																Type:     schema.TypeString,
-																Optional: true,
+																Required: true,
 																ForceNew: true,
 															},
 														},
@@ -283,7 +289,7 @@ func resourceAwsNetworkFirewallRuleGroup() *schema.Resource {
 																							Schema: map[string]*schema.Schema{
 																								"address_definition": {
 																									Type:         schema.TypeString,
-																									Optional:     true,
+																									Required:     true,
 																									ValidateFunc: validateIpv4CIDRNetworkAddress,
 																								},
 																							},
@@ -317,7 +323,7 @@ func resourceAwsNetworkFirewallRuleGroup() *schema.Resource {
 																							Schema: map[string]*schema.Schema{
 																								"address_definition": {
 																									Type:         schema.TypeString,
-																									Optional:     true,
+																									Required:     true,
 																									ValidateFunc: validateIpv4CIDRNetworkAddress,
 																								},
 																							},
