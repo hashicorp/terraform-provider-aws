@@ -973,6 +973,23 @@ func testAccCheckWithProviders(f func(*terraform.State, *schema.Provider) error,
 	}
 }
 
+// testAccErrorCheckSkipMessagesContaining skips tests based on error messages that indicate unsupported features
+func testAccErrorCheckSkipMessagesContaining(t *testing.T, messages ...string) resource.ErrorCheckFunc {
+	return func(err error) error {
+		if err == nil {
+			return err
+		}
+
+		for _, message := range messages {
+			if strings.Contains(err.Error(), message) {
+				t.Skipf("skipping test for %s/%s: %s", testAccGetPartition(), testAccGetRegion(), err.Error())
+			}
+		}
+
+		return err
+	}
+}
+
 // Check service API call error for reasons to skip acceptance testing
 // These include missing API endpoints and unsupported API calls
 func testAccPreCheckSkipError(err error) bool {

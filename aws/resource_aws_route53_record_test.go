@@ -109,6 +109,7 @@ func TestAccAWSRoute53Record_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -135,6 +136,7 @@ func TestAccAWSRoute53Record_underscored(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
@@ -161,6 +163,7 @@ func TestAccAWSRoute53Record_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
@@ -183,6 +186,7 @@ func TestAccAWSRoute53Record_disappears_MultipleRecords(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
@@ -209,6 +213,7 @@ func TestAccAWSRoute53Record_basic_fqdn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -250,6 +255,7 @@ func TestAccAWSRoute53Record_basic_trailingPeriodAndZoneID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -276,6 +282,7 @@ func TestAccAWSRoute53Record_txtSupport(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
+		ErrorCheck:      testAccErrorCheckSkipRoute53(t),
 		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"zone_id"}, // just for this test
 		Providers:       testAccProviders,
@@ -303,6 +310,7 @@ func TestAccAWSRoute53Record_spfSupport(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -330,6 +338,7 @@ func TestAccAWSRoute53Record_caaSupport(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -357,6 +366,7 @@ func TestAccAWSRoute53Record_generatesSuffix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -383,6 +393,7 @@ func TestAccAWSRoute53Record_wildcard(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -417,6 +428,7 @@ func TestAccAWSRoute53Record_failover(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -444,6 +456,7 @@ func TestAccAWSRoute53Record_weighted_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: "aws_route53_record.www-live",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -472,6 +485,7 @@ func TestAccAWSRoute53Record_weighted_to_simple_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
@@ -505,6 +519,7 @@ func TestAccAWSRoute53Record_Alias_Elb(t *testing.T) {
 	config := fmt.Sprintf(testAccRoute53RecordConfigAliasElb, rs)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -532,6 +547,7 @@ func TestAccAWSRoute53Record_Alias_S3(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
@@ -558,6 +574,7 @@ func TestAccAWSRoute53Record_Alias_VpcEndpoint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
@@ -589,6 +606,7 @@ func TestAccAWSRoute53Record_Alias_Uppercase(t *testing.T) {
 	config := fmt.Sprintf(testAccRoute53RecordConfigAliasElbUppercase, rs)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -615,6 +633,7 @@ func TestAccAWSRoute53Record_weighted_alias(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -652,6 +671,7 @@ func TestAccAWSRoute53Record_geolocation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
@@ -680,6 +700,7 @@ func TestAccAWSRoute53Record_HealthCheckId_SetIdentifierChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -712,6 +733,7 @@ func TestAccAWSRoute53Record_HealthCheckId_TypeChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -744,6 +766,7 @@ func TestAccAWSRoute53Record_latency_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
@@ -771,6 +794,7 @@ func TestAccAWSRoute53Record_TypeChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -805,6 +829,7 @@ func TestAccAWSRoute53Record_NameChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -840,6 +865,7 @@ func TestAccAWSRoute53Record_SetIdentifierChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -874,6 +900,7 @@ func TestAccAWSRoute53Record_AliasChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -908,6 +935,7 @@ func TestAccAWSRoute53Record_empty(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -929,6 +957,7 @@ func TestAccAWSRoute53Record_longTXTrecord(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRoute53RecordDestroy,
@@ -955,6 +984,7 @@ func TestAccAWSRoute53Record_multivalue_answer_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
@@ -975,19 +1005,30 @@ func TestAccAWSRoute53Record_multivalue_answer_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute53Record_doNotAllowOverwrite(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccAWSRoute53RecordOverwriteExpectErrorCheck(t),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53RecordConfig_allowOverwrite(false),
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute53Record_allowOverwrite(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.overwriting"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
-			{
-				Config:      testAccRoute53RecordConfig_allowOverwrite(false),
-				ExpectError: regexp.MustCompile(`Tried to create resource record set \[name='www.notexample.com.', type='A'] but it already exists`),
-			},
 			{
 				Config: testAccRoute53RecordConfig_allowOverwrite(true),
 				Check:  resource.ComposeTestCheckFunc(testAccCheckRoute53RecordExists("aws_route53_record.overwriting", &record1)),
@@ -1000,6 +1041,32 @@ func TestAccAWSRoute53Record_allowOverwrite(t *testing.T) {
 			},
 		},
 	})
+}
+
+// testAccErrorCheckSkipRoute53 skips Route53 tests that have error messages indicating unsupported features
+func testAccErrorCheckSkipRoute53(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"Operations related to PublicDNS",
+		"Regional control plane current does not support",
+	)
+}
+
+func testAccAWSRoute53RecordOverwriteExpectErrorCheck(t *testing.T) resource.ErrorCheckFunc {
+	return func(err error) error {
+		f := testAccErrorCheckSkipRoute53(t)
+		err = f(err)
+
+		if err == nil {
+			t.Fatalf("Expected an error but got none")
+		}
+
+		re := regexp.MustCompile(`Tried to create resource record set \[name='www.notexample.com.', type='A'] but it already exists`)
+		if !re.MatchString(err.Error()) {
+			t.Fatalf("Expected an error with pattern, no match on: %s", err)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckRoute53RecordDestroy(s *terraform.State) error {
@@ -1178,7 +1245,7 @@ resource "aws_route53_record" "default" {
 resource "aws_route53_record" "overwriting" {
   depends_on = [aws_route53_record.default]
 
-  allow_overwrite = %t
+  allow_overwrite = %[1]t
   zone_id         = aws_route53_zone.main.zone_id
   name            = "www.notexample.com"
   type            = "A"
@@ -1661,7 +1728,7 @@ resource "aws_route53_zone" "main" {
 }
 
 resource "aws_s3_bucket" "website" {
-  bucket = %q
+  bucket = %[1]q
   acl    = "public-read"
 
   website {
