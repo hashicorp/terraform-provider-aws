@@ -3,6 +3,7 @@
 ENHANCEMENTS
 
 * resource/aws_backup_plan: Add plan-time validation for various arguments [GH-16476]
+* resource/aws_eks_node_group: Make `capacity_type` a `Computed` attribute [GH-16552]
 * resource/aws_lambda_event_source_mapping: Add support for updating `maximum_batching_window_in_seconds` for SQS queue event sources [GH-16518]
 * resource/aws_ssm_maintenance_window_target: Add plan-time validation for `owner_information` and `targets` arguments [GH-16478]
 * resource/aws_storagegateway_gateway - add `timeout_in_seconds`, `organizational_unit`, `domain_controllers` arguments for `smb_active_directory_settings` block. [GH-16472]
