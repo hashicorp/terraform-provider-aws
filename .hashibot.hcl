@@ -273,6 +273,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/ecr" = [
       "aws_ecr_",
     ],
+    "service/ecrpublic" = [
+      "aws_ecrpublic_",
+    ],
     "service/ecs" = [
       "aws_ecs_",
     ],
@@ -990,6 +993,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/ecr/**/*",
       "**/*_ecr_*",
       "**/ecr_*"
+    ]
+    "service/ecrpublic" = [
+      "aws/internal/service/ecrpublic/**/*",
+      "**/*_ecrpublic_*",
+      "**/ecrpublic_*"
     ]
     "service/ecs" = [
       "aws/internal/service/ecs/**/*",

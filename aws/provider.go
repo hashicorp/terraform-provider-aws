@@ -1167,6 +1167,7 @@ func init() {
 		"dynamodb",
 		"ec2",
 		"ecr",
+		"ecrpublic",
 		"ecs",
 		"efs",
 		"eks",

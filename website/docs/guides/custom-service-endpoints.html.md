@@ -103,6 +103,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>dynamodb</code></li>
   <li><code>ec2</code></li>
   <li><code>ecr</code></li>
+  <li><code>ecrpublic</code></li>
   <li><code>ecs</code></li>
   <li><code>efs</code></li>
   <li><code>eks</code></li>
