@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"testing"
 
@@ -19,6 +20,10 @@ func TestAccDataSourceAwsPrefixList_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsPrefixListCheck("data.aws_prefix_list.s3_by_id"),
 					testAccDataSourceAwsPrefixListCheck("data.aws_prefix_list.s3_by_name"),
+					resource.TestMatchResourceAttr("data.aws_prefix_list.s3_by_name", "id", regexp.MustCompile(`^pl-[0-9a-z]{8}$`)),
+					testAccCheckResourceAttrRegionalReverseDnsService("data.aws_prefix_list.s3_by_name", "name", "s3"),
+					resource.TestMatchResourceAttr("data.aws_prefix_list.s3_by_id", "id", regexp.MustCompile(`^pl-[0-9a-z]{8}$`)),
+					testAccCheckResourceAttrRegionalReverseDnsService("data.aws_prefix_list.s3_by_id", "name", "s3"),
 				),
 			},
 		},
@@ -35,6 +40,10 @@ func TestAccDataSourceAwsPrefixList_filter(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsPrefixListCheck("data.aws_prefix_list.s3_by_id"),
 					testAccDataSourceAwsPrefixListCheck("data.aws_prefix_list.s3_by_name"),
+					resource.TestMatchResourceAttr("data.aws_prefix_list.s3_by_name", "id", regexp.MustCompile(`^pl-[0-9a-z]{8}$`)),
+					testAccCheckResourceAttrRegionalReverseDnsService("data.aws_prefix_list.s3_by_name", "name", "s3"),
+					resource.TestMatchResourceAttr("data.aws_prefix_list.s3_by_id", "id", regexp.MustCompile(`^pl-[0-9a-z]{8}$`)),
+					testAccCheckResourceAttrRegionalReverseDnsService("data.aws_prefix_list.s3_by_id", "name", "s3"),
 				),
 			},
 		},
@@ -49,13 +58,6 @@ func testAccDataSourceAwsPrefixListCheck(name string) resource.TestCheckFunc {
 		}
 
 		attr := rs.Primary.Attributes
-
-		if attr["name"] != "com.amazonaws.us-west-2.s3" {
-			return fmt.Errorf("bad name %s", attr["name"])
-		}
-		if attr["id"] != "pl-68a54001" {
-			return fmt.Errorf("bad id %s", attr["id"])
-		}
 
 		var (
 			cidrBlockSize int
@@ -74,27 +76,31 @@ func testAccDataSourceAwsPrefixListCheck(name string) resource.TestCheckFunc {
 }
 
 const testAccDataSourceAwsPrefixListConfig = `
-data "aws_prefix_list" "s3_by_id" {
-  prefix_list_id = "pl-68a54001"
-}
+data "aws_region" "current" {}
 
 data "aws_prefix_list" "s3_by_name" {
-  name = "com.amazonaws.us-west-2.s3"
+  name = "com.amazonaws.${data.aws_region.current.name}.s3"
+}
+
+data "aws_prefix_list" "s3_by_id" {
+  prefix_list_id = data.aws_prefix_list.s3_by_name.id
 }
 `
 
 const testAccDataSourceAwsPrefixListConfigFilter = `
+data "aws_region" "current" {}
+
 data "aws_prefix_list" "s3_by_name" {
   filter {
     name   = "prefix-list-name"
-    values = ["com.amazonaws.us-west-2.s3"]
+    values = ["com.amazonaws.${data.aws_region.current.name}.s3"]
   }
 }
 
 data "aws_prefix_list" "s3_by_id" {
   filter {
     name   = "prefix-list-id"
-    values = ["pl-68a54001"]
+    values = [data.aws_prefix_list.s3_by_name.id]
   }
 }
 `

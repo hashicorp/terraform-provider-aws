@@ -36,20 +36,22 @@ func dataSourceAwsPrefixList() *schema.Resource {
 func dataSourceAwsPrefixListRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	filters, filtersOk := d.GetOk("filter")
-
 	req := &ec2.DescribePrefixListsInput{}
-	if filtersOk {
-		req.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+
+	if v, ok := d.GetOk("prefix_list_id"); ok {
+		req.PrefixListIds = aws.StringSlice([]string{v.(string)})
 	}
-	if prefixListID := d.Get("prefix_list_id"); prefixListID != "" {
-		req.PrefixListIds = aws.StringSlice([]string{prefixListID.(string)})
+
+	if v, ok := d.GetOk("filter"); ok {
+		req.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
 	}
-	req.Filters = buildEC2AttributeFilterList(
-		map[string]string{
-			"prefix-list-name": d.Get("name").(string),
-		},
-	)
+
+	if v, ok := d.GetOk("name"); ok {
+		req.Filters = append(req.Filters, &ec2.Filter{
+			Name:   aws.String("prefix-list-name"),
+			Values: aws.StringSlice([]string{v.(string)}),
+		})
+	}
 
 	log.Printf("[DEBUG] Reading Prefix List: %s", req)
 	resp, err := conn.DescribePrefixLists(req)
