@@ -1492,7 +1492,7 @@ resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
 func testAccAWSLambdaEventSourceMappingConfigSQSBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = %q
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -1531,21 +1531,21 @@ EOF
 }
 
 resource "aws_sqs_queue" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = %q
+  function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.test.arn
   runtime       = "nodejs12.x"
 }
-`, rName, rName, rName)
+`, rName)
 }
 
 func testAccAWSLambdaEventSourceMappingConfigSqsWithBatchWindow(rName string, batchWindow int64) string {
-	return testAccAWSLambdaEventSourceMappingConfigSQSBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSLambdaEventSourceMappingConfigSQSBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size                         = 10
   maximum_batching_window_in_seconds = %d
@@ -1553,5 +1553,5 @@ resource "aws_lambda_event_source_mapping" "test" {
   enabled                            = false
   function_name                      = aws_lambda_function.test.arn
 }
-`, batchWindow)
+`, batchWindow))
 }
