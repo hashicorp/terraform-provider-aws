@@ -136,6 +136,7 @@ variable "service_labels" {
     "meteringmarketplace",
     "mobile",
     "mq",
+    "mwaa",
     "neptune",
     "networkfirewall",
     "networkmanager",

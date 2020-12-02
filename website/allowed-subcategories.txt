@@ -81,6 +81,7 @@ Managed Streaming for Kafka (MSK)
 MediaConvert
 MediaPackage
 MediaStore
+Managed Workflows for Apache Airflow (MWAA)
 Neptune
 Network Firewall
 OpsWorks
