@@ -23,11 +23,11 @@ func TestFindRegionByEc2Endpoint(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    "us-east-1",
+			Value:    "us-east-1", // lintignore:AWSAT003
 			ErrCount: 1,
 		},
 		{
-			Value:    "ec2.us-east-1.amazonaws.com",
+			Value:    "ec2.us-east-1.amazonaws.com", // lintignore:AWSAT003
 			ErrCount: 0,
 		},
 	}
@@ -53,11 +53,11 @@ func TestFindRegionByName(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    "ec2.us-east-1.amazonaws.com",
+			Value:    "ec2.us-east-1.amazonaws.com", // lintignore:AWSAT003
 			ErrCount: 1,
 		},
 		{
-			Value:    "us-east-1",
+			Value:    "us-east-1", // lintignore:AWSAT003
 			ErrCount: 0,
 		},
 	}
