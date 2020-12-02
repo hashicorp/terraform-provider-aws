@@ -592,7 +592,7 @@ func testAccGetAccountID() string {
 func testAccGetRegion() string {
 	v := os.Getenv("AWS_DEFAULT_REGION")
 	if v == "" {
-		return "us-west-2"
+		return "us-west-2" // lintignore:AWSAT003
 	}
 	return v
 }
@@ -600,7 +600,7 @@ func testAccGetRegion() string {
 func testAccGetAlternateRegion() string {
 	v := os.Getenv("AWS_ALTERNATE_REGION")
 	if v == "" {
-		return "us-east-1"
+		return "us-east-1" // lintignore:AWSAT003
 	}
 	return v
 }
@@ -608,7 +608,7 @@ func testAccGetAlternateRegion() string {
 func testAccGetThirdRegion() string {
 	v := os.Getenv("AWS_THIRD_REGION")
 	if v == "" {
-		return "us-east-2"
+		return "us-east-2" // lintignore:AWSAT003
 	}
 	return v
 }
@@ -1204,7 +1204,7 @@ func TestAccAWSProvider_Region_AwsChina(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSProviderConfigRegion("cn-northwest-1"),
+				Config: testAccAWSProviderConfigRegion("cn-northwest-1"), // lintignore:AWSAT003
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com.cn"),
 					testAccCheckAWSProviderPartition(&providers, "aws-cn"),
@@ -1224,7 +1224,7 @@ func TestAccAWSProvider_Region_AwsCommercial(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSProviderConfigRegion("us-west-2"),
+				Config: testAccAWSProviderConfigRegion("us-west-2"), // lintignore:AWSAT003
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com"),
 					testAccCheckAWSProviderPartition(&providers, "aws"),
@@ -1244,7 +1244,7 @@ func TestAccAWSProvider_Region_AwsGovCloudUs(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSProviderConfigRegion("us-gov-west-1"),
+				Config: testAccAWSProviderConfigRegion("us-gov-west-1"), // lintignore:AWSAT003
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com"),
 					testAccCheckAWSProviderPartition(&providers, "aws-us-gov"),
