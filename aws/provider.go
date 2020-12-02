@@ -675,6 +675,7 @@ func Provider() *schema.Provider {
 			"aws_glue_job":                                            resourceAwsGlueJob(),
 			"aws_glue_ml_transform":                                   resourceAwsGlueMLTransform(),
 			"aws_glue_partition":                                      resourceAwsGluePartition(),
+			"aws_glue_registry":                                       resourceAwsGlueRegistry(),
 			"aws_glue_security_configuration":                         resourceAwsGlueSecurityConfiguration(),
 			"aws_glue_trigger":                                        resourceAwsGlueTrigger(),
 			"aws_glue_user_defined_function":                          resourceAwsGlueUserDefinedFunction(),

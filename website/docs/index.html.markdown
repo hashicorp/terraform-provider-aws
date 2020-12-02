@@ -246,7 +246,6 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
     - [`aws_athena_workgroup` resource](/docs/providers/aws/r/athena_workgroup.html)
     - [`aws_budgets_budget` resource](/docs/providers/aws/r/budgets_budget.html)
     - [`aws_cognito_identity_pool` resource](/docs/providers/aws/r/cognito_identity_pool.html)
-    - [`aws_cognito_user_pool` resource](/docs/providers/aws/r/cognito_user_pool.html)
     - [`aws_cognito_user_pools` data source](/docs/providers/aws/d/cognito_user_pools.html)
     - [`aws_default_network_acl` resource](/docs/providers/aws/r/default_network_acl.html)
     - [`aws_default_vpc_dhcp_options`](/docs/providers/aws/r/default_vpc_dhcp_options.html)
