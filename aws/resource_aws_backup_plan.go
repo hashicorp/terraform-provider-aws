@@ -42,7 +42,7 @@ func resourceAwsBackupPlan() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 50),
-								validation.StringDoesNotMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_\.]$`), ""),
+								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_\.]+$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
 							),
 						},
 						"target_vault_name": {
@@ -50,7 +50,7 @@ func resourceAwsBackupPlan() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(2, 50),
-								validation.StringDoesNotMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_]$`), ""),
+								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_]+$`), "must contain only alphanumeric characters, hyphens, and underscores"),
 							),
 						},
 						"schedule": {
