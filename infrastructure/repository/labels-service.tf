@@ -73,6 +73,7 @@ variable "service_labels" {
     "ec2-classic",
     "ec2",
     "ecr",
+    "ecrpublic",
     "ecs",
     "efs",
     "eks",
