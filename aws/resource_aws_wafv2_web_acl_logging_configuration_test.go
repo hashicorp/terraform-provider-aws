@@ -263,7 +263,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_updateMultipleRedactedFields(t *t
 				),
 			},
 			{
-				Config: testAccAwsWafv2WebACLLoggingConfiguration_updateThreeRedactedFields(rName, "uri_path", "query_string"),
+				Config: testAccAwsWafv2WebACLLoggingConfiguration_updateThreeRedactedFields(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
