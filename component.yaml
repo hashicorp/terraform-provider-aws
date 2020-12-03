@@ -1,2 +1,8 @@
 name: terraform-provider-aws
 kind: go-library
+exports:
+  source:
+    ignore:
+    - "**/*_test.go"
+    - "vendor/**/*.go"
+    - "awsproviderlint/**"
