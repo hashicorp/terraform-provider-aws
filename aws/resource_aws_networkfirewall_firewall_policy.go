@@ -217,7 +217,7 @@ func resourceAwsNetworkFirewallFirewallPolicyDelete(ctx context.Context, d *sche
 		FirewallPolicyArn: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(waiter.FirewallPolicyTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, waiter.FirewallPolicyTimeout, func() *resource.RetryError {
 		var err error
 		_, err = conn.DeleteFirewallPolicyWithContext(ctx, input)
 		if err != nil {
