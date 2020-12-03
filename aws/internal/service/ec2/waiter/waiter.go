@@ -113,11 +113,11 @@ func ClientVpnAuthorizationRuleRevoked(conn *ec2.EC2, authorizationRuleID string
 }
 
 const (
-	ClientVpnNetworkAssociationAssociatedTimeout = 10 * time.Minute
+	ClientVpnNetworkAssociationAssociatedTimeout = 30 * time.Minute
 
 	ClientVpnNetworkAssociationAssociatedDelay = 4 * time.Minute
 
-	ClientVpnNetworkAssociationDisassociatedTimeout = 10 * time.Minute
+	ClientVpnNetworkAssociationDisassociatedTimeout = 30 * time.Minute
 
 	ClientVpnNetworkAssociationDisassociatedDelay = 4 * time.Minute
 
