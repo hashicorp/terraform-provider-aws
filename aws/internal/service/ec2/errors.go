@@ -1,6 +1,10 @@
 package ec2
 
 const (
+	ErrCodeInvalidParameterValue = "InvalidParameterValue"
+)
+
+const (
 	ErrCodeClientVpnEndpointIdNotFound        = "InvalidClientVpnEndpointId.NotFound"
 	ErrCodeClientVpnAuthorizationRuleNotFound = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
 	ErrCodeClientVpnAssociationIdNotFound     = "InvalidClientVpnAssociationId.NotFound"

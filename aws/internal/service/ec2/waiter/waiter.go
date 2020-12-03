@@ -8,6 +8,11 @@ import (
 )
 
 const (
+	// Maximum amount of time to wait for EC2 Instance attribute modifications to propagate
+	InstanceAttributePropagationTimeout = 2 * time.Minute
+)
+
+const (
 	// Maximum amount of time to wait for a LocalGatewayRouteTableVpcAssociation to return Associated
 	LocalGatewayRouteTableVpcAssociationAssociatedTimeout = 5 * time.Minute
 
