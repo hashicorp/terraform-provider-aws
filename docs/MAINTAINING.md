@@ -88,7 +88,6 @@ Ensure that the following steps are tracked within the issue and completed withi
 - Verify `goreleaser build --snapshot` succeeds for all currently supported architectures
 - Verify `goenv` support for the new version
 - Update `docs/DEVELOPMENT.md`
-- Update `.github/workflows/*.yml`
 - Update `.go-version`
 - Update `CHANGELOG.md` detailing the update and mention any notes practitioners need to be aware of.
 
