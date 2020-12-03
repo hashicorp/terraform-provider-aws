@@ -31,7 +31,7 @@ The following arguments are supported:
 The following attributes are exported.
 
 * `arn` - The ARN of the bot.
-* `checksum` - Checksum of the bot used to identify a specific revision of the bot's `$LATEST` version
+* `checksum` - Checksum of the bot used to identify a specific revision of the bot's `$LATEST` version.
 * `child_directed` - Specifies if this Amazon Lex Bot is related to a website, program, or other application that is directed or targeted, in whole or in part, to children under age 13 and subject to COPPA.
 * `created_date` - The date that the bot was created.
 * `description` - A description of the bot.
