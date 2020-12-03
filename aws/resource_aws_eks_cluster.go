@@ -692,9 +692,9 @@ func flattenEksVpcConfigResponse(vpcConfig *eks.VpcConfigResponse) []map[string]
 		"cluster_security_group_id": aws.StringValue(vpcConfig.ClusterSecurityGroupId),
 		"endpoint_private_access":   aws.BoolValue(vpcConfig.EndpointPrivateAccess),
 		"endpoint_public_access":    aws.BoolValue(vpcConfig.EndpointPublicAccess),
-		"security_group_ids":        schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SecurityGroupIds)),
-		"subnet_ids":                schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SubnetIds)),
-		"public_access_cidrs":       schema.NewSet(schema.HashString, flattenStringList(vpcConfig.PublicAccessCidrs)),
+		"security_group_ids":        flattenStringSet(vpcConfig.SecurityGroupIds),
+		"subnet_ids":                flattenStringSet(vpcConfig.SubnetIds),
+		"public_access_cidrs":       flattenStringSet(vpcConfig.PublicAccessCidrs),
 		"vpc_id":                    aws.StringValue(vpcConfig.VpcId),
 	}
 
