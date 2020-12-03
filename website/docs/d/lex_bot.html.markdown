@@ -39,7 +39,7 @@ The following attributes are exported.
 * `enable_model_improvements` - Set to true if natural language understanding improvements are enabled.
 * `failure_reason` - If the `status` is `FAILED`, the reason why the bot failed to build.
 * `idle_session_ttl_in_seconds` - The maximum time in seconds that Amazon Lex retains the data gathered in a conversation.
-* `last_updated_date` - The date that the bot was updated
+* `last_updated_date` - The date that the bot was updated.
 * `locale` - Specifies the target locale for the bot. Any intent used in the bot must be compatible with the locale of the bot.
 * `name` - The name of the bot, case sensitive.
 * `nlu_intent_confidence_threshold` - The threshold where Amazon Lex will insert the AMAZON.FallbackIntent, AMAZON.KendraSearchIntent, or both when returning alternative intents in a PostContent or PostText response. AMAZON.FallbackIntent and AMAZON.KendraSearchIntent are only inserted if they are configured for the bot.
