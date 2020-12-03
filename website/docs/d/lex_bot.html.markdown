@@ -44,5 +44,5 @@ The following attributes are exported.
 * `name` - The name of the bot, case sensitive.
 * `nlu_intent_confidence_threshold` - The threshold where Amazon Lex will insert the AMAZON.FallbackIntent, AMAZON.KendraSearchIntent, or both when returning alternative intents in a PostContent or PostText response. AMAZON.FallbackIntent and AMAZON.KendraSearchIntent are only inserted if they are configured for the bot.
 * `status` - The status of the bot.
-* `version` - The version of the bot. For a new bot, the version is always `$LATEST`
+* `version` - The version of the bot. For a new bot, the version is always `$LATEST`.
 * `voice_id` - The Amazon Polly voice ID that the Amazon Lex Bot uses for voice interactions with the user.
