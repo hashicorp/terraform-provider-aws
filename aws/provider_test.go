@@ -1067,7 +1067,7 @@ func testSweepSkipSweepError(err error) bool {
 func testSweepSkipResourceError(err error) bool {
 	// Since acceptance test sweepers are best effort, we allow bypassing this error globally
 	// instead of individual test sweeper fixes.
-	return tfawserr.ErrCodeEquals(err, "AccessDeniedException")
+	return tfawserr.ErrCodeEquals(err, "AccessDenied")
 }
 
 func TestAccAWSProvider_Endpoints(t *testing.T) {
