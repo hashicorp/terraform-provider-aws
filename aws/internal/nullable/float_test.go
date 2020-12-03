@@ -97,6 +97,10 @@ func TestValidationFloatBetween(t *testing.T) {
 			f:   ValidateFloatBetween(0.0, 1.0),
 		},
 		{
+			val: "",
+			f:   ValidateFloatBetween(1.0, 2.0),
+		},
+		{
 			val:         "0.5",
 			f:           ValidateFloatBetween(1.0, 2.0),
 			expectedErr: regexp.MustCompile(`expected [\w]+ to be in the range \(1\.0\d+ - 2\.0\d+\), got 0\.5\d+`),
@@ -105,11 +109,6 @@ func TestValidationFloatBetween(t *testing.T) {
 			val:         "2.5",
 			f:           ValidateFloatBetween(1.0, 2.0),
 			expectedErr: regexp.MustCompile(`expected [\w]+ to be in the range \(1\.0\d+ - 2\.0\d+\), got 2\.5\d+`),
-		},
-		{
-			val:         "",
-			f:           ValidateFloatBetween(1.0, 2.0),
-			expectedErr: regexp.MustCompile(`expected [\w]+ to be in the range \(1\.0\d+ - 2\.0\d+\), got null`),
 		},
 		{
 			val:         "A",
@@ -135,9 +134,8 @@ func TestValidationFloatAtLeast(t *testing.T) {
 			f:   ValidateFloatAtLeast(-1.5),
 		},
 		{
-			val:         "",
-			f:           ValidateFloatAtLeast(2.5),
-			expectedErr: regexp.MustCompile(`expected [\w]+ to be at least \(2\.5\d*\), got null`),
+			val: "",
+			f:   ValidateFloatAtLeast(2.5),
 		},
 		{
 			val:         "1.5",
@@ -168,9 +166,8 @@ func TestValidationFloatAtMost(t *testing.T) {
 			f:   ValidateFloatAtMost(-0.5),
 		},
 		{
-			val:         "",
-			f:           ValidateFloatAtMost(1.0),
-			expectedErr: regexp.MustCompile(`expected [\w]+ to be at most \(1\.0\d+\), got null`),
+			val: "",
+			f:   ValidateFloatAtMost(1.0),
 		},
 		{
 			val:         "2.5",

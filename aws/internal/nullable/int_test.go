@@ -91,9 +91,8 @@ func TestValidationIntBetween(t *testing.T) {
 			f:   ValidateIntBetween(0, 2),
 		},
 		{
-			val:         "",
-			f:           ValidateIntBetween(2, 3),
-			expectedErr: regexp.MustCompile(`expected [\w]+ to be in the range \(2 - 3\), got null`),
+			val: "",
+			f:   ValidateIntBetween(2, 3),
 		},
 		{
 			val:         "1",
@@ -124,9 +123,8 @@ func TestValidationIntAtLeast(t *testing.T) {
 			f:   ValidateIntAtLeast(0),
 		},
 		{
-			val:         "",
-			f:           ValidateIntAtLeast(2),
-			expectedErr: regexp.MustCompile(`expected [\w]+ to be at least \(2\), got null`),
+			val: "",
+			f:   ValidateIntAtLeast(2),
 		},
 		{
 			val:         "1",
@@ -157,9 +155,8 @@ func TestValidationIntAtMost(t *testing.T) {
 			f:   ValidateIntAtMost(2),
 		},
 		{
-			val:         "",
-			f:           ValidateIntAtMost(0),
-			expectedErr: regexp.MustCompile(`expected [\w]+ to be at most \(0\), got null`),
+			val: "",
+			f:   ValidateIntAtMost(0),
 		},
 		{
 			val:         "1",
