@@ -343,7 +343,7 @@ func testAccMatchResourceAttrRegionalARN(resourceName, attributeName, arnService
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %s", arnRegexp, err)
+			return fmt.Errorf("Unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -384,7 +384,7 @@ func testAccMatchResourceAttrRegionalARNAccountID(resourceName, attributeName, a
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %s", arnRegexp, err)
+			return fmt.Errorf("Unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -399,7 +399,7 @@ func testAccMatchResourceAttrRegionalHostname(resourceName, attributeName, servi
 		hostnameRegexp, err := regexp.Compile(hostnameRegexpPattern)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile hostname regexp (%s): %s", hostnameRegexp, err)
+			return fmt.Errorf("Unable to compile hostname regexp (%s): %w", hostnameRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, hostnameRegexp)(s)
@@ -457,7 +457,28 @@ func testAccMatchResourceAttrGlobalARN(resourceName, attributeName, arnService s
 		attributeMatch, err := regexp.Compile(arnRegexp)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %s", arnRegexp, err)
+			return fmt.Errorf("Unable to compile ARN regexp (%s): %w", arnRegexp, err)
+		}
+
+		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
+	}
+}
+
+// testAccCheckResourceAttrRegionalARNIgnoreRegionAndAccount ensures the Terraform state exactly matches a formatted ARN with region without specifying the region or account
+func testAccCheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		arnRegexp := arn.ARN{
+			AccountID: awsAccountIDRegexpInternalPattern,
+			Partition: testAccGetPartition(),
+			Region:    awsRegionRegexpInternalPattern,
+			Resource:  arnResource,
+			Service:   arnService,
+		}.String()
+
+		attributeMatch, err := regexp.Compile(arnRegexp)
+
+		if err != nil {
+			return fmt.Errorf("Unable to compile ARN regexp (%s): %w", arnRegexp, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
@@ -571,7 +592,7 @@ func testAccGetAccountID() string {
 func testAccGetRegion() string {
 	v := os.Getenv("AWS_DEFAULT_REGION")
 	if v == "" {
-		return "us-west-2"
+		return "us-west-2" // lintignore:AWSAT003
 	}
 	return v
 }
@@ -579,7 +600,7 @@ func testAccGetRegion() string {
 func testAccGetAlternateRegion() string {
 	v := os.Getenv("AWS_ALTERNATE_REGION")
 	if v == "" {
-		return "us-east-1"
+		return "us-east-1" // lintignore:AWSAT003
 	}
 	return v
 }
@@ -587,7 +608,7 @@ func testAccGetAlternateRegion() string {
 func testAccGetThirdRegion() string {
 	v := os.Getenv("AWS_THIRD_REGION")
 	if v == "" {
-		return "us-east-2"
+		return "us-east-2" // lintignore:AWSAT003
 	}
 	return v
 }
@@ -952,6 +973,23 @@ func testAccCheckWithProviders(f func(*terraform.State, *schema.Provider) error,
 	}
 }
 
+// testAccErrorCheckSkipMessagesContaining skips tests based on error messages that indicate unsupported features
+func testAccErrorCheckSkipMessagesContaining(t *testing.T, messages ...string) resource.ErrorCheckFunc {
+	return func(err error) error {
+		if err == nil {
+			return err
+		}
+
+		for _, message := range messages {
+			if strings.Contains(err.Error(), message) {
+				t.Skipf("skipping test for %s/%s: %s", testAccGetPartition(), testAccGetRegion(), err.Error())
+			}
+		}
+
+		return err
+	}
+}
+
 // Check service API call error for reasons to skip acceptance testing
 // These include missing API endpoints and unsupported API calls
 func testAccPreCheckSkipError(err error) bool {
@@ -1183,7 +1221,7 @@ func TestAccAWSProvider_Region_AwsChina(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSProviderConfigRegion("cn-northwest-1"),
+				Config: testAccAWSProviderConfigRegion("cn-northwest-1"), // lintignore:AWSAT003
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com.cn"),
 					testAccCheckAWSProviderPartition(&providers, "aws-cn"),
@@ -1203,7 +1241,7 @@ func TestAccAWSProvider_Region_AwsCommercial(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSProviderConfigRegion("us-west-2"),
+				Config: testAccAWSProviderConfigRegion("us-west-2"), // lintignore:AWSAT003
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com"),
 					testAccCheckAWSProviderPartition(&providers, "aws"),
@@ -1223,7 +1261,7 @@ func TestAccAWSProvider_Region_AwsGovCloudUs(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSProviderConfigRegion("us-gov-west-1"),
+				Config: testAccAWSProviderConfigRegion("us-gov-west-1"), // lintignore:AWSAT003
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com"),
 					testAccCheckAWSProviderPartition(&providers, "aws-us-gov"),
@@ -1767,7 +1805,7 @@ provider "aws" {
 }
 
 data "aws_caller_identity" "current" {}
-`
+` //lintignore:AT004
 
 // composeConfig can be called to concatenate multiple strings to build test configurations
 func composeConfig(config ...string) string {

@@ -400,9 +400,9 @@ func TestAccAWSEIP_tags_Ec2Classic(t *testing.T) {
 	rName1 := fmt.Sprintf("%s-%d", t.Name(), acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEIPDestroy,
+		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSEIPConfig_tags_Ec2Classic(rName1, t.Name()),
@@ -762,18 +762,16 @@ resource "aws_eip" "test" {
 }
 
 func testAccAWSEIPConfig_tags_Ec2Classic(rName, testName string) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
+	return composeConfig(
+		testAccEc2ClassicRegionProviderConfig(),
+		fmt.Sprintf(`
 resource "aws_eip" "test" {
   tags = {
     RandomName = "%[1]s"
     TestName   = "%[2]s"
   }
 }
-`, rName, testName)
+`, rName, testName))
 }
 
 const testAccAWSEIPConfig_PublicIpv4Pool_default = `

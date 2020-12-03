@@ -41,6 +41,7 @@ DynamoDB Accelerator (DAX)
 DynamoDB
 EC2
 ECR
+ECR Public
 ECS
 EFS
 EKS
@@ -61,6 +62,7 @@ Glue
 GuardDuty
 IAM
 Identity Store
+Image Builder
 Inspector
 IoT
 KMS
@@ -80,7 +82,9 @@ Managed Streaming for Kafka (MSK)
 MediaConvert
 MediaPackage
 MediaStore
+Managed Workflows for Apache Airflow (MWAA)
 Neptune
+Network Firewall
 OpsWorks
 Organizations
 Outposts
@@ -108,11 +112,13 @@ SWF
 Sagemaker
 Secrets Manager
 Security Hub
+Serverless Application Repository
 Service Catalog
 Service Discovery
 Service Quotas
 Shield
 SimpleDB
+Signer
 Step Function (SFN)
 Storage Gateway
 Synthetics
