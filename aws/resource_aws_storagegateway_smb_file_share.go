@@ -311,7 +311,7 @@ func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error setting valid_user_list: %w", err)
 	}
 
-	if err := d.Set("admin_user_list", schema.NewSet(schema.HashString, flattenStringList(fileshare.AdminUserList))); err != nil {
+	if err := d.Set("admin_user_list", flattenStringSet(fileshare.AdminUserList)); err != nil {
 		return fmt.Errorf("error setting admin_user_list: %s", err)
 	}
 
