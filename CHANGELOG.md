@@ -14,6 +14,7 @@ ENHANCEMENTS
 BUG FIXES
 
 * resource/aws_backup_plan: Retry on eventual consistency error during deletion [GH-16476]
+* resource/aws_ec2_client_vpn_network_association: Increase associate and disassociate timeouts from 10min to 30min [GH-16522]
 * resource/aws_ssm_maintenance_window_target: Remove from state if not found [GH-16478]
 
 ## 3.19.0 (December 01, 2020)
