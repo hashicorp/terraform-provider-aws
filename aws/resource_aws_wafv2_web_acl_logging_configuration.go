@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 )
 
 func resourceAwsWafv2WebACLLoggingConfiguration() *schema.Resource {
@@ -41,33 +42,9 @@ func resourceAwsWafv2WebACLLoggingConfiguration() *schema.Resource {
 				// to be correctly interpreted, this argument must be of type List,
 				// otherwise, at apply-time a field configured as an empty block
 				// (e.g. body {}) will result in a nil redacted_fields attribute
-				Type:     schema.TypeList,
-				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					o, n := d.GetChange("redacted_fields")
-					oList := o.([]interface{})
-					nList := n.([]interface{})
-					if len(oList) == 0 && len(nList) == 0 {
-						return true
-					}
-					if len(oList) == 0 && len(nList) != 0 {
-						if nList[0] == nil {
-							return true
-						}
-						return false
-					}
-					if len(oList) != 0 && len(nList) == 0 {
-						if oList[0] == nil {
-							return true
-						}
-						return false
-					}
-
-					oldSet := schema.NewSet(redactedFieldsHash, oList)
-					newSet := schema.NewSet(redactedFieldsHash, nList)
-					return oldSet.Equal(newSet)
-				},
-				MaxItems: 100,
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         100,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						// TODO: remove attributes marked as Deprecated
@@ -111,6 +88,7 @@ func resourceAwsWafv2WebACLLoggingConfiguration() *schema.Resource {
 											// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
 											validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
 										),
+										Deprecated: "Not supported by WAFv2 API",
 									},
 								},
 							},
@@ -119,8 +97,8 @@ func resourceAwsWafv2WebACLLoggingConfiguration() *schema.Resource {
 						"uri_path": wafv2EmptySchema(),
 					},
 				},
-				Description:      "Parts of the request to exclude from logs",
-				DiffSuppressFunc: suppressEquivalentRedactedFields,
+				Description: "Parts of the request to exclude from logs",
+				DiffSuppressFunc: suppressRedactedFieldsDiff,
 			},
 			"resource_arn": {
 				Type:         schema.TypeString,
@@ -131,62 +109,6 @@ func resourceAwsWafv2WebACLLoggingConfiguration() *schema.Resource {
 			},
 		},
 	}
-}
-
-// suppressEquivalentRedactedFields is required to
-// handle shifts in List ordering returned from the API
-func suppressEquivalentRedactedFields(k, old, new string, d *schema.ResourceData) bool {
-	o, n := d.GetChange("redacted_fields")
-	if o != nil && n != nil {
-		oldFields := o.([]interface{})
-		newFields := n.([]interface{})
-		if len(oldFields) != len(newFields) {
-			// account for case where the empty block {} is used as input
-			return !d.IsNewResource() && len(oldFields) == 0 && len(newFields) == 1 && newFields[0] == nil
-		}
-
-		for _, oldField := range oldFields {
-			om := oldField.(map[string]interface{})
-			found := false
-			for _, newField := range newFields {
-				nm := newField.(map[string]interface{})
-				if len(om) != len(nm) {
-					continue
-				}
-				for k, newVal := range nm {
-					if oldVal, ok := om[k]; ok {
-						if k == "method" || k == "query_string" || k == "uri_path" {
-							if len(oldVal.([]interface{})) == len(newVal.([]interface{})) {
-								found = true
-								break
-							}
-						} else if k == "single_header" {
-							oldHeader := oldVal.([]interface{})
-							newHeader := newVal.([]interface{})
-							if len(oldHeader) > 0 && oldHeader[0] != nil {
-								if len(newHeader) > 0 && newHeader[0] != nil {
-									oldName := oldVal.([]interface{})[0].(map[string]interface{})["name"].(string)
-									newName := newVal.([]interface{})[0].(map[string]interface{})["name"].(string)
-									if oldName == newName {
-										found = true
-										break
-									}
-								}
-							}
-						}
-					}
-				}
-				if found {
-					break
-				}
-			}
-			if !found {
-				return false
-			}
-		}
-		return true
-	}
-	return false
 }
 
 func resourceAwsWafv2WebACLLoggingConfigurationPut(d *schema.ResourceData, meta interface{}) error {
@@ -365,4 +287,28 @@ func redactedFieldsHash(v interface{}) int {
 	}
 
 	return hashcode.String(buf.String())
+}
+
+func suppressRedactedFieldsDiff(k, old, new string, d *schema.ResourceData) bool {
+	o, n := d.GetChange("redacted_fields")
+	oList := o.([]interface{})
+	nList := n.([]interface{})
+
+	if len(oList) == 0 && len(nList) == 0 {
+		return true
+	}
+
+	if len(oList) == 0 && len(nList) != 0 {
+		// account for empty block
+		return nList[0] == nil
+	}
+
+	if len(oList) != 0 && len(nList) == 0 {
+		// account for empty block
+		return oList[0] == nil
+	}
+
+	oldSet := schema.NewSet(redactedFieldsHash, oList)
+	newSet := schema.NewSet(redactedFieldsHash, nList)
+	return oldSet.Equal(newSet)
 }
