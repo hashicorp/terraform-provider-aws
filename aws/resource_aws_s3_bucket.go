@@ -561,6 +561,10 @@ func resourceAwsS3Bucket() *schema.Resource {
 											},
 										},
 									},
+									"bucket_key_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
 								},
 							},
 						},
@@ -1931,6 +1935,10 @@ func resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(s3conn *s3.S3, d
 			ApplyServerSideEncryptionByDefault: rcDefaultRule,
 		}
 
+		if val, ok := rr["bucket_key_enabled"].(bool); ok {
+			rcRule.BucketKeyEnabled = aws.Bool(val)
+		}
+
 		rules = append(rules, rcRule)
 	}
 
@@ -2291,6 +2299,7 @@ func flattenAwsS3ServerSideEncryptionConfiguration(c *s3.ServerSideEncryptionCon
 			d["kms_master_key_id"] = aws.StringValue(v.ApplyServerSideEncryptionByDefault.KMSMasterKeyID)
 			d["sse_algorithm"] = aws.StringValue(v.ApplyServerSideEncryptionByDefault.SSEAlgorithm)
 			r["apply_server_side_encryption_by_default"] = []map[string]interface{}{d}
+			r["bucket_key_enabled"] = aws.BoolValue(v.BucketKeyEnabled)
 			rules = append(rules, r)
 		}
 	}
