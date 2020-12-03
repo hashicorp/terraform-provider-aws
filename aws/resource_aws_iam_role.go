@@ -344,7 +344,6 @@ func deleteAwsIamRole(conn *iam.IAM, rolename string, forceDetach bool) error {
 	deleteRoleInput := &iam.DeleteRoleInput{
 		RoleName: aws.String(rolename),
 	}
-	log.Printf("[DEBUG] Deleting IAM Role: %s", deleteRoleInput)
 	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteRole(deleteRoleInput)
 		if err != nil {
@@ -381,7 +380,6 @@ func deleteAwsIamRoleInstanceProfiles(conn *iam.IAM, rolename string) error {
 			RoleName:            aws.String(rolename),
 		}
 
-		log.Printf("[DEBUG] Detaching Role from Instance Profile: %s", input)
 		_, err := conn.RemoveRoleFromInstanceProfile(input)
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
@@ -419,7 +417,6 @@ func deleteAwsIamRolePolicyAttachments(conn *iam.IAM, rolename string) error {
 			RoleName:  aws.String(rolename),
 		}
 
-		log.Printf("[DEBUG] Detaching Policy from Role: %s", input)
 		_, err = conn.DetachRolePolicy(input)
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
@@ -455,7 +452,6 @@ func deleteAwsIamRolePolicies(conn *iam.IAM, rolename string) error {
 			RoleName:   aws.String(rolename),
 		}
 
-		log.Printf("[DEBUG] Deleting Inline Policy from Role: %s", input)
 		_, err := conn.DeleteRolePolicy(input)
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return nil
