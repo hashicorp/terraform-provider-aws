@@ -537,7 +537,7 @@ func resourceAwsNetworkFirewallRuleGroupDelete(ctx context.Context, d *schema.Re
 	input := &networkfirewall.DeleteRuleGroupInput{
 		RuleGroupArn: aws.String(d.Id()),
 	}
-	err := resource.Retry(waiter.RuleGroupDeleteTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, waiter.RuleGroupDeleteTimeout, func() *resource.RetryError {
 		var err error
 		_, err = conn.DeleteRuleGroupWithContext(ctx, input)
 		if err != nil {
