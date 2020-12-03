@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -1059,6 +1060,14 @@ func testSweepSkipSweepError(err error) bool {
 		return true
 	}
 	return false
+}
+
+// Check sweeper API call error for reasons to skip a specific resource
+// These include AccessDeniedException for individual resources, e.g. managed by central IT
+func testSweepSkipResourceError(err error) bool {
+	// Since acceptance test sweepers are best effort, we allow bypassing this error globally
+	// instead of individual test sweeper fixes.
+	return tfawserr.ErrCodeEquals(err, "AccessDeniedException")
 }
 
 func TestAccAWSProvider_Endpoints(t *testing.T) {
