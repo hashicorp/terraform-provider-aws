@@ -972,20 +972,6 @@ func testAccCheckAWSRouteTableNumberOfRoutes(routeTable *ec2.RouteTable, n int) 
 	}
 }
 
-func testAccCheckAWSRouteTablePropagatingVgw(resourceName, vgwResourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[vgwResourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", vgwResourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No VPN Gateway ID is set")
-		}
-
-		return resource.TestCheckTypeSetElemAttr(resourceName, "propagating_vgws.*", rs.Primary.ID)(s)
-	}
-}
 
 func testAccCheckAWSRouteTableRoute(resourceName, destinationAttr, destination, targetAttr, targetResourceName, targetResourceAttr string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
