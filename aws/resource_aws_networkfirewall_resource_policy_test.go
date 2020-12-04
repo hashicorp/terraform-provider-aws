@@ -101,7 +101,7 @@ func TestAccAwsNetworkFirewallResourcePolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallResourcePolicy_firewallPolicy_disappears(t *testing.T) {
+func TestAccAwsNetworkFirewallResourcePolicy_disappears_FirewallPolicy(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_resource_policy.test"
 
@@ -122,7 +122,7 @@ func TestAccAwsNetworkFirewallResourcePolicy_firewallPolicy_disappears(t *testin
 	})
 }
 
-func TestAccAwsNetworkFirewallResourcePolicy_ruleGroup_disappears(t *testing.T) {
+func TestAccAwsNetworkFirewallResourcePolicy_disappears_RuleGroup(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_resource_policy.test"
 

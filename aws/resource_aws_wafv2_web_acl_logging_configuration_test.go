@@ -201,7 +201,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACLLoggingConfiguration_webACLDisappears(t *testing.T) {
+func TestAccAwsWafv2WebACLLoggingConfiguration_disappears_WebAcl(t *testing.T) {
 	var v wafv2.LoggingConfiguration
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"

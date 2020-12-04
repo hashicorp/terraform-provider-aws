@@ -639,6 +639,32 @@ if err != nil {
 }
 ```
 
+For children resources that are encapsulated by a parent resource, it is also preferable to verify that removing the parent resource will not generate an error either. These are typically named `TestAccAws{SERVICE}{THING}_disappears_{PARENT}`, e.g. `TestAccAwsRoute53ZoneAssociation_disappears_Vpc`
+
+```go
+func TestAccAwsExampleChildThing_disappears_ParentThing(t *testing.T) {
+  rName := acctest.RandomWithPrefix("tf-acc-test")
+  parentResourceName := "aws_example_parent_thing.test"
+  resourceName := "aws_example_child_thing.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck:     func() { testAccPreCheck(t) },
+    Providers:    testAccProviders,
+    CheckDestroy: testAccCheckAwsExampleChildThingDestroy,
+    Steps: []resource.TestStep{
+      {
+        Config: testAccAwsExampleThingConfigName(rName),
+        Check: resource.ComposeTestCheckFunc(
+          testAccCheckAwsExampleThingExists(resourceName),
+          testAccCheckResourceDisappears(testAccProvider, resourceAwsExampleParentThing(), parentResourceName),
+        ),
+        ExpectNonEmptyPlan: true,
+      },
+    },
+  })
+}
+```
+
 #### Per Attribute Acceptance Tests
 
 These are typically named `TestAccAws{SERVICE}{THING}_{ATTRIBUTE}`, e.g. `TestAccAwsCloudWatchDashboard_Name`
