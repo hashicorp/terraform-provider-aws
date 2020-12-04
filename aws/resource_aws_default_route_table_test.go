@@ -54,7 +54,7 @@ func TestAccAWSDefaultRouteTable_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultRouteTable_vpcDisappears(t *testing.T) {
+func TestAccAWSDefaultRouteTable_disappears_Vpc(t *testing.T) {
 	var routeTable ec2.RouteTable
 	var vpc ec2.Vpc
 	resourceName := "aws_default_route_table.test"
