@@ -1163,7 +1163,7 @@ resource "aws_route_table" "test" {
 func testAccAWSRouteTableConfigIpv4Instance(rName, destinationCidr string) string {
 	return composeConfig(
 		testAccLatestAmazonNatInstanceAmiConfig(),
-		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
+		testAccAvailableAZsNoOptInConfig(),
 		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
