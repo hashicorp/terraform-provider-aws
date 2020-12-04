@@ -808,11 +808,6 @@ func testAccWorkspacesDirectoryConfig_workspaceCreationProperties_customSecurity
 	return composeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.main.id
-  name   = "tf-acctest-%[1]s"
-}
-
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
