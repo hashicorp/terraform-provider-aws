@@ -1334,7 +1334,7 @@ resource "aws_route_table" "test" {
 
 func testAccRouteTableConfigNoDestination(rName string) string {
 	return composeConfig(
-		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
+		testAccAvailableAZsNoOptInConfig(),
 		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		fmt.Sprintf(`
