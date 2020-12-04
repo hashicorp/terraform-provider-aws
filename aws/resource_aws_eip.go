@@ -167,9 +167,9 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 	// it defaults to using the public IP
 	log.Printf("[DEBUG] EIP Allocate: %#v", allocResp)
 	if d.Get("domain").(string) == ec2.DomainTypeVpc {
-		d.SetId(*allocResp.AllocationId)
+		d.SetId(aws.StringValue(allocResp.AllocationId))
 	} else {
-		d.SetId(*allocResp.PublicIp)
+		d.SetId(aws.StringValue(allocResp.PublicIp))
 	}
 
 	log.Printf("[INFO] EIP ID: %s (domain: %v)", d.Id(), *allocResp.Domain)
@@ -309,7 +309,7 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 	// This allows users to import the EIP based on the IP if they are in a VPC
 	if *address.Domain == ec2.DomainTypeVpc && net.ParseIP(id) != nil {
 		log.Printf("[DEBUG] Re-assigning EIP ID (%s) to it's Allocation ID (%s)", d.Id(), *address.AllocationId)
-		d.SetId(*address.AllocationId)
+		d.SetId(aws.StringValue(address.AllocationId))
 	}
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(address.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

@@ -1047,7 +1047,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error requesting spot fleet: %s", err)
 	}
 
-	d.SetId(*resp.SpotFleetRequestId)
+	d.SetId(aws.StringValue(resp.SpotFleetRequestId))
 
 	log.Printf("[INFO] Spot Fleet Request ID: %s", d.Id())
 	log.Println("[INFO] Waiting for Spot Fleet Request to be active")
@@ -1209,7 +1209,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 		return nil
 	}
 
-	d.SetId(*sfr.SpotFleetRequestId)
+	d.SetId(aws.StringValue(sfr.SpotFleetRequestId))
 	d.Set("spot_request_state", aws.StringValue(sfr.SpotFleetRequestState))
 
 	config := sfr.SpotFleetRequestConfig

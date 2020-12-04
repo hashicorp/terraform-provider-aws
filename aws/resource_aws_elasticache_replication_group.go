@@ -369,7 +369,7 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 		return fmt.Errorf("Error creating Elasticache Replication Group: %w", err)
 	}
 
-	d.SetId(*resp.ReplicationGroup.ReplicationGroupId)
+	d.SetId(aws.StringValue(resp.ReplicationGroup.ReplicationGroupId))
 
 	pending := []string{"creating", "modifying", "restoring", "snapshotting"}
 	stateConf := &resource.StateChangeConf{

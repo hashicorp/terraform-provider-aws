@@ -236,7 +236,7 @@ func resourceAwsEMRInstanceFleetCreate(d *schema.ResourceData, meta interface{})
 	if resp == nil {
 		return fmt.Errorf("error creating instance fleet: no instance fleet returned")
 	}
-	d.SetId(*resp.InstanceFleetId)
+	d.SetId(aws.StringValue(resp.InstanceFleetId))
 
 	return nil
 }

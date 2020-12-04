@@ -409,7 +409,7 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 // Populate instance attribute fields with the returned instance
 func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2, ignoreTagsConfig *keyvaluetags.IgnoreConfig) error {
-	d.SetId(*instance.InstanceId)
+	d.SetId(aws.StringValue(instance.InstanceId))
 	// Set the easy attributes
 	d.Set("instance_state", instance.State.Name)
 	if instance.Placement != nil {

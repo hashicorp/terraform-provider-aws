@@ -172,7 +172,7 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error creating IAM Role %s: %s", name, err)
 	}
-	d.SetId(*createResp.Role.RoleName)
+	d.SetId(aws.StringValue(createResp.Role.RoleName))
 	return resourceAwsIamRoleRead(d, meta)
 }
 

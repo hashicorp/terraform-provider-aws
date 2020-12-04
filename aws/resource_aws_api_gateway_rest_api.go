@@ -173,7 +173,7 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("Error creating API Gateway: %s", err)
 	}
 
-	d.SetId(*gateway.Id)
+	d.SetId(aws.StringValue(gateway.Id))
 
 	if body, ok := d.GetOk("body"); ok {
 		log.Printf("[DEBUG] Initializing API Gateway from OpenAPI spec %s", d.Id())
