@@ -37,14 +37,14 @@ func testSweepAutoscalingGroups(region string) error {
 	resp, err := conn.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping AutoScaling Group sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping Auto Scaling Group sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving AutoScaling Groups in Sweeper: %s", err)
+		return fmt.Errorf("Error retrieving Auto Scaling Groups in Sweeper: %s", err)
 	}
 
 	if len(resp.AutoScalingGroups) == 0 {
-		log.Print("[DEBUG] No aws autoscaling groups to sweep")
+		log.Print("[DEBUG] No Auto Scaling Groups to sweep")
 		return nil
 	}
 
@@ -1124,7 +1124,7 @@ func testAccCheckAWSAutoScalingGroupExists(n string, group *autoscaling.Group) r
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No AutoScaling Group ID is set")
+			return fmt.Errorf("No Auto Scaling Group ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).autoscalingconn
@@ -1140,7 +1140,7 @@ func testAccCheckAWSAutoScalingGroupExists(n string, group *autoscaling.Group) r
 
 		if len(describeGroups.AutoScalingGroups) != 1 ||
 			*describeGroups.AutoScalingGroups[0].AutoScalingGroupName != rs.Primary.ID {
-			return fmt.Errorf("AutoScaling Group not found")
+			return fmt.Errorf("Auto Scaling Group not found")
 		}
 
 		*group = *describeGroups.AutoScalingGroups[0]
@@ -1166,7 +1166,7 @@ func testAccCheckAWSAutoScalingGroupDestroy(s *terraform.State) error {
 		if err == nil {
 			if len(describeGroups.AutoScalingGroups) != 0 &&
 				*describeGroups.AutoScalingGroups[0].AutoScalingGroupName == rs.Primary.ID {
-				return fmt.Errorf("AutoScaling Group still exists")
+				return fmt.Errorf("Auto Scaling Group still exists")
 			}
 		}
 
@@ -1186,7 +1186,7 @@ func testAccCheckAWSAutoScalingGroupDestroy(s *terraform.State) error {
 func testAccCheckAWSAutoScalingGroupAttributes(group *autoscaling.Group, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *group.AutoScalingGroupName != name {
-			return fmt.Errorf("Bad Autoscaling Group name, expected (%s), got (%s)", name, *group.AutoScalingGroupName)
+			return fmt.Errorf("Bad Auto Scaling Group name, expected (%s), got (%s)", name, *group.AutoScalingGroupName)
 		}
 
 		if *group.MaxSize != 5 {
