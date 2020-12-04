@@ -590,7 +590,7 @@ func TestAccAWSRouteTable_vgwRoutePropagation(t *testing.T) {
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 1),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "1"),
-					testAccCheckAWSRouteTablePropagatingVgw(resourceName, vgwResourceName1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "propagating_vgws.*", vgwResourceName1, "id"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
