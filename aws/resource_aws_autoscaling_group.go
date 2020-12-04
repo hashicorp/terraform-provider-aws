@@ -20,9 +20,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/experimental/nullable"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/nullable"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscaling/waiter"
 )
 
@@ -1867,8 +1867,7 @@ func expandAutoScalingGroupInstanceRefreshPreferences(l []interface{}) *autoscal
 	refreshPreferences := &autoscaling.RefreshPreferences{}
 
 	if v, ok := m["instance_warmup"]; ok {
-		i := nullable.Int(v.(string))
-		if v, null, _ := i.Value(); !null {
+		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
 			refreshPreferences.InstanceWarmup = aws.Int64(v)
 		}
 	}
