@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	multierror "github.com/hashicorp/go-multierror"
@@ -661,7 +662,7 @@ data "aws_availability_zones" "available" {
 
 locals {
   region_workspaces_az_ids = {
-    "us-east-1" = formatlist("use1-az%%d", [2, 4, 6])
+    %q = formatlist("use1-az%%d", [2, 4, 6])
   }
 
   workspaces_az_ids = lookup(local.region_workspaces_az_ids, data.aws_region.current.name, data.aws_availability_zones.available.zone_ids)
@@ -709,7 +710,7 @@ resource "aws_directory_service_directory" "main" {
     Name = "tf-testacc-workspaces-directory-%[1]s"
   }
 }
-`, rName)
+`, rName, endpoints.UsEast1RegionID)
 }
 
 func testAccWorkspacesDirectoryConfig(rName string) string {
