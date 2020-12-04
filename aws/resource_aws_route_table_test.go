@@ -972,7 +972,6 @@ func testAccCheckAWSRouteTableNumberOfRoutes(routeTable *ec2.RouteTable, n int) 
 	}
 }
 
-
 func testAccCheckAWSRouteTableRoute(resourceName, destinationAttr, destination, targetAttr, targetResourceName, targetResourceAttr string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[targetResourceName]
