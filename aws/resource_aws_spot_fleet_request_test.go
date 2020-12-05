@@ -2762,7 +2762,7 @@ resource "aws_spot_fleet_request" "test" {
 `, validUntil)
 }
 
-func testAccAWSSpotFleetRequestOnDemandTargetCapacityConfig(rName string, rInt int, validUntil string, targetCapacity int) string {
+func testAccAWSSpotFleetRequestOnDemandTargetCapacityConfig(rName string, validUntil string, targetCapacity int) string {
 	return testAccAWSSpotFleetRequestConfigBase(rName) +
 		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
