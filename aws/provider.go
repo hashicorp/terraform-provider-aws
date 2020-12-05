@@ -225,6 +225,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_local_gateway_virtual_interface":        dataSourceAwsEc2LocalGatewayVirtualInterface(),
 			"aws_ec2_local_gateway_virtual_interface_group":  dataSourceAwsEc2LocalGatewayVirtualInterfaceGroup(),
 			"aws_ec2_local_gateway_virtual_interface_groups": dataSourceAwsEc2LocalGatewayVirtualInterfaceGroups(),
+			"aws_ec2_managed_prefix_list":                    dataSourceAwsEc2ManagedPrefixList(),
 			"aws_ec2_spot_price":                             dataSourceAwsEc2SpotPrice(),
 			"aws_ec2_transit_gateway":                        dataSourceAwsEc2TransitGateway(),
 			"aws_ec2_transit_gateway_dx_gateway_attachment":  dataSourceAwsEc2TransitGatewayDxGatewayAttachment(),
