@@ -242,9 +242,10 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 							ForceNew: true,
 						},
 						"instance_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(ec2.InstanceType_Values(), false),
 						},
 						"key_name": {
 							Type:         schema.TypeString,
@@ -362,9 +363,10 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										ForceNew: true,
 									},
 									"instance_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(ec2.InstanceType_Values(), false),
 									},
 									"spot_price": {
 										Type:     schema.TypeString,
@@ -489,12 +491,10 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"replacement_strategy": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"launch",
-										}, false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(ec2.ReplacementStrategy_Values(), false),
 									},
 								},
 							},
