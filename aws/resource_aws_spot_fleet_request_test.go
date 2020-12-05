@@ -2763,7 +2763,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccAWSSpotFleetRequestOnDemandTargetCapacityConfig(rName string, rInt int, validUntil string, targetCapacity int) string {
-	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) +
+	return testAccAWSSpotFleetRequestConfigBase(rName) +
 		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
