@@ -1776,6 +1776,7 @@ func waitUntilAutoscalingGroupLoadBalancersAdded(conn *autoscaling.AutoScaling, 
 	var lbAdding bool
 
 	for {
+		// TODO: generate Pages function
 		output, err := conn.DescribeLoadBalancers(input)
 
 		if err != nil {
@@ -1879,40 +1880,38 @@ func expandAutoScalingGroupInstanceRefreshPreferences(l []interface{}) *autoscal
 	return refreshPreferences
 }
 
-// autoScalingGroupRefreshInstances starts a new Instance Refresh in this
-// Auto Scaling Group. If there is already an active refresh, it is cancelled.
 func autoScalingGroupRefreshInstances(conn *autoscaling.AutoScaling, asgName string, refreshConfig []interface{}) error {
-
-	log.Printf("[DEBUG] Cancelling active Instance Refresh in Auto Scaling Group %s, if any...", asgName)
-
-	if err := cancelAutoscalingInstanceRefresh(conn, asgName); err != nil {
-		// todo: add comment about subsequent Auto Scaling Group updates not picking up the refresh?
-		return fmt.Errorf("failed to cancel previous refresh: %w", err)
-	}
-
 	input := createAutoScalingGroupInstanceRefreshInput(asgName, refreshConfig)
-	log.Printf("[DEBUG] Starting Instance Refresh on Auto Scaling Group (%s): %s", asgName, input)
-	output, err := conn.StartInstanceRefresh(input)
-	if err != nil {
-		return err
+	err := resource.Retry(waiter.InstanceRefreshStartedTimeout, func() *resource.RetryError {
+		_, err := conn.StartInstanceRefresh(input)
+		if tfawserr.ErrCodeEquals(err, autoscaling.ErrCodeInstanceRefreshInProgressFault) {
+			cancelErr := cancelAutoscalingInstanceRefresh(conn, asgName)
+			if cancelErr != nil {
+				return resource.NonRetryableError(cancelErr)
+			}
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.StartInstanceRefresh(input)
 	}
-	instanceRefreshID := aws.StringValue(output.InstanceRefreshId)
-
-	log.Printf("[INFO] Started Instance Refresh (%s) on Auto Scaling Group (%s)", instanceRefreshID, asgName)
+	if err != nil {
+		return fmt.Errorf("error starting Instance Refresh: %w", err)
+	}
 
 	return nil
 }
 
-// cancelAutoscalingInstanceRefresh cancels the currently active Instance Refresh
-// of this Auto-Scaling Group, if any, and waits until the refresh is Cancelled.
 func cancelAutoscalingInstanceRefresh(conn *autoscaling.AutoScaling, asgName string) error {
 	input := autoscaling.CancelInstanceRefreshInput{
 		AutoScalingGroupName: aws.String(asgName),
 	}
-	log.Printf("[DEBUG] Attempting to cancel Instance Refresh on Auto Scaling Group (%s): %s", asgName, input)
 	output, err := conn.CancelInstanceRefresh(&input)
 	if tfawserr.ErrCodeEquals(err, autoscaling.ErrCodeActiveInstanceRefreshNotFoundFault) {
-		log.Printf("[DEBUG] No active Instance Refresh on Auto Scaling Group (%s)", asgName)
 		return nil
 	}
 	if err != nil {
@@ -1922,15 +1921,10 @@ func cancelAutoscalingInstanceRefresh(conn *autoscaling.AutoScaling, asgName str
 		return fmt.Errorf("error cancelling Instance Refresh on Auto Scaling Group (%s): empty result", asgName)
 	}
 
-	instanceRefreshID := aws.StringValue(output.InstanceRefreshId)
-	log.Printf("[INFO] Requested cancellation of Instance Refresh (%s) on Auto Scaling Group (%s)", instanceRefreshID, asgName)
-
-	_, err = waiter.InstanceRefreshCancelled(conn, asgName, instanceRefreshID)
+	_, err = waiter.InstanceRefreshCancelled(conn, asgName, aws.StringValue(output.InstanceRefreshId))
 	if err != nil {
-		return fmt.Errorf("error waiting for cancellation of Instance Refresh (%s) on Auto Scaling Group (%s): %w", instanceRefreshID, asgName, err)
+		return fmt.Errorf("error waiting for cancellation of Instance Refresh (%s) on Auto Scaling Group (%s): %w", aws.StringValue(output.InstanceRefreshId), asgName, err)
 	}
-
-	log.Printf("[INFO] Cancelled Instance Refresh (%s) on Auto Scaling Group (%s)", instanceRefreshID, asgName)
 
 	return nil
 }
