@@ -139,7 +139,6 @@ func TestAccAWSGlueSchema_compatibility(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "compatibility", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "schema_checkpoint", "1"),
 				),
 			},
 			{
@@ -147,7 +146,6 @@ func TestAccAWSGlueSchema_compatibility(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "compatibility", "FULL"),
-					resource.TestCheckResourceAttr(resourceName, "schema_checkpoint", "2"),
 				),
 			},
 			{
