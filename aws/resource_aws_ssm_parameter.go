@@ -195,7 +195,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
-        d.Set("arn", param.ARN)
+	d.Set("arn", param.ARN)
 
 	return nil
 }
