@@ -258,6 +258,29 @@ func TestAccAWSGlueSchema_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueSchema_disappears_registry(t *testing.T) {
+	var schema glue.GetSchemaOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_schema.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGlueSchema(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueSchemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueSchemaBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueSchemaExists(resourceName, &schema),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueRegistry(), "aws_glue_registry.test"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccPreCheckAWSGlueSchema(t *testing.T) {
 	conn := testAccProvider.Meta().(*AWSClient).glueconn
 
