@@ -67,7 +67,7 @@ func resourceAwsGlueSchema() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(glue.DataFormat_Values(), false),
 			},
-			"schema_definiton": {
+			"schema_definition": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -94,7 +94,7 @@ func resourceAwsGlueSchemaCreate(d *schema.ResourceData, meta interface{}) error
 
 	input := &glue.CreateSchemaInput{
 		SchemaName:       aws.String(d.Get("schema_name").(string)),
-		SchemaDefinition: aws.String(d.Get("schema_definiton").(string)),
+		SchemaDefinition: aws.String(d.Get("schema_definition").(string)),
 		DataFormat:       aws.String(d.Get("data_format").(string)),
 		Tags:             keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().GlueTags(),
 	}
@@ -173,7 +173,7 @@ func resourceAwsGlueSchemaRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading Glue Schema Definition (%s): %w", d.Id(), err)
 	}
 
-	d.Set("schema_definiton", schemeDefOutput.SchemaDefinition)
+	d.Set("schema_definition", schemeDefOutput.SchemaDefinition)
 
 	return nil
 }
@@ -219,10 +219,10 @@ func resourceAwsGlueSchemaUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if d.HasChange("schema_definiton") {
+	if d.HasChange("schema_definition") {
 		defInput := &glue.RegisterSchemaVersionInput{
 			SchemaId:         tfglue.CreateAwsGlueSchemaID(d.Id()),
-			SchemaDefinition: aws.String(d.Get("schema_definiton").(string)),
+			SchemaDefinition: aws.String(d.Get("schema_definition").(string)),
 		}
 
 		_, err := conn.RegisterSchemaVersion(defInput)

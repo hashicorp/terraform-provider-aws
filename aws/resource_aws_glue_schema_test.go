@@ -74,7 +74,7 @@ func TestAccAWSGlueSchema_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema_checkpoint", "1"),
 					resource.TestCheckResourceAttr(resourceName, "latest_schema_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "next_schema_version", "2"),
-					resource.TestCheckResourceAttr(resourceName, "schema_definiton", "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition", "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"),
 					resource.TestCheckResourceAttrPair(resourceName, "registry_name", registryResourceName, "registry_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "registry_arn", registryResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -216,14 +216,14 @@ func TestAccAWSGlueSchema_schemaDefUpdated(t *testing.T) {
 				Config: testAccAWSGlueSchemaBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueSchemaExists(resourceName, &schema),
-					resource.TestCheckResourceAttr(resourceName, "schema_definiton", "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition", "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"),
 				),
 			},
 			{
 				Config: testAccAWSGlueSchemaConfigSchemaDefinitionUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueSchemaExists(resourceName, &schema),
-					resource.TestCheckResourceAttr(resourceName, "schema_definiton", "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"string\"}, {\"name\": \"f2\", \"type\": \"int\"} ]}"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition", "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"string\"}, {\"name\": \"f2\", \"type\": \"int\"} ]}"),
 				),
 			},
 			{
@@ -367,7 +367,7 @@ resource "aws_glue_schema" "test" {
   data_format      = "AVRO"
   compatibility    = "NONE"
   description      = %[2]q
-  schema_definiton = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
+  schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
 }
 `, rName, description)
 }
@@ -379,7 +379,7 @@ resource "aws_glue_schema" "test" {
   registry_arn     = aws_glue_registry.test.arn
   data_format      = "AVRO"
   compatibility    = %[2]q
-  schema_definiton = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
+  schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
 }
 `, rName, compat)
 }
@@ -391,7 +391,7 @@ resource "aws_glue_schema" "test" {
   registry_arn     = aws_glue_registry.test.arn
   data_format      = "AVRO"
   compatibility    = "NONE"
-  schema_definiton = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
+  schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
 }
 `, rName)
 }
@@ -403,7 +403,7 @@ resource "aws_glue_schema" "test" {
   registry_arn     = aws_glue_registry.test.arn
   data_format      = "AVRO"
   compatibility    = "NONE"
-  schema_definiton = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
+  schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
 
   tags = {
     %[2]q = %[3]q
@@ -419,7 +419,7 @@ resource "aws_glue_schema" "test" {
   registry_arn     = aws_glue_registry.test.arn
   data_format      = "AVRO"
   compatibility    = "NONE"
-  schema_definiton = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
+  schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
 
   tags = {
     %[2]q = %[3]q
@@ -436,7 +436,7 @@ resource "aws_glue_schema" "test" {
   registry_arn     = aws_glue_registry.test.arn
   data_format      = "AVRO"
   compatibility    = "NONE"
-  schema_definiton = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"string\"}, {\"name\": \"f2\", \"type\": \"int\"} ]}"
+  schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"string\"}, {\"name\": \"f2\", \"type\": \"int\"} ]}"
 }
 `, rName)
 }
