@@ -139,6 +139,7 @@ func TestAccAWSGlueSchema_compatibility(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "compatibility", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "schema_checkpoint", "1"),
 				),
 			},
 			{
@@ -146,6 +147,7 @@ func TestAccAWSGlueSchema_compatibility(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "compatibility", "FULL"),
+					resource.TestCheckResourceAttr(resourceName, "schema_checkpoint", "2"),
 				),
 			},
 			{
@@ -217,6 +219,8 @@ func TestAccAWSGlueSchema_schemaDefUpdated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition", "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"),
+					resource.TestCheckResourceAttr(resourceName, "latest_schema_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "next_schema_version", "2"),
 				),
 			},
 			{
@@ -224,6 +228,8 @@ func TestAccAWSGlueSchema_schemaDefUpdated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition", "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"string\"}, {\"name\": \"f2\", \"type\": \"int\"} ]}"),
+					resource.TestCheckResourceAttr(resourceName, "latest_schema_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "next_schema_version", "3"),
 				),
 			},
 			{
