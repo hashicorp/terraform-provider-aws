@@ -1937,18 +1937,54 @@ resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
 
   route {
-    %[2]s = %[3]q
-    %[4]s = %[5]s.id
+    # Destination.
+    cidr_block      = (%[2]q == "cidr_block") ? %[3]q : null
+    ipv6_cidr_block = (%[2]q == "ipv6_cidr_block") ? %[3]q : null
+
+    # Target
+    egress_only_gateway_id    = (%[4]q == "egress_only_gateway_id") ? %[5]s.id : null
+    gateway_id                = (%[4]q == "gateway_id") ? %[5]s.id : null
+    instance_id               = (%[4]q == "instance_id") ? %[5]s.id : null
+    local_gateway_id          = (%[4]q == "local_gateway_id") ? %[5]s.id : null
+    nat_gateway_id            = (%[4]q == "nat_gateway_id") ? %[5]s.id : null
+    network_interface_id      = (%[4]q == "network_interface_id") ? %[5]s.id : null
+    transit_gateway_id        = (%[4]q == "transit_gateway_id") ? %[5]s.id : null
+    vpc_endpoint_id           = (%[4]q == "vpc_endpoint_id") ? %[5]s.id : null
+    vpc_peering_connection_id = (%[4]q == "vpc_peering_connection_id") ? %[5]s.id : null
   }
 
   route {
-    %[6]s = %[7]q
-    %[8]s = %[9]s.id
+    # Destination.
+    cidr_block      = (%[6]q == "cidr_block") ? %[7]q : null
+    ipv6_cidr_block = (%[6]q == "ipv6_cidr_block") ? %[7]q : null
+
+    # Target
+    egress_only_gateway_id    = (%[8]q == "egress_only_gateway_id") ? %[9]s.id : null
+    gateway_id                = (%[8]q == "gateway_id") ? %[9]s.id : null
+    instance_id               = (%[8]q == "instance_id") ? %[9]s.id : null
+    local_gateway_id          = (%[8]q == "local_gateway_id") ? %[9]s.id : null
+    nat_gateway_id            = (%[8]q == "nat_gateway_id") ? %[9]s.id : null
+    network_interface_id      = (%[8]q == "network_interface_id") ? %[9]s.id : null
+    transit_gateway_id        = (%[8]q == "transit_gateway_id") ? %[9]s.id : null
+    vpc_endpoint_id           = (%[8]q == "vpc_endpoint_id") ? %[9]s.id : null
+    vpc_peering_connection_id = (%[8]q == "vpc_peering_connection_id") ? %[9]s.id : null
   }
 
   route {
-    %[10]s = %[11]q
-    %[12]s = %[13]s.id
+    # Destination.
+    cidr_block      = (%[10]q == "cidr_block") ? %[11]q : null
+    ipv6_cidr_block = (%[10]q == "ipv6_cidr_block") ? %[11]q : null
+
+    # Target
+    egress_only_gateway_id    = (%[12]q == "egress_only_gateway_id") ? %[13]s.id : null
+    gateway_id                = (%[12]q == "gateway_id") ? %[13]s.id : null
+    instance_id               = (%[12]q == "instance_id") ? %[13]s.id : null
+    local_gateway_id          = (%[12]q == "local_gateway_id") ? %[13]s.id : null
+    nat_gateway_id            = (%[12]q == "nat_gateway_id") ? %[13]s.id : null
+    network_interface_id      = (%[12]q == "network_interface_id") ? %[13]s.id : null
+    transit_gateway_id        = (%[12]q == "transit_gateway_id") ? %[13]s.id : null
+    vpc_endpoint_id           = (%[12]q == "vpc_endpoint_id") ? %[13]s.id : null
+    vpc_peering_connection_id = (%[12]q == "vpc_peering_connection_id") ? %[13]s.id : null
   }
 
   tags = {
