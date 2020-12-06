@@ -53,9 +53,13 @@ func resourceAwsGlueSchema() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"schema_checkpoint": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"compatibility": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				ValidateFunc: validation.StringInSlice(glue.Compatibility_Values(), false),
 			},
 			"data_format": {
@@ -152,6 +156,7 @@ func resourceAwsGlueSchemaRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("next_schema_version", output.NextSchemaVersion)
 	d.Set("registry_arn", output.RegistryArn)
 	d.Set("registry_name", output.RegistryName)
+	d.Set("schema_checkpoint", output.SchemaCheckpoint)
 
 	tags, err := keyvaluetags.GlueListTags(conn, arn)
 
@@ -163,29 +168,38 @@ func resourceAwsGlueSchemaRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
+	schemeDefOutput, err := finder.SchemaVersionByID(conn, d.Id())
+	if err != nil {
+		return fmt.Errorf("error reading Glue Schema Definition (%s): %w", d.Id(), err)
+	}
+
+	d.Set("schema_definiton", schemeDefOutput.SchemaDefinition)
+
 	return nil
 }
 
 func resourceAwsGlueSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
 
-	if d.HasChanges("description", "") {
-		input := &glue.UpdateSchemaInput{
-			SchemaId: tfglue.CreateAwsGlueSchemaID(d.Id()),
-			SchemaVersionNumber: &glue.SchemaVersionNumber{
-				VersionNumber: aws.Int64(int64(d.Get("next_schema_version").(int))),
-				LatestVersion: aws.Bool(true),
-			},
-		}
+	input := &glue.UpdateSchemaInput{
+		SchemaId: tfglue.CreateAwsGlueSchemaID(d.Id()),
+		SchemaVersionNumber: &glue.SchemaVersionNumber{
+			LatestVersion: aws.Bool(true),
+		},
+	}
+	update := false
 
-		if v, ok := d.GetOk("description"); ok {
-			input.Description = aws.String(v.(string))
-		}
+	if d.HasChange("description") {
+		input.Description = aws.String(d.Get("description").(string))
+		update = true
+	}
 
-		if v, ok := d.GetOk("compatibility"); ok {
-			input.Compatibility = aws.String(v.(string))
-		}
+	if d.HasChange("compatibility") {
+		input.Compatibility = aws.String(d.Get("compatibility").(string))
+		update = true
+	}
 
+	if update {
 		log.Printf("[DEBUG] Updating Glue Schema: %#v", input)
 		_, err := conn.UpdateSchema(input)
 		if err != nil {
@@ -202,6 +216,23 @@ func resourceAwsGlueSchemaUpdate(d *schema.ResourceData, meta interface{}) error
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.GlueUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
+		}
+	}
+
+	if d.HasChange("schema_definiton") {
+		defInput := &glue.RegisterSchemaVersionInput{
+			SchemaId:         tfglue.CreateAwsGlueSchemaID(d.Id()),
+			SchemaDefinition: aws.String(d.Get("schema_definiton").(string)),
+		}
+
+		_, err := conn.RegisterSchemaVersion(defInput)
+		if err != nil {
+			return fmt.Errorf("error updating Glue Schema Definition (%s): %w", d.Id(), err)
+		}
+
+		_, err = waiter.SchemaVersionAvailable(conn, d.Id())
+		if err != nil {
+			return fmt.Errorf("error waiting for Glue Schema Version (%s) to be Available: %w", d.Id(), err)
 		}
 	}
 
