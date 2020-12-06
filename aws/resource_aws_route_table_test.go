@@ -1604,8 +1604,8 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = aws_vpc.test.id
+  cidr_block = "10.0.0.0/24"
+  vpc_id     = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -1755,9 +1755,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  cidr_block        = "10.1.1.0/24"
-  vpc_id            = aws_vpc.test.id
-  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
+  cidr_block      = "10.1.1.0/24"
+  vpc_id          = aws_vpc.test.id
+  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
 
   tags = {
     Name = %[1]q
