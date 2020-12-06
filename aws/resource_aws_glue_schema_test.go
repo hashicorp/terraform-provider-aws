@@ -379,10 +379,10 @@ resource "aws_glue_schema" "test" {
 func testAccAWSGlueSchemaCompatibillityConfig(rName, compat string) string {
 	return testAccAWSGlueSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
-  schema_name      = %[1]q
-  registry_arn     = aws_glue_registry.test.arn
-  data_format      = "AVRO"
-  compatibility    = %[2]q
+  schema_name       = %[1]q
+  registry_arn      = aws_glue_registry.test.arn
+  data_format       = "AVRO"
+  compatibility     = %[2]q
   schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
 }
 `, rName, compat)
@@ -391,10 +391,10 @@ resource "aws_glue_schema" "test" {
 func testAccAWSGlueSchemaBasicConfig(rName string) string {
 	return testAccAWSGlueSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
-  schema_name      = %[1]q
-  registry_arn     = aws_glue_registry.test.arn
-  data_format      = "AVRO"
-  compatibility    = "NONE"
+  schema_name       = %[1]q
+  registry_arn      = aws_glue_registry.test.arn
+  data_format       = "AVRO"
+  compatibility     = "NONE"
   schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
 }
 `, rName)
@@ -403,10 +403,10 @@ resource "aws_glue_schema" "test" {
 func testAccAWSGlueSchemaConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return testAccAWSGlueSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
-  schema_name      = %[1]q
-  registry_arn     = aws_glue_registry.test.arn
-  data_format      = "AVRO"
-  compatibility    = "NONE"
+  schema_name       = %[1]q
+  registry_arn      = aws_glue_registry.test.arn
+  data_format       = "AVRO"
+  compatibility     = "NONE"
   schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
 
   tags = {
@@ -419,10 +419,10 @@ resource "aws_glue_schema" "test" {
 func testAccAWSGlueSchemaConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccAWSGlueSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
-  schema_name      = %[1]q
-  registry_arn     = aws_glue_registry.test.arn
-  data_format      = "AVRO"
-  compatibility    = "NONE"
+  schema_name       = %[1]q
+  registry_arn      = aws_glue_registry.test.arn
+  data_format       = "AVRO"
+  compatibility     = "NONE"
   schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
 
   tags = {
@@ -436,10 +436,10 @@ resource "aws_glue_schema" "test" {
 func testAccAWSGlueSchemaConfigSchemaDefinitionUpdated(rName string) string {
 	return testAccAWSGlueSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
-  schema_name      = %[1]q
-  registry_arn     = aws_glue_registry.test.arn
-  data_format      = "AVRO"
-  compatibility    = "NONE"
+  schema_name       = %[1]q
+  registry_arn      = aws_glue_registry.test.arn
+  data_format       = "AVRO"
+  compatibility     = "NONE"
   schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"string\"}, {\"name\": \"f2\", \"type\": \"int\"} ]}"
 }
 `, rName)
