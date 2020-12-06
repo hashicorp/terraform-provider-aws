@@ -366,11 +366,11 @@ resource "aws_glue_registry" "test" {
 func testAccAWSGlueSchemaDescriptionConfig(rName, description string) string {
 	return testAccAWSGlueSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
-  schema_name      = %[1]q
-  registry_arn     = aws_glue_registry.test.arn
-  data_format      = "AVRO"
-  compatibility    = "NONE"
-  description      = %[2]q
+  schema_name       = %[1]q
+  registry_arn      = aws_glue_registry.test.arn
+  data_format       = "AVRO"
+  compatibility     = "NONE"
+  description       = %[2]q
   schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
 }
 `, rName, description)
