@@ -348,6 +348,21 @@ func TestAccAWSEBSVolume_InvalidIopsForType(t *testing.T) {
 	})
 }
 
+func TestAccAWSEBSVolume_InvalidThroughputForType(t *testing.T) {
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVolumeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAwsEbsVolumeConfigWithInvalidThroughputForType,
+				ExpectError: regexp.MustCompile(`'throughput' must not be set when 'type' is`),
+			},
+		},
+	})
+}
+
 func TestAccAWSEBSVolume_withTags(t *testing.T) {
 	var v ec2.Volume
 	resourceName := "aws_ebs_volume.test"
@@ -1026,6 +1041,29 @@ resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   size              = 10
   iops              = 100
+
+  tags = {
+    Name = "TerraformTest"
+  }
+}
+`
+
+const testAccAwsEbsVolumeConfigWithInvalidThroughputForType = `
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_ebs_volume" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  size              = 10
+  iops              = 100
+  throughput        = 500
+  type              = "io1"
 
   tags = {
     Name = "TerraformTest"

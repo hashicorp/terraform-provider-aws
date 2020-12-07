@@ -374,6 +374,8 @@ func resourceAwsEbsVolumeDelete(d *schema.ResourceData, meta interface{}) error 
 
 func resourceAwsEbsVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	iops := diff.Get("iops").(int)
+	multiAttachEnabled := diff.Get("multi_attach_enabled").(bool)
+	throughput := diff.Get("throughput").(int)
 	volumeType := diff.Get("type").(string)
 
 	if diff.Id() == "" {
@@ -398,9 +400,20 @@ func resourceAwsEbsVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceD
 				return fmt.Errorf("'iops' must not be set when 'type' is '%s'", volumeType)
 			}
 		}
+
+		// MultiAttachEnabled is supported with io1 volumes only.
+		if multiAttachEnabled && volumeType != ec2.VolumeTypeIo1 {
+			return fmt.Errorf("'multi_attach_enabled' must not be set when 'type' is '%s'", volumeType)
+		}
+
+		// Throughput is valid only for gp3 volumes.
+		if throughput > 0 && volumeType != ec2.VolumeTypeGp3 {
+			return fmt.Errorf("'throughput' must not be set when 'type' is '%s'", volumeType)
+		}
 	} else {
 		// Update.
 
+		// Setting 'iops = 0' is a no-op if the volume type does not require Iops to be specified.
 		if diff.HasChange("iops") && volumeType != ec2.VolumeTypeIo1 && volumeType != ec2.VolumeTypeIo2 && iops == 0 {
 			return diff.Clear("iops")
 		}
