@@ -759,7 +759,7 @@ resource "aws_ssm_maintenance_window" "test" {
   cutoff          = 1
   duration        = 3
   name            = %q
-  schedule        = "cron(0 16 ? * TUE *)"
+  schedule        = "cron(0 16 ? * TUE#3 *)"
   schedule_offset = %d
 }
 `, rName, scheduleOffset)
