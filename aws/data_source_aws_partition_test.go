@@ -18,6 +18,7 @@ func TestAccAWSPartition_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsPartition("data.aws_partition.current"),
 					testAccCheckAwsDnsSuffix("data.aws_partition.current"),
+					resource.TestCheckResourceAttr("data.aws_partition.current", "service_prefix", testAccGetPartitionReverseDNSPrefix()),
 				),
 			},
 		},
