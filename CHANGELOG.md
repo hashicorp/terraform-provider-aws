@@ -4,6 +4,7 @@ ENHANCEMENTS
 
 * resource/aws_appmesh_virtual_node: Add `listener.connection_pool` attribute [GH-16167]
 * resource/aws_appmesh_virtual_node: Add `listener.outlier_detection` attribute [GH-16167]
+* resource/aws_ssm_maintenance_window: Add `schedule_offset` argument [GH-16569]
 
 ## 3.20.0 (December 03, 2020)
 
