@@ -717,6 +717,10 @@ func testAccWorkspacesDirectoryConfig(rName string) string {
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName), `
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
 }
 
 data "aws_iam_role" "workspaces-default" {
@@ -737,6 +741,10 @@ resource "aws_workspaces_directory" "main" {
     rebuild_workspace    = true
     restart_workspace    = false
     switch_running_mode  = true
+  }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
   }
 }
 `)
@@ -800,6 +808,10 @@ resource "aws_workspaces_directory" "main" {
     enable_maintenance_mode             = false
     user_enabled_as_local_administrator = false
   }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
 }
 `, rName))
 }
@@ -815,6 +827,10 @@ resource "aws_workspaces_directory" "main" {
     enable_internet_access              = true
     enable_maintenance_mode             = false
     user_enabled_as_local_administrator = false
+  }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
   }
 }
 `, rName))
@@ -839,6 +855,10 @@ resource "aws_workspaces_directory" "main" {
     enable_maintenance_mode             = false
     user_enabled_as_local_administrator = false
   }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
 }
 `, rName))
 }
@@ -857,6 +877,10 @@ resource "aws_workspaces_directory" "test" {
   ip_group_ids = [
     aws_workspaces_ip_group.test_alpha.id
   ]
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
 }
 `, rName))
 }
@@ -880,6 +904,10 @@ resource "aws_workspaces_directory" "test" {
     aws_workspaces_ip_group.test_beta.id,
     aws_workspaces_ip_group.test_gamma.id
   ]
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
 }
 `, rName))
 }
