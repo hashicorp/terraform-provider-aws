@@ -110,6 +110,13 @@ func resourceAwsAmi() *schema.Resource {
 							ForceNew: true,
 						},
 
+						"throughput": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+
 						"volume_size": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -243,46 +250,8 @@ func resourceAwsAmiCreate(d *schema.ResourceData, meta interface{}) error {
 		req.RamdiskId = aws.String(ramdiskId)
 	}
 
-	ebsBlockDevsSet := d.Get("ebs_block_device").(*schema.Set)
-	ephemeralBlockDevsSet := d.Get("ephemeral_block_device").(*schema.Set)
-	for _, ebsBlockDevI := range ebsBlockDevsSet.List() {
-		ebsBlockDev := ebsBlockDevI.(map[string]interface{})
-		blockDev := &ec2.BlockDeviceMapping{
-			DeviceName: aws.String(ebsBlockDev["device_name"].(string)),
-			Ebs: &ec2.EbsBlockDevice{
-				DeleteOnTermination: aws.Bool(ebsBlockDev["delete_on_termination"].(bool)),
-				VolumeType:          aws.String(ebsBlockDev["volume_type"].(string)),
-			},
-		}
-		if iops, ok := ebsBlockDev["iops"]; ok {
-			if iop := iops.(int); iop != 0 {
-				blockDev.Ebs.Iops = aws.Int64(int64(iop))
-			}
-		}
-		if size, ok := ebsBlockDev["volume_size"]; ok {
-			if s := size.(int); s != 0 {
-				blockDev.Ebs.VolumeSize = aws.Int64(int64(s))
-			}
-		}
-		encrypted := ebsBlockDev["encrypted"].(bool)
-		if snapshotId := ebsBlockDev["snapshot_id"].(string); snapshotId != "" {
-			blockDev.Ebs.SnapshotId = aws.String(snapshotId)
-			if encrypted {
-				return errors.New("can't set both 'snapshot_id' and 'encrypted'")
-			}
-		} else if encrypted {
-			blockDev.Ebs.Encrypted = aws.Bool(true)
-		}
-		req.BlockDeviceMappings = append(req.BlockDeviceMappings, blockDev)
-	}
-	for _, ephemeralBlockDevI := range ephemeralBlockDevsSet.List() {
-		ephemeralBlockDev := ephemeralBlockDevI.(map[string]interface{})
-		blockDev := &ec2.BlockDeviceMapping{
-			DeviceName:  aws.String(ephemeralBlockDev["device_name"].(string)),
-			VirtualName: aws.String(ephemeralBlockDev["virtual_name"].(string)),
-		}
-		req.BlockDeviceMappings = append(req.BlockDeviceMappings, blockDev)
-	}
+	req.BlockDeviceMappings = expandAmiEbsBlockDeviceMappings(d.Get("ebs_block_device").(*schema.Set).List())
+	req.BlockDeviceMappings = append(req.BlockDeviceMappings, expandAmiEmphemeralBlockDeviceMappings(d.Get("ephemeral_block_device").(*schema.Set).List())...)
 
 	res, err := client.RegisterImage(req)
 	if err != nil {
@@ -394,40 +363,16 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", imageArn)
 
-	var ebsBlockDevs []map[string]interface{}
-	var ephemeralBlockDevs []map[string]interface{}
-
-	for _, blockDev := range image.BlockDeviceMappings {
-		if blockDev.Ebs != nil {
-			ebsBlockDev := map[string]interface{}{
-				"device_name":           *blockDev.DeviceName,
-				"delete_on_termination": *blockDev.Ebs.DeleteOnTermination,
-				"encrypted":             *blockDev.Ebs.Encrypted,
-				"iops":                  0,
-				"volume_size":           int(*blockDev.Ebs.VolumeSize),
-				"volume_type":           *blockDev.Ebs.VolumeType,
-			}
-			if blockDev.Ebs.Iops != nil {
-				ebsBlockDev["iops"] = int(*blockDev.Ebs.Iops)
-			}
-			// The snapshot ID might not be set.
-			if blockDev.Ebs.SnapshotId != nil {
-				ebsBlockDev["snapshot_id"] = *blockDev.Ebs.SnapshotId
-			}
-			ebsBlockDevs = append(ebsBlockDevs, ebsBlockDev)
-		} else {
-			ephemeralBlockDevs = append(ephemeralBlockDevs, map[string]interface{}{
-				"device_name":  *blockDev.DeviceName,
-				"virtual_name": *blockDev.VirtualName,
-			})
-		}
+	if err := d.Set("ebs_block_device", flattenAmiEbsBlockDeviceMappings(image.BlockDeviceMappings)); err != nil {
+		return fmt.Errorf("error setting ebs_block_device: %w", err)
 	}
 
-	d.Set("ebs_block_device", ebsBlockDevs)
-	d.Set("ephemeral_block_device", ephemeralBlockDevs)
+	if err := d.Set("ephemeral_block_device", flattenAmiEmphemeralBlockDeviceMappings(image.BlockDeviceMappings)); err != nil {
+		return fmt.Errorf("error setting ephemeral_block_device: %w", err)
+	}
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(image.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -567,4 +512,113 @@ func resourceAwsAmiWaitForAvailable(timeout time.Duration, id string, client *ec
 		return nil, fmt.Errorf("Error waiting for AMI (%s) to be ready: %v", id, err)
 	}
 	return info.(*ec2.Image), nil
+}
+
+func expandAmiEbsBlockDeviceMappings(vEbsBlockDevices []interface{}) []*ec2.BlockDeviceMapping {
+	if len(vEbsBlockDevices) == 0 {
+		return nil
+	}
+
+	blockDeviceMappings := []*ec2.BlockDeviceMapping{}
+
+	for _, vEbsBlockDevice := range vEbsBlockDevices {
+		mEbsBlockDevice := vEbsBlockDevice.(map[string]interface{})
+
+		ebsBlockDevice := &ec2.EbsBlockDevice{
+			DeleteOnTermination: aws.Bool(mEbsBlockDevice["delete_on_termination"].(bool)),
+			VolumeType:          aws.String(mEbsBlockDevice["volume_type"].(string)),
+		}
+		blockDeviceMapping := &ec2.BlockDeviceMapping{
+			DeviceName: aws.String(mEbsBlockDevice["device_name"].(string)),
+			Ebs:        ebsBlockDevice,
+		}
+
+		if vEncrypted, ok := mEbsBlockDevice["encrypted"].(bool); ok && vEncrypted {
+			ebsBlockDevice.Encrypted = aws.Bool(vEncrypted)
+		}
+		if vIops, ok := mEbsBlockDevice["iops"].(int); ok && vIops > 0 {
+			ebsBlockDevice.Iops = aws.Int64(int64(vIops))
+		}
+		if vSnapshotID, ok := mEbsBlockDevice["snapshot_id"].(string); ok && vSnapshotID != "" {
+			ebsBlockDevice.SnapshotId = aws.String(vSnapshotID)
+		}
+		if vThroughput, ok := mEbsBlockDevice["throughput"].(int); ok && vThroughput > 0 {
+			ebsBlockDevice.Throughput = aws.Int64(int64(vThroughput))
+		}
+		if vVolumeSize, ok := mEbsBlockDevice["volume_size"].(int); ok && vVolumeSize > 0 {
+			ebsBlockDevice.VolumeSize = aws.Int64(int64(vVolumeSize))
+		}
+
+		blockDeviceMappings = append(blockDeviceMappings, blockDeviceMapping)
+	}
+
+	return blockDeviceMappings
+}
+
+func expandAmiEmphemeralBlockDeviceMappings(vEphemeralBlockDevices []interface{}) []*ec2.BlockDeviceMapping {
+	if len(vEphemeralBlockDevices) == 0 {
+		return nil
+	}
+
+	blockDeviceMappings := []*ec2.BlockDeviceMapping{}
+
+	for _, vEphemeralBlockDevice := range vEphemeralBlockDevices {
+		mEphemeralBlockDevice := vEphemeralBlockDevice.(map[string]interface{})
+
+		blockDeviceMapping := &ec2.BlockDeviceMapping{
+			DeviceName:  aws.String(mEphemeralBlockDevice["device_name"].(string)),
+			VirtualName: aws.String(mEphemeralBlockDevice["virtual_name"].(string)),
+		}
+
+		blockDeviceMappings = append(blockDeviceMappings, blockDeviceMapping)
+	}
+
+	return blockDeviceMappings
+}
+
+func flattenAmiEbsBlockDeviceMappings(blockDeviceMappings []*ec2.BlockDeviceMapping) []interface{} {
+	vEbsBlockDevices := []interface{}{}
+
+	for _, blockDeviceMapping := range blockDeviceMappings {
+		if blockDeviceMapping == nil {
+			continue
+		}
+
+		if ebsBlockDevice := blockDeviceMapping.Ebs; ebsBlockDevice != nil {
+			mEbsBlockDevice := map[string]interface{}{
+				"delete_on_termination": aws.BoolValue(ebsBlockDevice.DeleteOnTermination),
+				"device_name":           aws.StringValue(blockDeviceMapping.DeviceName),
+				"encrypted":             aws.BoolValue(ebsBlockDevice.Encrypted),
+				"iops":                  int(aws.Int64Value(ebsBlockDevice.Iops)),
+				"snapshot_id":           aws.StringValue(ebsBlockDevice.SnapshotId),
+				"volume_size":           int(aws.Int64Value(ebsBlockDevice.VolumeSize)),
+				"volume_type":           aws.StringValue(ebsBlockDevice.VolumeType),
+			}
+
+			vEbsBlockDevices = append(vEbsBlockDevices, mEbsBlockDevice)
+		}
+	}
+
+	return vEbsBlockDevices
+}
+
+func flattenAmiEmphemeralBlockDeviceMappings(blockDeviceMappings []*ec2.BlockDeviceMapping) []interface{} {
+	vEphemeralBlockDevices := []interface{}{}
+
+	for _, blockDeviceMapping := range blockDeviceMappings {
+		if blockDeviceMapping == nil {
+			continue
+		}
+
+		if blockDeviceMapping.Ebs == nil {
+			mEphemeralBlockDevice := map[string]interface{}{
+				"device_name":  aws.StringValue(blockDeviceMapping.DeviceName),
+				"virtual_name": aws.StringValue(blockDeviceMapping.VirtualName),
+			}
+
+			vEphemeralBlockDevices = append(vEphemeralBlockDevices, mEphemeralBlockDevice)
+		}
+	}
+
+	return vEphemeralBlockDevices
 }
