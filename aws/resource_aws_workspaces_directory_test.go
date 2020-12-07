@@ -323,8 +323,8 @@ func TestAccAwsWorkspacesDirectory_workspaceCreationProperties_customSecurityGro
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "workspace_creation_properties.0.custom_security_group_id", resourceSecurityGroup, "id"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.default_ou", "OU=AWS,DC=Workgroup,DC=Example,DC=com"),
+					resource.TestCheckResourceAttrSet(resourceName, "workspace_creation_properties.0.custom_security_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "workspace_creation_properties.0.default_ou"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
