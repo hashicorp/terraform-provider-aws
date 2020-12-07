@@ -175,7 +175,7 @@ func TestAccAWSInstanceDataSource_rootInstanceStore(t *testing.T) {
 func TestAccAWSInstanceDataSource_privateIP(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -196,7 +196,7 @@ func TestAccAWSInstanceDataSource_privateIP(t *testing.T) {
 func TestAccAWSInstanceDataSource_secondaryPrivateIPs(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -239,7 +239,7 @@ func TestAccAWSInstanceDataSource_keyPair(t *testing.T) {
 func TestAccAWSInstanceDataSource_VPC(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -262,7 +262,7 @@ func TestAccAWSInstanceDataSource_VPC(t *testing.T) {
 func TestAccAWSInstanceDataSource_PlacementGroup(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -304,7 +304,7 @@ func TestAccAWSInstanceDataSource_SecurityGroups(t *testing.T) {
 func TestAccAWSInstanceDataSource_VPCSecurityGroups(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -325,7 +325,7 @@ func TestAccAWSInstanceDataSource_VPCSecurityGroups(t *testing.T) {
 
 func TestAccAWSInstanceDataSource_getPasswordData_trueToFalse(t *testing.T) {
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -351,7 +351,7 @@ func TestAccAWSInstanceDataSource_getPasswordData_trueToFalse(t *testing.T) {
 
 func TestAccAWSInstanceDataSource_getPasswordData_falseToTrue(t *testing.T) {
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -377,7 +377,7 @@ func TestAccAWSInstanceDataSource_getPasswordData_falseToTrue(t *testing.T) {
 
 func TestAccAWSInstanceDataSource_GetUserData(t *testing.T) {
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -411,7 +411,7 @@ func TestAccAWSInstanceDataSource_GetUserData(t *testing.T) {
 func TestAccAWSInstanceDataSource_GetUserData_NoUserData(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -448,7 +448,7 @@ func TestAccAWSInstanceDataSource_GetUserData_NoUserData(t *testing.T) {
 func TestAccAWSInstanceDataSource_creditSpecification(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },

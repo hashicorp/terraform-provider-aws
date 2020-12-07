@@ -123,7 +123,7 @@ func TestAccAWSElasticSearchDomain_RequireHTTPS(t *testing.T) {
 
 func TestAccAWSElasticSearchDomain_ClusterConfig_ZoneAwarenessConfig(t *testing.T) {
 	var domain1, domain2, domain3, domain4 elasticsearch.ElasticsearchDomainStatus
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum)) // len = 28
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(16)) // len = 28
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -181,7 +181,7 @@ func TestAccAWSElasticSearchDomain_ClusterConfig_ZoneAwarenessConfig(t *testing.
 
 func TestAccAWSElasticSearchDomain_warm(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum)) // len = 28
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(16)) // len = 28
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1005,7 +1005,7 @@ func TestAccAWSElasticSearchDomain_update_volume_type(t *testing.T) {
 func TestAccAWSElasticSearchDomain_WithVolumeType_Missing(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(16))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
