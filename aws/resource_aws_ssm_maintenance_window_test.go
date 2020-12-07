@@ -756,12 +756,11 @@ resource "aws_ssm_maintenance_window" "test" {
 func testAccAWSSSMMaintenanceWindowConfigScheduleOffset(rName string, scheduleOffset int) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "test" {
-  cutoff            = 1
-  duration          = 3
-  name              = %q
-  schedule          = "cron(0 16 ? * TUE *)"
-  schedule_timezone = %q
-  schedule_offset   = 3
+  cutoff          = 1
+  duration        = 3
+  name            = %q
+  schedule        = "cron(0 16 ? * TUE *)"
+  schedule_offset = %d
 }
 `, rName, scheduleOffset)
 }
