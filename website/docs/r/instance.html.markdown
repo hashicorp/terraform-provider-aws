@@ -130,8 +130,8 @@ The `root_block_device` mapping supports the following:
 * `volume_size` - (Optional) The size of the volume in gibibytes (GiB).
 * `iops` - (Optional) The amount of provisioned
   [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
-  This is only valid for `volume_type` of `"io1/io2"`, and must be specified if
-  using that type
+  This is only valid for `volume_type` of `"io1/io2"` (required) and `"gp3"` (optional).
+* `throughput` - (Optional) The throughput to provision for a volume in mebibytes per second (MiB/s). This is only valid for `volume_type` of `"gp3"`.
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed
   on instance termination (Default: `true`).
 * `encrypted` - (Optional) Enable volume encryption. (Default: `false`). Must be configured to perform drift detection.
@@ -149,7 +149,8 @@ Each `ebs_block_device` supports the following:
 * `volume_size` - (Optional) The size of the volume in gibibytes (GiB).
 * `iops` - (Optional) The amount of provisioned
   [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
-  This must be set with a `volume_type` of `"io1/io2"`.
+  This is only valid for `volume_type` of `"io1/io2"` (required) and `"gp3"` (optional).
+* `throughput` - (Optional) The throughput to provision for a volume in mebibytes per second (MiB/s). This is only valid for `volume_type` of `"gp3"`.
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed
   on instance termination (Default: `true`).
 * `encrypted` - (Optional) Enables [EBS
