@@ -32,6 +32,7 @@ func TestAccAWSAMI_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"delete_on_termination": "true",
 						"device_name":           "/dev/sda1",
@@ -86,6 +87,7 @@ func TestAccAWSAMI_description(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", desc),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"delete_on_termination": "true",
 						"device_name":           "/dev/sda1",
@@ -123,6 +125,7 @@ func TestAccAWSAMI_description(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", descUpdated),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"delete_on_termination": "true",
 						"device_name":           "/dev/sda1",
@@ -189,6 +192,7 @@ func TestAccAWSAMI_EphemeralBlockDevices(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"delete_on_termination": "true",
 						"device_name":           "/dev/sda1",
@@ -208,6 +212,68 @@ func TestAccAWSAMI_EphemeralBlockDevices(t *testing.T) {
 						"device_name":  "/dev/sdc",
 						"virtual_name": "ephemeral1",
 					}),
+					resource.TestCheckResourceAttr(resourceName, "kernel_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "ramdisk_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "root_device_name", "/dev/sda1"),
+					resource.TestCheckResourceAttrPair(resourceName, "root_snapshot_id", snapshotResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
+					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"manage_ebs_snapshots",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSAMI_Gp3BlockDevice(t *testing.T) {
+	var ami ec2.Image
+	resourceName := "aws_ami.test"
+	snapshotResourceName := "aws_ebs_snapshot.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAmiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAmiConfigGp3BlockDevice(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAmiExists(resourceName, &ami),
+					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
+					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"delete_on_termination": "true",
+						"device_name":           "/dev/sda1",
+						"encrypted":             "false",
+						"iops":                  "0",
+						"throughput":            "0",
+						"volume_size":           "8",
+						"volume_type":           "standard",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.snapshot_id", snapshotResourceName, "id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"delete_on_termination": "false",
+						"device_name":           "/dev/sdb",
+						"encrypted":             "true",
+						"iops":                  "100",
+						"throughput":            "500",
+						"volume_size":           "10",
+						"volume_type":           "gp3",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "ena_support", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kernel_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "ramdisk_id", ""),
@@ -433,6 +499,34 @@ resource "aws_ami" "test" {
   ephemeral_block_device {
     device_name  = "/dev/sdc"
     virtual_name = "ephemeral1"
+  }
+}
+`, rName))
+}
+
+func testAccAmiConfigGp3BlockDevice(rName string) string {
+	return composeConfig(
+		testAccAmiConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_ami" "test" {
+  ena_support         = false
+  name                = %[1]q
+  root_device_name    = "/dev/sda1"
+  virtualization_type = "hvm"
+
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    snapshot_id = aws_ebs_snapshot.test.id
+  }
+
+  ebs_block_device {
+    delete_on_termination = false
+    device_name           = "/dev/sdb"
+    encrypted             = true
+    iops                  = 100
+    throughput            = 500
+    volume_size           = 10
+    volume_type           = "gp3"
   }
 }
 `, rName))

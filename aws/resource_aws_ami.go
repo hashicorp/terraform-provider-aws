@@ -591,6 +591,7 @@ func flattenAmiEbsBlockDeviceMappings(blockDeviceMappings []*ec2.BlockDeviceMapp
 				"encrypted":             aws.BoolValue(ebsBlockDevice.Encrypted),
 				"iops":                  int(aws.Int64Value(ebsBlockDevice.Iops)),
 				"snapshot_id":           aws.StringValue(ebsBlockDevice.SnapshotId),
+				"throughput":            int(aws.Int64Value(ebsBlockDevice.Throughput)),
 				"volume_size":           int(aws.Int64Value(ebsBlockDevice.VolumeSize)),
 				"volume_type":           aws.StringValue(ebsBlockDevice.VolumeType),
 			}
