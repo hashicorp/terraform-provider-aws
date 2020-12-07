@@ -389,6 +389,14 @@ func resourceAwsInstance() *schema.Resource {
 							ForceNew: true,
 						},
 
+						"throughput": {
+							Type:             schema.TypeInt,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							DiffSuppressFunc: throughputDiffSuppressFunc,
+						},
+
 						"volume_size": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -496,6 +504,13 @@ func resourceAwsInstance() *schema.Resource {
 							DiffSuppressFunc: iopsDiffSuppressFunc,
 						},
 
+						"throughput": {
+							Type:             schema.TypeInt,
+							Optional:         true,
+							Computed:         true,
+							DiffSuppressFunc: throughputDiffSuppressFunc,
+						},
+
 						"volume_size": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -590,6 +605,14 @@ func iopsDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
 	vt := k[:i+1] + "volume_type"
 	v := d.Get(vt).(string)
 	return (strings.ToLower(v) != ec2.VolumeTypeIo1 || strings.ToLower(v) != ec2.VolumeTypeIo2 || strings.ToLower(v) != ec2.VolumeTypeGp3) && new == "0"
+}
+
+func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
+	// Suppress diff if volume_type is not gp3 and throughput is unset or configured as 0
+	i := strings.LastIndexByte(k, '.')
+	vt := k[:i+1] + "volume_type"
+	v := d.Get(vt).(string)
+	return strings.ToLower(v) != ec2.VolumeTypeGp3 && new == "0"
 }
 
 func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
@@ -1410,6 +1433,16 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				input.Iops = aws.Int64(int64(v))
 			}
 		}
+		if d.HasChange("root_block_device.0.throughput") {
+			if v, ok := d.Get("root_block_device.0.throughput").(int); ok && v != 0 {
+				// Enforce throughput usage with a valid volume type
+				if t, ok := d.Get("root_block_device.0.volume_type").(string); ok && t != ec2.volumeTypeGp3 {
+					return fmt.Errorf("error updating instance: throughput attribute not supported for type %s", t)
+				}
+				modifyVolume = true
+				input.Throughput = aws.Int64(int64(v))
+			}
+		}
 		if modifyVolume {
 			_, err := conn.ModifyVolume(&input)
 			if err != nil {
@@ -1743,6 +1776,9 @@ func readBlockDevicesFromInstance(instance *ec2.Instance, conn *ec2.EC2) (map[st
 		if vol.KmsKeyId != nil {
 			bd["kms_key_id"] = aws.StringValue(vol.KmsKeyId)
 		}
+		if vol.Throughput != nil {
+			bd["throughput"] = aws.Int64Value(vol.Throughput)
+		}
 		if instanceBd.DeviceName != nil {
 			bd["device_name"] = aws.StringValue(instanceBd.DeviceName)
 		}
@@ -1942,6 +1978,13 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 						// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
 						return nil, fmt.Errorf("error creating resource: iops attribute not supported for ebs_block_device with volume_type %s", v)
 					}
+				} else if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
+					// `throughput` is only valid for gp3
+					if ec2.VolumeTypeGp3 == strings.ToLower(v) {
+						ebs.Throughput = aws.Int64(int64(throughput))
+					} else {
+						return nil, fmt.Errorf("error creating resource: throughput attribute not supported for ebs_block_device with volume_type %s", v)
+					}
 				}
 			}
 
@@ -2008,6 +2051,14 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 						// Enforce IOPs usage with a valid volume type
 						// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
 						return nil, fmt.Errorf("error creating resource: iops attribute not supported for root_block_device with volume_type %s", v)
+					}
+				} else if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
+					// throughput is only valid for gp3
+					if ec2.VolumeTypeGp3 == strings.ToLower(v) {
+						ebs.Throughput = aws.Int64(int64(throughput))
+					} else {
+						// Enforce throughput usage with a valid volume type
+						return nil, fmt.Errorf("error creating resource: throughput attribute not supported for root_block_device with volume_type %s", v)
 					}
 				}
 			}
