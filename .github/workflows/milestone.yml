@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
       - id: get-current-milestone
         run: |
             echo ::set-output name=current_milestone::v$(head -1 CHANGELOG.md | cut -d " " -f 2)
