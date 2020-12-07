@@ -1422,7 +1422,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			if v, ok := d.Get("root_block_device.0.iops").(int); ok && v != 0 {
 				// Enforce IOPs usage with a valid volume type
 				// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
-				if t, ok := d.Get("root_block_device.0.volume_type").(string); ok && t != ec2.VolumeTypeIo1 && t != ec2.VolumeTypeIo2 && t != ec2.volumeTypeGp3 {
+				if t, ok := d.Get("root_block_device.0.volume_type").(string); ok && t != ec2.VolumeTypeIo1 && t != ec2.VolumeTypeIo2 && t != ec2.VolumeTypeGp3 {
 					if t == "" {
 						// Volume defaults to gp2
 						t = ec2.VolumeTypeGp2
@@ -1436,7 +1436,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		if d.HasChange("root_block_device.0.throughput") {
 			if v, ok := d.Get("root_block_device.0.throughput").(int); ok && v != 0 {
 				// Enforce throughput usage with a valid volume type
-				if t, ok := d.Get("root_block_device.0.volume_type").(string); ok && t != ec2.volumeTypeGp3 {
+				if t, ok := d.Get("root_block_device.0.volume_type").(string); ok && t != ec2.VolumeTypeGp3 {
 					return fmt.Errorf("error updating instance: throughput attribute not supported for type %s", t)
 				}
 				modifyVolume = true
@@ -1967,7 +1967,7 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 			if v, ok := bd["volume_type"].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
 				if iops, ok := bd["iops"].(int); ok && iops > 0 {
-					if ec2.VolumeTypeIo1 == strings.ToLower(v) || ec2.VolumeTypeIo2 == strings.ToLower(v) || ec2.volumeTypeGp3 == strings.ToLower(v) {
+					if ec2.VolumeTypeIo1 == strings.ToLower(v) || ec2.VolumeTypeIo2 == strings.ToLower(v) || ec2.VolumeTypeGp3 == strings.ToLower(v) {
 						// Condition: This parameter is required for requests to create io1 or io2
 						// volumes and optional for gp3; it is not used in requests to create gp2, st1, sc1, or
 						// standard volumes.
