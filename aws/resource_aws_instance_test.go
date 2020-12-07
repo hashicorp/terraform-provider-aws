@@ -340,6 +340,20 @@ func TestAccAWSInstance_EbsBlockDevice_InvalidIopsForVolumeType(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstance_EbsBlockDevice_InvalidThroughputForVolumeType(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCheckInstanceConfigEBSBlockDeviceInvalidThroughput,
+				ExpectError: regexp.MustCompile(`error creating resource: throughput attribute not supported for ebs_block_device with volume_type gp2`),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_RootBlockDevice_KmsKeyArn(t *testing.T) {
 	var instance ec2.Instance
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -3999,6 +4013,21 @@ resource "aws_instance" "test" {
     volume_size = 10
     volume_type = "gp2"
     iops        = 100
+  }
+}
+`)
+
+var testAccCheckInstanceConfigEBSBlockDeviceInvalidThroughput = composeConfig(testAccAwsEc2InstanceAmiWithEbsRootVolume, `
+resource "aws_instance" "test" {
+  ami = data.aws_ami.ami.id
+
+  instance_type = "t2.medium"
+
+  ebs_block_device {
+    device_name = "/dev/sdc"
+    volume_size = 10
+    volume_type = "gp2"
+    throughput  = 300
   }
 }
 `)
