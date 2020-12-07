@@ -78,9 +78,8 @@ func resourceAwsBackupPlan() *schema.Resource {
 										Optional: true,
 									},
 									"delete_after": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(90),
+										Type:     schema.TypeInt,
+										Optional: true,
 									},
 								},
 							},
