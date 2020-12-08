@@ -6,6 +6,10 @@ ENHANCEMENTS
 * resource/aws_appmesh_virtual_node: Add `listener.outlier_detection` attribute [GH-16167]
 * resource/aws_ssm_maintenance_window: Add `schedule_offset` argument [GH-16569]
 
+BUG FIXES
+
+* resource/aws_workspaces_directory: Fix empty custom_security_group_id & default_ou [GH-16589]
+
 ## 3.20.0 (December 03, 2020)
 
 ENHANCEMENTS
