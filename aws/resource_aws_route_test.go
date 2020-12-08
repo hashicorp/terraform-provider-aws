@@ -14,7 +14,6 @@ import (
 
 // IPv4 to Internet Gateway.
 func TestAccAWSRoute_basic(t *testing.T) {
-	var route ec2.Route
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -30,7 +29,6 @@ func TestAccAWSRoute_basic(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					testAccCheckRouteTableExists(rtResourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
@@ -61,7 +59,6 @@ func TestAccAWSRoute_basic(t *testing.T) {
 }
 
 func TestAccAWSRoute_disappears(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr := "10.3.0.0/16"
@@ -74,7 +71,6 @@ func TestAccAWSRoute_disappears(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -84,8 +80,6 @@ func TestAccAWSRoute_disappears(t *testing.T) {
 }
 
 func TestAccAWSRoute_disappears_RouteTable(t *testing.T) {
-	var route ec2.Route
-	resourceName := "aws_route.test"
 	rtResourceName := "aws_route_table.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr := "10.3.0.0/16"
@@ -98,7 +92,6 @@ func TestAccAWSRoute_disappears_RouteTable(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsRouteTable(), rtResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -108,7 +101,6 @@ func TestAccAWSRoute_disappears_RouteTable(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv6_To_EgressOnlyInternetGateway(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	eoigwResourceName := "aws_egress_only_internet_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -122,7 +114,6 @@ func TestAccAWSRoute_IPv6_To_EgressOnlyInternetGateway(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv6EgressOnlyInternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -156,7 +147,6 @@ func TestAccAWSRoute_IPv6_To_EgressOnlyInternetGateway(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv6_To_InternetGateway(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	igwResourceName := "aws_internet_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -170,7 +160,6 @@ func TestAccAWSRoute_IPv6_To_InternetGateway(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv6InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -199,7 +188,6 @@ func TestAccAWSRoute_IPv6_To_InternetGateway(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv6_To_Instance(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	instanceResourceName := "aws_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -213,7 +201,6 @@ func TestAccAWSRoute_IPv6_To_Instance(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv6Instance(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -242,7 +229,6 @@ func TestAccAWSRoute_IPv6_To_Instance(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv6_To_NetworkInterface_Unattached(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	eniResourceName := "aws_network_interface.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -258,7 +244,6 @@ func TestAccAWSRoute_IPv6_To_NetworkInterface_Unattached(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv6NetworkInterfaceUnattached(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -287,7 +272,6 @@ func TestAccAWSRoute_IPv6_To_NetworkInterface_Unattached(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv6_To_VpcPeeringConnection(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	pcxResourceName := "aws_vpc_peering_connection.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -301,7 +285,6 @@ func TestAccAWSRoute_IPv6_To_VpcPeeringConnection(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv6VpcPeeringConnection(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -330,7 +313,6 @@ func TestAccAWSRoute_IPv6_To_VpcPeeringConnection(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv6_To_VpnGateway(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	vgwResourceName := "aws_vpn_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -344,7 +326,6 @@ func TestAccAWSRoute_IPv6_To_VpnGateway(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv6VpnGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -373,7 +354,6 @@ func TestAccAWSRoute_IPv6_To_VpnGateway(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv4_To_VpnGateway(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	vgwResourceName := "aws_vpn_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -387,7 +367,6 @@ func TestAccAWSRoute_IPv4_To_VpnGateway(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4VpnGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -416,7 +395,6 @@ func TestAccAWSRoute_IPv4_To_VpnGateway(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv4_To_Instance(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	instanceResourceName := "aws_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -430,7 +408,6 @@ func TestAccAWSRoute_IPv4_To_Instance(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4Instance(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -459,7 +436,6 @@ func TestAccAWSRoute_IPv4_To_Instance(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv4_To_NetworkInterface_Unattached(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	eniResourceName := "aws_network_interface.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -475,7 +451,6 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_Unattached(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4NetworkInterfaceUnattached(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -504,7 +479,6 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_Unattached(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv4_To_NetworkInterface_Attached(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	eniResourceName := "aws_network_interface.test"
 	instanceResourceName := "aws_instance.test"
@@ -521,7 +495,6 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_Attached(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4NetworkInterfaceAttached(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -550,7 +523,6 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_Attached(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv4_To_NetworkInterface_TwoAttachments(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	eni1ResourceName := "aws_network_interface.test1"
 	eni2ResourceName := "aws_network_interface.test2"
@@ -568,7 +540,6 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_TwoAttachments(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4NetworkInterfaceTwoAttachments(rName, destinationCidr, eni1ResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -589,7 +560,6 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_TwoAttachments(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4NetworkInterfaceTwoAttachments(rName, destinationCidr, eni2ResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -618,7 +588,6 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_TwoAttachments(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv4_To_VpcPeeringConnection(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	pcxResourceName := "aws_vpc_peering_connection.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -632,7 +601,6 @@ func TestAccAWSRoute_IPv4_To_VpcPeeringConnection(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4VpcPeeringConnection(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -661,7 +629,6 @@ func TestAccAWSRoute_IPv4_To_VpcPeeringConnection(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv4_To_NatGateway(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	ngwResourceName := "aws_nat_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -675,7 +642,6 @@ func TestAccAWSRoute_IPv4_To_NatGateway(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4NatGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -704,7 +670,6 @@ func TestAccAWSRoute_IPv4_To_NatGateway(t *testing.T) {
 }
 
 func TestAccAWSRoute_DoesNotCrashWithVpcEndpoint(t *testing.T) {
-	var route ec2.Route
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route.test"
 	rtResourceName := "aws_route_table.test"
@@ -718,7 +683,6 @@ func TestAccAWSRoute_DoesNotCrashWithVpcEndpoint(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigWithVpcEndpoint(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					testAccCheckRouteTableExists(rtResourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 3),
 				),
@@ -734,7 +698,6 @@ func TestAccAWSRoute_DoesNotCrashWithVpcEndpoint(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv4_To_TransitGateway(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	tgwResourceName := "aws_ec2_transit_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -748,7 +711,6 @@ func TestAccAWSRoute_IPv4_To_TransitGateway(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4TransitGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -777,7 +739,6 @@ func TestAccAWSRoute_IPv4_To_TransitGateway(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv6_To_TransitGateway(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	tgwResourceName := "aws_ec2_transit_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -791,7 +752,6 @@ func TestAccAWSRoute_IPv6_To_TransitGateway(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv6TransitGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -820,7 +780,6 @@ func TestAccAWSRoute_IPv6_To_TransitGateway(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv4_To_LocalGateway(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	localGatewayDataSourceName := "data.aws_ec2_local_gateway.first"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -834,7 +793,6 @@ func TestAccAWSRoute_IPv4_To_LocalGateway(t *testing.T) {
 			{
 				Config: testAccAWSRouteResourceConfigIpv4LocalGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -863,7 +821,6 @@ func TestAccAWSRoute_IPv4_To_LocalGateway(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv6_To_LocalGateway(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	localGatewayDataSourceName := "data.aws_ec2_local_gateway.first"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -877,7 +834,6 @@ func TestAccAWSRoute_IPv6_To_LocalGateway(t *testing.T) {
 			{
 				Config: testAccAWSRouteResourceConfigIpv6LocalGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -906,7 +862,6 @@ func TestAccAWSRoute_IPv6_To_LocalGateway(t *testing.T) {
 }
 
 func TestAccAWSRoute_ConditionalCidrBlock(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr := "10.2.0.0/16"
@@ -920,7 +875,6 @@ func TestAccAWSRoute_ConditionalCidrBlock(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 				),
@@ -928,7 +882,6 @@ func TestAccAWSRoute_ConditionalCidrBlock(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationIpv6Cidr),
 				),
@@ -944,7 +897,6 @@ func TestAccAWSRoute_ConditionalCidrBlock(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	vgwResourceName := "aws_vpn_gateway.test"
 	instanceResourceName := "aws_instance.test"
@@ -965,7 +917,6 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "instance_id", instanceResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -986,7 +937,6 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "gateway_id", vgwResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1007,7 +957,6 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "gateway_id", igwResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1028,7 +977,6 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "nat_gateway_id", ngwResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1049,7 +997,6 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "network_interface_id", eniResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1071,7 +1018,6 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "transit_gateway_id", tgwResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1092,7 +1038,6 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "vpc_endpoint_id", vpcEndpointResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1113,7 +1058,6 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "vpc_peering_connection_id", pcxResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1142,7 +1086,6 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
-	var route ec2.Route
 	resourceName := "aws_route.test"
 	vgwResourceName := "aws_vpn_gateway.test"
 	instanceResourceName := "aws_instance.test"
@@ -1161,7 +1104,6 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv6FlexiTarget(rName, destinationCidr, "instance_id", instanceResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1182,7 +1124,6 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv6FlexiTarget(rName, destinationCidr, "gateway_id", vgwResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1203,7 +1144,6 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv6FlexiTarget(rName, destinationCidr, "gateway_id", igwResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1224,7 +1164,6 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv6FlexiTarget(rName, destinationCidr, "egress_only_gateway_id", eoigwResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1245,7 +1184,6 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv6FlexiTarget(rName, destinationCidr, "network_interface_id", eniResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1266,7 +1204,6 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 			{
 				Config: testAccAWSRouteConfigIpv6FlexiTarget(rName, destinationCidr, "vpc_peering_connection_id", pcxResourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1295,7 +1232,6 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 }
 
 func TestAccAWSRoute_IPv4_To_VpcEndpoint(t *testing.T) {
-	var route ec2.Route
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_route.test"
 	vpcEndpointResourceName := "aws_vpc_endpoint.test"
@@ -1309,7 +1245,6 @@ func TestAccAWSRoute_IPv4_To_VpcEndpoint(t *testing.T) {
 			{
 				Config: testAccAWSRouteResourceConfigIpv4VpcEndpoint(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1374,41 +1309,6 @@ func TestAccAWSRoute_LocalRoute(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckAWSRouteExists(n string, res *ec2.Route) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s\n", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-		var route *ec2.Route
-		var err error
-		if v := rs.Primary.Attributes["destination_cidr_block"]; v != "" {
-			route, err = finder.RouteByIpv4Destination(conn, rs.Primary.Attributes["route_table_id"], v)
-		} else if v := rs.Primary.Attributes["destination_ipv6_cidr_block"]; v != "" {
-			route, err = finder.RouteByIpv6Destination(conn, rs.Primary.Attributes["route_table_id"], v)
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if route == nil {
-			return fmt.Errorf("Route not found")
-		}
-
-		*res = *route
-
-		return nil
-	}
 }
 
 func testAccCheckAWSRouteDestroy(s *terraform.State) error {
