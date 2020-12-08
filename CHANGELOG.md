@@ -5,6 +5,7 @@ ENHANCEMENTS
 * resource/aws_appmesh_virtual_node: Add `listener.connection_pool` attribute [GH-16167]
 * resource/aws_appmesh_virtual_node: Add `listener.outlier_detection` attribute [GH-16167]
 * resource/aws_ssm_maintenance_window: Add `schedule_offset` argument [GH-16569]
+* resource/aws_workspaces_workspace: Add failed request error code along with message [GH-16459]
 
 BUG FIXES
 
