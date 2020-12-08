@@ -28,6 +28,7 @@ CodeStar Connections
 CodeStar Notifications
 Cognito
 Config
+Connect
 Cost and Usage Report
 Data Lifecycle Manager (DLM)
 DataPipeline

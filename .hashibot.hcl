@@ -214,6 +214,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/configservice" = [
       "aws_config_",
     ],
+    "service/connect" = [
+      "aws_connect_",
+    ],
     "service/databasemigrationservice" = [
       "aws_dms_",
     ],
@@ -862,6 +865,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/configservice/**/*",
       "aws/*_aws_config_*",
       "website/**/config_*"
+    ]
+    "service/connect" = [
+      "aws/internal/service/connect/**/*",
+      "aws/*_aws_connect_*",
+      "website/**/connect_*"
     ]
     "service/costandusagereportservice" = [
       "aws/internal/service/costandusagereportservice/**/*",

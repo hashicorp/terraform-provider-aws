@@ -1153,6 +1153,7 @@ func init() {
 		"cognitoidentity",
 		"cognitoidp",
 		"configservice",
+		"connect",
 		"cur",
 		"dataexchange",
 		"datapipeline",
