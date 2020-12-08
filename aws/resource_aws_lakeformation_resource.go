@@ -2,70 +2,69 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsLakeFormationResource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLakeFormationResourceRegister,
-		Read:   resourceAwsLakeFormationResourceDescribe,
-		Delete: resourceAwsLakeFormationResourceDeregister,
+		Create: resourceAwsLakeFormationResourceCreate,
+		Read:   resourceAwsLakeFormationResourceRead,
+		Update: resourceAwsLakeFormationResourceUpdate,
+		Delete: resourceAwsLakeFormationResourceDelete,
 
 		Schema: map[string]*schema.Schema{
+			"last_modified": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"resource_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
 			"role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validateArn,
-			},
-			"use_service_linked_role": {
-				Type:     schema.TypeBool,
-				Required: true,
-				ForceNew: true,
-			},
-			"last_modified": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
 }
 
-func resourceAwsLakeFormationResourceRegister(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsLakeFormationResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lakeformationconn
 	resourceArn := d.Get("resource_arn").(string)
-	useServiceLinkedRole := d.Get("use_service_linked_role").(bool)
 
 	input := &lakeformation.RegisterResourceInput{
-		ResourceArn:          aws.String(resourceArn),
-		UseServiceLinkedRole: aws.Bool(useServiceLinkedRole),
+		ResourceArn: aws.String(resourceArn),
 	}
+
 	if v, ok := d.GetOk("role_arn"); ok {
 		input.RoleArn = aws.String(v.(string))
+	} else {
+		input.UseServiceLinkedRole = aws.Bool(true)
 	}
 
 	_, err := conn.RegisterResource(input)
-	if err != nil {
-		return fmt.Errorf("Error registering LakeFormation Resource: %s", err)
+
+	if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeAlreadyExistsException) {
+		log.Printf("[WARN] Lake Formation Resource (%s) already exists", resourceArn)
+	} else if err != nil {
+		return fmt.Errorf("error registering Lake Formation Resource (%s): %s", resourceArn, err)
 	}
 
-	d.SetId(fmt.Sprintf("lakeformation:resource:%s", resourceArn))
-
-	return resourceAwsLakeFormationResourceDescribe(d, meta)
+	d.SetId(resourceArn)
+	return resourceAwsLakeFormationResourceRead(d, meta)
 }
 
-func resourceAwsLakeFormationResourceDescribe(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsLakeFormationResourceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lakeformationconn
 	resourceArn := d.Get("resource_arn").(string)
 
@@ -73,21 +72,56 @@ func resourceAwsLakeFormationResourceDescribe(d *schema.ResourceData, meta inter
 		ResourceArn: aws.String(resourceArn),
 	}
 
-	out, err := conn.DescribeResource(input)
-	if err != nil {
-		return fmt.Errorf("Error reading LakeFormation Resource: %s", err)
+	output, err := conn.DescribeResource(input)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
+		log.Printf("[WARN] Lake Formation Resource (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	d.Set("resource_arn", resourceArn)
-	d.Set("role_arn", out.ResourceInfo.RoleArn)
-	if out.ResourceInfo.LastModified != nil {
-		d.Set("last_modified", out.ResourceInfo.LastModified.Format(time.RFC3339))
+	if err != nil {
+		return fmt.Errorf("error getting Lake Formation Resource (%s): %w", d.Id(), err)
+	}
+
+	if output == nil || output.ResourceInfo == nil {
+		return fmt.Errorf("error getting Lake Formation Resource (%s): empty response", d.Id())
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading Lake Formation Resource: %s", err)
+	}
+
+	d.Set("resource_arn", output.ResourceInfo.ResourceArn)
+	d.Set("role_arn", output.ResourceInfo.RoleArn)
+	if output.ResourceInfo.LastModified != nil {
+		d.Set("last_modified", output.ResourceInfo.LastModified.Format(time.RFC3339))
 	}
 
 	return nil
 }
 
-func resourceAwsLakeFormationResourceDeregister(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsLakeFormationResourceUpdate(d *schema.ResourceData, meta interface{}) error {
+	if _, ok := d.GetOk("role_arn"); !ok {
+		return resourceAwsLakeFormationResourceCreate(d, meta)
+	}
+
+	conn := meta.(*AWSClient).lakeformationconn
+
+	input := &lakeformation.UpdateResourceInput{
+		ResourceArn: aws.String(d.Get("resource_arn").(string)),
+		RoleArn:     aws.String(d.Get("role_arn").(string)),
+	}
+
+	_, err := conn.UpdateResource(input)
+	if err != nil {
+		return fmt.Errorf("error updating Lake Formation Resource: %s", err)
+	}
+
+	return resourceAwsLakeFormationResourceRead(d, meta)
+}
+
+func resourceAwsLakeFormationResourceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lakeformationconn
 	resourceArn := d.Get("resource_arn").(string)
 
@@ -97,7 +131,7 @@ func resourceAwsLakeFormationResourceDeregister(d *schema.ResourceData, meta int
 
 	_, err := conn.DeregisterResource(input)
 	if err != nil {
-		return fmt.Errorf("Error deregistering LakeFormation Resource: %s", err)
+		return fmt.Errorf("error deregistering Lake Formation Resource: %s", err)
 	}
 
 	return nil

@@ -3,12 +3,14 @@ subcategory: "Lake Formation"
 layout: "aws"
 page_title: "AWS: aws_lakeformation_resource"
 description: |-
-  Manages the data (Amazon S3 buckets and folders) that is being registered with AWS Lake Formation
+  Registers a Lake Formation resource as managed by the Data Catalog.
 ---
 
 # Resource: aws_lakeformation_resource
 
-Manages the data (Amazon S3 buckets and folders) that is being registered with AWS Lake Formation.
+Registers a Lake Formation resource (e.g. S3 bucket) as managed by the Data Catalog. In other words, the S3 path is added to the data lake.
+
+Choose a role that has read/write access to the chosen Amazon S3 path or use the service-linked role. When you register the S3 path, the service-linked role and a new inline policy are created on your behalf. Lake Formation adds the first path to the inline policy and attaches it to the service-linked role. When you register subsequent paths, Lake Formation adds the path to the existing policy.
 
 ## Example Usage
 
@@ -18,8 +20,7 @@ data "aws_s3_bucket" "example" {
 }
 
 resource "aws_lakeformation_resource" "example" {
-  resource_arn            = "${data.aws_s3_bucket.example.arn}"
-  use_service_linked_role = true
+  resource_arn = "${data.aws_s3_bucket.example.arn}"
 }
 ```
 
@@ -27,16 +28,11 @@ resource "aws_lakeformation_resource" "example" {
 
 The following arguments are required:
 
-* `resource_arn` – (Required) The Amazon Resource Name (ARN) of the resource.
-
-* `use_service_linked_role` – (Required) Designates a trusted caller, an IAM principal, by registering this caller with the Data Catalog.
-
-The following arguments are optional:
-
-* `role_arn` – (Optional) The IAM role that registered a resource.
+* `resource_arn` – (Required) Amazon Resource Name (ARN) of the resource, an S3 path.
+* `role_arn` – (Optional) Role that has read/write access to the resource. If not provided, the service-linked role is used.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `last_modified` - (Optional) The date and time the resource was last modified.
+* `last_modified` - (Optional) The date and time the resource was last modified in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
