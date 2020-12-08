@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -77,7 +77,7 @@ func testSweepLaunchTemplates(region string) error {
 func TestAccAWSLaunchTemplate_basic(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -85,7 +85,7 @@ func TestAccAWSLaunchTemplate_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchTemplateConfig_basic(rInt),
+				Config: testAccAWSLaunchTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
@@ -107,7 +107,7 @@ func TestAccAWSLaunchTemplate_basic(t *testing.T) {
 func TestAccAWSLaunchTemplate_disappears(t *testing.T) {
 	var launchTemplate ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -115,7 +115,7 @@ func TestAccAWSLaunchTemplate_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchTemplateConfig_basic(rInt),
+				Config: testAccAWSLaunchTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &launchTemplate),
 					testAccCheckAWSLaunchTemplateDisappears(&launchTemplate),
@@ -141,7 +141,7 @@ func TestAccAWSLaunchTemplate_BlockDeviceMappings_EBS(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.device_name", "/dev/sda1"),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.device_name", "/dev/xvda"),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.0.volume_size", "15"),
 				),
@@ -170,7 +170,7 @@ func TestAccAWSLaunchTemplate_BlockDeviceMappings_EBS_DeleteOnTermination(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.device_name", "/dev/sda1"),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.device_name", "/dev/xvda"),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.0.delete_on_termination", "true"),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.0.volume_size", "15"),
@@ -181,7 +181,7 @@ func TestAccAWSLaunchTemplate_BlockDeviceMappings_EBS_DeleteOnTermination(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.device_name", "/dev/sda1"),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.device_name", "/dev/xvda"),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.0.delete_on_termination", "false"),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.0.volume_size", "15"),
@@ -285,10 +285,10 @@ func TestAccAWSLaunchTemplate_ElasticInferenceAccelerator(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_data(t *testing.T) {
+func TestAccAWSLaunchTemplate_NetworkInterfaces_DeleteOnTermination(t *testing.T) {
 	var template ec2.LaunchTemplate
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_launch_template.test"
-	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -296,7 +296,62 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchTemplateConfig_data(rInt),
+				Config: testAccAWSLaunchTemplateConfig_NetworkInterfaces_DeleteOnTermination(rName, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.delete_on_termination", "true"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_NetworkInterfaces_DeleteOnTermination(rName, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.delete_on_termination", "false"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_NetworkInterfaces_DeleteOnTermination(rName, "\"\""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.delete_on_termination", ""),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_NetworkInterfaces_DeleteOnTermination(rName, "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.delete_on_termination", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchTemplate_data(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_data(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "1"),
@@ -313,10 +368,11 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "monitoring.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.delete_on_termination", ""),
 					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "ram_disk_id"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tag_specifications.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tag_specifications.#", "4"),
 				),
 			},
 			{
@@ -404,7 +460,7 @@ func TestAccAWSLaunchTemplate_update(t *testing.T) {
 func TestAccAWSLaunchTemplate_tags(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -412,7 +468,7 @@ func TestAccAWSLaunchTemplate_tags(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchTemplateConfig_basic(rInt),
+				Config: testAccAWSLaunchTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -425,7 +481,7 @@ func TestAccAWSLaunchTemplate_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSLaunchTemplateConfig_tagsUpdate(rInt),
+				Config: testAccAWSLaunchTemplateConfig_tagsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -439,7 +495,7 @@ func TestAccAWSLaunchTemplate_tags(t *testing.T) {
 func TestAccAWSLaunchTemplate_capacityReservation_preference(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -447,7 +503,7 @@ func TestAccAWSLaunchTemplate_capacityReservation_preference(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchTemplateConfig_capacityReservation_preference(rInt, "open"),
+				Config: testAccAWSLaunchTemplateConfig_capacityReservation_preference(rName, "open"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 				),
@@ -464,7 +520,7 @@ func TestAccAWSLaunchTemplate_capacityReservation_preference(t *testing.T) {
 func TestAccAWSLaunchTemplate_capacityReservation_target(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -472,7 +528,7 @@ func TestAccAWSLaunchTemplate_capacityReservation_target(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchTemplateConfig_capacityReservation_target(rInt),
+				Config: testAccAWSLaunchTemplateConfig_capacityReservation_target(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 				),
@@ -586,7 +642,7 @@ func TestAccAWSLaunchTemplate_creditSpecification_t3(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6757
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6757
 func TestAccAWSLaunchTemplate_IamInstanceProfile_EmptyConfigurationBlock(t *testing.T) {
 	var template1 ec2.LaunchTemplate
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -625,6 +681,7 @@ func TestAccAWSLaunchTemplate_networkInterface(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_public_ip_address", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.delete_on_termination", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_address_count", "2"),
 				),
 			},
@@ -640,6 +697,7 @@ func TestAccAWSLaunchTemplate_networkInterface(t *testing.T) {
 func TestAccAWSLaunchTemplate_networkInterfaceAddresses(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -647,7 +705,7 @@ func TestAccAWSLaunchTemplate_networkInterfaceAddresses(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchTemplateConfig_networkInterfaceAddresses,
+				Config: testAccAWSLaunchTemplateConfig_networkInterfaceAddresses(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
@@ -777,7 +835,7 @@ func TestAccAWSLaunchTemplate_networkInterface_ipv6Addresses(t *testing.T) {
 func TestAccAWSLaunchTemplate_networkInterface_ipv6AddressCount(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -785,7 +843,7 @@ func TestAccAWSLaunchTemplate_networkInterface_ipv6AddressCount(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchTemplateConfig_ipv6_count(rInt),
+				Config: testAccAWSLaunchTemplateConfig_ipv6_count(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
@@ -847,7 +905,7 @@ func TestAccAWSLaunchTemplate_instanceMarketOptions(t *testing.T) {
 func TestAccAWSLaunchTemplate_licenseSpecification(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.example"
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -855,7 +913,7 @@ func TestAccAWSLaunchTemplate_licenseSpecification(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchTemplateConfig_licenseSpecification(rInt),
+				Config: testAccAWSLaunchTemplateConfig_licenseSpecification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "license_specification.#", "1"),
@@ -939,6 +997,108 @@ func TestAccAWSLaunchTemplate_hibernation(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_defaultVersion(t *testing.T) {
+	resourceName := "aws_launch_template.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	description := "Test Description 1"
+	descriptionNew := "Test Description 2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_description(rName, description),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "latest_version", "1"),
+				),
+			},
+			// An updated config should cause a new version to be created
+			// but keep the default_version unchanged if unset
+			{
+				Config: testAccAWSLaunchTemplateConfig_description(rName, descriptionNew),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "latest_version", "2"),
+				),
+			},
+			// An updated config to set the default_version to an existing version
+			// should not cause a new version to be created
+			{
+				Config: testAccAWSLaunchTemplateConfig_descriptionDefaultVersion(rName, descriptionNew, 2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "default_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "latest_version", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchTemplate_updateDefaultVersion(t *testing.T) {
+	resourceName := "aws_launch_template.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	description := "Test Description 1"
+	descriptionNew := "Test Description 2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_description(rName, description),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "latest_version", "1"),
+				),
+			},
+			// Updating a field should create a new version but not update the default_version
+			// if update_default_version is set to false
+			{
+				Config: testAccAWSLaunchTemplateconfig_descriptionUpdateDefaultVersion(rName, descriptionNew, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "latest_version", "2"),
+				),
+			},
+			// Only updating the update_default_version to true should not create a new version
+			// but update the template version to the latest available
+			{
+				Config: testAccAWSLaunchTemplateconfig_descriptionUpdateDefaultVersion(rName, descriptionNew, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "default_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "latest_version", "2"),
+				),
+			},
+			// Updating a field should create a new version and update the default_version
+			// if update_default_version is set to true
+			{
+				Config: testAccAWSLaunchTemplateconfig_descriptionUpdateDefaultVersion(rName, description, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "default_version", "3"),
+					resource.TestCheckResourceAttr(resourceName, "latest_version", "3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"update_default_version",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLaunchTemplateExists(n string, t *ec2.LaunchTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1011,63 +1171,43 @@ func testAccCheckAWSLaunchTemplateDisappears(launchTemplate *ec2.LaunchTemplate)
 	}
 }
 
-func testAccAWSLaunchTemplateConfig_basic(rInt int) string {
+func testAccAWSLaunchTemplateConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  name = "test_%d"
+  name = %q
 
   tags = {
     test = "bar"
   }
 }
-`, rInt)
+`, rName)
 }
 
-func testAccAWSLaunchTemplateConfig_ipv6_count(rInt int) string {
+func testAccAWSLaunchTemplateConfig_ipv6_count(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  name = "set_ipv6_count_test_%d"
+  name = %q
 
   network_interfaces {
     ipv6_address_count = 1
   }
 }
-`, rInt)
+`, rName)
 }
 
 func testAccAWSLaunchTemplateConfig_BlockDeviceMappings_EBS(rName string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["099720109477"] # Canonical
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableAZsNoOptInConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  image_id      = "${data.aws_ami.test.id}"
-  instance_type = "t2.micro"
-  name          = %q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  name          = %[1]q
 
   block_device_mappings {
-    device_name = "/dev/sda1"
+    device_name = "/dev/xvda"
 
     ebs {
       volume_size = 15
@@ -1078,53 +1218,33 @@ resource "aws_launch_template" "test" {
 # Creating an AutoScaling Group verifies the launch template
 # ValidationError: You must use a valid fully-formed launch template. the encrypted flag cannot be specified since device /dev/sda1 has a snapshot specified.
 resource "aws_autoscaling_group" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
   desired_capacity   = 0
   max_size           = 0
   min_size           = 0
-  name               = %q
+  name               = %[1]q
 
   launch_template {
-    id      = "${aws_launch_template.test.id}"
-    version = "${aws_launch_template.test.default_version}"
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.default_version
   }
 }
-`, rName, rName)
+`, rName))
 }
 
 func testAccAWSLaunchTemplateConfig_BlockDeviceMappings_EBS_DeleteOnTermination(rName string, deleteOnTermination bool) string {
-	return fmt.Sprintf(`
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["099720109477"] # Canonical
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableAZsNoOptInConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  image_id      = "${data.aws_ami.test.id}"
-  instance_type = "t2.micro"
-  name          = %q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  name          = %[1]q
 
   block_device_mappings {
-    device_name = "/dev/sda1"
+    device_name = "/dev/xvda"
 
     ebs {
       delete_on_termination = %t
@@ -1136,24 +1256,38 @@ resource "aws_launch_template" "test" {
 # Creating an AutoScaling Group verifies the launch template
 # ValidationError: You must use a valid fully-formed launch template. the encrypted flag cannot be specified since device /dev/sda1 has a snapshot specified.
 resource "aws_autoscaling_group" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
   desired_capacity   = 0
   max_size           = 0
   min_size           = 0
-  name               = %q
+  name               = %[1]q
 
   launch_template {
-    id      = "${aws_launch_template.test.id}"
-    version = "${aws_launch_template.test.default_version}"
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.default_version
   }
 }
-`, rName, deleteOnTermination, rName)
+`, rName, deleteOnTermination))
+}
+
+func testAccAWSLaunchTemplateConfig_NetworkInterfaces_DeleteOnTermination(rName string, deleteOnTermination string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %q
+
+  network_interfaces {
+    network_interface_id  = "eni-123456ab"
+    security_groups       = ["sg-1a23bc45"]
+    delete_on_termination = %s
+  }
+}
+`, rName, deleteOnTermination)
 }
 
 func testAccAWSLaunchTemplateConfig_EbsOptimized(rName, ebsOptimized string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  ebs_optimized = %s # allows "", false, true, "false", "true" values
+  ebs_optimized = %s
   name          = %q
 }
 `, ebsOptimized, rName)
@@ -1171,18 +1305,17 @@ resource "aws_launch_template" "test" {
 `, rName, elasticInferenceAcceleratorType)
 }
 
-func testAccAWSLaunchTemplateConfig_data(rInt int) string {
-	return fmt.Sprintf(`
+func testAccAWSLaunchTemplateConfig_data(rName string) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  name = "test_%d"
+  name = %q
 
   block_device_mappings {
     device_name = "test"
   }
 
   disable_api_termination = true
-
-  ebs_optimized = false
+  ebs_optimized           = false
 
   elastic_gpu_specifications {
     type = "test"
@@ -1192,8 +1325,7 @@ resource "aws_launch_template" "test" {
     name = "test"
   }
 
-  image_id = "ami-12a3b456"
-
+  image_id                             = "ami-12a3b456"
   instance_initiated_shutdown_behavior = "terminate"
 
   instance_market_options {
@@ -1201,10 +1333,8 @@ resource "aws_launch_template" "test" {
   }
 
   instance_type = "t2.micro"
-
-  kernel_id = "aki-a12bc3de"
-
-  key_name = "test"
+  kernel_id     = "aki-a12bc3de"
+  key_name      = "test"
 
   monitoring {
     enabled = true
@@ -1216,11 +1346,10 @@ resource "aws_launch_template" "test" {
   }
 
   placement {
-    availability_zone = "us-west-2b"
+    availability_zone = data.aws_availability_zones.available.names[0]
   }
 
-  ram_disk_id = "ari-a12bc3de"
-
+  ram_disk_id            = "ari-a12bc3de"
   vpc_security_group_ids = ["sg-12a3b45c"]
 
   tag_specifications {
@@ -1230,35 +1359,59 @@ resource "aws_launch_template" "test" {
       Name = "test"
     }
   }
+
+  tag_specifications {
+    resource_type = "volume"
+
+    tags = {
+      Name = "test"
+    }
+  }
+
+  tag_specifications {
+    resource_type = "spot-instances-request"
+
+    tags = {
+      Name = "test"
+    }
+  }
+
+  tag_specifications {
+    resource_type = "elastic-gpu"
+
+    tags = {
+      Name = "test"
+    }
+  }
 }
-`, rInt)
+`, rName)) //lintignore:AWSAT002
 }
 
-func testAccAWSLaunchTemplateConfig_tagsUpdate(rInt int) string {
+func testAccAWSLaunchTemplateConfig_tagsUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  name = "test_%d"
+  name = %q
 
   tags = {
     bar = "baz"
   }
 }
-`, rInt)
+`, rName)
 }
 
-func testAccAWSLaunchTemplateConfig_capacityReservation_preference(rInt int, preference string) string {
+func testAccAWSLaunchTemplateConfig_capacityReservation_preference(rName string, preference string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  name = "test_%d"
+  name = %q
 
   capacity_reservation_specification {
     capacity_reservation_preference = %q
   }
 }
-`, rInt, preference)
+`, rName, preference)
 }
 
-func testAccAWSLaunchTemplateConfig_capacityReservation_target(rInt int) string {
+func testAccAWSLaunchTemplateConfig_capacityReservation_target(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -1270,32 +1423,32 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_ec2_capacity_reservation" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   instance_count    = 1
   instance_platform = "Linux/UNIX"
   instance_type     = "t2.micro"
 }
 
 resource "aws_launch_template" "test" {
-  name = "test_%d"
+  name = %q
 
   capacity_reservation_specification {
     capacity_reservation_target {
-      capacity_reservation_id = "${aws_ec2_capacity_reservation.test.id}"
+      capacity_reservation_id = aws_ec2_capacity_reservation.test.id
     }
   }
 }
-`, rInt)
+`, rName)
 }
 
 func testAccAWSLaunchTemplateConfig_cpuOptions(rName string, coreCount, threadsPerCore int) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "foo" {
-	name = %q
+  name = %q
 
   cpu_options {
-		core_count = %d
-		threads_per_core = %d
+    core_count       = %d
+    threads_per_core = %d
   }
 }
 `, rName, coreCount, threadsPerCore)
@@ -1324,7 +1477,7 @@ resource "aws_launch_template" "test" {
 `, rName)
 }
 
-func testAccAWSLaunchTemplateConfig_licenseSpecification(rInt int) string {
+func testAccAWSLaunchTemplateConfig_licenseSpecification(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_licensemanager_license_configuration" "example" {
   name                  = "Example"
@@ -1332,20 +1485,20 @@ resource "aws_licensemanager_license_configuration" "example" {
 }
 
 resource "aws_launch_template" "example" {
-  name = "test_%d"
+  name = %q
 
   license_specification {
-    license_configuration_arn = "${aws_licensemanager_license_configuration.example.id}"
+    license_configuration_arn = aws_licensemanager_license_configuration.example.id
   }
 }
-`, rInt)
+`, rName)
 }
 
 func testAccAWSLaunchTemplateConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  name        = "%s"
-  description = "%s"
+  name        = %q
+  description = %q
 }
 `, rName, description)
 }
@@ -1357,20 +1510,20 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = aws_vpc.test.id
   cidr_block = "10.1.0.0/24"
 }
 
 resource "aws_network_interface" "test" {
-  subnet_id = "${aws_subnet.test.id}"
+  subnet_id = aws_subnet.test.id
 }
 
 resource "aws_launch_template" "test" {
   name = %[1]q
 
   network_interfaces {
-    network_interface_id = "${aws_network_interface.test.id}"
-    ipv4_address_count = 2
+    network_interface_id = aws_network_interface.test.id
+    ipv4_address_count   = 2
   }
 }
 `, rName)
@@ -1387,7 +1540,7 @@ resource "aws_launch_template" "test" {
   name = %[1]q
 
   placement {
-    group_name       = "${aws_placement_group.test.name}"
+    group_name       = aws_placement_group.test.name
     partition_number = %[2]d
   }
 
@@ -1398,29 +1551,32 @@ resource "aws_launch_template" "test" {
 `, rName, partNum)
 }
 
-const testAccAWSLaunchTemplateConfig_networkInterfaceAddresses = `
+func testAccAWSLaunchTemplateConfig_networkInterfaceAddresses(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 }
 
 resource "aws_subnet" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = aws_vpc.test.id
   cidr_block = "10.1.0.0/24"
 }
 
 resource "aws_network_interface" "test" {
-  subnet_id = "${aws_subnet.test.id}"
+  subnet_id = aws_subnet.test.id
 }
 
 resource "aws_launch_template" "test" {
-  name = "network-interface-launch-template"
+  name = %q
 
   network_interfaces {
-    network_interface_id = "${aws_network_interface.test.id}"
-    ipv4_addresses = ["10.1.0.10", "10.1.0.11"]
+    network_interface_id = aws_network_interface.test.id
+    ipv4_addresses       = ["10.1.0.10", "10.1.0.11"]
   }
 }
-`
+`, rName)
+
+}
 
 func testAccAWSLaunchTemplateConfig_associatePublicIpAddress(rName, associatePublicIPAddress string) string {
 	return fmt.Sprintf(`
@@ -1429,21 +1585,21 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = aws_vpc.test.id
   cidr_block = "10.1.0.0/24"
 }
 
 resource "aws_network_interface" "test" {
-  subnet_id = "${aws_subnet.test.id}"
+  subnet_id = aws_subnet.test.id
 }
 
 resource "aws_launch_template" "test" {
   name = %[1]q
 
   network_interfaces {
-	network_interface_id = "${aws_network_interface.test.id}"
-	associate_public_ip_address = %[2]s
-    ipv4_address_count = 2
+    network_interface_id        = aws_network_interface.test.id
+    associate_public_ip_address = %[2]s
+    ipv4_address_count          = 2
   }
 }
 `, rName, associatePublicIPAddress)
@@ -1476,8 +1632,8 @@ data "aws_ami" "test_ami" {
 }
 
 resource "aws_launch_template" "test" {
-  name_prefix = "testbar"
-  image_id = "${data.aws_ami.test_ami.id}"
+  name_prefix   = "testbar"
+  image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.micro"
 }
 
@@ -1491,13 +1647,14 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
-  desired_capacity = 0
-  max_size = 0
-  min_size = 0
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  desired_capacity   = 0
+  max_size           = 0
+  min_size           = 0
+
   launch_template {
-    id = "${aws_launch_template.test.id}"
-    version = "${aws_launch_template.test.latest_version}"
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.latest_version
   }
 }
 `
@@ -1514,8 +1671,8 @@ data "aws_ami" "test_ami" {
 }
 
 resource "aws_launch_template" "test" {
-  name_prefix = "testbar"
-  image_id = "${data.aws_ami.test_ami.id}"
+  name_prefix   = "testbar"
+  image_id      = data.aws_ami.test_ami.id
   instance_type = "t2.nano"
 }
 
@@ -1529,13 +1686,14 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
-  desired_capacity = 0
-  max_size = 0
-  min_size = 0
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  desired_capacity   = 0
+  max_size           = 0
+  min_size           = 0
+
   launch_template {
-    id = "${aws_launch_template.test.id}"
-    version = "${aws_launch_template.test.latest_version}"
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.latest_version
   }
 }
 `
@@ -1546,18 +1704,19 @@ data "aws_ami" "test" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-hvm-*-x86_64-gp2"]
   }
 }
 
 resource "aws_launch_template" "test" {
-  name_prefix = "instance_market_options"
-  image_id = "${data.aws_ami.test.id}"
+  name_prefix   = "instance_market_options"
+  image_id      = data.aws_ami.test.id
   instance_type = "t2.micro"
 
   instance_market_options {
     market_type = "spot"
+
     spot_options {
       spot_instance_type = "one-time"
     }
@@ -1574,14 +1733,14 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_autoscaling_group" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
-  desired_capacity = 0
-  min_size = 0
-  max_size = 0
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  desired_capacity   = 0
+  min_size           = 0
+  max_size           = 0
 
   launch_template {
-    id = "${aws_launch_template.test.id}"
-    version = "${aws_launch_template.test.latest_version}"
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.latest_version
   }
 }
 `
@@ -1592,18 +1751,19 @@ data "aws_ami" "test" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-hvm-*-x86_64-gp2"]
   }
 }
 
 resource "aws_launch_template" "test" {
-  name_prefix = "instance_market_options"
-  image_id = "${data.aws_ami.test.id}"
+  name_prefix   = "instance_market_options"
+  image_id      = data.aws_ami.test.id
   instance_type = "t2.micro"
 
   instance_market_options {
     market_type = "spot"
+
     spot_options {
       max_price          = "0.5"
       spot_instance_type = "one-time"
@@ -1621,14 +1781,14 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_autoscaling_group" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
-  desired_capacity = 0
-  min_size = 0
-  max_size = 0
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  desired_capacity   = 0
+  min_size           = 0
+  max_size           = 0
 
   launch_template {
-    id = "${aws_launch_template.test.id}"
-    version = "${aws_launch_template.test.latest_version}"
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.latest_version
   }
 }
 `
@@ -1657,4 +1817,32 @@ resource "aws_launch_template" "test" {
   }
 }
 `, rName, enabled)
+}
+
+func testAccAWSLaunchTemplateConfig_descriptionDefaultVersion(rName, description string, version int) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name            = %q
+  description     = %q
+  default_version = %d
+
+  tags = {
+    test = "baz"
+  }
+}
+`, rName, description, version)
+}
+
+func testAccAWSLaunchTemplateconfig_descriptionUpdateDefaultVersion(rName, description string, update bool) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name                   = %q
+  description            = %q
+  update_default_version = %t
+
+  tags = {
+    test = "baz"
+  }
+}
+`, rName, description, update)
 }

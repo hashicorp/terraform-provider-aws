@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -92,7 +92,7 @@ func dataSourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface
 	d.Set("iam_role_arn", stack.RoleARN)
 
 	if len(stack.NotificationARNs) > 0 {
-		d.Set("notification_arns", schema.NewSet(schema.HashString, flattenStringList(stack.NotificationARNs)))
+		d.Set("notification_arns", flattenStringSet(stack.NotificationARNs))
 	}
 
 	d.Set("parameters", flattenAllCloudFormationParameters(stack.Parameters))
@@ -102,7 +102,7 @@ func dataSourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface
 	d.Set("outputs", flattenCloudFormationOutputs(stack.Outputs))
 
 	if len(stack.Capabilities) > 0 {
-		d.Set("capabilities", schema.NewSet(schema.HashString, flattenStringList(stack.Capabilities)))
+		d.Set("capabilities", flattenStringSet(stack.Capabilities))
 	}
 
 	tInput := cloudformation.GetTemplateInput{
@@ -113,7 +113,7 @@ func dataSourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	template, err := normalizeCloudFormationTemplate(*tOut.TemplateBody)
+	template, err := normalizeJsonOrYamlString(*tOut.TemplateBody)
 	if err != nil {
 		return fmt.Errorf("template body contains an invalid JSON or YAML: %s", err)
 	}

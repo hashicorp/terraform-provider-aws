@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -14,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -215,25 +214,25 @@ func TestAccAWSElasticacheCluster_Port(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheCluster_SecurityGroup(t *testing.T) {
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
+func TestAccAWSElasticacheCluster_SecurityGroup_Ec2Classic(t *testing.T) {
 	var ec elasticache.CacheCluster
+	resourceName := "aws_elasticache_cluster.test"
+	resourceSecurityGroupName := "aws_elasticache_security_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticacheClusterConfig_SecurityGroup,
+				Config: testAccAWSElasticacheClusterConfig_SecurityGroup_Ec2Classic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheSecurityGroupExists("aws_elasticache_security_group.test"),
-					testAccCheckAWSElasticacheClusterExists("aws_elasticache_cluster.test", &ec),
-					resource.TestCheckResourceAttr("aws_elasticache_cluster.test", "cache_nodes.0.id", "0001"),
-					resource.TestCheckResourceAttrSet("aws_elasticache_cluster.test", "configuration_endpoint"),
-					resource.TestCheckResourceAttrSet("aws_elasticache_cluster.test", "cluster_address"),
+					testAccCheckAWSElasticacheSecurityGroupExists(resourceSecurityGroupName),
+					testAccCheckAWSElasticacheClusterEc2ClassicExists(resourceName, &ec),
+					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.id", "0001"),
+					resource.TestCheckResourceAttrSet(resourceName, "configuration_endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_address"),
 				),
 			},
 		},
@@ -542,18 +541,18 @@ func TestAccAWSElasticacheCluster_NodeTypeResize_Memcached(t *testing.T) {
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticacheClusterConfig_NodeType_Memcached(rName, "cache.m3.medium"),
+				Config: testAccAWSElasticacheClusterConfig_NodeType_Memcached(rName, "cache.t3.small"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheClusterExists(resourceName, &pre),
-					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.m3.medium"),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.t3.small"),
 				),
 			},
 			{
-				Config: testAccAWSElasticacheClusterConfig_NodeType_Memcached(rName, "cache.m3.large"),
+				Config: testAccAWSElasticacheClusterConfig_NodeType_Memcached(rName, "cache.t3.medium"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheClusterExists(resourceName, &post),
 					testAccCheckAWSElasticacheClusterRecreated(&pre, &post),
-					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.m3.large"),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.t3.medium"),
 				),
 			},
 		},
@@ -571,18 +570,18 @@ func TestAccAWSElasticacheCluster_NodeTypeResize_Redis(t *testing.T) {
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticacheClusterConfig_NodeType_Redis(rName, "cache.m3.medium"),
+				Config: testAccAWSElasticacheClusterConfig_NodeType_Redis(rName, "cache.t3.small"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheClusterExists(resourceName, &pre),
-					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.m3.medium"),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.t3.small"),
 				),
 			},
 			{
-				Config: testAccAWSElasticacheClusterConfig_NodeType_Redis(rName, "cache.m3.large"),
+				Config: testAccAWSElasticacheClusterConfig_NodeType_Redis(rName, "cache.t3.medium"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheClusterExists(resourceName, &post),
 					testAccCheckAWSElasticacheClusterNotRecreated(&pre, &post),
-					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.m3.large"),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.t3.medium"),
 				),
 			},
 		},
@@ -600,82 +599,6 @@ func TestAccAWSElasticacheCluster_NumCacheNodes_Redis(t *testing.T) {
 			{
 				Config:      testAccAWSElasticacheClusterConfig_NumCacheNodes_Redis(rName, 2),
 				ExpectError: regexp.MustCompile(`engine "redis" does not support num_cache_nodes > 1`),
-			},
-		},
-	})
-}
-
-func TestAccAWSElasticacheCluster_ReplicationGroupID_InvalidAttributes(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "az_mode", "single-az"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with az_mode`),
-			},
-			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "engine_version", "3.2.10"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with engine_version`),
-			},
-			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "engine", "redis"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with engine`),
-			},
-			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "maintenance_window", "sun:05:00-sun:09:00"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with maintenance_window`),
-			},
-			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "node_type", "cache.m3.medium"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with node_type`),
-			},
-			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "notification_topic_arn", "arn:aws:sns:us-east-1:123456789012:topic/non-existent"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with notification_topic_arn`),
-			},
-			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "num_cache_nodes", "1"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with num_cache_nodes`),
-			},
-			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "parameter_group_name", "non-existent"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with parameter_group_name`),
-			},
-			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "port", "6379"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with port`),
-			},
-			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "security_group_ids", "${list(\"sg-12345678\", \"sg-87654321\")}"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with security_group_ids`),
-			},
-			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "security_group_names", "${list(\"group1\", \"group2\")}"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with security_group_names`),
-			},
-			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "snapshot_arns", "${list(\"arn:aws:s3:::my_bucket/snapshot1.rdb\")}"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with snapshot_arns`),
-			},
-			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "snapshot_name", "arn:aws:s3:::my_bucket/snapshot1.rdb"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with snapshot_name`),
-			},
-			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "snapshot_retention_limit", "0"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with snapshot_retention_limit`),
-			},
-			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "snapshot_window", "05:00-09:00"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with snapshot_window`),
-			},
-			{
-				Config:      testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, "subnet_group_name", "group1"),
-				ExpectError: regexp.MustCompile(`"replication_group_id": conflicts with subnet_group_name`),
 			},
 		},
 	})
@@ -709,7 +632,7 @@ func TestAccAWSElasticacheCluster_ReplicationGroupID_SingleReplica(t *testing.T)
 	var cluster elasticache.CacheCluster
 	var replicationGroup elasticache.ReplicationGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	clusterResourceName := "aws_elasticache_cluster.test"
+	clusterResourceName := "aws_elasticache_cluster.test.0"
 	replicationGroupResourceName := "aws_elasticache_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -724,7 +647,7 @@ func TestAccAWSElasticacheCluster_ReplicationGroupID_SingleReplica(t *testing.T)
 					testAccCheckAWSElasticacheClusterExists(clusterResourceName, &cluster),
 					testAccCheckAWSElasticacheClusterReplicationGroupIDAttribute(&cluster, &replicationGroup),
 					resource.TestCheckResourceAttr(clusterResourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(clusterResourceName, "node_type", "cache.m3.medium"),
+					resource.TestCheckResourceAttr(clusterResourceName, "node_type", "cache.t3.medium"),
 					resource.TestCheckResourceAttr(clusterResourceName, "port", "6379"),
 				),
 			},
@@ -749,15 +672,17 @@ func TestAccAWSElasticacheCluster_ReplicationGroupID_MultipleReplica(t *testing.
 				Config: testAccAWSElasticacheClusterConfig_ReplicationGroupID_Replica(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheReplicationGroupExists(replicationGroupResourceName, &replicationGroup),
+
 					testAccCheckAWSElasticacheClusterExists(clusterResourceName1, &cluster1),
-					testAccCheckAWSElasticacheClusterExists(clusterResourceName2, &cluster2),
 					testAccCheckAWSElasticacheClusterReplicationGroupIDAttribute(&cluster1, &replicationGroup),
-					testAccCheckAWSElasticacheClusterReplicationGroupIDAttribute(&cluster2, &replicationGroup),
 					resource.TestCheckResourceAttr(clusterResourceName1, "engine", "redis"),
-					resource.TestCheckResourceAttr(clusterResourceName1, "node_type", "cache.m3.medium"),
+					resource.TestCheckResourceAttr(clusterResourceName1, "node_type", "cache.t3.medium"),
 					resource.TestCheckResourceAttr(clusterResourceName1, "port", "6379"),
+
+					testAccCheckAWSElasticacheClusterExists(clusterResourceName2, &cluster2),
+					testAccCheckAWSElasticacheClusterReplicationGroupIDAttribute(&cluster2, &replicationGroup),
 					resource.TestCheckResourceAttr(clusterResourceName2, "engine", "redis"),
-					resource.TestCheckResourceAttr(clusterResourceName2, "node_type", "cache.m3.medium"),
+					resource.TestCheckResourceAttr(clusterResourceName2, "node_type", "cache.t3.medium"),
 					resource.TestCheckResourceAttr(clusterResourceName2, "port", "6379"),
 				),
 			},
@@ -866,6 +791,41 @@ func testAccCheckAWSElasticacheClusterExists(n string, v *elasticache.CacheClust
 	}
 }
 
+func testAccCheckAWSElasticacheClusterEc2ClassicExists(n string, v *elasticache.CacheCluster) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No cache cluster ID is set")
+		}
+
+		conn := testAccProviderEc2Classic.Meta().(*AWSClient).elasticacheconn
+
+		input := &elasticache.DescribeCacheClustersInput{
+			CacheClusterId: aws.String(rs.Primary.ID),
+		}
+
+		output, err := conn.DescribeCacheClusters(input)
+
+		if err != nil {
+			return fmt.Errorf("error describing Elasticache Cluster (%s): %w", rs.Primary.ID, err)
+		}
+
+		for _, c := range output.CacheClusters {
+			if aws.StringValue(c.CacheClusterId) == rs.Primary.ID {
+				*v = *c
+
+				return nil
+			}
+		}
+
+		return fmt.Errorf("Elasticache Cluster (%s) not found", rs.Primary.ID)
+	}
+}
+
 func testAccAWSElasticacheClusterConfig_Engine_Memcached(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
@@ -913,48 +873,55 @@ resource "aws_elasticache_cluster" "test" {
 `, rName, port)
 }
 
-var testAccAWSElasticacheClusterConfig_SecurityGroup = fmt.Sprintf(`
+func testAccAWSElasticacheClusterConfig_SecurityGroup_Ec2Classic(rName string) string {
+	return composeConfig(
+		testAccEc2ClassicRegionProviderConfig(),
+		fmt.Sprintf(`
 resource "aws_security_group" "test" {
-    name        = "tf-test-security-group-%03d"
-    description = "tf-test-security-group-descr"
-    ingress {
-        from_port   = -1
-        to_port     = -1
-        protocol    = "icmp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
+  name        = %[1]q
+  description = "tf-test-security-group-descr"
 
-    tags = {
-        Name = "TestAccAWSElasticacheCluster_basic"
-    }
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "TestAccAWSElasticacheCluster_basic"
+  }
 }
 
 resource "aws_elasticache_security_group" "test" {
-    name                 = "tf-test-security-group-%03d"
-    description          = "tf-test-security-group-descr"
-    security_group_names = ["${aws_security_group.test.name}"]
+  name                 = %[1]q
+  description          = "tf-test-security-group-descr"
+  security_group_names = [aws_security_group.test.name]
 }
 
 resource "aws_elasticache_cluster" "test" {
-    cluster_id           = "tf-%s"
-    engine               = "memcached"
-    node_type            = "cache.m3.medium"
-    num_cache_nodes      = 1
-    port                 = 11211
-    security_group_names = ["${aws_elasticache_security_group.test.name}"]
+  cluster_id = %[1]q
+  engine     = "memcached"
+
+  # tflint-ignore: aws_elasticache_cluster_previous_type
+  node_type            = "cache.m3.medium"
+  num_cache_nodes      = 1
+  port                 = 11211
+  security_group_names = [aws_elasticache_security_group.test.name]
 }
-`, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
+`, rName))
+}
 
 func testAccAWSElasticacheClusterConfig_snapshots(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
-    cluster_id               = "tf-%s"
-    engine                   = "redis"
-    node_type                = "cache.t3.small"
-    num_cache_nodes          = 1
-    port                     = 6379
-    snapshot_window          = "05:00-09:00"
-    snapshot_retention_limit = 3
+  cluster_id               = "tf-%s"
+  engine                   = "redis"
+  node_type                = "cache.t3.small"
+  num_cache_nodes          = 1
+  port                     = 6379
+  snapshot_window          = "05:00-09:00"
+  snapshot_retention_limit = 3
 }
 `, rName)
 }
@@ -962,14 +929,14 @@ resource "aws_elasticache_cluster" "test" {
 func testAccAWSElasticacheClusterConfig_snapshotsUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
-    cluster_id               = "tf-%s"
-    engine                   = "redis"
-    node_type                = "cache.t3.small"
-    num_cache_nodes          = 1
-    port                     = 6379
-    snapshot_window          = "07:00-09:00"
-    snapshot_retention_limit = 7
-    apply_immediately        = true
+  cluster_id               = "tf-%s"
+  engine                   = "redis"
+  node_type                = "cache.t3.small"
+  num_cache_nodes          = 1
+  port                     = 6379
+  snapshot_window          = "07:00-09:00"
+  snapshot_retention_limit = 7
+  apply_immediately        = true
 }
 `, rName)
 }
@@ -989,7 +956,7 @@ resource "aws_elasticache_cluster" "test" {
 func testAccAWSElasticacheClusterConfig_NumCacheNodesWithPreferredAvailabilityZones(rName string, numCacheNodes int) string {
 	preferredAvailabilityZones := make([]string, numCacheNodes)
 	for i := range preferredAvailabilityZones {
-		preferredAvailabilityZones[i] = `"${data.aws_availability_zones.available.names[0]}"`
+		preferredAvailabilityZones[i] = `data.aws_availability_zones.available.names[0]`
 	}
 
 	return fmt.Sprintf(`
@@ -1024,58 +991,61 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_vpc" "test" {
-    cidr_block = "192.168.0.0/16"
-    tags = {
-        Name = "terraform-testacc-elasticache-cluster-in-vpc"
-    }
+  cidr_block = "192.168.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-elasticache-cluster-in-vpc"
+  }
 }
 
 resource "aws_subnet" "test" {
-    vpc_id            = "${aws_vpc.test.id}"
-    cidr_block        = "192.168.0.0/20"
-    availability_zone = "${data.aws_availability_zones.available.names[0]}"
-    tags = {
-        Name = "tf-acc-elasticache-cluster-in-vpc"
-    }
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "192.168.0.0/20"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = "tf-acc-elasticache-cluster-in-vpc"
+  }
 }
 
 resource "aws_elasticache_subnet_group" "test" {
-    name        = "tf-test-cache-subnet-%03d"
-    description = "tf-test-cache-subnet-group-descr"
-    subnet_ids  = ["${aws_subnet.test.id}"]
+  name        = "tf-test-cache-subnet-%03d"
+  description = "tf-test-cache-subnet-group-descr"
+  subnet_ids  = [aws_subnet.test.id]
 }
 
 resource "aws_security_group" "test" {
-    name        = "tf-test-security-group-%03d"
-    description = "tf-test-security-group-descr"
-    vpc_id      = "${aws_vpc.test.id}"
-    ingress {
-        from_port   = -1
-        to_port     = -1
-        protocol    = "icmp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
+  name        = "tf-test-security-group-%03d"
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 resource "aws_elasticache_cluster" "test" {
-    // Including uppercase letters in this name to ensure
-    // that we correctly handle the fact that the API
-    // normalizes names to lowercase.
-    cluster_id             = "tf-%s"
-    node_type              = "cache.t3.small"
-    num_cache_nodes        = 1
-    engine                 = "redis"
-    engine_version         = "2.8.19"
-    port                   = 6379
-    subnet_group_name      = "${aws_elasticache_subnet_group.test.name}"
-    security_group_ids     = ["${aws_security_group.test.id}"]
-    parameter_group_name   = "default.redis2.8"
-    notification_topic_arn = "${aws_sns_topic.test.arn}"
-    availability_zone      = "${data.aws_availability_zones.available.names[0]}"
+  # Including uppercase letters in this name to ensure
+  # that we correctly handle the fact that the API
+  # normalizes names to lowercase.
+  cluster_id             = "tf-%s"
+  node_type              = "cache.t3.small"
+  num_cache_nodes        = 1
+  engine                 = "redis"
+  engine_version         = "2.8.19"
+  port                   = 6379
+  subnet_group_name      = aws_elasticache_subnet_group.test.name
+  security_group_ids     = [aws_security_group.test.id]
+  parameter_group_name   = "default.redis2.8"
+  notification_topic_arn = aws_sns_topic.test.arn
+  availability_zone      = data.aws_availability_zones.available.names[0]
 }
 
 resource "aws_sns_topic" "test" {
-    name = "tf-ecache-cluster-test"
+  name = "tf-ecache-cluster-test"
 }
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
 
@@ -1090,71 +1060,75 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_vpc" "test" {
-    cidr_block = "192.168.0.0/16"
-    tags = {
-        Name = "terraform-testacc-elasticache-cluster-multi-az-in-vpc"
-    }
+  cidr_block = "192.168.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-elasticache-cluster-multi-az-in-vpc"
+  }
 }
 
 resource "aws_subnet" "test1" {
-    vpc_id            = "${aws_vpc.test.id}"
-    cidr_block        = "192.168.0.0/20"
-    availability_zone = "${data.aws_availability_zones.available.names[0]}"
-    tags = {
-        Name = "tf-acc-elasticache-cluster-multi-az-in-vpc-foo"
-    }
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "192.168.0.0/20"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = "tf-acc-elasticache-cluster-multi-az-in-vpc-foo"
+  }
 }
 
 resource "aws_subnet" "test2" {
-    vpc_id            = "${aws_vpc.test.id}"
-    cidr_block        = "192.168.16.0/20"
-    availability_zone = "${data.aws_availability_zones.available.names[1]}"
-    tags = {
-        Name = "tf-acc-elasticache-cluster-multi-az-in-vpc-bar"
-    }
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "192.168.16.0/20"
+  availability_zone = data.aws_availability_zones.available.names[1]
+
+  tags = {
+    Name = "tf-acc-elasticache-cluster-multi-az-in-vpc-bar"
+  }
 }
 
 resource "aws_elasticache_subnet_group" "test" {
-    name        = "tf-test-cache-subnet-%03d"
-    description = "tf-test-cache-subnet-group-descr"
-    subnet_ids = [
-        "${aws_subnet.test1.id}",
-        "${aws_subnet.test2.id}"
-    ]
+  name        = "tf-test-cache-subnet-%03d"
+  description = "tf-test-cache-subnet-group-descr"
+  subnet_ids = [
+    aws_subnet.test1.id,
+    aws_subnet.test2.id,
+  ]
 }
 
 resource "aws_security_group" "test" {
-    name        = "tf-test-security-group-%03d"
-    description = "tf-test-security-group-descr"
-    vpc_id      = "${aws_vpc.test.id}"
-    ingress {
-        from_port = -1
-        to_port = -1
-        protocol = "icmp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
+  name        = "tf-test-security-group-%03d"
+  description = "tf-test-security-group-descr"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 resource "aws_elasticache_cluster" "test" {
-    cluster_id         = "tf-%s"
-    engine             = "memcached"
-    node_type          = "cache.t3.small"
-    num_cache_nodes    = 2
-    port               = 11211
-    subnet_group_name  = "${aws_elasticache_subnet_group.test.name}"
-    security_group_ids = ["${aws_security_group.test.id}"]
-    az_mode            = "cross-az"
-    preferred_availability_zones = [
-        "${data.aws_availability_zones.available.names[0]}",
-        "${data.aws_availability_zones.available.names[1]}"
-    ]
+  cluster_id         = "tf-%s"
+  engine             = "memcached"
+  node_type          = "cache.t3.small"
+  num_cache_nodes    = 2
+  port               = 11211
+  subnet_group_name  = aws_elasticache_subnet_group.test.name
+  security_group_ids = [aws_security_group.test.id]
+  az_mode            = "cross-az"
+  preferred_availability_zones = [
+    data.aws_availability_zones.available.names[0],
+    data.aws_availability_zones.available.names[1]
+  ]
 }
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
 
 var testAccAWSElasticacheClusterConfig_RedisDefaultPort = `
 resource "aws_security_group" "test" {
-    name        = "tf-test-security-group"
-    description = "tf-test-security-group-descr"
+  name        = "tf-test-security-group"
+  description = "tf-test-security-group-descr"
 }
 
 resource "aws_security_group_rule" "test" {
@@ -1167,25 +1141,25 @@ resource "aws_security_group_rule" "test" {
 }
 
 resource "aws_elasticache_cluster" "test" {
-    cluster_id           = "foo-cluster"
-    engine               = "redis"
-    engine_version       = "5.0.4"
-    node_type            = "cache.t2.micro"
-    num_cache_nodes      = 1
-    parameter_group_name = "default.redis5.0"
+  cluster_id           = "foo-cluster"
+  engine               = "redis"
+  engine_version       = "5.0.4"
+  node_type            = "cache.t2.micro"
+  num_cache_nodes      = 1
+  parameter_group_name = "default.redis5.0"
 }
 `
 
 func testAccAWSElasticacheClusterConfig_AZMode_Memcached(rName, azMode string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
-    apply_immediately = true
-    az_mode           = "%[2]s"
-    cluster_id        = "%[1]s"
-    engine            = "memcached"
-    node_type         = "cache.m3.medium"
-    num_cache_nodes   = 1
-    port              = 11211
+  apply_immediately = true
+  az_mode           = "%[2]s"
+  cluster_id        = "%[1]s"
+  engine            = "memcached"
+  node_type         = "cache.t3.medium"
+  num_cache_nodes   = 1
+  port              = 11211
 }
 `, rName, azMode)
 }
@@ -1193,13 +1167,13 @@ resource "aws_elasticache_cluster" "test" {
 func testAccAWSElasticacheClusterConfig_AZMode_Redis(rName, azMode string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
-    apply_immediately = true
-    az_mode           = "%[2]s"
-    cluster_id        = "%[1]s"
-    engine            = "redis"
-    node_type         = "cache.m3.medium"
-    num_cache_nodes   = 1
-    port              = 6379
+  apply_immediately = true
+  az_mode           = "%[2]s"
+  cluster_id        = "%[1]s"
+  engine            = "redis"
+  node_type         = "cache.t3.medium"
+  num_cache_nodes   = 1
+  port              = 6379
 }
 `, rName, azMode)
 }
@@ -1207,13 +1181,13 @@ resource "aws_elasticache_cluster" "test" {
 func testAccAWSElasticacheClusterConfig_EngineVersion_Memcached(rName, engineVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
-    apply_immediately = true
-    cluster_id        = "%[1]s"
-    engine            = "memcached"
-    engine_version    = "%[2]s"
-    node_type         = "cache.m3.medium"
-    num_cache_nodes   = 1
-    port              = 11211
+  apply_immediately = true
+  cluster_id        = "%[1]s"
+  engine            = "memcached"
+  engine_version    = "%[2]s"
+  node_type         = "cache.t3.medium"
+  num_cache_nodes   = 1
+  port              = 11211
 }
 `, rName, engineVersion)
 }
@@ -1221,13 +1195,13 @@ resource "aws_elasticache_cluster" "test" {
 func testAccAWSElasticacheClusterConfig_EngineVersion_Redis(rName, engineVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
-    apply_immediately = true
-    cluster_id        = "%[1]s"
-    engine            = "redis"
-    engine_version    = "%[2]s"
-    node_type         = "cache.m3.medium"
-    num_cache_nodes   = 1
-    port              = 6379
+  apply_immediately = true
+  cluster_id        = "%[1]s"
+  engine            = "redis"
+  engine_version    = "%[2]s"
+  node_type         = "cache.t3.medium"
+  num_cache_nodes   = 1
+  port              = 6379
 }
 `, rName, engineVersion)
 }
@@ -1235,12 +1209,12 @@ resource "aws_elasticache_cluster" "test" {
 func testAccAWSElasticacheClusterConfig_NodeType_Memcached(rName, nodeType string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
-    apply_immediately = true
-    cluster_id        = "%[1]s"
-    engine            = "memcached"
-    node_type         = "%[2]s"
-    num_cache_nodes   = 1
-    port              = 11211
+  apply_immediately = true
+  cluster_id        = "%[1]s"
+  engine            = "memcached"
+  node_type         = "%[2]s"
+  num_cache_nodes   = 1
+  port              = 11211
 }
 `, rName, nodeType)
 }
@@ -1248,12 +1222,12 @@ resource "aws_elasticache_cluster" "test" {
 func testAccAWSElasticacheClusterConfig_NodeType_Redis(rName, nodeType string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
-    apply_immediately = true
-    cluster_id        = "%[1]s"
-    engine            = "redis"
-    node_type         = "%[2]s"
-    num_cache_nodes   = 1
-    port              = 6379
+  apply_immediately = true
+  cluster_id        = "%[1]s"
+  engine            = "redis"
+  node_type         = "%[2]s"
+  num_cache_nodes   = 1
+  port              = 6379
 }
 `, rName, nodeType)
 }
@@ -1261,24 +1235,14 @@ resource "aws_elasticache_cluster" "test" {
 func testAccAWSElasticacheClusterConfig_NumCacheNodes_Redis(rName string, numCacheNodes int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "test" {
-    apply_immediately = true
-    cluster_id        = "%[1]s"
-    engine            = "redis"
-    node_type         = "cache.m3.medium"
-    num_cache_nodes   = %[2]d
-    port              = 6379
+  apply_immediately = true
+  cluster_id        = "%[1]s"
+  engine            = "redis"
+  node_type         = "cache.t3.medium"
+  num_cache_nodes   = %[2]d
+  port              = 6379
 }
 `, rName, numCacheNodes)
-}
-
-func testAccAWSElasticacheClusterConfig_ReplicationGroupID_InvalidAttribute(rName, attrName, attrValue string) string {
-	return fmt.Sprintf(`
-resource "aws_elasticache_cluster" "test" {
-    cluster_id           = "%[1]s"
-    replication_group_id = "non-existent-id"
-    %[2]s                = "%[3]s"
-}
-`, rName, attrName, attrValue)
 }
 
 func testAccAWSElasticacheClusterConfig_ReplicationGroupID_AvailabilityZone(rName string) string {
@@ -1293,21 +1257,21 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_elasticache_replication_group" "test" {
-    replication_group_description = "Terraform Acceptance Testing"
-    replication_group_id          = "%[1]s"
-    node_type                     = "cache.m3.medium"
-    number_cache_clusters         = 1
-    port                          = 6379
+  replication_group_description = "Terraform Acceptance Testing"
+  replication_group_id          = "%[1]s"
+  node_type                     = "cache.t3.medium"
+  number_cache_clusters         = 1
+  port                          = 6379
 
-    lifecycle {
-      ignore_changes = ["number_cache_clusters"]
-    }
+  lifecycle {
+    ignore_changes = [number_cache_clusters]
+  }
 }
 
 resource "aws_elasticache_cluster" "test" {
-    availability_zone    = "${data.aws_availability_zones.available.names[0]}"
-    cluster_id           = "%[1]s1"
-    replication_group_id = "${aws_elasticache_replication_group.test.id}"
+  availability_zone    = data.aws_availability_zones.available.names[0]
+  cluster_id           = "%[1]s1"
+  replication_group_id = aws_elasticache_replication_group.test.id
 }
 `, rName)
 }
@@ -1315,21 +1279,21 @@ resource "aws_elasticache_cluster" "test" {
 func testAccAWSElasticacheClusterConfig_ReplicationGroupID_Replica(rName string, count int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-    replication_group_description = "Terraform Acceptance Testing"
-    replication_group_id          = "%[1]s"
-    node_type                     = "cache.m3.medium"
-    number_cache_clusters         = 1
-    port                          = 6379
+  replication_group_description = "Terraform Acceptance Testing"
+  replication_group_id          = "%[1]s"
+  node_type                     = "cache.t3.medium"
+  number_cache_clusters         = 1
+  port                          = 6379
 
-    lifecycle {
-      ignore_changes = ["number_cache_clusters"]
-    }
+  lifecycle {
+    ignore_changes = [number_cache_clusters]
+  }
 }
 
 resource "aws_elasticache_cluster" "test" {
   count                = %[2]d
   cluster_id           = "%[1]s${count.index}"
-  replication_group_id = "${aws_elasticache_replication_group.test.id}"
+  replication_group_id = aws_elasticache_replication_group.test.id
 }
 `, rName, count)
 }

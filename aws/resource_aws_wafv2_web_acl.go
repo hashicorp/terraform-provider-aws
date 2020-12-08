@@ -9,9 +9,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -110,7 +111,6 @@ func resourceAwsWafv2WebACL() *schema.Resource {
 						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
 						"override_action": {
@@ -253,11 +253,11 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 			Scope:            aws.String(d.Get("scope").(string)),
 			LockToken:        aws.String(d.Get("lock_token").(string)),
 			DefaultAction:    expandWafv2DefaultAction(d.Get("default_action").([]interface{})),
-			Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
+			Rules:            expandWafv2WebACLRules(d.Get("rule").(*schema.Set).List()),
 			VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 		}
 
-		if v, ok := d.GetOk("description"); ok && len(v.(string)) > 0 {
+		if v, ok := d.GetOk("description"); ok {
 			u.Description = aws.String(v.(string))
 		}
 
@@ -309,10 +309,10 @@ func resourceAwsWafv2WebACLDelete(d *schema.ResourceData, meta interface{}) erro
 	err := resource.Retry(Wafv2WebACLDeleteTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteWebACL(r)
 		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFAssociatedItemException, "") {
+			if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFAssociatedItemException) {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFUnavailableEntityException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -322,6 +322,10 @@ func resourceAwsWafv2WebACLDelete(d *schema.ResourceData, meta interface{}) erro
 
 	if isResourceTimeoutError(err) {
 		_, err = conn.DeleteWebACL(r)
+	}
+
+	if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
+		return nil
 	}
 
 	if err != nil {
@@ -338,14 +342,14 @@ func wafv2WebACLRootStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"and_statement":                         wafv2StatementSchema(level - 1),
+				"and_statement":                         wafv2StatementSchema(level),
 				"byte_match_statement":                  wafv2ByteMatchStatementSchema(),
 				"geo_match_statement":                   wafv2GeoMatchStatementSchema(),
 				"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
 				"managed_rule_group_statement":          wafv2ManagedRuleGroupStatementSchema(),
-				"not_statement":                         wafv2StatementSchema(level - 1),
-				"or_statement":                          wafv2StatementSchema(level - 1),
-				"rate_based_statement":                  wafv2RateBasedStatementSchema(level - 1),
+				"not_statement":                         wafv2StatementSchema(level),
+				"or_statement":                          wafv2StatementSchema(level),
+				"rate_based_statement":                  wafv2RateBasedStatementSchema(level),
 				"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
 				"rule_group_reference_statement":        wafv2RuleGroupReferenceStatementSchema(),
 				"size_constraint_statement":             wafv2SizeConstraintSchema(),
@@ -402,15 +406,14 @@ func wafv2RateBasedStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				// Required field but currently only supports "IP"
+				// Required field
 				"aggregate_key_type": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Default:  wafv2.RateBasedStatementAggregateKeyTypeIp,
-					ValidateFunc: validation.StringInSlice([]string{
-						wafv2.RateBasedStatementAggregateKeyTypeIp,
-					}, false),
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      wafv2.RateBasedStatementAggregateKeyTypeIp,
+					ValidateFunc: validation.StringInSlice(wafv2.RateBasedStatementAggregateKeyType_Values(), false),
 				},
+				"forwarded_ip_config": wafv2ForwardedIPConfig(),
 				"limit": {
 					Type:         schema.TypeInt,
 					Required:     true,
@@ -429,12 +432,12 @@ func wafv2ScopeDownStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"and_statement":                         wafv2StatementSchema(level - 1),
+				"and_statement":                         wafv2StatementSchema(level),
 				"byte_match_statement":                  wafv2ByteMatchStatementSchema(),
 				"geo_match_statement":                   wafv2GeoMatchStatementSchema(),
 				"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
-				"not_statement":                         wafv2StatementSchema(level - 1),
-				"or_statement":                          wafv2StatementSchema(level - 1),
+				"not_statement":                         wafv2StatementSchema(level),
+				"or_statement":                          wafv2StatementSchema(level),
 				"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
 				"size_constraint_statement":             wafv2SizeConstraintSchema(),
 				"sqli_match_statement":                  wafv2SqliMatchStatementSchema(),
@@ -626,6 +629,10 @@ func expandWafv2RateBasedStatement(l []interface{}) *wafv2.RateBasedStatement {
 	r := &wafv2.RateBasedStatement{
 		AggregateKeyType: aws.String(m["aggregate_key_type"].(string)),
 		Limit:            aws.Int64(int64(m["limit"].(int))),
+	}
+
+	if v, ok := m["forwarded_ip_config"]; ok {
+		r.ForwardedIPConfig = expandWafv2ForwardedIPConfig(v.([]interface{}))
 	}
 
 	s := m["scope_down_statement"].([]interface{})
@@ -820,6 +827,7 @@ func flattenWafv2RateBasedStatement(r *wafv2.RateBasedStatement) interface{} {
 	m := map[string]interface{}{
 		"limit":                int(aws.Int64Value(r.Limit)),
 		"aggregate_key_type":   aws.StringValue(r.AggregateKeyType),
+		"forwarded_ip_config":  flattenWafv2ForwardedIPConfig(r.ForwardedIPConfig),
 		"scope_down_statement": nil,
 	}
 

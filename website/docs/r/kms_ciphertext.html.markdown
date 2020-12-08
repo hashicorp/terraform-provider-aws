@@ -25,7 +25,7 @@ resource "aws_kms_key" "oauth_config" {
 }
 
 resource "aws_kms_ciphertext" "oauth" {
-  key_id = "${aws_kms_key.oauth_config.key_id}"
+  key_id = aws_kms_key.oauth_config.key_id
 
   plaintext = <<EOF
 {
@@ -46,6 +46,6 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-All of the argument attributes are also exported as result attributes.
+In addition to all arguments above, the following attributes are exported:
 
 * `ciphertext_blob` - Base64 encoded ciphertext

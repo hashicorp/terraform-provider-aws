@@ -5,10 +5,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceAwsWorkspaceBundle() *schema.Resource {
+func dataSourceAwsWorkspacesBundle() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsWorkspaceBundleRead,
 
@@ -97,10 +97,13 @@ func dataSourceAwsWorkspaceBundleRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if name, ok := d.GetOk("name"); ok {
-		name := name.(string)
-		input := &workspaces.DescribeWorkspaceBundlesInput{
-			Owner: aws.String(d.Get("owner").(string)),
+		input := &workspaces.DescribeWorkspaceBundlesInput{}
+
+		if owner, ok := d.GetOk("owner"); ok {
+			input.Owner = aws.String(owner.(string))
 		}
+
+		name := name.(string)
 		err := conn.DescribeWorkspaceBundlesPages(input, func(out *workspaces.DescribeWorkspaceBundlesOutput, lastPage bool) bool {
 			for _, b := range out.Bundles {
 				if aws.StringValue(b.Name) == name {

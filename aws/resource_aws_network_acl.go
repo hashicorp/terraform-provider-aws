@@ -11,10 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -38,12 +38,6 @@ func resourceAwsNetworkAcl() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"subnet_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Removed:  "Use `subnet_ids` argument instead",
 			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,
@@ -196,7 +190,8 @@ func resourceAwsNetworkAclCreate(d *schema.ResourceData, meta interface{}) error
 
 	// Create the Network Acl
 	createOpts := &ec2.CreateNetworkAclInput{
-		VpcId: aws.String(d.Get("vpc_id").(string)),
+		VpcId:             aws.String(d.Get("vpc_id").(string)),
+		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeNetworkAcl),
 	}
 
 	log.Printf("[DEBUG] Network Acl create config: %#v", createOpts)
@@ -208,12 +203,6 @@ func resourceAwsNetworkAclCreate(d *schema.ResourceData, meta interface{}) error
 	// Get the ID and store it
 	networkAcl := resp.NetworkAcl
 	d.SetId(aws.StringValue(networkAcl.NetworkAclId))
-
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
-			return fmt.Errorf("error adding EC2 VPN Gateway (%s) tags: %s", d.Id(), err)
-		}
-	}
 
 	// Update rules and subnet association once acl is created
 	return resourceAwsNetworkAclUpdate(d, meta)
@@ -449,12 +438,17 @@ func updateNetworkAclEntries(d *schema.ResourceData, entryType string, conn *ec2
 				}
 			}
 
-			if add.CidrBlock != nil && aws.StringValue(add.CidrBlock) != "" {
-				// AWS mutates the CIDR block into a network implied by the IP and
-				// mask provided. This results in hashing inconsistencies between
-				// the local config file and the state returned by the API. Error
-				// if the user provides a CIDR block with an inappropriate mask
-				if err := validateCIDRBlock(aws.StringValue(add.CidrBlock)); err != nil {
+			// AWS mutates the CIDR block into a network implied by the IP and
+			// mask provided. This results in hashing inconsistencies between
+			// the local config file and the state returned by the API. Error
+			// if the user provides a CIDR block with an inappropriate mask
+			if cidrBlock := aws.StringValue(add.CidrBlock); cidrBlock != "" {
+				if err := validateIpv4CIDRBlock(cidrBlock); err != nil {
+					return err
+				}
+			}
+			if ipv6CidrBlock := aws.StringValue(add.Ipv6CidrBlock); ipv6CidrBlock != "" {
+				if err := validateIpv6CIDRBlock(ipv6CidrBlock); err != nil {
 					return err
 				}
 			}

@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -76,7 +76,7 @@ func TestAccAWSConfigConfigurationAggregator_account(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.account_ids.#", "1"),
 					testAccCheckResourceAttrAccountID(resourceName, "account_aggregation_source.0.account_ids.0"),
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.regions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.regions.0", "us-west-2"),
+					resource.TestCheckResourceAttrPair(resourceName, "account_aggregation_source.0.regions.0", "data.aws_region.current", "name"),
 				),
 			},
 			{
@@ -261,16 +261,19 @@ func testAccCheckAWSConfigConfigurationAggregatorDestroy(s *terraform.State) err
 
 func testAccAWSConfigConfigurationAggregatorConfig_account(rName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_config_configuration_aggregator" "example" {
-  name = %[1]q
+  name = %q
 
   account_aggregation_source {
-    account_ids = ["${data.aws_caller_identity.current.account_id}"]
-    regions     = ["us-west-2"]
+    account_ids = [data.aws_caller_identity.current.account_id]
+    regions     = [data.aws_region.current.name]
   }
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_caller_identity" "current" {
+}
 `, rName)
 }
 
@@ -279,15 +282,17 @@ func testAccAWSConfigConfigurationAggregatorConfig_organization(rName string) st
 resource "aws_organizations_organization" "test" {}
 
 resource "aws_config_configuration_aggregator" "example" {
-  depends_on = ["aws_iam_role_policy_attachment.example"]
+  depends_on = [aws_iam_role_policy_attachment.example]
 
   name = %[1]q
 
   organization_aggregation_source {
     all_regions = true
-    role_arn    = "${aws_iam_role.example.arn}"
+    role_arn    = aws_iam_role.example.arn
   }
 }
+
+data "aws_partition" "current" {}
 
 resource "aws_iam_role" "example" {
   name = %[1]q
@@ -300,7 +305,7 @@ resource "aws_iam_role" "example" {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "Service": "config.amazonaws.com"
+        "Service": "config.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -310,26 +315,29 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "example" {
-  role       = "${aws_iam_role.example.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSConfigRoleForOrganizations"
+  role       = aws_iam_role.example.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSConfigRoleForOrganizations"
 }
 `, rName)
 }
 
 func testAccAWSConfigConfigurationAggregatorConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_config_configuration_aggregator" "example" {
   name = %[1]q
 
   account_aggregation_source {
-    account_ids = ["${data.aws_caller_identity.current.account_id}"]
-    regions     = ["us-west-2"]
+    account_ids = [data.aws_caller_identity.current.account_id]
+    regions     = [data.aws_region.current.name]
   }
 
   tags = {
-	Name  = %[1]q
-	%[2]s = %[3]q
-	%[4]s = %[5]q
+    Name = %[1]q
+
+    %[2]s = %[3]q
+    %[4]s = %[5]q
   }
 }
 
