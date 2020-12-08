@@ -419,13 +419,21 @@ func expandWorkspaceCreationProperties(properties []interface{}) *workspaces.Wor
 
 	p := properties[0].(map[string]interface{})
 
-	return &workspaces.WorkspaceCreationProperties{
-		CustomSecurityGroupId:           aws.String(p["custom_security_group_id"].(string)),
-		DefaultOu:                       aws.String(p["default_ou"].(string)),
+	result := &workspaces.WorkspaceCreationProperties{
 		EnableInternetAccess:            aws.Bool(p["enable_internet_access"].(bool)),
 		EnableMaintenanceMode:           aws.Bool(p["enable_maintenance_mode"].(bool)),
 		UserEnabledAsLocalAdministrator: aws.Bool(p["user_enabled_as_local_administrator"].(bool)),
 	}
+
+	if p["custom_security_group_id"].(string) != "" {
+		result.CustomSecurityGroupId = aws.String(p["custom_security_group_id"].(string))
+	}
+
+	if p["default_ou"].(string) != "" {
+		result.DefaultOu = aws.String(p["default_ou"].(string))
+	}
+
+	return result
 }
 
 func flattenSelfServicePermissions(permissions *workspaces.SelfservicePermissions) []interface{} {
