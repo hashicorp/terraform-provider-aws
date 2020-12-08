@@ -1,5 +1,9 @@
 ## 3.21.0 (Unreleased)
 
+FEATURES
+
+* **New Resource:** `resource_aws_glue_schema` [GH-16612]
+
 ENHANCEMENTS
 
 * resource/aws_appmesh_virtual_node: Add `listener.connection_pool` attribute [GH-16167]
