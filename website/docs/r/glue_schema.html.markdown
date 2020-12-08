@@ -38,9 +38,9 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN) of Glue Schema.
-* `id` - Amazon Resource Name (ARN) of Glue Schema.
-* `registry_name` - The name of the registry.
+* `arn` - Amazon Resource Name (ARN) of the schema.
+* `id` - Amazon Resource Name (ARN) of the schema.
+* `registry_name` - The name of the Glue Registry.
 * `latest_schema_version` - The latest version of the schema associated with the returned schema definition.
 * `next_schema_version` - The next version of the schema associated with the returned schema definition.
 * `schema_checkpoint` - The version number of the checkpoint (the last time the compatibility mode was changed).
