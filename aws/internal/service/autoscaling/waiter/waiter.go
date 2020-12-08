@@ -14,7 +14,7 @@ const (
 	InstanceRefreshStartedTimeout = InstanceRefreshCancelledTimeout
 
 	// Maximum amount of time to wait for an Instance Refresh to be Cancelled
-	InstanceRefreshCancelledTimeout = 10 * time.Minute
+	InstanceRefreshCancelledTimeout = 15 * time.Minute
 )
 
 func InstanceRefreshCancelled(conn *autoscaling.AutoScaling, asgName, instanceRefreshId string) (*autoscaling.InstanceRefresh, error) {

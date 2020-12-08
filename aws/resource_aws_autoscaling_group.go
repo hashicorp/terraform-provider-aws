@@ -864,7 +864,6 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-// TODO: make this a waiter function
 func waitUntilAutoscalingGroupLoadBalancerTargetGroupsRemoved(conn *autoscaling.AutoScaling, asgName string) error {
 	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
 		AutoScalingGroupName: aws.String(asgName),
@@ -872,7 +871,6 @@ func waitUntilAutoscalingGroupLoadBalancerTargetGroupsRemoved(conn *autoscaling.
 	var tgRemoving bool
 
 	for {
-		// TODO: generate Pages function
 		output, err := conn.DescribeLoadBalancerTargetGroups(input)
 
 		if err != nil {
@@ -902,7 +900,6 @@ func waitUntilAutoscalingGroupLoadBalancerTargetGroupsRemoved(conn *autoscaling.
 	return nil
 }
 
-// TODO: make this a waiter function
 func waitUntilAutoscalingGroupLoadBalancerTargetGroupsAdded(conn *autoscaling.AutoScaling, asgName string) error {
 	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
 		AutoScalingGroupName: aws.String(asgName),
@@ -910,7 +907,6 @@ func waitUntilAutoscalingGroupLoadBalancerTargetGroupsAdded(conn *autoscaling.Au
 	var tgAdding bool
 
 	for {
-		// TODO: generate Pages function
 		output, err := conn.DescribeLoadBalancerTargetGroups(input)
 
 		if err != nil {
@@ -976,7 +972,6 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("mixed_instances_policy") {
 		opts.MixedInstancesPolicy = expandAutoScalingMixedInstancesPolicy(d.Get("mixed_instances_policy").([]interface{}))
-		// TODO: optional trigger
 		shouldRefreshInstances = true
 	}
 
@@ -1002,26 +997,18 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		opts.HealthCheckType = aws.String(d.Get("health_check_type").(string))
 	}
 
-	// TODO: this probably needs a wait for capacity
 	if d.HasChange("vpc_zone_identifier") {
 		opts.VPCZoneIdentifier = expandVpcZoneIdentifiers(d.Get("vpc_zone_identifier").(*schema.Set).List())
-		// TODO: no
-		shouldRefreshInstances = true
 	}
 
-	// TODO: this probably needs a wait for capacity
 	if d.HasChange("availability_zones") {
 		if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
 			opts.AvailabilityZones = expandStringList(v.(*schema.Set).List())
 		}
-		// TODO: no
-		shouldRefreshInstances = true
 	}
 
 	if d.HasChange("placement_group") {
 		opts.PlacementGroup = aws.String(d.Get("placement_group").(string))
-		// TODO: optional trigger
-		shouldRefreshInstances = true
 	}
 
 	if d.HasChange("termination_policies") {
@@ -1201,9 +1188,15 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
+	if instanceRefreshRaw, ok := d.GetOk("instance_refresh"); ok && shouldRefreshInstances {
+		if err := autoScalingGroupRefreshInstances(conn, d.Id(), instanceRefreshRaw.([]interface{})); err != nil {
+			return fmt.Errorf("failed to start instance refresh of Auto Scaling Group %s: %w", d.Id(), err)
+		}
+	}
+
 	if shouldWaitForCapacity {
 		if err := waitForASGCapacity(d, meta, capacitySatisfiedUpdate); err != nil {
-			return fmt.Errorf("Error waiting for Auto Scaling Group Capacity: %s", err)
+			return fmt.Errorf("error waiting for Auto Scaling Group Capacity: %w", err)
 		}
 	}
 
@@ -1216,12 +1209,6 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 	if d.HasChange("suspended_processes") {
 		if err := updateASGSuspendedProcesses(d, conn); err != nil {
 			return fmt.Errorf("Error updating Auto Scaling Group Suspended Processes: %s", err)
-		}
-	}
-
-	if instanceRefreshRaw, ok := d.GetOk("instance_refresh"); ok && shouldRefreshInstances {
-		if err := autoScalingGroupRefreshInstances(conn, d.Id(), instanceRefreshRaw.([]interface{})); err != nil {
-			return fmt.Errorf("failed to start instance refresh of Auto Scaling Group %s: %w", d.Id(), err)
 		}
 	}
 
@@ -1768,7 +1755,6 @@ func flattenAutoScalingMixedInstancesPolicy(mixedInstancesPolicy *autoscaling.Mi
 	return []interface{}{m}
 }
 
-// TODO: make this a waiter function
 func waitUntilAutoscalingGroupLoadBalancersAdded(conn *autoscaling.AutoScaling, asgName string) error {
 	input := &autoscaling.DescribeLoadBalancersInput{
 		AutoScalingGroupName: aws.String(asgName),
@@ -1776,7 +1762,6 @@ func waitUntilAutoscalingGroupLoadBalancersAdded(conn *autoscaling.AutoScaling, 
 	var lbAdding bool
 
 	for {
-		// TODO: generate Pages function
 		output, err := conn.DescribeLoadBalancers(input)
 
 		if err != nil {
@@ -1806,7 +1791,6 @@ func waitUntilAutoscalingGroupLoadBalancersAdded(conn *autoscaling.AutoScaling, 
 	return nil
 }
 
-// TODO: make this a waiter function
 func waitUntilAutoscalingGroupLoadBalancersRemoved(conn *autoscaling.AutoScaling, asgName string) error {
 	input := &autoscaling.DescribeLoadBalancersInput{
 		AutoScalingGroupName: aws.String(asgName),
@@ -1814,7 +1798,6 @@ func waitUntilAutoscalingGroupLoadBalancersRemoved(conn *autoscaling.AutoScaling
 	var lbRemoving bool
 
 	for {
-		// TODO: generate Pages function
 		output, err := conn.DescribeLoadBalancers(input)
 
 		if err != nil {

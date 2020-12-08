@@ -355,7 +355,7 @@ This configuration block supports the following:
     * `instance_warmup_seconds` - (Optional) The number of seconds until a newly launched instance is configured and ready to use. Default behavior is to use the Auto Scaling Group's health check grace period.
     * `min_healthy_percentage` - (Optional) The amount of capacity in the Auto Scaling group that must remain healthy during an instance refresh to allow the operation to continue, as a percentage of the desired capacity of the Auto Scaling group. Defaults to `90`.
   
-~> **NOTE:** A refresh is only started when any of the following Auto Scaling Group properties change: `launch_configuration`, `launch_template`, `mixed_instances_policy`, `vpc_zone_identifier`, `availability_zones`, `placement_group`, or any `tag` or `tags` configured to propagate at launch.
+~> **NOTE:** A refresh is only started when any of the following Auto Scaling Group properties change: `launch_configuration`, `launch_template`, `mixed_instances_policy`.
 
 ~> **NOTE:** Auto Scaling Groups support up to one active instance refresh at a time. When this resource is updated, any existing refresh is cancelled.
 
