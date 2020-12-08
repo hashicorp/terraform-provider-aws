@@ -83,7 +83,7 @@ func TestAccAWSRoute_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_routeTableDisappears(t *testing.T) {
+func TestAccAWSRoute_disappears_RouteTable(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	rtResourceName := "aws_route_table.test"
