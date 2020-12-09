@@ -84,7 +84,7 @@ func dataSourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Expected 1 CloudFormation stack (%s), found %d", name, l)
 	}
 	stack := out.Stacks[0]
-	d.SetId(*stack.StackId)
+	d.SetId(aws.StringValue(stack.StackId))
 
 	d.Set("description", stack.Description)
 	d.Set("disable_rollback", stack.DisableRollback)

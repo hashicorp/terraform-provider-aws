@@ -98,7 +98,7 @@ func resourceAwsVPCPeeringCreate(d *schema.ResourceData, meta interface{}) error
 
 	// Get the ID and store it
 	rt := resp.VpcPeeringConnection
-	d.SetId(*rt.VpcPeeringConnectionId)
+	d.SetId(aws.StringValue(rt.VpcPeeringConnectionId))
 	log.Printf("[INFO] VPC Peering Connection ID: %s", d.Id())
 
 	err = vpcPeeringConnectionWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))

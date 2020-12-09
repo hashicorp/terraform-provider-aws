@@ -654,7 +654,7 @@ func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	launchTemplate := resp.LaunchTemplate
-	d.SetId(*launchTemplate.LaunchTemplateId)
+	d.SetId(aws.StringValue(launchTemplate.LaunchTemplateId))
 
 	log.Printf("[DEBUG] Launch Template created: %q (version %d)",
 		*launchTemplate.LaunchTemplateId, *launchTemplate.LatestVersionNumber)

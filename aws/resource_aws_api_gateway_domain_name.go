@@ -202,7 +202,7 @@ func resourceAwsApiGatewayDomainNameCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error creating API Gateway Domain Name: %s", err)
 	}
 
-	d.SetId(*domainName.DomainName)
+	d.SetId(aws.StringValue(domainName.DomainName))
 
 	return resourceAwsApiGatewayDomainNameRead(d, meta)
 }

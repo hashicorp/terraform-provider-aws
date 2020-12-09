@@ -35,6 +35,16 @@ rules:
           metavariable: '$Y'
           regex: '^"github.com/aws/aws-sdk-go/service/[^/]+"$'
     severity: WARNING
+  
+  - id: aws-go-sdk-pointer-conversion-ResourceData-SetId
+    fix: d.SetId(aws.StringValue($VALUE))
+    languages: [go]
+    message: Prefer AWS Go SDK pointer conversion aws.StringValue() function for dereferencing during d.SetId()
+    paths:
+      include:
+        - aws/
+    pattern: 'd.SetId(*$VALUE)'
+    severity: WARNING
 
   - id: helper-schema-ResourceData-GetOk-with-extraneous-conditional
     languages: [go]

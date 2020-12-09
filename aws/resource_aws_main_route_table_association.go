@@ -60,7 +60,7 @@ func resourceAwsMainRouteTableAssociationCreate(d *schema.ResourceData, meta int
 	}
 
 	d.Set("original_route_table_id", mainAssociation.RouteTableId)
-	d.SetId(*resp.NewAssociationId)
+	d.SetId(aws.StringValue(resp.NewAssociationId))
 	log.Printf("[INFO] New main route table association ID: %s", d.Id())
 
 	return nil
@@ -102,7 +102,7 @@ func resourceAwsMainRouteTableAssociationUpdate(d *schema.ResourceData, meta int
 		return err
 	}
 
-	d.SetId(*resp.NewAssociationId)
+	d.SetId(aws.StringValue(resp.NewAssociationId))
 	log.Printf("[INFO] New main route table association ID: %s", d.Id())
 
 	return nil

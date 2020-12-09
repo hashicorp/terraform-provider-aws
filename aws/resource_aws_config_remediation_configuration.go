@@ -207,7 +207,7 @@ func resourceAwsConfigRemediationConfigurationRead(d *schema.ResourceData, meta 
 	d.Set("target_type", remediationConfiguration.TargetType)
 	d.Set("target_version", remediationConfiguration.TargetVersion)
 	d.Set("parameter", flattenRemediationConfigurationParameters(remediationConfiguration.Parameters))
-	d.SetId(*remediationConfiguration.ConfigRuleName)
+	d.SetId(aws.StringValue(remediationConfiguration.ConfigRuleName))
 
 	return nil
 }
