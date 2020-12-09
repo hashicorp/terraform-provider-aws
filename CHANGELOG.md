@@ -1,5 +1,9 @@
 ## 3.21.0 (Unreleased)
 
+NOTES
+
+* resource/aws_imagebuilder_image_recipe: Previously the ordering of `component` configuration blocks was not properly handled by the resource, which could cause unexpected behavior with multiple Components. These configurations may see the ordering difference being fixed after upgrade. [GH-16566]
+
 FEATURES
 
 * **New Resource:** `aws_ec2_carrier_gateway` [GH-16252]
@@ -20,7 +24,9 @@ BUG FIXES
 * data-source/aws_ec2_transit_gateway_route_table: Prevent missing `id` attribute when not configured as argument [GH-16667]
 * data-source/aws_ec2_transit_gateway_vpc_attachment: Prevent missing `id` attribute when not configured as argument [GH-16667]
 * data-source/aws_guardduty_detector: Prevent missing `id` attribute when not configured as argument [GH-16667]
+* data-source/aws_imagebuilder_image_recipe: Ensure proper ordering of `component` attribute [GH-16566]
 * resource/aws_backup_plan: Prevent plan-time validation error for pre-existing resources with `lifecycle` `delete_after` and/or `copy_action` `lifecycle` `delete_after` arguments configured [GH-16605]
+* resource/aws_imagebuilder_image_recipe: Ensure proper ordering of `component` configuration blocks [GH-16566]
 * resource/aws_workspaces_directory: Fix empty custom_security_group_id & default_ou [GH-16589]
 
 ## 3.20.0 (December 03, 2020)
