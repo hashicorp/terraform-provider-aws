@@ -2,11 +2,9 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -62,12 +60,6 @@ func TestAccAWSLakeFormationResource_serviceLinkedRole(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceAddr := "aws_lakeformation_resource.test"
 	bucketAddr := "aws_s3_bucket.test"
-	arn := arn.ARN{
-		Partition: testAccGetPartition(),
-		Service:   "iam",
-		AccountID: ".*",
-		Resource:  "role/aws-service-role/lakeformation.amazonaws.com/AWSServiceRoleForLakeFormationDataAccess",
-	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -82,7 +74,7 @@ func TestAccAWSLakeFormationResource_serviceLinkedRole(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLakeFormationResourceExists(resourceAddr),
 					resource.TestCheckResourceAttrPair(resourceAddr, "resource_arn", bucketAddr, "arn"),
-					resource.TestMatchResourceAttr(resourceAddr, "role_arn", regexp.MustCompile(fmt.Sprintf(`^%s$`, arn.String()))),
+					testAccCheckResourceAttrGlobalARN(resourceAddr, "role_arn", "iam", "role/aws-service-role/lakeformation.amazonaws.com/AWSServiceRoleForLakeFormationDataAccess"),
 				),
 			},
 		},
@@ -251,7 +243,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_lakeformation_resource" "test" {
-  resource_arn = "${aws_s3_bucket.test.arn}"
+  resource_arn = aws_s3_bucket.test.arn
 }
 `, rName)
 }
