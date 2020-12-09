@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -389,6 +388,33 @@ func TestAccAWSRDSCluster_PointInTimeRestore(t *testing.T) {
 	})
 }
 
+func TestAccAWSRDSCluster_PointInTimeRestore_EnabledCloudwatchLogsExports(t *testing.T) {
+	var v rds.DBCluster
+	var c rds.DBCluster
+
+	parentId := acctest.RandomWithPrefix("tf-acc-point-in-time-restore-seed-test")
+	restoredId := acctest.RandomWithPrefix("tf-acc-point-in-time-restored-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterConfig_pointInTimeRestoreSource_enabled_cloudwatch_logs_exports(parentId, restoredId, "audit"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists("aws_rds_cluster.test", &v),
+					testAccCheckAWSClusterExists("aws_rds_cluster.restored_pit", &c),
+					resource.TestCheckResourceAttr("aws_rds_cluster.restored_pit", "cluster_identifier", restoredId),
+					resource.TestCheckResourceAttrPair("aws_rds_cluster.restored_pit", "engine", "aws_rds_cluster.test", "engine"),
+					resource.TestCheckResourceAttr("aws_rds_cluster.restored_pit", "enabled_cloudwatch_logs_exports.#", "1"),
+					resource.TestCheckTypeSetElemAttr("aws_rds_cluster.restored_pit", "enabled_cloudwatch_logs_exports.*", "audit"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRDSCluster_generatedName(t *testing.T) {
 	var v rds.DBCluster
 	resourceName := "aws_rds_cluster.test"
@@ -538,7 +564,7 @@ func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports_MySQL(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
 				),
 			},
 			{
@@ -558,8 +584,8 @@ func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports_MySQL(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "slowquery"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "slowquery"),
 				),
 			},
 			{
@@ -567,7 +593,7 @@ func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports_MySQL(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster3),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
 				),
 			},
 		},
@@ -589,7 +615,7 @@ func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports_Postgresql(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "postgresql"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "postgresql"),
 				),
 			},
 			{
@@ -2708,6 +2734,53 @@ resource "aws_rds_cluster" "restored_pit" {
   }
 }
 `, parentId, childId))
+}
+
+func testAccAWSClusterConfig_pointInTimeRestoreSource_enabled_cloudwatch_logs_exports(parentId, childId, enabledCloudwatchLogExports string) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier   = "%[1]s"
+  master_username      = "root"
+  master_password      = "password"
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  skip_final_snapshot  = true
+  engine               = "aurora-mysql"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+  tags = {
+    Name = "%[1]s-vpc"
+  }
+}
+
+resource "aws_subnet" "subnets" {
+  count             = length(data.aws_availability_zones.available.names)
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.${count.index}.0/24"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  tags = {
+    Name = "%[1]s-subnet-${count.index}"
+  }
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = "%[1]s-db-subnet-group"
+  subnet_ids = aws_subnet.subnets[*].id
+}
+
+resource "aws_rds_cluster" "restored_pit" {
+  cluster_identifier              = "%s"
+  skip_final_snapshot             = true
+  engine                          = aws_rds_cluster.test.engine
+  enabled_cloudwatch_logs_exports = [%q]
+  restore_to_point_in_time {
+    source_cluster_identifier  = aws_rds_cluster.test.cluster_identifier
+    restore_type               = "full-copy"
+    use_latest_restorable_time = true
+  }
+}
+`, parentId, childId, enabledCloudwatchLogExports))
 }
 
 func testAccAWSClusterConfigTags1(rName, tagKey1, tagValue1 string) string {

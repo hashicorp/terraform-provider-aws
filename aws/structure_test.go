@@ -540,11 +540,11 @@ func TestFlattenOrganizationsOrganizationalUnits(t *testing.T) {
 }
 
 func TestExpandStringList(t *testing.T) {
-	expanded := []interface{}{"us-east-1a", "us-east-1b"}
+	expanded := []interface{}{"us-east-1a", "us-east-1b"} //lintignore:AWSAT003
 	stringList := expandStringList(expanded)
 	expected := []*string{
-		aws.String("us-east-1a"),
-		aws.String("us-east-1b"),
+		aws.String("us-east-1a"), //lintignore:AWSAT003
+		aws.String("us-east-1b"), //lintignore:AWSAT003
 	}
 
 	if !reflect.DeepEqual(stringList, expected) {

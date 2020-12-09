@@ -564,6 +564,23 @@ func TestCanonicalCidrBlock(t *testing.T) {
 	}
 }
 
+func Test_canonicalCidrBlock(t *testing.T) {
+	for _, ts := range []struct {
+		cidr     string
+		expected string
+	}{
+		{"10.2.2.0/24", "10.2.2.0/24"},
+		{"::/0", "::/0"},
+		{"::0/0", "::/0"},
+		{"", ""},
+	} {
+		got := canonicalCidrBlock(ts.cidr)
+		if ts.expected != got {
+			t.Fatalf("canonicalCidrBlock(%q) should be: %q, got: %q", ts.cidr, ts.expected, got)
+		}
+	}
+}
+
 func TestValidateLogMetricFilterName(t *testing.T) {
 	validNames := []string{
 		"YadaHereAndThere",
@@ -2135,7 +2152,7 @@ func TestValidateCognitoIdentityProvidersProviderName(t *testing.T) {
 		"foo:bar",
 		"foo/bar",
 		"foo-bar",
-		"cognito-idp.us-east-1.amazonaws.com/us-east-1_Zr231apJu",
+		"cognito-idp.us-east-1.amazonaws.com/us-east-1_Zr231apJu", //lintignore:AWSAT003
 		strings.Repeat("W", 128),
 	}
 
@@ -2655,8 +2672,8 @@ func TestValidateCognitoUserGroupName(t *testing.T) {
 
 func TestValidateCognitoUserPoolId(t *testing.T) {
 	validValues := []string{
-		"eu-west-1_Foo123",
-		"ap-southeast-2_BaRBaz987",
+		"eu-west-1_Foo123",         //lintignore:AWSAT003
+		"ap-southeast-2_BaRBaz987", //lintignore:AWSAT003
 	}
 
 	for _, s := range validValues {
@@ -2669,8 +2686,8 @@ func TestValidateCognitoUserPoolId(t *testing.T) {
 	invalidValues := []string{
 		"",
 		"foo",
-		"us-east-1-Foo123",
-		"eu-central-2_Bar+4",
+		"us-east-1-Foo123",   //lintignore:AWSAT003
+		"eu-central-2_Bar+4", //lintignore:AWSAT003
 	}
 
 	for _, s := range invalidValues {

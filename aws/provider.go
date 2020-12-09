@@ -61,7 +61,7 @@ func Provider() *schema.Provider {
 					"AWS_DEFAULT_REGION",
 				}, nil),
 				Description:  descriptions["region"],
-				InputDefault: "us-east-1",
+				InputDefault: "us-east-1", // lintignore:AWSAT003
 			},
 
 			"max_retries": {
@@ -268,6 +268,8 @@ func Provider() *schema.Provider {
 			"aws_iam_user":                                   dataSourceAwsIAMUser(),
 			"aws_imagebuilder_component":                     dataSourceAwsImageBuilderComponent(),
 			"aws_imagebuilder_distribution_configuration":    datasourceAwsImageBuilderDistributionConfiguration(),
+			"aws_imagebuilder_image_pipeline":                dataSourceAwsImageBuilderImagePipeline(),
+			"aws_imagebuilder_image_recipe":                  dataSourceAwsImageBuilderImageRecipe(),
 			"aws_imagebuilder_infrastructure_configuration":  datasourceAwsImageBuilderInfrastructureConfiguration(),
 			"aws_internet_gateway":                           dataSourceAwsInternetGateway(),
 			"aws_iot_endpoint":                               dataSourceAwsIotEndpoint(),
@@ -282,6 +284,7 @@ func Provider() *schema.Provider {
 			"aws_kms_secret":                                 dataSourceAwsKmsSecret(),
 			"aws_kms_secrets":                                dataSourceAwsKmsSecrets(),
 			"aws_lambda_alias":                               dataSourceAwsLambdaAlias(),
+			"aws_lambda_code_signing_config":                 dataSourceAwsLambdaCodeSigningConfig(),
 			"aws_lambda_function":                            dataSourceAwsLambdaFunction(),
 			"aws_lambda_invocation":                          dataSourceAwsLambdaInvocation(),
 			"aws_lambda_layer_version":                       dataSourceAwsLambdaLayerVersion(),
@@ -341,6 +344,8 @@ func Provider() *schema.Provider {
 			"aws_servicequotas_service_quota":                dataSourceAwsServiceQuotasServiceQuota(),
 			"aws_sfn_activity":                               dataSourceAwsSfnActivity(),
 			"aws_sfn_state_machine":                          dataSourceAwsSfnStateMachine(),
+			"aws_signer_signing_job":                         dataSourceAwsSignerSigningJob(),
+			"aws_signer_signing_profile":                     dataSourceAwsSignerSigningProfile(),
 			"aws_sns_topic":                                  dataSourceAwsSnsTopic(),
 			"aws_sqs_queue":                                  dataSourceAwsSqsQueue(),
 			"aws_ssm_document":                               dataSourceAwsSsmDocument(),
@@ -458,6 +463,7 @@ func Provider() *schema.Provider {
 			"aws_autoscaling_schedule":                                resourceAwsAutoscalingSchedule(),
 			"aws_autoscalingplans_scaling_plan":                       resourceAwsAutoScalingPlansScalingPlan(),
 			"aws_backup_plan":                                         resourceAwsBackupPlan(),
+			"aws_backup_region_settings":                              resourceAwsBackupRegionSettings(),
 			"aws_backup_selection":                                    resourceAwsBackupSelection(),
 			"aws_backup_vault":                                        resourceAwsBackupVault(),
 			"aws_backup_vault_notifications":                          resourceAwsBackupVaultNotifications(),
@@ -586,6 +592,7 @@ func Provider() *schema.Provider {
 			"aws_ebs_volume":                                          resourceAwsEbsVolume(),
 			"aws_ec2_availability_zone_group":                         resourceAwsEc2AvailabilityZoneGroup(),
 			"aws_ec2_capacity_reservation":                            resourceAwsEc2CapacityReservation(),
+			"aws_ec2_carrier_gateway":                                 resourceAwsEc2CarrierGateway(),
 			"aws_ec2_client_vpn_authorization_rule":                   resourceAwsEc2ClientVpnAuthorizationRule(),
 			"aws_ec2_client_vpn_endpoint":                             resourceAwsEc2ClientVpnEndpoint(),
 			"aws_ec2_client_vpn_network_association":                  resourceAwsEc2ClientVpnNetworkAssociation(),
@@ -667,11 +674,13 @@ func Provider() *schema.Provider {
 			"aws_glue_job":                                            resourceAwsGlueJob(),
 			"aws_glue_ml_transform":                                   resourceAwsGlueMLTransform(),
 			"aws_glue_partition":                                      resourceAwsGluePartition(),
+			"aws_glue_registry":                                       resourceAwsGlueRegistry(),
+			"aws_glue_resource_policy":                                resourceAwsGlueResourcePolicy(),
+			"aws_glue_schema":                                         resourceAwsGlueSchema(),
 			"aws_glue_security_configuration":                         resourceAwsGlueSecurityConfiguration(),
 			"aws_glue_trigger":                                        resourceAwsGlueTrigger(),
 			"aws_glue_user_defined_function":                          resourceAwsGlueUserDefinedFunction(),
 			"aws_glue_workflow":                                       resourceAwsGlueWorkflow(),
-			"aws_glue_resource_policy":                                resourceAwsGlueResourcePolicy(),
 			"aws_guardduty_detector":                                  resourceAwsGuardDutyDetector(),
 			"aws_guardduty_filter":                                    resourceAwsGuardDutyFilter(),
 			"aws_guardduty_invite_accepter":                           resourceAwsGuardDutyInviteAccepter(),
@@ -706,6 +715,8 @@ func Provider() *schema.Provider {
 			"aws_iam_user_login_profile":                              resourceAwsIamUserLoginProfile(),
 			"aws_imagebuilder_component":                              resourceAwsImageBuilderComponent(),
 			"aws_imagebuilder_distribution_configuration":             resourceAwsImageBuilderDistributionConfiguration(),
+			"aws_imagebuilder_image_pipeline":                         resourceAwsImageBuilderImagePipeline(),
+			"aws_imagebuilder_image_recipe":                           resourceAwsImageBuilderImageRecipe(),
 			"aws_imagebuilder_infrastructure_configuration":           resourceAwsImageBuilderInfrastructureConfiguration(),
 			"aws_inspector_assessment_target":                         resourceAWSInspectorAssessmentTarget(),
 			"aws_inspector_assessment_template":                       resourceAWSInspectorAssessmentTemplate(),
@@ -732,6 +743,7 @@ func Provider() *schema.Provider {
 			"aws_kms_key":                                             resourceAwsKmsKey(),
 			"aws_kms_ciphertext":                                      resourceAwsKmsCiphertext(),
 			"aws_lambda_alias":                                        resourceAwsLambdaAlias(),
+			"aws_lambda_code_signing_config":                          resourceAwsLambdaCodeSigningConfig(),
 			"aws_lambda_event_source_mapping":                         resourceAwsLambdaEventSourceMapping(),
 			"aws_lambda_function_event_invoke_config":                 resourceAwsLambdaFunctionEventInvokeConfig(),
 			"aws_lambda_function":                                     resourceAwsLambdaFunction(),
@@ -767,6 +779,7 @@ func Provider() *schema.Provider {
 			"aws_media_store_container_policy":                        resourceAwsMediaStoreContainerPolicy(),
 			"aws_msk_cluster":                                         resourceAwsMskCluster(),
 			"aws_msk_configuration":                                   resourceAwsMskConfiguration(),
+			"aws_msk_scram_secret_association":                        resourceAwsMskScramSecretAssociation(),
 			"aws_nat_gateway":                                         resourceAwsNatGateway(),
 			"aws_network_acl":                                         resourceAwsNetworkAcl(),
 			"aws_default_network_acl":                                 resourceAwsDefaultNetworkAcl(),
@@ -783,6 +796,7 @@ func Provider() *schema.Provider {
 			"aws_networkfirewall_firewall":                            resourceAwsNetworkFirewallFirewall(),
 			"aws_networkfirewall_firewall_policy":                     resourceAwsNetworkFirewallFirewallPolicy(),
 			"aws_networkfirewall_logging_configuration":               resourceAwsNetworkFirewallLoggingConfiguration(),
+			"aws_networkfirewall_resource_policy":                     resourceAwsNetworkFirewallResourcePolicy(),
 			"aws_networkfirewall_rule_group":                          resourceAwsNetworkFirewallRuleGroup(),
 			"aws_opsworks_application":                                resourceAwsOpsworksApplication(),
 			"aws_opsworks_stack":                                      resourceAwsOpsworksStack(),
@@ -899,6 +913,9 @@ func Provider() *schema.Provider {
 			"aws_service_discovery_service":                           resourceAwsServiceDiscoveryService(),
 			"aws_servicequotas_service_quota":                         resourceAwsServiceQuotasServiceQuota(),
 			"aws_shield_protection":                                   resourceAwsShieldProtection(),
+			"aws_signer_signing_job":                                  resourceAwsSignerSigningJob(),
+			"aws_signer_signing_profile":                              resourceAwsSignerSigningProfile(),
+			"aws_signer_signing_profile_permission":                   resourceAwsSignerSigningProfilePermission(),
 			"aws_simpledb_domain":                                     resourceAwsSimpleDBDomain(),
 			"aws_ssm_activation":                                      resourceAwsSsmActivation(),
 			"aws_ssm_association":                                     resourceAwsSsmAssociation(),
@@ -1032,6 +1049,11 @@ func Provider() *schema.Provider {
 		},
 	}
 
+	// Avoid Go formatting churn and Git conflicts
+	// You probably should not do this
+	provider.DataSourcesMap["aws_serverlessapplicationrepository_application"] = dataSourceAwsServerlessApplicationRepositoryApplication()
+	provider.ResourcesMap["aws_serverlessapplicationrepository_cloudformation_stack"] = resourceAwsServerlessApplicationRepositoryCloudFormationStack()
+
 	provider.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
 		terraformVersion := provider.TerraformVersion
 		if terraformVersion == "" {
@@ -1051,7 +1073,7 @@ var endpointServiceNames []string
 func init() {
 	descriptions = map[string]string{
 		"region": "The region where AWS operations will take place. Examples\n" +
-			"are us-east-1, us-west-2, etc.",
+			"are us-east-1, us-west-2, etc.", // lintignore:AWSAT003
 
 		"access_key": "The access key for API operations. You can retrieve this\n" +
 			"from the 'Security & Credentials' section of the AWS console.",
@@ -1147,6 +1169,7 @@ func init() {
 		"dynamodb",
 		"ec2",
 		"ecr",
+		"ecrpublic",
 		"ecs",
 		"efs",
 		"eks",
@@ -1195,6 +1218,7 @@ func init() {
 		"mediastore",
 		"mediastoredata",
 		"mq",
+		"mwaa",
 		"neptune",
 		"networkfirewall",
 		"networkmanager",
@@ -1227,6 +1251,7 @@ func init() {
 		"servicequotas",
 		"ses",
 		"shield",
+		"signer",
 		"sns",
 		"sqs",
 		"ssm",

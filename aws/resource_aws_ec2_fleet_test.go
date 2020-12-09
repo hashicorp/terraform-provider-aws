@@ -683,6 +683,35 @@ func TestAccAWSEc2Fleet_SpotOptions_AllocationStrategy(t *testing.T) {
 	})
 }
 
+func TestAccAWSEc2Fleet_SpotOptions_CapacityRebalance(t *testing.T) {
+	var fleet1 ec2.FleetData
+	resourceName := "aws_ec2_fleet.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEc2FleetConfig_SpotOptions_CapacityRebalance(rName, "diversified"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEc2FleetExists(resourceName, &fleet1),
+					resource.TestCheckResourceAttr(resourceName, "spot_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spot_options.0.allocation_strategy", "diversified"),
+					resource.TestCheckResourceAttr(resourceName, "spot_options.0.maintenance_strategies.0.capacity_rebalance.0.replacement_strategy", "launch"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"terminate_instances"},
+			},
+		},
+	})
+}
+
 func TestAccAWSEc2Fleet_SpotOptions_InstanceInterruptionBehavior(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
@@ -1732,6 +1761,33 @@ resource "aws_ec2_fleet" "test" {
 
   spot_options {
     allocation_strategy = %q
+  }
+
+  target_capacity_specification {
+    default_target_capacity_type = "spot"
+    total_target_capacity        = 0
+  }
+}
+`, allocationStrategy)
+}
+
+func testAccAWSEc2FleetConfig_SpotOptions_CapacityRebalance(rName, allocationStrategy string) string {
+	return testAccAWSEc2FleetConfig_BaseLaunchTemplate(rName) + fmt.Sprintf(`
+resource "aws_ec2_fleet" "test" {
+  launch_template_config {
+    launch_template_specification {
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
+    }
+  }
+
+  spot_options {
+    allocation_strategy = %[1]q
+    maintenance_strategies {
+      capacity_rebalance {
+        replacement_strategy = "launch"
+      }
+    }
   }
 
   target_capacity_specification {

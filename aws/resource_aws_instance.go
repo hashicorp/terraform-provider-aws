@@ -15,11 +15,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsInstance() *schema.Resource {
@@ -1228,11 +1232,32 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Starting Instance %q after instance_type change", d.Id())
-		_, err = conn.StartInstances(&ec2.StartInstancesInput{
+
+		input := &ec2.StartInstancesInput{
 			InstanceIds: []*string{aws.String(d.Id())},
+		}
+
+		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433
+		err = resource.Retry(waiter.InstanceAttributePropagationTimeout, func() *resource.RetryError {
+			_, err := conn.StartInstances(input)
+
+			if tfawserr.ErrMessageContains(err, tfec2.ErrCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value") {
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
 		})
+
+		if tfresource.TimedOut(err) {
+			_, err = conn.StartInstances(input)
+		}
+
 		if err != nil {
-			return fmt.Errorf("error starting instance (%s): %s", d.Id(), err)
+			return fmt.Errorf("error starting EC2 Instance (%s): %w", d.Id(), err)
 		}
 
 		stateConf := &resource.StateChangeConf{

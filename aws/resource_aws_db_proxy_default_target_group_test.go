@@ -46,6 +46,40 @@ func TestAccAWSDBProxyDefaultTargetGroup_Basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBProxyDefaultTargetGroup_EmptyConnectionPoolConfig(t *testing.T) {
+	var dbProxyTargetGroup rds.DBProxyTargetGroup
+	resourceName := "aws_db_proxy_default_target_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBProxyDefaultTargetGroupConfig_EmptyConnectionPoolConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`target-group:.+`)),
+					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "connection_pool_config.*", map[string]string{
+						"connection_borrow_timeout":    "120",
+						"init_query":                   "",
+						"max_connections_percent":      "100",
+						"max_idle_connections_percent": "50",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSDBProxyDefaultTargetGroup_ConnectionBorrowTimeout(t *testing.T) {
 	var dbProxyTargetGroup rds.DBProxyTargetGroup
 	resourceName := "aws_db_proxy_default_target_group.test"
@@ -419,6 +453,14 @@ resource "aws_subnet" "test" {
 }
 
 func testAccAWSDBProxyDefaultTargetGroupConfig_Basic(rName string) string {
+	return testAccAWSDBProxyDefaultTargetGroupConfigBase(rName) + `
+resource "aws_db_proxy_default_target_group" "test" {
+  db_proxy_name = aws_db_proxy.test.name
+}
+`
+}
+
+func testAccAWSDBProxyDefaultTargetGroupConfig_EmptyConnectionPoolConfig(rName string) string {
 	return testAccAWSDBProxyDefaultTargetGroupConfigBase(rName) + `
 resource "aws_db_proxy_default_target_group" "test" {
   db_proxy_name = aws_db_proxy.test.name

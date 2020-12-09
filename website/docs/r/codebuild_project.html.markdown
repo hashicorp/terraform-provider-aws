@@ -326,7 +326,7 @@ The following arguments are supported:
 
 `secondary_artifacts` supports the following:
 
-* `type` - (Required) The build output artifact's type. Valid values for this parameter are: `CODEPIPELINE`, `NO_ARTIFACTS` or `S3`.
+* `type` - (Required) The build output artifact's type. The only valid value is `S3`.
 * `artifact_identifier` - (Required) The artifact identifier. Must be the same specified inside AWS CodeBuild buildspec.
 * `encryption_disabled` - (Optional) If set to true, output artifacts will not be encrypted. If `type` is set to `NO_ARTIFACTS` then this value will be ignored. Defaults to `false`.
 * `override_artifact_name` (Optional) If set to true, a name specified in the build spec file overrides the artifact name.

@@ -514,7 +514,7 @@ func expandAllowedMethods(s *schema.Set) *cloudfront.AllowedMethods {
 
 func flattenAllowedMethods(am *cloudfront.AllowedMethods) *schema.Set {
 	if am.Items != nil {
-		return schema.NewSet(schema.HashString, flattenStringList(am.Items))
+		return flattenStringSet(am.Items)
 	}
 	return nil
 }
@@ -528,7 +528,7 @@ func expandCachedMethods(s *schema.Set) *cloudfront.CachedMethods {
 
 func flattenCachedMethods(cm *cloudfront.CachedMethods) *schema.Set {
 	if cm.Items != nil {
-		return schema.NewSet(schema.HashString, flattenStringList(cm.Items))
+		return flattenStringSet(cm.Items)
 	}
 	return nil
 }
@@ -877,7 +877,7 @@ func expandCustomOriginConfigSSL(s []interface{}) *cloudfront.OriginSslProtocols
 }
 
 func flattenCustomOriginConfigSSL(osp *cloudfront.OriginSslProtocols) *schema.Set {
-	return schema.NewSet(schema.HashString, flattenStringList(osp.Items))
+	return flattenStringSet(osp.Items)
 }
 
 func expandS3OriginConfig(m map[string]interface{}) *cloudfront.S3OriginConfig {
@@ -1014,7 +1014,7 @@ func expandAliases(as *schema.Set) *cloudfront.Aliases {
 
 func flattenAliases(aliases *cloudfront.Aliases) *schema.Set {
 	if aliases.Items != nil {
-		return schema.NewSet(aliasesHash, flattenStringList(aliases.Items))
+		return flattenStringSet(aliases.Items)
 	}
 	return schema.NewSet(aliasesHash, []interface{}{})
 }
@@ -1058,7 +1058,7 @@ func flattenGeoRestriction(gr *cloudfront.GeoRestriction) map[string]interface{}
 
 	m["restriction_type"] = aws.StringValue(gr.RestrictionType)
 	if gr.Items != nil {
-		m["locations"] = schema.NewSet(schema.HashString, flattenStringList(gr.Items))
+		m["locations"] = flattenStringSet(gr.Items)
 	}
 	return m
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -63,6 +64,12 @@ func resourceAwsSsmMaintenanceWindow() *schema.Resource {
 				Optional: true,
 			},
 
+			"schedule_offset": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(1, 6),
+			},
+
 			"start_date": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -98,6 +105,10 @@ func resourceAwsSsmMaintenanceWindowCreate(d *schema.ResourceData, meta interfac
 
 	if v, ok := d.GetOk("schedule_timezone"); ok {
 		params.ScheduleTimezone = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("schedule_offset"); ok {
+		params.ScheduleOffset = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("start_date"); ok {
@@ -154,6 +165,10 @@ func resourceAwsSsmMaintenanceWindowUpdate(d *schema.ResourceData, meta interfac
 		params.ScheduleTimezone = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("schedule_offset"); ok {
+		params.ScheduleOffset = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("start_date"); ok {
 		params.StartDate = aws.String(v.(string))
 	}
@@ -208,6 +223,7 @@ func resourceAwsSsmMaintenanceWindowRead(d *schema.ResourceData, meta interface{
 	d.Set("end_date", resp.EndDate)
 	d.Set("name", resp.Name)
 	d.Set("schedule_timezone", resp.ScheduleTimezone)
+	d.Set("schedule_offset", resp.ScheduleOffset)
 	d.Set("schedule", resp.Schedule)
 	d.Set("start_date", resp.StartDate)
 	d.Set("description", resp.Description)

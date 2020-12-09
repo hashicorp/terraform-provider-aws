@@ -6,6 +6,25 @@ import (
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 )
 
+// CarrierGatewayByID returns the carrier gateway corresponding to the specified identifier.
+// Returns nil and potentially an error if no carrier gateway is found.
+func CarrierGatewayByID(conn *ec2.EC2, id string) (*ec2.CarrierGateway, error) {
+	input := &ec2.DescribeCarrierGatewaysInput{
+		CarrierGatewayIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeCarrierGateways(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.CarrierGateways) == 0 {
+		return nil, nil
+	}
+
+	return output.CarrierGateways[0], nil
+}
+
 func ClientVpnAuthorizationRule(conn *ec2.EC2, endpointID, targetNetworkCidr, accessGroupID string) (*ec2.DescribeClientVpnAuthorizationRulesOutput, error) {
 	filters := map[string]string{
 		"destination-cidr": targetNetworkCidr,

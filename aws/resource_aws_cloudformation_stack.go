@@ -257,7 +257,7 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 		d.Set("disable_rollback", stack.DisableRollback)
 	}
 	if len(stack.NotificationARNs) > 0 {
-		err = d.Set("notification_arns", schema.NewSet(schema.HashString, flattenStringList(stack.NotificationARNs)))
+		err = d.Set("notification_arns", flattenStringSet(stack.NotificationARNs))
 		if err != nil {
 			return err
 		}
@@ -279,7 +279,7 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if len(stack.Capabilities) > 0 {
-		err = d.Set("capabilities", schema.NewSet(schema.HashString, flattenStringList(stack.Capabilities)))
+		err = d.Set("capabilities", flattenStringSet(stack.Capabilities))
 		if err != nil {
 			return err
 		}
