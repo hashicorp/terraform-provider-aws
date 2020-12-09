@@ -2,7 +2,8 @@
 
 FEATURES
 
-* **New Resource:** `resource_aws_glue_schema` [GH-16612]
+* **New Resource:** `aws_ec2_carrier_gateway` [GH-16252]
+* **New Resource:** `aws_glue_schema` [GH-16612]
 
 ENHANCEMENTS
 
