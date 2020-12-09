@@ -743,7 +743,7 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		}
 	} else {
 		if ds.Endpoint != nil {
-			d.Set("endpoint", aws.StringValue(ds.Endpoint))
+			d.Set("endpoint", ds.Endpoint)
 			d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		}
 		if ds.Endpoints != nil {
