@@ -20,7 +20,7 @@ data "aws_s3_bucket" "example" {
 }
 
 resource "aws_lakeformation_resource" "example" {
-  resource_arn = "${data.aws_s3_bucket.example.arn}"
+  resource_arn = data.aws_s3_bucket.example.arn
 }
 ```
 
