@@ -2,9 +2,11 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,45 +14,75 @@ import (
 )
 
 func TestAccAWSLakeFormationResource_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_lakeformation_resource.test"
-	bucketName := "aws_s3_bucket.test"
-	roleName := "aws_iam_role.test"
+	bucketName := acctest.RandomWithPrefix("tf-acc-test")
+	roleName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceAddr := "aws_lakeformation_resource.test"
+	bucketAddr := "aws_s3_bucket.test"
+	roleAddr := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSLakeFormationResourceDeregister,
+		CheckDestroy: testAccCheckAWSLakeFormationResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationResourceConfig_basic(rName),
+				Config: testAccAWSLakeFormationResourceConfig_basic(bucketName, roleName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", bucketName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_modified"),
+					testAccCheckAWSLakeFormationResourceExists(resourceAddr),
+					resource.TestCheckResourceAttrPair(resourceAddr, "role_arn", roleAddr, "arn"),
+					resource.TestCheckResourceAttrPair(resourceAddr, "resource_arn", bucketAddr, "arn"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSLakeFormationResource_withRole(t *testing.T) {
+func TestAccAWSLakeFormationResource_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lakeformation_resource.test"
-	bucketName := "aws_s3_bucket.test"
-	roleName := "data.aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSLakeFormationResourceDeregister,
+		CheckDestroy: testAccCheckAWSLakeFormationResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationResourceConfig_withRole(rName),
+				Config: testAccAWSLakeFormationResourceConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(bucketName, "arn", resourceName, "resource_arn"),
-					resource.TestCheckResourceAttrPair(roleName, "arn", resourceName, "role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "use_service_linked_role", "false"),
+					testAccCheckAWSLakeFormationResourceExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsLakeFormationResource(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSLakeFormationResource_serviceLinkedRole(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceAddr := "aws_lakeformation_resource.test"
+	bucketAddr := "aws_s3_bucket.test"
+	arn := arn.ARN{
+		Partition: testAccGetPartition(),
+		Service:   "iam",
+		AccountID: ".*",
+		Resource:  "role/aws-service-role/lakeformation.amazonaws.com/AWSServiceRoleForLakeFormationDataAccess",
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckIamServiceLinkedRole(t, "/aws-service-role/lakeformation.amazonaws.com")
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLakeFormationResourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLakeFormationResourceConfig_serviceLinkedRole(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLakeFormationResourceExists(resourceAddr),
+					resource.TestCheckResourceAttrPair(resourceAddr, "resource_arn", bucketAddr, "arn"),
+					resource.TestMatchResourceAttr(resourceAddr, "role_arn", regexp.MustCompile(fmt.Sprintf(`^%s$`, arn.String()))),
 				),
 			},
 		},
@@ -58,37 +90,39 @@ func TestAccAWSLakeFormationResource_withRole(t *testing.T) {
 }
 
 func TestAccAWSLakeFormationResource_update(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_lakeformation_resource.test"
-	bucketName := "aws_s3_bucket.test"
-	roleName := "data.aws_iam_role.test"
+	bucketName := acctest.RandomWithPrefix("tf-acc-test")
+	roleName1 := acctest.RandomWithPrefix("tf-acc-test")
+	roleName2 := acctest.RandomWithPrefix("tf-acc-test")
+	resourceAddr := "aws_lakeformation_resource.test"
+	bucketAddr := "aws_s3_bucket.test"
+	roleAddr := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSLakeFormationResourceDeregister,
+		CheckDestroy: testAccCheckAWSLakeFormationResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationResourceConfig_basic(rName),
+				Config: testAccAWSLakeFormationResourceConfig_basic(bucketName, roleName1),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(bucketName, "arn", resourceName, "resource_arn"),
-					resource.TestCheckResourceAttr(resourceName, "use_service_linked_role", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					testAccCheckAWSLakeFormationResourceExists(resourceAddr),
+					resource.TestCheckResourceAttrPair(resourceAddr, "role_arn", roleAddr, "arn"),
+					resource.TestCheckResourceAttrPair(resourceAddr, "resource_arn", bucketAddr, "arn"),
 				),
 			},
 			{
-				Config: testAccAWSLakeFormationResourceConfig_withRole(rName),
+				Config: testAccAWSLakeFormationResourceConfig_basic(bucketName, roleName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(bucketName, "arn", resourceName, "resource_arn"),
-					resource.TestCheckResourceAttrPair(roleName, "arn", resourceName, "role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "use_service_linked_role", "false"),
+					testAccCheckAWSLakeFormationResourceExists(resourceAddr),
+					resource.TestCheckResourceAttrPair(resourceAddr, "role_arn", roleAddr, "arn"),
+					resource.TestCheckResourceAttrPair(resourceAddr, "resource_arn", bucketAddr, "arn"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSLakeFormationResourceDeregister(s *terraform.State) error {
+func testAccCheckAWSLakeFormationResourceDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).lakeformationconn
 
 	for _, rs := range s.RootModule().Resources {
@@ -104,7 +138,7 @@ func testAccCheckAWSLakeFormationResourceDeregister(s *terraform.State) error {
 
 		_, err := conn.DescribeResource(input)
 		if err == nil {
-			return fmt.Errorf("Resource still registered: %s", resourceArn)
+			return fmt.Errorf("resource still registered: %s", resourceArn)
 		}
 		if !isLakeFormationResourceNotFoundErr(err) {
 			return err
@@ -114,6 +148,29 @@ func testAccCheckAWSLakeFormationResourceDeregister(s *terraform.State) error {
 	return nil
 }
 
+func testAccCheckAWSLakeFormationResourceExists(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", resourceName)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).lakeformationconn
+
+		input := &lakeformation.DescribeResourceInput{
+			ResourceArn: aws.String(rs.Primary.ID),
+		}
+
+		_, err := conn.DescribeResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error getting Lake Formation resource (%s): %w", rs.Primary.ID, err)
+		}
+
+		return nil
+	}
+}
+
 func isLakeFormationResourceNotFoundErr(err error) bool {
 	return isAWSErr(
 		err,
@@ -121,29 +178,29 @@ func isLakeFormationResourceNotFoundErr(err error) bool {
 		"Entity not found")
 }
 
-func testAccAWSLakeFormationResourceConfig_basic(rName string) string {
+func testAccAWSLakeFormationResourceConfig_basic(bucket, role string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
 resource "aws_iam_role" "test" {
-  name = %[1]q
+  name = %[2]q
   path = "/test/"
 
   assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": "sts:AssumeRole",
-			"Principal": {
-				"Service": "s3.amazonaws.com"
-			},
-			"Effect": "Allow",
-			"Sid": ""
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "s3.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
 }
 EOF
 }
@@ -151,7 +208,7 @@ EOF
 data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "test" {
-  name = %[1]q
+  name = %[2]q
   role = aws_iam_role.test.id
 
   policy = <<EOF
@@ -168,12 +225,12 @@ resource "aws_iam_role_policy" "test" {
         "s3:GetObject",
         "s3:GetObjectACL",
         "s3:PutObject",
-        "s3:PutObjectAcl",
+        "s3:PutObjectAcl"
       ],
       "Resource": [
-		"arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*",
-		"arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}",
-      ],
+        "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*",
+        "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}"
+      ]
     }
   ]
 }
@@ -184,7 +241,7 @@ resource "aws_lakeformation_resource" "test" {
   resource_arn = aws_s3_bucket.test.arn
   role_arn     = aws_iam_role.test.arn
 }
-`, rName)
+`, bucket, role)
 }
 
 func testAccAWSLakeFormationResourceConfig_serviceLinkedRole(rName string) string {
@@ -194,26 +251,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_lakeformation_resource" "test" {
-  resource_arn            = "${aws_s3_bucket.test.arn}"
-  use_service_linked_role = true
-}
-`, rName)
-}
-
-func testAccAWSLakeFormationResourceConfig_withRole(rName string) string {
-	return fmt.Sprintf(`
-data "aws_iam_role" "test" {
-  name = "AWSServiceRoleForLakeFormationDataAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_lakeformation_resource" "test" {
-  resource_arn            = "${aws_s3_bucket.test.arn}"
-  role_arn                = "${data.aws_iam_role.test.arn}"
-  use_service_linked_role = false
+  resource_arn = "${aws_s3_bucket.test.arn}"
 }
 `, rName)
 }

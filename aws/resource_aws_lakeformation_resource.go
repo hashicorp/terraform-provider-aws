@@ -26,6 +26,7 @@ func resourceAwsLakeFormationResource() *schema.Resource {
 			"resource_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
 			"role_arn": {
@@ -92,9 +93,9 @@ func resourceAwsLakeFormationResourceRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error reading Lake Formation Resource: %s", err)
 	}
 
-	d.Set("resource_arn", output.ResourceInfo.ResourceArn)
+	// d.Set("resource_arn", output.ResourceInfo.ResourceArn) // output not including resource arn currently
 	d.Set("role_arn", output.ResourceInfo.RoleArn)
-	if output.ResourceInfo.LastModified != nil {
+	if output.ResourceInfo.LastModified != nil { // output not including last modified currently
 		d.Set("last_modified", output.ResourceInfo.LastModified.Format(time.RFC3339))
 	}
 
