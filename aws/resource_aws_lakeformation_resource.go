@@ -90,7 +90,7 @@ func resourceAwsLakeFormationResourceRead(d *schema.ResourceData, meta interface
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Lake Formation Resource: %s", err)
+		return fmt.Errorf("error reading Lake Formation Resource (%s): %w", d.Id(), err)
 	}
 
 	// d.Set("resource_arn", output.ResourceInfo.ResourceArn) // output not including resource arn currently
@@ -116,7 +116,7 @@ func resourceAwsLakeFormationResourceUpdate(d *schema.ResourceData, meta interfa
 
 	_, err := conn.UpdateResource(input)
 	if err != nil {
-		return fmt.Errorf("error updating Lake Formation Resource: %s", err)
+		return fmt.Errorf("error updating Lake Formation Resource (%s): %w", d.Id(), err)
 	}
 
 	return resourceAwsLakeFormationResourceRead(d, meta)
@@ -132,7 +132,7 @@ func resourceAwsLakeFormationResourceDelete(d *schema.ResourceData, meta interfa
 
 	_, err := conn.DeregisterResource(input)
 	if err != nil {
-		return fmt.Errorf("error deregistering Lake Formation Resource: %s", err)
+		return fmt.Errorf("error deregistering Lake Formation Resource (%s): %w", d.Id(), err)
 	}
 
 	return nil
