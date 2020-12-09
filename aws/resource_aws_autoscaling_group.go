@@ -16,6 +16,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -510,8 +512,11 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 						"triggers": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: validateAutoScalingGroupInstanceRefreshTriggerFields,
+							},
 						},
 					},
 				},
@@ -1936,4 +1941,32 @@ func cancelAutoscalingInstanceRefresh(conn *autoscaling.AutoScaling, asgName str
 	}
 
 	return nil
+}
+
+func validateAutoScalingGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) diag.Diagnostics {
+	v, ok := i.(string)
+	if !ok {
+		return diag.Errorf("expected type to be string")
+	}
+
+	if v == "launch_configuration" || v == "launch_template" || v == "mixed_instances_policy" {
+		return diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  fmt.Sprintf("'%s' always triggers an instance refresh and can be removed", v),
+			},
+		}
+	}
+
+	schema := resourceAwsAutoscalingGroup().Schema
+	for attr, attrSchema := range schema {
+		if v == attr {
+			if attrSchema.Computed && !attrSchema.Optional {
+				return diag.Errorf("'%s' is a read-only parameter and cannot be used to trigger an instance refresh", v)
+			}
+			return nil
+		}
+	}
+
+	return diag.Errorf("'%s' is not a recognized parameter name for aws_autoscaling_group", v)
 }

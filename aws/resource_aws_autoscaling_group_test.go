@@ -4450,14 +4450,14 @@ resource "aws_autoscaling_group" "test" {
   launch_configuration = aws_launch_configuration.test.name
 
   instance_refresh {
-	strategy = "Rolling"
-	triggers = ["tags"]
+    strategy = "Rolling"
+    triggers = ["tags"]
   }
 
   tag {
-	key                 = "Key"
-	value               = "Value"
-	propagate_at_launch = true
+    key                 = "Key"
+    value               = "Value"
+    propagate_at_launch = true
   }
 }
 

@@ -19,8 +19,17 @@ const (
 
 func InstanceRefreshCancelled(conn *autoscaling.AutoScaling, asgName, instanceRefreshId string) (*autoscaling.InstanceRefresh, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress, autoscaling.InstanceRefreshStatusCancelling},
-		Target:  []string{autoscaling.InstanceRefreshStatusCancelled},
+		Pending: []string{
+			autoscaling.InstanceRefreshStatusPending,
+			autoscaling.InstanceRefreshStatusInProgress,
+			autoscaling.InstanceRefreshStatusCancelling,
+		},
+		Target: []string{
+			autoscaling.InstanceRefreshStatusCancelled,
+			// Failed and Successful are also acceptable end-states
+			autoscaling.InstanceRefreshStatusFailed,
+			autoscaling.InstanceRefreshStatusSuccessful,
+		},
 		Refresh: InstanceRefreshStatus(conn, asgName, instanceRefreshId),
 		Timeout: InstanceRefreshCancelledTimeout,
 	}
