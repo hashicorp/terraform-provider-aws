@@ -82,7 +82,7 @@ func TestAccAWSLakeFormationResource_serviceLinkedRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSLakeFormationResource_update(t *testing.T) {
+func TestAccAWSLakeFormationResource_updateRoleToRole(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-acc-test")
 	roleName1 := acctest.RandomWithPrefix("tf-acc-test")
 	roleName2 := acctest.RandomWithPrefix("tf-acc-test")
@@ -114,6 +114,47 @@ func TestAccAWSLakeFormationResource_update(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAWSLakeFormationResource_updateSLRToRole(t *testing.T) {
+	bucketName := acctest.RandomWithPrefix("tf-acc-test")
+	roleName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceAddr := "aws_lakeformation_resource.test"
+	bucketAddr := "aws_s3_bucket.test"
+	roleAddr := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t)
+			testAccPreCheckIamServiceLinkedRole(t, "/aws-service-role/lakeformation.amazonaws.com")
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLakeFormationResourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLakeFormationResourceConfig_serviceLinkedRole(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLakeFormationResourceExists(resourceAddr),
+					resource.TestCheckResourceAttrPair(resourceAddr, "resource_arn", bucketAddr, "arn"),
+					testAccCheckResourceAttrGlobalARN(resourceAddr, "role_arn", "iam", "role/aws-service-role/lakeformation.amazonaws.com/AWSServiceRoleForLakeFormationDataAccess"),
+				),
+			},
+			{
+				Config: testAccAWSLakeFormationResourceConfig_basic(bucketName, roleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLakeFormationResourceExists(resourceAddr),
+					resource.TestCheckResourceAttrPair(resourceAddr, "role_arn", roleAddr, "arn"),
+					resource.TestCheckResourceAttrPair(resourceAddr, "resource_arn", bucketAddr, "arn"),
+				),
+			},
+		},
+	})
+}
+
+// AWS does not support changing from an IAM role to an SLR. No error is thrown
+// but the registration is not changed (the IAM role continues in the registration).
+//
+// func TestAccAWSLakeFormationResource_updateRoleToSLR(t *testing.T) {
 
 func testAccCheckAWSLakeFormationResourceDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).lakeformationconn

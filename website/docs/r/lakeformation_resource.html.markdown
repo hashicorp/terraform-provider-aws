@@ -29,7 +29,9 @@ resource "aws_lakeformation_resource" "example" {
 The following arguments are required:
 
 * `resource_arn` – (Required) Amazon Resource Name (ARN) of the resource, an S3 path.
-* `role_arn` – (Optional) Role that has read/write access to the resource. If not provided, the service-linked role is used.
+* `role_arn` – (Optional) Role that has read/write access to the resource. If not provided, the Lake Formation service-linked role must exist and is used.
+
+~> **NOTE:** AWS does not support registering an S3 location with an IAM role and subsequently updating the S3 location registration to a service-linked role.
 
 ## Attributes Reference
 

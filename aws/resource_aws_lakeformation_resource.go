@@ -15,7 +15,6 @@ func resourceAwsLakeFormationResource() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLakeFormationResourceCreate,
 		Read:   resourceAwsLakeFormationResourceRead,
-		Update: resourceAwsLakeFormationResourceUpdate,
 		Delete: resourceAwsLakeFormationResourceDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -33,6 +32,7 @@ func resourceAwsLakeFormationResource() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
+				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
 		},
@@ -100,26 +100,6 @@ func resourceAwsLakeFormationResourceRead(d *schema.ResourceData, meta interface
 	}
 
 	return nil
-}
-
-func resourceAwsLakeFormationResourceUpdate(d *schema.ResourceData, meta interface{}) error {
-	if _, ok := d.GetOk("role_arn"); !ok {
-		return resourceAwsLakeFormationResourceCreate(d, meta)
-	}
-
-	conn := meta.(*AWSClient).lakeformationconn
-
-	input := &lakeformation.UpdateResourceInput{
-		ResourceArn: aws.String(d.Get("resource_arn").(string)),
-		RoleArn:     aws.String(d.Get("role_arn").(string)),
-	}
-
-	_, err := conn.UpdateResource(input)
-	if err != nil {
-		return fmt.Errorf("error updating Lake Formation Resource (%s): %w", d.Id(), err)
-	}
-
-	return resourceAwsLakeFormationResourceRead(d, meta)
 }
 
 func resourceAwsLakeFormationResourceDelete(d *schema.ResourceData, meta interface{}) error {
