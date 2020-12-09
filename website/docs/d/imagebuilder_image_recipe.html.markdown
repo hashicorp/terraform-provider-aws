@@ -40,7 +40,7 @@ In addition to all arguments above, the following attributes are exported:
         * `volume_type` - Type of the volume. For example, `gp2` or `io2`.
     * `no_device` - Whether to remove a mapping from the parent image.
     * `virtual_name` - Virtual device name. For example, `ephemeral0`. Instance store volumes are numbered starting from 0.
-* `component` - Set of objects with components for the image recipe.
+* `component` - List of objects with components for the image recipe.
     * `component_arn` - Amazon Resource Name (ARN) of the Image Builder Component.
 * `date_created` - Date the image recipe was created.
 * `description` - Description of the image recipe.
