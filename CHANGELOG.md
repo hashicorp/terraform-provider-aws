@@ -13,6 +13,12 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* data-source/aws_customer_gateway: Prevent missing `id` attribute when not configured as argument [GH-16667]
+* data-source/aws_ec2_transit_gateway: Prevent missing `id` attribute when not configured as argument [GH-16667]
+* data-source/aws_ec2_transit_gateway_peering_attachment: Prevent missing `id` attribute when not configured as argument [GH-16667]
+* data-source/aws_ec2_transit_gateway_route_table: Prevent missing `id` attribute when not configured as argument [GH-16667]
+* data-source/aws_ec2_transit_gateway_vpc_attachment: Prevent missing `id` attribute when not configured as argument [GH-16667]
+* data-source/aws_guardduty_detector: Prevent missing `id` attribute when not configured as argument [GH-16667]
 * resource/aws_workspaces_directory: Fix empty custom_security_group_id & default_ou [GH-16589]
 
 ## 3.20.0 (December 03, 2020)
