@@ -19,6 +19,7 @@ BUG FIXES
 * data-source/aws_ec2_transit_gateway_route_table: Prevent missing `id` attribute when not configured as argument [GH-16667]
 * data-source/aws_ec2_transit_gateway_vpc_attachment: Prevent missing `id` attribute when not configured as argument [GH-16667]
 * data-source/aws_guardduty_detector: Prevent missing `id` attribute when not configured as argument [GH-16667]
+* resource/aws_backup_plan: Prevent plan-time validation error for pre-existing resources with `lifecycle` `delete_after` and/or `copy_action` `lifecycle` `delete_after` arguments configured [GH-16605]
 * resource/aws_workspaces_directory: Fix empty custom_security_group_id & default_ou [GH-16589]
 
 ## 3.20.0 (December 03, 2020)
