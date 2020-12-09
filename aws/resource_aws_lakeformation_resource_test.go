@@ -19,7 +19,7 @@ func TestAccAWSLakeFormationResource_basic(t *testing.T) {
 	roleAddr := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLakeFormationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -40,7 +40,7 @@ func TestAccAWSLakeFormationResource_disappears(t *testing.T) {
 	resourceName := "aws_lakeformation_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLakeFormationResourceDestroy,
 		Steps: []resource.TestStep{
@@ -64,6 +64,7 @@ func TestAccAWSLakeFormationResource_serviceLinkedRole(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t)
 			testAccPreCheckIamServiceLinkedRole(t, "/aws-service-role/lakeformation.amazonaws.com")
 		},
 		Providers:    testAccProviders,
@@ -90,7 +91,7 @@ func TestAccAWSLakeFormationResource_update(t *testing.T) {
 	roleAddr := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLakeFormationResourceDestroy,
 		Steps: []resource.TestStep{
