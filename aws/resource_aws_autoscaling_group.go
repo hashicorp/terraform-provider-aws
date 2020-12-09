@@ -507,6 +507,12 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 								},
 							},
 						},
+						"triggers": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
+						},
 					},
 				},
 			},
@@ -1188,9 +1194,29 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	if instanceRefreshRaw, ok := d.GetOk("instance_refresh"); ok && shouldRefreshInstances {
-		if err := autoScalingGroupRefreshInstances(conn, d.Id(), instanceRefreshRaw.([]interface{})); err != nil {
-			return fmt.Errorf("failed to start instance refresh of Auto Scaling Group %s: %w", d.Id(), err)
+	if instanceRefreshRaw, ok := d.GetOk("instance_refresh"); ok {
+		instanceRefresh := instanceRefreshRaw.([]interface{})
+		if !shouldRefreshInstances {
+			if len(instanceRefresh) > 0 && instanceRefresh[0] != nil {
+				m := instanceRefresh[0].(map[string]interface{})
+				attrsSet := m["triggers"].(*schema.Set)
+				attrs := attrsSet.List()
+				strs := make([]string, len(attrs))
+				for i, a := range attrs {
+					strs[i] = a.(string)
+				}
+				if attrsSet.Contains("tag") && !attrsSet.Contains("tags") {
+					strs = append(strs, "tags")
+				} else if !attrsSet.Contains("tag") && attrsSet.Contains("tags") {
+					strs = append(strs, "tag")
+				}
+				shouldRefreshInstances = d.HasChanges(strs...)
+			}
+		}
+		if shouldRefreshInstances {
+			if err := autoScalingGroupRefreshInstances(conn, d.Id(), instanceRefresh); err != nil {
+				return fmt.Errorf("failed to start instance refresh of Auto Scaling Group %s: %w", d.Id(), err)
+			}
 		}
 	}
 
@@ -1341,7 +1367,7 @@ func resourceAwsAutoscalingGroupDrain(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Error setting capacity to zero to drain: %s", err)
 	}
 
-	// Next, wait for the autoscale group to drain
+	// Next, wait for the Auto Scaling Group to drain
 	log.Printf("[DEBUG] Waiting for group to have zero instances")
 	var g *autoscaling.Group
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {

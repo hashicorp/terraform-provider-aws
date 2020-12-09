@@ -178,21 +178,6 @@ resource "aws_autoscaling_group" "bar" {
 ### Automatically refresh all instances after the group is updated
 
 ```hcl
-data "aws_ami" "example" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
-resource "aws_launch_template" "example" {
-  image_id      = data.aws_ami.example.id
-  instance_type = "t3.nano"
-}
-
 resource "aws_autoscaling_group" "example" {
   availability_zones = ["us-east-1a"]
   desired_capacity   = 1
@@ -210,6 +195,21 @@ resource "aws_autoscaling_group" "example" {
       min_healthy_percentage = 50
     }
   }
+}
+
+data "aws_ami" "example" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "example" {
+  image_id      = data.aws_ami.example.id
+  instance_type = "t3.nano"
 }
 ```
 
@@ -354,8 +354,9 @@ This configuration block supports the following:
 * `preferences` - (Optional) Override default parameters for Instance Refresh.
     * `instance_warmup_seconds` - (Optional) The number of seconds until a newly launched instance is configured and ready to use. Default behavior is to use the Auto Scaling Group's health check grace period.
     * `min_healthy_percentage` - (Optional) The amount of capacity in the Auto Scaling group that must remain healthy during an instance refresh to allow the operation to continue, as a percentage of the desired capacity of the Auto Scaling group. Defaults to `90`.
+* `triggers` - (Optional) Set of additional property names that will trigger an Instance Refresh. A refresh will always be triggered by a change in any of `launch_configuration`, `launch_template`, or `mixed_instances_policy`.
   
-~> **NOTE:** A refresh is only started when any of the following Auto Scaling Group properties change: `launch_configuration`, `launch_template`, `mixed_instances_policy`.
+~> **NOTE:** A refresh is started when any of the following Auto Scaling Group properties change: `launch_configuration`, `launch_template`, `mixed_instances_policy`. Additional properties can be specified in the `triggers` property of `instance_refresh`.
 
 ~> **NOTE:** Auto Scaling Groups support up to one active instance refresh at a time. When this resource is updated, any existing refresh is cancelled.
 
@@ -367,15 +368,15 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Auto Scaling Group id.
 * `arn` - The ARN for this Auto Scaling Group
-* `availability_zones` - The availability zones of the autoscale group.
-* `min_size` - The minimum size of the autoscale group
-* `max_size` - The maximum size of the autoscale group
+* `availability_zones` - The availability zones of the Auto Scaling Group.
+* `min_size` - The minimum size of the Auto Scaling Group
+* `max_size` - The maximum size of the Auto Scaling Group
 * `default_cooldown` - Time between a scaling activity and the succeeding scaling activity.
-* `name` - The name of the autoscale group
+* `name` - The name of the Auto Scaling Group
 * `health_check_grace_period` - Time after instance comes into service before checking health.
 * `health_check_type` - "EC2" or "ELB". Controls how health checking is done.
 * `desired_capacity` -The number of Amazon EC2 instances that should be running in the group.
-* `launch_configuration` - The launch configuration of the autoscale group
+* `launch_configuration` - The launch configuration of the Auto Scaling Group
 * `vpc_zone_identifier` (Optional) - The VPC zone identifier
 
 ~> **NOTE:** When using `ELB` as the `health_check_type`, `health_check_grace_period` is required.

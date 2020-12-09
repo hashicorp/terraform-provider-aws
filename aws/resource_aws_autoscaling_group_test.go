@@ -1084,58 +1084,34 @@ func TestAccAWSAutoScalingGroup_InstanceRefresh_Start(t *testing.T) {
 }
 
 func TestAccAWSAutoScalingGroup_InstanceRefresh_Triggers(t *testing.T) {
-	matrix := []struct {
-		AvailabilityZoneCount   int
-		SubnetCount             int
-		InstanceType            string
-		Capacity                int
-		UseLaunchConfiguration  bool
-		UseLaunchTemplate       bool
-		UseMixedInstancesPolicy bool
-		UsePlacementGroup       bool
-		ExpectRefreshCount      int
-	}{
-		{2, 0, "t3.nano", 1, true, false, false, false, 0},  // create asg with 2 az-s
-		{1, 0, "t3.nano", 1, true, false, false, false, 0},  // drop 1 az
-		{0, 2, "t3.nano", 4, true, false, false, false, 0},  // add 2 subnets, drop az-s
-		{0, 1, "t3.nano", 1, true, false, false, false, 0},  // drop 1 subnet
-		{0, 1, "t3.nano", 1, false, true, false, false, 1},  // drop launch config, add template
-		{0, 1, "t3.micro", 1, false, true, false, false, 2}, // update template
-		{0, 1, "t3.micro", 1, false, false, true, false, 3}, // drop template, add mixed policy
-		{0, 1, "t3.nano", 1, false, false, true, false, 4},  // update mixed policy
-		{0, 1, "t3.nano", 1, false, false, true, true, 4},   // use placement group
-	}
-
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
-	placementGroupName := fmt.Sprintf("tf-test-%s", acctest.RandString(8))
-
-	steps := make([]resource.TestStep, len(matrix))
-	for i, test := range matrix {
-		steps[i] = resource.TestStep{
-			Config: testAccAwsAutoScalingGroupConfig_InstanceRefresh_Triggers(
-				test.AvailabilityZoneCount,
-				test.SubnetCount,
-				test.InstanceType,
-				test.Capacity,
-				test.UseLaunchConfiguration,
-				test.UseLaunchTemplate,
-				test.UseMixedInstancesPolicy,
-				test.UsePlacementGroup,
-				placementGroupName,
-			),
-			Check: resource.ComposeTestCheckFunc(
-				testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
-				testAccCheckAutoScalingInstanceRefreshCount(&group, test.ExpectRefreshCount),
-			),
-		}
-	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
-		Steps:        steps,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsAutoScalingGroupConfig_InstanceRefresh_Basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.preferences.#", "0"),
+				),
+			},
+			{
+				Config: testAccAwsAutoScalingGroupConfig_InstanceRefresh_Triggers(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "instance_refresh.0.triggers.*", "tags"),
+					testAccCheckAutoScalingInstanceRefreshCount(&group, 1),
+					testAccCheckAutoScalingInstanceRefreshStatus(&group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
+				),
+			},
+		},
 	})
 }
 
@@ -4464,61 +4440,25 @@ resource "aws_launch_configuration" "test" {
 `, launchConfigurationName)
 }
 
-func testAccAwsAutoScalingGroupConfig_InstanceRefresh_Triggers(
-	availabilityZoneCount int,
-	subnetCount int,
-	instanceType string,
-	capacity int,
-	useLaunchConfiguration bool,
-	useLaunchTemplate bool,
-	useMixedInstancesPolicy bool,
-	usePlacementGroup bool,
-	placementGroupName string,
-) string {
+func testAccAwsAutoScalingGroupConfig_InstanceRefresh_Triggers() string {
 	return fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
-  availability_zones   = local.availability_zone_count > 0 ? slice(data.aws_availability_zones.current.names, 0, local.availability_zone_count) : null
+  availability_zones   = [data.aws_availability_zones.current.names[0]]
+  max_size             = 2
   min_size             = 1
-  max_size             = %[9]d
-  desired_capacity     = %[9]d
-  launch_configuration = local.use_launch_configuration ? aws_launch_configuration.test.name : null
-  vpc_zone_identifier  = local.subnet_count > 0 ? slice(aws_subnet.test.*.id, 0, local.subnet_count) : null
-  placement_group      = local.use_placement_group ? aws_placement_group.test.name : null
-
-  dynamic "launch_template" {
-    for_each = local.use_launch_template ? [1] : []
-    content {
-      id      = aws_launch_template.test.id
-      version = aws_launch_template.test.latest_version
-    }
-  }
-
-  dynamic "mixed_instances_policy" {
-    for_each = local.use_mixed_instances_policy ? [1] : []
-    content {
-      launch_template {
-        launch_template_specification {
-          launch_template_id = aws_launch_template.test.id
-          version            = aws_launch_template.test.latest_version
-        }
-      }
-    }
-  }
+  desired_capacity     = 1
+  launch_configuration = aws_launch_configuration.test.name
 
   instance_refresh {
-    strategy = "Rolling"
+	strategy = "Rolling"
+	triggers = ["tags"]
   }
-}
 
-locals {
-  availability_zone_count    = %[1]d
-  subnet_count               = %[2]d
-  instance_type              = %[3]q
-  use_launch_configuration   = %[4]t
-  use_launch_template        = %[5]t
-  use_mixed_instances_policy = %[6]t
-  use_placement_group        = %[7]t
-  placement_group_name       = %[8]q
+  tag {
+	key                 = "Key"
+	value               = "Value"
+	propagate_at_launch = true
+  }
 }
 
 data "aws_ami" "test" {
@@ -4540,32 +4480,11 @@ data "aws_availability_zones" "current" {
   }
 }
 
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  count             = length(data.aws_availability_zones.current.names)
-  availability_zone = data.aws_availability_zones.current.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, count.index)
-  vpc_id            = aws_vpc.test.id
-}
-
 resource "aws_launch_configuration" "test" {
   image_id      = data.aws_ami.test.id
-  instance_type = local.instance_type
+  instance_type = "t3.nano"
 }
-
-resource "aws_launch_template" "test" {
-  image_id      = data.aws_ami.test.image_id
-  instance_type = local.instance_type
-}
-
-resource "aws_placement_group" "test" {
-  name     = local.placement_group_name
-  strategy = "cluster"
-}
-`, availabilityZoneCount, subnetCount, instanceType, useLaunchConfiguration, useLaunchTemplate, useMixedInstancesPolicy, usePlacementGroup, placementGroupName, capacity)
+`)
 }
 
 func testAccCheckAutoScalingInstanceRefreshCount(group *autoscaling.Group, expected int) resource.TestCheckFunc {
