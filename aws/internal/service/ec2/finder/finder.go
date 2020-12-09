@@ -72,6 +72,25 @@ func SecurityGroupByID(conn *ec2.EC2, id string) (*ec2.SecurityGroup, error) {
 	return result.SecurityGroups[0], nil
 }
 
+// SubnetByID looks up a Subnet by ID. When not found, returns nil and potentially an API error.
+func SubnetByID(conn *ec2.EC2, id string) (*ec2.Subnet, error) {
+	input := &ec2.DescribeSubnetsInput{
+		SubnetIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeSubnets(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Subnets) == 0 || output.Subnets[0] == nil {
+		return nil, nil
+	}
+
+	return output.Subnets[0], nil
+}
+
 // VpcPeeringConnectionByID returns the VPC peering connection corresponding to the specified identifier.
 // Returns nil and potentially an error if no VPC peering connection is found.
 func VpcPeeringConnectionByID(conn *ec2.EC2, id string) (*ec2.VpcPeeringConnection, error) {

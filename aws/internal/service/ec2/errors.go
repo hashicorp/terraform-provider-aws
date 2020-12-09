@@ -17,6 +17,10 @@ const (
 )
 
 const (
+	ErrCodeInvalidSubnetIDNotFound = "InvalidSubnetID.NotFound"
+)
+
+const (
 	ErrCodeInvalidVpcPeeringConnectionIDNotFound = "InvalidVpcPeeringConnectionID.NotFound"
 )
 
