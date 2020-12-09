@@ -13,6 +13,46 @@ const (
 )
 
 const (
+	CarrierGatewayAvailableTimeout = 5 * time.Minute
+
+	CarrierGatewayDeletedTimeout = 5 * time.Minute
+)
+
+func CarrierGatewayAvailable(conn *ec2.EC2, carrierGatewayID string) (*ec2.CarrierGateway, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.CarrierGatewayStatePending},
+		Target:  []string{ec2.CarrierGatewayStateAvailable},
+		Refresh: CarrierGatewayState(conn, carrierGatewayID),
+		Timeout: CarrierGatewayAvailableTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.CarrierGateway); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func CarrierGatewayDeleted(conn *ec2.EC2, carrierGatewayID string) (*ec2.CarrierGateway, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.CarrierGatewayStateDeleting},
+		Target:  []string{},
+		Refresh: CarrierGatewayState(conn, carrierGatewayID),
+		Timeout: CarrierGatewayDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.CarrierGateway); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	// Maximum amount of time to wait for a LocalGatewayRouteTableVpcAssociation to return Associated
 	LocalGatewayRouteTableVpcAssociationAssociatedTimeout = 5 * time.Minute
 
