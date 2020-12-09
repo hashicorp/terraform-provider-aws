@@ -191,8 +191,8 @@ func testAccPreCheck(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderConfigure.Do(func() {
-		if os.Getenv("AWS_PROFILE") == "" && os.Getenv("AWS_ACCESS_KEY_ID") == "" {
-			t.Fatal("AWS_ACCESS_KEY_ID or AWS_PROFILE must be set for acceptance tests")
+		if os.Getenv("AWS_PROFILE") == "" && os.Getenv("AWS_ACCESS_KEY_ID") == "" && os.Getenv("AWS_CONTAINER_CREDENTIALS_FULL_URI") == "" {
+			t.Fatal("AWS_ACCESS_KEY_ID, AWS_PROFILE, or AWS_CONTAINER_CREDENTIALS_FULL_URI must be set for acceptance tests")
 		}
 
 		if os.Getenv("AWS_ACCESS_KEY_ID") != "" && os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
