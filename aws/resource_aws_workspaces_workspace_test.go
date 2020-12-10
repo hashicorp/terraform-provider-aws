@@ -423,7 +423,6 @@ func testAccWorkspacesWorkspaceConfig(rName string) string {
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
-  
 
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
