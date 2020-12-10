@@ -35,7 +35,7 @@ jobs:
       run: go build -o terraform-plugin-dir/terraform-provider-aws_v99.99.99_x5 .
     - name: override plugin
       run: mkdir -p ~/.terraform.d/plugins && cp terraform-plugin-dir/terraform-provider-aws_v99.99.99_x5 ~/.terraform.d/plugins
-    - uses: hashicorp/setup-terraform@v1
+    - uses: hashicorp/setup-terraform@v1.3.2
       with:
         terraform_version: ${{ matrix.terraform_version }}
         # Needed to use the output of `terraform validate -json`
