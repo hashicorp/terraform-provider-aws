@@ -203,8 +203,7 @@ func resourceAwsIamInstanceProfileRead(d *schema.ResourceData, meta interface{})
 	}
 
 	result, err := iamconn.GetInstanceProfile(request)
-	if isAWSErr(err, "NoSuchEntity", "") {
-		log.Printf("[WARN] IAM Instance Profile %s is already gone", d.Id())
+	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 		d.SetId("")
 		return nil
 	}
@@ -226,6 +225,10 @@ func resourceAwsIamInstanceProfileDelete(d *schema.ResourceData, meta interface{
 		InstanceProfileName: aws.String(d.Id()),
 	}
 	_, err := iamconn.DeleteInstanceProfile(request)
+	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		log.Printf("[WARN] IAM Instance Profile %s is already gone", d.Id())
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("Error deleting IAM instance profile %s: %s", d.Id(), err)
 	}

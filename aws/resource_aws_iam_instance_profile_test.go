@@ -125,7 +125,7 @@ func testAccCheckAWSInstanceProfileDestroy(s *terraform.State) error {
 			return fmt.Errorf("still exist.")
 		}
 
-		if isAWSErr(err, "NoSuchEntity", "") {
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 
