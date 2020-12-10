@@ -115,43 +115,36 @@ func resourceAwsWorkspacesDirectory() *schema.Resource {
 						"device_type_android": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      workspaces.AccessPropertyValueAllow,
 							ValidateFunc: validation.StringInSlice(workspaces.AccessPropertyValue_Values(), false),
 						},
 						"device_type_chromeos": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      workspaces.AccessPropertyValueAllow,
 							ValidateFunc: validation.StringInSlice(workspaces.AccessPropertyValue_Values(), false),
 						},
 						"device_type_ios": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      workspaces.AccessPropertyValueAllow,
 							ValidateFunc: validation.StringInSlice(workspaces.AccessPropertyValue_Values(), false),
 						},
 						"device_type_osx": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      workspaces.AccessPropertyValueAllow,
 							ValidateFunc: validation.StringInSlice(workspaces.AccessPropertyValue_Values(), false),
 						},
 						"device_type_web": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      workspaces.AccessPropertyValueAllow,
 							ValidateFunc: validation.StringInSlice(workspaces.AccessPropertyValue_Values(), false),
 						},
 						"device_type_windows": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      workspaces.AccessPropertyValueAllow,
 							ValidateFunc: validation.StringInSlice(workspaces.AccessPropertyValue_Values(), false),
 						},
 						"device_type_zeroclient": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      workspaces.AccessPropertyValueAllow,
 							ValidateFunc: validation.StringInSlice(workspaces.AccessPropertyValue_Values(), false),
 						},
 					},
