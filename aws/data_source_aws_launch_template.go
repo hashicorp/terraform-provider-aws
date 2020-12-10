@@ -239,6 +239,10 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"associate_carrier_ip_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"associate_public_ip_address": {
 							Type:     schema.TypeString,
 							Computed: true,
