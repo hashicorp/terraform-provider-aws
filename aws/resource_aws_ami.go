@@ -402,10 +402,12 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 			ebsBlockDev := map[string]interface{}{
 				"device_name":           *blockDev.DeviceName,
 				"delete_on_termination": *blockDev.Ebs.DeleteOnTermination,
-				"encrypted":             *blockDev.Ebs.Encrypted,
 				"iops":                  0,
 				"volume_size":           int(*blockDev.Ebs.VolumeSize),
 				"volume_type":           *blockDev.Ebs.VolumeType,
+			}
+			if blockDev.Ebs.Encrypted != nil {
+				ebsBlockDev["encrypted"] = *blockDev.Ebs.Encrypted
 			}
 			if blockDev.Ebs.Iops != nil {
 				ebsBlockDev["iops"] = int(*blockDev.Ebs.Iops)
