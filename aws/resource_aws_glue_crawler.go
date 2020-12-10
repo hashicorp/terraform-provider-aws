@@ -643,13 +643,8 @@ func resourceAwsGlueCrawlerRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("table_prefix", crawler.TablePrefix)
 
 	if crawler.SchemaChangePolicy != nil {
-		schemaPolicy := map[string]string{
-			"delete_behavior": aws.StringValue(crawler.SchemaChangePolicy.DeleteBehavior),
-			"update_behavior": aws.StringValue(crawler.SchemaChangePolicy.UpdateBehavior),
-		}
-
-		if err := d.Set("schema_change_policy", []map[string]string{schemaPolicy}); err != nil {
-			return fmt.Errorf("error setting schema_change_policy: %s", schemaPolicy)
+		if err := d.Set("schema_change_policy", flattenGlueCrawlerSchemaChangePolicy(crawler.SchemaChangePolicy)); err != nil {
+			return fmt.Errorf("error setting schema_change_policy: %w", err)
 		}
 	}
 
@@ -775,6 +770,19 @@ func resourceAwsGlueCrawlerDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error deleting Glue crawler: %w", err)
 	}
 	return nil
+}
+
+func flattenGlueCrawlerSchemaChangePolicy(cfg *glue.SchemaChangePolicy) []map[string]interface{} {
+	if cfg == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"delete_behavior": aws.StringValue(cfg.DeleteBehavior),
+		"update_behavior": aws.StringValue(cfg.UpdateBehavior),
+	}
+
+	return []map[string]interface{}{m}
 }
 
 func expandGlueCrawlerLineageConfiguration(cfg []interface{}) *glue.LineageConfiguration {
