@@ -43,6 +43,18 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"self_managed_active_directory"},
 			},
+			"aliases": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 50,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(4, 253),
+						validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9]([.][A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])+$`), "must be in the fqdn format hostname.domain"),
+					),
+				},
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -265,6 +277,10 @@ func resourceAwsFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interfac
 		input.WindowsConfiguration.ActiveDirectoryId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("aliases"); ok {
+		input.WindowsConfiguration.Aliases = expandStringSet(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("deployment_type"); ok {
 		input.WindowsConfiguration.DeploymentType = aws.String(v.(string))
 	}
@@ -337,6 +353,14 @@ func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interfac
 			ClientRequestToken:   aws.String(resource.UniqueId()),
 			FileSystemId:         aws.String(d.Id()),
 			WindowsConfiguration: &fsx.UpdateFileSystemWindowsConfiguration{},
+		}
+
+		if d.HasChange("aliases") {
+			o, n := d.GetChange("aliases")
+
+			if err := updateFsxAliases(conn, d.Get("arn").(string), o.([]*fsx.Alias), n.([]*fsx.Alias)); err != nil {
+				return fmt.Errorf("error updating FSx Windows File System (%s) aliases: %s", d.Get("arn").(string), err)
+			}
 		}
 
 		if d.HasChange("automatic_backup_retention_days") {
@@ -425,6 +449,10 @@ func resourceAwsFsxWindowsFileSystemRead(d *schema.ResourceData, meta interface{
 	d.Set("kms_key_id", filesystem.KmsKeyId)
 	d.Set("storage_type", filesystem.StorageType)
 
+	if err := d.Set("aliases", aws.StringValueSlice(expandFsxAliasValues(filesystem.WindowsConfiguration.Aliases))); err != nil {
+		return fmt.Errorf("error setting aliases: %s", err)
+	}
+
 	if err := d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds)); err != nil {
 		return fmt.Errorf("error setting network_interface_ids: %w", err)
 	}
@@ -488,6 +516,83 @@ func resourceAwsFsxWindowsFileSystemDelete(d *schema.ResourceData, meta interfac
 
 	if err := waitForFsxFileSystemDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("Error waiting for filesystem (%s) to delete: %w", d.Id(), err)
+	}
+
+	return nil
+}
+
+func expandFsxAliasValues(aliases []*fsx.Alias) []*string {
+	var alternateDNSNames []*string
+
+	for i := 0; i < len(aliases); i++ {
+		alternateDNSNames[i] = aliases[i].Name
+	}
+
+	return alternateDNSNames
+}
+
+func updateFsxAliases(conn *fsx.FSx, identifier string, oldAliases []*fsx.Alias, newAliases []*fsx.Alias) error {
+	oldAliasValues := expandFsxAliasValues(oldAliases)
+	newAliasValues := expandFsxAliasValues(newAliases)
+
+	var removedAliases []*string
+
+	for _, oldAliasValue := range oldAliasValues {
+		exists := false
+
+		for _, newAliasValue := range newAliasValues {
+			if newAliasValue == oldAliasValue {
+				exists = true
+				break
+			}
+		}
+
+		if !exists {
+			removedAliases = append(removedAliases, oldAliasValue)
+		}
+	}
+
+	if len(removedAliases) > 0 {
+		input := &fsx.DisassociateFileSystemAliasesInput{
+			FileSystemId: aws.String(identifier),
+			Aliases:      removedAliases,
+		}
+
+		_, err := conn.DisassociateFileSystemAliases(input)
+
+		if err != nil {
+			return fmt.Errorf("error disassociating aliases from FSx file system (%s): %w", identifier, err)
+		}
+	}
+
+	var addedAliases []*string
+
+	for _, newAliasValue := range newAliasValues {
+		exists := false
+
+		for _, oldAliasValue := range oldAliasValues {
+			if oldAliasValue == newAliasValue {
+				exists = true
+				break
+			}
+		}
+
+		if !exists {
+			addedAliases = append(addedAliases, newAliasValue)
+		}
+	}
+
+	if len(addedAliases) > 0 {
+		input := &fsx.AssociateFileSystemAliasesInput{
+			FileSystemId: aws.String(identifier),
+			Aliases:      addedAliases,
+		}
+
+		_, err := conn.AssociateFileSystemAliases(input)
+
+		if err != nil {
+			return fmt.Errorf("error associating aliases to FSx file system (%s): %w", identifier, err)
+		}
 	}
 
 	return nil
