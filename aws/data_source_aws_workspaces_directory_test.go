@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -60,7 +61,7 @@ func TestAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
 func testAccDataSourceAwsWorkspacesDirectoryConfig(rName string) string {
 	return composeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
-		`
+		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = "tf-testacc-workspaces-directory-%[1]s"
   vpc_id = aws_vpc.main.id
@@ -98,6 +99,10 @@ resource "aws_workspaces_directory" "test" {
     enable_maintenance_mode             = false
     user_enabled_as_local_administrator = false
   }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
 }
 
 data "aws_workspaces_directory" "test" {
@@ -107,5 +112,5 @@ data "aws_workspaces_directory" "test" {
 data "aws_iam_role" "workspaces-default" {
   name = "workspaces_DefaultRole"
 }
-`)
+`, rName))
 }
