@@ -1271,6 +1271,48 @@ func TestAccAWSGlueCrawler_SecurityConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueCrawler_lineageConfig(t *testing.T) {
+	var crawler glue.Crawler
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_crawler.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCrawlerLineageConfig(rName, "ENABLE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "lineage_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lineage_configuration.0.crawler_lineage_settings", "ENABLE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGlueCrawlerLineageConfig(rName, "DISABLE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "lineage_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lineage_configuration.0.crawler_lineage_settings", "DISABLE")),
+			},
+			{
+				Config: testAccGlueCrawlerLineageConfig(rName, "ENABLE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "lineage_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lineage_configuration.0.crawler_lineage_settings", "ENABLE"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSGlueCrawlerExists(resourceName string, crawler *glue.Crawler) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -2338,4 +2380,28 @@ resource "aws_glue_crawler" "test" {
   }
 }
 `, rName, path1, path2)
+}
+
+func testAccGlueCrawlerLineageConfig(rName, lineageConfig string) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name          = aws_glue_catalog_database.test.name
+  name                   = %[1]q
+  role                   = aws_iam_role.test.name
+
+  lineage_configuration {
+    crawler_lineage_settings = %[2]q
+  }
+
+  s3_target {
+    path = "s3://bucket-name"
+  }
+}
+`, rName, lineageConfig)
 }
