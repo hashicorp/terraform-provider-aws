@@ -1036,17 +1036,18 @@ func testAccAWSIAMPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultipl
 }`, testAccGetPartition())
 }
 
+//lintignore:AWSAT005
 var testAccAWSIAMPolicyDocumentInvalidSidConfig = `
 data "aws_iam_policy_document" "test" {
-    statement {
-		sid = "Invalid_SID"
-        actions = [
-            "s3:ListAllMyBuckets",
-            "s3:GetBucketLocation",
-        ]
-        resources = [
-            "arn:aws:s3:::*",
-        ]
-    }
+  statement {
+    sid = "Invalid_SID"
+    actions = [
+      "s3:ListAllMyBuckets",
+      "s3:GetBucketLocation",
+    ]
+    resources = [
+      "arn:aws:s3:::*",
+    ]
+  }
 }
 `
