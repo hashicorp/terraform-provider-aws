@@ -250,6 +250,40 @@ func TestAccAwsWorkspacesDirectory_selfServicePermissions(t *testing.T) {
 	})
 }
 
+func TestAccAwsWorkspacesDirectory_workspaceAccessProperties(t *testing.T) {
+	var v workspaces.WorkspaceDirectory
+	rName := acctest.RandString(8)
+
+	resourceName := "aws_workspaces_directory.main"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspacesDirectory_workspaceAccessProperties(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_android", "true"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_chromeos", "true"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_ios", "true"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_osx", "true"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_web", "true"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_windows", "true"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_zeroclient", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAwsWorkspacesDirectory_workspaceCreationProperties(t *testing.T) {
 	var v workspaces.WorkspaceDirectory
 	rName := acctest.RandString(8)
@@ -787,6 +821,30 @@ resource "aws_workspaces_directory" "main" {
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccWorkspacesDirectory_workspaceAccessProperties(rName string) string {
+	return composeConfig(
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "main" {
+  directory_id = aws_directory_service_directory.main.id
+
+  workspace_access_properties {
+    device_type_android    = true
+    device_type_chromeos   = true
+    device_type_ios        = true
+    device_type_osx        = true
+    device_type_web        = true
+    device_type_windows    = true
+    device_type_zeroclient = true
+  }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+`, rName))
 }
 
 func testAccWorkspacesDirectoryConfig_workspaceCreationProperties(rName string) string {
