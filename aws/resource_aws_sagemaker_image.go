@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -86,32 +84,15 @@ func resourceAwsSagemakerImageCreate(d *schema.ResourceData, meta interface{}) e
 
 	// for some reason even if the operation is retried the same error response is given even though the role is valid. a short sleep before creation solves it.
 	time.Sleep(1 * time.Minute)
-	log.Printf("[DEBUG] sagemaker Image create config: %#v", *input)
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-		_, err = conn.CreateImage(input)
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("error creating SageMaker Image: %w", err))
-		}
-
-		d.SetId(name)
-
-		out, err := waiter.ImageCreated(conn, d.Id())
-
-		if strings.Contains(aws.StringValue(out.FailureReason), "Unable to assume role with RoleArn") {
-			return resource.RetryableError(err)
-		}
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("error waiting for SageMaker Image (%s) to create: %w", d.Id(), err))
-		}
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.CreateImage(input)
-		_, err = waiter.ImageCreated(conn, d.Id())
-	}
+	_, err := conn.CreateImage(input)
 	if err != nil {
 		return fmt.Errorf("error creating SageMaker Image %s: %w", name, err)
+	}
+
+	d.SetId(name)
+
+	if _, err := waiter.ImageCreated(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for SageMaker Image (%s) to be created: %w", d.Id(), err)
 	}
 
 	return resourceAwsSagemakerImageRead(d, meta)
