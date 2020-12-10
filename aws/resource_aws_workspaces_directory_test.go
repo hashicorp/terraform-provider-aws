@@ -80,6 +80,7 @@ func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "directory_type", workspaces.WorkspaceDirectoryTypeSimpleAd),
 					resource.TestCheckResourceAttr(resourceName, "dns_ip_addresses.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_id", iamRoleDataSourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "registration_code"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.change_compute_type", "false"),
@@ -88,8 +89,8 @@ func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.restart_workspace", "true"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.switch_running_mode", "false"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf-testacc-workspaces-directory-%[1]s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_android", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_chromeos", "ALLOW"),
@@ -882,12 +883,17 @@ resource "aws_workspaces_directory" "main" {
 
 func testAccWorkspacesDirectoryConfig_subnetIds(rName string) string {
 	return composeConfig(
-		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName), `
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
+		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
   subnet_ids   = [aws_subnet.primary.id, aws_subnet.secondary.id]
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
 }
-`)
+`, rName))
 }
 
 func testAccWorkspacesDirectoryConfigTags1(rName, tagKey1, tagValue1 string) string {
