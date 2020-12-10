@@ -69,7 +69,6 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 			"scope": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					wafv2.ScopeCloudfront,
 					wafv2.ScopeRegional,
@@ -95,7 +94,6 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
 						"priority": {
