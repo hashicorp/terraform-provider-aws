@@ -83,13 +83,13 @@ resource "aws_workspaces_directory" "test" {
   }
 
   workspace_access_properties {
-    device_type_android    = true
-    device_type_chromeos   = true
-    device_type_ios        = true
-    device_type_osx        = true
-    device_type_web        = true
-    device_type_windows    = true
-    device_type_zeroclient = true
+    device_type_android    = "ALLOW"
+    device_type_chromeos   = "ALLOW"
+    device_type_ios        = "ALLOW"
+    device_type_osx        = "ALLOW"
+    device_type_web        = "DENY"
+    device_type_windows    = "DENY"
+    device_type_zeroclient = "DENY"
   }
 
   workspace_creation_properties {

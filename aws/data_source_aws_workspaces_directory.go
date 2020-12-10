@@ -94,39 +94,39 @@ func dataSourceAwsWorkspacesDirectory() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"device_type_android": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeString,
 							Optional: true,
-							Default:  false,
+							Computed: true,
 						},
 						"device_type_chromeos": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeString,
 							Optional: true,
-							Default:  false,
+							Computed: true,
 						},
 						"device_type_ios": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeString,
 							Optional: true,
-							Default:  true,
+							Computed: true,
 						},
 						"device_type_osx": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeString,
 							Optional: true,
-							Default:  false,
+							Computed: true,
 						},
 						"device_type_web": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeString,
 							Optional: true,
-							Default:  false,
+							Computed: true,
 						},
 						"device_type_windows": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeString,
 							Optional: true,
-							Default:  false,
+							Computed: true,
 						},
 						"device_type_zeroclient": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeString,
 							Optional: true,
-							Default:  false,
+							Computed: true,
 						},
 					},
 				},
@@ -206,7 +206,7 @@ func dataSourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error setting self_service_permissions: %s", err)
 	}
 
-	if err := d.Set("workspace_access_properties", flattenAccessProperties(directory.WorkspaceAccessProperties)); err != nil {
+	if err := d.Set("workspace_access_properties", flattenWorkspaceAccessProperties(directory.WorkspaceAccessProperties)); err != nil {
 		return fmt.Errorf("error setting workspace_access_properties: %w", err)
 	}
 

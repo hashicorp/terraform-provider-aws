@@ -271,13 +271,13 @@ func TestAccAwsWorkspacesDirectory_workspaceAccessProperties(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_android", "true"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_chromeos", "true"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_ios", "true"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_osx", "true"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_web", "true"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_windows", "true"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_zeroclient", "true"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_android", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_chromeos", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_ios", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_osx", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_web", "DENY"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_windows", "DENY"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_zeroclient", "DENY"),
 				),
 			},
 		},
@@ -480,6 +480,92 @@ func TestFlattenSelfServicePermissions(t *testing.T) {
 
 	for _, c := range cases {
 		actual := flattenSelfServicePermissions(c.input)
+		if !reflect.DeepEqual(actual, c.expected) {
+			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
+		}
+	}
+}
+
+func TestExpandWorkspaceAccessProperties(t *testing.T) {
+	cases := []struct {
+		input    []interface{}
+		expected *workspaces.WorkspaceAccessProperties
+	}{
+		// Empty
+		{
+			input:    []interface{}{},
+			expected: nil,
+		},
+		// Full
+		{
+			input: []interface{}{
+				map[string]interface{}{
+					"device_type_android":    "ALLOW",
+					"device_type_chromeos":   "ALLOW",
+					"device_type_ios":        "ALLOW",
+					"device_type_osx":        "ALLOW",
+					"device_type_web":        "DENY",
+					"device_type_windows":    "DENY",
+					"device_type_zeroclient": "DENY",
+				},
+			},
+			expected: &workspaces.WorkspaceAccessProperties{
+				DeviceTypeAndroid:    aws.String("ALLOW"),
+				DeviceTypeChromeOs:   aws.String("ALLOW"),
+				DeviceTypeIos:        aws.String("ALLOW"),
+				DeviceTypeOsx:        aws.String("ALLOW"),
+				DeviceTypeWeb:        aws.String("DENY"),
+				DeviceTypeWindows:    aws.String("DENY"),
+				DeviceTypeZeroClient: aws.String("DENY"),
+			},
+		},
+	}
+
+	for _, c := range cases {
+		actual := expandWorkspaceAccessProperties(c.input)
+		if !reflect.DeepEqual(actual, c.expected) {
+			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
+		}
+	}
+}
+
+func TestFlattenWorkspaceAccessProperties(t *testing.T) {
+	cases := []struct {
+		input    *workspaces.WorkspaceAccessProperties
+		expected []interface{}
+	}{
+		// Empty
+		{
+			input:    nil,
+			expected: []interface{}{},
+		},
+		// Full
+		{
+			input: &workspaces.WorkspaceAccessProperties{
+				DeviceTypeAndroid:    aws.String("ALLOW"),
+				DeviceTypeChromeOs:   aws.String("ALLOW"),
+				DeviceTypeIos:        aws.String("ALLOW"),
+				DeviceTypeOsx:        aws.String("ALLOW"),
+				DeviceTypeWeb:        aws.String("DENY"),
+				DeviceTypeWindows:    aws.String("DENY"),
+				DeviceTypeZeroClient: aws.String("DENY"),
+			},
+			expected: []interface{}{
+				map[string]interface{}{
+					"device_type_android":    "ALLOW",
+					"device_type_chromeos":   "ALLOW",
+					"device_type_ios":        "ALLOW",
+					"device_type_osx":        "ALLOW",
+					"device_type_web":        "DENY",
+					"device_type_windows":    "DENY",
+					"device_type_zeroclient": "DENY",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		actual := flattenWorkspaceAccessProperties(c.input)
 		if !reflect.DeepEqual(actual, c.expected) {
 			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
 		}
@@ -833,13 +919,13 @@ resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
   workspace_access_properties {
-    device_type_android    = true
-    device_type_chromeos   = true
-    device_type_ios        = true
-    device_type_osx        = true
-    device_type_web        = true
-    device_type_windows    = true
-    device_type_zeroclient = true
+    device_type_android    = "ALLOW"
+    device_type_chromeos   = "ALLOW"
+    device_type_ios        = "ALLOW"
+    device_type_osx        = "ALLOW"
+    device_type_web        = "DENY"
+    device_type_windows    = "DENY"
+    device_type_zeroclient = "DENY"
   }
 
   tags = {
