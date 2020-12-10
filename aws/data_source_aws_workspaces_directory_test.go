@@ -61,6 +61,15 @@ func testAccDataSourceAwsWorkspacesDirectoryConfig(rName string) string {
 	return composeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
 		`
+resource "aws_security_group" "test" {
+  name   = "tf-testacc-workspaces-directory-%[1]s"
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+
 resource "aws_workspaces_directory" "test" {
   directory_id = aws_directory_service_directory.main.id
 
@@ -80,6 +89,14 @@ resource "aws_workspaces_directory" "test" {
     device_type_web        = true
     device_type_windows    = true
     device_type_zeroclient = true
+  }
+
+  workspace_creation_properties {
+    custom_security_group_id            = aws_security_group.test.id
+    default_ou                          = "OU=AWS,DC=Workgroup,DC=Example,DC=com"
+    enable_internet_access              = true
+    enable_maintenance_mode             = false
+    user_enabled_as_local_administrator = false
   }
 }
 
