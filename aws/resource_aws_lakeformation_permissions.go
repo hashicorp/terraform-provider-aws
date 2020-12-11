@@ -355,3 +355,12 @@ func flattenAWSLakeFormationTableWithColumns(tb *lakeformation.TableWithColumnsR
 
 	return m
 }
+
+func createAwsDataCatalogId(d *schema.ResourceData, accountId string) (catalogId string) {
+	if inputCatalogId, ok := d.GetOkExists("catalog_id"); ok {
+		catalogId = inputCatalogId.(string)
+	} else {
+		catalogId = accountId
+	}
+	return
+}
