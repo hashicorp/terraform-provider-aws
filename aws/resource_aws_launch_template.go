@@ -133,6 +133,12 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
+									"throughput": {
+										Type:         schema.TypeInt,
+										Computed:     true,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(125, 1000),
+									},
 									"volume_size": {
 										Type:     schema.TypeInt,
 										Optional: true,
@@ -935,6 +941,9 @@ func getBlockDeviceMappings(m []*ec2.LaunchTemplateBlockDeviceMapping) []interfa
 			if v.Ebs.SnapshotId != nil {
 				ebs["snapshot_id"] = aws.StringValue(v.Ebs.SnapshotId)
 			}
+			if v.Ebs.Throughput != nil {
+				ebs["throughput"] = aws.Int64Value(v.Ebs.Throughput)
+			}
 
 			mapping["ebs"] = []interface{}{ebs}
 		}
@@ -1505,6 +1514,10 @@ func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) (*ec2.LaunchTempla
 
 	if v := ebs["snapshot_id"].(string); v != "" {
 		ebsDevice.SnapshotId = aws.String(v)
+	}
+
+	if v := ebs["throughput"].(int); v > 0 {
+		ebsDevice.Throughput = aws.Int64(int64(v))
 	}
 
 	if v := ebs["volume_size"]; v != nil {
