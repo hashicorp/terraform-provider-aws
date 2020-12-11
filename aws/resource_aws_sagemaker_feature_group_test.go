@@ -585,11 +585,11 @@ resource "aws_sagemaker_feature_group" "test" {
   }
 
   offline_store_config {
-	disable_glue_table_creation = false
+    disable_glue_table_creation = false
 
-	s3_storage_config {
-	  s3_uri = "s3://${aws_s3_bucket.test.bucket}/prefix/"
-	}
+    s3_storage_config {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/prefix/"
+    }
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -626,17 +626,17 @@ resource "aws_sagemaker_feature_group" "test" {
   }
 
   offline_store_config {
-	disable_glue_table_creation = true
+    disable_glue_table_creation = true
 
-	s3_storage_config {
-	  s3_uri = "s3://${aws_s3_bucket.test.bucket}/prefix/"
-	}
+    s3_storage_config {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/prefix/"
+    }
 
-	data_catalog_config {
-	  catalog    = aws_glue_catalog_table.test.catalog_id
-	  database   = aws_glue_catalog_table.test.database_name
-	  table_name = aws_glue_catalog_table.test.name
-	}
+    data_catalog_config {
+      catalog    = aws_glue_catalog_table.test.catalog_id
+      database   = aws_glue_catalog_table.test.database_name
+      table_name = aws_glue_catalog_table.test.name
+    }
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -658,7 +658,7 @@ resource "aws_sagemaker_feature_group" "test" {
   }
 
   online_store_config {
-	enable_online_store = true
+    enable_online_store = true
   }
 
   tags = {
@@ -682,11 +682,11 @@ resource "aws_sagemaker_feature_group" "test" {
   }
 
   online_store_config {
-	enable_online_store = true
+    enable_online_store = true
   }
 
   tags = {
-	%[2]q = %[3]q
+    %[2]q = %[3]q
     %[4]q = %[5]q	
   }
 }
