@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -32,6 +33,10 @@ func resourceAwsGlueCrawler() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 255),
+					validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9-_$#]+$`), ""),
+				),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -57,8 +62,9 @@ func resourceAwsGlueCrawler() *schema.Resource {
 				},
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 2048),
 			},
 			"schedule": {
 				Type:     schema.TypeString,
@@ -97,8 +103,9 @@ func resourceAwsGlueCrawler() *schema.Resource {
 				},
 			},
 			"table_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 128),
 			},
 			"s3_target": {
 				Type:         schema.TypeList,
@@ -225,13 +232,40 @@ func resourceAwsGlueCrawler() *schema.Resource {
 			"lineage_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MinItems: 1,
+				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"crawler_lineage_settings": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
+							Default:      glue.CrawlerLineageSettingsDisable,
 							ValidateFunc: validation.StringInSlice(glue.CrawlerLineageSettings_Values(), false),
+						},
+					},
+				},
+			},
+			"recrawl_policy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"recrawl_behavior": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(glue.RecrawlBehavior_Values(), false),
 						},
 					},
 				},
@@ -323,6 +357,10 @@ func createCrawlerInput(crawlerName string, d *schema.ResourceData) (*glue.Creat
 		crawlerInput.LineageConfiguration = expandGlueCrawlerLineageConfiguration(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("recrawl_policy"); ok {
+		crawlerInput.RecrawlPolicy = expandGlueCrawlerRecrawlPolicy(v.([]interface{}))
+	}
+
 	return crawlerInput, nil
 }
 
@@ -369,6 +407,10 @@ func updateCrawlerInput(crawlerName string, d *schema.ResourceData) (*glue.Updat
 
 	if v, ok := d.GetOk("lineage_configuration"); ok {
 		crawlerInput.LineageConfiguration = expandGlueCrawlerLineageConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("recrawl_policy"); ok {
+		crawlerInput.RecrawlPolicy = expandGlueCrawlerRecrawlPolicy(v.([]interface{}))
 	}
 
 	return crawlerInput, nil
@@ -552,7 +594,7 @@ func resourceAwsGlueCrawlerUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChanges(
 		"catalog_target", "classifiers", "configuration", "description", "dynamodb_target", "jdbc_target", "role",
 		"s3_target", "schedule", "schema_change_policy", "security_configuration", "table_prefix", "mongodb_target",
-		"lineage_configuration") {
+		"lineage_configuration", "recrawl_policy") {
 		updateCrawlerInput, err := updateCrawlerInput(name, d)
 		if err != nil {
 			return err
@@ -684,6 +726,10 @@ func resourceAwsGlueCrawlerRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting lineage_configuration: %w", err)
 	}
 
+	if err := d.Set("recrawl_policy", flattenGlueCrawlerRecrawlPolicy(crawler.RecrawlPolicy)); err != nil {
+		return fmt.Errorf("error setting recrawl_policy: %w", err)
+	}
+
 	return nil
 }
 
@@ -801,6 +847,27 @@ func flattenGlueCrawlerLineageConfiguration(cfg *glue.LineageConfiguration) []ma
 
 	m := map[string]interface{}{
 		"crawler_lineage_settings": aws.StringValue(cfg.CrawlerLineageSettings),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandGlueCrawlerRecrawlPolicy(cfg []interface{}) *glue.RecrawlPolicy {
+	m := cfg[0].(map[string]interface{})
+
+	target := &glue.RecrawlPolicy{
+		RecrawlBehavior: aws.String(m["recrawl_behavior"].(string)),
+	}
+	return target
+}
+
+func flattenGlueCrawlerRecrawlPolicy(cfg *glue.RecrawlPolicy) []map[string]interface{} {
+	if cfg == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"recrawl_behavior": aws.StringValue(cfg.RecrawlBehavior),
 	}
 
 	return []map[string]interface{}{m}
