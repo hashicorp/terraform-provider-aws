@@ -382,7 +382,7 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
 	clientName := acctest.RandString(10)
 	resourceName := "aws_cognito_user_pool_client.test"
-	pinpointResourceName:= "aws_pinpoint_app.test"
+	pinpointResourceName := "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
