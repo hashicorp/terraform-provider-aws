@@ -264,7 +264,8 @@ func resourceAwsGlueCrawler() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"recrawl_behavior": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
+							Default:      glue.RecrawlBehaviorCrawlEverything,
 							ValidateFunc: validation.StringInSlice(glue.RecrawlBehavior_Values(), false),
 						},
 					},
