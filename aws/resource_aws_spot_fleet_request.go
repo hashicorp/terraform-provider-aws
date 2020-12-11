@@ -118,6 +118,12 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
+									"throughput": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
+									},
 									"volume_size": {
 										Type:     schema.TypeInt,
 										Optional: true,
@@ -187,6 +193,12 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 									},
 									"kms_key_id": {
 										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
+									},
+									"throughput": {
+										Type:     schema.TypeInt,
 										Optional: true,
 										Computed: true,
 										ForceNew: true,
@@ -706,6 +718,10 @@ func readSpotFleetBlockDeviceMappingsFromConfig(
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
+			if v, ok := bd["throughput"].(int); ok && v > 0 {
+				ebs.Throughput = aws.Int64(int64(v))
+			}
+
 			blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
 				DeviceName: aws.String(bd["device_name"].(string)),
 				Ebs:        ebs,
@@ -753,6 +769,10 @@ func readSpotFleetBlockDeviceMappingsFromConfig(
 
 			if v, ok := bd["iops"].(int); ok && v > 0 {
 				ebs.Iops = aws.Int64(int64(v))
+			}
+
+			if v, ok := bd["throughput"].(int); ok && v > 0 {
+				ebs.Throughput = aws.Int64(int64(v))
 			}
 
 			if dn, err := fetchRootDeviceName(d["ami"].(string), conn); err == nil {
@@ -1475,6 +1495,10 @@ func ebsBlockDevicesToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 				m["iops"] = aws.Int64Value(ebs.Iops)
 			}
 
+			if ebs.Throughput != nil {
+				m["throughput"] = aws.Int64Value(ebs.Throughput)
+			}
+
 			set.Add(m)
 		}
 	}
@@ -1533,6 +1557,10 @@ func rootBlockDeviceToSet(
 
 				if val.Ebs.Iops != nil {
 					m["iops"] = aws.Int64Value(val.Ebs.Iops)
+				}
+
+				if val.Ebs.Throughput != nil {
+					m["throughput"] = aws.Int64Value(val.Ebs.Throughput)
 				}
 
 				set.Add(m)
