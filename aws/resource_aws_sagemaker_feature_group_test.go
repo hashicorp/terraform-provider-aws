@@ -528,7 +528,7 @@ resource "aws_sagemaker_feature_group" "test" {
     security_config {
       kms_key_id = aws_kms_key.test.arn
     }
-  }  
+  } 
 }
 `, rName)
 }
