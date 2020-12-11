@@ -1,39 +1,39 @@
-## 3.21.0 (Unreleased)
+## 3.21.0 (December 11, 2020)
 
 NOTES
 
-* resource/aws_imagebuilder_image_recipe: Previously the ordering of `component` configuration blocks was not properly handled by the resource, which could cause unexpected behavior with multiple Components. These configurations may see the ordering difference being fixed after upgrade. [GH-16566]
+* resource/aws_imagebuilder_image_recipe: Previously the ordering of `component` configuration blocks was not properly handled by the resource, which could cause unexpected behavior with multiple Components. These configurations may see the ordering difference being fixed after upgrade. ([#16566](https://github.com/hashicorp/terraform-provider-aws/issues/16566))
 
 FEATURES
 
-* **New Resource:** `aws_ec2_carrier_gateway` [GH-16252]
-* **New Resource:** `aws_glue_schema` [GH-16612]
+* **New Resource:** `aws_ec2_carrier_gateway` ([#16252](https://github.com/hashicorp/terraform-provider-aws/issues/16252))
+* **New Resource:** `aws_glue_schema` ([#16612](https://github.com/hashicorp/terraform-provider-aws/issues/16612))
 
 ENHANCEMENTS
 
-* data-source/aws_launch_template: Add `associate_carrier_ip_address` attribute to `network_interfaces` configuration block [GH-16707]
-* data-source/aws_launch_template: Add `throughput` attribute to `block_device_mappings.ebs` configuration block [GH-16649]
-* data-source/aws_launch_template: Support `id` as argument [GH-16457]
-* resource/aws_appmesh_virtual_node: Add `listener.connection_pool` attribute [GH-16167]
-* resource/aws_appmesh_virtual_node: Add `listener.outlier_detection` attribute [GH-16167]
-* resource/aws_launch_template: Add `associate_carrier_ip_address` attribute to `network_interfaces` configuration block [GH-16707]
-* resource/aws_launch_template: Add `throughput` attribute to `block_device_mappings.ebs` configuration block [GH-16649]
-* resource/aws_spot_fleet_request: Add `throughput` attribute to `launch_specification.ebs_block_device` and `launch_specification.root_block_device` configuration blocks [GH-16652]
-* resource/aws_ssm_maintenance_window: Add `schedule_offset` argument [GH-16569]
-* resource/aws_workspaces_workspace: Add failed request error code along with message [GH-16459]
+* data-source/aws_launch_template: Add `associate_carrier_ip_address` attribute to `network_interfaces` configuration block ([#16707](https://github.com/hashicorp/terraform-provider-aws/issues/16707))
+* data-source/aws_launch_template: Add `throughput` attribute to `block_device_mappings.ebs` configuration block ([#16649](https://github.com/hashicorp/terraform-provider-aws/issues/16649))
+* data-source/aws_launch_template: Support `id` as argument ([#16457](https://github.com/hashicorp/terraform-provider-aws/issues/16457))
+* resource/aws_appmesh_virtual_node: Add `listener.connection_pool` attribute ([#16167](https://github.com/hashicorp/terraform-provider-aws/issues/16167))
+* resource/aws_appmesh_virtual_node: Add `listener.outlier_detection` attribute ([#16167](https://github.com/hashicorp/terraform-provider-aws/issues/16167))
+* resource/aws_launch_template: Add `associate_carrier_ip_address` attribute to `network_interfaces` configuration block ([#16707](https://github.com/hashicorp/terraform-provider-aws/issues/16707))
+* resource/aws_launch_template: Add `throughput` attribute to `block_device_mappings.ebs` configuration block ([#16649](https://github.com/hashicorp/terraform-provider-aws/issues/16649))
+* resource/aws_spot_fleet_request: Add `throughput` attribute to `launch_specification.ebs_block_device` and `launch_specification.root_block_device` configuration blocks ([#16652](https://github.com/hashicorp/terraform-provider-aws/issues/16652))
+* resource/aws_ssm_maintenance_window: Add `schedule_offset` argument ([#16569](https://github.com/hashicorp/terraform-provider-aws/issues/16569))
+* resource/aws_workspaces_workspace: Add failed request error code along with message ([#16459](https://github.com/hashicorp/terraform-provider-aws/issues/16459))
 
 BUG FIXES
 
-* data-source/aws_customer_gateway: Prevent missing `id` attribute when not configured as argument [GH-16667]
-* data-source/aws_ec2_transit_gateway: Prevent missing `id` attribute when not configured as argument [GH-16667]
-* data-source/aws_ec2_transit_gateway_peering_attachment: Prevent missing `id` attribute when not configured as argument [GH-16667]
-* data-source/aws_ec2_transit_gateway_route_table: Prevent missing `id` attribute when not configured as argument [GH-16667]
-* data-source/aws_ec2_transit_gateway_vpc_attachment: Prevent missing `id` attribute when not configured as argument [GH-16667]
-* data-source/aws_guardduty_detector: Prevent missing `id` attribute when not configured as argument [GH-16667]
-* data-source/aws_imagebuilder_image_recipe: Ensure proper ordering of `component` attribute [GH-16566]
-* resource/aws_backup_plan: Prevent plan-time validation error for pre-existing resources with `lifecycle` `delete_after` and/or `copy_action` `lifecycle` `delete_after` arguments configured [GH-16605]
-* resource/aws_imagebuilder_image_recipe: Ensure proper ordering of `component` configuration blocks [GH-16566]
-* resource/aws_workspaces_directory: Fix empty custom_security_group_id & default_ou [GH-16589]
+* data-source/aws_customer_gateway: Prevent missing `id` attribute when not configured as argument ([#16667](https://github.com/hashicorp/terraform-provider-aws/issues/16667))
+* data-source/aws_ec2_transit_gateway: Prevent missing `id` attribute when not configured as argument ([#16667](https://github.com/hashicorp/terraform-provider-aws/issues/16667))
+* data-source/aws_ec2_transit_gateway_peering_attachment: Prevent missing `id` attribute when not configured as argument ([#16667](https://github.com/hashicorp/terraform-provider-aws/issues/16667))
+* data-source/aws_ec2_transit_gateway_route_table: Prevent missing `id` attribute when not configured as argument ([#16667](https://github.com/hashicorp/terraform-provider-aws/issues/16667))
+* data-source/aws_ec2_transit_gateway_vpc_attachment: Prevent missing `id` attribute when not configured as argument ([#16667](https://github.com/hashicorp/terraform-provider-aws/issues/16667))
+* data-source/aws_guardduty_detector: Prevent missing `id` attribute when not configured as argument ([#16667](https://github.com/hashicorp/terraform-provider-aws/issues/16667))
+* data-source/aws_imagebuilder_image_recipe: Ensure proper ordering of `component` attribute ([#16566](https://github.com/hashicorp/terraform-provider-aws/issues/16566))
+* resource/aws_backup_plan: Prevent plan-time validation error for pre-existing resources with `lifecycle` `delete_after` and/or `copy_action` `lifecycle` `delete_after` arguments configured ([#16605](https://github.com/hashicorp/terraform-provider-aws/issues/16605))
+* resource/aws_imagebuilder_image_recipe: Ensure proper ordering of `component` configuration blocks ([#16566](https://github.com/hashicorp/terraform-provider-aws/issues/16566))
+* resource/aws_workspaces_directory: Fix empty custom_security_group_id & default_ou ([#16589](https://github.com/hashicorp/terraform-provider-aws/issues/16589))
 
 ## 3.20.0 (December 03, 2020)
 
