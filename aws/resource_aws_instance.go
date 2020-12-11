@@ -604,7 +604,7 @@ func iopsDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
 	i := strings.LastIndexByte(k, '.')
 	vt := k[:i+1] + "volume_type"
 	v := d.Get(vt).(string)
-	return (strings.ToLower(v) != ec2.VolumeTypeIo1 || strings.ToLower(v) != ec2.VolumeTypeIo2 || strings.ToLower(v) != ec2.VolumeTypeGp3) && new == "0"
+	return (strings.ToLower(v) != ec2.VolumeTypeIo1 && strings.ToLower(v) != ec2.VolumeTypeIo2 && strings.ToLower(v) != ec2.VolumeTypeGp3) && new == "0"
 }
 
 func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
