@@ -120,6 +120,53 @@ func TestAccAWSSagemakerFeatureGroup_description(t *testing.T) {
 	})
 }
 
+func TestAccAWSSagemakerFeatureGroup_tags(t *testing.T) {
+	var notebook sagemaker.DescribeFeatureGroupOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_feature_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerFeatureGroupTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerFeatureGroupExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSagemakerFeatureGroupTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerFeatureGroupExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSSagemakerFeatureGroupTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerFeatureGroupExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSagemakerFeatureGroup_multipleFeatures(t *testing.T) {
 	var notebook sagemaker.DescribeFeatureGroupOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -595,4 +642,53 @@ resource "aws_sagemaker_feature_group" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName)
+}
+
+func testAccAWSSagemakerFeatureGroupTags1(rName, tag1Key, tag1Value string) string {
+	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_feature_group" "test" {
+  feature_group_name             = %[1]q
+  record_identifier_feature_name = %[1]q
+  event_time_feature_name        = %[1]q
+  role_arn                       = aws_iam_role.test.arn
+
+  feature_definition {
+	feature_name = %[1]q
+    feature_type = "String"
+  }
+
+  online_store_config {
+	enable_online_store = true
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tag1Key, tag1Value)
+}
+
+func testAccAWSSagemakerFeatureGroupTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_feature_group" "test" {
+  feature_group_name             = %[1]q
+  record_identifier_feature_name = %[1]q
+  event_time_feature_name        = %[1]q
+  role_arn                       = aws_iam_role.test.arn
+
+  feature_definition {
+	feature_name = %[1]q
+    feature_type = "String"
+  }
+
+  online_store_config {
+	enable_online_store = true
+  }
+
+  tags = {
+	%[2]q = %[3]q
+    %[4]q = %[5]q	
+  }
+}
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }
