@@ -498,7 +498,7 @@ resource "aws_sagemaker_feature_group" "test" {
   }
 
   online_store_config {
-	enable_online_store = true
+    enable_online_store = true
   }
 }
 `, rName)
@@ -523,11 +523,11 @@ resource "aws_sagemaker_feature_group" "test" {
   }
 
   online_store_config {
-	enable_online_store = true
+    enable_online_store = true
 
-	security_config {
-	  kms_key_id = aws_kms_key.test.arn
-	}
+    security_config {
+      kms_key_id = aws_kms_key.test.arn
+    }
   }  
 }
 `, rName)
@@ -553,11 +553,11 @@ resource "aws_sagemaker_feature_group" "test" {
   }
 
   offline_store_config {
-	disable_glue_table_creation = true
+    disable_glue_table_creation = true
 
-	s3_storage_config {
-	  s3_uri = "s3://${aws_s3_bucket.test.bucket}/prefix/"
-	}
+    s3_storage_config {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/prefix/"
+    }
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
