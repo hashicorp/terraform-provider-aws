@@ -2463,7 +2463,7 @@ resource "aws_glue_crawler" "test" {
 
   schema_change_policy {
     delete_behavior = "LOG"
-    update_behavior = "LOG"	
+    update_behavior = "LOG"
   }
 
   recrawl_policy {
