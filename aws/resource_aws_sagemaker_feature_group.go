@@ -237,6 +237,7 @@ func resourceAwsSagemakerFeatureGroupCreate(d *schema.ResourceData, meta interfa
 
 func resourceAwsSagemakerFeatureGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	output, err := finder.FeatureGroupByName(conn, d.Id())
 	if err != nil {
@@ -249,12 +250,13 @@ func resourceAwsSagemakerFeatureGroupRead(d *schema.ResourceData, meta interface
 
 	}
 
+	arn := aws.StringValue(output.FeatureGroupArn)
 	d.Set("feature_group_name", output.FeatureGroupName)
 	d.Set("event_time_feature_name", output.EventTimeFeatureName)
 	d.Set("description", output.Description)
 	d.Set("record_identifier_feature_name", output.RecordIdentifierFeatureName)
 	d.Set("role_arn", output.RoleArn)
-	d.Set("arn", output.FeatureGroupArn)
+	d.Set("arn", arn)
 
 	if err := d.Set("feature_definition", flattenSagemakerFeatureGroupFeatureDefinition(output.FeatureDefinitions)); err != nil {
 		return fmt.Errorf("error setting feature_definition for Sagemaker Feature Group (%s): %w", d.Id(), err)
@@ -266,6 +268,15 @@ func resourceAwsSagemakerFeatureGroupRead(d *schema.ResourceData, meta interface
 
 	if err := d.Set("offline_store_config", flattenSagemakerFeatureGroupOfflineStoreConfig(output.OfflineStoreConfig)); err != nil {
 		return fmt.Errorf("error setting offline_store_config for Sagemaker Feature Group (%s): %w", d.Id(), err)
+	}
+
+	tags, err := keyvaluetags.SagemakerListTags(conn, arn)
+	if err != nil {
+		return fmt.Errorf("error listing tags for Sagemaker Feature Group (%s): %w", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil

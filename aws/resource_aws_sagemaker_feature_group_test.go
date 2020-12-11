@@ -447,13 +447,13 @@ resource "aws_sagemaker_feature_group" "test" {
   role_arn                       = aws_iam_role.test.arn
 
   feature_definition {
-	feature_name = %[1]q
+    feature_name = %[1]q
     feature_type = "String"
   }
 
   online_store_config {
-	enable_online_store = true
-  }  
+    enable_online_store = true
+  }
 }
 `, rName)
 }
@@ -468,13 +468,13 @@ resource "aws_sagemaker_feature_group" "test" {
   description                    = %[1]q
 
   feature_definition {
-	feature_name = %[1]q
+    feature_name = %[1]q
     feature_type = "String"
   }
 
   online_store_config {
 	enable_online_store = true
-  }  
+  }
 }
 `, rName)
 }
@@ -488,18 +488,18 @@ resource "aws_sagemaker_feature_group" "test" {
   role_arn                       = aws_iam_role.test.arn
 
   feature_definition {
-	feature_name = %[1]q
+    feature_name = %[1]q
     feature_type = "String"
   }
 
   feature_definition {
-	feature_name = "%[1]s-2"
+    feature_name = "%[1]s-2"
     feature_type = "Integral"
   }
 
   online_store_config {
 	enable_online_store = true
-  }  
+  }
 }
 `, rName)
 }
@@ -518,7 +518,7 @@ resource "aws_sagemaker_feature_group" "test" {
   role_arn                       = aws_iam_role.test.arn
 
   feature_definition {
-	feature_name = %[1]q
+    feature_name = %[1]q
     feature_type = "String"
   }
 
@@ -548,7 +548,7 @@ resource "aws_sagemaker_feature_group" "test" {
   role_arn                       = aws_iam_role.test.arn
 
   feature_definition {
-	feature_name = %[1]q
+    feature_name = %[1]q
     feature_type = "String"
   }
 
@@ -580,7 +580,7 @@ resource "aws_sagemaker_feature_group" "test" {
   role_arn                       = aws_iam_role.test.arn
 
   feature_definition {
-	feature_name = %[1]q
+    feature_name = %[1]q
     feature_type = "String"
   }
 
@@ -621,7 +621,7 @@ resource "aws_sagemaker_feature_group" "test" {
   role_arn                       = aws_iam_role.test.arn
 
   feature_definition {
-	feature_name = %[1]q
+    feature_name = %[1]q
     feature_type = "String"
   }
 
@@ -653,7 +653,7 @@ resource "aws_sagemaker_feature_group" "test" {
   role_arn                       = aws_iam_role.test.arn
 
   feature_definition {
-	feature_name = %[1]q
+    feature_name = %[1]q
     feature_type = "String"
   }
 
@@ -677,7 +677,7 @@ resource "aws_sagemaker_feature_group" "test" {
   role_arn                       = aws_iam_role.test.arn
 
   feature_definition {
-	feature_name = %[1]q
+    feature_name = %[1]q
     feature_type = "String"
   }
 
