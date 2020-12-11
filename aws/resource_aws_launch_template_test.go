@@ -772,6 +772,55 @@ func TestAccAWSLaunchTemplate_associatePublicIPAddress(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_associateCarrierIPAddress(t *testing.T) {
+	var template ec2.LaunchTemplate
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_launch_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_associateCarrierIpAddress(rName, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_carrier_ip_address", "true"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_address_count", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_associateCarrierIpAddress(rName, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_carrier_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_address_count", "2"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_associateCarrierIpAddress(rName, "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_carrier_ip_address", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_address_count", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchTemplate_placement_partitionNum(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -1603,6 +1652,33 @@ resource "aws_launch_template" "test" {
   }
 }
 `, rName, associatePublicIPAddress)
+}
+
+func testAccAWSLaunchTemplateConfig_associateCarrierIpAddress(rName, associateCarrierIPAddress string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.1.0.0/24"
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = aws_subnet.test.id
+}
+
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  network_interfaces {
+    network_interface_id         = aws_network_interface.test.id
+    associate_carrier_ip_address = %[2]s
+    ipv4_address_count           = 2
+  }
+}
+`, rName, associateCarrierIPAddress)
 }
 
 func testAccAWSLaunchTemplateConfig_networkInterface_ipv6Addresses(rName string) string {

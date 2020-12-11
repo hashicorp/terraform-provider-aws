@@ -160,6 +160,41 @@ func TestAccAWSLaunchTemplateDataSource_associatePublicIPAddress(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplateDataSource_associateCarrierIPAddress(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_launch_template.test"
+	resourceName := "aws_launch_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateDataSourceConfig_associateCarrierIpAddress(rName, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_interfaces.#", resourceName, "network_interfaces.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_interfaces.0.associate_carrier_ip_address", resourceName, "network_interfaces.0.associate_carrier_ip_address"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateDataSourceConfig_associateCarrierIpAddress(rName, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_interfaces.#", resourceName, "network_interfaces.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_interfaces.0.associate_carrier_ip_address", resourceName, "network_interfaces.0.associate_carrier_ip_address"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateDataSourceConfig_associateCarrierIpAddress(rName, "null"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_interfaces.#", resourceName, "network_interfaces.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_interfaces.0.associate_carrier_ip_address", resourceName, "network_interfaces.0.associate_carrier_ip_address"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchTemplateDataSource_networkInterfaces_deleteOnTermination(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_launch_template.test"
@@ -288,6 +323,22 @@ data "aws_launch_template" "test" {
   name = aws_launch_template.test.name
 }
 `, rName, associatePublicIPAddress)
+}
+
+func testAccAWSLaunchTemplateDataSourceConfig_associateCarrierIpAddress(rName, associateCarrierIPAddress string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  network_interfaces {
+    associate_carrier_ip_address = %[2]s
+  }
+}
+
+data "aws_launch_template" "test" {
+  name = aws_launch_template.test.name
+}
+`, rName, associateCarrierIPAddress)
 }
 
 func testAccAWSLaunchTemplateDataSourceConfigNetworkInterfacesDeleteOnTermination(rName, deleteOnTermination string) string {

@@ -289,6 +289,7 @@ Check limitations for autoscaling group in [Creating an Auto Scaling Group Using
 
 Each `network_interfaces` block supports the following:
 
+* `associate_carrier_ip_address` - Associate a Carrier IP address with `eth0` for a new network interface. Use this option when you launch an instance in a Wavelength Zone and want to associate a Carrier IP address with the network interface. Boolean value.
 * `associate_public_ip_address` - Associate a public ip address with the network interface.  Boolean value.
 * `delete_on_termination` - Whether the network interface should be destroyed on instance termination. Defaults to `false` if not set.
 * `description` - Description of the network interface.

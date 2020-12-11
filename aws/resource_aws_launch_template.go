@@ -418,6 +418,12 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"associate_carrier_ip_address": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+							ValidateFunc:     validateTypeStringNullableBoolean,
+						},
 						"associate_public_ip_address": {
 							Type:             schema.TypeString,
 							Optional:         true,
@@ -1130,6 +1136,11 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 			"private_ip_address":   aws.StringValue(v.PrivateIpAddress),
 			"subnet_id":            aws.StringValue(v.SubnetId),
 		}
+
+		if v.AssociateCarrierIpAddress != nil {
+			networkInterface["associate_carrier_ip_address"] = strconv.FormatBool(aws.BoolValue(v.AssociateCarrierIpAddress))
+		}
+
 		if v.AssociatePublicIpAddress != nil {
 			networkInterface["associate_public_ip_address"] = strconv.FormatBool(aws.BoolValue(v.AssociatePublicIpAddress))
 		}
@@ -1531,6 +1542,14 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) (*ec2.LaunchTemp
 
 	if v, ok := ni["network_interface_id"].(string); ok && v != "" {
 		networkInterface.NetworkInterfaceId = aws.String(v)
+	}
+
+	if v, ok := ni["associate_carrier_ip_address"]; ok && v.(string) != "" {
+		vBool, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("error converting associate_carrier_ip_address %q from string to boolean: %s", v.(string), err)
+		}
+		networkInterface.AssociateCarrierIpAddress = aws.Bool(vBool)
 	}
 
 	if v, ok := ni["associate_public_ip_address"]; ok && v.(string) != "" {
