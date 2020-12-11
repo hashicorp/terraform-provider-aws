@@ -1165,6 +1165,9 @@ func flattenEc2NetworkInterfaceAssociation(a *ec2.NetworkInterfaceAssociation) [
 	if a.AssociationId != nil {
 		att["association_id"] = *a.AssociationId
 	}
+	if a.CarrierIp != nil {
+		att["carrier_ip"] = *a.CarrierIp
+	}
 	if a.IpOwnerId != nil {
 		att["ip_owner_id"] = *a.IpOwnerId
 	}
