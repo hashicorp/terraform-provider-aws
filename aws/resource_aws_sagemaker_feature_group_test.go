@@ -473,7 +473,7 @@ resource "aws_sagemaker_feature_group" "test" {
   }
 
   online_store_config {
-	enable_online_store = true
+    enable_online_store = true
   }
 }
 `, rName)
