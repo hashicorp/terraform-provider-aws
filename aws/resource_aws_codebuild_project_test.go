@@ -2414,9 +2414,8 @@ func testAccAWSCodebuildProjectConfig_BatchBuildConfig_CombineArtifacts(rName st
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
 
-
-  name          = "%s"
-  service_role  = aws_iam_role.test.arn
+  name         = "%s"
+  service_role = aws_iam_role.test.arn
 
   artifacts {
     type = "NO_ARTIFACTS"
@@ -2432,11 +2431,10 @@ resource "aws_codebuild_project" "test" {
     type     = "GITHUB"
     location = "https://github.com/hashicorp/packer.git"
   }
-  
-  
+
   buildbatch_config {
-	service_role = aws_iam_role.test.arn
-	combine_artifacts = %t
+    service_role      = aws_iam_role.test.arn
+    combine_artifacts = %t
   }
 }
 `, rName, combine_artifacts)
@@ -2445,10 +2443,9 @@ resource "aws_codebuild_project" "test" {
 func testAccAWSCodebuildProjectConfig_BatchBuildConfig_BuildTimeout(rName string, buildTimeout int) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
-  
-  
-  name          = "%s"
-  service_role  = aws_iam_role.test.arn
+
+  name         = "%s"
+  service_role = aws_iam_role.test.arn
 
   artifacts {
     type = "NO_ARTIFACTS"
@@ -2464,11 +2461,10 @@ resource "aws_codebuild_project" "test" {
     type     = "GITHUB"
     location = "https://github.com/hashicorp/packer.git"
   }
-  
 
   buildbatch_config {
-	service_role = aws_iam_role.test.arn
-	build_timeout = %d
+    service_role  = aws_iam_role.test.arn
+    build_timeout = %d
   }
 }
 `, rName, buildTimeout)
