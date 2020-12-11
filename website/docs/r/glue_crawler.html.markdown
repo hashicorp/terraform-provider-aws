@@ -12,7 +12,7 @@ Manages a Glue Crawler. More information can be found in the [AWS Glue Developer
 
 ## Example Usage
 
-### DynamoDB Target
+### DynamoDB Target Example
 
 ```hcl
 resource "aws_glue_crawler" "example" {
@@ -26,7 +26,7 @@ resource "aws_glue_crawler" "example" {
 }
 ```
 
-### JDBC Target
+### JDBC Target Example
 
 ```hcl
 resource "aws_glue_crawler" "example" {
@@ -41,7 +41,7 @@ resource "aws_glue_crawler" "example" {
 }
 ```
 
-### S3 Target
+### S3 Target Example
 
 ```hcl
 resource "aws_glue_crawler" "example" {
@@ -56,7 +56,7 @@ resource "aws_glue_crawler" "example" {
 ```
 
 
-### Catalog Target
+### Catalog Target Example
 
 ```hcl
 resource "aws_glue_crawler" "example" {
@@ -84,7 +84,7 @@ EOF
 }
 ```
 
-### MongoDB Target
+### MongoDB Target Example
 
 ```hcl
 resource "aws_glue_crawler" "example" {
@@ -99,7 +99,7 @@ resource "aws_glue_crawler" "example" {
 }
 ```
 
-### Configuration Settings
+### Configuration Settings Example
 
 ```hcl
 resource "aws_glue_crawler" "events_crawler" {
@@ -178,6 +178,12 @@ The following arguments are supported:
 
 -> **Note:** `configuration` for catalog target crawlers will have `{ ... "Grouping": { "TableGroupingPolicy": "CombineCompatibleSchemas"} }` by default.
 
+
+### MongoDB Target
+
+* `connection_name` - (Required) The name of the connection to use to connect to the Amazon DocumentDB or MongoDB target.
+* `path` - (Required) The path of the Amazon DocumentDB or MongoDB target (database/collection).
+* `scan_all` - (Optional) Indicates whether to scan all the records, or to sample rows from the table. Scanning all the records can take a long time when the table is not a high throughput table. Default value is `true`.
 
 ### Schema Change Policy
 
