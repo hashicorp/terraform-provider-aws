@@ -76,21 +76,17 @@ func resourceAwsLakeFormationResourceRead(d *schema.ResourceData, meta interface
 	output, err := conn.DescribeResource(input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
-		log.Printf("[WARN] Lake Formation Resource (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Resource Lake Formation Resource (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Lake Formation Resource (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading resource Lake Formation Resource (%s): %w", d.Id(), err)
 	}
 
 	if output == nil || output.ResourceInfo == nil {
-		return fmt.Errorf("error getting Lake Formation Resource (%s): empty response", d.Id())
-	}
-
-	if err != nil {
-		return fmt.Errorf("error reading Lake Formation Resource (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading resource Lake Formation Resource (%s): empty response", d.Id())
 	}
 
 	// d.Set("resource_arn", output.ResourceInfo.ResourceArn) // output not including resource arn currently
