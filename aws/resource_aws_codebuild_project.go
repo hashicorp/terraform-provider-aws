@@ -576,6 +576,29 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Computed: true,
 			},
 			"tags": tagsSchema(),
+			"buildbatch_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"combine_artifacts": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"service_role": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"build_timeout": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      "60",
+							ValidateFunc: validation.IntBetween(5, 480),
+						},
+					},
+				},
+			},
 			"vpc_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -682,6 +705,9 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 
 	if v, ok := d.GetOk("vpc_config"); ok {
 		params.VpcConfig = expandCodeBuildVpcConfig(v.([]interface{}))
+	}
+	if v, ok := d.GetOk("buildbatch_config"); ok {
+		params.BuildBatchConfig = expandProjectBatchBuildConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("badge_enabled"); ok {
@@ -986,6 +1012,19 @@ func expandCodeBuildVpcConfig(rawVpcConfig []interface{}) *codebuild.VpcConfig {
 
 	return &vpcConfig
 }
+func expandProjectBatchBuildConfig(configList []interface{}) *codebuild.ProjectBuildBatchConfig {
+	projectBuildBatchConfig := codebuild.ProjectBuildBatchConfig{}
+	if len(configList) == 0 || configList[0] == nil {
+		return &projectBuildBatchConfig
+	}
+
+	data := configList[0].(map[string]interface{})
+	projectBuildBatchConfig.CombineArtifacts = aws.Bool(data["combine_artifacts"].(bool))
+	projectBuildBatchConfig.ServiceRole = aws.String(data["service_role"].(string))
+	projectBuildBatchConfig.TimeoutInMins = aws.Int64(int64(data["build_timeout"].(int)))
+
+	return &projectBuildBatchConfig
+}
 
 func expandProjectSecondarySources(d *schema.ResourceData) []*codebuild.ProjectSource {
 	configs := d.Get("secondary_sources").(*schema.Set).List()
@@ -1118,6 +1157,9 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 	if err := d.Set("vpc_config", flattenAwsCodeBuildVpcConfig(project.VpcConfig)); err != nil {
 		return fmt.Errorf("error setting vpc_config: %s", err)
 	}
+	if err := d.Set("buildbatch_config", flattenAwsCodeBuildBuildBatchConfig(project.BuildBatchConfig)); err != nil {
+		return fmt.Errorf("error setting buildbatch_config: %s", err)
+	}
 
 	d.Set("arn", project.Arn)
 	d.Set("description", project.Description)
@@ -1174,6 +1216,9 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 		params.SecondaryArtifacts = projectSecondaryArtifacts
 	}
 
+	if d.HasChange("buildbatch_config") {
+		params.BuildBatchConfig = expandProjectBatchBuildConfig(d.Get("buildbatch_config").([]interface{}))
+	}
 	if d.HasChange("vpc_config") {
 		params.VpcConfig = expandCodeBuildVpcConfig(d.Get("vpc_config").([]interface{}))
 	}
@@ -1469,6 +1514,20 @@ func flattenAwsCodeBuildVpcConfig(vpcConfig *codebuild.VpcConfig) []interface{} 
 		values["vpc_id"] = aws.StringValue(vpcConfig.VpcId)
 		values["subnets"] = flattenStringSet(vpcConfig.Subnets)
 		values["security_group_ids"] = flattenStringSet(vpcConfig.SecurityGroupIds)
+
+		return []interface{}{values}
+	}
+	return nil
+}
+func flattenAwsCodeBuildBuildBatchConfig(config *codebuild.ProjectBuildBatchConfig) []interface{} {
+	if config != nil {
+		values := map[string]interface{}{}
+
+		//values["build_timeout"] = aws.StringValue(config.TimeoutInMins)
+		//fmt.Println(aws.StringValue(config.ServiceRole))
+		values["build_timeout"] = int(aws.Int64Value(config.TimeoutInMins))
+		values["service_role"] = aws.StringValue(config.ServiceRole)
+		values["combine_artifacts"] = aws.BoolValue(config.CombineArtifacts)
 
 		return []interface{}{values}
 	}

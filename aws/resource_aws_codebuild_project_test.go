@@ -1480,7 +1480,75 @@ func TestAccAWSCodeBuildProject_Artifacts_Name(t *testing.T) {
 		},
 	})
 }
+func TestAccAWSCodeBuildProject_BuildBatchConfig_CombineArtifacts(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_project.test"
 
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodebuildProjectConfig_BatchBuildConfig_CombineArtifacts(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "buildbatch_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "buildbatch_config.0.combine_artifacts", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodebuildProjectConfig_BatchBuildConfig_CombineArtifacts(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "buildbatch_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "buildbatch_config.0.combine_artifacts", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_BuildBatchConfig_BuildTimeout(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodebuildProjectConfig_BatchBuildConfig_BuildTimeout(rName, 120),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "buildbatch_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "buildbatch_config.0.build_timeout", "120"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodebuildProjectConfig_BatchBuildConfig_BuildTimeout(rName, 122),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "buildbatch_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "buildbatch_config.0.build_timeout", "122"),
+				),
+			},
+		},
+	})
+}
 func TestAccAWSCodeBuildProject_Artifacts_NamespaceType(t *testing.T) {
 	var project codebuild.Project
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -2341,6 +2409,63 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, badgeEnabled, rName)
+}
+func testAccAWSCodebuildProjectConfig_BatchBuildConfig_CombineArtifacts(rName string, combine_artifacts bool) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name          = "%s"
+  service_role  = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+  
+  buildbatch_config {
+	  service_role = aws_iam_role.test.arn
+	  combine_artifacts = %t
+  }
+}
+`, rName, combine_artifacts)
+}
+
+func testAccAWSCodebuildProjectConfig_BatchBuildConfig_BuildTimeout(rName string, buildTimeout int) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name          = "%s"
+  service_role  = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+  
+  buildbatch_config {
+	  service_role = aws_iam_role.test.arn
+	  build_timeout = %d
+  }
+}
+`, rName, buildTimeout)
 }
 
 func testAccAWSCodeBuildProjectConfig_BuildTimeout(rName string, buildTimeout int) string {
