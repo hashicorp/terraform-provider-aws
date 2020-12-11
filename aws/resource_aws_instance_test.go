@@ -3307,6 +3307,30 @@ data "aws_availability_zones" "available" {
 `
 }
 
+func testAccAvailableAZsWavelengthZonesExcludeConfig(excludeZoneIds ...string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  exclude_zone_ids = ["%[1]s"]
+  state            = "available"
+
+  filter {
+    name   = "zone-type"
+    values = ["wavelength-zone"]
+  }
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opted-in"]
+  }
+}
+`, strings.Join(excludeZoneIds, "\", \""))
+}
+
+func testAccAvailableAZsWavelengthZonesDefaultExcludeConfig() string {
+	// Exclude usw2-wl1-den-wlz1 as there may be problems allocating carrier IP addresses.
+	return testAccAvailableAZsWavelengthZonesExcludeConfig("usw2-wl1-den-wlz1")
+}
+
 func testAccInstanceConfigInDefaultVpcBySgName(rName string) string {
 	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
 		testAccLatestAmazonLinuxHvmEbsAmiConfig() +

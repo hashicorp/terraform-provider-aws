@@ -127,6 +127,7 @@ In addition to all arguments above, the following attributes are exported:
 * `instance` - Contains the ID of the attached instance.
 * `network_interface` - Contains the ID of the attached network interface.
 * `public_ipv4_pool` - EC2 IPv4 address pool identifier (if in VPC).
+* `carrier_ip` - The carrier IP address.
 * `customer_owned_ipv4_pool` - The  ID  of a customer-owned address pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing)
 * `customer_owned_ip` - Customer owned IP.
 * `domain` - Indicates if this EIP is for use in VPC (`vpc`) or EC2 Classic (`standard`).
