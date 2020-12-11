@@ -64,6 +64,10 @@ func dataSourceAwsEip() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"carrier_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"customer_owned_ipv4_pool": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -158,6 +162,7 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
+	d.Set("carrier_ip", eip.CarrierIp)
 	d.Set("customer_owned_ipv4_pool", eip.CustomerOwnedIpv4Pool)
 	d.Set("customer_owned_ip", eip.CustomerOwnedIp)
 
