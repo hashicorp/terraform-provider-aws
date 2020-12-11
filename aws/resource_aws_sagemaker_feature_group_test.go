@@ -91,6 +91,94 @@ func TestAccAWSSagemakerFeatureGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSagemakerFeatureGroup_description(t *testing.T) {
+	var notebook sagemaker.DescribeFeatureGroupOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_feature_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerFeatureGroupDescriptionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerFeatureGroupExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerFeatureGroup_multipleFeatures(t *testing.T) {
+	var notebook sagemaker.DescribeFeatureGroupOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_feature_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerFeatureGroupConfigMultiFeature(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerFeatureGroupExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.feature_name", fmt.Sprintf("%s-2", rName)),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.feature_type", "Integral"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerFeatureGroup_onlineConfigSecurityConfig(t *testing.T) {
+	var notebook sagemaker.DescribeFeatureGroupOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_feature_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerFeatureGroupOnlineSecurityConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerFeatureGroupExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.enable_online_store", "true"),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.security_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "online_store_config.0.security_config.0.kms_key_id", "aws_kms_key.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSagemakerFeatureGroup_disappears(t *testing.T) {
 	var notebook sagemaker.DescribeFeatureGroupOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -193,6 +281,81 @@ resource "aws_sagemaker_feature_group" "test" {
 
   online_store_config {
 	enable_online_store = true
+  }  
+}
+`, rName)
+}
+
+func testAccAWSSagemakerFeatureGroupDescriptionConfig(rName string) string {
+	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_feature_group" "test" {
+  feature_group_name             = %[1]q
+  record_identifier_feature_name = %[1]q
+  event_time_feature_name        = %[1]q
+  role_arn                       = aws_iam_role.test.arn
+  description                    = %[1]q
+
+  feature_definition {
+	feature_name = %[1]q
+    feature_type = "String"
+  }
+
+  online_store_config {
+	enable_online_store = true
+  }  
+}
+`, rName)
+}
+
+func testAccAWSSagemakerFeatureGroupConfigMultiFeature(rName string) string {
+	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_feature_group" "test" {
+  feature_group_name             = %[1]q
+  record_identifier_feature_name = %[1]q
+  event_time_feature_name        = %[1]q
+  role_arn                       = aws_iam_role.test.arn
+
+  feature_definition {
+	feature_name = %[1]q
+    feature_type = "String"
+  }
+
+  feature_definition {
+	feature_name = "%[1]s-2"
+    feature_type = "Integral"
+  }
+
+  online_store_config {
+	enable_online_store = true
+  }  
+}
+`, rName)
+}
+
+func testAccAWSSagemakerFeatureGroupOnlineSecurityConfig(rName string) string {
+	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_sagemaker_feature_group" "test" {
+  feature_group_name             = %[1]q
+  record_identifier_feature_name = %[1]q
+  event_time_feature_name        = %[1]q
+  role_arn                       = aws_iam_role.test.arn
+
+  feature_definition {
+	feature_name = %[1]q
+    feature_type = "String"
+  }
+
+  online_store_config {
+	enable_online_store = true
+
+	security_config {
+	  kms_key_id = aws_kms_key.test.arn
+	}
   }  
 }
 `, rName)
