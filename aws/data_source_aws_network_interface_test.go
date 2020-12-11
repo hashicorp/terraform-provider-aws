@@ -33,6 +33,23 @@ func TestAccDataSourceAwsNetworkInterface_basic(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAwsNetworkInterface_filters(t *testing.T) {
+	rName := acctest.RandString(5)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsNetworkInterface_filters(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_network_interface.test", "private_ips.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_network_interface.test", "security_groups.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccDataSourceAwsNetworkInterface_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -77,23 +94,6 @@ data "aws_network_interface" "test" {
   id = aws_network_interface.test.id
 }
 `, rName)
-}
-
-func TestAccDataSourceAwsNetworkInterface_filters(t *testing.T) {
-	rName := acctest.RandString(5)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataSourceAwsNetworkInterface_filters(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_network_interface.test", "private_ips.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_network_interface.test", "security_groups.#", "1"),
-				),
-			},
-		},
-	})
 }
 
 func testAccDataSourceAwsNetworkInterface_filters(rName string) string {
