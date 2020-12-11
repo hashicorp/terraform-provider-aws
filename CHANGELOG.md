@@ -13,6 +13,7 @@ ENHANCEMENTS
 
 * data-source/aws_launch_template: Add `associate_carrier_ip_address` attribute to `network_interfaces` configuration block [GH-16707]
 * data-source/aws_launch_template: Add `throughput` attribute to `block_device_mappings.ebs` configuration block [GH-16649]
+* data-source/aws_launch_template: Support `id` as argument [GH-16457]
 * resource/aws_appmesh_virtual_node: Add `listener.connection_pool` attribute [GH-16167]
 * resource/aws_appmesh_virtual_node: Add `listener.outlier_detection` attribute [GH-16167]
 * resource/aws_launch_template: Add `associate_carrier_ip_address` attribute to `network_interfaces` configuration block [GH-16707]
