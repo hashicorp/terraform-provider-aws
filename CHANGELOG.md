@@ -11,8 +11,10 @@ FEATURES
 
 ENHANCEMENTS
 
+* data-source/aws_launch_template: Add `associate_carrier_ip_address` attribute to `network_interfaces` configuration block [GH-16707]
 * resource/aws_appmesh_virtual_node: Add `listener.connection_pool` attribute [GH-16167]
 * resource/aws_appmesh_virtual_node: Add `listener.outlier_detection` attribute [GH-16167]
+* resource/aws_launch_template: Add `associate_carrier_ip_address` attribute to `network_interfaces` configuration block [GH-16707]
 * resource/aws_ssm_maintenance_window: Add `schedule_offset` argument [GH-16569]
 * resource/aws_workspaces_workspace: Add failed request error code along with message [GH-16459]
 
