@@ -687,7 +687,7 @@ resource "aws_sagemaker_feature_group" "test" {
 
   tags = {
     %[2]q = %[3]q
-    %[4]q = %[5]q	
+    %[4]q = %[5]q
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
