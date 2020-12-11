@@ -18,6 +18,7 @@ ENHANCEMENTS
 * resource/aws_appmesh_virtual_node: Add `listener.outlier_detection` attribute [GH-16167]
 * resource/aws_launch_template: Add `associate_carrier_ip_address` attribute to `network_interfaces` configuration block [GH-16707]
 * resource/aws_launch_template: Add `throughput` attribute to `block_device_mappings.ebs` configuration block [GH-16649]
+* resource/aws_spot_fleet_request: Add `throughput` attribute to `launch_specification.ebs_block_device` and `launch_specification.root_block_device` configuration blocks [GH-16652]
 * resource/aws_ssm_maintenance_window: Add `schedule_offset` argument [GH-16569]
 * resource/aws_workspaces_workspace: Add failed request error code along with message [GH-16459]
 
