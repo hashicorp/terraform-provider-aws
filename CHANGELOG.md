@@ -1,3 +1,9 @@
+## 3.22.0 (unreleased)
+
+FEATURES
+
+* **New Resource:** `aws_lakeformation_resource` ([#13267](https://github.com/hashicorp/terraform-provider-aws/issues/13267))
+
 ## 3.21.0 (December 11, 2020)
 
 NOTES
