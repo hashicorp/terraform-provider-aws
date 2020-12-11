@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -34,8 +35,8 @@ func resourceAwsSagemakerFeatureGroup() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])$`),
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,63}`),
 						"Must start and end with an alphanumeric character and Can only contain alphanumeric character and hyphens. Spaces are not allowed."),
 				),
 			},
@@ -44,8 +45,8 @@ func resourceAwsSagemakerFeatureGroup() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9])$`),
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9]){0,63}`),
 						"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
 				),
 			},
@@ -54,8 +55,8 @@ func resourceAwsSagemakerFeatureGroup() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9])$`),
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9]){0,63}`),
 						"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
 				),
 			},
@@ -83,9 +84,9 @@ func resourceAwsSagemakerFeatureGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 63),
+								validation.StringLenBetween(1, 64),
 								validation.StringNotInSlice([]string{"is_deleted", "write_time", "api_invocation_time"}, false),
-								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9])$`),
+								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9]){0,63}`),
 									"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
 							),
 						},
@@ -98,11 +99,11 @@ func resourceAwsSagemakerFeatureGroup() *schema.Resource {
 				},
 			},
 			"offline_store_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				// AtLeastOneOf: []string{"offline_store_config", "online_store_config"},
+				Type:         schema.TypeList,
+				Optional:     true,
+				ForceNew:     true,
+				MaxItems:     1,
+				AtLeastOneOf: []string{"offline_store_config", "online_store_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"data_catalog_config": {
@@ -152,16 +153,16 @@ func resourceAwsSagemakerFeatureGroup() *schema.Resource {
 				},
 			},
 			"online_store_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				// AtLeastOneOf: []string{"offline_store_config", "online_store_config"},
+				Type:         schema.TypeList,
+				Optional:     true,
+				ForceNew:     true,
+				MaxItems:     1,
+				AtLeastOneOf: []string{"offline_store_config", "online_store_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"security_config": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -235,7 +236,7 @@ func resourceAwsSagemakerFeatureGroupRead(d *schema.ResourceData, meta interface
 
 	output, err := finder.FeatureGroupByName(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, "ValidationException", "Cannot find FeatureGroup") {
+		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker Feature Group (%s); removing from state", d.Id())
 			return nil
@@ -288,14 +289,14 @@ func resourceAwsSagemakerFeatureGroupDelete(d *schema.ResourceData, meta interfa
 	}
 
 	if _, err := conn.DeleteFeatureGroup(input); err != nil {
-		if isAWSErr(err, "ValidationException", "Cannot find FeatureGroup") {
+		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			return nil
 		}
 		return fmt.Errorf("error deleting SageMaker Feature Group (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waiter.FeatureGroupDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, "ValidationException", "RecordNotFound") {
+		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			return nil
 		}
 		return fmt.Errorf("error waiting for SageMaker Feature Group (%s) to delete: %w", d.Id(), err)

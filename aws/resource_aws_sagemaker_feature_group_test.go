@@ -72,9 +72,14 @@ func TestAccAWSSagemakerFeatureGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerFeatureGroupExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
-					// testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
-					// resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
-					// resource.TestCheckResourceAttr(resourceName, "git_config.0.repository_url", "https://github.com/hashicorp/terraform-provider-aws.git"),
+					resource.TestCheckResourceAttr(resourceName, "event_time_feature_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "record_identifier_feature_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.enable_online_store", "true"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("feature-group/%s", rName)),
 				),
 			},
 			{
@@ -184,7 +189,11 @@ resource "aws_sagemaker_feature_group" "test" {
   feature_definition {
 	feature_name = %[1]q
     feature_type = "String"
-  } 
+  }
+
+  online_store_config {
+	enable_online_store = true
+  }  
 }
 `, rName)
 }
