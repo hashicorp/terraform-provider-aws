@@ -108,21 +108,25 @@ func resourceAwsSagemakerFeatureGroup() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"data_catalog_config": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"catalog": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
+										Computed: true,
 									},
 									"database": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
+										Computed: true,
 									},
 									"table_name": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
+										Computed: true,
 									},
 								},
 							},

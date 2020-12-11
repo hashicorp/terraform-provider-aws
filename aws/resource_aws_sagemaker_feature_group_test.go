@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -80,6 +81,7 @@ func TestAccAWSSagemakerFeatureGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("feature-group/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", "0"),
 				),
 			},
 			{
@@ -179,6 +181,107 @@ func TestAccAWSSagemakerFeatureGroup_onlineConfigSecurityConfig(t *testing.T) {
 	})
 }
 
+func TestAccAWSSagemakerFeatureGroup_offlineConfig_basic(t *testing.T) {
+	var notebook sagemaker.DescribeFeatureGroupOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_feature_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerFeatureGroupOfflineBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerFeatureGroupExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.disable_glue_table_creation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.0.s3_uri", fmt.Sprintf("s3://%s/prefix/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerFeatureGroup_offlineConfig_createCatalog(t *testing.T) {
+	var notebook sagemaker.DescribeFeatureGroupOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_feature_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerFeatureGroupOfflineCreateGlueCatalogConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerFeatureGroupExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.disable_glue_table_creation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.0.s3_uri", fmt.Sprintf("s3://%s/prefix/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.0.catalog", "AwsDataCatalog"),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.0.database", "sagemaker_featurestore"),
+					resource.TestMatchResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.0.table_name", regexp.MustCompile(fmt.Sprintf("^%s-", rName))),
+					// testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerFeatureGroup_offlineConfig_providedCatalog(t *testing.T) {
+	var notebook sagemaker.DescribeFeatureGroupOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_feature_group.test"
+	glueTableResourceName := "aws_glue_catalog_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerFeatureGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerFeatureGroupOfflineCreateGlueCatalogConfigProvidedCatalog(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerFeatureGroupExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.disable_glue_table_creation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.0.s3_uri", fmt.Sprintf("s3://%s/prefix/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "offline_store_config.0.data_catalog_config.0.catalog", glueTableResourceName, "catalog_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "offline_store_config.0.data_catalog_config.0.database", glueTableResourceName, "database_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "offline_store_config.0.data_catalog_config.0.table_name", glueTableResourceName, "name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSagemakerFeatureGroup_disappears(t *testing.T) {
 	var notebook sagemaker.DescribeFeatureGroupOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -247,6 +350,8 @@ func testAccCheckAWSSagemakerFeatureGroupExists(n string, codeRepo *sagemaker.De
 
 func testAccAWSSagemakerFeatureGroupBaseConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name               = %[1]q
   path               = "/"
@@ -262,6 +367,26 @@ data "aws_iam_policy_document" "test" {
       identifiers = ["sagemaker.amazonaws.com"]
     }
   }
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.test.arn
+}
+
+resource "aws_iam_policy" "test" {
+  policy = <<EOT
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Resource": "*",
+    "Action": [
+      "s3:*"
+    ]
+  }]
+}
+EOT
 }
 `, rName)
 }
@@ -357,6 +482,117 @@ resource "aws_sagemaker_feature_group" "test" {
 	  kms_key_id = aws_kms_key.test.arn
 	}
   }  
+}
+`, rName)
+}
+
+func testAccAWSSagemakerFeatureGroupOfflineBasicConfig(rName string) string {
+	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  acl           = "private"
+  force_destroy = true
+}
+
+resource "aws_sagemaker_feature_group" "test" {
+  feature_group_name             = %[1]q
+  record_identifier_feature_name = %[1]q
+  event_time_feature_name        = %[1]q
+  role_arn                       = aws_iam_role.test.arn
+
+  feature_definition {
+	feature_name = %[1]q
+    feature_type = "String"
+  }
+
+  offline_store_config {
+	disable_glue_table_creation = true
+
+	s3_storage_config {
+	  s3_uri = "s3://${aws_s3_bucket.test.bucket}/prefix/"
+	}
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName)
+}
+
+func testAccAWSSagemakerFeatureGroupOfflineCreateGlueCatalogConfig(rName string) string {
+	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  acl           = "private"
+  force_destroy = true
+}
+
+resource "aws_sagemaker_feature_group" "test" {
+  feature_group_name             = %[1]q
+  record_identifier_feature_name = %[1]q
+  event_time_feature_name        = %[1]q
+  role_arn                       = aws_iam_role.test.arn
+
+  feature_definition {
+	feature_name = %[1]q
+    feature_type = "String"
+  }
+
+  offline_store_config {
+	disable_glue_table_creation = false
+
+	s3_storage_config {
+	  s3_uri = "s3://${aws_s3_bucket.test.bucket}/prefix/"
+	}
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName)
+}
+
+func testAccAWSSagemakerFeatureGroupOfflineCreateGlueCatalogConfigProvidedCatalog(rName string) string {
+	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) + fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  acl           = "private"
+  force_destroy = true
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+}
+
+resource "aws_sagemaker_feature_group" "test" {
+  feature_group_name             = %[1]q
+  record_identifier_feature_name = %[1]q
+  event_time_feature_name        = %[1]q
+  role_arn                       = aws_iam_role.test.arn
+
+  feature_definition {
+	feature_name = %[1]q
+    feature_type = "String"
+  }
+
+  offline_store_config {
+	disable_glue_table_creation = true
+
+	s3_storage_config {
+	  s3_uri = "s3://${aws_s3_bucket.test.bucket}/prefix/"
+	}
+
+	data_catalog_config {
+	  catalog    = aws_glue_catalog_table.test.catalog_id
+	  database   = aws_glue_catalog_table.test.database_name
+	  table_name = aws_glue_catalog_table.test.name
+	}
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName)
 }
