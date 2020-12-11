@@ -3,138 +3,40 @@ subcategory: "Lake Formation"
 layout: "aws"
 page_title: "AWS: aws_lakeformation_permissions"
 description: |-
-  Manages the permissions that a principal has on an AWS Glue Data Catalog resource (such as AWS Glue database or AWS Glue tables)
+    Grants permissions to the principal to access metadata in the Data Catalog and data organized in underlying data storage such as Amazon S3.
 ---
 
-# Resource: aws_lakeformation_resource
+# Resource: aws_lakeformation_permissions
 
-Manages the permissions that a principal has on an AWS Glue Data Catalog resource (such as AWS Glue database or AWS Glue tables).
+Grants permissions to the principal to access metadata in the Data Catalog and data organized in underlying data storage such as Amazon S3. Permissions are granted to a principal, in a Data Catalog, relative to a Lake Formation resource, which includes the Data Catalog, databases, and tables. For more information, see [Security and Access Control to Metadata and Data in Lake Formation](https://docs.aws.amazon.com/lake-formation/latest/dg/security-data-access.html).
+
+~> **NOTE:** Lake Formation grants implicit permissions to data lake administrators, database creators, and table creators. For more information, see [Implicit Lake Formation Permissions](https://docs.aws.amazon.com/lake-formation/latest/dg/implicit-permissions.html).
 
 ## Example Usage
 
-### Granting permissions on Lake Formation resource
+### Grant Permissions For A Lake Formation S3 Resource
 
 ```hcl
-data "aws_iam_role" "example" {
-  name = "existing_lakeformation_role"
-}
+resource "aws_lakeformation_permissions" "test" {
+  principal_arn = aws_iam_role.workflow_role.arn
+  permissions   = ["ALL"]
 
-data "aws_s3_bucket" "example" {
-  bucket = "existing_bucket"
-}
-
-resource "aws_lakeformation_resource" "example" {
-  resource_arn            = data.aws_s3_bucket.example.arn
-  use_service_linked_role = true
-}
-
-resource "aws_lakeformation_permissions" "example" {
-  permissions = ["DATA_LOCATION_ACCESS"]
-  principal   = data.aws_iam_role.example.arn
-
-  location = aws_lakeformation_resource.example.resource_arn
-}
-```
-
-### Granting permissions on Lake Formation catalog
-
-```hcl
-data "aws_iam_role" "example" {
-  name = "existing_lakeformation_role"
-}
-
-resource "aws_lakeformation_permissions" "example" {
-  permissions = ["CREATE_DATABASE"]
-  principal   = data.aws_iam_role.example.arn
-}
-```
-
-### Granting permissions on Lake Formation database
-
-```hcl
-data "aws_iam_role" "example" {
-  name = "existing_lakeformation_role"
-}
-
-resource "aws_glue_catalog_database" "example" {
-  name = "example_database"
-}
-
-resource "aws_lakeformation_permissions" "example" {
-  permissions = ["ALTER", "CREATE_TABLE", "DROP"]
-  principal   = data.aws_iam_role.example.arn
-
-  database = aws_glue_catalog_database.example.name
-}
-```
-
-### Granting permissions on Lake Formation table
-
-```hcl
-data "aws_iam_role" "example" {
-  name = "existing_lakeformation_role"
-}
-
-resource "aws_glue_catalog_database" "example" {
-  name = "example_database"
-}
-
-resource "aws_glue_catalog_table" "example" {
-  name          = "example_table"
-  database_name = aws_glue_catalog_database.example.name
-}
-
-resource "aws_lakeformation_permissions" "example" {
-  permissions                   = ["INSERT", "DELETE", "SELECT"]
-  permissions_with_grant_option = ["SELECT"]
-  principal                     = data.aws_iam_role.example.arn
-
-  table {
-    database = aws_glue_catalog_table.example.database_name
-    name     = aws_glue_catalog_table.example.name
+  data_location {
+    resource_arn = aws_lakeformation_resource.test.resource_arn
   }
 }
 ```
 
-### Granting permissions on Lake Formation columns
+### Grant Permissions For A Glue Catalog Database
 
 ```hcl
-data "aws_iam_role" "example" {
-  name = "existing_lakeformation_role"
-}
+resource "aws_lakeformation_permissions" "test" {
+  role        = aws_iam_role.workflow_role.arn
+  permissions = ["CREATE_TABLE", "ALTER", "DROP"]
 
-resource "aws_glue_catalog_database" "example" {
-  name = "example_database"
-}
-
-resource "aws_glue_catalog_table" "example" {
-  name          = "example_table"
-  database_name = aws_glue_catalog_database.example.name
-
-  storage_descriptor {
-    columns {
-      name = "event"
-      type = "string"
-    }
-    columns {
-      name = "timestamp"
-      type = "date"
-    }
-    columns {
-      name = "value"
-      type = "double"
-    }
-  }
-}
-
-resource "aws_lakeformation_permissions" "example" {
-  permissions = ["SELECT"]
-  principal   = data.aws_iam_role.example.arn
-
-  table {
-    database     = aws_glue_catalog_table.example.database_name
-    name         = aws_glue_catalog_table.example.name
-    column_names = ["event", "timestamp"]
+  database {
+    name       = aws_glue_catalog_database.test.name
+    catalog_id = "110376042874"
   }
 }
 ```
@@ -143,51 +45,62 @@ resource "aws_lakeformation_permissions" "example" {
 
 The following arguments are required:
 
-* `permissions` – (Required) The permissions granted.
-
-* `principal` – (Required) The AWS Lake Formation principal.
+* `permissions` – (Required) List of permissions granted to the principal. Valid values include `ALL`, `ALTER`, `CREATE_DATABASE`, `CREATE_TABLE`, `DATA_LOCATION_ACCESS`, `DELETE`, `DESCRIBE`, `DROP`, `INSERT`, and `SELECT`. For details on each permission, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
+* `principal_arn` – (Required) Principal to be granted the permissions on the resource. Supported principals are IAM users or IAM roles.
 
 The following arguments are optional:
 
-* `catalog_id` – (Optional) The identifier for the Data Catalog. By default, the account ID.
+* `catalog` - (Optional) Whether the permissions are to be granted for the Data Catalog. Defaults to `false`.
+* `catalog_id` – (Optional) Identifier for the Data Catalog. By default, the account ID. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment.
+* `data_location` - (Optional) Configuration block for data location configuration. Detailed below.
+* `database` - (Optional) Configuration block for database configuration. Detailed below.
+* `table` - (Optional) Configuration block for table configuration. Detailed below.
+* `table_with_columns` - (Optional) Configuration block for table with columns configuration. Detailed below.
 
-* `permissions_with_grant_option` – (Optional) Indicates whether to grant the ability to grant permissions (as a subset of permissions granted)s.
+### data_location
 
-* `database` – (Optional) The name of the database resource. Unique to the Data Catalog. A database is a set of associated table definitions organized into a logical group.
+The following argument is required:
 
-* `location` – (Optional) The Amazon Resource Name (ARN) of the resource (data location).
+* `resource_arn` – (Required) Amazon Resource Name (ARN) that uniquely identifies the data location resource.
 
-* `table` – (Optional) A structure for the table object. A table is a metadata definition that represents your data.
+The following argument is optional:
 
-Only one of `database`, `location`, `table` can be specified at a time. If none of them is specified, permissions will be set at catalog level. See bellow for available permissions for each resource.
+* `catalog_id` - (Optional) Identifier for the Data Catalog where the location is registered with Lake Formation. By default, it is the account ID of the caller.
 
-The `table` object supports the following:
+### database
 
-* `database` – (Required) The name of the database for the table.
+The following argument is required:
 
-* `table` – (Required) The name of the table.
+* `name` – (Required) Name of the database resource. Unique to the Data Catalog.
 
-* `column_names` - (Optional) The list of column names for the table.
+The following argument is optional:
 
-* `excluded_column_names` - (Optional) Excludes column names. Any column with this name will be excluded.
+* `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
 
-The following summarizes the available Lake Formation permissions on Data Catalog resources:
+### table
 
-* `DATA_LOCATION_ACCESS` on registered location resources,
+The following argument is required:
 
-* `CREATE_DATABASE` on catalog,
+* `database_name` – (Required) Name of the database for the table. Unique to a Data Catalog.
 
-* `CREATE_TABLE`, `ALTER`, `DROP` on databases,
+The following arguments are optional:
 
-* `ALTER`, `INSERT`, `DELETE`, `DROP`, `SELECT` on tables,
+* `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
+* `name` - (Optional) Name of the table. Not including the table name results in a wildcard representing every table under a database.
 
-* `SELECT` on columns.
+### table_with_columns
 
-`INSERT`, `DELETE`, `SELECT` permissions apply to the underlying data, the others to the metadata.
+The following arguments are required:
 
-There is also a special permission `ALL`, that enables a principal to perform every supported Lake Formation operation on the database or table on which it is granted.
+* `database_name` – (Required) Name of the database for the table with columns resource. Unique to the Data Catalog.
+* `name` – (Required) Name of the table resource.
 
-For details on each permission, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
+The following arguments are optional:
 
-~> **NOTE:** Data lake administrators and database creators have implicit Lake Formation permissions. See [Implicit Lake Formation Permissions](https://docs.aws.amazon.com/lake-formation/latest/dg/implicit-permissions.html) for more information.
+* `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
+* `column_names` - (Optional) List of column names for the table. At least one of `column_names` or `excluded_column_names` is required.
+* `excluded_column_names` - (Optional) List of column names for the table to exclude. At least one of `column_names` or `excluded_column_names` is required.
 
+## Attributes Reference
+
+In addition to the above arguments, no attributes are exported.
