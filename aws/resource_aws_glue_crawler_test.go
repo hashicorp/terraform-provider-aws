@@ -2433,9 +2433,9 @@ resource "aws_glue_catalog_database" "test" {
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name          = aws_glue_catalog_database.test.name
-  name                   = %[1]q
-  role                   = aws_iam_role.test.name
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
 
   lineage_configuration {
     crawler_lineage_settings = %[2]q
@@ -2457,12 +2457,12 @@ resource "aws_glue_catalog_database" "test" {
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-  database_name          = aws_glue_catalog_database.test.name
-  name                   = %[1]q
-  role                   = aws_iam_role.test.name
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
 
   schema_change_policy {
-	delete_behavior = "LOG"
+    delete_behavior = "LOG"
     update_behavior = "LOG"	
   }
 
