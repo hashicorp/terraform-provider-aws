@@ -382,6 +382,7 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
 	clientName := acctest.RandString(10)
 	resourceName := "aws_cognito_user_pool_client.test"
+	pinpointResourceName:= "aws_pinpoint_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -397,6 +398,7 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_id", pinpointResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.external_id", clientName),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", "false"),
 				),
@@ -419,6 +421,7 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_id", pinpointResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.external_id", clientName),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", "true"),
 				),
