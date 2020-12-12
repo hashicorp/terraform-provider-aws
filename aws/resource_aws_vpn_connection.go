@@ -516,244 +516,8 @@ func resourceAwsVpnConnection() *schema.Resource {
 func resourceAwsVpnConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	// Fill the tunnel options for the EC2 API
-	options := []*ec2.VpnTunnelOptionsSpecification{
-		{}, {},
-	}
-
-	if v, ok := d.GetOk("tunnel1_dpd_timeout_action"); ok {
-		options[0].DPDTimeoutAction = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("tunnel2_dpd_timeout_action"); ok {
-		options[1].DPDTimeoutAction = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("tunnel1_dpd_timeout_seconds"); ok {
-		options[0].DPDTimeoutSeconds = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("tunnel2_dpd_timeout_seconds"); ok {
-		options[1].DPDTimeoutSeconds = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("tunnel1_ike_versions"); ok {
-		l := []*ec2.IKEVersionsRequestListValue{}
-		for _, s := range v.(*schema.Set).List() {
-			l = append(l, &ec2.IKEVersionsRequestListValue{Value: aws.String(s.(string))})
-		}
-		options[0].IKEVersions = l
-	}
-
-	if v, ok := d.GetOk("tunnel2_ike_versions"); ok {
-		l := []*ec2.IKEVersionsRequestListValue{}
-		for _, s := range v.(*schema.Set).List() {
-			l = append(l, &ec2.IKEVersionsRequestListValue{Value: aws.String(s.(string))})
-		}
-		options[1].IKEVersions = l
-	}
-
-	if v, ok := d.GetOk("tunnel1_phase1_dh_group_numbers"); ok {
-		l := []*ec2.Phase1DHGroupNumbersRequestListValue{}
-		for _, s := range v.(*schema.Set).List() {
-			l = append(l, &ec2.Phase1DHGroupNumbersRequestListValue{Value: aws.Int64(int64(s.(int)))})
-		}
-		options[0].Phase1DHGroupNumbers = l
-	}
-
-	if v, ok := d.GetOk("tunnel2_phase1_dh_group_numbers"); ok {
-		l := []*ec2.Phase1DHGroupNumbersRequestListValue{}
-		for _, s := range v.(*schema.Set).List() {
-			l = append(l, &ec2.Phase1DHGroupNumbersRequestListValue{Value: aws.Int64(int64(s.(int)))})
-		}
-		options[1].Phase1DHGroupNumbers = l
-	}
-
-	if v, ok := d.GetOk("tunnel1_phase1_encryption_algorithms"); ok {
-		l := []*ec2.Phase1EncryptionAlgorithmsRequestListValue{}
-		for _, s := range v.(*schema.Set).List() {
-			l = append(l, &ec2.Phase1EncryptionAlgorithmsRequestListValue{Value: aws.String(s.(string))})
-		}
-		options[0].Phase1EncryptionAlgorithms = l
-	}
-
-	if v, ok := d.GetOk("tunnel2_phase1_encryption_algorithms"); ok {
-		l := []*ec2.Phase1EncryptionAlgorithmsRequestListValue{}
-		for _, s := range v.(*schema.Set).List() {
-			l = append(l, &ec2.Phase1EncryptionAlgorithmsRequestListValue{Value: aws.String(s.(string))})
-		}
-		options[1].Phase1EncryptionAlgorithms = l
-	}
-
-	if v, ok := d.GetOk("tunnel1_phase1_integrity_algorithms"); ok {
-		l := []*ec2.Phase1IntegrityAlgorithmsRequestListValue{}
-		for _, s := range v.(*schema.Set).List() {
-			l = append(l, &ec2.Phase1IntegrityAlgorithmsRequestListValue{Value: aws.String(s.(string))})
-		}
-		options[0].Phase1IntegrityAlgorithms = l
-	}
-
-	if v, ok := d.GetOk("tunnel2_phase1_integrity_algorithms"); ok {
-		l := []*ec2.Phase1IntegrityAlgorithmsRequestListValue{}
-		for _, s := range v.(*schema.Set).List() {
-			l = append(l, &ec2.Phase1IntegrityAlgorithmsRequestListValue{Value: aws.String(s.(string))})
-		}
-		options[1].Phase1IntegrityAlgorithms = l
-	}
-
-	if v, ok := d.GetOk("tunnel1_phase1_lifetime_seconds"); ok {
-		options[0].Phase1LifetimeSeconds = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("tunnel2_phase1_lifetime_seconds"); ok {
-		options[1].Phase1LifetimeSeconds = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("tunnel1_phase2_dh_group_numbers"); ok {
-		l := []*ec2.Phase2DHGroupNumbersRequestListValue{}
-		for _, s := range v.(*schema.Set).List() {
-			l = append(l, &ec2.Phase2DHGroupNumbersRequestListValue{Value: aws.Int64(int64(s.(int)))})
-		}
-		options[0].Phase2DHGroupNumbers = l
-	}
-
-	if v, ok := d.GetOk("tunnel2_phase2_dh_group_numbers"); ok {
-		l := []*ec2.Phase2DHGroupNumbersRequestListValue{}
-		for _, s := range v.(*schema.Set).List() {
-			l = append(l, &ec2.Phase2DHGroupNumbersRequestListValue{Value: aws.Int64(int64(s.(int)))})
-		}
-		options[1].Phase2DHGroupNumbers = l
-	}
-
-	if v, ok := d.GetOk("tunnel1_phase2_encryption_algorithms"); ok {
-		l := []*ec2.Phase2EncryptionAlgorithmsRequestListValue{}
-		for _, s := range v.(*schema.Set).List() {
-			l = append(l, &ec2.Phase2EncryptionAlgorithmsRequestListValue{Value: aws.String(s.(string))})
-		}
-		options[0].Phase2EncryptionAlgorithms = l
-	}
-
-	if v, ok := d.GetOk("tunnel2_phase2_encryption_algorithms"); ok {
-		l := []*ec2.Phase2EncryptionAlgorithmsRequestListValue{}
-		for _, s := range v.(*schema.Set).List() {
-			l = append(l, &ec2.Phase2EncryptionAlgorithmsRequestListValue{Value: aws.String(s.(string))})
-		}
-		options[1].Phase2EncryptionAlgorithms = l
-	}
-
-	if v, ok := d.GetOk("tunnel1_phase2_integrity_algorithms"); ok {
-		l := []*ec2.Phase2IntegrityAlgorithmsRequestListValue{}
-		for _, s := range v.(*schema.Set).List() {
-			l = append(l, &ec2.Phase2IntegrityAlgorithmsRequestListValue{Value: aws.String(s.(string))})
-		}
-		options[0].Phase2IntegrityAlgorithms = l
-	}
-
-	if v, ok := d.GetOk("tunnel2_phase2_integrity_algorithms"); ok {
-		l := []*ec2.Phase2IntegrityAlgorithmsRequestListValue{}
-		for _, s := range v.(*schema.Set).List() {
-			l = append(l, &ec2.Phase2IntegrityAlgorithmsRequestListValue{Value: aws.String(s.(string))})
-		}
-		options[1].Phase2IntegrityAlgorithms = l
-	}
-
-	if v, ok := d.GetOk("tunnel1_phase2_lifetime_seconds"); ok {
-		options[0].Phase2LifetimeSeconds = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("tunnel2_phase2_lifetime_seconds"); ok {
-		options[1].Phase2LifetimeSeconds = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("tunnel1_rekey_fuzz_percentage"); ok {
-		options[0].RekeyFuzzPercentage = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("tunnel2_rekey_fuzz_percentage"); ok {
-		options[1].RekeyFuzzPercentage = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("tunnel1_rekey_margin_time_seconds"); ok {
-		options[0].RekeyMarginTimeSeconds = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("tunnel2_rekey_margin_time_seconds"); ok {
-		options[1].RekeyMarginTimeSeconds = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("tunnel1_replay_window_size"); ok {
-		options[0].ReplayWindowSize = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("tunnel2_replay_window_size"); ok {
-		options[1].ReplayWindowSize = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("tunnel1_startup_action"); ok {
-		options[0].StartupAction = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("tunnel2_startup_action"); ok {
-		options[1].StartupAction = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("tunnel1_inside_cidr"); ok {
-		options[0].TunnelInsideCidr = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("tunnel2_inside_cidr"); ok {
-		options[1].TunnelInsideCidr = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("tunnel1_inside_ipv6_cidr"); ok {
-		options[0].TunnelInsideIpv6Cidr = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("tunnel2_inside_ipv6_cidr"); ok {
-		options[1].TunnelInsideIpv6Cidr = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("tunnel1_preshared_key"); ok {
-		options[0].PreSharedKey = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("tunnel2_preshared_key"); ok {
-		options[1].PreSharedKey = aws.String(v.(string))
-	}
-
-	var connectOpts *ec2.VpnConnectionOptionsSpecification = new(ec2.VpnConnectionOptionsSpecification)
-	ipv := d.Get("tunnel_inside_ip_version").(string)
-	if ipv == "ipv6" {
-		if v, ok := d.GetOk("local_ipv6_network_cidr"); ok {
-			connectOpts.LocalIpv6NetworkCidr = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("remote_ipv6_network_cidr"); ok {
-			connectOpts.RemoteIpv6NetworkCidr = aws.String(v.(string))
-		}
-
-		connectOpts.TunnelInsideIpVersion = aws.String(ipv)
-	} else {
-		if v, ok := d.GetOk("local_ipv4_network_cidr"); ok {
-			connectOpts.LocalIpv4NetworkCidr = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("remote_ipv4_network_cidr"); ok {
-			connectOpts.RemoteIpv4NetworkCidr = aws.String(v.(string))
-		}
-
-		connectOpts.TunnelInsideIpVersion = aws.String("ipv4")
-	}
-
-	if v, ok := d.GetOk("enable_acceleration"); ok {
-		connectOpts.EnableAcceleration = aws.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("static_routes_only"); ok {
-		connectOpts.StaticRoutesOnly = aws.Bool(v.(bool))
-	}
-
-	connectOpts.TunnelOptions = options
+	// Fill the connection options for the EC2 API
+	connectOpts := expandVpnConnectionOptions(d)
 
 	createOpts := &ec2.CreateVpnConnectionInput{
 		CustomerGatewayId: aws.String(d.Get("customer_gateway_id").(string)),
@@ -977,14 +741,333 @@ func resourceAwsVpnConnectionRead(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsVpnConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	tun1Changed := false
-	tun2Changed := false
-	vgwTelemetryTun1Index := 0
-	vgwTelemetryTun2Index := 1
-	options := []*ec2.ModifyVpnTunnelOptionsSpecification{
+	if err := modifyVpnConnectionOptions(d, conn); err != nil {
+		return err
+	}
+
+	if err := modifyVpnTunnels(d, conn); err != nil {
+		return err
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		vpnConnectionID := d.Id()
+
+		if err := keyvaluetags.Ec2UpdateTags(conn, vpnConnectionID, o, n); err != nil {
+			return fmt.Errorf("error updating EC2 VPN Connection (%s) tags: %s", d.Id(), err)
+		}
+	}
+
+	return resourceAwsVpnConnectionRead(d, meta)
+}
+
+func resourceAwsVpnConnectionDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ec2conn
+
+	_, err := conn.DeleteVpnConnection(&ec2.DeleteVpnConnectionInput{
+		VpnConnectionId: aws.String(d.Id()),
+	})
+
+	if isAWSErr(err, "InvalidVpnConnectionID.NotFound", "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting VPN Connection (%s): %s", d.Id(), err)
+	}
+
+	if err := waitForEc2VpnConnectionDeletion(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for VPN connection (%s) to delete: %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func expandVpnConnectionOptions(d *schema.ResourceData) *ec2.VpnConnectionOptionsSpecification {
+	var connectOpts *ec2.VpnConnectionOptionsSpecification = new(ec2.VpnConnectionOptionsSpecification)
+	ipv := d.Get("tunnel_inside_ip_version").(string)
+	if ipv == "ipv6" {
+		if v, ok := d.GetOk("local_ipv6_network_cidr"); ok {
+			connectOpts.LocalIpv6NetworkCidr = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("remote_ipv6_network_cidr"); ok {
+			connectOpts.RemoteIpv6NetworkCidr = aws.String(v.(string))
+		}
+
+		connectOpts.TunnelInsideIpVersion = aws.String(ipv)
+	} else {
+		if v, ok := d.GetOk("local_ipv4_network_cidr"); ok {
+			connectOpts.LocalIpv4NetworkCidr = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("remote_ipv4_network_cidr"); ok {
+			connectOpts.RemoteIpv4NetworkCidr = aws.String(v.(string))
+		}
+
+		connectOpts.TunnelInsideIpVersion = aws.String("ipv4")
+	}
+
+	if v, ok := d.GetOk("enable_acceleration"); ok {
+		connectOpts.EnableAcceleration = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("static_routes_only"); ok {
+		connectOpts.StaticRoutesOnly = aws.Bool(v.(bool))
+	}
+
+	// Fill the tunnel options for the EC2 API
+	connectOpts.TunnelOptions = expandVpnTunnelOptions(d)
+
+	return connectOpts
+}
+
+func expandVpnTunnelOptions(d *schema.ResourceData) []*ec2.VpnTunnelOptionsSpecification {
+	options := []*ec2.VpnTunnelOptionsSpecification{
 		{}, {},
 	}
 
+	if v, ok := d.GetOk("tunnel1_dpd_timeout_action"); ok {
+		options[0].DPDTimeoutAction = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tunnel2_dpd_timeout_action"); ok {
+		options[1].DPDTimeoutAction = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tunnel1_dpd_timeout_seconds"); ok {
+		options[0].DPDTimeoutSeconds = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("tunnel2_dpd_timeout_seconds"); ok {
+		options[1].DPDTimeoutSeconds = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("tunnel1_ike_versions"); ok {
+		l := []*ec2.IKEVersionsRequestListValue{}
+		for _, s := range v.(*schema.Set).List() {
+			l = append(l, &ec2.IKEVersionsRequestListValue{Value: aws.String(s.(string))})
+		}
+		options[0].IKEVersions = l
+	}
+
+	if v, ok := d.GetOk("tunnel2_ike_versions"); ok {
+		l := []*ec2.IKEVersionsRequestListValue{}
+		for _, s := range v.(*schema.Set).List() {
+			l = append(l, &ec2.IKEVersionsRequestListValue{Value: aws.String(s.(string))})
+		}
+		options[1].IKEVersions = l
+	}
+
+	if v, ok := d.GetOk("tunnel1_phase1_dh_group_numbers"); ok {
+		l := []*ec2.Phase1DHGroupNumbersRequestListValue{}
+		for _, s := range v.(*schema.Set).List() {
+			l = append(l, &ec2.Phase1DHGroupNumbersRequestListValue{Value: aws.Int64(int64(s.(int)))})
+		}
+		options[0].Phase1DHGroupNumbers = l
+	}
+
+	if v, ok := d.GetOk("tunnel2_phase1_dh_group_numbers"); ok {
+		l := []*ec2.Phase1DHGroupNumbersRequestListValue{}
+		for _, s := range v.(*schema.Set).List() {
+			l = append(l, &ec2.Phase1DHGroupNumbersRequestListValue{Value: aws.Int64(int64(s.(int)))})
+		}
+		options[1].Phase1DHGroupNumbers = l
+	}
+
+	if v, ok := d.GetOk("tunnel1_phase1_encryption_algorithms"); ok {
+		l := []*ec2.Phase1EncryptionAlgorithmsRequestListValue{}
+		for _, s := range v.(*schema.Set).List() {
+			l = append(l, &ec2.Phase1EncryptionAlgorithmsRequestListValue{Value: aws.String(s.(string))})
+		}
+		options[0].Phase1EncryptionAlgorithms = l
+	}
+
+	if v, ok := d.GetOk("tunnel2_phase1_encryption_algorithms"); ok {
+		l := []*ec2.Phase1EncryptionAlgorithmsRequestListValue{}
+		for _, s := range v.(*schema.Set).List() {
+			l = append(l, &ec2.Phase1EncryptionAlgorithmsRequestListValue{Value: aws.String(s.(string))})
+		}
+		options[1].Phase1EncryptionAlgorithms = l
+	}
+
+	if v, ok := d.GetOk("tunnel1_phase1_integrity_algorithms"); ok {
+		l := []*ec2.Phase1IntegrityAlgorithmsRequestListValue{}
+		for _, s := range v.(*schema.Set).List() {
+			l = append(l, &ec2.Phase1IntegrityAlgorithmsRequestListValue{Value: aws.String(s.(string))})
+		}
+		options[0].Phase1IntegrityAlgorithms = l
+	}
+
+	if v, ok := d.GetOk("tunnel2_phase1_integrity_algorithms"); ok {
+		l := []*ec2.Phase1IntegrityAlgorithmsRequestListValue{}
+		for _, s := range v.(*schema.Set).List() {
+			l = append(l, &ec2.Phase1IntegrityAlgorithmsRequestListValue{Value: aws.String(s.(string))})
+		}
+		options[1].Phase1IntegrityAlgorithms = l
+	}
+
+	if v, ok := d.GetOk("tunnel1_phase1_lifetime_seconds"); ok {
+		options[0].Phase1LifetimeSeconds = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("tunnel2_phase1_lifetime_seconds"); ok {
+		options[1].Phase1LifetimeSeconds = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("tunnel1_phase2_dh_group_numbers"); ok {
+		l := []*ec2.Phase2DHGroupNumbersRequestListValue{}
+		for _, s := range v.(*schema.Set).List() {
+			l = append(l, &ec2.Phase2DHGroupNumbersRequestListValue{Value: aws.Int64(int64(s.(int)))})
+		}
+		options[0].Phase2DHGroupNumbers = l
+	}
+
+	if v, ok := d.GetOk("tunnel2_phase2_dh_group_numbers"); ok {
+		l := []*ec2.Phase2DHGroupNumbersRequestListValue{}
+		for _, s := range v.(*schema.Set).List() {
+			l = append(l, &ec2.Phase2DHGroupNumbersRequestListValue{Value: aws.Int64(int64(s.(int)))})
+		}
+		options[1].Phase2DHGroupNumbers = l
+	}
+
+	if v, ok := d.GetOk("tunnel1_phase2_encryption_algorithms"); ok {
+		l := []*ec2.Phase2EncryptionAlgorithmsRequestListValue{}
+		for _, s := range v.(*schema.Set).List() {
+			l = append(l, &ec2.Phase2EncryptionAlgorithmsRequestListValue{Value: aws.String(s.(string))})
+		}
+		options[0].Phase2EncryptionAlgorithms = l
+	}
+
+	if v, ok := d.GetOk("tunnel2_phase2_encryption_algorithms"); ok {
+		l := []*ec2.Phase2EncryptionAlgorithmsRequestListValue{}
+		for _, s := range v.(*schema.Set).List() {
+			l = append(l, &ec2.Phase2EncryptionAlgorithmsRequestListValue{Value: aws.String(s.(string))})
+		}
+		options[1].Phase2EncryptionAlgorithms = l
+	}
+
+	if v, ok := d.GetOk("tunnel1_phase2_integrity_algorithms"); ok {
+		l := []*ec2.Phase2IntegrityAlgorithmsRequestListValue{}
+		for _, s := range v.(*schema.Set).List() {
+			l = append(l, &ec2.Phase2IntegrityAlgorithmsRequestListValue{Value: aws.String(s.(string))})
+		}
+		options[0].Phase2IntegrityAlgorithms = l
+	}
+
+	if v, ok := d.GetOk("tunnel2_phase2_integrity_algorithms"); ok {
+		l := []*ec2.Phase2IntegrityAlgorithmsRequestListValue{}
+		for _, s := range v.(*schema.Set).List() {
+			l = append(l, &ec2.Phase2IntegrityAlgorithmsRequestListValue{Value: aws.String(s.(string))})
+		}
+		options[1].Phase2IntegrityAlgorithms = l
+	}
+
+	if v, ok := d.GetOk("tunnel1_phase2_lifetime_seconds"); ok {
+		options[0].Phase2LifetimeSeconds = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("tunnel2_phase2_lifetime_seconds"); ok {
+		options[1].Phase2LifetimeSeconds = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("tunnel1_rekey_fuzz_percentage"); ok {
+		options[0].RekeyFuzzPercentage = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("tunnel2_rekey_fuzz_percentage"); ok {
+		options[1].RekeyFuzzPercentage = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("tunnel1_rekey_margin_time_seconds"); ok {
+		options[0].RekeyMarginTimeSeconds = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("tunnel2_rekey_margin_time_seconds"); ok {
+		options[1].RekeyMarginTimeSeconds = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("tunnel1_replay_window_size"); ok {
+		options[0].ReplayWindowSize = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("tunnel2_replay_window_size"); ok {
+		options[1].ReplayWindowSize = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("tunnel1_startup_action"); ok {
+		options[0].StartupAction = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tunnel2_startup_action"); ok {
+		options[1].StartupAction = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tunnel1_inside_cidr"); ok {
+		options[0].TunnelInsideCidr = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tunnel2_inside_cidr"); ok {
+		options[1].TunnelInsideCidr = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tunnel1_inside_ipv6_cidr"); ok {
+		options[0].TunnelInsideIpv6Cidr = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tunnel2_inside_ipv6_cidr"); ok {
+		options[1].TunnelInsideIpv6Cidr = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tunnel1_preshared_key"); ok {
+		options[0].PreSharedKey = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tunnel2_preshared_key"); ok {
+		options[1].PreSharedKey = aws.String(v.(string))
+	}
+
+	return options
+}
+
+// routesToMapList turns the list of routes into a list of maps.
+func routesToMapList(routes []*ec2.VpnStaticRoute) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, len(routes))
+	for _, r := range routes {
+		staticRoute := make(map[string]interface{})
+		staticRoute["destination_cidr_block"] = aws.StringValue(r.DestinationCidrBlock)
+		staticRoute["state"] = aws.StringValue(r.State)
+
+		if r.Source != nil {
+			staticRoute["source"] = aws.StringValue(r.Source)
+		}
+
+		result = append(result, staticRoute)
+	}
+
+	return result
+}
+
+// telemetryToMapList turns the VGW telemetry into a list of maps.
+func telemetryToMapList(telemetry []*ec2.VgwTelemetry) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, len(telemetry))
+	for _, t := range telemetry {
+		vgw := make(map[string]interface{})
+		vgw["accepted_route_count"] = aws.Int64Value(t.AcceptedRouteCount)
+		vgw["outside_ip_address"] = aws.StringValue(t.OutsideIpAddress)
+		vgw["status"] = aws.StringValue(t.Status)
+		vgw["status_message"] = aws.StringValue(t.StatusMessage)
+
+		// LastStatusChange is a time.Time(). Convert it into a string
+		// so it can be handled by schema's type system.
+		vgw["last_status_change"] = t.LastStatusChange.Format(time.RFC3339)
+		result = append(result, vgw)
+	}
+
+	return result
+}
+
+func modifyVpnConnectionOptions(d *schema.ResourceData, conn *ec2.EC2) error {
 	var connOpts *ec2.ModifyVpnConnectionOptionsInput = new(ec2.ModifyVpnConnectionOptionsInput)
 	connChanged := false
 
@@ -1021,6 +1104,20 @@ func resourceAwsVpnConnectionUpdate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("error waiting for VPN connection (%s) to become available: %s", vpnConnectionID, err)
 		}
 	}
+
+	return nil
+}
+
+func modifyVpnTunnels(d *schema.ResourceData, conn *ec2.EC2) error {
+	tun1Changed := false
+	tun2Changed := false
+	vgwTelemetryTun1Index := 0
+	vgwTelemetryTun2Index := 1
+	options := []*ec2.ModifyVpnTunnelOptionsSpecification{
+		{}, {},
+	}
+
+	vpnConnectionID := d.Id()
 
 	if d.HasChange("tunnel1_dpd_timeout_action") {
 		tun1Changed = true
@@ -1240,74 +1337,7 @@ func resourceAwsVpnConnectionUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-
-		if err := keyvaluetags.Ec2UpdateTags(conn, vpnConnectionID, o, n); err != nil {
-			return fmt.Errorf("error updating EC2 VPN Connection (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	return resourceAwsVpnConnectionRead(d, meta)
-}
-
-func resourceAwsVpnConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-
-	_, err := conn.DeleteVpnConnection(&ec2.DeleteVpnConnectionInput{
-		VpnConnectionId: aws.String(d.Id()),
-	})
-
-	if isAWSErr(err, "InvalidVpnConnectionID.NotFound", "") {
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error deleting VPN Connection (%s): %s", d.Id(), err)
-	}
-
-	if err := waitForEc2VpnConnectionDeletion(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for VPN connection (%s) to delete: %s", d.Id(), err)
-	}
-
 	return nil
-}
-
-// routesToMapList turns the list of routes into a list of maps.
-func routesToMapList(routes []*ec2.VpnStaticRoute) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(routes))
-	for _, r := range routes {
-		staticRoute := make(map[string]interface{})
-		staticRoute["destination_cidr_block"] = aws.StringValue(r.DestinationCidrBlock)
-		staticRoute["state"] = aws.StringValue(r.State)
-
-		if r.Source != nil {
-			staticRoute["source"] = aws.StringValue(r.Source)
-		}
-
-		result = append(result, staticRoute)
-	}
-
-	return result
-}
-
-// telemetryToMapList turns the VGW telemetry into a list of maps.
-func telemetryToMapList(telemetry []*ec2.VgwTelemetry) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(telemetry))
-	for _, t := range telemetry {
-		vgw := make(map[string]interface{})
-		vgw["accepted_route_count"] = aws.Int64Value(t.AcceptedRouteCount)
-		vgw["outside_ip_address"] = aws.StringValue(t.OutsideIpAddress)
-		vgw["status"] = aws.StringValue(t.Status)
-		vgw["status_message"] = aws.StringValue(t.StatusMessage)
-
-		// LastStatusChange is a time.Time(). Convert it into a string
-		// so it can be handled by schema's type system.
-		vgw["last_status_change"] = t.LastStatusChange.Format(time.RFC3339)
-		result = append(result, vgw)
-	}
-
-	return result
 }
 
 func modifyVpnTunnelOptions(conn *ec2.EC2, vgwTelemetry *schema.Set, vpnConnectionID string, vgwTelemetryTunIndex int, optionsTun *ec2.ModifyVpnTunnelOptionsSpecification) error {

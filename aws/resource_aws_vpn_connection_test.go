@@ -14,6 +14,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+type TunnelOptions struct {
+	psk                        string
+	tunnelCidr                 string
+	dpdTimeoutAction           string
+	dpdTimeoutSeconds          int
+	ikeVersions                string
+	phase1DhGroupNumbers       string
+	phase1EncryptionAlgorithms string
+	phase1IntegrityAlgorithms  string
+	phase1LifetimeSeconds      int
+	phase2DhGroupNumbers       string
+	phase2EncryptionAlgorithms string
+	phase2IntegrityAlgorithms  string
+	phase2LifetimeSeconds      int
+	rekeyFuzzPercentage        int
+	rekeyMarginTimeSeconds     int
+	replayWindowSize           int
+	startupAction              string
+}
+
 func init() {
 	resource.AddTestSweepers("aws_vpn_connection", &resource.Sweeper{
 		Name: "aws_vpn_connection",
@@ -145,6 +165,46 @@ func TestAccAWSVpnConnection_tunnelOptions(t *testing.T) {
 	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
 
+	tunnel1 := TunnelOptions{
+		psk:                        "12345678",
+		tunnelCidr:                 "169.254.8.0/30",
+		dpdTimeoutAction:           "clear",
+		dpdTimeoutSeconds:          30,
+		ikeVersions:                "\"ikev1\", \"ikev2\"",
+		phase1DhGroupNumbers:       "2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
+		phase1EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase1IntegrityAlgorithms:  "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase1LifetimeSeconds:      28800,
+		phase2DhGroupNumbers:       "2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
+		phase2EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase2IntegrityAlgorithms:  "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase2LifetimeSeconds:      3600,
+		rekeyFuzzPercentage:        100,
+		rekeyMarginTimeSeconds:     540,
+		replayWindowSize:           1024,
+		startupAction:              "add",
+	}
+
+	tunnel2 := TunnelOptions{
+		psk:                        "abcdefgh",
+		tunnelCidr:                 "169.254.9.0/30",
+		dpdTimeoutAction:           "clear",
+		dpdTimeoutSeconds:          30,
+		ikeVersions:                "\"ikev1\", \"ikev2\"",
+		phase1DhGroupNumbers:       "2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
+		phase1EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase1IntegrityAlgorithms:  "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase1LifetimeSeconds:      28800,
+		phase2DhGroupNumbers:       "2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
+		phase2EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase2IntegrityAlgorithms:  "\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase2LifetimeSeconds:      3600,
+		rekeyFuzzPercentage:        100,
+		rekeyMarginTimeSeconds:     540,
+		replayWindowSize:           1024,
+		startupAction:              "add",
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
@@ -230,44 +290,7 @@ func TestAccAWSVpnConnection_tunnelOptions(t *testing.T) {
 
 			//Try actual building
 			{
-				Config: testAccAwsVpnConnectionConfigTunnelOptions(
-					rBgpAsn,
-					"192.168.1.1/32",
-					"192.168.1.2/32",
-					"12345678",
-					"169.254.8.0/30",
-					"clear",
-					30,
-					"\"ikev1\", \"ikev2\"",
-					"2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
-					"\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
-					"\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
-					28800,
-					"2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
-					"\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
-					"\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
-					3600,
-					100,
-					540,
-					1024,
-					"add",
-					"abcdefgh",
-					"169.254.9.0/30",
-					"clear",
-					30,
-					"\"ikev1\", \"ikev2\"",
-					"2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
-					"\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
-					"\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
-					28800,
-					"2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24",
-					"\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
-					"\"SHA1\", \"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
-					3600,
-					100,
-					540,
-					1024,
-					"add"),
+				Config: testAccAwsVpnConnectionConfigTunnelOptions(rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAwsVpnConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "static_routes_only", "false"),
@@ -646,12 +669,12 @@ resource "aws_vpn_connection" "test" {
   static_routes_only  = false
   enable_acceleration = false
 
-  local_ipv6_network_cidr  = "%s"
-  remote_ipv6_network_cidr = "%s"
+  local_ipv6_network_cidr  = %[2]q
+  remote_ipv6_network_cidr = %[3]q
   tunnel_inside_ip_version = "ipv6"
 
-  tunnel1_inside_ipv6_cidr = "%s"
-  tunnel2_inside_ipv6_cidr = "%s"
+  tunnel1_inside_ipv6_cidr = %[4]q
+  tunnel2_inside_ipv6_cidr = %[5]q
 }
 `, rBgpAsn, localIpv6NetworkCidr, remoteIpv6NetworkCidr, tunnel1InsideIpv6Cidr, tunnel2InsideIpv6Cidr)
 }
@@ -712,40 +735,8 @@ func testAccAwsVpnConnectionConfigTunnelOptions(
 	rBgpAsn int,
 	localIpv4NetworkCidr string,
 	remoteIpv4NetworkCidr string,
-	psk string,
-	tunnelCidr string,
-	dpdTimeoutAction string,
-	dpdTimeoutSeconds int,
-	ikeVersions string,
-	phase1DhGroupNumbers string,
-	phase1EncryptionAlgorithms string,
-	phase1IntegrityAlgorithms string,
-	phase1LifetimeSeconds int,
-	phase2DhGroupNumbers string,
-	phase2EncryptionAlgorithms string,
-	phase2IntegrityAlgorithms string,
-	phase2LifetimeSeconds int,
-	rekeyFuzzPercentage int,
-	rekeyMarginTimeSeconds int,
-	replayWindowSize int,
-	startupAction string,
-	psk2 string,
-	tunnelCidr2 string,
-	dpdTimeoutAction2 string,
-	dpdTimeoutSeconds2 int,
-	ikeVersions2 string,
-	phase1DhGroupNumbers2 string,
-	phase1EncryptionAlgorithms2 string,
-	phase1IntegrityAlgorithms2 string,
-	phase1LifetimeSeconds2 int,
-	phase2DhGroupNumbers2 string,
-	phase2EncryptionAlgorithms2 string,
-	phase2IntegrityAlgorithms2 string,
-	phase2LifetimeSeconds2 int,
-	rekeyFuzzPercentage2 int,
-	rekeyMarginTimeSeconds2 int,
-	replayWindowSize2 int,
-	startupAction2 string,
+	tunnel1 TunnelOptions,
+	tunnel2 TunnelOptions,
 ) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "vpn_gateway" {
@@ -770,83 +761,83 @@ resource "aws_vpn_connection" "test" {
   type                = "ipsec.1"
   static_routes_only  = false
 
-  local_ipv4_network_cidr  = "%s"
-  remote_ipv4_network_cidr = "%s"
+  local_ipv4_network_cidr  = %[2]q
+  remote_ipv4_network_cidr = %[3]q
 
-  tunnel1_inside_cidr                  = "%s"
-  tunnel1_preshared_key                = "%s"
-  tunnel1_dpd_timeout_action           = "%s"
-  tunnel1_dpd_timeout_seconds          = %d
-  tunnel1_ike_versions                 = [%s]
-  tunnel1_phase1_dh_group_numbers      = [%s]
-  tunnel1_phase1_encryption_algorithms = [%s]
-  tunnel1_phase1_integrity_algorithms  = [%s]
-  tunnel1_phase1_lifetime_seconds      = %d
-  tunnel1_phase2_dh_group_numbers      = [%s]
-  tunnel1_phase2_encryption_algorithms = [%s]
-  tunnel1_phase2_integrity_algorithms  = [%s]
-  tunnel1_phase2_lifetime_seconds      = %d
-  tunnel1_rekey_fuzz_percentage        = %d
-  tunnel1_rekey_margin_time_seconds    = %d
-  tunnel1_replay_window_size           = %d
-  tunnel1_startup_action               = "%s"
+  tunnel1_inside_cidr                  = %[4]q
+  tunnel1_preshared_key                = %[5]q
+  tunnel1_dpd_timeout_action           = %[6]q
+  tunnel1_dpd_timeout_seconds          = %[7]d
+  tunnel1_ike_versions                 = [%[8]s]
+  tunnel1_phase1_dh_group_numbers      = [%[9]s]
+  tunnel1_phase1_encryption_algorithms = [%[10]s]
+  tunnel1_phase1_integrity_algorithms  = [%[11]s]
+  tunnel1_phase1_lifetime_seconds      = %[12]d
+  tunnel1_phase2_dh_group_numbers      = [%[13]s]
+  tunnel1_phase2_encryption_algorithms = [%[14]s]
+  tunnel1_phase2_integrity_algorithms  = [%[15]s]
+  tunnel1_phase2_lifetime_seconds      = %[16]d
+  tunnel1_rekey_fuzz_percentage        = %[17]d
+  tunnel1_rekey_margin_time_seconds    = %[18]d
+  tunnel1_replay_window_size           = %[19]d
+  tunnel1_startup_action               = %[20]q
 
-  tunnel2_inside_cidr                  = "%s"
-  tunnel2_preshared_key                = "%s"
-  tunnel2_dpd_timeout_action           = "%s"
-  tunnel2_dpd_timeout_seconds          = %d
-  tunnel2_ike_versions                 = [%s]
-  tunnel2_phase1_dh_group_numbers      = [%s]
-  tunnel2_phase1_encryption_algorithms = [%s]
-  tunnel2_phase1_integrity_algorithms  = [%s]
-  tunnel2_phase1_lifetime_seconds      = %d
-  tunnel2_phase2_dh_group_numbers      = [%s]
-  tunnel2_phase2_encryption_algorithms = [%s]
-  tunnel2_phase2_integrity_algorithms  = [%s]
-  tunnel2_phase2_lifetime_seconds      = %d
-  tunnel2_rekey_fuzz_percentage        = %d
-  tunnel2_rekey_margin_time_seconds    = %d
-  tunnel2_replay_window_size           = %d
-  tunnel2_startup_action               = "%s"
+  tunnel2_inside_cidr                  = %[21]q
+  tunnel2_preshared_key                = %[22]q
+  tunnel2_dpd_timeout_action           = %[23]q
+  tunnel2_dpd_timeout_seconds          = %[24]d
+  tunnel2_ike_versions                 = [%[25]s]
+  tunnel2_phase1_dh_group_numbers      = [%[26]s]
+  tunnel2_phase1_encryption_algorithms = [%[27]s]
+  tunnel2_phase1_integrity_algorithms  = [%[28]s]
+  tunnel2_phase1_lifetime_seconds      = %[29]d
+  tunnel2_phase2_dh_group_numbers      = [%[30]s]
+  tunnel2_phase2_encryption_algorithms = [%[31]s]
+  tunnel2_phase2_integrity_algorithms  = [%[32]s]
+  tunnel2_phase2_lifetime_seconds      = %[33]d
+  tunnel2_rekey_fuzz_percentage        = %[34]d
+  tunnel2_rekey_margin_time_seconds    = %[35]d
+  tunnel2_replay_window_size           = %[36]d
+  tunnel2_startup_action               = %[37]q
 }
 `,
 		rBgpAsn,
 		localIpv4NetworkCidr,
 		remoteIpv4NetworkCidr,
-		tunnelCidr,
-		psk,
-		dpdTimeoutAction,
-		dpdTimeoutSeconds,
-		ikeVersions,
-		phase1DhGroupNumbers,
-		phase1EncryptionAlgorithms,
-		phase1IntegrityAlgorithms,
-		phase1LifetimeSeconds,
-		phase2DhGroupNumbers,
-		phase2EncryptionAlgorithms,
-		phase2IntegrityAlgorithms,
-		phase2LifetimeSeconds,
-		rekeyFuzzPercentage,
-		rekeyMarginTimeSeconds,
-		replayWindowSize,
-		startupAction,
-		tunnelCidr2,
-		psk2,
-		dpdTimeoutAction2,
-		dpdTimeoutSeconds2,
-		ikeVersions2,
-		phase1DhGroupNumbers2,
-		phase1EncryptionAlgorithms2,
-		phase1IntegrityAlgorithms2,
-		phase1LifetimeSeconds2,
-		phase2DhGroupNumbers2,
-		phase2EncryptionAlgorithms2,
-		phase2IntegrityAlgorithms2,
-		phase2LifetimeSeconds2,
-		rekeyFuzzPercentage2,
-		rekeyMarginTimeSeconds2,
-		replayWindowSize2,
-		startupAction2)
+		tunnel1.tunnelCidr,
+		tunnel1.psk,
+		tunnel1.dpdTimeoutAction,
+		tunnel1.dpdTimeoutSeconds,
+		tunnel1.ikeVersions,
+		tunnel1.phase1DhGroupNumbers,
+		tunnel1.phase1EncryptionAlgorithms,
+		tunnel1.phase1IntegrityAlgorithms,
+		tunnel1.phase1LifetimeSeconds,
+		tunnel1.phase2DhGroupNumbers,
+		tunnel1.phase2EncryptionAlgorithms,
+		tunnel1.phase2IntegrityAlgorithms,
+		tunnel1.phase2LifetimeSeconds,
+		tunnel1.rekeyFuzzPercentage,
+		tunnel1.rekeyMarginTimeSeconds,
+		tunnel1.replayWindowSize,
+		tunnel1.startupAction,
+		tunnel2.tunnelCidr,
+		tunnel2.psk,
+		tunnel2.dpdTimeoutAction,
+		tunnel2.dpdTimeoutSeconds,
+		tunnel2.ikeVersions,
+		tunnel2.phase1DhGroupNumbers,
+		tunnel2.phase1EncryptionAlgorithms,
+		tunnel2.phase1IntegrityAlgorithms,
+		tunnel2.phase1LifetimeSeconds,
+		tunnel2.phase2DhGroupNumbers,
+		tunnel2.phase2EncryptionAlgorithms,
+		tunnel2.phase2IntegrityAlgorithms,
+		tunnel2.phase2LifetimeSeconds,
+		tunnel2.rekeyFuzzPercentage,
+		tunnel2.rekeyMarginTimeSeconds,
+		tunnel2.replayWindowSize,
+		tunnel2.startupAction)
 }
 
 func testAccAwsVpnConnectionConfigTags1(rBgpAsn int, tagKey1, tagValue1 string) string {
