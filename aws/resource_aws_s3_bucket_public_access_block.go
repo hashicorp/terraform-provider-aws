@@ -120,6 +120,12 @@ func resourceAwsS3BucketPublicAccessBlockRead(d *schema.ResourceData, meta inter
 
 		return nil
 	})
+
+	// RM-4400 - more descriptive 403 errors
+	if isAWSErrRequestFailureStatusCode(err, 403) {
+		return fmt.Errorf("permissions error on S3 Bucket (%s) while getting public access block configuration: %s", d.Id(), err)
+	}
+
 	if isResourceTimeoutError(err) {
 		output, err = s3conn.GetPublicAccessBlock(input)
 	}

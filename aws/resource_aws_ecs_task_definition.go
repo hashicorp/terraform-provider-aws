@@ -214,10 +214,10 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 										}, false),
 									},
 									"transit_encryption_port": {
-										Type:         schema.TypeInt,
-										ForceNew:     true,
-										Optional:     true,
-										ValidateFunc: validation.IsPortNumber,
+										Type:     schema.TypeInt,
+										ForceNew: true,
+										Optional: true,
+										// ValidateFunc: validation.IsPortNumber,
 									},
 									"authorization_config": {
 										Type:     schema.TypeList,
