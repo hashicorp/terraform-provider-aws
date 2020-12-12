@@ -166,17 +166,28 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"application_id": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:          schema.TypeString,
+							Optional:      true,
+							ExactlyOneOf:  []string{"analytics_configuration.0.application_id", "analytics_configuration.0.application_arn"},
+							ConflictsWith: []string{"analytics_configuration.0.external_id", "analytics_configuration.0.role_arn"},
+						},
+						"application_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ExactlyOneOf: []string{"analytics_configuration.0.application_id", "analytics_configuration.0.application_arn"},
+							ValidateFunc: validateArn,
 						},
 						"external_id": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:          schema.TypeString,
+							ConflictsWith: []string{"analytics_configuration.0.application_arn"},
+							Optional:      true,
 						},
 						"role_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateArn,
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ConflictsWith: []string{"analytics_configuration.0.application_arn"},
+							ValidateFunc:  validateArn,
 						},
 						"user_data_shared": {
 							Type:     schema.TypeBool,
@@ -424,10 +435,22 @@ func expandAwsCognitoUserPoolClientAnalyticsConfig(l []interface{}) *cognitoiden
 
 	m := l[0].(map[string]interface{})
 
-	analyticsConfig := &cognitoidentityprovider.AnalyticsConfigurationType{
-		ApplicationId: aws.String(m["application_id"].(string)),
-		ExternalId:    aws.String(m["external_id"].(string)),
-		RoleArn:       aws.String(m["role_arn"].(string)),
+	analyticsConfig := &cognitoidentityprovider.AnalyticsConfigurationType{}
+
+	if v, ok := m["role_arn"]; ok && v != "" {
+		analyticsConfig.RoleArn = aws.String(v.(string))
+	}
+
+	if v, ok := m["external_id"]; ok && v != "" {
+		analyticsConfig.ExternalId = aws.String(v.(string))
+	}
+
+	if v, ok := m["application_id"]; ok && v != "" {
+		analyticsConfig.ApplicationId = aws.String(v.(string))
+	}
+
+	if v, ok := m["application_arn"]; ok && v != "" {
+		analyticsConfig.ApplicationArn = aws.String(v.(string))
 	}
 
 	if v, ok := m["user_data_shared"]; ok {
@@ -443,10 +466,23 @@ func flattenAwsCognitoUserPoolClientAnalyticsConfig(analyticsConfig *cognitoiden
 	}
 
 	m := map[string]interface{}{
-		"application_id":   aws.StringValue(analyticsConfig.ApplicationId),
-		"external_id":      aws.StringValue(analyticsConfig.ExternalId),
-		"role_arn":         aws.StringValue(analyticsConfig.RoleArn),
 		"user_data_shared": aws.BoolValue(analyticsConfig.UserDataShared),
+	}
+
+	if analyticsConfig.ExternalId != nil {
+		m["external_id"] = aws.StringValue(analyticsConfig.ExternalId)
+	}
+
+	if analyticsConfig.RoleArn != nil {
+		m["role_arn"] = aws.StringValue(analyticsConfig.RoleArn)
+	}
+
+	if analyticsConfig.ApplicationId != nil {
+		m["application_id"] = aws.StringValue(analyticsConfig.ApplicationId)
+	}
+
+	if analyticsConfig.ApplicationArn != nil {
+		m["application_arn"] = aws.StringValue(analyticsConfig.ApplicationArn)
 	}
 
 	return []interface{}{m}
