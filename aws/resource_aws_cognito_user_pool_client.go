@@ -166,16 +166,16 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"application_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ExactlyOneOf: []string{"analytics_configuration.0.application_id", "analytics_configuration.0.application_arn"},
+						},
+						"application_arn": {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ExactlyOneOf:  []string{"analytics_configuration.0.application_id", "analytics_configuration.0.application_arn"},
 							ConflictsWith: []string{"analytics_configuration.0.external_id", "analytics_configuration.0.role_arn"},
-						},
-						"application_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ExactlyOneOf: []string{"analytics_configuration.0.application_id", "analytics_configuration.0.application_arn"},
-							ValidateFunc: validateArn,
+							ValidateFunc:  validateArn,
 						},
 						"external_id": {
 							Type:          schema.TypeString,
