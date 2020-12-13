@@ -223,59 +223,6 @@ func resourceAwsLightsailInstanceCreate(d *schema.ResourceData, meta interface{}
 	return resourceAwsLightsailInstanceRead(d, meta)
 }
 
-func resourceAwsLightsailInstanceCreateFromSnapshot(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lightsailconn
-
-	iName := d.Get("name").(string)
-
-	req := lightsail.CreateInstancesFromSnapshotInput{
-		AvailabilityZone:     aws.String(d.Get("availability_zone").(string)),
-		InstanceSnapshotName: aws.String(d.Get("instance_snapshot_name").(string)),
-		BundleId:             aws.String(d.Get("bundle_id").(string)),
-		InstanceNames:        aws.StringSlice([]string{iName}),
-	}
-
-	if v, ok := d.GetOk("key_pair_name"); ok {
-		req.KeyPairName = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("user_data"); ok {
-		req.UserData = aws.String(v.(string))
-	}
-
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		req.Tags = keyvaluetags.New(v).IgnoreAws().LightsailTags()
-	}
-
-	resp, err := conn.CreateInstancesFromSnapshot(&req)
-	if err != nil {
-		return err
-	}
-
-	if len(resp.Operations) == 0 {
-		return fmt.Errorf("No operations found for CreateInstance request")
-	}
-
-	op := resp.Operations[0]
-	d.SetId(d.Get("name").(string))
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"Started"},
-		Target:     []string{"Completed", "Succeeded"},
-		Refresh:    resourceAwsLightsailOperationRefreshFunc(op.Id, meta),
-		Timeout:    10 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		// We don't return an error here because the Create call succeeded
-		log.Printf("[ERR] Error waiting for instance (%s) to become ready: %s", d.Id(), err)
-	}
-
-	return resourceAwsLightsailInstanceRead(d, meta)
-}
-
 func resourceAwsLightsailInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lightsailconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
