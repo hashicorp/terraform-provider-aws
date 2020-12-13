@@ -5157,10 +5157,6 @@ resource "aws_instance" "test" {
     Name = %[1]q
   }
 }
-
-data "aws_instance" "test" {
-  instance_id = aws_instance.test.id
-}
 `, name, enabled))
 }
 

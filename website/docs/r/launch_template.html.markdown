@@ -152,7 +152,6 @@ The following arguments are supported:
 * `hibernation_options` - The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 * `enclave_options` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
 
-
 ### Block devices
 
 Configure additional volumes of the instance besides specified by the AMI. It's a good idea to familiarize yourself with
