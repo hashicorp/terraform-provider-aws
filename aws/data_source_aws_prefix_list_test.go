@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"testing"
 
@@ -38,6 +39,19 @@ func TestAccDataSourceAwsPrefixList_filter(t *testing.T) {
 					testAccDataSourceAwsPrefixListCheck("data.aws_prefix_list.s3_by_id"),
 					testAccDataSourceAwsPrefixListCheck("data.aws_prefix_list.s3_by_name"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsPrefixList_nameDoesNotOverrideFilter(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDataSourceAwsPrefixListConfig_nameDoesNotOverrideFilter,
+				ExpectError: regexp.MustCompile(`no matching prefix list found`),
 			},
 		},
 	})
@@ -126,6 +140,19 @@ data "aws_prefix_list" "s3_by_id" {
   filter {
     name   = "prefix-list-id"
     values = [data.aws_prefix_list.s3_by_name.id]
+  }
+}
+`
+
+const testAccDataSourceAwsPrefixListConfig_nameDoesNotOverrideFilter = `
+data "aws_region" "current" {}
+
+data "aws_prefix_list" "test" {
+  name = "com.amazonaws.${data.aws_region.current.name}.dynamodb"
+
+  filter {
+    name   = "prefix-list-name"
+    values = ["com.amazonaws.${data.aws_region.current.name}.s3"]
   }
 }
 `
