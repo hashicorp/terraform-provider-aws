@@ -117,8 +117,8 @@ resource "aws_s3_bucket" "bucket" {
     prefix = "log/"
 
     tags = {
-      "rule"      = "log"
-      "autoclean" = "true"
+      rule      = "log"
+      autoclean = "true"
     }
 
     transition {
