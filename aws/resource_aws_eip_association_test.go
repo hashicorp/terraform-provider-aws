@@ -452,7 +452,7 @@ resource "aws_eip_association" "test" {
 func testAccAWSEIPAssociationConfig_instance() string {
 	return composeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
-		fmt.Sprintf(`
+		`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.small"
@@ -464,7 +464,7 @@ resource "aws_eip_association" "test" {
   allocation_id = aws_eip.test.id
   instance_id   = aws_instance.test.id
 }
-`))
+`)
 }
 
 const testAccAWSEIPAssociationConfig_networkInterface = `
