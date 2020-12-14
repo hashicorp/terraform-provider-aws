@@ -45,9 +45,7 @@ func resourceAwsCodeStarConnectionsConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					codestarconnections.ProviderTypeBitbucket,
-				}, false),
+				ValidateFunc: validation.StringInSlice(codestarconnections.ProviderType_Values(), false),
 			},
 		},
 	}
