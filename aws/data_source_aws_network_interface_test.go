@@ -75,6 +75,7 @@ func TestAccDataSourceAwsNetworkInterface_CarrierIPAssociation(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.allocation_id", eipResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.association_id", eipAssociationResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.carrier_ip", eipResourceName, "carrier_ip"),
+					resource.TestCheckResourceAttr(datasourceName, "association.0.customer_owned_ip", ""),
 					testAccCheckResourceAttrAccountID(datasourceName, "association.0.ip_owner_id"),
 					resource.TestCheckResourceAttr(datasourceName, "association.0.public_dns_name", ""),
 					resource.TestCheckResourceAttr(datasourceName, "association.0.public_ip", ""),
@@ -121,6 +122,7 @@ func TestAccDataSourceAwsNetworkInterface_PublicIPAssociation(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.allocation_id", eipResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.association_id", eipAssociationResourceName, "id"),
 					resource.TestCheckResourceAttr(datasourceName, "association.0.carrier_ip", ""),
+					resource.TestCheckResourceAttr(datasourceName, "association.0.customer_owned_ip", ""),
 					testAccCheckResourceAttrAccountID(datasourceName, "association.0.ip_owner_id"),
 					// Public DNS name is not set by the EC2 API.
 					resource.TestCheckResourceAttr(datasourceName, "association.0.public_dns_name", ""),

@@ -1159,12 +1159,13 @@ func flattenEc2AttributeValues(l []*ec2.AttributeValue) []string {
 
 func flattenEc2NetworkInterfaceAssociation(a *ec2.NetworkInterfaceAssociation) []interface{} {
 	return []interface{}{map[string]interface{}{
-		"allocation_id":   aws.StringValue(a.AllocationId),
-		"association_id":  aws.StringValue(a.AssociationId),
-		"carrier_ip":      aws.StringValue(a.CarrierIp),
-		"ip_owner_id":     aws.StringValue(a.IpOwnerId),
-		"public_dns_name": aws.StringValue(a.PublicDnsName),
-		"public_ip":       aws.StringValue(a.PublicIp),
+		"allocation_id":     aws.StringValue(a.AllocationId),
+		"association_id":    aws.StringValue(a.AssociationId),
+		"carrier_ip":        aws.StringValue(a.CarrierIp),
+		"customer_owned_ip": aws.StringValue(a.CustomerOwnedIp),
+		"ip_owner_id":       aws.StringValue(a.IpOwnerId),
+		"public_dns_name":   aws.StringValue(a.PublicDnsName),
+		"public_ip":         aws.StringValue(a.PublicIp),
 	}}
 }
 
