@@ -4,6 +4,10 @@ FEATURES
 
 * **New Resource:** `aws_lakeformation_resource` ([#13267](https://github.com/hashicorp/terraform-provider-aws/issues/13267))
 
+ENHANCEMENTS
+
+* data-source/aws_autoscaling_group: Adds `launch_template` attribute [GH-16297]
+
 ## 3.21.0 (December 11, 2020)
 
 NOTES
