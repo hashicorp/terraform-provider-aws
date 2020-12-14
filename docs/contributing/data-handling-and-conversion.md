@@ -126,7 +126,7 @@ The maintainers can provide guidance on appropriate solutions for cases not ment
 
 All Attributes and Blocks at the top level of `schema.Resource` `Schema` are considered "root" attributes. These will always be handled with receiver methods on `ResourceData`, such as reading with `d.Get()`, `d.GetOk()`, etc. and writing with `d.Set()`. Any nested Attributes and Blocks inside those root Blocks will then be handled with standard Go types according to the table in the [Type Mapping section](#type-mapping).
 
-By convention in the codebase, each level of Block handling beyond root attributes should be separated into "expand" and "flatten" functions, typically named `expand{Service}{Type}` and `flatten{Service}{Type}`. The [Recommended Implementations section](#recommended-implementations) will go into those details.
+By convention in the codebase, each level of Block handling beyond root attributes should be separated into "expand" functions that convert Terraform Plugin SDK data into the equivalent AWS Go SDK type (typically named `expand{Service}{Type}`) and "flatten" functions that convert an AWS Go SDK type into the equivalent Terraform Plugin SDK data (typically named `flatten{Service}{Type}`). The [Recommended Implementations section](#recommended-implementations) will go into those details.
 
 _NOTE: While it is possible in certain type scenarios to deeply read and write ResourceData information for a Block Attribute, this practice is discouraged in preference of only handling root Attributes and Blocks._
 
