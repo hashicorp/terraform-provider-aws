@@ -103,7 +103,7 @@ func resourceAwsMqBroker() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					mq.EngineTypeActivemq,
+					mq.EngineTypeActivemq, mq.EngineTypeRabbitmq,
 				}, true),
 			},
 			"engine_version": {
