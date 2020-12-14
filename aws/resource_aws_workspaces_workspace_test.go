@@ -89,7 +89,8 @@ func TestAccAwsWorkspacesWorkspace_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", workspaces.RunningModeAlwaysOn),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", "0"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", "10"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf-testacc-workspaces-workspace-%[1]s", rName)),
 				),
 			},
 			{
@@ -544,7 +545,9 @@ resource "aws_workspaces_workspace" "test" {
 }
 
 func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesC(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
+	return composeConfig(
+		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
+		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
@@ -555,8 +558,12 @@ resource "aws_workspaces_workspace" "test" {
 
   workspace_properties {
   }
+
+  tags = {
+    Name = "tf-testacc-workspaces-workspace-%[1]s"
+  }
 }
-`
+`, rName))
 }
 
 func testAccWorkspacesWorkspaceConfig_validateRootVolumeSize(rName string) string {
