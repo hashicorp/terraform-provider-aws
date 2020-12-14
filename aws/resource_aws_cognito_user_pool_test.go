@@ -728,18 +728,24 @@ func TestAccAWSCognitoUserPool_withEmailConfiguration(t *testing.T) {
 		t.Skip("'TEST_AWS_SES_VERIFIED_EMAIL_ARN' not set, skipping test.")
 	}
 
+	configurationSet, ok := os.LookupEnv("TEST_AWS_SES_CONFIGURATION_SET")
+	if !ok {
+		t.Skip("'TEST_AWS_SES_CONFIGURATION_SET' not set, skipping test.")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolConfig_withEmailConfiguration(rName, "", "", "", "COGNITO_DEFAULT"),
+				Config: testAccAWSCognitoUserPoolConfig_withEmailConfiguration(rName, "", "", "", "COGNITO_DEFAULT", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.reply_to_email_address", ""),
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.email_sending_account", "COGNITO_DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.from_email_address", ""),
+					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.configuration_set", ""),
 				),
 			},
 			{
@@ -748,13 +754,14 @@ func TestAccAWSCognitoUserPool_withEmailConfiguration(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCognitoUserPoolConfig_withEmailConfiguration(rName, replyTo, sourceARN, "John Smith <john@smith.com>", "DEVELOPER"),
+				Config: testAccAWSCognitoUserPoolConfig_withEmailConfiguration(rName, replyTo, sourceARN, "John Smith <john@smith.com>", "DEVELOPER", configurationSet),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.reply_to_email_address", replyTo),
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.email_sending_account", "DEVELOPER"),
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.source_arn", sourceARN),
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.from_email_address", "John Smith <john@smith.com>"),
+					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.configuration_set", configurationSet),
 				),
 			},
 		},
@@ -1594,7 +1601,7 @@ resource "aws_cognito_user_pool" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSCognitoUserPoolConfig_withEmailConfiguration(rName, email, arn, from, account string) string {
+func testAccAWSCognitoUserPoolConfig_withEmailConfiguration(rName, email, arn, from, account, configuration_set string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -1604,9 +1611,10 @@ resource "aws_cognito_user_pool" "test" {
     source_arn             = %[3]q
     from_email_address     = %[4]q
     email_sending_account  = %[5]q
+    configuration_set      = %[6]q
   }
 }
-`, rName, email, arn, from, account)
+`, rName, email, arn, from, account, configuration_set)
 }
 
 func testAccAWSCognitoUserPoolConfig_withAliasAttributes(rName string) string {
