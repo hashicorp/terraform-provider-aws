@@ -89,43 +89,34 @@ func dataSourceAwsWorkspacesDirectory() *schema.Resource {
 			"workspace_access_properties": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Optional: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"device_type_android": {
 							Type:     schema.TypeString,
-							Optional: true,
 							Computed: true,
 						},
 						"device_type_chromeos": {
 							Type:     schema.TypeString,
-							Optional: true,
 							Computed: true,
 						},
 						"device_type_ios": {
 							Type:     schema.TypeString,
-							Optional: true,
 							Computed: true,
 						},
 						"device_type_osx": {
 							Type:     schema.TypeString,
-							Optional: true,
 							Computed: true,
 						},
 						"device_type_web": {
 							Type:     schema.TypeString,
-							Optional: true,
 							Computed: true,
 						},
 						"device_type_windows": {
 							Type:     schema.TypeString,
-							Optional: true,
 							Computed: true,
 						},
 						"device_type_zeroclient": {
 							Type:     schema.TypeString,
-							Optional: true,
 							Computed: true,
 						},
 					},
@@ -134,33 +125,27 @@ func dataSourceAwsWorkspacesDirectory() *schema.Resource {
 			"workspace_creation_properties": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Optional: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"custom_security_group_id": {
 							Type:     schema.TypeString,
-							Optional: true,
 							Computed: true,
 						},
 						"default_ou": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"enable_internet_access": {
 							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+							Computed: true,
 						},
 						"enable_maintenance_mode": {
 							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+							Computed: true,
 						},
 						"user_enabled_as_local_administrator": {
 							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+							Computed: true,
 						},
 					},
 				},
