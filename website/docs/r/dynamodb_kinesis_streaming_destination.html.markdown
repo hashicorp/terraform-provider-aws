@@ -14,8 +14,8 @@ Configures a [Kinesis streaming destination](https://docs.aws.amazon.com/amazond
 
 ```hcl
 resource "aws_dynamodb_table" "orders" {
-  name           = "orders"
-  hash_key       = "id"
+  name     = "orders"
+  hash_key = "id"
 
   attribute {
     name = "id"
@@ -38,7 +38,7 @@ resource "aws_dynamodb_kinesis_streaming_destination" "order_changes" {
 
 The following arguments are supported:
 
-* `table_name` - (Required) The name of the DynamoDB table to capture changes from. There 
+* `table_name` - (Required) The name of the DynamoDB table to capture changes from. There
   can only be one Kinesis streaming destination for a given DynamoDB table.
-* `stream_arn` - (Required) The arn of the Kinesis stream to capture changes into. This 
+* `stream_arn` - (Required) The arn of the Kinesis stream to capture changes into. This
 must exist in the same account and region as the DynamoDB table.
