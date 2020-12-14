@@ -118,8 +118,8 @@ func testAccAwsDynamodbKinesisStreamingDestinationConfigBasic(tableName string, 
 	return composeConfig(testAccAwsDynamodbKinesisStreamingDestinationConfigBase(tableName, streamName),
 		`
 resource "aws_dynamodb_kinesis_streaming_destination" "test" {
-	table_name = aws_dynamodb_table.test.name
-	stream_arn = aws_kinesis_stream.test.arn
+  table_name = aws_dynamodb_table.test.name
+  stream_arn = aws_kinesis_stream.test.arn
 }
 `)
 }
