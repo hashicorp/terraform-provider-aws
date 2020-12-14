@@ -715,19 +715,20 @@ resource "aws_launch_configuration" "test" {
 }
 
 func testAccAWSLaunchConfigurationConfigMetadataOptions(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name = %[1]q
-  image_id = "${data.aws_ami.ubuntu.id}"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t3.nano"
-
+  name          = %[1]q
   metadata_options {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSLaunchConfigurationConfig() string {

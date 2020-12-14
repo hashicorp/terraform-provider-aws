@@ -163,10 +163,13 @@ data "aws_launch_configuration" "foo" {
 }
 
 func testAccLaunchConfigurationDataSourceConfig_metadataOptions(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  name = %[1]q
-
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t3.nano"
+  name          = %[1]q
   metadata_options {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
@@ -177,7 +180,7 @@ resource "aws_launch_configuration" "test" {
 data "aws_launch_configuration" "test" {
   name = aws_launch_configuration.test.name
 }
-`, rName)
+`, rName))
 }
 
 func testAccLaunchConfigurationDataSourceConfigEbsNoDevice(rName string) string {
