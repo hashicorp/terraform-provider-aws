@@ -118,7 +118,7 @@ func resourceAwsDynamodbKinesisStreamingDestinationDelete(ctx context.Context, d
 	return nil
 }
 
-func createDynamodbKinesisStreamingDestinationResourceId(tableName  string, streamArn string) string {
+func createDynamodbKinesisStreamingDestinationResourceId(tableName string, streamArn string) string {
 	return fmt.Sprintf("%s_%s", tableName, streamArn)
 }
 
