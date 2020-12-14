@@ -101,7 +101,7 @@ func TestAccDataSourceAwsNetworkInterface_CarrierIPAssociation(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsNetworkInterface_EIPAssociation(t *testing.T) {
+func TestAccDataSourceAwsNetworkInterface_PublicIPAssociation(t *testing.T) {
 	datasourceName := "data.aws_network_interface.test"
 	resourceName := "aws_network_interface.test"
 	eipResourceName := "aws_eip.test"
@@ -115,7 +115,7 @@ func TestAccDataSourceAwsNetworkInterface_EIPAssociation(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsNetworkInterfaceConfigEIPAssociation(rName),
+				Config: testAccDataSourceAwsNetworkInterfaceConfigPublicIPAssociation(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "association.#", "1"),
 					resource.TestCheckResourceAttrPair(datasourceName, "association.0.allocation_id", eipResourceName, "id"),
@@ -266,7 +266,7 @@ data "aws_network_interface" "test" {
 `, rName))
 }
 
-func testAccDataSourceAwsNetworkInterfaceConfigEIPAssociation(rName string) string {
+func testAccDataSourceAwsNetworkInterfaceConfigPublicIPAssociation(rName string) string {
 	return composeConfig(
 		testAccDataSourceAwsNetworkInterfaceConfigBase(rName),
 		fmt.Sprintf(`
