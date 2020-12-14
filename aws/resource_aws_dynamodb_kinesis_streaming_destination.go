@@ -53,6 +53,8 @@ func resourceAwsDynamodbKinesisStreamingDestinationCreate(ctx context.Context, d
 		return diag.FromErr(fmt.Errorf("failed waiting for Kinesis streaming destination to become active: %s", err))
 	}
 
+	d.SetId(createDynamodbKinesisStreamingDestinationResourceId(tableName, streamArn))
+
 	return resourceAwsDynamodbKinesisStreamingDestinationRead(ctx, d, meta)
 }
 
@@ -80,7 +82,7 @@ func resourceAwsDynamodbKinesisStreamingDestinationRead(ctx context.Context, d *
 		if *destination.StreamArn == streamArn {
 			if *destination.DestinationStatus == dynamodb.DestinationStatusActive ||
 				*destination.DestinationStatus == dynamodb.DestinationStatusEnabling {
-				d.SetId(fmt.Sprintf("%s_%s", tableName, streamArn))
+				d.SetId(createDynamodbKinesisStreamingDestinationResourceId(tableName, streamArn))
 			} else {
 				log.Printf("[WARN] Dynamodb Kinesis streaming destination (%s, %s) not active: %s", tableName, streamArn, *destination.DestinationStatus)
 				d.SetId("")
@@ -114,6 +116,10 @@ func resourceAwsDynamodbKinesisStreamingDestinationDelete(ctx context.Context, d
 	}
 
 	return nil
+}
+
+func createDynamodbKinesisStreamingDestinationResourceId(tableName  string, streamArn string) string {
+	return fmt.Sprintf("%s_%s", tableName, streamArn)
 }
 
 func waitForDynamodbKinesisStreamingDestinationToBeActive(ctx context.Context, tableName string, streamArn string, timeout time.Duration, conn *dynamodb.DynamoDB) error {
