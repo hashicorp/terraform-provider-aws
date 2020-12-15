@@ -8,6 +8,10 @@ ENHANCEMENTS
 
 * data-source/aws_autoscaling_group: Adds `launch_template` attribute [GH-16297]
 
+BUG FIXES
+
+* resource/aws_workspaces_workspace: Prevent panic from terminated WorkSpace [GH-16692]
+
 ## 3.21.0 (December 11, 2020)
 
 NOTES
