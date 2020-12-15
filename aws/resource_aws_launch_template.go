@@ -405,6 +405,20 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				},
 			},
 
+			"enclave_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
+			},
+
 			"monitoring": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -803,6 +817,10 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error setting metadata_options: %s", err)
 	}
 
+	if err := d.Set("enclave_options", getEnclaveOptions(ltData.EnclaveOptions)); err != nil {
+		return fmt.Errorf("error setting enclave_options: %s", err)
+	}
+
 	if err := d.Set("monitoring", getMonitoring(ltData.Monitoring)); err != nil {
 		return fmt.Errorf("error setting monitoring: %s", err)
 	}
@@ -1120,6 +1138,17 @@ func flattenLaunchTemplateInstanceMetadataOptions(opts *ec2.LaunchTemplateInstan
 	return []interface{}{m}
 }
 
+func getEnclaveOptions(m *ec2.LaunchTemplateEnclaveOptions) []interface{} {
+	s := []interface{}{}
+	if m != nil {
+		mo := map[string]interface{}{
+			"enabled": aws.BoolValue(m.Enabled),
+		}
+		s = append(s, mo)
+	}
+	return s
+}
+
 func getMonitoring(m *ec2.LaunchTemplatesMonitoring) []interface{} {
 	s := []interface{}{}
 	if m != nil {
@@ -1391,6 +1420,17 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 
 	if v, ok := d.GetOk("metadata_options"); ok {
 		opts.MetadataOptions = expandLaunchTemplateInstanceMetadataOptions(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("enclave_options"); ok {
+		m := v.([]interface{})
+		if len(m) > 0 && m[0] != nil {
+			mData := m[0].(map[string]interface{})
+			enclaveOptions := &ec2.LaunchTemplateEnclaveOptionsRequest{
+				Enabled: aws.Bool(mData["enabled"].(bool)),
+			}
+			opts.EnclaveOptions = enclaveOptions
+		}
 	}
 
 	if v, ok := d.GetOk("monitoring"); ok {
@@ -1816,6 +1856,7 @@ var updateKeys = []string{
 	"ebs_optimized",
 	"elastic_gpu_specifications",
 	"elastic_inference_accelerator",
+	"enclave_options",
 	"hibernation_options",
 	"iam_instance_profile",
 	"image_id",

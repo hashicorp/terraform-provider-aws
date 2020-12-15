@@ -108,6 +108,7 @@ instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/Use
 * `credit_specification` - (Optional) Customize the credit specification of the instance. See [Credit Specification](#credit-specification) below for more details.
 * `hibernation` - (Optional) If true, the launched EC2 instance will support hibernation.
 * `metadata_options` - (Optional) Customize the metadata options of the instance. See [Metadata Options](#metadata-options) below for more details.
+* `enclave_options` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
 
 ### Timeouts
 
@@ -210,6 +211,18 @@ The `metadata_options` block supports the following:
 * `http_put_response_hop_limit` - (Optional) The desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Can be an integer from `1` to `64`. (Default: `1`).
 
 For more information, see the documentation on the [Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html).
+
+### Enclave Options
+
+-> **NOTE:** Changing `enabled` will cause the resource to be destroyed and re-created.
+
+Enclave options apply to the instance at boot time.
+
+The `enclave_options` block supports the following:
+
+* `enabled` - (Optional) Whether Nitro Enclaves will be enabled on the instance. (Default: `"false"`).
+
+For more information, see the documentation on [Nitro Enclaves](https://docs.aws.amazon.com/enclaves/latest/user/nitro-enclave.html).
 
 ### Example
 

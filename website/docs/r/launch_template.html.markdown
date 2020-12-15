@@ -150,6 +150,7 @@ The following arguments are supported:
 * `tags` - (Optional) A map of tags to assign to the launch template.
 * `user_data` - The Base64-encoded user data to provide when launching the instance.
 * `hibernation_options` - The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
+* `enclave_options` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
 
 ### Block devices
 
@@ -323,6 +324,14 @@ The `placement` block supports the following:
 The `hibernation_options` block supports the following:
 
 * `configured` - If set to `true`, the launched EC2 instance will hibernation enabled.
+
+### Enclave Options
+
+The `enclave_options` block supports the following:
+
+* `enabled` - If set to `true`, Nitro Enclaves will be enabled on the instance.
+
+For more information, see the documentation on [Nitro Enclaves](https://docs.aws.amazon.com/enclaves/latest/user/nitro-enclave.html).
 
 ### Tag Specifications
 

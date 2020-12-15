@@ -489,6 +489,26 @@ func TestAccAWSInstanceDataSource_metadataOptions(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstanceDataSource_enclaveOptions(t *testing.T) {
+	resourceName := "aws_instance.test"
+	datasourceName := "data.aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_enclaveOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "enclave_options.#", resourceName, "enclave_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "enclave_options.0.enabled", resourceName, "enclave_options.0.enabled"),
+				),
+			},
+		},
+	})
+}
+
 // Lookup based on InstanceID
 var testAccInstanceDataSourceConfig = testAccLatestAmazonLinuxHvmEbsAmiConfig() + `
 resource "aws_instance" "test" {
@@ -912,6 +932,32 @@ resource "aws_instance" "test" {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
+  }
+}
+
+data "aws_instance" "test" {
+  instance_id = aws_instance.test.id
+}
+`, rName))
+}
+
+func testAccInstanceDataSourceConfig_enclaveOptions(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAwsInstanceVpcConfig(rName, false),
+		testAccAvailableEc2InstanceTypeForRegion("c5a.xlarge", "c5.xlarge"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  enclave_options {
+    enabled = true
   }
 }
 

@@ -3109,6 +3109,41 @@ func TestAccAWSInstance_metadataOptions(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstance_enclaveOptions(t *testing.T) {
+	var instance1, instance2 ec2.Instance
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigEnclaveOptions(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance1),
+					resource.TestCheckResourceAttr(resourceName, "enclave_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enclave_options.0.enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInstanceConfigEnclaveOptions(false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance2),
+					testAccCheckInstanceRecreated(&instance1, &instance2),
+					resource.TestCheckResourceAttr(resourceName, "enclave_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enclave_options.0.enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceNotRecreated(t *testing.T,
 	before, after *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -5123,6 +5158,29 @@ resource "aws_instance" "test" {
   }
 }
 `, rName))
+}
+
+func testAccInstanceConfigEnclaveOptions(enabled bool) string {
+	name := "tf-acc-instance-enclaves"
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAwsInstanceVpcConfig(name, false),
+		testAccAvailableEc2InstanceTypeForRegion("c5a.xlarge", "c5.xlarge"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  enclave_options {
+    enabled = %[2]t
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, name, enabled))
 }
 
 func testAccAwsEc2InstanceConfigDynamicEBSBlockDevices() string {

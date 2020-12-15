@@ -119,5 +119,7 @@ interpolation.
     * `http_endpoint` - The state of the metadata service: `enabled`, `disabled`.
     * `http_tokens` - If session tokens are required: `optional`, `required`.
     * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
+* `enclave_options` - The enclave options of the Instance.
+    * `enabled` - Whether Nitro Enclaves are enabled.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html
