@@ -132,7 +132,7 @@ The following arguments are supported:
 ##### Custom Sender Constraints
 
 * `lambda_arn` (Required) - The ARN of the custom sender Lambda.
-* `lambda_version` (Optional) - The Lambda version represents the signature of the "request" attribute in the "event" information Amazon Cognito passes to your custom sender Lambda function. The only supported value is V1_0.
+* `lambda_version` (Optional) - The Lambda version represents the signature of the "request" attribute in the "event" information Amazon Cognito passes to your custom sender Lambda function. Default value is "V1_0".
 
 #### Password Policy
 

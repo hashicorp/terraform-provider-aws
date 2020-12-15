@@ -193,9 +193,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							ValidateFunc: validateArn,
 						},
 						"custom_email_sender": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:         schema.TypeList,
+							Optional:     true,
+							MaxItems:     1,
+							Computed:     true,
+							RequiredWith: []string{"lambda_config.0.kms_key_id"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"lambda_arn": {
@@ -218,9 +220,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							ValidateFunc: validateArn,
 						},
 						"custom_sms_sender": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:         schema.TypeList,
+							Optional:     true,
+							MaxItems:     1,
+							Computed:     true,
+							RequiredWith: []string{"lambda_config.0.kms_key_id"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"lambda_arn": {
