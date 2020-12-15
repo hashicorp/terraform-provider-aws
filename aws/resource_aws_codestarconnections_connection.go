@@ -25,11 +25,6 @@ func resourceAwsCodeStarConnectionsConnection() *schema.Resource {
 				Computed: true,
 			},
 
-			"connection_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"connection_status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -87,7 +82,6 @@ func resourceAwsCodeStarConnectionsConnectionRead(d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(rule.Connection.ConnectionArn))
 	d.Set("arn", rule.Connection.ConnectionArn)
-	d.Set("connection_arn", rule.Connection.ConnectionArn)
 	d.Set("connection_name", rule.Connection.ConnectionName)
 	d.Set("connection_status", rule.Connection.ConnectionStatus)
 	d.Set("provider_type", rule.Connection.ProviderType)

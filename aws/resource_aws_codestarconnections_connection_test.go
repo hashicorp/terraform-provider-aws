@@ -26,7 +26,6 @@ func TestAccAWSCodeStarConnectionsConnection_Basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccMatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("connection/.+")),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("connection/.+")),
-					testAccMatchResourceAttrRegionalARN(resourceName, "connection_arn", "codestar-connections", regexp.MustCompile("connection/.+")),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeBitbucket),
 					resource.TestCheckResourceAttr(resourceName, "connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", codestarconnections.ConnectionStatusPending),
