@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -119,17 +118,11 @@ func resourceAwsAmi() *schema.Resource {
 						},
 
 						"volume_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							Default:  ec2.VolumeTypeStandard,
-							ValidateFunc: validation.StringInSlice([]string{
-								ec2.VolumeTypeStandard,
-								ec2.VolumeTypeIo1,
-								ec2.VolumeTypeGp2,
-								ec2.VolumeTypeSc1,
-								ec2.VolumeTypeSt1,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							Default:      ec2.VolumeTypeStandard,
+							ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
 						},
 					},
 				},

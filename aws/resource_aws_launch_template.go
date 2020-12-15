@@ -133,22 +133,22 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
+									"throughput": {
+										Type:         schema.TypeInt,
+										Computed:     true,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(125, 1000),
+									},
 									"volume_size": {
 										Type:     schema.TypeInt,
 										Optional: true,
 										Computed: true,
 									},
 									"volume_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											ec2.VolumeTypeStandard,
-											ec2.VolumeTypeGp2,
-											ec2.VolumeTypeIo1,
-											ec2.VolumeTypeSc1,
-											ec2.VolumeTypeSt1,
-										}, false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
 									},
 								},
 							},
@@ -424,6 +424,12 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"associate_carrier_ip_address": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+							ValidateFunc:     validateTypeStringNullableBoolean,
+						},
 						"associate_public_ip_address": {
 							Type:             schema.TypeString,
 							Optional:         true,
@@ -650,7 +656,7 @@ func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) e
 		TagSpecifications:  ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeLaunchTemplate),
 	}
 
-	if v, ok := d.GetOk("description"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("description"); ok {
 		launchTemplateOpts.VersionDescription = aws.String(v.(string))
 	}
 
@@ -660,7 +666,7 @@ func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	launchTemplate := resp.LaunchTemplate
-	d.SetId(*launchTemplate.LaunchTemplateId)
+	d.SetId(aws.StringValue(launchTemplate.LaunchTemplateId))
 
 	log.Printf("[DEBUG] Launch Template created: %q (version %d)",
 		*launchTemplate.LaunchTemplateId, *launchTemplate.LatestVersionNumber)
@@ -935,6 +941,9 @@ func getBlockDeviceMappings(m []*ec2.LaunchTemplateBlockDeviceMapping) []interfa
 			if v.Ebs.SnapshotId != nil {
 				ebs["snapshot_id"] = aws.StringValue(v.Ebs.SnapshotId)
 			}
+			if v.Ebs.Throughput != nil {
+				ebs["throughput"] = aws.Int64Value(v.Ebs.Throughput)
+			}
 
 			mapping["ebs"] = []interface{}{ebs}
 		}
@@ -1136,6 +1145,11 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 			"private_ip_address":   aws.StringValue(v.PrivateIpAddress),
 			"subnet_id":            aws.StringValue(v.SubnetId),
 		}
+
+		if v.AssociateCarrierIpAddress != nil {
+			networkInterface["associate_carrier_ip_address"] = strconv.FormatBool(aws.BoolValue(v.AssociateCarrierIpAddress))
+		}
+
 		if v.AssociatePublicIpAddress != nil {
 			networkInterface["associate_public_ip_address"] = strconv.FormatBool(aws.BoolValue(v.AssociatePublicIpAddress))
 		}
@@ -1502,6 +1516,10 @@ func readEbsBlockDeviceFromConfig(ebs map[string]interface{}) (*ec2.LaunchTempla
 		ebsDevice.SnapshotId = aws.String(v)
 	}
 
+	if v := ebs["throughput"].(int); v > 0 {
+		ebsDevice.Throughput = aws.Int64(int64(v))
+	}
+
 	if v := ebs["volume_size"]; v != nil {
 		ebsDevice.VolumeSize = aws.Int64(int64(v.(int)))
 	}
@@ -1537,6 +1555,14 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) (*ec2.LaunchTemp
 
 	if v, ok := ni["network_interface_id"].(string); ok && v != "" {
 		networkInterface.NetworkInterfaceId = aws.String(v)
+	}
+
+	if v, ok := ni["associate_carrier_ip_address"]; ok && v.(string) != "" {
+		vBool, err := strconv.ParseBool(v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("error converting associate_carrier_ip_address %q from string to boolean: %s", v.(string), err)
+		}
+		networkInterface.AssociateCarrierIpAddress = aws.Bool(vBool)
 	}
 
 	if v, ok := ni["associate_public_ip_address"]; ok && v.(string) != "" {

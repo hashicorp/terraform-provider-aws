@@ -134,6 +134,28 @@ func TestAccAWSEksFargateProfile_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSEksFargateProfile_Multi_Profile(t *testing.T) {
+	var fargateProfile eks.FargateProfile
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName1 := "aws_eks_fargate_profile.test.0"
+	resourceName2 := "aws_eks_fargate_profile.test.1"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksFargateProfile(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEksFargateProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEksFargateProfileConfigFargateProfileMultiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksFargateProfileExists(resourceName1, &fargateProfile),
+					testAccCheckAWSEksFargateProfileExists(resourceName2, &fargateProfile),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEksFargateProfile_Selector_Labels(t *testing.T) {
 	var fargateProfile1 eks.FargateProfile
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -338,7 +360,7 @@ func testAccPreCheckAWSEksFargateProfile(t *testing.T) {
 The allowed regions are hardcoded in the acceptance testing since dynamically determining the
 functionality requires creating and destroying a real EKS Cluster, which is a lengthy process.
 If this check is out of date, please create an issue in the Terraform AWS Provider
-repository (https://github.com/terraform-providers/terraform-provider-aws) or submit a PR to update the
+repository (https://github.com/hashicorp/terraform-provider-aws) or submit a PR to update the
 check itself (testAccPreCheckAWSEksFargateProfile).
 
 For the most up to date supported region information, see the EKS User Guide:
@@ -366,8 +388,8 @@ resource "aws_iam_role" "cluster" {
 
   assume_role_policy = jsonencode({
     Statement = [{
-      Action    = "sts:AssumeRole"
-      Effect    = "Allow"
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
       Principal = {
         Service = "eks.${data.aws_partition.current.dns_suffix}"
       }
@@ -383,11 +405,11 @@ resource "aws_iam_role_policy_attachment" "cluster-AmazonEKSClusterPolicy" {
 
 resource "aws_iam_role" "pod" {
   name = "%[1]s-pod"
-  
+
   assume_role_policy = jsonencode({
     Statement = [{
-      Action    = "sts:AssumeRole"
-      Effect    = "Allow"
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
       Principal = {
         Service = "eks-fargate-pods.${data.aws_partition.current.dns_suffix}"
       }
@@ -434,7 +456,7 @@ resource "aws_subnet" "private" {
   count = 2
 
   availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index+2)
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index + 2)
   vpc_id            = aws_vpc.test.id
 
   tags = {
@@ -522,6 +544,30 @@ resource "aws_eks_fargate_profile" "test" {
   ]
 }
 `, rName)
+}
+
+func testAccAWSEksFargateProfileConfigFargateProfileMultiple(rName string) string {
+	return composeConfig(
+		testAccAWSEksFargateProfileConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_eks_fargate_profile" "test" {
+  count = 2
+
+  cluster_name           = aws_eks_cluster.test.name
+  fargate_profile_name   = "%[1]s-${count.index}"
+  pod_execution_role_arn = aws_iam_role.pod.arn
+  subnet_ids             = aws_subnet.private[*].id
+
+  selector {
+    namespace = "test"
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.pod-AmazonEKSFargatePodExecutionRolePolicy,
+    aws_route_table_association.private,
+  ]
+}
+`, rName))
 }
 
 func testAccAWSEksFargateProfileConfigSelectorLabels1(rName, labelKey1, labelValue1 string) string {

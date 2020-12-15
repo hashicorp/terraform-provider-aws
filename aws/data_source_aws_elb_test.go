@@ -10,7 +10,7 @@ import (
 
 func TestAccDataSourceAWSELB_basic(t *testing.T) {
 	// Must be less than 32 characters for ELB name
-	rName := fmt.Sprintf("TestAccDataSourceAWSELB-%s", acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("TestAccDataSourceAWSELB-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -42,7 +42,7 @@ resource "aws_elb" "elb_test" {
   name            = "%[1]s"
   internal        = true
   security_groups = [aws_security_group.elb_test.id]
-  subnets         = [aws_subnet.elb_test.0.id, aws_subnet.elb_test.1.id]
+  subnets         = aws_subnet.elb_test[*].id
 
   idle_timeout = 30
 

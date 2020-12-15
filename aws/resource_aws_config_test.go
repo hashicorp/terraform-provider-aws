@@ -61,6 +61,12 @@ func TestAccAWSConfig_serial(t *testing.T) {
 			"TagKeyScope":               testAccConfigOrganizationManagedRule_TagKeyScope,
 			"TagValueScope":             testAccConfigOrganizationManagedRule_TagValueScope,
 		},
+		"RemediationConfiguration": {
+			"basic":      testAccConfigRemediationConfiguration_basic,
+			"disappears": testAccConfigRemediationConfiguration_disappears,
+			"recreates":  testAccConfigRemediationConfiguration_recreates,
+			"updates":    testAccConfigRemediationConfiguration_updates,
+		},
 	}
 
 	for group, m := range testCases {

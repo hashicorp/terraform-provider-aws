@@ -8,9 +8,18 @@ description: |-
 
 # Resource: aws_autoscaling_group
 
-Provides an AutoScaling Group resource.
+Provides an Auto Scaling Group resource.
 
 -> **Note:** You must specify either `launch_configuration`, `launch_template`, or `mixed_instances_policy`.
+
+~> **NOTE on Auto Scaling Groups and ASG Attachments:** Terraform currently provides
+both a standalone [`aws_autoscaling_attachment`](autoscaling_attachment.html) resource
+(describing an ASG attached to an ELB or ALB), and an [`aws_autoscaling_group`](autoscaling_group.html)
+with `load_balancers` and `target_group_arns` defined in-line. These two methods are not
+mutually-exclusive. If `aws_autoscaling_attachment` resources are used, either alone or with inline
+`load_balancers` or `target_group_arns`, the `aws_autoscaling_group` resource must be configured
+to ignore changes to the `load_balancers` and `target_group_arns` arguments within a
+[`lifecycle` configuration block](/docs/configuration/resources.html#lifecycle-lifecycle-customizations).
 
 ## Example Usage
 
@@ -123,6 +132,48 @@ resource "aws_autoscaling_group" "example" {
 }
 ```
 
+### Mixed Instances Policy with Spot Instances and Capacity Rebalance
+
+```hcl
+resource "aws_launch_template" "example" {
+  name_prefix   = "example"
+  image_id      = data.aws_ami.example.id
+  instance_type = "c5.large"
+}
+
+resource "aws_autoscaling_group" "example" {
+  capacity_rebalance  = true
+  desired_capacity    = 12
+  max_size            = 15
+  min_size            = 12
+  vpc_zone_identifier = [aws_subnet.example1.id, aws_subnet.example2.id]
+
+  mixed_instances_policy {
+    instances_distribution {
+      on_demand_base_capacity                  = 0
+      on_demand_percentage_above_base_capacity = 25
+      spot_allocation_strategy                 = "capacity-optimized"
+    }
+
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.example.id
+      }
+
+      override {
+        instance_type     = "c4.large"
+        weighted_capacity = "3"
+      }
+
+      override {
+        instance_type     = "c3.large"
+        weighted_capacity = "2"
+      }
+    }
+  }
+}
+```
+
 ## Interpolated tags
 
 ```hcl
@@ -177,6 +228,7 @@ The following arguments are supported:
 * `min_size` - (Required) The minimum size of the auto scale group.
     (See also [Waiting for Capacity](#waiting-for-capacity) below.)
 * `availability_zones` - (Optional) A list of one or more availability zones for the group. Used for EC2-Classic and default subnets when not specified with `vpc_zone_identifier` argument. Conflicts with `vpc_zone_identifier`.
+* `capacity_rebalance` - (Optional) Indicates whether capacity rebalance is enabled. Otherwise, capacity rebalance is disabled.
 * `default_cooldown` - (Optional) The amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
 * `launch_configuration` - (Optional) The name of the launch configuration to use.
 * `launch_template` - (Optional) Nested argument with Launch template specification to use to launch instances. Defined below.
@@ -251,7 +303,7 @@ This configuration block supports the following:
 
 * `on_demand_allocation_strategy` - (Optional) Strategy to use when launching on-demand instances. Valid values: `prioritized`. Default: `prioritized`.
 * `on_demand_base_capacity` - (Optional) Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances. Default: `0`.
-* `on_demand_percentage_above_base_capacity` - (Optional) Percentage split between on-demand and Spot instances above the base on-demand capacity. Default: `100`.
+* `on_demand_percentage_above_base_capacity` - (Optional) Percentage split between on-demand and Spot instances above the base on-demand capacity. Default: `0`.
 * `spot_allocation_strategy` - (Optional) How to allocate capacity across the Spot pools. Valid values: `lowest-price`, `capacity-optimized`. Default: `lowest-price`.
 * `spot_instance_pools` - (Optional) Number of Spot pools per availability zone to allocate capacity. EC2 Auto Scaling selects the cheapest Spot pools and evenly allocates Spot capacity across the number of Spot pools that you specify. Default: `2`.
 * `spot_max_price` - (Optional) Maximum price per unit hour that the user is willing to pay for the Spot instances. Default: an empty string which means the on-demand price.

@@ -73,8 +73,10 @@ One of the following target arguments must be supplied:
 * `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway.
 * `instance_id` - (Optional) Identifier of an EC2 instance.
 * `nat_gateway_id` - (Optional) Identifier of a VPC NAT gateway.
+* `local_gateway_id` - (Optional) Identifier of a Outpost local gateway.
 * `network_interface_id` - (Optional) Identifier of an EC2 network interface.
 * `transit_gateway_id` - (Optional) Identifier of an EC2 Transit Gateway.
+* `vpc_endpoint_id` - (Optional) Identifier of a VPC Endpoint.
 * `vpc_peering_connection_id` - (Optional) Identifier of a VPC peering connection.
 
 Note that the default route, mapping the VPC's CIDR block to "local", is created implicitly and cannot be specified.

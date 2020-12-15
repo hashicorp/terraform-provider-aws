@@ -57,6 +57,7 @@ The following arguments are supported:
 ## Import
 
 EMR Managed Scaling Policies can be imported via the EMR Cluster identifier, e.g.
+
 ```console
 $ terraform import aws_emr_managed_scaling_policy.example j-123456ABCDEF
 ```

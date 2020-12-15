@@ -8,6 +8,51 @@ import (
 )
 
 const (
+	// Maximum amount of time to wait for EC2 Instance attribute modifications to propagate
+	InstanceAttributePropagationTimeout = 2 * time.Minute
+)
+
+const (
+	CarrierGatewayAvailableTimeout = 5 * time.Minute
+
+	CarrierGatewayDeletedTimeout = 5 * time.Minute
+)
+
+func CarrierGatewayAvailable(conn *ec2.EC2, carrierGatewayID string) (*ec2.CarrierGateway, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.CarrierGatewayStatePending},
+		Target:  []string{ec2.CarrierGatewayStateAvailable},
+		Refresh: CarrierGatewayState(conn, carrierGatewayID),
+		Timeout: CarrierGatewayAvailableTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.CarrierGateway); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func CarrierGatewayDeleted(conn *ec2.EC2, carrierGatewayID string) (*ec2.CarrierGateway, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.CarrierGatewayStateDeleting},
+		Target:  []string{},
+		Refresh: CarrierGatewayState(conn, carrierGatewayID),
+		Timeout: CarrierGatewayDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.CarrierGateway); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	// Maximum amount of time to wait for a LocalGatewayRouteTableVpcAssociation to return Associated
 	LocalGatewayRouteTableVpcAssociationAssociatedTimeout = 5 * time.Minute
 
@@ -73,9 +118,9 @@ func ClientVpnEndpointDeleted(conn *ec2.EC2, id string) (*ec2.ClientVpnEndpoint,
 }
 
 const (
-	ClientVpnAuthorizationRuleActiveTimeout = 1 * time.Minute
+	ClientVpnAuthorizationRuleActiveTimeout = 10 * time.Minute
 
-	ClientVpnAuthorizationRuleRevokedTimeout = 1 * time.Minute
+	ClientVpnAuthorizationRuleRevokedTimeout = 10 * time.Minute
 )
 
 func ClientVpnAuthorizationRuleAuthorized(conn *ec2.EC2, authorizationRuleID string) (*ec2.AuthorizationRule, error) {
@@ -113,11 +158,11 @@ func ClientVpnAuthorizationRuleRevoked(conn *ec2.EC2, authorizationRuleID string
 }
 
 const (
-	ClientVpnNetworkAssociationAssociatedTimeout = 10 * time.Minute
+	ClientVpnNetworkAssociationAssociatedTimeout = 30 * time.Minute
 
 	ClientVpnNetworkAssociationAssociatedDelay = 4 * time.Minute
 
-	ClientVpnNetworkAssociationDisassociatedTimeout = 10 * time.Minute
+	ClientVpnNetworkAssociationDisassociatedTimeout = 30 * time.Minute
 
 	ClientVpnNetworkAssociationDisassociatedDelay = 4 * time.Minute
 
@@ -194,6 +239,46 @@ func SecurityGroupCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.SecurityGroup); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	VpnGatewayVpcAttachmentAttachedTimeout = 15 * time.Minute
+
+	VpnGatewayVpcAttachmentDetachedTimeout = 30 * time.Minute
+)
+
+func VpnGatewayVpcAttachmentAttached(conn *ec2.EC2, vpnGatewayID, vpcID string) (*ec2.VpcAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AttachmentStatusDetached, ec2.AttachmentStatusAttaching},
+		Target:  []string{ec2.AttachmentStatusAttached},
+		Refresh: VpnGatewayVpcAttachmentState(conn, vpnGatewayID, vpcID),
+		Timeout: VpnGatewayVpcAttachmentAttachedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func VpnGatewayVpcAttachmentDetached(conn *ec2.EC2, vpnGatewayID, vpcID string) (*ec2.VpcAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AttachmentStatusAttached, ec2.AttachmentStatusDetaching},
+		Target:  []string{ec2.AttachmentStatusDetached},
+		Refresh: VpnGatewayVpcAttachmentState(conn, vpnGatewayID, vpcID),
+		Timeout: VpnGatewayVpcAttachmentDetachedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.VpcAttachment); ok {
 		return output, err
 	}
 

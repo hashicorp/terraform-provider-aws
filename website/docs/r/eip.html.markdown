@@ -103,9 +103,10 @@ The following arguments are supported:
 * `associate_with_private_ip` - (Optional) A user specified primary or secondary private IP address to
   associate with the Elastic IP address. If no private IP address is specified,
   the Elastic IP address is associated with the primary private IP address.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. Tags can only be applied to EIPs in a VPC.
 * `public_ipv4_pool` - (Optional) EC2 IPv4 address pool identifier or `amazon`. This option is only available for VPC EIPs.
 * `customer_owned_ipv4_pool` - The  ID  of a customer-owned address pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing)
+* `network_border_group` - The location from which the IP address is advertised. Use this parameter to limit the address to this location.
 
 ~> **NOTE:** You can specify either the `instance` ID or the `network_interface` ID,
 but not both. Including both will **not** return an error from the AWS API, but will
@@ -126,8 +127,10 @@ In addition to all arguments above, the following attributes are exported:
 * `instance` - Contains the ID of the attached instance.
 * `network_interface` - Contains the ID of the attached network interface.
 * `public_ipv4_pool` - EC2 IPv4 address pool identifier (if in VPC).
+* `carrier_ip` - The carrier IP address.
 * `customer_owned_ipv4_pool` - The  ID  of a customer-owned address pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing)
 * `customer_owned_ip` - Customer owned IP.
+* `domain` - Indicates if this EIP is for use in VPC (`vpc`) or EC2 Classic (`standard`).
 
 ~> **Note:** The resource computes the `public_dns` and `private_dns` attributes according to the [VPC DNS Guide](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames) as they are not available with the EC2 API.
 

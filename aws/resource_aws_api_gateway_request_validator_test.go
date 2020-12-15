@@ -18,7 +18,7 @@ func TestAccAWSAPIGatewayRequestValidator_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_request_validator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRequestValidatorDestroy,
 		Steps: []resource.TestStep{
@@ -62,7 +62,7 @@ func TestAccAWSAPIGatewayRequestValidator_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_request_validator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRequestValidatorDestroy,
 		Steps: []resource.TestStep{
@@ -196,8 +196,8 @@ resource "aws_api_gateway_rest_api" "test" {
 func testAccAWSAPIGatewayRequestValidatorConfig(rName string) string {
 	return fmt.Sprintf(testAccAWSAPIGatewayRequestValidatorConfig_base(rName) + `
 resource "aws_api_gateway_request_validator" "test" {
-  name = "tf-acc-test-request-validator"
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  name        = "tf-acc-test-request-validator"
+  rest_api_id = aws_api_gateway_rest_api.test.id
 }
 `)
 }
@@ -205,9 +205,9 @@ resource "aws_api_gateway_request_validator" "test" {
 func testAccAWSAPIGatewayRequestValidatorUpdatedConfig(rName string) string {
 	return fmt.Sprintf(testAccAWSAPIGatewayRequestValidatorConfig_base(rName) + `
 resource "aws_api_gateway_request_validator" "test" {
-  name = "tf-acc-test-request-validator_modified"
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  validate_request_body = true
+  name                        = "tf-acc-test-request-validator_modified"
+  rest_api_id                 = aws_api_gateway_rest_api.test.id
+  validate_request_body       = true
   validate_request_parameters = true
 }
 `)

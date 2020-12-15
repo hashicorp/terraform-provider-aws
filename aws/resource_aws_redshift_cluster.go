@@ -28,7 +28,7 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(75 * time.Minute),
-			Update: schema.DefaultTimeout(40 * time.Minute),
+			Update: schema.DefaultTimeout(75 * time.Minute),
 			Delete: schema.DefaultTimeout(40 * time.Minute),
 		},
 
@@ -405,7 +405,7 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 			return err
 		}
 
-		d.SetId(*resp.Cluster.ClusterIdentifier)
+		d.SetId(aws.StringValue(resp.Cluster.ClusterIdentifier))
 
 	} else {
 		if _, ok := d.GetOk("master_password"); !ok {
@@ -489,7 +489,7 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		log.Printf("[DEBUG]: Cluster create response: %s", resp)
-		d.SetId(*resp.Cluster.ClusterIdentifier)
+		d.SetId(aws.StringValue(resp.Cluster.ClusterIdentifier))
 	}
 
 	stateConf := &resource.StateChangeConf{
@@ -512,7 +512,7 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	if logging, ok := d.GetOk("logging.0.enable"); ok && logging.(bool) {
+	if _, ok := d.GetOk("logging.0.enable"); ok {
 		if err := enableRedshiftClusterLogging(d, conn); err != nil {
 			return fmt.Errorf("error enabling Redshift Cluster (%s) logging: %s", d.Id(), err)
 		}

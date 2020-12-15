@@ -10,17 +10,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+)
+
+const (
+	autoscalingTagResourceTypeAutoScalingGroup = `auto-scaling-group`
 )
 
 func resourceAwsAutoscalingGroup() *schema.Resource {
@@ -198,6 +202,11 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 						},
 					},
 				},
+			},
+
+			"capacity_rebalance": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 
 			"desired_capacity": {
@@ -385,7 +394,38 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				},
 			},
 
-			"tag": autoscalingTagSchema(),
+			"tag": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+
+						"value": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+
+						"propagate_at_launch": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+				// This should be removable, but wait until other tags work is being done.
+				Set: func(v interface{}) int {
+					var buf bytes.Buffer
+					m := v.(map[string]interface{})
+					buf.WriteString(fmt.Sprintf("%s-", m["key"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["value"].(string)))
+					buf.WriteString(fmt.Sprintf("%t-", m["propagate_at_launch"].(bool)))
+
+					return hashcode.String(buf.String())
+				},
+			},
 
 			"tags": {
 				Type:     schema.TypeSet,
@@ -565,29 +605,24 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	resourceID := d.Get("name").(string)
+
 	if v, ok := d.GetOk("tag"); ok {
-		var err error
-		createOpts.Tags, err = autoscalingTagsFromMap(
-			setToMapByKey(v.(*schema.Set)), resourceID)
-		if err != nil {
-			return err
-		}
+		createOpts.Tags = keyvaluetags.AutoscalingKeyValueTags(v, resourceID, autoscalingTagResourceTypeAutoScalingGroup).IgnoreAws().AutoscalingTags()
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		tags, err := autoscalingTagsFromList(v.(*schema.Set).List(), resourceID)
-		if err != nil {
-			return err
-		}
+		createOpts.Tags = keyvaluetags.AutoscalingKeyValueTags(v, resourceID, autoscalingTagResourceTypeAutoScalingGroup).IgnoreAws().AutoscalingTags()
+	}
 
-		createOpts.Tags = append(createOpts.Tags, tags...)
+	if v, ok := d.GetOk("capacity_rebalance"); ok {
+		createOpts.CapacityRebalance = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("default_cooldown"); ok {
 		createOpts.DefaultCooldown = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("health_check_type"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("health_check_type"); ok {
 		createOpts.HealthCheckType = aws.String(v.(string))
 	}
 
@@ -687,6 +722,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 
 func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).autoscalingconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	g, err := getAwsAutoscalingGroup(d.Id(), conn)
 	if err != nil {
@@ -703,6 +739,7 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("arn", g.AutoScalingGroupARN)
+	d.Set("capacity_rebalance", g.CapacityRebalance)
 	d.Set("default_cooldown", g.DefaultCooldown)
 	d.Set("desired_capacity", g.DesiredCapacity)
 
@@ -745,47 +782,31 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting suspended_processes: %s", err)
 	}
 
-	var tagList, tagsList []*autoscaling.TagDescription
 	var tagOk, tagsOk bool
 	var v interface{}
 
+	// Deprecated: In a future major version, this should always set all tags except those ignored.
+	//             Remove d.GetOk() and Only() handling.
 	if v, tagOk = d.GetOk("tag"); tagOk {
-		tags := setToMapByKey(v.(*schema.Set))
-		for _, t := range g.Tags {
-			if _, ok := tags[*t.Key]; ok {
-				tagList = append(tagList, t)
-			}
+		proposedStateTags := keyvaluetags.AutoscalingKeyValueTags(v, d.Id(), autoscalingTagResourceTypeAutoScalingGroup)
+
+		if err := d.Set("tag", keyvaluetags.AutoscalingKeyValueTags(g.Tags, d.Id(), autoscalingTagResourceTypeAutoScalingGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags).AutoscalingListOfMap()); err != nil {
+			return fmt.Errorf("error setting tag: %w", err)
 		}
-		d.Set("tag", autoscalingTagDescriptionsToSlice(tagList, false))
 	}
 
 	if v, tagsOk = d.GetOk("tags"); tagsOk {
-		tags := map[string]struct{}{}
-		for _, tag := range v.(*schema.Set).List() {
-			attr, ok := tag.(map[string]interface{})
-			if !ok {
-				continue
-			}
+		proposedStateTags := keyvaluetags.AutoscalingKeyValueTags(v, d.Id(), autoscalingTagResourceTypeAutoScalingGroup)
 
-			key, ok := attr["key"].(string)
-			if !ok {
-				continue
-			}
-
-			tags[key] = struct{}{}
+		if err := d.Set("tags", keyvaluetags.AutoscalingKeyValueTags(g.Tags, d.Id(), autoscalingTagResourceTypeAutoScalingGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags).AutoscalingListOfStringMap()); err != nil {
+			return fmt.Errorf("error setting tags: %w", err)
 		}
-
-		for _, t := range g.Tags {
-			if _, ok := tags[*t.Key]; ok {
-				tagsList = append(tagsList, t)
-			}
-		}
-		//lintignore:AWSR002
-		d.Set("tags", autoscalingTagDescriptionsToSlice(tagsList, true))
 	}
 
 	if !tagOk && !tagsOk {
-		d.Set("tag", autoscalingTagDescriptionsToSlice(g.Tags, false))
+		if err := d.Set("tag", keyvaluetags.AutoscalingKeyValueTags(g.Tags, d.Id(), autoscalingTagResourceTypeAutoScalingGroup).IgnoreAws().IgnoreConfig(ignoreTagsConfig).AutoscalingListOfMap()); err != nil {
+			return fmt.Errorf("error setting tag: %w", err)
+		}
 	}
 
 	if err := d.Set("target_group_arns", flattenStringList(g.TargetGroupARNs)); err != nil {
@@ -900,6 +921,16 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		opts.DefaultCooldown = aws.Int64(int64(d.Get("default_cooldown").(int)))
 	}
 
+	if d.HasChange("capacity_rebalance") {
+		// If the capacity rebalance field is set to null, we need to explicitly set
+		// it back to "false", or the API won't reset it for us.
+		if v, ok := d.GetOk("capacity_rebalance"); ok {
+			opts.CapacityRebalance = aws.Bool(v.(bool))
+		} else {
+			opts.CapacityRebalance = aws.Bool(false)
+		}
+	}
+
 	if d.HasChange("desired_capacity") {
 		opts.DesiredCapacity = aws.Int64(int64(d.Get("desired_capacity").(int)))
 		shouldWaitForCapacity = true
@@ -972,8 +1003,21 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		opts.ServiceLinkedRoleARN = aws.String(d.Get("service_linked_role_arn").(string))
 	}
 
-	if err := setAutoscalingTags(conn, d); err != nil {
-		return err
+	if d.HasChanges("tag", "tags") {
+		oTagRaw, nTagRaw := d.GetChange("tag")
+		oTagsRaw, nTagsRaw := d.GetChange("tags")
+
+		oTag := keyvaluetags.AutoscalingKeyValueTags(oTagRaw, d.Id(), autoscalingTagResourceTypeAutoScalingGroup)
+		oTags := keyvaluetags.AutoscalingKeyValueTags(oTagsRaw, d.Id(), autoscalingTagResourceTypeAutoScalingGroup)
+		oldTags := oTag.Merge(oTags).AutoscalingTags()
+
+		nTag := keyvaluetags.AutoscalingKeyValueTags(nTagRaw, d.Id(), autoscalingTagResourceTypeAutoScalingGroup)
+		nTags := keyvaluetags.AutoscalingKeyValueTags(nTagsRaw, d.Id(), autoscalingTagResourceTypeAutoScalingGroup)
+		newTags := nTag.Merge(nTags).AutoscalingTags()
+
+		if err := keyvaluetags.AutoscalingUpdateTags(conn, d.Id(), autoscalingTagResourceTypeAutoScalingGroup, oldTags, newTags); err != nil {
+			return fmt.Errorf("error updating tags for Auto Scaling Group (%s): %w", d.Id(), err)
+		}
 	}
 
 	log.Printf("[DEBUG] AutoScaling Group update configuration: %#v", opts)

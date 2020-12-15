@@ -103,22 +103,26 @@ func dmsReplicationTaskDestroy(s *terraform.State) error {
 }
 
 func dmsReplicationTaskConfig(randId string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
 resource "aws_vpc" "dms_vpc" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-dms-replication-task"
+    Name = "terraform-testacc-dms-replication-task-%[1]s"
   }
 }
 
 resource "aws_subnet" "dms_subnet_1" {
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   vpc_id            = aws_vpc.dms_vpc.id
 
   tags = {
-    Name = "tf-acc-dms-replication-task-1"
+    Name = "tf-acc-dms-replication-task-1-%[1]s"
   }
 
   depends_on = [aws_vpc.dms_vpc]
@@ -126,11 +130,11 @@ resource "aws_subnet" "dms_subnet_1" {
 
 resource "aws_subnet" "dms_subnet_2" {
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   vpc_id            = aws_vpc.dms_vpc.id
 
   tags = {
-    Name = "tf-acc-dms-replication-task-2"
+    Name = "tf-acc-dms-replication-task-2-%[1]s"
   }
 
   depends_on = [aws_vpc.dms_vpc]
@@ -141,7 +145,7 @@ resource "aws_dms_endpoint" "dms_endpoint_source" {
   endpoint_id   = "tf-test-dms-endpoint-source-%[1]s"
   endpoint_type = "source"
   engine_name   = "aurora"
-  server_name   = "tf-test-cluster.cluster-xxxxxxx.us-west-2.rds.amazonaws.com"
+  server_name   = "tf-test-cluster.cluster-xxxxxxx.${data.aws_region.current.name}.rds.${data.aws_partition.current.dns_suffix}"
   port          = 3306
   username      = "tftest"
   password      = "tftest"
@@ -152,7 +156,7 @@ resource "aws_dms_endpoint" "dms_endpoint_target" {
   endpoint_id   = "tf-test-dms-endpoint-target-%[1]s"
   endpoint_type = "target"
   engine_name   = "aurora"
-  server_name   = "tf-test-cluster.cluster-xxxxxxx.us-west-2.rds.amazonaws.com"
+  server_name   = "tf-test-cluster.cluster-xxxxxxx.${data.aws_region.current.name}.rds.${data.aws_partition.current.dns_suffix}"
   port          = 3306
   username      = "tftest"
   password      = "tftest"
@@ -167,7 +171,7 @@ resource "aws_dms_replication_subnet_group" "dms_replication_subnet_group" {
 resource "aws_dms_replication_instance" "dms_replication_instance" {
   allocated_storage            = 5
   auto_minor_version_upgrade   = true
-  replication_instance_class   = "dms.t2.micro"
+  replication_instance_class   = "dms.c4.large"
   replication_instance_id      = "tf-test-dms-replication-instance-%[1]s"
   preferred_maintenance_window = "sun:00:30-sun:02:30"
   publicly_accessible          = false
@@ -190,26 +194,30 @@ resource "aws_dms_replication_task" "dms_replication_task" {
 
   target_endpoint_arn = aws_dms_endpoint.dms_endpoint_target.endpoint_arn
 }
-`, randId)
+`, randId))
 }
 
 func dmsReplicationTaskConfigUpdate(randId string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
 resource "aws_vpc" "dms_vpc" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-dms-replication-task"
+    Name = "terraform-testacc-dms-replication-task-%[1]s"
   }
 }
 
 resource "aws_subnet" "dms_subnet_1" {
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   vpc_id            = aws_vpc.dms_vpc.id
 
   tags = {
-    Name = "tf-acc-dms-replication-task-1"
+    Name = "tf-acc-dms-replication-task-1-%[1]s"
   }
 
   depends_on = [aws_vpc.dms_vpc]
@@ -217,11 +225,11 @@ resource "aws_subnet" "dms_subnet_1" {
 
 resource "aws_subnet" "dms_subnet_2" {
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   vpc_id            = aws_vpc.dms_vpc.id
 
   tags = {
-    Name = "tf-acc-dms-replication-task-2"
+    Name = "tf-acc-dms-replication-task-2-%[1]s"
   }
 
   depends_on = [aws_vpc.dms_vpc]
@@ -232,7 +240,7 @@ resource "aws_dms_endpoint" "dms_endpoint_source" {
   endpoint_id   = "tf-test-dms-endpoint-source-%[1]s"
   endpoint_type = "source"
   engine_name   = "aurora"
-  server_name   = "tf-test-cluster.cluster-xxxxxxx.us-west-2.rds.amazonaws.com"
+  server_name   = "tf-test-cluster.cluster-xxxxxxx.${data.aws_region.current.name}.rds.${data.aws_partition.current.dns_suffix}"
   port          = 3306
   username      = "tftest"
   password      = "tftest"
@@ -243,7 +251,7 @@ resource "aws_dms_endpoint" "dms_endpoint_target" {
   endpoint_id   = "tf-test-dms-endpoint-target-%[1]s"
   endpoint_type = "target"
   engine_name   = "aurora"
-  server_name   = "tf-test-cluster.cluster-xxxxxxx.us-west-2.rds.amazonaws.com"
+  server_name   = "tf-test-cluster.cluster-xxxxxxx.${data.aws_region.current.name}.rds.${data.aws_partition.current.dns_suffix}"
   port          = 3306
   username      = "tftest"
   password      = "tftest"
@@ -258,7 +266,7 @@ resource "aws_dms_replication_subnet_group" "dms_replication_subnet_group" {
 resource "aws_dms_replication_instance" "dms_replication_instance" {
   allocated_storage            = 5
   auto_minor_version_upgrade   = true
-  replication_instance_class   = "dms.t2.micro"
+  replication_instance_class   = "dms.c4.large"
   replication_instance_id      = "tf-test-dms-replication-instance-%[1]s"
   preferred_maintenance_window = "sun:00:30-sun:02:30"
   publicly_accessible          = false
@@ -281,5 +289,5 @@ resource "aws_dms_replication_task" "dms_replication_task" {
 
   target_endpoint_arn = aws_dms_endpoint.dms_endpoint_target.endpoint_arn
 }
-`, randId)
+`, randId))
 }

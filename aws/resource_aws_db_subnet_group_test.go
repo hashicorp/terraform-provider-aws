@@ -6,13 +6,12 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -464,8 +463,8 @@ resource "aws_subnet" "frontend" {
   availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "192.168.1.0/24"
   tags = {
-        Name = "tf-acc-db-subnet-group-w-underscores-etc-front"
-    }
+    Name = "tf-acc-db-subnet-group-w-underscores-etc-front"
+  }
 }
 
 resource "aws_subnet" "backend" {
@@ -473,8 +472,8 @@ resource "aws_subnet" "backend" {
   availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = "192.168.2.0/24"
   tags = {
-        Name = "tf-acc-db-subnet-group-w-underscores-etc-back"
-    }
+    Name = "tf-acc-db-subnet-group-w-underscores-etc-back"
+  }
 }
 
 resource "aws_db_subnet_group" "underscores" {

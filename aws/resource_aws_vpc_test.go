@@ -22,6 +22,7 @@ func init() {
 	resource.AddTestSweepers("aws_vpc", &resource.Sweeper{
 		Name: "aws_vpc",
 		Dependencies: []string{
+			"aws_ec2_carrier_gateway",
 			"aws_egress_only_internet_gateway",
 			"aws_internet_gateway",
 			"aws_nat_gateway",
@@ -165,7 +166,7 @@ func TestAccAWSVpc_ignoreTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
 		CheckDestroy:      testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -591,11 +592,12 @@ resource "aws_vpc" "test" {
 
 const testAccVpcConfigUpdate = `
 resource "aws_vpc" "test" {
-	cidr_block = "10.1.0.0/16"
-	enable_dns_hostnames = true
-	tags = {
-		Name = "terraform-testacc-vpc"
-	}
+  cidr_block           = "10.1.0.0/16"
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "terraform-testacc-vpc"
+  }
 }
 `
 
@@ -626,52 +628,57 @@ resource "aws_vpc" "test" {
 
 const testAccVpcDedicatedConfig = `
 resource "aws_vpc" "test" {
-	instance_tenancy = "dedicated"
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-vpc-dedicated"
-	}
+  instance_tenancy = "dedicated"
+  cidr_block       = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-vpc-dedicated"
+  }
 }
 `
 
 const testAccVpcConfig_BothDnsOptions = `
 resource "aws_vpc" "test" {
-	cidr_block = "10.2.0.0/16"
-	enable_dns_hostnames = true
-	enable_dns_support = true
-	tags = {
-		Name = "terraform-testacc-vpc-both-dns-opts"
-	}
+  cidr_block           = "10.2.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name = "terraform-testacc-vpc-both-dns-opts"
+  }
 }
 `
 
 const testAccVpcConfig_DisabledDnsSupport = `
 resource "aws_vpc" "test" {
-	cidr_block = "10.2.0.0/16"
-	enable_dns_support = false
-	tags = {
-		Name = "terraform-testacc-vpc-disabled-dns-support"
-	}
+  cidr_block         = "10.2.0.0/16"
+  enable_dns_support = false
+
+  tags = {
+    Name = "terraform-testacc-vpc-disabled-dns-support"
+  }
 }
 `
 
 const testAccVpcConfig_ClassiclinkOption = `
 resource "aws_vpc" "test" {
-	cidr_block = "172.2.0.0/16"
-	enable_classiclink = true
-	tags = {
-		Name = "terraform-testacc-vpc-classic-link"
-	}
+  cidr_block         = "172.2.0.0/16"
+  enable_classiclink = true
+
+  tags = {
+    Name = "terraform-testacc-vpc-classic-link"
+  }
 }
 `
 
 const testAccVpcConfig_ClassiclinkDnsSupportOption = `
 resource "aws_vpc" "test" {
-	cidr_block = "172.2.0.0/16"
-	enable_classiclink = true
-	enable_classiclink_dns_support = true
-	tags = {
-		Name = "terraform-testacc-vpc-classic-link-support"
-	}
+  cidr_block                     = "172.2.0.0/16"
+  enable_classiclink             = true
+  enable_classiclink_dns_support = true
+
+  tags = {
+    Name = "terraform-testacc-vpc-classic-link-support"
+  }
 }
 `
