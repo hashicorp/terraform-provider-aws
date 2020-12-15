@@ -124,12 +124,12 @@ resource "aws_cognito_user_pool" "pool" {
     verify_auth_challenge_response = aws_lambda_function.main.arn
 
     custom_email_sender {
-      lambda_arn     = aws_lambda_function.test.arn
+      lambda_arn     = aws_lambda_function.main.arn
       lambda_version = "V1_0"
     }
 
     custom_sms_sender {
-      lambda_arn     = aws_lambda_function.test.arn
+      lambda_arn     = aws_lambda_function.main.arn
       lambda_version = "V1_0"
     }
   }
