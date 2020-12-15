@@ -8,9 +8,13 @@ ENHANCEMENTS
 
 * data-source/aws_autoscaling_group: Adds `launch_template` attribute [GH-16297]
 * data-source/aws_eip: Add `carrier_ip` attribute [GH-16724]
+* data-source/aws_instance: Add `enclave_options` attribute (Nitro Enclaves) [GH-16361]
 * data-source/aws_launch_configuration: Add `metadata_options` attribute [GH-14637]
+* data-source/aws_launch_template: Add `enclave_options` attribute (Nitro Enclaves) [GH-16361]
 * resource/aws_eip: Add `carrier_ip` attribute [GH-16724]
+* resource/aws_instance: Add `enclave_options` configuration block (Nitro Enclaves) [GH-16361]
 * resource/aws_launch_configuration: Add `metadata_options` configuration block [GH-14637]
+* resource/aws_launch_template: Add `enclave_options` configuration block (Nitro Enclaves) [GH-16361]
 
 BUG FIXES
 
