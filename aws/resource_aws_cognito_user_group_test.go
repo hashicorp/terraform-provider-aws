@@ -14,9 +14,9 @@ import (
 )
 
 func TestAccAWSCognitoUserGroup_basic(t *testing.T) {
-	poolName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	groupName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	updatedGroupName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	poolName := fmt.Sprintf("tf-acc-%s", acctest.RandString(10))
+	groupName := fmt.Sprintf("tf-acc-%s", acctest.RandString(10))
+	updatedGroupName := fmt.Sprintf("tf-acc-%s", acctest.RandString(10))
 	resourceName := "aws_cognito_user_group.main"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -48,9 +48,9 @@ func TestAccAWSCognitoUserGroup_basic(t *testing.T) {
 }
 
 func TestAccAWSCognitoUserGroup_complex(t *testing.T) {
-	poolName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	groupName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	updatedGroupName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	poolName := fmt.Sprintf("tf-acc-%s", acctest.RandString(10))
+	groupName := fmt.Sprintf("tf-acc-%s", acctest.RandString(10))
+	updatedGroupName := fmt.Sprintf("tf-acc-%s", acctest.RandString(10))
 	resourceName := "aws_cognito_user_group.main"
 
 	resource.ParallelTest(t, resource.TestCase{

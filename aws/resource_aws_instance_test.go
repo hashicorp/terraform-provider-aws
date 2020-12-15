@@ -153,7 +153,7 @@ func TestFetchRootDevice(t *testing.T) {
 func TestAccAWSInstance_inDefaultVpcBySgName(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -178,7 +178,7 @@ func TestAccAWSInstance_inDefaultVpcBySgName(t *testing.T) {
 func TestAccAWSInstance_inDefaultVpcBySgId(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -658,7 +658,7 @@ func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
 func TestAccAWSInstance_sourceDestCheck(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	testCheck := func(enabled bool) resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -712,7 +712,7 @@ func TestAccAWSInstance_sourceDestCheck(t *testing.T) {
 func TestAccAWSInstance_disableApiTermination(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	checkDisableApiTermination := func(expected bool) resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -764,7 +764,7 @@ func TestAccAWSInstance_disableApiTermination(t *testing.T) {
 func TestAccAWSInstance_dedicatedInstance(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
@@ -822,7 +822,7 @@ func TestAccAWSInstance_outpost(t *testing.T) {
 func TestAccAWSInstance_placementGroup(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
@@ -850,7 +850,7 @@ func TestAccAWSInstance_placementGroup(t *testing.T) {
 func TestAccAWSInstance_ipv6_supportAddressCount(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -874,7 +874,7 @@ func TestAccAWSInstance_ipv6_supportAddressCount(t *testing.T) {
 }
 
 func TestAccAWSInstance_ipv6AddressCountAndSingleAddressCausesError(t *testing.T) {
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -892,7 +892,7 @@ func TestAccAWSInstance_ipv6AddressCountAndSingleAddressCausesError(t *testing.T
 func TestAccAWSInstance_ipv6_supportAddressCountWithIpv4(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -918,7 +918,7 @@ func TestAccAWSInstance_ipv6_supportAddressCountWithIpv4(t *testing.T) {
 func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
@@ -945,7 +945,7 @@ func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 func TestAccAWSInstance_NetworkInstanceRemovingAllSecurityGroups(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -982,7 +982,7 @@ func TestAccAWSInstance_NetworkInstanceRemovingAllSecurityGroups(t *testing.T) {
 func TestAccAWSInstance_NetworkInstanceVPCSecurityGroupIDs(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -1118,8 +1118,8 @@ func TestAccAWSInstance_volumeTagsComputed(t *testing.T) {
 func TestAccAWSInstance_instanceProfileChange(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
-	rName2 := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
+	rName2 := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	testCheckInstanceProfile := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -1175,7 +1175,7 @@ func TestAccAWSInstance_instanceProfileChange(t *testing.T) {
 func TestAccAWSInstance_withIamInstanceProfile(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	testCheckInstanceProfile := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -1212,7 +1212,7 @@ func TestAccAWSInstance_withIamInstanceProfile(t *testing.T) {
 func TestAccAWSInstance_privateIP(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	testCheckPrivateIP := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -1249,7 +1249,7 @@ func TestAccAWSInstance_privateIP(t *testing.T) {
 func TestAccAWSInstance_associatePublicIPAndPrivateIP(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	testCheckPrivateIP := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -1289,7 +1289,7 @@ func TestAccAWSInstance_associatePublicIPAndPrivateIP(t *testing.T) {
 func TestAccAWSInstance_Empty_PrivateIP(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	testCheckPrivateIP := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -1328,7 +1328,7 @@ func TestAccAWSInstance_Empty_PrivateIP(t *testing.T) {
 func TestAccAWSInstance_keyPairCheck(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	testCheckKeyPair := func(keyName string) resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -1400,7 +1400,7 @@ func TestAccAWSInstance_rootBlockDeviceMismatch(t *testing.T) {
 func TestAccAWSInstance_forceNewAndTagsDrift(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -1900,7 +1900,7 @@ func TestAccAWSInstance_primaryNetworkInterface(t *testing.T) {
 	var eni ec2.NetworkInterface
 	resourceName := "aws_instance.test"
 	eniResourceName := "aws_network_interface.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1930,7 +1930,7 @@ func TestAccAWSInstance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
 	var eni ec2.NetworkInterface
 	resourceName := "aws_instance.test"
 	eniResourceName := "aws_network_interface.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1963,7 +1963,7 @@ func TestAccAWSInstance_addSecondaryInterface(t *testing.T) {
 	resourceName := "aws_instance.test"
 	eniPrimaryResourceName := "aws_network_interface.primary"
 	eniSecondaryResourceName := "aws_network_interface.secondary"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2001,7 +2001,7 @@ func TestAccAWSInstance_addSecurityGroupNetworkInterface(t *testing.T) {
 	var before ec2.Instance
 	var after ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2225,7 +2225,7 @@ func TestAccAWSInstance_NewNetworkInterface_PrivateIPAndSecondaryPrivateIPsUpdat
 func TestAccAWSInstance_associatePublic_defaultPrivate(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2253,7 +2253,7 @@ func TestAccAWSInstance_associatePublic_defaultPrivate(t *testing.T) {
 func TestAccAWSInstance_associatePublic_defaultPublic(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2281,7 +2281,7 @@ func TestAccAWSInstance_associatePublic_defaultPublic(t *testing.T) {
 func TestAccAWSInstance_associatePublic_explicitPublic(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2309,7 +2309,7 @@ func TestAccAWSInstance_associatePublic_explicitPublic(t *testing.T) {
 func TestAccAWSInstance_associatePublic_explicitPrivate(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2337,7 +2337,7 @@ func TestAccAWSInstance_associatePublic_explicitPrivate(t *testing.T) {
 func TestAccAWSInstance_associatePublic_overridePublic(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2365,7 +2365,7 @@ func TestAccAWSInstance_associatePublic_overridePublic(t *testing.T) {
 func TestAccAWSInstance_associatePublic_overridePrivate(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2392,7 +2392,7 @@ func TestAccAWSInstance_associatePublic_overridePrivate(t *testing.T) {
 func TestAccAWSInstance_getPasswordData_falseToTrue(t *testing.T) {
 	var before, after ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2428,7 +2428,7 @@ func TestAccAWSInstance_getPasswordData_falseToTrue(t *testing.T) {
 func TestAccAWSInstance_getPasswordData_trueToFalse(t *testing.T) {
 	var before, after ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2465,7 +2465,7 @@ func TestAccAWSInstance_getPasswordData_trueToFalse(t *testing.T) {
 func TestAccAWSInstance_CreditSpecification_Empty_NonBurstable(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2492,7 +2492,7 @@ func TestAccAWSInstance_CreditSpecification_Empty_NonBurstable(t *testing.T) {
 func TestAccAWSInstance_CreditSpecification_UnspecifiedToEmpty_NonBurstable(t *testing.T) {
 	var instance ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2523,7 +2523,7 @@ func TestAccAWSInstance_CreditSpecification_UnspecifiedToEmpty_NonBurstable(t *t
 func TestAccAWSInstance_creditSpecification_unspecifiedDefaultsToStandard(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2550,7 +2550,7 @@ func TestAccAWSInstance_creditSpecification_unspecifiedDefaultsToStandard(t *tes
 func TestAccAWSInstance_creditSpecification_standardCpuCredits(t *testing.T) {
 	var first, second ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2585,7 +2585,7 @@ func TestAccAWSInstance_creditSpecification_standardCpuCredits(t *testing.T) {
 func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits(t *testing.T) {
 	var first, second ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2620,7 +2620,7 @@ func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits(t *testing.T) {
 func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t2(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2647,7 +2647,7 @@ func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t2(t *testing.T) {
 func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t3(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2674,7 +2674,7 @@ func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t3(t *testing.T) {
 func TestAccAWSInstance_creditSpecification_updateCpuCredits(t *testing.T) {
 	var first, second, third ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2717,7 +2717,7 @@ func TestAccAWSInstance_creditSpecification_updateCpuCredits(t *testing.T) {
 func TestAccAWSInstance_creditSpecification_isNotAppliedToNonBurstable(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2743,7 +2743,7 @@ func TestAccAWSInstance_creditSpecification_isNotAppliedToNonBurstable(t *testin
 func TestAccAWSInstance_creditSpecificationT3_unspecifiedDefaultsToUnlimited(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2770,7 +2770,7 @@ func TestAccAWSInstance_creditSpecificationT3_unspecifiedDefaultsToUnlimited(t *
 func TestAccAWSInstance_creditSpecificationT3_standardCpuCredits(t *testing.T) {
 	var first, second ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2805,7 +2805,7 @@ func TestAccAWSInstance_creditSpecificationT3_standardCpuCredits(t *testing.T) {
 func TestAccAWSInstance_creditSpecificationT3_unlimitedCpuCredits(t *testing.T) {
 	var first, second ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2840,7 +2840,7 @@ func TestAccAWSInstance_creditSpecificationT3_unlimitedCpuCredits(t *testing.T) 
 func TestAccAWSInstance_creditSpecificationT3_updateCpuCredits(t *testing.T) {
 	var first, second, third ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2883,7 +2883,7 @@ func TestAccAWSInstance_creditSpecificationT3_updateCpuCredits(t *testing.T) {
 func TestAccAWSInstance_creditSpecification_standardCpuCredits_t2Tot3Taint(t *testing.T) {
 	var before, after ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2919,7 +2919,7 @@ func TestAccAWSInstance_creditSpecification_standardCpuCredits_t2Tot3Taint(t *te
 func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits_t2Tot3Taint(t *testing.T) {
 	var before, after ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2976,7 +2976,7 @@ func TestAccAWSInstance_disappears(t *testing.T) {
 func TestAccAWSInstance_UserData_EmptyStringToUnspecified(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -3008,7 +3008,7 @@ func TestAccAWSInstance_UserData_EmptyStringToUnspecified(t *testing.T) {
 func TestAccAWSInstance_UserData_UnspecifiedToEmptyString(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

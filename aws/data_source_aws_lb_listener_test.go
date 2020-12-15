@@ -9,8 +9,8 @@ import (
 )
 
 func TestAccDataSourceAWSLBListener_basic(t *testing.T) {
-	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandString(13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -40,8 +40,8 @@ func TestAccDataSourceAWSLBListener_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAWSLBListener_BackwardsCompatibility(t *testing.T) {
-	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandString(13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -71,8 +71,8 @@ func TestAccDataSourceAWSLBListener_BackwardsCompatibility(t *testing.T) {
 }
 
 func TestAccDataSourceAWSLBListener_https(t *testing.T) {
-	lbName := fmt.Sprintf("testlistener-https-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testlistener-https-%s", acctest.RandString(13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
 	key := tlsRsaPrivateKeyPem(2048)
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 

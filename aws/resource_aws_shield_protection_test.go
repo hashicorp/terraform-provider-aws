@@ -15,7 +15,7 @@ import (
 
 func TestAccAWSShieldProtection_GlobalAccelerator(t *testing.T) {
 	resourceName := "aws_shield_protection.acctest"
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -43,7 +43,7 @@ func TestAccAWSShieldProtection_GlobalAccelerator(t *testing.T) {
 
 func TestAccAWSShieldProtection_ElasticIPAddress(t *testing.T) {
 	resourceName := "aws_shield_protection.acctest"
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -71,7 +71,7 @@ func TestAccAWSShieldProtection_ElasticIPAddress(t *testing.T) {
 
 func TestAccAWSShieldProtection_Alb(t *testing.T) {
 	resourceName := "aws_shield_protection.acctest"
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -99,7 +99,7 @@ func TestAccAWSShieldProtection_Alb(t *testing.T) {
 
 func TestAccAWSShieldProtection_Elb(t *testing.T) {
 	resourceName := "aws_shield_protection.acctest"
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -127,7 +127,7 @@ func TestAccAWSShieldProtection_Elb(t *testing.T) {
 
 func TestAccAWSShieldProtection_Cloudfront(t *testing.T) {
 	resourceName := "aws_shield_protection.acctest"
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -156,7 +156,7 @@ func TestAccAWSShieldProtection_Cloudfront(t *testing.T) {
 
 func TestAccAWSShieldProtection_Route53(t *testing.T) {
 	resourceName := "aws_shield_protection.acctest"
-	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
