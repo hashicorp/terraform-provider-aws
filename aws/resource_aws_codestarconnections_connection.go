@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -70,14 +71,13 @@ func resourceAwsCodeStarConnectionsConnectionRead(d *schema.ResourceData, meta i
 	resp, err := conn.GetConnection(&codestarconnections.GetConnectionInput{
 		ConnectionArn: aws.String(d.Id()),
 	})
-
+	if tfawserr.ErrCodeEquals(err, codestarconnections.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] CodeStar connection (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		if isAWSErr(err, codestarconnections.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] CodeStar connection (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading CodeStar connection: %s", err)
+		return fmt.Errorf("error reading CodeStar connection: %w", err)
 	}
 
 	if resp == nil || resp.Connection == nil {
@@ -99,12 +99,10 @@ func resourceAwsCodeStarConnectionsConnectionDelete(d *schema.ResourceData, meta
 	_, err := conn.DeleteConnection(&codestarconnections.DeleteConnectionInput{
 		ConnectionArn: aws.String(d.Id()),
 	})
-
+	if tfawserr.ErrCodeEquals(err, codestarconnections.ErrCodeResourceNotFoundException) {
+		return nil
+	}
 	if err != nil {
-		if isAWSErr(err, codestarconnections.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
-
 		return fmt.Errorf("error deleting CodeStar connection: %w", err)
 	}
 
