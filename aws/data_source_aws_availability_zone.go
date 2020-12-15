@@ -40,6 +40,14 @@ func dataSourceAwsAvailabilityZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"parent_zone_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"parent_zone_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"region": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -120,6 +128,8 @@ func dataSourceAwsAvailabilityZoneRead(d *schema.ResourceData, meta interface{})
 	d.Set("name_suffix", nameSuffix)
 	d.Set("network_border_group", az.NetworkBorderGroup)
 	d.Set("opt_in_status", az.OptInStatus)
+	d.Set("parent_zone_id", az.ParentZoneId)
+	d.Set("parent_zone_name", az.ParentZoneName)
 	d.Set("region", az.RegionName)
 	d.Set("state", az.State)
 	d.Set("zone_id", az.ZoneId)
