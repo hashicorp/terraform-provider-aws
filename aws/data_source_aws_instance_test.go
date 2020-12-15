@@ -645,7 +645,7 @@ resource "aws_instance" "test" {
   }
 
   ebs_block_device {
-    device_name = "/device/sdf"
+    device_name = "/dev/sdf"
     volume_size = 10
     volume_type = "gp3"
     throughput  = 300
