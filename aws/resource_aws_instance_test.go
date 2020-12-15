@@ -533,7 +533,7 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "root_block_device.0.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", rootVolumeSize),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp2"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "4"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"device_name": "/dev/sdb",
 						"volume_size": "9",
@@ -549,10 +549,10 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 						"iops":        "100",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"device_name": "/dev/sde",
+						"device_name": "/dev/sdf",
 						"volume_size": "10",
 						"volume_type": "gp3",
-						"throughput":  "1000",
+						"throughput":  "300",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
 						"volume_id": regexp.MustCompile("vol-[a-z0-9]+"),
@@ -3710,6 +3710,14 @@ resource "aws_instance" "test" {
     device_name  = "/dev/sde"
     virtual_name = "ephemeral0"
   }
+
+  ebs_block_device {
+    device_name = "/dev/sdf"
+    volume_size = 10
+    volume_type = "gp3"
+    throughput  = 300
+  }
+
 }
 `, size, delete))
 }
