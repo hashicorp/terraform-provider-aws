@@ -508,8 +508,8 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 				return fmt.Errorf("block device doesn't exist: /dev/sdd")
 			}
 
-			if _, ok := blockDevices["/dev/sde"]; !ok {
-				return fmt.Errorf("block device doesn't exist: /dev/sde")
+			if _, ok := blockDevices["/dev/sdf"]; !ok {
+				return fmt.Errorf("block device doesn't exist: /dev/sdf")
 			}
 
 			return nil
