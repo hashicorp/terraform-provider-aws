@@ -82,6 +82,10 @@ resource "aws_iam_role_policy" "main" {
 EOF
 }
 
+resource "aws_kms_key" "main" {
+  description = "key"
+}
+
 resource "aws_cognito_user_pool" "pool" {
   name                       = "terraform-example"
   email_verification_subject = "Device Verification Code"
@@ -110,6 +114,7 @@ resource "aws_cognito_user_pool" "pool" {
     create_auth_challenge          = aws_lambda_function.main.arn
     custom_message                 = aws_lambda_function.main.arn
     define_auth_challenge          = aws_lambda_function.main.arn
+    kms_key_id                     = aws_kms_key.main.arn
     post_authentication            = aws_lambda_function.main.arn
     post_confirmation              = aws_lambda_function.main.arn
     pre_authentication             = aws_lambda_function.main.arn
@@ -117,6 +122,16 @@ resource "aws_cognito_user_pool" "pool" {
     pre_token_generation           = aws_lambda_function.main.arn
     user_migration                 = aws_lambda_function.main.arn
     verify_auth_challenge_response = aws_lambda_function.main.arn
+
+    custom_email_sender {
+      lambda_arn     = aws_lambda_function.test.arn
+      lambda_version = "V1_0"
+    }
+
+    custom_sms_sender {
+      lambda_arn     = aws_lambda_function.test.arn
+      lambda_version = "V1_0"
+    }
   }
 
   schema {

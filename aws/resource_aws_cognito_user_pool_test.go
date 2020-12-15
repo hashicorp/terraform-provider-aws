@@ -932,8 +932,15 @@ func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
 					testAccCheckAWSCognitoUserPoolExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.create_auth_challenge"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.custom_email_sender.0.lambda_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.custom_email_sender.0.lambda_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.custom_message"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.define_auth_challenge"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.kms_key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.post_authentication"),
 					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.post_confirmation"),
 					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.pre_authentication"),
@@ -953,8 +960,15 @@ func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.create_auth_challenge"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.custom_email_sender.0.lambda_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.custom_email_sender.0.lambda_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.custom_message"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.define_auth_challenge"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.kms_key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.post_authentication"),
 					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.post_confirmation"),
 					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.pre_authentication"),
@@ -1739,6 +1753,10 @@ resource "aws_lambda_function" "test" {
   runtime       = "nodejs12.x"
 }
 
+resource "aws_kms_key" "test" {
+  description = %[1]q
+}
+
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
@@ -1746,6 +1764,7 @@ resource "aws_cognito_user_pool" "test" {
     create_auth_challenge          = aws_lambda_function.test.arn
     custom_message                 = aws_lambda_function.test.arn
     define_auth_challenge          = aws_lambda_function.test.arn
+    kms_key_id                     = aws_kms_key.test.arn
     post_authentication            = aws_lambda_function.test.arn
     post_confirmation              = aws_lambda_function.test.arn
     pre_authentication             = aws_lambda_function.test.arn
@@ -1753,7 +1772,17 @@ resource "aws_cognito_user_pool" "test" {
     pre_token_generation           = aws_lambda_function.test.arn
     user_migration                 = aws_lambda_function.test.arn
     verify_auth_challenge_response = aws_lambda_function.test.arn
-  }
+
+    custom_email_sender {
+      lambda_arn     = aws_lambda_function.test.arn
+      lambda_version = "V1_0"
+    }
+
+    custom_sms_sender {
+      lambda_arn     = aws_lambda_function.test.arn
+      lambda_version = "V1_0"
+    }
+	}
 }
 `, name)
 }
@@ -1796,6 +1825,14 @@ resource "aws_lambda_function" "second" {
   runtime       = "nodejs12.x"
 }
 
+resource "aws_kms_key" "test" {
+  description = "test description"
+}
+
+resource "aws_kms_key" "second" {
+  description = "second description"
+}
+
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
@@ -1803,6 +1840,7 @@ resource "aws_cognito_user_pool" "test" {
     create_auth_challenge          = aws_lambda_function.second.arn
     custom_message                 = aws_lambda_function.second.arn
     define_auth_challenge          = aws_lambda_function.second.arn
+    kms_key_id                     = aws_kms_key.second.arn
     post_authentication            = aws_lambda_function.second.arn
     post_confirmation              = aws_lambda_function.second.arn
     pre_authentication             = aws_lambda_function.second.arn
@@ -1810,6 +1848,16 @@ resource "aws_cognito_user_pool" "test" {
     pre_token_generation           = aws_lambda_function.second.arn
     user_migration                 = aws_lambda_function.second.arn
     verify_auth_challenge_response = aws_lambda_function.second.arn
+
+    custom_email_sender {
+      lambda_arn     = aws_lambda_function.second.arn
+      lambda_version = "V1_0"
+    }
+
+    custom_sms_sender {
+      lambda_arn     = aws_lambda_function.second.arn
+      lambda_version = "V1_0"
+    }
   }
 }
 `, name)

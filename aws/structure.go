@@ -2530,12 +2530,58 @@ func expandCognitoUserPoolLambdaConfig(config map[string]interface{}) *cognitoid
 		configs.CreateAuthChallenge = aws.String(v.(string))
 	}
 
+	if v, ok := config["custom_email_sender"]; ok {
+		data := v.([]interface{})
+
+		if len(data) > 0 {
+			m, ok := data[0].(map[string]interface{})
+			if ok {
+				customEmailLambdaVersionConfigType := &cognitoidentityprovider.CustomEmailLambdaVersionConfigType{}
+
+				if v, ok := m["lambda_arn"]; ok && v.(string) != "" {
+					customEmailLambdaVersionConfigType.LambdaArn = aws.String(v.(string))
+				}
+
+				if v, ok := m["lambda_version"]; ok && v.(string) != "" {
+					customEmailLambdaVersionConfigType.LambdaVersion = aws.String(v.(string))
+				}
+
+				configs.CustomEmailSender = customEmailLambdaVersionConfigType
+			}
+		}
+	}
+
 	if v, ok := config["custom_message"]; ok && v.(string) != "" {
 		configs.CustomMessage = aws.String(v.(string))
 	}
 
+	if v, ok := config["custom_sms_sender"]; ok {
+		data := v.([]interface{})
+
+		if len(data) > 0 {
+			m, ok := data[0].(map[string]interface{})
+			if ok {
+				customSMSLambdaVersionConfigType := &cognitoidentityprovider.CustomSMSLambdaVersionConfigType{}
+
+				if v, ok := m["lambda_arn"]; ok && v.(string) != "" {
+					customSMSLambdaVersionConfigType.LambdaArn = aws.String(v.(string))
+				}
+
+				if v, ok := m["lambda_version"]; ok && v.(string) != "" {
+					customSMSLambdaVersionConfigType.LambdaVersion = aws.String(v.(string))
+				}
+
+				configs.CustomSMSSender = customSMSLambdaVersionConfigType
+			}
+		}
+	}
+
 	if v, ok := config["define_auth_challenge"]; ok && v.(string) != "" {
 		configs.DefineAuthChallenge = aws.String(v.(string))
+	}
+
+	if v, ok := config["kms_key_id"]; ok && v.(string) != "" {
+		configs.KMSKeyID = aws.String(v.(string))
 	}
 
 	if v, ok := config["post_authentication"]; ok && v.(string) != "" {
@@ -2580,12 +2626,24 @@ func flattenCognitoUserPoolLambdaConfig(s *cognitoidentityprovider.LambdaConfigT
 		m["create_auth_challenge"] = *s.CreateAuthChallenge
 	}
 
+	if s.CustomEmailSender != nil {
+		m["custom_email_sender"] = *s.CustomEmailSender
+	}
+
 	if s.CustomMessage != nil {
 		m["custom_message"] = *s.CustomMessage
 	}
 
+	if s.CustomSMSSender != nil {
+		m["custom_sms_sender"] = *s.CustomSMSSender
+	}
+
 	if s.DefineAuthChallenge != nil {
 		m["define_auth_challenge"] = *s.DefineAuthChallenge
+	}
+
+	if s.KMSKeyID != nil {
+		m["kms_key_id"] = *s.KMSKeyID
 	}
 
 	if s.PostAuthentication != nil {

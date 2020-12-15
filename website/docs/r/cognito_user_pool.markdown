@@ -116,8 +116,11 @@ The following arguments are supported:
 #### Lambda Configuration
 
 * `create_auth_challenge` (Optional) - The ARN of the lambda creating an authentication challenge.
+* `custom_email_sender` (Optional) - Specifies the [constraints for a custom email sender](#custom-sender-constraints) AWS Lambda trigger.
 * `custom_message` (Optional) - A custom Message AWS Lambda trigger.
+* `custom_sms_sender` (Optional) - Specifies the [constraints for a custom SMS sender](#custom-sender-constraints) AWS Lambda trigger..
 * `define_auth_challenge` (Optional) - Defines the authentication challenge.
+* `kms_key_id` (Optional) - Defines the key to encrypt codes and temporary passwords sent to CustomEmailSender and CustomSMSSender Lambda triggers.
 * `post_authentication` (Optional) - A post-authentication AWS Lambda trigger.
 * `post_confirmation` (Optional) - A post-confirmation AWS Lambda trigger.
 * `pre_authentication` (Optional) - A pre-authentication AWS Lambda trigger.
@@ -125,6 +128,11 @@ The following arguments are supported:
 * `pre_token_generation` (Optional) - Allow to customize identity token claims before token generation.
 * `user_migration` (Optional) - The user migration Lambda config type.
 * `verify_auth_challenge_response` (Optional) - Verifies the authentication challenge response.
+
+##### Custom Sender Constraints
+
+* `lambda_arn` (Required) - The ARN of the custom sender Lambda.
+* `lambda_version` (Optional) - The Lambda version represents the signature of the "request" attribute in the "event" information Amazon Cognito passes to your custom sender Lambda function. The only supported value is V1_0.
 
 #### Password Policy
 
