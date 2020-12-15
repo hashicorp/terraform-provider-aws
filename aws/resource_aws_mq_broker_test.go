@@ -360,7 +360,7 @@ func TestAccAWSMqBroker_throughputOptimized(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
 						"console_access": "false",
 						"groups.#":       "0",
 						"username":       "Test",
