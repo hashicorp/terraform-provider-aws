@@ -8,7 +8,7 @@ import (
 
 func TestAccAWSLakeFormationDataLakeSettings_basic(t *testing.T) {
 	callerIdentityName := "data.aws_caller_identity.current"
-	resourceName := "aws_lakeformation_datalake_settings.test"
+	resourceName := "aws_lakeformation_data_lake_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -30,14 +30,14 @@ func TestAccAWSLakeFormationDataLakeSettings_basic(t *testing.T) {
 const testAccAWSLakeFormationDataLakeSettingsConfig_basic = `
 data "aws_caller_identity" "current" {}
 
-resource "aws_lakeformation_datalake_settings" "test" {
+resource "aws_lakeformation_data_lake_settings" "test" {
   admins = ["${data.aws_caller_identity.current.arn}"]
 }
 `
 
 func TestAccAWSLakeFormationDataLakeSettings_withCatalogId(t *testing.T) {
 	callerIdentityName := "data.aws_caller_identity.current"
-	resourceName := "aws_lakeformation_datalake_settings.test"
+	resourceName := "aws_lakeformation_data_lake_settings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -59,7 +59,7 @@ func TestAccAWSLakeFormationDataLakeSettings_withCatalogId(t *testing.T) {
 const testAccAWSLakeFormationDataLakeSettingsConfig_withCatalogId = `
 data "aws_caller_identity" "current" {}
 
-resource "aws_lakeformation_datalake_settings" "test" {
+resource "aws_lakeformation_data_lake_settings" "test" {
   catalog_id = "${data.aws_caller_identity.current.account_id}"
   admins = ["${data.aws_caller_identity.current.arn}"]
 }

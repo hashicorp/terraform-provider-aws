@@ -1,12 +1,12 @@
 ---
 subcategory: "Lake Formation"
 layout: "aws"
-page_title: "AWS: aws_lakeformation_datalake_settings"
+page_title: "AWS: aws_lakeformation_data_lake_settings"
 description: |-
   Manages the data lake settings for the current account
 ---
 
-# Resource: aws_lakeformation_datalake_settings
+# Resource: aws_lakeformation_data_lake_settings
 
 Manages the data lake settings for the current account.
 
@@ -21,7 +21,7 @@ data "aws_iam_role" "existing_role" {
   name = "an_existing_role_name"
 }
 
-resource "aws_lakeformation_datalake_settings" "example" {
+resource "aws_lakeformation_data_lake_settings" "example" {
   admins = [
     "${aws_iam_user.existing_user.arn}",
     "${aws_iam_user.existing_role.arn}",
