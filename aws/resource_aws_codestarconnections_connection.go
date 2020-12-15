@@ -54,12 +54,12 @@ func resourceAwsCodeStarConnectionsConnectionCreate(d *schema.ResourceData, meta
 		ProviderType:   aws.String(d.Get("provider_type").(string)),
 	}
 
-	res, err := conn.CreateConnection(params)
+	resp, err := conn.CreateConnection(params)
 	if err != nil {
 		return fmt.Errorf("error creating CodeStar connection: %w", err)
 	}
 
-	d.SetId(aws.StringValue(res.ConnectionArn))
+	d.SetId(aws.StringValue(resp.ConnectionArn))
 
 	return resourceAwsCodeStarConnectionsConnectionRead(d, meta)
 }
@@ -67,7 +67,7 @@ func resourceAwsCodeStarConnectionsConnectionCreate(d *schema.ResourceData, meta
 func resourceAwsCodeStarConnectionsConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codestarconnectionsconn
 
-	rule, err := conn.GetConnection(&codestarconnections.GetConnectionInput{
+	resp, err := conn.GetConnection(&codestarconnections.GetConnectionInput{
 		ConnectionArn: aws.String(d.Id()),
 	})
 
@@ -80,15 +80,15 @@ func resourceAwsCodeStarConnectionsConnectionRead(d *schema.ResourceData, meta i
 		return fmt.Errorf("error reading CodeStar connection: %s", err)
 	}
 
-	if rule == nil || rule.Connection == nil {
+	if resp == nil || resp.Connection == nil {
 		return fmt.Errorf("error reading CodeStar connection (%s): empty response", d.Id())
 	}
 
-	d.SetId(aws.StringValue(rule.Connection.ConnectionArn))
-	d.Set("arn", rule.Connection.ConnectionArn)
-	d.Set("name", rule.Connection.ConnectionName)
-	d.Set("connection_status", rule.Connection.ConnectionStatus)
-	d.Set("provider_type", rule.Connection.ProviderType)
+	d.SetId(aws.StringValue(resp.Connection.ConnectionArn))
+	d.Set("arn", resp.Connection.ConnectionArn)
+	d.Set("name", resp.Connection.ConnectionName)
+	d.Set("connection_status", resp.Connection.ConnectionStatus)
+	d.Set("provider_type", resp.Connection.ProviderType)
 
 	return nil
 }
