@@ -30,7 +30,7 @@ func resourceAwsCodeStarConnectionsConnection() *schema.Resource {
 				Computed: true,
 			},
 
-			"connection_name": {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,7 +50,7 @@ func resourceAwsCodeStarConnectionsConnectionCreate(d *schema.ResourceData, meta
 	conn := meta.(*AWSClient).codestarconnectionsconn
 
 	params := &codestarconnections.CreateConnectionInput{
-		ConnectionName: aws.String(d.Get("connection_name").(string)),
+		ConnectionName: aws.String(d.Get("name").(string)),
 		ProviderType:   aws.String(d.Get("provider_type").(string)),
 	}
 
@@ -82,7 +82,7 @@ func resourceAwsCodeStarConnectionsConnectionRead(d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(rule.Connection.ConnectionArn))
 	d.Set("arn", rule.Connection.ConnectionArn)
-	d.Set("connection_name", rule.Connection.ConnectionName)
+	d.Set("name", rule.Connection.ConnectionName)
 	d.Set("connection_status", rule.Connection.ConnectionStatus)
 	d.Set("provider_type", rule.Connection.ProviderType)
 

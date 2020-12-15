@@ -27,7 +27,7 @@ func TestAccAWSCodeStarConnectionsConnection_Basic(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("connection/.+")),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("connection/.+")),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeBitbucket),
-					resource.TestCheckResourceAttr(resourceName, "connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", codestarconnections.ConnectionStatusPending),
 				),
 			},
@@ -62,7 +62,7 @@ func testAccCheckAWSCodeStarConnectionsConnectionDestroy(s *terraform.State) err
 func testAccAWSCodeStarConnectionsConnectionConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_connection" "test" {
-  connection_name = %[1]q
+  name = %[1]q
   provider_type   = "Bitbucket"
 }
 `, rName)
