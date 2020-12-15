@@ -109,6 +109,31 @@ func TestAccDataSourceAwsAvailabilityZone_Name(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAwsAvailabilityZone_WavelengthZone(t *testing.T) {
+	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
+	dataSourceName := "data.aws_availability_zone.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsAvailabilityZoneConfigZoneType("wavelength-zone"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, "group_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "name_suffix"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "network_border_group"),
+					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptedIn),
+					resource.TestCheckResourceAttr(dataSourceName, "region", testAccGetRegion()),
+					resource.TestCheckResourceAttrPair(dataSourceName, "zone_id", availabilityZonesDataSourceName, "zone_ids.0"),
+					resource.TestCheckResourceAttr(dataSourceName, "zone_type", "wavelength-zone"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSourceAwsAvailabilityZone_ZoneId(t *testing.T) {
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	dataSourceName := "data.aws_availability_zone.test"
