@@ -101,6 +101,10 @@ func resourceAwsCodeStarConnectionsConnectionDelete(d *schema.ResourceData, meta
 	})
 
 	if err != nil {
+		if isAWSErr(err, codestarconnections.ErrCodeResourceNotFoundException, "") {
+			return nil
+		}
+
 		return fmt.Errorf("error deleting CodeStar connection: %w", err)
 	}
 
