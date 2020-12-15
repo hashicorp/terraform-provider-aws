@@ -7,6 +7,8 @@ FEATURES
 ENHANCEMENTS
 
 * data-source/aws_autoscaling_group: Adds `launch_template` attribute [GH-16297]
+* data-source/aws_launch_configuration: Add `metadata_options` attribute [GH-14637]
+* resource/aws_launch_configuration: Add `metadata_options` configuration block [GH-14637]
 
 BUG FIXES
 
