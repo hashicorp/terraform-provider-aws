@@ -2,6 +2,7 @@
 
 FEATURES
 
+* **New Resource:** `aws_codestarconnections_connection` [GH-15990]
 * **New Resource:** `aws_lakeformation_resource` ([#13267](https://github.com/hashicorp/terraform-provider-aws/issues/13267))
 
 ENHANCEMENTS
