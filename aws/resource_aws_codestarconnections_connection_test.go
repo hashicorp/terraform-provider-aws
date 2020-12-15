@@ -106,8 +106,8 @@ func testAccCheckAWSCodeStarConnectionsConnectionDestroy(s *terraform.State) err
 func testAccAWSCodeStarConnectionsConnectionConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_connection" "test" {
-  name = %[1]q
-  provider_type   = "Bitbucket"
+  name          = %[1]q
+  provider_type = "Bitbucket"
 }
 `, rName)
 }
