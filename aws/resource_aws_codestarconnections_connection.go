@@ -37,9 +37,9 @@ func resourceAwsCodeStarConnectionsConnection() *schema.Resource {
 			},
 
 			"provider_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(codestarconnections.ProviderType_Values(), false),
 			},
 		},

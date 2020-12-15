@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"testing"
@@ -24,6 +25,7 @@ func TestAccAWSCodeStarConnectionsConnection_Basic(t *testing.T) {
 			{
 				Config: testAccAWSCodeStarConnectionsConnectionConfigBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCodeStarConnectionsConnectionExists(resourceName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("connection/.+")),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("connection/.+")),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeBitbucket),
@@ -38,6 +40,48 @@ func TestAccAWSCodeStarConnectionsConnection_Basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAWSCodeStarConnectionsConnection_disappears(t *testing.T) {
+	resourceName := "aws_codestarconnections_connection.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeStarConnectionsConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeStarConnectionsConnectionConfigBasic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCodeStarConnectionsConnectionExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodeStarConnectionsConnection(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAWSCodeStarConnectionsConnectionExists(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return errors.New("No CodeStar connection ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).codestarconnectionsconn
+
+		_, err := conn.GetConnection(&codestarconnections.GetConnectionInput{
+			ConnectionArn: aws.String(rs.Primary.ID),
+		})
+
+		return err
+	}
 }
 
 func testAccCheckAWSCodeStarConnectionsConnectionDestroy(s *terraform.State) error {
