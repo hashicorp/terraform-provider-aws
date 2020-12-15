@@ -56,7 +56,7 @@ func resourceAwsCodeStarConnectionsConnectionCreate(d *schema.ResourceData, meta
 
 	res, err := conn.CreateConnection(params)
 	if err != nil {
-		return fmt.Errorf("error creating codestar connection: %s", err)
+		return fmt.Errorf("error creating CodeStar connection: %w", err)
 	}
 
 	d.SetId(aws.StringValue(res.ConnectionArn))
@@ -73,11 +73,11 @@ func resourceAwsCodeStarConnectionsConnectionRead(d *schema.ResourceData, meta i
 
 	if err != nil {
 		if isAWSErr(err, codestarconnections.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] codestar connection (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] CodeStar connection (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading codestar connection: %s", err)
+		return fmt.Errorf("error reading CodeStar connection: %s", err)
 	}
 
 	d.SetId(aws.StringValue(rule.Connection.ConnectionArn))
@@ -97,7 +97,7 @@ func resourceAwsCodeStarConnectionsConnectionDelete(d *schema.ResourceData, meta
 	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting codestar connection: %s", err)
+		return fmt.Errorf("error deleting CodeStar connection: %w", err)
 	}
 
 	return nil
