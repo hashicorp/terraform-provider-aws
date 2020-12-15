@@ -2627,7 +2627,19 @@ func flattenCognitoUserPoolLambdaConfig(s *cognitoidentityprovider.LambdaConfigT
 	}
 
 	if s.CustomEmailSender != nil {
-		m["custom_email_sender"] = *s.CustomEmailSender
+		d := map[string]interface{}{}
+
+		if s.CustomEmailSender.LambdaArn != nil {
+			d["lambda_arn"] = *s.CustomEmailSender.LambdaArn
+		}
+
+		if s.CustomEmailSender.LambdaVersion != nil {
+			d["lambda_version"] = *s.CustomEmailSender.LambdaVersion
+		}
+
+		if len(d) > 0 {
+			m["custom_email_sender"] = []map[string]interface{}{d}
+		}
 	}
 
 	if s.CustomMessage != nil {
@@ -2635,7 +2647,19 @@ func flattenCognitoUserPoolLambdaConfig(s *cognitoidentityprovider.LambdaConfigT
 	}
 
 	if s.CustomSMSSender != nil {
-		m["custom_sms_sender"] = *s.CustomSMSSender
+		d := map[string]interface{}{}
+
+		if s.CustomSMSSender.LambdaArn != nil {
+			d["lambda_arn"] = *s.CustomSMSSender.LambdaArn
+		}
+
+		if s.CustomSMSSender.LambdaVersion != nil {
+			d["lambda_version"] = *s.CustomSMSSender.LambdaVersion
+		}
+
+		if len(d) > 0 {
+			m["custom_sms_sender"] = []map[string]interface{}{d}
+		}
 	}
 
 	if s.DefineAuthChallenge != nil {
