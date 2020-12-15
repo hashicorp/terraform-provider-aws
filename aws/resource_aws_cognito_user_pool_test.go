@@ -1782,7 +1782,7 @@ resource "aws_cognito_user_pool" "test" {
       lambda_arn     = aws_lambda_function.test.arn
       lambda_version = "V1_0"
     }
-	}
+  }
 }
 `, name)
 }
