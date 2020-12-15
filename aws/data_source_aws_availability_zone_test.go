@@ -76,7 +76,7 @@ func TestAccDataSourceAwsAvailabilityZone_LocalZone(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "group_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "name_suffix"),
+					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexp.MustCompile(`^[a-z0-9][a-z0-9-]+$`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "network_border_group"),
 					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptedIn),
 					resource.TestCheckResourceAttrSet(dataSourceName, "parent_zone_id"),
@@ -130,7 +130,7 @@ func TestAccDataSourceAwsAvailabilityZone_WavelengthZone(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "group_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "name_suffix"),
+					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexp.MustCompile(`^[a-z0-9][a-z0-9-]+$`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "network_border_group"),
 					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptedIn),
 					resource.TestCheckResourceAttrSet(dataSourceName, "parent_zone_id"),

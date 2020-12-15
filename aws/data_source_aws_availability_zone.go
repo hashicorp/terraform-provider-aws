@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -120,7 +121,9 @@ func dataSourceAwsAvailabilityZoneRead(d *schema.ResourceData, meta interface{})
 	// the AZ suffix alone, without the region name.
 	// This can be used e.g. to create lookup tables by AZ letter that
 	// work regardless of region.
-	nameSuffix := (*az.ZoneName)[len(*az.RegionName):]
+	nameSuffix := aws.StringValue(az.ZoneName)[len(aws.StringValue(az.RegionName)):]
+	// For Local and Wavelength zones, remove any leading "-".
+	nameSuffix = strings.TrimLeft(nameSuffix, "-")
 
 	d.SetId(aws.StringValue(az.ZoneName))
 	d.Set("group_name", az.GroupName)
