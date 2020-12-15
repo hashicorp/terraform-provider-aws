@@ -80,6 +80,10 @@ func resourceAwsCodeStarConnectionsConnectionRead(d *schema.ResourceData, meta i
 		return fmt.Errorf("error reading CodeStar connection: %s", err)
 	}
 
+	if rule == nil || rule.Connection == nil {
+		return fmt.Errorf("error reading CodeStar connection (%s): empty response", d.Id())
+	}
+
 	d.SetId(aws.StringValue(rule.Connection.ConnectionArn))
 	d.Set("arn", rule.Connection.ConnectionArn)
 	d.Set("name", rule.Connection.ConnectionName)
