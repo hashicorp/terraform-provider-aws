@@ -1158,23 +1158,31 @@ func flattenEc2AttributeValues(l []*ec2.AttributeValue) []string {
 }
 
 func flattenEc2NetworkInterfaceAssociation(a *ec2.NetworkInterfaceAssociation) []interface{} {
-	att := make(map[string]interface{})
+	tfMap := map[string]interface{}{}
+
 	if a.AllocationId != nil {
-		att["allocation_id"] = *a.AllocationId
+		tfMap["allocation_id"] = aws.StringValue(a.AllocationId)
 	}
 	if a.AssociationId != nil {
-		att["association_id"] = *a.AssociationId
+		tfMap["association_id"] = aws.StringValue(a.AssociationId)
+	}
+	if a.CarrierIp != nil {
+		tfMap["carrier_ip"] = aws.StringValue(a.CarrierIp)
+	}
+	if a.CustomerOwnedIp != nil {
+		tfMap["customer_owned_ip"] = aws.StringValue(a.CustomerOwnedIp)
 	}
 	if a.IpOwnerId != nil {
-		att["ip_owner_id"] = *a.IpOwnerId
+		tfMap["ip_owner_id"] = aws.StringValue(a.IpOwnerId)
 	}
 	if a.PublicDnsName != nil {
-		att["public_dns_name"] = *a.PublicDnsName
+		tfMap["public_dns_name"] = aws.StringValue(a.PublicDnsName)
 	}
 	if a.PublicIp != nil {
-		att["public_ip"] = *a.PublicIp
+		tfMap["public_ip"] = aws.StringValue(a.PublicIp)
 	}
-	return []interface{}{att}
+
+	return []interface{}{tfMap}
 }
 
 func flattenEc2NetworkInterfaceIpv6Address(niia []*ec2.NetworkInterfaceIpv6Address) []string {

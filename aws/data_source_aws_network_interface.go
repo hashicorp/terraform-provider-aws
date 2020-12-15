@@ -33,6 +33,14 @@ func dataSourceAwsNetworkInterface() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"carrier_ip": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"customer_owned_ip": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"ip_owner_id": {
 							Type:     schema.TypeString,
 							Computed: true,
