@@ -12,6 +12,7 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* data-source/aws_prefix_list: Using `name` argument no longer overrides other arguments [GH-16739]
 * resource/aws_workspaces_workspace: Prevent panic from terminated WorkSpace [GH-16692]
 
 ## 3.21.0 (December 11, 2020)
