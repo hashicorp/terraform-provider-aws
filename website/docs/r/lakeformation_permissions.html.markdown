@@ -10,7 +10,7 @@ description: |-
 
 Grants permissions to the principal to access metadata in the Data Catalog and data organized in underlying data storage such as Amazon S3. Permissions are granted to a principal, in a Data Catalog, relative to a Lake Formation resource, which includes the Data Catalog, databases, and tables. For more information, see [Security and Access Control to Metadata and Data in Lake Formation](https://docs.aws.amazon.com/lake-formation/latest/dg/security-data-access.html).
 
-~> **NOTE:** Lake Formation grants implicit permissions to data lake administrators, database creators, and table creators. For more information, see [Implicit Lake Formation Permissions](https://docs.aws.amazon.com/lake-formation/latest/dg/implicit-permissions.html).
+~> **NOTE:** This resource deals with explicitly granted permissions. Lake Formation grants implicit permissions to data lake administrators, database creators, and table creators. For more information, see [Implicit Lake Formation Permissions](https://docs.aws.amazon.com/lake-formation/latest/dg/implicit-permissions.html).
 
 ## Example Usage
 
@@ -50,8 +50,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `catalog` - (Optional) Whether the permissions are to be granted for the Data Catalog. Defaults to `false`.
 * `catalog_id` – (Optional) Identifier for the Data Catalog. By default, the account ID. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment.
+* `catalog_resource` - (Optional) Whether the permissions are to be granted for the Data Catalog. Defaults to `false`.
 * `data_location` - (Optional) Configuration block for data location configuration. Detailed below.
 * `database` - (Optional) Configuration block for database configuration. Detailed below.
 * `table` - (Optional) Configuration block for table configuration. Detailed below.
