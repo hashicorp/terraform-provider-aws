@@ -7,6 +7,7 @@ FEATURES
 ENHANCEMENTS
 
 * data-source/aws_autoscaling_group: Adds `launch_template` attribute [GH-16297]
+* data-source/aws_availability_zone: Add `parent_zone_id`, `parent_zone_name`, and `zone_type` attributes (additional support for Local and Wavelength Zones) [GH-16770]
 * data-source/aws_eip: Add `carrier_ip` attribute [GH-16724]
 * data-source/aws_instance: Add `enclave_options` attribute (Nitro Enclaves) [GH-16361]
 * data-source/aws_launch_configuration: Add `metadata_options` attribute [GH-14637]
