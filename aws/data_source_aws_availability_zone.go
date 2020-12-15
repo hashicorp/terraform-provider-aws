@@ -54,6 +54,10 @@ func dataSourceAwsAvailabilityZone() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"zone_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -119,6 +123,7 @@ func dataSourceAwsAvailabilityZoneRead(d *schema.ResourceData, meta interface{})
 	d.Set("region", az.RegionName)
 	d.Set("state", az.State)
 	d.Set("zone_id", az.ZoneId)
+	d.Set("zone_type", az.ZoneType)
 
 	return nil
 }

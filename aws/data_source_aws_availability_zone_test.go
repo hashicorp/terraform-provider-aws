@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -22,9 +23,10 @@ func TestAccDataSourceAwsAvailabilityZone_AllAvailabilityZones(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexp.MustCompile(`^[a-z]$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", testAccGetRegion()),
-					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", "opt-in-not-required"),
+					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptInNotRequired),
 					resource.TestCheckResourceAttr(dataSourceName, "region", testAccGetRegion()),
 					resource.TestCheckResourceAttrPair(dataSourceName, "zone_id", availabilityZonesDataSourceName, "zone_ids.0"),
+					resource.TestCheckResourceAttr(dataSourceName, "zone_type", "availability-zone"),
 				),
 			},
 		},
@@ -46,9 +48,10 @@ func TestAccDataSourceAwsAvailabilityZone_Filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexp.MustCompile(`^[a-z]$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", testAccGetRegion()),
-					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", "opt-in-not-required"),
+					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptInNotRequired),
 					resource.TestCheckResourceAttr(dataSourceName, "region", testAccGetRegion()),
 					resource.TestCheckResourceAttrPair(dataSourceName, "zone_id", availabilityZonesDataSourceName, "zone_ids.0"),
+					resource.TestCheckResourceAttr(dataSourceName, "zone_type", "availability-zone"),
 				),
 			},
 		},
@@ -70,9 +73,10 @@ func TestAccDataSourceAwsAvailabilityZone_Name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexp.MustCompile(`^[a-z]$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", testAccGetRegion()),
-					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", "opt-in-not-required"),
+					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptInNotRequired),
 					resource.TestCheckResourceAttr(dataSourceName, "region", testAccGetRegion()),
 					resource.TestCheckResourceAttrPair(dataSourceName, "zone_id", availabilityZonesDataSourceName, "zone_ids.0"),
+					resource.TestCheckResourceAttr(dataSourceName, "zone_type", "availability-zone"),
 				),
 			},
 		},
@@ -94,9 +98,10 @@ func TestAccDataSourceAwsAvailabilityZone_ZoneId(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexp.MustCompile(`^[a-z]$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", testAccGetRegion()),
-					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", "opt-in-not-required"),
+					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptInNotRequired),
 					resource.TestCheckResourceAttr(dataSourceName, "region", testAccGetRegion()),
 					resource.TestCheckResourceAttrPair(dataSourceName, "zone_id", availabilityZonesDataSourceName, "zone_ids.0"),
+					resource.TestCheckResourceAttr(dataSourceName, "zone_type", "availability-zone"),
 				),
 			},
 		},
@@ -104,37 +109,45 @@ func TestAccDataSourceAwsAvailabilityZone_ZoneId(t *testing.T) {
 }
 
 func testAccDataSourceAwsAvailabilityZoneConfigAllAvailabilityZones() string {
-	return testAccAvailableAZsNoOptInConfig() + `
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		`
 data "aws_availability_zone" "test" {
   all_availability_zones = true
   name                   = data.aws_availability_zones.available.names[0]
 }
-`
+`)
 }
 
 func testAccDataSourceAwsAvailabilityZoneConfigFilter() string {
-	return testAccAvailableAZsNoOptInConfig() + `
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		`
 data "aws_availability_zone" "test" {
   filter {
     name   = "zone-name"
     values = [data.aws_availability_zones.available.names[0]]
   }
 }
-`
+`)
 }
 
 func testAccDataSourceAwsAvailabilityZoneConfigName() string {
-	return testAccAvailableAZsNoOptInConfig() + `
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		`
 data "aws_availability_zone" "test" {
   name = data.aws_availability_zones.available.names[0]
 }
-`
+`)
 }
 
 func testAccDataSourceAwsAvailabilityZoneConfigZoneId() string {
-	return testAccAvailableAZsNoOptInConfig() + `
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		`
 data "aws_availability_zone" "test" {
   zone_id = data.aws_availability_zones.available.zone_ids[0]
 }
-`
+`)
 }

@@ -96,3 +96,4 @@ In addition to all arguments above, the following attributes are exported:
 * `network_border_group` - The name of the location from which the address is advertised.
 * `opt_in_status` - For Availability Zones, this always has the value of `opt-in-not-required`. For Local Zones, this is the opt in status. The possible values are `opted-in` and `not-opted-in`.
 * `region` - The region where the selected availability zone resides. This is always the region selected on the provider, since this data source searches only within that region.
+* `zone_type` - The type of zone. Values are `availability-zone`, `local-zone`, and `wavelength-zone`.
