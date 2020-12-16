@@ -26,7 +26,7 @@ func init() {
 func testSweepElasticacheReplicationGroups(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).elasticacheconn
 
@@ -52,7 +52,7 @@ func testSweepElasticacheReplicationGroups(region string) error {
 			log.Printf("[WARN] Skipping Elasticache Replication Group sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving Elasticache Replication Groups: %s", err)
+		return fmt.Errorf("Error retrieving Elasticache Replication Groups: %w", err)
 	}
 	return nil
 }
@@ -71,14 +71,13 @@ func TestAccAWSElasticacheReplicationGroup_basic(t *testing.T) {
 				Config: testAccAWSElasticacheReplicationGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(
-						resourceName, "cluster_mode.#", "0"),
-					resource.TestCheckResourceAttr(
-						resourceName, "number_cache_clusters", "2"),
-					resource.TestCheckResourceAttr(
-						resourceName, "member_clusters.#", "2"),
-					resource.TestCheckResourceAttr(
-						resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
+					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "1"),
 				),
 			},
 			{
@@ -395,6 +394,38 @@ func TestAccAWSElasticacheReplicationGroup_ClusterMode_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
 					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration_endpoint_address"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheReplicationGroup_ClusterMode_NonClusteredParameterGroup(t *testing.T) {
+	var rg elasticache.ReplicationGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheReplicationGroupNativeRedisClusterConfig_NonClusteredParameterGroup(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
+					resource.TestMatchResourceAttr(resourceName, "primary_endpoint_address", regexp.MustCompile(fmt.Sprintf("%s\\..+\\.%s", rName, testAccGetPartitionDNSSuffix()))),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
+					resource.TestCheckNoResourceAttr(resourceName, "configuration_endpoint_address"),
 				),
 			},
 			{
@@ -963,7 +994,7 @@ resource "aws_elasticache_parameter_group" "test" {
 
   # We do not have a data source for "latest" Elasticache family
   # so unfortunately we must hardcode this for now
-  family = "redis5.0"
+  family = "redis6.x"
 
   name = "%[1]s-${count.index}"
 
@@ -1397,6 +1428,25 @@ resource "aws_elasticache_replication_group" "test" {
   }
 }
 `, rName, numNodeGroups, replicasPerNodeGroup)
+}
+
+func testAccAWSElasticacheReplicationGroupNativeRedisClusterConfig_NonClusteredParameterGroup(rName string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  node_type                     = "cache.t2.medium"
+  automatic_failover_enabled    = false
+
+  parameter_group_name = "default.redis6.x"
+  cluster_mode {
+    num_node_groups         = 1
+    replicas_per_node_group = 1
+  }
+}
+`, rName))
 }
 
 func testAccAWSElasticacheReplicationGroup_UseCmkKmsKeyId(rInt int, rString string) string {
