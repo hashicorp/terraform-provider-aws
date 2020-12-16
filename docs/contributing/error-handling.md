@@ -111,7 +111,7 @@ const(
 )
 ```
 
-Then code references can implement it via:
+Then referencing code can use it via:
 
 ```go
 // imports
