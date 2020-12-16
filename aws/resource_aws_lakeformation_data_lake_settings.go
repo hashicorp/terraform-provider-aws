@@ -175,18 +175,8 @@ func resourceAwsLakeFormationDataLakeSettingsRead(d *schema.ResourceData, meta i
 
 	settings := output.DataLakeSettings
 
-	if settings.CreateDatabaseDefaultPermissions != nil {
-		d.Set("create_database_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateDatabaseDefaultPermissions))
-	} else {
-		d.Set("create_database_default_permissions", nil)
-	}
-
-	if settings.CreateTableDefaultPermissions != nil {
-		d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
-	} else {
-		d.Set("create_table_default_permissions", nil)
-	}
-
+	d.Set("create_database_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateDatabaseDefaultPermissions))
+	d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
 	d.Set("data_lake_admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
 	d.Set("trusted_resource_owners", flattenStringList(settings.TrustedResourceOwners))
 
@@ -273,11 +263,13 @@ func expandDataLakeSettingsCreateDefaultPermission(tfMap map[string]interface{})
 }
 
 func flattenDataLakeSettingsCreateDefaultPermissions(apiObjects []*lakeformation.PrincipalPermissions) []map[string]interface{} {
+	if apiObjects == nil {
+		return nil
+	}
+
 	tfMaps := make([]map[string]interface{}, len(apiObjects))
-	if len(apiObjects) > 0 {
-		for i, v := range apiObjects {
-			tfMaps[i] = flattenDataLakeSettingsCreateDefaultPermission(v)
-		}
+	for i, v := range apiObjects {
+		tfMaps[i] = flattenDataLakeSettingsCreateDefaultPermission(v)
 	}
 
 	return tfMaps
@@ -317,7 +309,7 @@ func expandDataLakeSettingsAdmins(tfSlice []interface{}) []*lakeformation.DataLa
 }
 
 func flattenDataLakeSettingsAdmins(apiObjects []*lakeformation.DataLakePrincipal) []interface{} {
-	if apiObjects == nil || len(apiObjects) == 0 {
+	if apiObjects == nil {
 		return nil
 	}
 

@@ -12,23 +12,16 @@ import (
 )
 
 func TestAccAWSLakeFormationDataLakeSettings_serial(t *testing.T) {
-	testCases := map[string]map[string]func(t *testing.T){
-		"ResourcePolicy": {
-			"basic":            testAccAWSLakeFormationDataLakeSettings_basic,
-			"disappears":       testAccAWSLakeFormationDataLakeSettings_disappears,
-			"withoutCatalogId": testAccAWSLakeFormationDataLakeSettings_withoutCatalogId,
-		},
+	testCases := map[string]func(t *testing.T){
+		"basic":            testAccAWSLakeFormationDataLakeSettings_basic,
+		"disappears":       testAccAWSLakeFormationDataLakeSettings_disappears,
+		"withoutCatalogId": testAccAWSLakeFormationDataLakeSettings_withoutCatalogId,
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			tc(t)
 		})
 	}
 }
