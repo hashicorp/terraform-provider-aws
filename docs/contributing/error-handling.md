@@ -101,7 +101,7 @@ _The codebase also contains an older style `isAWSErr(err, "CodeEquals", "Message
 
 #### Use AWS Go SDK Error Code Constants
 
-Each AWS Go SDK service API typically implements common error codes, which get exported as public constants in the AWS Go SDK. In the [AWS Go SDK API Reference](https://docs.aws.amazon.com/sdk-for-go/api/), these can be found in each of the service packages under the `Constants` section (typcially named `ErrCode{ExceptionName}`).
+Each AWS Go SDK service API typically implements common error codes, which get exported as public constants in the AWS Go SDK. In the [AWS Go SDK API Reference](https://docs.aws.amazon.com/sdk-for-go/api/), these can be found in each of the service packages under the `Constants` section (typically named `ErrCode{ExceptionName}`).
 
 If an AWS Go SDK service API is missing an error code constant, an AWS Support case should be submitted and a new constant can be added to `aws/internal/service/{SERVICE}/errors.go` file (created if not present), e.g.
 
@@ -153,7 +153,7 @@ Invoked in the resource via the `schema.Resource` type `Create`/`CreateContext` 
 
 #### d.IsNewResource() Checks
 
-During resource creation, Terraform CLI expects either a properly applied state for the new resource or an error. To signal proper resource existance, the Terraform Plugin SDK uses an underlying resource identifier (set via `d.SetId(/* some value */)`). If for some reason the resource creation is returned without an error, but also without the resource identifier being set, Terraform CLI will return an error such as:
+During resource creation, Terraform CLI expects either a properly applied state for the new resource or an error. To signal proper resource existence, the Terraform Plugin SDK uses an underlying resource identifier (set via `d.SetId(/* some value */)`). If for some reason the resource creation is returned without an error, but also without the resource identifier being set, Terraform CLI will return an error such as:
 
 ```
 Error: Provider produced inconsistent result after apply
@@ -168,7 +168,7 @@ issue tracker.
 
 A typical pattern in resource implementations in the `Create`/`CreateContext` function is to `return` the `Read`/`ReadContext` function at the end to fill in the Terraform State for all attributes. Another typical pattern in resource implementations in the `Read`/`ReadContext` function is to remove the resource from the Terraform State if the remote system returns an error or status that indicates the remote resource no longer exists by explicitly calling `d.SetId("")` and returning no error. If the remote system is not strongly read-after-write consistent (eventually consistent), this means the resource creation can return no error and also return no resource state.
 
-To prevent this type of Terraform CLI error, the resource implementation should also check against `d.IsNewResource()` before removing from the Terraform State and returning no error. If that check is `true`, then remote operation error (or one synthesized from the non-existant status) should be returned instead. While adding this check will not fix the resource implementation to handle the eventually consistent nature of the remote system, the error being returned will be less opaque for operators and code maintainers to troubleshoot.
+To prevent this type of Terraform CLI error, the resource implementation should also check against `d.IsNewResource()` before removing from the Terraform State and returning no error. If that check is `true`, then remote operation error (or one synthesized from the non-existent status) should be returned instead. While adding this check will not fix the resource implementation to handle the eventually consistent nature of the remote system, the error being returned will be less opaque for operators and code maintainers to troubleshoot.
 
 In the Terraform AWS Provider, an initial fix for the Terraform CLI error will typically look like:
 
@@ -232,7 +232,7 @@ Invoked in the resource via the `schema.Resource` type `Delete`/`DeleteContext` 
 
 #### Resource Already Deleted
 
-A typical pattern for resource deletion is to immediately perform the remote system deletion operation without checking existance. This is generally acceptable as operators are encouraged to always refresh their Terraform State prior to performing changes. However in certain scenarios, such as external systems modifying the remote system prior to the Terraform execution, it is certainly still possible that the remote system will return an error signifying that remote resource does not exist. In these cases, resources should implement logic that catches the error and returns no error.
+A typical pattern for resource deletion is to immediately perform the remote system deletion operation without checking existence. This is generally acceptable as operators are encouraged to always refresh their Terraform State prior to performing changes. However in certain scenarios, such as external systems modifying the remote system prior to the Terraform execution, it is certainly still possible that the remote system will return an error signifying that remote resource does not exist. In these cases, resources should implement logic that catches the error and returns no error.
 
 _NOTE: The Terraform Plugin SDK automatically handles the equivalent of d.SetId("") on deletion, so it is not necessary to include it._
 
@@ -295,7 +295,7 @@ A data source which is expected to return Terraform State about a single remote 
 
 For remote operations that are designed to return an error when the remote resource is not found, this error is typically just passed through similar to other remote operation errors. For remote operations that are designed to return a successful result whether there is zero, one, or multiple multiple results the error must be generated.
 
-For example in psuedo-code:
+For example in pseudo-code:
 
 ```go
 output, err := conn.ListServiceThings(input)
