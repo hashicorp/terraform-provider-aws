@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -15,26 +14,6 @@ func dataSourceAwsEc2ManagedPrefixList() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceAwsEc2ManagedPrefixListRead,
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-			},
-			"entries": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     dataSourceAwsEc2ManagedPrefixListEntrySchema(),
-			},
-			"filter": dataSourceFiltersSchema(),
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"address_family": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -43,8 +22,39 @@ func dataSourceAwsEc2ManagedPrefixList() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"entries": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"filter": dataSourceFiltersSchema(),
+			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+			},
 			"max_entries": {
 				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+			},
+			"owner_id": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"tags": tagsSchemaComputed(),
@@ -56,29 +66,13 @@ func dataSourceAwsEc2ManagedPrefixList() *schema.Resource {
 	}
 }
 
-func dataSourceAwsEc2ManagedPrefixListEntrySchema() *schema.Resource {
-	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"cidr": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-		},
-	}
-}
-
 func dataSourceAwsEc2ManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).ec2conn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
-	filters, filtersOk := d.GetOk("filter")
 
 	input := ec2.DescribeManagedPrefixListsInput{}
 
-	if filtersOk {
+	if filters, ok := d.GetOk("filter"); ok {
 		input.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
 	}
 
@@ -86,7 +80,7 @@ func dataSourceAwsEc2ManagedPrefixListRead(ctx context.Context, d *schema.Resour
 		input.PrefixListIds = aws.StringSlice([]string{prefixListId.(string)})
 	}
 
-	if prefixListName := d.Get("name"); prefixListName.(string) != "" {
+	if prefixListName, ok := d.GetOk("name"); ok {
 		input.Filters = append(input.Filters, &ec2.Filter{
 			Name:   aws.String("prefix-list-name"),
 			Values: aws.StringSlice([]string{prefixListName.(string)}),
@@ -96,7 +90,7 @@ func dataSourceAwsEc2ManagedPrefixListRead(ctx context.Context, d *schema.Resour
 	out, err := conn.DescribeManagedPrefixListsWithContext(ctx, &input)
 
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("error describing EC2 Managed Prefix Lists: %s", err)
 	}
 
 	if len(out.PrefixLists) < 1 {
@@ -118,12 +112,10 @@ func dataSourceAwsEc2ManagedPrefixListRead(ctx context.Context, d *schema.Resour
 	d.Set("version", pl.Version)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(pl.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("error setting tags attribute: %s", err)
 	}
 
-	entries := &schema.Set{
-		F: schema.HashResource(dataSourceAwsEc2ManagedPrefixListEntrySchema()),
-	}
+	var entries []interface{}
 
 	err = conn.GetManagedPrefixListEntriesPages(
 		&ec2.GetManagedPrefixListEntriesInput{
@@ -131,7 +123,7 @@ func dataSourceAwsEc2ManagedPrefixListRead(ctx context.Context, d *schema.Resour
 		},
 		func(output *ec2.GetManagedPrefixListEntriesOutput, last bool) bool {
 			for _, entry := range output.Entries {
-				entries.Add(map[string]interface{}{
+				entries = append(entries, map[string]interface{}{
 					"cidr":        aws.StringValue(entry.Cidr),
 					"description": aws.StringValue(entry.Description),
 				})
@@ -142,7 +134,7 @@ func dataSourceAwsEc2ManagedPrefixListRead(ctx context.Context, d *schema.Resour
 	)
 
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("error listing EC2 Managed Prefix List (%s) entries: %s", d.Id(), err)
 	}
 
 	if err := d.Set("entries", entries); err != nil {

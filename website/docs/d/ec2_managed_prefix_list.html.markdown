@@ -26,20 +26,10 @@ data "aws_ec2_managed_prefix_list" "example" {
 ### Find a managed prefix list using filters
 
 ```hcl
-resource "aws_ec2_managed_prefix_list" "example" {
-  name           = "example"
-  max_entries    = 5
-  address_family = "IPv4"
-  
-  entry {
-    cidr_block = "1.0.0.0/8"
-  }
-}
-
 data "aws_ec2_managed_prefix_list" "example" {
   filter {
     name   = "prefix-list-name"
-    values = [aws_ec2_managed_prefix_list.example.name]
+    values = ["my-prefix-list"]
   }
 }
 ```
