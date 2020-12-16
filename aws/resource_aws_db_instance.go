@@ -1415,7 +1415,6 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	d.SetId(*v.DbiResourceId)
 	d.Set("resource_id", v.DbiResourceId)
 	d.Set("identifier", v.DBInstanceIdentifier)
 	d.Set("name", v.DBName)
