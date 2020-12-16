@@ -23,3 +23,23 @@ func ProjectByName(conn *lookoutforvision.LookoutForVision, name string) (*looko
 
 	return output, nil
 }
+
+// DatasetByName returns the dataset corresponding to a given project and dataset type
+// Returns nil if no dataset is found.
+func DatasetByProjectAndType(conn *lookoutforvision.LookoutForVision, project_name string, dataset_type string) (*lookoutforvision.DescribeDatasetOutput, error) {
+	input := &lookoutforvision.DescribeDatasetInput{
+		ProjectName: aws.String(project_name),
+		DatasetType: aws.String(dataset_type),
+	}
+
+	output, err := conn.DescribeDataset(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	return output, nil
+}
