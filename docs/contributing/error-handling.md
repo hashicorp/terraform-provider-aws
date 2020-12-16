@@ -81,7 +81,7 @@ To simplify operations with AWS Go SDK error types, the following helpers are av
 - `tfawserr.ErrCodeEquals(err, "Code")`: Preferred when the error code is specific enough for the check condition. For example, a `ResourceNotFoundError` code provides enough information that the requested API resource identifier/Amazon Resource Name does not exist.
 - `tfawserr.ErrMessageContains(err, "Code", "MessageContains")`: Does simple substring matching for the error message.
 
-The recommendation for error message checking is to be just specific enough to capture the antipated issue, but not include _too_ much matching as the AWS API can change over time without notice. The maintainers have observed changes in wording and capitalization cause unexpected issues in the past.
+The recommendation for error message checking is to be just specific enough to capture the anticipated issue, but not include _too_ much matching as the AWS API can change over time without notice. The maintainers have observed changes in wording and capitalization cause unexpected issues in the past.
 
 For example, given this error code and message:
 
