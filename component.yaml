@@ -2,6 +2,10 @@ name: terraform-provider-aws
 kind: go-library
 exports:
   source:
+    resources:
+    - go.mod
+    - go.sum
+    - "**/*.go"
     ignore:
     - "**/*_test.go"
     - "vendor/**/*.go"
