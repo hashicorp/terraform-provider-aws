@@ -10,20 +10,13 @@ description: |-
 
 Manages Lake Formation principals designated as data lake administrators and lists of principal permission entries for default create database and default create table permissions.
 
-## Example Usage
+~> **NOTE:** Lake Formation introduces fine-grained access control for data in your data lake. In order to make Lake Formation backwards compatible with existing IAM and Glue permissions, AWS introduced the `IAMAllowedPrincipals` principal. For more details, see [Changing the Default Security Settings for Your Data Lake](https://docs.aws.amazon.com/lake-formation/latest/dg/change-settings.html) and [Upgrading AWS Glue Data Permissions to the AWS Lake Formation Model](https://docs.aws.amazon.com/lake-formation/latest/dg/upgrade-glue-lake-formation.html).
 
+## Example Usage
 
 ### Data Lake Admins
 
 ```hcl
-resource "aws_iam_user" "test" {
-  name = "username"
-}
-
-resource "aws_iam_role" "test" {
-  name = "rolename"
-}
-
 resource "aws_lakeformation_data_lake_settings" "example" {
   data_lake_admins = [aws_iam_user.test.arn, aws_iam_role.test.arn]
 }
@@ -62,14 +55,14 @@ The following arguments are optional:
 The following arguments are optional:
 
 * `permissions` - (Optional) List of permissions that are granted to the principal. Valid values include `ALL`, `SELECT`, `ALTER`, `DROP`, `DELETE`, `INSERT`, `DESCRIBE`, `CREATE_DATABASE`, `CREATE_TABLE`, and `DATA_LOCATION_ACCESS`.
-* `principal` - (Optional) Identifier for the Lake Formation principal. Supported principals are IAM users or IAM roles.
+* `principal` - (Optional) Principal who is granted permissions. To enforce metadata and underlying data access control only by IAM on new databases and tables set `principal` to `IAM_ALLOWED_PRINCIPALS` and `permissions` to `["ALL"]`.
 
 ### create_table_default_permissions
 
 The following arguments are optional:
 
 * `permissions` - (Optional) List of permissions that are granted to the principal. Valid values include `ALL`, `SELECT`, `ALTER`, `DROP`, `DELETE`, `INSERT`, `DESCRIBE`, `CREATE_DATABASE`, `CREATE_TABLE`, and `DATA_LOCATION_ACCESS`.
-* `principal` - (Optional) Identifier for the Lake Formation principal. Supported principals are IAM users or IAM roles.
+* `principal` - (Optional) Principal who is granted permissions. To enforce metadata and underlying data access control only by IAM on new databases and tables set `principal` to `IAM_ALLOWED_PRINCIPALS` and `permissions` to `["ALL"]`.
 
 ## Attributes Reference
 
