@@ -25,7 +25,6 @@ func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"catalog_id": {
 				Type:     schema.TypeString,
-				Computed: true,
 				ForceNew: true,
 				Optional: true,
 			},
@@ -103,10 +102,6 @@ func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 
 func resourceAwsLakeFormationDataLakeSettingsCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lakeformationconn
-
-	if err := resourceAwsLakeFormationDataLakeSettingsAdminUpdate(d, meta); err != nil {
-		return fmt.Errorf("error updating Lake Formation data lake admins: %w", err)
-	}
 
 	input := &lakeformation.PutDataLakeSettingsInput{}
 
@@ -208,34 +203,6 @@ func resourceAwsLakeFormationDataLakeSettingsDelete(d *schema.ResourceData, meta
 
 	if err != nil {
 		return fmt.Errorf("error deleting Lake Formation data lake settings (%s): %w", d.Id(), err)
-	}
-
-	return nil
-}
-
-func resourceAwsLakeFormationDataLakeSettingsAdminUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lakeformationconn
-
-	if v, ok := d.GetOk("data_lake_admins"); ok {
-		input := &lakeformation.PutDataLakeSettingsInput{}
-
-		if v, ok := d.GetOk("catalog_id"); ok {
-			input.CatalogId = aws.String(v.(string))
-		}
-
-		settings := &lakeformation.DataLakeSettings{}
-		settings.DataLakeAdmins = expandDataLakeSettingsAdmins(v.([]interface{}))
-
-		input.DataLakeSettings = settings
-		output, err := conn.PutDataLakeSettings(input)
-
-		if err != nil {
-			return err
-		}
-
-		if output == nil {
-			return fmt.Errorf("empty response")
-		}
 	}
 
 	return nil

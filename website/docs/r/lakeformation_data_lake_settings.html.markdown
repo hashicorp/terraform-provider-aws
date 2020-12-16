@@ -10,7 +10,7 @@ description: |-
 
 Manages Lake Formation principals designated as data lake administrators and lists of principal permission entries for default create database and default create table permissions.
 
-~> **NOTE:** Lake Formation introduces fine-grained access control for data in your data lake. In order to make Lake Formation backwards compatible with existing IAM and Glue permissions, AWS introduced the `IAMAllowedPrincipals` principal. For more details, see [Changing the Default Security Settings for Your Data Lake](https://docs.aws.amazon.com/lake-formation/latest/dg/change-settings.html) and [Upgrading AWS Glue Data Permissions to the AWS Lake Formation Model](https://docs.aws.amazon.com/lake-formation/latest/dg/upgrade-glue-lake-formation.html).
+~> **NOTE:** Lake Formation introduces fine-grained access control for data in your data lake. Part of the changes include the `IAMAllowedPrincipals` principal in order to make Lake Formation backwards compatible with existing IAM and Glue permissions. For more information, see [Changing the Default Security Settings for Your Data Lake](https://docs.aws.amazon.com/lake-formation/latest/dg/change-settings.html) and [Upgrading AWS Glue Data Permissions to the AWS Lake Formation Model](https://docs.aws.amazon.com/lake-formation/latest/dg/upgrade-glue-lake-formation.html).
 
 ## Example Usage
 

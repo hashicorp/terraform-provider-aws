@@ -76,6 +76,7 @@ func dataSourceAwsLakeFormationDataLakeSettingsRead(d *schema.ResourceData, meta
 	if v, ok := d.GetOk("catalog_id"); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
+	d.SetId(fmt.Sprintf("%d", hashcode.String(input.String())))
 
 	output, err := conn.GetDataLakeSettings(input)
 
@@ -99,8 +100,6 @@ func dataSourceAwsLakeFormationDataLakeSettingsRead(d *schema.ResourceData, meta
 	d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
 	d.Set("data_lake_admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
 	d.Set("trusted_resource_owners", flattenStringList(settings.TrustedResourceOwners))
-
-	d.SetId(fmt.Sprintf("%d", hashcode.String(input.String())))
 
 	return nil
 }
