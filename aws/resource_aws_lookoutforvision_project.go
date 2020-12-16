@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lookoutforvision"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lookoutforvision/finder"
@@ -42,6 +43,7 @@ func resourceAwsLookoutForVisionProjectCreate(d *schema.ResourceData, meta inter
 
 	input := &lookoutforvision.CreateProjectInput{
 		ProjectName: aws.String(name),
+		ClientToken: aws.String(resource.UniqueId()),
 	}
 
 	log.Printf("[DEBUG] Amazon Lookout for Vision project create config: %#v", *input)
@@ -69,7 +71,8 @@ func resourceAwsLookoutForVisionProjectRead(d *schema.ResourceData, meta interfa
 
 	}
 
-	d.Set("name", project.ProjectName)
+	d.Set("name", project.ProjectDescription.ProjectName)
+	d.Set("arn", project.ProjectDescription.ProjectArn)
 
 	return nil
 }
