@@ -2,19 +2,22 @@ package aws
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 )
 
 func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsLakeFormationDataLakeSettingsPut,
-		Update: resourceAwsLakeFormationDataLakeSettingsPut,
+		Create: resourceAwsLakeFormationDataLakeSettingsCreate,
+		Update: resourceAwsLakeFormationDataLakeSettingsCreate,
 		Read:   resourceAwsLakeFormationDataLakeSettingsRead,
-		Delete: resourceAwsLakeFormationDataLakeSettingsReset,
+		Delete: resourceAwsLakeFormationDataLakeSettingsDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -22,114 +25,307 @@ func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"catalog_id": {
 				Type:     schema.TypeString,
+				Computed: true,
 				ForceNew: true,
 				Optional: true,
-				Computed: true,
 			},
-			"admins": {
+			"create_database_default_permissions": {
 				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 0,
-				MaxItems: 10,
+				Computed: true,
+				Optional: true,
+				MaxItems: 3,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"permissions": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(lakeformation.Permission_Values(), false),
+							},
+						},
+						"principal": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							//ValidateFunc: validateArn,
+						},
+					},
+				},
+			},
+			"create_table_default_permissions": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Optional: true,
+				MaxItems: 3,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"permissions": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(lakeformation.Permission_Values(), false),
+							},
+						},
+						"principal": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							//ValidateFunc: validateArn,
+						},
+					},
+				},
+			},
+			"data_lake_admins": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.NoZeroValues,
+					ValidateFunc: validateArn,
+				},
+			},
+			"trusted_resource_owners": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validateAwsAccountId,
 				},
 			},
 		},
 	}
 }
 
-func resourceAwsLakeFormationDataLakeSettingsPut(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsLakeFormationDataLakeSettingsCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lakeformationconn
-	catalogId := createAwsDataCatalogId(d, meta.(*AWSClient).accountid)
 
-	input := &lakeformation.PutDataLakeSettingsInput{
-		CatalogId: aws.String(catalogId),
-		DataLakeSettings: &lakeformation.DataLakeSettings{
-			DataLakeAdmins: expandAdmins(d),
-		},
+	if err := resourceAwsLakeFormationDataLakeSettingsAdminUpdate(d, meta); err != nil {
+		return fmt.Errorf("error updating Lake Formation data lake admins: %w", err)
 	}
 
-	_, err := conn.PutDataLakeSettings(input)
+	input := &lakeformation.PutDataLakeSettingsInput{}
+
+	if v, ok := d.GetOk("catalog_id"); ok {
+		input.CatalogId = aws.String(v.(string))
+	}
+
+	settings := &lakeformation.DataLakeSettings{}
+
+	if v, ok := d.GetOk("create_database_default_permissions"); ok {
+		settings.CreateDatabaseDefaultPermissions = expandDataLakeSettingsCreateDefaultPermissions(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("create_table_default_permissions"); ok {
+		settings.CreateTableDefaultPermissions = expandDataLakeSettingsCreateDefaultPermissions(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("data_lake_admins"); ok {
+		settings.DataLakeAdmins = expandDataLakeSettingsAdmins(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("trusted_resource_owners"); ok {
+		settings.TrustedResourceOwners = expandStringList(v.([]interface{}))
+	}
+
+	input.DataLakeSettings = settings
+	output, err := conn.PutDataLakeSettings(input)
+
 	if err != nil {
-		return fmt.Errorf("Error updating DataLakeSettings: %s", err)
+		return fmt.Errorf("error creating Lake Formation data lake settings: %w", err)
 	}
 
-	d.SetId(fmt.Sprintf("lakeformation:settings:%s", catalogId))
-	d.Set("catalog_id", catalogId)
+	if output == nil {
+		return fmt.Errorf("error creating Lake Formation data lake settings: empty response")
+	}
+
+	d.SetId(fmt.Sprintf("%d", hashcode.String(input.String())))
 
 	return resourceAwsLakeFormationDataLakeSettingsRead(d, meta)
 }
 
 func resourceAwsLakeFormationDataLakeSettingsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lakeformationconn
-	catalogId := d.Get("catalog_id").(string)
 
-	input := &lakeformation.GetDataLakeSettingsInput{
-		CatalogId: aws.String(catalogId),
+	input := &lakeformation.GetDataLakeSettingsInput{}
+
+	if v, ok := d.GetOk("catalog_id"); ok {
+		input.CatalogId = aws.String(v.(string))
 	}
 
-	out, err := conn.GetDataLakeSettings(input)
+	output, err := conn.GetDataLakeSettings(input)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
+		log.Printf("[WARN] Lake Formation data lake settings (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("Error reading DataLakeSettings: %s", err)
+		return fmt.Errorf("error reading Lake Formation data lake settings (%s): %w", d.Id(), err)
 	}
 
-	d.Set("catalog_id", catalogId)
-	if err := d.Set("admins", flattenAdmins(out.DataLakeSettings.DataLakeAdmins)); err != nil {
-		return fmt.Errorf("Error setting admins from DataLakeSettings: %s", err)
+	if output == nil || output.DataLakeSettings == nil {
+		return fmt.Errorf("error reading Lake Formation data lake settings (%s): empty response", d.Id())
 	}
-	// TODO: Add CreateDatabaseDefaultPermissions and CreateTableDefaultPermissions
+
+	settings := output.DataLakeSettings
+
+	if settings.CreateDatabaseDefaultPermissions != nil {
+		d.Set("create_database_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateDatabaseDefaultPermissions))
+	} else {
+		d.Set("create_database_default_permissions", nil)
+	}
+
+	if settings.CreateTableDefaultPermissions != nil {
+		d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
+	} else {
+		d.Set("create_table_default_permissions", nil)
+	}
+
+	d.Set("data_lake_admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
+	d.Set("trusted_resource_owners", flattenStringList(settings.TrustedResourceOwners))
 
 	return nil
 }
 
-func resourceAwsLakeFormationDataLakeSettingsReset(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsLakeFormationDataLakeSettingsDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lakeformationconn
-	catalogId := d.Get("catalog_id").(string)
 
 	input := &lakeformation.PutDataLakeSettingsInput{
-		CatalogId: aws.String(catalogId),
 		DataLakeSettings: &lakeformation.DataLakeSettings{
-			DataLakeAdmins: make([]*lakeformation.DataLakePrincipal, 0),
+			CreateDatabaseDefaultPermissions: make([]*lakeformation.PrincipalPermissions, 0),
+			CreateTableDefaultPermissions:    make([]*lakeformation.PrincipalPermissions, 0),
+			DataLakeAdmins:                   make([]*lakeformation.DataLakePrincipal, 0),
+			TrustedResourceOwners:            make([]*string, 0),
 		},
 	}
 
+	if v, ok := d.GetOk("catalog_id"); ok {
+		input.CatalogId = aws.String(v.(string))
+	}
+
 	_, err := conn.PutDataLakeSettings(input)
+
+	if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
+		log.Printf("[WARN] Lake Formation data lake settings (%s) not found, removing from state", d.Id())
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("Error reseting DataLakeSettings: %s", err)
+		return fmt.Errorf("error deleting Lake Formation data lake settings (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func createAwsDataCatalogId(d *schema.ResourceData, accountId string) (catalogId string) {
-	if inputCatalogId, ok := d.GetOkExists("catalog_id"); ok {
-		catalogId = inputCatalogId.(string)
-	} else {
-		catalogId = accountId
-	}
-	return
-}
+func resourceAwsLakeFormationDataLakeSettingsAdminUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).lakeformationconn
 
-func expandAdmins(d *schema.ResourceData) []*lakeformation.DataLakePrincipal {
-	xs := d.Get("admins")
-	ys := make([]*lakeformation.DataLakePrincipal, len(xs.([]interface{})))
+	if v, ok := d.GetOk("data_lake_admins"); ok {
+		input := &lakeformation.PutDataLakeSettingsInput{}
 
-	for i, x := range xs.([]interface{}) {
-		ys[i] = &lakeformation.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(x.(string)),
+		if v, ok := d.GetOk("catalog_id"); ok {
+			input.CatalogId = aws.String(v.(string))
+		}
+
+		settings := &lakeformation.DataLakeSettings{}
+		settings.DataLakeAdmins = expandDataLakeSettingsAdmins(v.([]interface{}))
+
+		input.DataLakeSettings = settings
+		output, err := conn.PutDataLakeSettings(input)
+
+		if err != nil {
+			return err
+		}
+
+		if output == nil {
+			return fmt.Errorf("empty response")
 		}
 	}
 
-	return ys
+	return nil
 }
 
-func flattenAdmins(xs []*lakeformation.DataLakePrincipal) []string {
-	admins := make([]string, len(xs))
-	for i, x := range xs {
-		admins[i] = aws.StringValue(x.DataLakePrincipalIdentifier)
+func expandDataLakeSettingsCreateDefaultPermissions(tfMaps []interface{}) []*lakeformation.PrincipalPermissions {
+	apiObjects := make([]*lakeformation.PrincipalPermissions, 0, len(tfMaps))
+
+	for _, tfMap := range tfMaps {
+		apiObjects = append(apiObjects, expandDataLakeSettingsCreateDefaultPermission(tfMap.(map[string]interface{})))
 	}
 
-	return admins
+	return apiObjects
+}
+
+func expandDataLakeSettingsCreateDefaultPermission(tfMap map[string]interface{}) *lakeformation.PrincipalPermissions {
+	apiObject := &lakeformation.PrincipalPermissions{
+		Permissions: expandStringSet(tfMap["permissions"].(*schema.Set)),
+		Principal: &lakeformation.DataLakePrincipal{
+			DataLakePrincipalIdentifier: aws.String(tfMap["principal"].(string)),
+		},
+	}
+
+	return apiObject
+}
+
+func flattenDataLakeSettingsCreateDefaultPermissions(apiObjects []*lakeformation.PrincipalPermissions) []map[string]interface{} {
+	tfMaps := make([]map[string]interface{}, len(apiObjects))
+	if len(apiObjects) > 0 {
+		for i, v := range apiObjects {
+			tfMaps[i] = flattenDataLakeSettingsCreateDefaultPermission(v)
+		}
+	}
+
+	return tfMaps
+}
+
+func flattenDataLakeSettingsCreateDefaultPermission(apiObject *lakeformation.PrincipalPermissions) map[string]interface{} {
+	tfMap := make(map[string]interface{})
+
+	if apiObject == nil {
+		return tfMap
+	}
+
+	if apiObject.Permissions != nil {
+		tfMap["permissions"] = flattenStringSet(apiObject.Permissions)
+	}
+
+	if v := aws.StringValue(apiObject.Principal.DataLakePrincipalIdentifier); v != "" {
+		tfMap["principal"] = v
+	}
+
+	return tfMap
+}
+
+func expandDataLakeSettingsAdmins(tfSlice []interface{}) []*lakeformation.DataLakePrincipal {
+	apiObjects := make([]*lakeformation.DataLakePrincipal, 0, len(tfSlice))
+
+	for _, tfItem := range tfSlice {
+		val, ok := tfItem.(string)
+		if ok && val != "" {
+			apiObjects = append(apiObjects, &lakeformation.DataLakePrincipal{
+				DataLakePrincipalIdentifier: aws.String(tfItem.(string)),
+			})
+		}
+	}
+
+	return apiObjects
+}
+
+func flattenDataLakeSettingsAdmins(apiObjects []*lakeformation.DataLakePrincipal) []interface{} {
+	if apiObjects == nil || len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfSlice := make([]interface{}, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfSlice = append(tfSlice, *apiObject.DataLakePrincipalIdentifier)
+	}
+
+	return tfSlice
 }
