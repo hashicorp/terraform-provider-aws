@@ -773,6 +773,7 @@ func Provider() *schema.Provider {
 			"aws_load_balancer_policy":                                resourceAwsLoadBalancerPolicy(),
 			"aws_load_balancer_backend_server_policy":                 resourceAwsLoadBalancerBackendServerPolicies(),
 			"aws_load_balancer_listener_policy":                       resourceAwsLoadBalancerListenerPolicies(),
+			"aws_lookoutforvision_project":                            resourceAwsLookoutForVisionProject(),
 			"aws_lb_ssl_negotiation_policy":                           resourceAwsLBSSLNegotiationPolicy(),
 			"aws_macie_member_account_association":                    resourceAwsMacieMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":                         resourceAwsMacieS3BucketAssociation(),
