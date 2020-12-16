@@ -141,7 +141,7 @@ The following arguments are supported:
 * `description` (Optional) Description of the crawler.
 * `dynamodb_target` (Optional) List of nested DynamoDB target arguments. See [Dynamodb Target](#dynamodb-target) below.
 * `jdbc_target` (Optional) List of nested JBDC target arguments. See [JDBC Target](#jdbc-target) below.
-* `s3_target` (Optional) List nested Amazon S3 target arguments. See [S# Target](#s3-target) below.
+* `s3_target` (Optional) List nested Amazon S3 target arguments. See [S3 Target](#s3-target) below.
 * `mongodb_target` (Optional) List nested MongoDB target arguments. See [MongoDB Target](#mongodb-target) below.
 * `schedule` (Optional) A cron expression used to specify the schedule. For more information, see [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html). For example, to run something every day at 12:15 UTC, you would specify: `cron(15 12 * * ? *)`.
 * `schema_change_policy` (Optional) Policy for the crawler's update and deletion behavior. See [Schema Change Policy](#schema-change-policy) below.
