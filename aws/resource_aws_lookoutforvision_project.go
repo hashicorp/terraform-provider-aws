@@ -29,8 +29,8 @@ func resourceAwsLookoutForVisionProject() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](_*-*[a-zA-Z0-9])*$`), "Valid characters are a-z, A-Z, 0-9, - (hyphen) and _ (underscore). Name must begin with an alphanumeric character."),
-				)
-			}
+				),
+			},
 		},
 	}
 }
