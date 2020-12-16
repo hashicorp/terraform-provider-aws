@@ -625,7 +625,6 @@ resource "aws_vpn_connection" "test" {
   customer_gateway_id = aws_customer_gateway.customer_gateway.id
   type                = "ipsec.1"
   static_routes_only  = false
-  enable_acceleration = false
 }
 `, rBgpAsn, rInt)
 }
