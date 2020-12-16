@@ -2,8 +2,10 @@
 
 FEATURES
 
+* **New Data Source:** `aws_lakeformation_data_lake_settings` [GH-13250]
 * **New Resource:** `aws_codestarconnections_connection` [GH-15990]
-* **New Resource:** `aws_lakeformation_resource` ([#13267](https://github.com/hashicorp/terraform-provider-aws/issues/13267))
+* **New Resource:** `aws_lakeformation_data_lake_settings` [GH-13250]
+* **New Resource:** `aws_lakeformation_resource` [GH-13267]
 
 ENHANCEMENTS
 
