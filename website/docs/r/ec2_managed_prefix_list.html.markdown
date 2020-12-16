@@ -10,13 +10,6 @@ description: |-
 
 Provides a managed prefix list resource.
 
-~> **NOTE on Prefix Lists and Prefix List Entries:** Terraform currently
-provides both a standalone [Managed Prefix List Entry resource](ec2_managed_prefix_list_entry.html),
-and a Prefix List resource with an `entry` set defined in-line. At this time you
-cannot use a Prefix List with in-line rules in conjunction with any Prefix List Entry
-resources. Doing so will cause a conflict of rule settings and will unpredictably
-fail or overwrite rules.
-
 ~> **NOTE on `max_entries`:** When you reference a Prefix List in a resource,
 the maximum number of entries for the prefix lists counts as the same number of rules
 or entries for the resource. For example, if you create a prefix list with a maximum
@@ -75,6 +68,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ID of the prefix list.
 * `arn` - The ARN of the prefix list.
 * `owner_id` - The ID of the AWS account that owns this prefix list.
+* `version` - The latest version of this prefix list.
 
 ## Import
 

@@ -1,22 +1,16 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
-	"sort"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-)
-
-var (
-	awsPrefixListEntrySetHashFunc = schema.HashResource(prefixListEntrySchema())
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 )
 
 func resourceAwsEc2ManagedPrefixList() *schema.Resource {
@@ -44,12 +38,24 @@ func resourceAwsEc2ManagedPrefixList() *schema.Resource {
 				Computed: true,
 			},
 			"entry": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Computed:   true,
-				ConfigMode: schema.SchemaConfigModeAttr,
-				Elem:       prefixListEntrySchema(),
-				Set:        awsPrefixListEntrySetHashFunc,
+				Type:     schema.TypeSet,
+				Optional: true,
+				// Computed:   true,
+				// ConfigMode: schema.SchemaConfigModeAttr,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cidr_block": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.IsCIDR,
+						},
+						"description": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 255),
+						},
+					},
+				},
 			},
 			"max_entries": {
 				Type:         schema.TypeInt,
@@ -67,22 +73,9 @@ func resourceAwsEc2ManagedPrefixList() *schema.Resource {
 				Computed: true,
 			},
 			"tags": tagsSchema(),
-		},
-	}
-}
-
-func prefixListEntrySchema() *schema.Resource {
-	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"cidr_block": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.IsCIDR,
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 255),
+			"version": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 		},
 	}
@@ -110,18 +103,16 @@ func resourceAwsEc2ManagedPrefixListCreate(d *schema.ResourceData, meta interfac
 
 	output, err := conn.CreateManagedPrefixList(&input)
 	if err != nil {
-		return fmt.Errorf("failed to create managed prefix list: %v", err)
+		return fmt.Errorf("failed to create managed prefix list: %w", err)
 	}
 
-	id := aws.StringValue(output.PrefixList.PrefixListId)
+	d.SetId(aws.StringValue(output.PrefixList.PrefixListId))
 
-	log.Printf("[INFO] Created Managed Prefix List %s (%s)", d.Get("name").(string), id)
+	log.Printf("[INFO] Created Managed Prefix List %s (%s)", d.Get("name").(string), d.Id())
 
-	if err := waitUntilAwsManagedPrefixListSettled(id, conn, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("prefix list %s did not settle after create: %s", id, err)
+	if _, err := waiter.ManagedPrefixListCreated(conn, d.Id()); err != nil {
+		return fmt.Errorf("managed prefix list %s failed to create: %w", d.Id(), err)
 	}
-
-	d.SetId(id)
 
 	return resourceAwsEc2ManagedPrefixListRead(d, meta)
 }
@@ -132,10 +123,11 @@ func resourceAwsEc2ManagedPrefixListRead(d *schema.ResourceData, meta interface{
 	id := d.Id()
 
 	pl, ok, err := getManagedPrefixList(id, conn)
-	switch {
-	case err != nil:
-		return err
-	case !ok:
+	if err != nil {
+		return fmt.Errorf("failed to get managed prefix list %s: %w", id, err)
+	}
+
+	if !ok {
 		log.Printf("[WARN] Managed Prefix List %s not found; removing from state.", id)
 		d.SetId("")
 		return nil
@@ -146,7 +138,7 @@ func resourceAwsEc2ManagedPrefixListRead(d *schema.ResourceData, meta interface{
 
 	entries, err := getPrefixListEntries(id, conn, 0)
 	if err != nil {
-		return err
+		return fmt.Errorf("error listing entries of EC2 Managed Prefix List (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("entry", flattenPrefixListEntries(entries)); err != nil {
@@ -161,70 +153,56 @@ func resourceAwsEc2ManagedPrefixListRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error settings attribute tags of managed prefix list %s: %s", id, err)
 	}
 
+	d.Set("version", pl.Version)
+
 	return nil
 }
 
 func resourceAwsEc2ManagedPrefixListUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 	id := d.Id()
-	modifyPrefixList := false
 
 	input := ec2.ModifyManagedPrefixListInput{}
 
 	input.PrefixListId = aws.String(id)
 
-	if d.HasChange("name") {
+	if d.HasChangeExcept("tags") {
 		input.PrefixListName = aws.String(d.Get("name").(string))
-		modifyPrefixList = true
-	}
+		currentVersion := int64(d.Get("version").(int))
+		wait := false
 
-	if d.HasChange("entry") {
-		pl, ok, err := getManagedPrefixList(id, conn)
-		switch {
-		case err != nil:
-			return err
-		case !ok:
-			return &resource.NotFoundError{}
-		}
+		oldAttr, newAttr := d.GetChange("entry")
+		os := oldAttr.(*schema.Set)
+		ns := newAttr.(*schema.Set)
 
-		currentVersion := aws.Int64Value(pl.Version)
-
-		oldEntries, err := getPrefixListEntries(id, conn, currentVersion)
-		if err != nil {
-			return err
-		}
-
-		newEntries := expandAddPrefixListEntries(d.Get("entry"))
-		adds, removes := computePrefixListEntriesModification(oldEntries, newEntries)
-
-		if len(adds) > 0 || len(removes) > 0 {
-			if len(adds) > 0 {
-				// the Modify API doesn't like empty lists
-				input.AddEntries = adds
-			}
-
-			if len(removes) > 0 {
-				// the Modify API doesn't like empty lists
-				input.RemoveEntries = removes
-			}
-
+		if addEntries := ns.Difference(os); addEntries.Len() > 0 {
+			input.AddEntries = expandAddPrefixListEntries(addEntries)
 			input.CurrentVersion = aws.Int64(currentVersion)
-			modifyPrefixList = true
+			wait = true
 		}
-	}
 
-	if modifyPrefixList {
+		if removeEntries := os.Difference(ns); removeEntries.Len() > 0 {
+			input.RemoveEntries = expandRemovePrefixListEntries(removeEntries)
+			input.CurrentVersion = aws.Int64(currentVersion)
+			wait = true
+		}
+
 		log.Printf("[INFO] modifying managed prefix list %s...", id)
 
-		switch _, err := conn.ModifyManagedPrefixList(&input); {
-		case isAWSErr(err, "PrefixListVersionMismatch", "prefix list has the incorrect version number"):
+		_, err := conn.ModifyManagedPrefixList(&input)
+
+		if isAWSErr(err, "PrefixListVersionMismatch", "prefix list has the incorrect version number") {
 			return fmt.Errorf("failed to modify managed prefix list %s: conflicting change", id)
-		case err != nil:
+		}
+
+		if err != nil {
 			return fmt.Errorf("failed to modify managed prefix list %s: %s", id, err)
 		}
 
-		if err := waitUntilAwsManagedPrefixListSettled(id, conn, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("prefix list did not settle after update: %s", err)
+		if wait {
+			if _, err := waiter.ManagedPrefixListModified(conn, d.Id()); err != nil {
+				return fmt.Errorf("failed to modify managed prefix list %s: %w", d.Id(), err)
+			}
 		}
 	}
 
@@ -246,31 +224,18 @@ func resourceAwsEc2ManagedPrefixListDelete(d *schema.ResourceData, meta interfac
 		PrefixListId: aws.String(id),
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteManagedPrefixList(&input)
-		switch {
-		case isManagedPrefixListModificationConflictErr(err):
-			return resource.RetryableError(err)
-		case isAWSErr(err, "InvalidPrefixListID.NotFound", ""):
-			log.Printf("[WARN] managed prefix list %s has already been deleted", id)
-			return nil
-		case err != nil:
-			return resource.NonRetryableError(err)
-		}
+	_, err := conn.DeleteManagedPrefixList(&input)
 
+	if tfawserr.ErrCodeEquals(err, "InvalidPrefixListID.NotFound") {
 		return nil
-	})
-
-	if isResourceTimeoutError(err) {
-		_, err = conn.DeleteManagedPrefixList(&input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed to delete managed prefix list %s: %s", id, err)
+		return fmt.Errorf("error deleting EC2 Managed Prefix List (%s): %w", d.Id(), err)
 	}
 
-	if err := waitUntilAwsManagedPrefixListSettled(id, conn, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("prefix list %s did not settle after delete: %s", id, err)
+	if err := waiter.ManagedPrefixListDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("failed to delete managed prefix list %s: %w", d.Id(), err)
 	}
 
 	return nil
@@ -301,7 +266,25 @@ func expandAddPrefixListEntries(input interface{}) []*ec2.AddPrefixListEntry {
 	return result
 }
 
-func flattenPrefixListEntries(entries []*ec2.PrefixListEntry) *schema.Set {
+func expandRemovePrefixListEntries(input interface{}) []*ec2.RemovePrefixListEntry {
+	if input == nil {
+		return nil
+	}
+
+	list := input.(*schema.Set).List()
+	result := make([]*ec2.RemovePrefixListEntry, 0, len(list))
+
+	for _, entry := range list {
+		m := entry.(map[string]interface{})
+		output := ec2.RemovePrefixListEntry{}
+		output.Cidr = aws.String(m["cidr_block"].(string))
+		result = append(result, &output)
+	}
+
+	return result
+}
+
+func flattenPrefixListEntries(entries []*ec2.PrefixListEntry) []interface{} {
 	list := make([]interface{}, 0, len(entries))
 
 	for _, entry := range entries {
@@ -315,7 +298,7 @@ func flattenPrefixListEntries(entries []*ec2.PrefixListEntry) *schema.Set {
 		list = append(list, m)
 	}
 
-	return schema.NewSet(awsPrefixListEntrySetHashFunc, list)
+	return list
 }
 
 func getManagedPrefixList(
@@ -364,112 +347,4 @@ func getPrefixListEntries(
 	}
 
 	return result, nil
-}
-
-func computePrefixListEntriesModification(
-	oldEntries []*ec2.PrefixListEntry,
-	newEntries []*ec2.AddPrefixListEntry,
-) ([]*ec2.AddPrefixListEntry, []*ec2.RemovePrefixListEntry) {
-	adds := map[string]string{} // CIDR => Description
-
-	removes := map[string]struct{}{} // set of CIDR
-	for _, oldEntry := range oldEntries {
-		oldCIDR := aws.StringValue(oldEntry.Cidr)
-		removes[oldCIDR] = struct{}{}
-	}
-
-	for _, newEntry := range newEntries {
-		newCIDR := aws.StringValue(newEntry.Cidr)
-		newDescription := aws.StringValue(newEntry.Description)
-
-		for _, oldEntry := range oldEntries {
-			oldCIDR := aws.StringValue(oldEntry.Cidr)
-			oldDescription := aws.StringValue(oldEntry.Description)
-
-			if oldCIDR == newCIDR {
-				delete(removes, oldCIDR)
-
-				if oldDescription != newDescription {
-					adds[oldCIDR] = newDescription
-				}
-
-				goto nextNewEntry
-			}
-		}
-
-		// reach this point when no matching oldEntry found
-		adds[newCIDR] = newDescription
-
-	nextNewEntry:
-	}
-
-	addList := make([]*ec2.AddPrefixListEntry, 0, len(adds))
-	for cidr, description := range adds {
-		addList = append(addList, &ec2.AddPrefixListEntry{
-			Cidr:        aws.String(cidr),
-			Description: aws.String(description),
-		})
-	}
-	sort.Slice(addList, func(i, j int) bool {
-		return aws.StringValue(addList[i].Cidr) < aws.StringValue(addList[j].Cidr)
-	})
-
-	removeList := make([]*ec2.RemovePrefixListEntry, 0, len(removes))
-	for cidr := range removes {
-		removeList = append(removeList, &ec2.RemovePrefixListEntry{
-			Cidr: aws.String(cidr),
-		})
-	}
-	sort.Slice(removeList, func(i, j int) bool {
-		return aws.StringValue(removeList[i].Cidr) < aws.StringValue(removeList[j].Cidr)
-	})
-
-	return addList, removeList
-}
-
-func waitUntilAwsManagedPrefixListSettled(
-	id string,
-	conn *ec2.EC2,
-	timeout time.Duration,
-) error {
-	log.Printf("[INFO] Waiting for managed prefix list %s to settle...", id)
-
-	err := resource.Retry(timeout, func() *resource.RetryError {
-		settled, err := isAwsManagedPrefixListSettled(id, conn)
-		switch {
-		case err != nil:
-			return resource.NonRetryableError(err)
-		case !settled:
-			return resource.RetryableError(errors.New("resource not yet settled"))
-		}
-
-		return nil
-	})
-
-	if isResourceTimeoutError(err) {
-		return fmt.Errorf("timed out: %s", err)
-	}
-
-	return nil
-}
-
-func isAwsManagedPrefixListSettled(id string, conn *ec2.EC2) (bool, error) {
-	pl, ok, err := getManagedPrefixList(id, conn)
-	switch {
-	case err != nil:
-		return false, err
-	case !ok:
-		return true, nil
-	}
-
-	switch state := aws.StringValue(pl.State); state {
-	case ec2.PrefixListStateCreateComplete, ec2.PrefixListStateModifyComplete, ec2.PrefixListStateDeleteComplete:
-		return true, nil
-	case ec2.PrefixListStateCreateInProgress, ec2.PrefixListStateModifyInProgress, ec2.PrefixListStateDeleteInProgress:
-		return false, nil
-	case ec2.PrefixListStateCreateFailed, ec2.PrefixListStateModifyFailed, ec2.PrefixListStateDeleteFailed:
-		return false, fmt.Errorf("terminal state %s indicates failure", state)
-	default:
-		return false, fmt.Errorf("unexpected state %s", state)
-	}
 }

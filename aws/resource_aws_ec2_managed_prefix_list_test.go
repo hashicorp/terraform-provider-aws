@@ -2,135 +2,15 @@ package aws
 
 import (
 	"fmt"
-	"reflect"
 	"regexp"
-	"sort"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
-
-func TestAccAwsEc2ManagedPrefixList_computePrefixListEntriesModification(t *testing.T) {
-	type testEntry struct {
-		CIDR        string
-		Description string
-	}
-
-	tests := []struct {
-		name            string
-		oldEntries      []testEntry
-		newEntries      []testEntry
-		expectedAdds    []testEntry
-		expectedRemoves []testEntry
-	}{
-		{
-			name:            "add two",
-			oldEntries:      []testEntry{},
-			newEntries:      []testEntry{{"1.2.3.4/32", "test1"}, {"2.3.4.5/32", "test2"}},
-			expectedAdds:    []testEntry{{"1.2.3.4/32", "test1"}, {"2.3.4.5/32", "test2"}},
-			expectedRemoves: []testEntry{},
-		},
-		{
-			name:            "remove one",
-			oldEntries:      []testEntry{{"1.2.3.4/32", "test1"}, {"2.3.4.5/32", "test2"}},
-			newEntries:      []testEntry{{"1.2.3.4/32", "test1"}},
-			expectedAdds:    []testEntry{},
-			expectedRemoves: []testEntry{{"2.3.4.5/32", "test2"}},
-		},
-		{
-			name:            "modify description of one",
-			oldEntries:      []testEntry{{"1.2.3.4/32", "test1"}, {"2.3.4.5/32", "test2"}},
-			newEntries:      []testEntry{{"1.2.3.4/32", "test1"}, {"2.3.4.5/32", "test2-1"}},
-			expectedAdds:    []testEntry{{"2.3.4.5/32", "test2-1"}},
-			expectedRemoves: []testEntry{},
-		},
-		{
-			name:            "add third",
-			oldEntries:      []testEntry{{"1.2.3.4/32", "test1"}, {"2.3.4.5/32", "test2"}},
-			newEntries:      []testEntry{{"1.2.3.4/32", "test1"}, {"2.3.4.5/32", "test2"}, {"3.4.5.6/32", "test3"}},
-			expectedAdds:    []testEntry{{"3.4.5.6/32", "test3"}},
-			expectedRemoves: []testEntry{},
-		},
-		{
-			name:            "add and remove one",
-			oldEntries:      []testEntry{{"1.2.3.4/32", "test1"}, {"2.3.4.5/32", "test2"}},
-			newEntries:      []testEntry{{"1.2.3.4/32", "test1"}, {"3.4.5.6/32", "test3"}},
-			expectedAdds:    []testEntry{{"3.4.5.6/32", "test3"}},
-			expectedRemoves: []testEntry{{"2.3.4.5/32", "test2"}},
-		},
-		{
-			name:            "add and remove one with description change",
-			oldEntries:      []testEntry{{"1.2.3.4/32", "test1"}, {"2.3.4.5/32", "test2"}},
-			newEntries:      []testEntry{{"1.2.3.4/32", "test1-1"}, {"3.4.5.6/32", "test3"}},
-			expectedAdds:    []testEntry{{"1.2.3.4/32", "test1-1"}, {"3.4.5.6/32", "test3"}},
-			expectedRemoves: []testEntry{{"2.3.4.5/32", "test2"}},
-		},
-		{
-			name:            "basic test update",
-			oldEntries:      []testEntry{{"1.0.0.0/8", "Test1"}},
-			newEntries:      []testEntry{{"1.0.0.0/8", "Test1-1"}, {"2.2.0.0/16", "Test2"}},
-			expectedAdds:    []testEntry{{"1.0.0.0/8", "Test1-1"}, {"2.2.0.0/16", "Test2"}},
-			expectedRemoves: []testEntry{},
-		},
-	}
-
-	for _, test := range tests {
-		oldEntryList := []*ec2.PrefixListEntry(nil)
-		for _, entry := range test.oldEntries {
-			oldEntryList = append(oldEntryList, &ec2.PrefixListEntry{
-				Cidr:        aws.String(entry.CIDR),
-				Description: aws.String(entry.Description),
-			})
-		}
-
-		newEntryList := []*ec2.AddPrefixListEntry(nil)
-		for _, entry := range test.newEntries {
-			newEntryList = append(newEntryList, &ec2.AddPrefixListEntry{
-				Cidr:        aws.String(entry.CIDR),
-				Description: aws.String(entry.Description),
-			})
-		}
-
-		addList, removeList := computePrefixListEntriesModification(oldEntryList, newEntryList)
-
-		if len(addList) != len(test.expectedAdds) {
-			t.Errorf("expected %d adds, got %d", len(test.expectedAdds), len(addList))
-		}
-
-		for i, added := range addList {
-			expected := test.expectedAdds[i]
-
-			actualCidr := aws.StringValue(added.Cidr)
-			expectedCidr := expected.CIDR
-			if actualCidr != expectedCidr {
-				t.Errorf("add[%d]: expected cidr %s, got %s", i, expectedCidr, actualCidr)
-			}
-
-			actualDesc := aws.StringValue(added.Description)
-			expectedDesc := expected.Description
-			if actualDesc != expectedDesc {
-				t.Errorf("add[%d]: expected description '%s', got '%s'", i, expectedDesc, actualDesc)
-			}
-		}
-
-		if len(removeList) != len(test.expectedRemoves) {
-			t.Errorf("expected %d removes, got %d", len(test.expectedRemoves), len(removeList))
-		}
-
-		for i, removed := range removeList {
-			expected := test.expectedRemoves[i]
-
-			actualCidr := aws.StringValue(removed.Cidr)
-			expectedCidr := expected.CIDR
-			if actualCidr != expectedCidr {
-				t.Errorf("add[%d]: expected cidr %s, got %s", i, expectedCidr, actualCidr)
-			}
-		}
-	}
-}
 
 func testAccCheckAwsEc2ManagedPrefixListDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
@@ -169,52 +49,8 @@ func testAccCheckAwsEc2ManagedPrefixListVersion(
 func TestAccAwsEc2ManagedPrefixList_basic(t *testing.T) {
 	resourceName := "aws_ec2_managed_prefix_list.test"
 	pl, entries := ec2.ManagedPrefixList{}, []*ec2.PrefixListEntry(nil)
-
-	checkAttributes := func(*terraform.State) error {
-		if actual := aws.StringValue(pl.AddressFamily); actual != "IPv4" {
-			return fmt.Errorf("bad address family: %s", actual)
-		}
-
-		if actual := aws.Int64Value(pl.MaxEntries); actual != 5 {
-			return fmt.Errorf("bad max entries: %d", actual)
-		}
-
-		if actual := aws.StringValue(pl.OwnerId); actual != testAccGetAccountID() {
-			return fmt.Errorf("bad owner id: %s", actual)
-		}
-
-		if actual := aws.StringValue(pl.PrefixListName); actual != "tf-test-basic-create" {
-			return fmt.Errorf("bad name: %s", actual)
-		}
-
-		sort.Slice(pl.Tags, func(i, j int) bool {
-			return aws.StringValue(pl.Tags[i].Key) < aws.StringValue(pl.Tags[j].Key)
-		})
-
-		expectTags := []*ec2.Tag{
-			{Key: aws.String("Key1"), Value: aws.String("Value1")},
-			{Key: aws.String("Key2"), Value: aws.String("Value2")},
-		}
-
-		if !reflect.DeepEqual(expectTags, pl.Tags) {
-			return fmt.Errorf("expected tags %#v, got %#v", expectTags, pl.Tags)
-		}
-
-		sort.Slice(entries, func(i, j int) bool {
-			return aws.StringValue(entries[i].Cidr) < aws.StringValue(entries[j].Cidr)
-		})
-
-		expectEntries := []*ec2.PrefixListEntry{
-			{Cidr: aws.String("1.0.0.0/8"), Description: aws.String("Test1")},
-			{Cidr: aws.String("2.0.0.0/8"), Description: aws.String("Test2")},
-		}
-
-		if !reflect.DeepEqual(expectEntries, entries) {
-			return fmt.Errorf("expected entries %#v, got %#v", expectEntries, entries)
-		}
-
-		return nil
-	}
+	rName1 := acctest.RandomWithPrefix("tf-acc-test")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -222,12 +58,11 @@ func TestAccAwsEc2ManagedPrefixList_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:       testAccAwsEc2ManagedPrefixListConfig_basic_create,
+				Config:       testAccAwsEc2ManagedPrefixListConfig_basic_create(rName1),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2ManagedPrefixListExists(resourceName, &pl, &entries),
-					checkAttributes,
-					resource.TestCheckResourceAttr(resourceName, "name", "tf-test-basic-create"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`prefix-list/pl-[[:xdigit:]]+`)),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "IPv4"),
 					resource.TestCheckResourceAttr(resourceName, "max_entries", "5"),
@@ -253,11 +88,11 @@ func TestAccAwsEc2ManagedPrefixList_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:       testAccAwsEc2ManagedPrefixListConfig_basic_update,
+				Config:       testAccAwsEc2ManagedPrefixListConfig_basic_update(rName2),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2ManagedPrefixListExists(resourceName, &pl, &entries),
-					resource.TestCheckResourceAttr(resourceName, "name", "tf-test-basic-update"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "entry.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
 						"cidr_block":  "1.0.0.0/8",
@@ -273,13 +108,19 @@ func TestAccAwsEc2ManagedPrefixList_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
-const testAccAwsEc2ManagedPrefixListConfig_basic_create = `
+func testAccAwsEc2ManagedPrefixListConfig_basic_create(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
-  name           = "tf-test-basic-create"
+  name           = %[1]q
   address_family = "IPv4"
   max_entries    = 5
 
@@ -298,11 +139,13 @@ resource "aws_ec2_managed_prefix_list" "test" {
     Key2 = "Value2"
   }
 }
-`
+`, rName)
+}
 
-const testAccAwsEc2ManagedPrefixListConfig_basic_update = `
+func testAccAwsEc2ManagedPrefixListConfig_basic_update(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
-  name           = "tf-test-basic-update"
+  name           = %[1]q
   address_family = "IPv4"
   max_entries    = 5
 
@@ -321,7 +164,8 @@ resource "aws_ec2_managed_prefix_list" "test" {
     Key3 = "Value3"
   }
 }
-`
+`, rName)
+}
 
 func testAccAwsEc2ManagedPrefixListExists(
 	name string,
@@ -368,6 +212,7 @@ func testAccAwsEc2ManagedPrefixListExists(
 func TestAccAwsEc2ManagedPrefixList_disappears(t *testing.T) {
 	resourceName := "aws_ec2_managed_prefix_list.test"
 	pl := ec2.ManagedPrefixList{}
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -375,7 +220,7 @@ func TestAccAwsEc2ManagedPrefixList_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:       testAccAwsEc2ManagedPrefixListConfig_disappears,
+				Config:       testAccAwsEc2ManagedPrefixListConfig_disappears(rName),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2ManagedPrefixListExists(resourceName, &pl, nil),
@@ -387,9 +232,10 @@ func TestAccAwsEc2ManagedPrefixList_disappears(t *testing.T) {
 	})
 }
 
-const testAccAwsEc2ManagedPrefixListConfig_disappears = `
+func testAccAwsEc2ManagedPrefixListConfig_disappears(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
-  name           = "tf-test-disappears"
+  name           = %[1]q
   address_family = "IPv4"
   max_entries    = 2
 
@@ -397,21 +243,14 @@ resource "aws_ec2_managed_prefix_list" "test" {
     cidr_block = "1.0.0.0/8"
   }
 }
-`
+`, rName)
+}
 
 func TestAccAwsEc2ManagedPrefixList_name(t *testing.T) {
 	resourceName := "aws_ec2_managed_prefix_list.test"
 	pl := ec2.ManagedPrefixList{}
-
-	checkName := func(name string) resource.TestCheckFunc {
-		return func(*terraform.State) error {
-			if actual := aws.StringValue(pl.PrefixListName); actual != name {
-				return fmt.Errorf("expected name %s, got %s", name, actual)
-			}
-
-			return nil
-		}
-	}
+	rName1 := acctest.RandomWithPrefix("tf-acc-test")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -419,22 +258,25 @@ func TestAccAwsEc2ManagedPrefixList_name(t *testing.T) {
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:       testAccAwsEc2ManagedPrefixListConfig_name_create,
+				Config:       testAccAwsEc2ManagedPrefixListConfig_name_create(rName1),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2ManagedPrefixListExists(resourceName, &pl, nil),
-					resource.TestCheckResourceAttr(resourceName, "name", "tf-test-name-create"),
-					checkName("tf-test-name-create"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 					testAccCheckAwsEc2ManagedPrefixListVersion(&pl, 1),
 				),
 			},
 			{
-				Config:       testAccAwsEc2ManagedPrefixListConfig_name_update,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:       testAccAwsEc2ManagedPrefixListConfig_name_update(rName2),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2ManagedPrefixListExists(resourceName, &pl, nil),
-					resource.TestCheckResourceAttr(resourceName, "name", "tf-test-name-update"),
-					checkName("tf-test-name-update"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					testAccCheckAwsEc2ManagedPrefixListVersion(&pl, 1),
 				),
 			},
@@ -447,54 +289,30 @@ func TestAccAwsEc2ManagedPrefixList_name(t *testing.T) {
 	})
 }
 
-const testAccAwsEc2ManagedPrefixListConfig_name_create = `
+func testAccAwsEc2ManagedPrefixListConfig_name_create(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
-  name           = "tf-test-name-create"
+  name           = %[1]q
   address_family = "IPv4"
   max_entries    = 5
 }
-`
+`, rName)
+}
 
-const testAccAwsEc2ManagedPrefixListConfig_name_update = `
+func testAccAwsEc2ManagedPrefixListConfig_name_update(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
-  name           = "tf-test-name-update"
+  name           = %[1]q
   address_family = "IPv4"
   max_entries    = 5
 }
-`
+`, rName)
+}
 
 func TestAccAwsEc2ManagedPrefixList_tags(t *testing.T) {
 	resourceName := "aws_ec2_managed_prefix_list.test"
 	pl := ec2.ManagedPrefixList{}
-
-	checkTags := func(m map[string]string) resource.TestCheckFunc {
-		return func(*terraform.State) error {
-			sort.Slice(pl.Tags, func(i, j int) bool {
-				return aws.StringValue(pl.Tags[i].Key) < aws.StringValue(pl.Tags[j].Key)
-			})
-
-			expectTags := []*ec2.Tag(nil)
-
-			if m != nil {
-				for k, v := range m {
-					expectTags = append(expectTags, &ec2.Tag{
-						Key:   aws.String(k),
-						Value: aws.String(v),
-					})
-				}
-
-				sort.Slice(expectTags, func(i, j int) bool {
-					return aws.StringValue(expectTags[i].Key) < aws.StringValue(expectTags[j].Key)
-				})
-			}
-
-			if !reflect.DeepEqual(expectTags, pl.Tags) {
-				return fmt.Errorf("expected tags %#v, got %#v", expectTags, pl.Tags)
-			}
-
-			return nil
-		}
-	}
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -502,11 +320,10 @@ func TestAccAwsEc2ManagedPrefixList_tags(t *testing.T) {
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:       testAccAwsEc2ManagedPrefixListConfig_tags_none,
+				Config:       testAccAwsEc2ManagedPrefixListConfig_tags_none(rName),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2ManagedPrefixListExists(resourceName, &pl, nil),
-					checkTags(nil),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -516,11 +333,10 @@ func TestAccAwsEc2ManagedPrefixList_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:       testAccAwsEc2ManagedPrefixListConfig_tags_addSome,
+				Config:       testAccAwsEc2ManagedPrefixListConfig_tags_addSome(rName),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2ManagedPrefixListExists(resourceName, &pl, nil),
-					checkTags(map[string]string{"Key1": "Value1", "Key2": "Value2", "Key3": "Value3"}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2"),
@@ -533,11 +349,10 @@ func TestAccAwsEc2ManagedPrefixList_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:       testAccAwsEc2ManagedPrefixListConfig_tags_dropOrModifySome,
+				Config:       testAccAwsEc2ManagedPrefixListConfig_tags_dropOrModifySome(rName),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2ManagedPrefixListExists(resourceName, &pl, nil),
-					checkTags(map[string]string{"Key2": "Value2-1", "Key3": "Value3"}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2-1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
@@ -549,11 +364,10 @@ func TestAccAwsEc2ManagedPrefixList_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:       testAccAwsEc2ManagedPrefixListConfig_tags_empty,
+				Config:       testAccAwsEc2ManagedPrefixListConfig_tags_empty(rName),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2ManagedPrefixListExists(resourceName, &pl, nil),
-					checkTags(nil),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -563,11 +377,10 @@ func TestAccAwsEc2ManagedPrefixList_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:       testAccAwsEc2ManagedPrefixListConfig_tags_none,
+				Config:       testAccAwsEc2ManagedPrefixListConfig_tags_none(rName),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2ManagedPrefixListExists(resourceName, &pl, nil),
-					checkTags(nil),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -580,17 +393,20 @@ func TestAccAwsEc2ManagedPrefixList_tags(t *testing.T) {
 	})
 }
 
-const testAccAwsEc2ManagedPrefixListConfig_tags_none = `
+func testAccAwsEc2ManagedPrefixListConfig_tags_none(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
-  name           = "tf-test-acc"
+  name           = %[1]q
   address_family = "IPv4"
   max_entries    = 5
 }
-`
+`, rName)
+}
 
-const testAccAwsEc2ManagedPrefixListConfig_tags_addSome = `
+func testAccAwsEc2ManagedPrefixListConfig_tags_addSome(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
-  name           = "tf-test-acc"
+  name           = %[1]q
   address_family = "IPv4"
   max_entries    = 5
 
@@ -600,11 +416,13 @@ resource "aws_ec2_managed_prefix_list" "test" {
     Key3 = "Value3"
   }
 }
-`
+`, rName)
+}
 
-const testAccAwsEc2ManagedPrefixListConfig_tags_dropOrModifySome = `
+func testAccAwsEc2ManagedPrefixListConfig_tags_dropOrModifySome(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
-  name           = "tf-test-acc"
+  name           = %[1]q
   address_family = "IPv4"
   max_entries    = 5
 
@@ -613,97 +431,24 @@ resource "aws_ec2_managed_prefix_list" "test" {
     Key3 = "Value3"
   }
 }
-`
+`, rName)
+}
 
-const testAccAwsEc2ManagedPrefixListConfig_tags_empty = `
+func testAccAwsEc2ManagedPrefixListConfig_tags_empty(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
-  name           = "tf-test-acc"
+  name           = %[1]q
   address_family = "IPv4"
   max_entries    = 5
   tags           = {}
 }
-`
-
-func TestAccAwsEc2ManagedPrefixList_entryConfigMode(t *testing.T) {
-	resourceName := "aws_ec2_managed_prefix_list.test"
-	prefixList := ec2.ManagedPrefixList{}
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:       testAccAwsEc2ManagedPrefixListConfig_entryConfigMode_blocks,
-				ResourceName: resourceName,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAwsEc2ManagedPrefixListExists(resourceName, &prefixList, nil),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", "2"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config:       testAccAwsEc2ManagedPrefixListConfig_entryConfigMode_noBlocks,
-				ResourceName: resourceName,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAwsEc2ManagedPrefixListExists(resourceName, &prefixList, nil),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", "2"),
-				),
-			},
-			{
-				Config:       testAccAwsEc2ManagedPrefixListConfig_entryConfigMode_zeroed,
-				ResourceName: resourceName,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccAwsEc2ManagedPrefixListExists(resourceName, &prefixList, nil),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", "0"),
-				),
-			},
-		},
-	})
+`, rName)
 }
-
-const testAccAwsEc2ManagedPrefixListConfig_entryConfigMode_blocks = `
-resource "aws_ec2_managed_prefix_list" "test" {
-  name           = "tf-test-acc"
-  max_entries    = 5
-  address_family = "IPv4"
-
-  entry {
-    cidr_block  = "1.0.0.0/8"
-    description = "Entry1"
-  }
-
-  entry {
-    cidr_block  = "2.0.0.0/8"
-    description = "Entry2"
-  }
-}
-`
-
-const testAccAwsEc2ManagedPrefixListConfig_entryConfigMode_noBlocks = `
-resource "aws_ec2_managed_prefix_list" "test" {
-  name           = "tf-test-acc"
-  max_entries    = 5
-  address_family = "IPv4"
-}
-`
-
-const testAccAwsEc2ManagedPrefixListConfig_entryConfigMode_zeroed = `
-resource "aws_ec2_managed_prefix_list" "test" {
-  name           = "tf-test-acc"
-  max_entries    = 5
-  address_family = "IPv4"
-  entry          = []
-}
-`
 
 func TestAccAwsEc2ManagedPrefixList_exceedLimit(t *testing.T) {
 	resourceName := "aws_ec2_managed_prefix_list.test"
 	prefixList := ec2.ManagedPrefixList{}
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -711,7 +456,7 @@ func TestAccAwsEc2ManagedPrefixList_exceedLimit(t *testing.T) {
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:       testAccAwsEc2ManagedPrefixListConfig_exceedLimit(2),
+				Config:       testAccAwsEc2ManagedPrefixListConfig_exceedLimit(rName, 2),
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAwsEc2ManagedPrefixListExists(resourceName, &prefixList, nil),
@@ -719,7 +464,7 @@ func TestAccAwsEc2ManagedPrefixList_exceedLimit(t *testing.T) {
 				),
 			},
 			{
-				Config:       testAccAwsEc2ManagedPrefixListConfig_exceedLimit(3),
+				Config:       testAccAwsEc2ManagedPrefixListConfig_exceedLimit(rName, 3),
 				ResourceName: resourceName,
 				ExpectError:  regexp.MustCompile(`You've reached the maximum number of entries for the prefix list.`),
 			},
@@ -727,7 +472,7 @@ func TestAccAwsEc2ManagedPrefixList_exceedLimit(t *testing.T) {
 	})
 }
 
-func testAccAwsEc2ManagedPrefixListConfig_exceedLimit(count int) string {
+func testAccAwsEc2ManagedPrefixListConfig_exceedLimit(rName string, count int) string {
 	entries := ``
 	for i := 0; i < count; i++ {
 		entries += fmt.Sprintf(`
@@ -740,11 +485,10 @@ func testAccAwsEc2ManagedPrefixListConfig_exceedLimit(count int) string {
 
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
-  name           = "tf-test-acc"
+  name           = %[2]q
   address_family = "IPv4"
   max_entries    = 2
 %[1]s
 }
-`,
-		entries)
+`, entries, rName)
 }
