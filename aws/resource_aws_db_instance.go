@@ -27,12 +27,17 @@ func resourceAwsDbInstance() *schema.Resource {
 			State: resourceAwsDbInstanceImport,
 		},
 
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceAwsDbInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: resourceAwsDbInstanceStateUpgradeV0,
 				Version: 0,
+			},
+			{
+				Type:    resourceAwsDbInstanceResourceV1().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAwsDbInstanceStateUpgradeV1,
+				Version: 1,
 			},
 		},
 
@@ -149,7 +154,6 @@ func resourceAwsDbInstance() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ForceNew:      true,
 				ConflictsWith: []string{"identifier_prefix"},
 				ValidateFunc:  validateRdsIdentifier,
 			},
@@ -157,7 +161,6 @@ func resourceAwsDbInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validateRdsIdentifierPrefix,
 			},
 
@@ -706,10 +709,12 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		log.Printf("[DEBUG] DB Instance Replica create configuration: %#v", opts)
-		_, err := conn.CreateDBInstanceReadReplica(&opts)
+		createDBInstanceReadReplicaOutput, err := conn.CreateDBInstanceReadReplica(&opts)
 		if err != nil {
 			return fmt.Errorf("Error creating DB Instance: %s", err)
 		}
+
+		d.Set("resource_id", createDBInstanceReadReplicaOutput.DBInstance.DbiResourceId)
 	} else if v, ok := d.GetOk("s3_import"); ok {
 
 		if _, ok := d.GetOk("allocated_storage"); !ok {
@@ -837,10 +842,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		log.Printf("[DEBUG] DB Instance S3 Restore configuration: %#v", opts)
+		var restoreDBInstanceFromS3Output *rds.RestoreDBInstanceFromS3Output
 		var err error
 		// Retry for IAM eventual consistency
 		err = resource.Retry(2*time.Minute, func() *resource.RetryError {
-			_, err = conn.RestoreDBInstanceFromS3(&opts)
+			restoreDBInstanceFromS3Output, err = conn.RestoreDBInstanceFromS3(&opts)
 			if err != nil {
 				if isAWSErr(err, "InvalidParameterValue", "ENHANCED_MONITORING") {
 					return resource.RetryableError(err)
@@ -860,15 +866,15 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			return nil
 		})
 		if isResourceTimeoutError(err) {
-			_, err = conn.RestoreDBInstanceFromS3(&opts)
+			restoreDBInstanceFromS3Output, err = conn.RestoreDBInstanceFromS3(&opts)
 		}
 		if err != nil {
 			return fmt.Errorf("Error creating DB Instance: %s", err)
 		}
 
-		d.SetId(d.Get("identifier").(string))
+		d.Set("resource_id", restoreDBInstanceFromS3Output.DBInstance.DbiResourceId)
 
-		log.Printf("[INFO] DB Instance ID: %s", d.Id())
+		log.Printf("[INFO] DB Instance ID: %q; DB Resource ID: %q", identifier, d.Get("resource_id").(string))
 
 		log.Println(
 			"[INFO] Waiting for DB Instance to be available")
@@ -876,7 +882,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		stateConf := &resource.StateChangeConf{
 			Pending:    resourceAwsDbInstanceCreatePendingStates,
 			Target:     []string{"available", "storage-optimization"},
-			Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Id(), conn),
+			Refresh:    resourceAwsDbInstanceStateRefreshFunc(d.Get("resource_id").(string), conn),
 			Timeout:    d.Timeout(schema.TimeoutCreate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second, // Wait 30 secs before starting
@@ -1059,7 +1065,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		log.Printf("[DEBUG] DB Instance restore from snapshot configuration: %s", opts)
-		_, err := conn.RestoreDBInstanceFromDBSnapshot(&opts)
+		restoreDBInstanceFromDBSnapshotOutput, err := conn.RestoreDBInstanceFromDBSnapshot(&opts)
 
 		// When using SQL Server engine with MultiAZ enabled, its not
 		// possible to immediately enable mirroring since
@@ -1073,12 +1079,14 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.MultiAZ = aws.Bool(false)
 			modifyDbInstanceInput.MultiAZ = aws.Bool(true)
 			requiresModifyDbInstance = true
-			_, err = conn.RestoreDBInstanceFromDBSnapshot(&opts)
+			restoreDBInstanceFromDBSnapshotOutput, err = conn.RestoreDBInstanceFromDBSnapshot(&opts)
 		}
 
 		if err != nil {
 			return fmt.Errorf("Error creating DB Instance: %s", err)
 		}
+
+		d.Set("resource_id", restoreDBInstanceFromDBSnapshotOutput.DBInstance.DbiResourceId)
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok {
 		if input := expandRestoreToPointInTime(v.([]interface{})); input != nil {
 			input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
@@ -1163,10 +1171,12 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 			log.Printf("[DEBUG] DB Instance restore to point in time configuration: %s", input)
 
-			_, err := conn.RestoreDBInstanceToPointInTime(input)
+			restoreDBInstanceToPointInTime, err := conn.RestoreDBInstanceToPointInTime(input)
 			if err != nil {
 				return fmt.Errorf("error creating DB Instance: %w", err)
 			}
+
+			d.Set("resource_id", restoreDBInstanceToPointInTime.DBInstance.DbiResourceId)
 		}
 	} else {
 		if _, ok := d.GetOk("allocated_storage"); !ok {
@@ -1319,7 +1329,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			return nil
 		})
 		if isResourceTimeoutError(err) {
-			_, err = conn.CreateDBInstance(&opts)
+			createdDBInstanceOutput, err = conn.CreateDBInstance(&opts)
 		}
 		if err != nil {
 			if isAWSErr(err, "InvalidParameterValue", "") {
@@ -1328,6 +1338,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			}
 			return fmt.Errorf("Error creating DB Instance: %s", err)
 		}
+		d.Set("resource_id", createdDBInstanceOutput.DBInstance.DbiResourceId)
 		// This is added here to avoid unnecessary modification when ca_cert_identifier is the default one
 		if attr, ok := d.GetOk("ca_cert_identifier"); ok && attr.(string) != aws.StringValue(createdDBInstanceOutput.DBInstance.CACertificateIdentifier) {
 			modifyDbInstanceInput.CACertificateIdentifier = aws.String(attr.(string))
@@ -1335,7 +1346,8 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	d.SetId(d.Get("identifier").(string))
+	d.SetId(d.Get("resource_id").(string))
+	log.Printf("[DEBUG] DB Instance ID: %q; DB Resource ID: %q", identifier, d.Id())
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceAwsDbInstanceCreatePendingStates,
@@ -1346,43 +1358,43 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 
-	log.Printf("[INFO] Waiting for DB Instance (%s) to be available", d.Id())
+	log.Printf("[INFO] Waiting for DB Instance %q (%s) to become available", identifier, d.Id())
 	_, err := stateConf.WaitForState()
 	if err != nil {
 		return err
 	}
 
 	if requiresModifyDbInstance {
-		modifyDbInstanceInput.DBInstanceIdentifier = aws.String(d.Id())
+		modifyDbInstanceInput.DBInstanceIdentifier = aws.String(identifier)
 
-		log.Printf("[INFO] DB Instance (%s) configuration requires ModifyDBInstance: %s", d.Id(), modifyDbInstanceInput)
+		log.Printf("[INFO] DB Instance %q (%s) configuration requires ModifyDBInstance: %s", identifier, d.Id(), modifyDbInstanceInput)
 		_, err := conn.ModifyDBInstance(modifyDbInstanceInput)
 		if err != nil {
-			return fmt.Errorf("error modifying DB Instance (%s): %s", d.Id(), err)
+			return fmt.Errorf("error modifying DB Instance %q (%s): %s", identifier, d.Id(), err)
 		}
 
-		log.Printf("[INFO] Waiting for DB Instance (%s) to be available", d.Id())
+		log.Printf("[INFO] Waiting for DB Instance %q (%s) to become available", identifier, d.Id())
 		err = waitUntilAwsDbInstanceIsAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
-			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %s", d.Id(), err)
+			return fmt.Errorf("error waiting for DB Instance %q (%s) to become available: %s", identifier, d.Id(), err)
 		}
 	}
 
 	if requiresRebootDbInstance {
 		rebootDbInstanceInput := &rds.RebootDBInstanceInput{
-			DBInstanceIdentifier: aws.String(d.Id()),
+			DBInstanceIdentifier: aws.String(identifier),
 		}
 
-		log.Printf("[INFO] DB Instance (%s) configuration requires RebootDBInstance: %s", d.Id(), rebootDbInstanceInput)
+		log.Printf("[INFO] DB Instance %q (%s) configuration requires RebootDBInstance: %s", identifier, d.Id(), rebootDbInstanceInput)
 		_, err := conn.RebootDBInstance(rebootDbInstanceInput)
 		if err != nil {
-			return fmt.Errorf("error rebooting DB Instance (%s): %s", d.Id(), err)
+			return fmt.Errorf("error rebooting DB Instance %q (%s): %s", identifier, d.Id(), err)
 		}
 
-		log.Printf("[INFO] Waiting for DB Instance (%s) to be available", d.Id())
+		log.Printf("[INFO] Waiting for DB Instance %q (%s) to become available", identifier, d.Id())
 		err = waitUntilAwsDbInstanceIsAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
-			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %s", d.Id(), err)
+			return fmt.Errorf("error waiting for DB Instance %q (%s) to become available: %s", identifier, d.Id(), err)
 		}
 	}
 
@@ -1403,9 +1415,10 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	d.Set("name", v.DBName)
-	d.Set("identifier", v.DBInstanceIdentifier)
+	d.SetId(*v.DbiResourceId)
 	d.Set("resource_id", v.DbiResourceId)
+	d.Set("identifier", v.DBInstanceIdentifier)
+	d.Set("name", v.DBName)
 	d.Set("username", v.MasterUsername)
 	d.Set("deletion_protection", v.DeletionProtection)
 	d.Set("engine", v.Engine)
@@ -1481,7 +1494,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := keyvaluetags.RdsListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for RDS DB Instance (%s): %s", d.Get("arn").(string), err)
+		return fmt.Errorf("error listing tags for RDS DB Instance %q (%s): %s", d.Get("arn").(string), d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
@@ -1525,9 +1538,9 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	log.Printf("[DEBUG] DB Instance destroy: %v", d.Id())
+	log.Printf("[DEBUG] DB Instance destroy: %q (%s)", d.Get("arn"), d.Id())
 
-	opts := rds.DeleteDBInstanceInput{DBInstanceIdentifier: aws.String(d.Id())}
+	opts := rds.DeleteDBInstanceInput{DBInstanceIdentifier: aws.String(d.Get("identifier").(string))}
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 	opts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
@@ -1552,10 +1565,10 @@ func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error
 
 	// InvalidDBInstanceState: Instance XXX is already being deleted.
 	if err != nil && !isAWSErr(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
-		return fmt.Errorf("error deleting Database Instance %q: %s", d.Id(), err)
+		return fmt.Errorf("error deleting Database Instance %q (%s): %s", d.Get("identifier").(string), d.Id(), err)
 	}
 
-	log.Println("[INFO] Waiting for DB Instance to be destroyed")
+	log.Printf("[INFO] Waiting for DB Instance %q (%s) to be destroyed", d.Get("identifier").(string), d.Id())
 	return waitUntilAwsDbInstanceIsDeleted(d.Id(), conn, d.Timeout(schema.TimeoutDelete))
 }
 
@@ -1588,9 +1601,11 @@ func waitUntilAwsDbInstanceIsDeleted(id string, conn *rds.RDS, timeout time.Dura
 func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
+	oldIdentifier, newIdentifier := d.GetChange("identifier")
+
 	req := &rds.ModifyDBInstanceInput{
 		ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
-		DBInstanceIdentifier: aws.String(d.Id()),
+		DBInstanceIdentifier: aws.String(oldIdentifier.(string)),
 	}
 
 	if !aws.BoolValue(req.ApplyImmediately) {
@@ -1598,6 +1613,10 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	requestUpdate := false
+	if d.HasChanges("identifier") {
+		req.NewDBInstanceIdentifier = aws.String(newIdentifier.(string))
+		requestUpdate = true
+	}
 	if d.HasChanges("allocated_storage", "iops") {
 		req.Iops = aws.Int64(int64(d.Get("iops").(int)))
 		req.AllocatedStorage = aws.Int64(int64(d.Get("allocated_storage").(int)))
@@ -1785,13 +1804,13 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if err != nil {
-			return fmt.Errorf("Error modifying DB Instance %s: %s", d.Id(), err)
+			return fmt.Errorf("Error modifying DB Instance %q (%s): %s", d.Get("identifier").(string), d.Id(), err)
 		}
 
-		log.Printf("[DEBUG] Waiting for DB Instance (%s) to be available", d.Id())
+		log.Printf("[DEBUG] Waiting for DB Instance %q (%s) to become available", d.Get("identifier").(string), d.Id())
 		err = waitUntilAwsDbInstanceIsAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
-			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %s", d.Id(), err)
+			return fmt.Errorf("error waiting for DB Instance %q (%s) to become available: %s", d.Get("identifier").(string), d.Id(), err)
 		}
 	}
 
@@ -1800,7 +1819,7 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		if d.Get("replicate_source_db").(string) == "" {
 			// promote
 			opts := rds.PromoteReadReplicaInput{
-				DBInstanceIdentifier: aws.String(d.Id()),
+				DBInstanceIdentifier: aws.String(d.Get("identifier").(string)),
 			}
 			attr := d.Get("backup_retention_period")
 			opts.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
@@ -1834,8 +1853,14 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 // error with AWS. When the DBInstance is not found, it returns no error and a
 // nil pointer.
 func resourceAwsDbInstanceRetrieve(id string, conn *rds.RDS) (*rds.DBInstance, error) {
+	resourceIdFilterName := "dbi-resource-id"
 	opts := rds.DescribeDBInstancesInput{
-		DBInstanceIdentifier: aws.String(id),
+		Filters: []*rds.Filter{
+			{
+				Name:   &resourceIdFilterName,
+				Values: []*string{&id},
+			},
+		},
 	}
 
 	log.Printf("[DEBUG] DB Instance describe configuration: %#v", opts)
@@ -1848,7 +1873,7 @@ func resourceAwsDbInstanceRetrieve(id string, conn *rds.RDS) (*rds.DBInstance, e
 		return nil, fmt.Errorf("Error retrieving DB Instances: %s", err)
 	}
 
-	if len(resp.DBInstances) != 1 || resp.DBInstances[0] == nil || aws.StringValue(resp.DBInstances[0].DBInstanceIdentifier) != id {
+	if len(resp.DBInstances) != 1 || resp.DBInstances[0] == nil || aws.StringValue(resp.DBInstances[0].DbiResourceId) != id {
 		return nil, nil
 	}
 
@@ -1879,7 +1904,7 @@ func resourceAwsDbInstanceStateRefreshFunc(id string, conn *rds.RDS) resource.St
 		}
 
 		if v.DBInstanceStatus != nil {
-			log.Printf("[DEBUG] DB Instance status for instance %s: %s", id, *v.DBInstanceStatus)
+			log.Printf("[DEBUG] DB Instance status for %q (%s): %s", *v.DBInstanceIdentifier, id, *v.DBInstanceStatus)
 		}
 
 		return v, *v.DBInstanceStatus, nil
