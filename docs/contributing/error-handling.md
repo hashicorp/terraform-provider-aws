@@ -101,9 +101,9 @@ _The codebase also contains an older style `isAWSErr(err, "CodeEquals", "Message
 
 #### Use AWS Go SDK Error Code Constants
 
-Each AWS Go SDK service API typically implements common error codes 
+Each AWS Go SDK service API typically implements common error codes, which get exported as public constants in the AWS Go SDK. In the [AWS Go SDK API Reference](https://docs.aws.amazon.com/sdk-for-go/api/), these can be found in each of the service packages under the `Constants` section (typcially named `ErrCode{ExceptionName}`).
 
-If an AWS Go SDK service API is missing an error code constant (typcially named `ErrCode{ExceptionName}`), an AWS Support case should be submitted and a new constant can be added to `aws/internal/service/{SERVICE}/errors.go` file (created if not present), e.g.
+If an AWS Go SDK service API is missing an error code constant, an AWS Support case should be submitted and a new constant can be added to `aws/internal/service/{SERVICE}/errors.go` file (created if not present), e.g.
 
 ```go
 const(
