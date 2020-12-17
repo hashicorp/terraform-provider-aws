@@ -240,10 +240,9 @@ The **advanced_security_options** block supports the following attributes:
 
 * `ebs_enabled` - (Required) Whether EBS volumes are attached to data nodes in the domain.
 * `volume_type` - (Optional) The type of EBS volumes attached to data nodes.
-* `volume_size` - The size of EBS volumes attached to data nodes (in GB).
+* `volume_size` - The size of EBS volumes attached to data nodes (in GiB).
 **Required** if `ebs_enabled` is set to `true`.
-* `iops` - (Optional) The baseline input/output (I/O) performance of EBS volumes
-	attached to data nodes. Applicable only for the Provisioned IOPS EBS volume type.
+* `iops` - (Optional) The baseline input/output (I/O) performance of EBS volumes attached to data nodes. Applicable only for the Provisioned IOPS EBS volume type.
 
 **encrypt_at_rest** supports the following attributes:
 
@@ -291,8 +290,7 @@ Security Groups and Subnets referenced in these attributes must all be within th
 
 **snapshot_options** supports the following attribute:
 
-* `automated_snapshot_start_hour` - (Required) Hour during which the service takes an automated daily
-	snapshot of the indices in the domain.
+* `automated_snapshot_start_hour` - (Required) Hour during which the service takes an automated daily snapshot of the indices in the domain.
 
 **log_publishing_options** supports the following attribute:
 

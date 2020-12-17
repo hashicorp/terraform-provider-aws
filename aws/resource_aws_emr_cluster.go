@@ -922,7 +922,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error running EMR Job Flow: %s", err)
 	}
 
-	d.SetId(*resp.JobFlowId)
+	d.SetId(aws.StringValue(resp.JobFlowId))
 	// This value can only be obtained through a deprecated function
 	d.Set("keep_job_flow_alive_when_no_steps", params.Instances.KeepJobFlowAliveWhenNoSteps)
 

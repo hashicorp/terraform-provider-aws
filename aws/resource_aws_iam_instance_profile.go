@@ -234,7 +234,7 @@ func resourceAwsIamInstanceProfileDelete(d *schema.ResourceData, meta interface{
 }
 
 func instanceProfileReadResult(d *schema.ResourceData, result *iam.InstanceProfile) error {
-	d.SetId(*result.InstanceProfileName)
+	d.SetId(aws.StringValue(result.InstanceProfileName))
 	if err := d.Set("name", result.InstanceProfileName); err != nil {
 		return err
 	}

@@ -79,7 +79,7 @@ func resourceAwsIamAccessKeyCreate(d *schema.ResourceData, meta interface{}) err
 		)
 	}
 
-	d.SetId(*createResp.AccessKey.AccessKeyId)
+	d.SetId(aws.StringValue(createResp.AccessKey.AccessKeyId))
 
 	if createResp.AccessKey == nil || createResp.AccessKey.SecretAccessKey == nil {
 		return fmt.Errorf("CreateAccessKey response did not contain a Secret Access Key as expected")
@@ -147,7 +147,7 @@ func resourceAwsIamAccessKeyRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsIamAccessKeyReadResult(d *schema.ResourceData, key *iam.AccessKeyMetadata) error {
-	d.SetId(*key.AccessKeyId)
+	d.SetId(aws.StringValue(key.AccessKeyId))
 	if err := d.Set("user", key.UserName); err != nil {
 		return err
 	}

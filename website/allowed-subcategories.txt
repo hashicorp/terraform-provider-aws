@@ -28,6 +28,7 @@ CodeStar Connections
 CodeStar Notifications
 Cognito
 Config
+Connect
 Cost and Usage Report
 Data Lifecycle Manager (DLM)
 DataPipeline
@@ -41,6 +42,7 @@ DynamoDB Accelerator (DAX)
 DynamoDB
 EC2
 ECR
+ECR Public
 ECS
 EFS
 EKS
@@ -61,6 +63,7 @@ Glue
 GuardDuty
 IAM
 Identity Store
+Image Builder
 Inspector
 IoT
 KMS
@@ -69,6 +72,7 @@ Kinesis Data Analytics (SQL Applications)
 Kinesis Data Analytics v2 (SQL and Flink Applications)
 Kinesis Firehose
 Kinesis Video
+Lake Formation
 Lambda
 Lex
 License Manager
@@ -80,7 +84,9 @@ Managed Streaming for Kafka (MSK)
 MediaConvert
 MediaPackage
 MediaStore
+Managed Workflows for Apache Airflow (MWAA)
 Neptune
+Network Firewall
 OpsWorks
 Organizations
 Outposts
@@ -108,11 +114,13 @@ SWF
 Sagemaker
 Secrets Manager
 Security Hub
+Serverless Application Repository
 Service Catalog
 Service Discovery
 Service Quotas
 Shield
 SimpleDB
+Signer
 Step Function (SFN)
 Storage Gateway
 Synthetics

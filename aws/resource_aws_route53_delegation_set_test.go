@@ -19,6 +19,7 @@ func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
+		ErrorCheck:      testAccErrorCheckSkipRoute53(t),
 		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"reference_name"},
 		Providers:       testAccProviders,
@@ -51,6 +52,7 @@ func TestAccAWSRoute53DelegationSet_withZones(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
+		ErrorCheck:      testAccErrorCheckSkipRoute53(t),
 		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"reference_name"},
 		Providers:       testAccProviders,

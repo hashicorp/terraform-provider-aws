@@ -59,7 +59,7 @@ func resourceAwsEc2TrafficMirrorFilterCreate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("Error while creating traffic filter %s", err)
 	}
 
-	d.SetId(*out.TrafficMirrorFilter.TrafficMirrorFilterId)
+	d.SetId(aws.StringValue(out.TrafficMirrorFilter.TrafficMirrorFilterId))
 
 	if v, ok := d.GetOk("network_services"); ok {
 		input := &ec2.ModifyTrafficMirrorFilterNetworkServicesInput{

@@ -1467,8 +1467,8 @@ func flattenAwsCodeBuildVpcConfig(vpcConfig *codebuild.VpcConfig) []interface{} 
 		values := map[string]interface{}{}
 
 		values["vpc_id"] = aws.StringValue(vpcConfig.VpcId)
-		values["subnets"] = schema.NewSet(schema.HashString, flattenStringList(vpcConfig.Subnets))
-		values["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SecurityGroupIds))
+		values["subnets"] = flattenStringSet(vpcConfig.Subnets)
+		values["security_group_ids"] = flattenStringSet(vpcConfig.SecurityGroupIds)
 
 		return []interface{}{values}
 	}
