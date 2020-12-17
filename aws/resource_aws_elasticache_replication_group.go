@@ -64,6 +64,10 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
+			"cluster_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"cluster_mode": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -71,8 +75,9 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				// and a cluster mode enabled parameter_group_name will create
 				// a single shard replication group with number_cache_clusters - 1
 				// read replicas. Otherwise, the resource is marked ForceNew.
-				Computed: true,
-				MaxItems: 1,
+				Computed:     true,
+				MaxItems:     1,
+				ExactlyOneOf: []string{"cluster_mode", "number_cache_clusters"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"replicas_per_node_group": {
@@ -131,9 +136,10 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 			"number_cache_clusters": {
-				Type:     schema.TypeInt,
-				Computed: true,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Computed:     true,
+				Optional:     true,
+				ExactlyOneOf: []string{"cluster_mode", "number_cache_clusters"},
 			},
 			"parameter_group_name": {
 				Type:     schema.TypeString,
@@ -340,14 +346,7 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 		params.AuthToken = aws.String(v.(string))
 	}
 
-	clusterMode, clusterModeOk := d.GetOk("cluster_mode")
-	cacheClusters, cacheClustersOk := d.GetOk("number_cache_clusters")
-
-	if !clusterModeOk && !cacheClustersOk || clusterModeOk && cacheClustersOk {
-		return fmt.Errorf("Either `number_cache_clusters` or `cluster_mode` must be set")
-	}
-
-	if clusterModeOk {
+	if clusterMode, ok := d.GetOk("cluster_mode"); ok {
 		clusterModeList := clusterMode.([]interface{})
 		attributes := clusterModeList[0].(map[string]interface{})
 
@@ -360,7 +359,7 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 		}
 	}
 
-	if cacheClustersOk {
+	if cacheClusters, ok := d.GetOk("number_cache_clusters"); ok {
 		params.NumCacheClusters = aws.Int64(int64(cacheClusters.(int)))
 	}
 
@@ -449,6 +448,7 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 	if err := d.Set("cluster_mode", flattenElasticacheNodeGroupsToClusterMode(rgp.NodeGroups)); err != nil {
 		return fmt.Errorf("error setting cluster_mode attribute: %w", err)
 	}
+	d.Set("cluster_enabled", rgp.ClusterEnabled)
 	d.Set("replication_group_id", rgp.ReplicationGroupId)
 
 	if rgp.NodeGroups != nil {

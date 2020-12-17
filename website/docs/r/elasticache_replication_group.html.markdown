@@ -100,7 +100,7 @@ The following arguments are supported:
 
 * `replication_group_id` – (Required) The replication group identifier. This parameter is stored as a lowercase string.
 * `replication_group_description` – (Required) A user-created description for the replication group.
-* `number_cache_clusters` - (Required for Cluster Mode Disabled) The number of cache clusters (primary and replicas) this replication group will have. If Multi-AZ is enabled, the value of this parameter must be at least 2. Updates will occur before other modifications.
+* `number_cache_clusters` - (Optional) The number of cache clusters (primary and replicas) this replication group will have. If Multi-AZ is enabled, the value of this parameter must be at least 2. Updates will occur before other modifications. One of `number_cache_clusters` or `cluster_mode` is required.
 * `node_type` - (Required) The compute and memory capacity of the nodes in the node group.
 * `automatic_failover_enabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. If true, Multi-AZ is enabled for this replication group. If false, Multi-AZ is disabled for this replication group. Must be enabled for Redis (cluster mode enabled) replication groups. Defaults to `false`.
 * `auto_minor_version_upgrade` - (Optional) Specifies whether a minor engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window. Defaults to `true`.
@@ -135,7 +135,7 @@ before being deleted. If the value of SnapshotRetentionLimit is set to zero (0),
 Please note that setting a `snapshot_retention_limit` is not supported on cache.t1.micro cache nodes
 * `apply_immediately` - (Optional) Specifies whether any modifications are applied immediately, or during the next maintenance window. Default is `false`.
 * `tags` - (Optional) A map of tags to assign to the resource. Adding tags to this resource will add or overwrite any existing tags on the clusters in the replication group and not to the group itself.
-* `cluster_mode` - (Optional) Create a native redis cluster. `automatic_failover_enabled` must be set to true. Cluster Mode documented below. Only 1 `cluster_mode` block is allowed.
+* `cluster_mode` - (Optional) Create a native redis cluster. `automatic_failover_enabled` must be set to true. Cluster Mode documented below. Only 1 `cluster_mode` block is allowed. One of `number_cache_clusters` or `cluster_mode` is required.
 
 Cluster Mode (`cluster_mode`) supports the following:
 
@@ -147,6 +147,7 @@ Cluster Mode (`cluster_mode`) supports the following:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the ElastiCache Replication Group.
+* `cluster_enabled` - Indicates if cluster mode is enabled.
 * `configuration_endpoint_address` - The address of the replication group configuration endpoint when cluster mode is enabled.
 * `primary_endpoint_address` - (Redis only) The address of the endpoint for the primary node in the replication group, if the cluster mode is disabled.
 * `member_clusters` - The identifiers of all the nodes that are part of this replication group.
