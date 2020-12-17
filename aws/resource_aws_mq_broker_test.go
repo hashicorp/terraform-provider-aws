@@ -300,6 +300,61 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSMqBroker_basic_rabbitmq(t *testing.T) {
+	var broker mq.DescribeBrokerResponse
+	sgName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	brokerName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_mq_broker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMqBrokerConfigRabbitmq(sgName, brokerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqBrokerExists(resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, "broker_name", brokerName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_mode", "SINGLE_INSTANCE"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_options.0.use_aws_owned_key", "true"),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.8.6"),
+					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
+					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.time_of_day"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.time_zone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+						"console_access": "false",
+						"groups.#":       "0",
+						"username":       "Test",
+						"password":       "TestTest1234",
+					}),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
+					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
+						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com$`)),
+					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexp.MustCompile(`^amqps://[a-z0-9-\.]+:5671$`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
+
 func TestAccAWSMqBroker_allFieldsDefaultVpc(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
 	sgName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
@@ -910,6 +965,27 @@ resource "aws_mq_broker" "test" {
   logs {
     general = true
   }
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+}
+`, sgName, brokerName)
+}
+
+func testAccMqBrokerConfigRabbitmq(sgName, brokerName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = "%s"
+}
+
+resource "aws_mq_broker" "test" {
+  broker_name        = "%s"
+  engine_type        = "RabbitMQ"
+  engine_version     = "3.8.6"
+  host_instance_type = "mq.t3.micro"
+  security_groups    = [aws_security_group.test.id]
 
   user {
     username = "Test"

@@ -103,7 +103,8 @@ func resourceAwsMqBroker() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					mq.EngineTypeActivemq, mq.EngineTypeRabbitmq,
+					mq.EngineTypeActivemq,
+					mq.EngineTypeRabbitmq,
 				}, true),
 			},
 			"engine_version": {
@@ -375,7 +376,9 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting logs: %s", err)
 	}
 
-	err = d.Set("configuration", flattenMqConfigurationId(out.Configurations.Current))
+	if out.Configurations != nil {
+		err = d.Set("configuration", flattenMqConfigurationId(out.Configurations.Current))
+	}
 	if err != nil {
 		return err
 	}
