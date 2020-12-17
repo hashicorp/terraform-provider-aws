@@ -2479,7 +2479,7 @@ var validateCloudWatchEventCustomEventBusName = validation.All(
 
 var validateCloudWatchEventBusName = validation.All(
 	validation.StringLenBetween(1, 256),
-	validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._\-]+$`), ""),
+	validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._\-/]+$`), ""),
 )
 
 var validateServiceDiscoveryNamespaceName = validation.All(
