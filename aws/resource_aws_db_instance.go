@@ -19,6 +19,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
+const DbiResourceIdFilterName = "dbi-resource-id"
+
 func resourceAwsDbInstance() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsDbInstanceCreate,
@@ -1868,7 +1870,7 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 // error with AWS. When the DBInstance is not found, it returns no error and a
 // nil pointer.
 func resourceAwsDbInstanceRetrieve(id string, conn *rds.RDS) (*rds.DBInstance, error) {
-	resourceIdFilterName := "dbi-resource-id"
+	resourceIdFilterName := DbiResourceIdFilterName
 	opts := rds.DescribeDBInstancesInput{
 		Filters: []*rds.Filter{
 			{

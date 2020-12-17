@@ -128,8 +128,8 @@ func TestAccAWSDBInstance_basic(t *testing.T) {
 func TestAccAWSDBInstance_identifierUpdate(t *testing.T) {
 	var dbInstance1, dbInstance2 rds.DBInstance
 
-	rIdentifier1 := acctest.RandString(10)
-	rIdentifier2 := acctest.RandString(10)
+	rIdentifier1 := acctest.RandomWithPrefix("tf-acc-test")
+	rIdentifier2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -360,7 +360,7 @@ func TestAccAWSDBInstance_DbSubnetGroupName(t *testing.T) {
 				Config: testAccAWSDBInstanceConfig_DbSubnetGroupName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
-					testAccCheckDBSubnetGroupExists(resourceName, &dbSubnetGroup),
+					testAccCheckDBSubnetGroupExists(dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -415,7 +415,7 @@ func TestAccAWSDBInstance_DbSubnetGroupName_VpcSecurityGroupIds(t *testing.T) {
 				Config: testAccAWSDBInstanceConfig_DbSubnetGroupName_VpcSecurityGroupIds(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
-					testAccCheckDBSubnetGroupExists(resourceName, &dbSubnetGroup),
+					testAccCheckDBSubnetGroupExists(dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -815,7 +815,7 @@ func TestAccAWSDBInstance_ReplicateSourceDb_DbSubnetGroupName(t *testing.T) {
 				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_DbSubnetGroupName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
-					testAccCheckDBSubnetGroupExists(resourceName, &dbSubnetGroup),
+					testAccCheckDBSubnetGroupExists(dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -875,7 +875,7 @@ func TestAccAWSDBInstance_ReplicateSourceDb_DbSubnetGroupName_VpcSecurityGroupId
 				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_DbSubnetGroupName_VpcSecurityGroupIds(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
-					testAccCheckDBSubnetGroupExists(resourceName, &dbSubnetGroup),
+					testAccCheckDBSubnetGroupExists(dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -1442,7 +1442,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_DbSubnetGroupName(t *testing.T) {
 					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
-					testAccCheckDBSubnetGroupExists(resourceName, &dbSubnetGroup),
+					testAccCheckDBSubnetGroupExists(dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -1507,7 +1507,7 @@ func TestAccAWSDBInstance_SnapshotIdentifier_DbSubnetGroupName_VpcSecurityGroupI
 					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
-					testAccCheckDBSubnetGroupExists(resourceName, &dbSubnetGroup),
+					testAccCheckDBSubnetGroupExists(dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -2492,7 +2492,7 @@ func testAccCheckAWSDBInstanceAutomatedBackups(s *terraform.State) error {
 		log.Printf("[INFO] Trying to locate the DBInstance Automated Backup")
 		describeOutput, err := conn.DescribeDBInstanceAutomatedBackups(
 			&rds.DescribeDBInstanceAutomatedBackupsInput{
-				DBInstanceIdentifier: aws.String(rs.Primary.ID),
+				DbiResourceId: aws.String(rs.Primary.ID),
 			})
 		if err != nil {
 			return err
@@ -2524,10 +2524,16 @@ func testAccCheckAWSDBInstanceDestroy(s *terraform.State) error {
 		}
 
 		// Try to find the Group
+		resourceIdFilterName := DbiResourceIdFilterName
 		var err error
 		resp, err := conn.DescribeDBInstances(
 			&rds.DescribeDBInstancesInput{
-				DBInstanceIdentifier: aws.String(rs.Primary.ID),
+				Filters: []*rds.Filter{
+					{
+						Name:   &resourceIdFilterName,
+						Values: []*string{aws.String(rs.Primary.ID)},
+					},
+				},
 			})
 
 		if err != nil {
@@ -2538,7 +2544,7 @@ func testAccCheckAWSDBInstanceDestroy(s *terraform.State) error {
 		}
 
 		if len(resp.DBInstances) != 0 &&
-			*resp.DBInstances[0].DBInstanceIdentifier == rs.Primary.ID {
+			*resp.DBInstances[0].DbiResourceId == rs.Primary.ID {
 			return fmt.Errorf("DB Instance still exists")
 		}
 	}
@@ -2678,9 +2684,15 @@ func testAccCheckAWSDBInstanceSnapshot(s *terraform.State) error {
 			return err
 		}
 
+		resourceIdFilterName := DbiResourceIdFilterName
 		resp, err := conn.DescribeDBInstances(
 			&rds.DescribeDBInstancesInput{
-				DBInstanceIdentifier: aws.String(rs.Primary.ID),
+				Filters: []*rds.Filter{
+					{
+						Name:   &resourceIdFilterName,
+						Values: []*string{aws.String(rs.Primary.ID)},
+					},
+				},
 			})
 
 		if err != nil {
@@ -2691,7 +2703,7 @@ func testAccCheckAWSDBInstanceSnapshot(s *terraform.State) error {
 
 		}
 
-		if len(resp.DBInstances) != 0 && aws.StringValue(resp.DBInstances[0].DBInstanceIdentifier) == rs.Primary.ID {
+		if len(resp.DBInstances) != 0 && aws.StringValue(resp.DBInstances[0].DbiResourceId) == rs.Primary.ID {
 			return fmt.Errorf("DB Instance still exists")
 		}
 	}
@@ -2707,16 +2719,22 @@ func testAccCheckAWSDBInstanceNoSnapshot(s *terraform.State) error {
 			continue
 		}
 
+		resourceIdFilterName := DbiResourceIdFilterName
 		resp, err := conn.DescribeDBInstances(
 			&rds.DescribeDBInstancesInput{
-				DBInstanceIdentifier: aws.String(rs.Primary.ID),
+				Filters: []*rds.Filter{
+					{
+						Name:   &resourceIdFilterName,
+						Values: []*string{aws.String(rs.Primary.ID)},
+					},
+				},
 			})
 
 		if err != nil && !isAWSErr(err, rds.ErrCodeDBInstanceNotFoundFault, "") {
 			return err
 		}
 
-		if len(resp.DBInstances) != 0 && aws.StringValue(resp.DBInstances[0].DBInstanceIdentifier) == rs.Primary.ID {
+		if len(resp.DBInstances) != 0 && aws.StringValue(resp.DBInstances[0].DbiResourceId) == rs.Primary.ID {
 			return fmt.Errorf("DB Instance still exists")
 		}
 
@@ -2746,7 +2764,7 @@ func testAccCheckAWSDBInstanceExists(n string, v *rds.DBInstance) resource.TestC
 
 		conn := testAccProvider.Meta().(*AWSClient).rdsconn
 
-		resourceIdFilterName := "dbi-resource-id"
+		resourceIdFilterName := DbiResourceIdFilterName
 		opts := rds.DescribeDBInstancesInput{
 			Filters: []*rds.Filter{
 				{
@@ -4445,7 +4463,7 @@ resource "aws_db_instance" "mssql" {
 }
 
 resource "aws_db_snapshot" "mssql-snap" {
-  db_instance_identifier = aws_db_instance.mssql.id
+  db_instance_identifier = aws_db_instance.mssql.identifier
   db_snapshot_identifier = "tf-acc-test-%[1]d"
 }
 
@@ -4581,7 +4599,7 @@ resource "aws_db_instance" "mysql" {
 }
 
 resource "aws_db_snapshot" "mysql-snap" {
-  db_instance_identifier = aws_db_instance.mysql.id
+  db_instance_identifier = aws_db_instance.mysql.identifier
   db_snapshot_identifier = "tf-acc-test-%[1]d"
 }
 
@@ -5258,7 +5276,7 @@ resource "aws_db_instance" "source" {
 resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = aws_db_instance.source.instance_class
-  replicate_source_db = aws_db_instance.source.id
+  replicate_source_db = aws_db_instance.source.identifier
   skip_final_snapshot = true
 }
 `, rName))
@@ -5281,7 +5299,7 @@ resource "aws_db_instance" "test" {
   allocated_storage   = %[2]d
   identifier          = %[1]q
   instance_class      = aws_db_instance.source.instance_class
-  replicate_source_db = aws_db_instance.source.id
+  replicate_source_db = aws_db_instance.source.identifier
   skip_final_snapshot = true
 }
 `, rName, allocatedStorage))
@@ -5304,7 +5322,7 @@ resource "aws_db_instance" "test" {
   allow_major_version_upgrade = %[2]t
   identifier                  = %[1]q
   instance_class              = aws_db_instance.source.instance_class
-  replicate_source_db         = aws_db_instance.source.id
+  replicate_source_db         = aws_db_instance.source.identifier
   skip_final_snapshot         = true
 }
 `, rName, allowMajorVersionUpgrade))
@@ -5327,7 +5345,7 @@ resource "aws_db_instance" "test" {
   auto_minor_version_upgrade = %[2]t
   identifier                 = %[1]q
   instance_class             = aws_db_instance.source.instance_class
-  replicate_source_db        = aws_db_instance.source.id
+  replicate_source_db        = aws_db_instance.source.identifier
   skip_final_snapshot        = true
 }
 `, rName, autoMinorVersionUpgrade))
@@ -5353,7 +5371,7 @@ resource "aws_db_instance" "test" {
   availability_zone   = data.aws_availability_zones.available.names[0]
   identifier          = %[1]q
   instance_class      = aws_db_instance.source.instance_class
-  replicate_source_db = aws_db_instance.source.id
+  replicate_source_db = aws_db_instance.source.identifier
   skip_final_snapshot = true
 }
 `, rName))
@@ -5376,7 +5394,7 @@ resource "aws_db_instance" "test" {
   backup_retention_period = %[2]d
   identifier              = %[1]q
   instance_class          = aws_db_instance.source.instance_class
-  replicate_source_db     = aws_db_instance.source.id
+  replicate_source_db     = aws_db_instance.source.identifier
   skip_final_snapshot     = true
 }
 `, rName, backupRetentionPeriod))
@@ -5402,7 +5420,7 @@ resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = aws_db_instance.source.instance_class
   maintenance_window  = %[3]q
-  replicate_source_db = aws_db_instance.source.id
+  replicate_source_db = aws_db_instance.source.identifier
   skip_final_snapshot = true
 }
 `, rName, backupWindow, maintenanceWindow))
@@ -5793,7 +5811,7 @@ resource "aws_db_instance" "test" {
   deletion_protection = %[2]t
   identifier          = %[1]q
   instance_class      = aws_db_instance.source.instance_class
-  replicate_source_db = aws_db_instance.source.id
+  replicate_source_db = aws_db_instance.source.identifier
   skip_final_snapshot = true
 }
 `, rName, deletionProtection))
@@ -5816,7 +5834,7 @@ resource "aws_db_instance" "test" {
   iam_database_authentication_enabled = %[2]t
   identifier                          = %[1]q
   instance_class                      = aws_db_instance.source.instance_class
-  replicate_source_db                 = aws_db_instance.source.id
+  replicate_source_db                 = aws_db_instance.source.identifier
   skip_final_snapshot                 = true
 }
 `, rName, iamDatabaseAuthenticationEnabled))
@@ -5842,7 +5860,7 @@ resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = aws_db_instance.source.instance_class
   maintenance_window  = %[3]q
-  replicate_source_db = aws_db_instance.source.id
+  replicate_source_db = aws_db_instance.source.identifier
   skip_final_snapshot = true
 }
 `, rName, backupWindow, maintenanceWindow))
@@ -5866,7 +5884,7 @@ resource "aws_db_instance" "test" {
   identifier            = %[1]q
   instance_class        = aws_db_instance.source.instance_class
   max_allocated_storage = %[2]d
-  replicate_source_db   = aws_db_instance.source.id
+  replicate_source_db   = aws_db_instance.source.identifier
   skip_final_snapshot   = true
 }
 `, rName, maxAllocatedStorage))
@@ -5917,7 +5935,7 @@ resource "aws_db_instance" "test" {
   instance_class      = aws_db_instance.source.instance_class
   monitoring_interval = %[2]d
   monitoring_role_arn = aws_iam_role.test.arn
-  replicate_source_db = aws_db_instance.source.id
+  replicate_source_db = aws_db_instance.source.identifier
   skip_final_snapshot = true
 }
 `, rName, monitoringInterval))
@@ -5940,7 +5958,7 @@ resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = aws_db_instance.source.instance_class
   multi_az            = %[2]t
-  replicate_source_db = aws_db_instance.source.id
+  replicate_source_db = aws_db_instance.source.identifier
   skip_final_snapshot = true
 }
 `, rName, multiAz))
@@ -5974,7 +5992,7 @@ resource "aws_db_instance" "test" {
   identifier           = %[1]q
   instance_class       = aws_db_instance.source.instance_class
   parameter_group_name = aws_db_parameter_group.test.id
-  replicate_source_db  = aws_db_instance.source.id
+  replicate_source_db  = aws_db_instance.source.identifier
   skip_final_snapshot  = true
 }
 `, rName))
@@ -5997,7 +6015,7 @@ resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = aws_db_instance.source.instance_class
   port                = %[2]d
-  replicate_source_db = aws_db_instance.source.id
+  replicate_source_db = aws_db_instance.source.identifier
   skip_final_snapshot = true
 }
 `, rName, port))
@@ -6028,7 +6046,7 @@ resource "aws_db_instance" "source" {
 resource "aws_db_instance" "test" {
   identifier             = %[1]q
   instance_class         = aws_db_instance.source.instance_class
-  replicate_source_db    = aws_db_instance.source.id
+  replicate_source_db    = aws_db_instance.source.identifier
   skip_final_snapshot    = true
   vpc_security_group_ids = [aws_security_group.test.id]
 }
@@ -6056,7 +6074,7 @@ resource "aws_db_instance" "source" {
 resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = aws_db_instance.source.instance_class
-  replicate_source_db = aws_db_instance.source.id
+  replicate_source_db = aws_db_instance.source.identifier
   ca_cert_identifier  = data.aws_rds_certificate.latest.id
   skip_final_snapshot = true
 }
@@ -6076,7 +6094,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6102,7 +6120,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6138,7 +6156,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6177,7 +6195,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6215,7 +6233,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6245,7 +6263,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6272,7 +6290,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6300,7 +6318,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6329,7 +6347,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6385,7 +6403,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6486,7 +6504,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6547,7 +6565,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6575,7 +6593,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6602,7 +6620,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6631,7 +6649,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6659,7 +6677,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6714,7 +6732,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6742,7 +6760,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6779,7 +6797,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6821,7 +6839,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6850,7 +6868,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6879,7 +6897,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6913,7 +6931,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6950,7 +6968,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -6986,7 +7004,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
@@ -7223,7 +7241,7 @@ resource "aws_db_instance" "test" {
   performance_insights_enabled          = true
   performance_insights_kms_key_id       = aws_kms_key.test.arn
   performance_insights_retention_period = 7
-  replicate_source_db                   = aws_db_instance.source.id
+  replicate_source_db                   = aws_db_instance.source.identifier
   skip_final_snapshot                   = true
 }
 `, rName)
@@ -7278,7 +7296,7 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.source.id
+  db_instance_identifier = aws_db_instance.source.identifier
   db_snapshot_identifier = %[1]q
 }
 
