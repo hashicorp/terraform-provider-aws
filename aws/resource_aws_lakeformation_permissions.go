@@ -121,6 +121,11 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
+						"wildcard": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -140,7 +145,6 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 						"column_names": {
 							Type:     schema.TypeList,
 							Optional: true,
-							MinItems: 1,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.NoZeroValues,
@@ -153,7 +157,6 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 						"excluded_column_names": {
 							Type:     schema.TypeList,
 							Optional: true,
-							MinItems: 1,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.NoZeroValues,
@@ -485,7 +488,9 @@ func expandLakeFormationTableResource(tfMap map[string]interface{}) *lakeformati
 
 	if v, ok := tfMap["name"].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
-	} else {
+	}
+
+	if v, ok := tfMap["wildcard"].(bool); ok && v {
 		apiObject.TableWildcard = &lakeformation.TableWildcard{}
 	}
 
@@ -509,6 +514,10 @@ func flattenLakeFormationTableResource(apiObject *lakeformation.TableResource) m
 
 	if v := apiObject.Name; v != nil {
 		tfMap["name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.TableWildcard; v != nil {
+		tfMap["wildcard"] = true
 	}
 
 	return tfMap

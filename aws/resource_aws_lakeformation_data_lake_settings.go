@@ -78,7 +78,7 @@ func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 					},
 				},
 			},
-			"data_lake_admins": {
+			"admins": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Optional: true,
@@ -119,7 +119,7 @@ func resourceAwsLakeFormationDataLakeSettingsCreate(d *schema.ResourceData, meta
 		settings.CreateTableDefaultPermissions = expandDataLakeSettingsCreateDefaultPermissions(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("data_lake_admins"); ok {
+	if v, ok := d.GetOk("admins"); ok {
 		settings.DataLakeAdmins = expandDataLakeSettingsAdmins(v.([]interface{}))
 	}
 
@@ -172,7 +172,7 @@ func resourceAwsLakeFormationDataLakeSettingsRead(d *schema.ResourceData, meta i
 
 	d.Set("create_database_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateDatabaseDefaultPermissions))
 	d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
-	d.Set("data_lake_admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
+	d.Set("admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
 	d.Set("trusted_resource_owners", flattenStringList(settings.TrustedResourceOwners))
 
 	return nil

@@ -89,7 +89,8 @@ The following argument is required:
 The following arguments are optional:
 
 * `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
-* `name` - (Optional) Name of the table. Not including the table name results in a wildcard representing every table under a database.
+* `name` - (Optional) Name of the table. At least one of `name` or `wildcard` is required.
+* `wildcard` - (Optional) Whether to use a wildcard representing every table under a database. At least one of `name` or `wildcard` is required. Defaults to `false`.
 
 ### table_with_columns
 

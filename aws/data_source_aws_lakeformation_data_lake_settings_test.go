@@ -34,8 +34,8 @@ func testAccAWSLakeFormationDataLakeSettingsDataSource_basic(t *testing.T) {
 				Config: testAccAWSLakeFormationDataLakeSettingsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "catalog_id", callerIdentityName, "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "data_lake_admins.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "data_lake_admins.0", callerIdentityName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "admins.0", callerIdentityName, "arn"),
 				),
 			},
 		},
@@ -47,7 +47,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_lakeformation_data_lake_settings" "test" {
   catalog_id       = data.aws_caller_identity.current.account_id
-  data_lake_admins = [data.aws_caller_identity.current.arn]
+  admins = [data.aws_caller_identity.current.arn]
 }
 
 data "aws_lakeformation_data_lake_settings" "test" {

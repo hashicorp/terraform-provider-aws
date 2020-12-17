@@ -18,7 +18,7 @@ Manages Lake Formation principals designated as data lake administrators and lis
 
 ```hcl
 resource "aws_lakeformation_data_lake_settings" "example" {
-  data_lake_admins = [aws_iam_user.test.arn, aws_iam_role.test.arn]
+  admins = [aws_iam_user.test.arn, aws_iam_role.test.arn]
 }
 ```
 
@@ -26,7 +26,7 @@ resource "aws_lakeformation_data_lake_settings" "example" {
 
 ```hcl
 resource "aws_lakeformation_data_lake_settings" "example" {
-  data_lake_admins = [aws_iam_user.test.arn, aws_iam_role.test.arn]
+  admins = [aws_iam_user.test.arn, aws_iam_role.test.arn]
 
   create_database_default_permissions {
     permissions = ["SELECT", "ALTER", "DROP"]
@@ -47,7 +47,7 @@ The following arguments are optional:
 * `catalog_id` – (Optional) Identifier for the Data Catalog. By default, the account ID.
 * `create_database_default_permissions` - (Optional) Up to three configuration blocks of principal permissions for default create database permissions. Detailed below.
 * `create_table_default_permissions` - (Optional) Up to three configuration blocks of principal permissions for default create table permissions. Detailed below.
-* `data_lake_admins` – (Optional) List of ARNs of AWS Lake Formation principals (IAM users or roles).
+* `admins` – (Optional) List of ARNs of AWS Lake Formation principals (IAM users or roles).
 * `trusted_resource_owners` – (Optional) List of the resource-owning account IDs that the caller's account can use to share their user access details (user ARNs).
 
 ### create_database_default_permissions

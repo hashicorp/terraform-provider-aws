@@ -40,8 +40,8 @@ func testAccAWSLakeFormationDataLakeSettings_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLakeFormationDataLakeSettingsExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "catalog_id", callerIdentityName, "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "data_lake_admins.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "data_lake_admins.0", callerIdentityName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "admins.0", callerIdentityName, "arn"),
 				),
 			},
 		},
@@ -81,8 +81,8 @@ func testAccAWSLakeFormationDataLakeSettings_withoutCatalogId(t *testing.T) {
 				Config: testAccAWSLakeFormationDataLakeSettingsConfig_withoutCatalogId,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLakeFormationDataLakeSettingsExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_lake_admins.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "data_lake_admins.0", callerIdentityName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "admins.0", callerIdentityName, "arn"),
 				),
 			},
 		},
@@ -162,7 +162,7 @@ resource "aws_lakeformation_data_lake_settings" "test" {
     permissions = ["ALL"]
   }
 
-  data_lake_admins        = [data.aws_caller_identity.current.arn]
+  admins        = [data.aws_caller_identity.current.arn]
   trusted_resource_owners = [data.aws_caller_identity.current.account_id]
 }
 `
@@ -171,6 +171,6 @@ const testAccAWSLakeFormationDataLakeSettingsConfig_withoutCatalogId = `
 data "aws_caller_identity" "current" {}
 
 resource "aws_lakeformation_data_lake_settings" "test" {
-  data_lake_admins = [data.aws_caller_identity.current.arn]
+  admins = [data.aws_caller_identity.current.arn]
 }
 `

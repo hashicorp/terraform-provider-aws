@@ -30,7 +30,7 @@ In addition to arguments above, the following attributes are exported.
 
 * `create_database_default_permissions` - Up to three configuration blocks of principal permissions for default create database permissions. Detailed below.
 * `create_table_default_permissions` - Up to three configuration blocks of principal permissions for default create table permissions. Detailed below.
-* `data_lake_admins` – List of ARNs of AWS Lake Formation principals (IAM users or roles).
+* `admins` – List of ARNs of AWS Lake Formation principals (IAM users or roles).
 * `trusted_resource_owners` – List of the resource-owning account IDs that the caller's account can use to share their user access details (user ARNs).
 
 ### create_database_default_permissions

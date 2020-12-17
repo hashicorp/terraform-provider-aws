@@ -36,27 +36,6 @@ func TestAccAWSLakeFormationPermissions_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLakeFormationPermissions_disappears(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_lakeformation_permissions.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSLakeFormationPermissionsConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLakeFormationPermissionsExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsLakeFormationPermissions(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSLakeFormationPermissions_dataLocation(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lakeformation_permissions.test"
@@ -84,47 +63,26 @@ func TestAccAWSLakeFormationPermissions_dataLocation(t *testing.T) {
 	})
 }
 
-func TestAccAWSLakeFormationPermissions_full(t *testing.T) {
-	rName := acctest.RandomWithPrefix("lakeformation-test-bucket")
-	dName := acctest.RandomWithPrefix("lakeformation-test-db")
-	tName := acctest.RandomWithPrefix("lakeformation-test-table")
-
-	roleName := "data.aws_iam_role.test"
+func TestAccAWSLakeFormationPermissions_database(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lakeformation_permissions.test"
-	bucketName := "aws_s3_bucket.test"
+	roleName := "aws_iam_role.test"
 	dbName := "aws_glue_catalog_database.test"
-	tableName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationPermissionsConfig_catalog(),
+				Config: testAccAWSLakeFormationPermissionsConfig_database(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
-					resource.TestCheckResourceAttrPair(roleName, "arn", resourceName, "principal"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", "CREATE_DATABASE"),
-				),
-			},
-			{
-				Config: testAccAWSLakeFormationPermissionsConfig_location(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
-					resource.TestCheckResourceAttrPair(roleName, "arn", resourceName, "principal"),
-					resource.TestCheckResourceAttrPair(bucketName, "arn", resourceName, "location"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", "DATA_LOCATION_ACCESS"),
-				),
-			},
-			{
-				Config: testAccAWSLakeFormationPermissionsConfig_database(rName, dName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
-					resource.TestCheckResourceAttrPair(roleName, "arn", resourceName, "principal"),
-					resource.TestCheckResourceAttrPair(dbName, "name", resourceName, "database"),
+					testAccCheckAWSLakeFormationPermissionsExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "database.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "database.0.name", dbName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", "ALTER"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.1", "CREATE_TABLE"),
@@ -133,42 +91,59 @@ func TestAccAWSLakeFormationPermissions_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.0", "CREATE_TABLE"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccAWSLakeFormationPermissions_table(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lakeformation_permissions.test"
+	roleName := "aws_iam_role.test"
+	tableName := "aws_glue_catalog_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationPermissionsConfig_table(rName, dName, tName, "\"ALL\""),
+				Config: testAccAWSLakeFormationPermissionsConfig_table(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
+					testAccCheckAWSLakeFormationPermissionsExists(resourceName),
 					resource.TestCheckResourceAttrPair(roleName, "arn", resourceName, "principal"),
 					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
-					resource.TestCheckResourceAttrPair(tableName, "database_name", resourceName, "table.0.database"),
-					resource.TestCheckResourceAttrPair(tableName, "name", resourceName, "table.0.name"),
+					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", tableName, "database_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "table.0.name", tableName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", "ALL"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccAWSLakeFormationPermissions_tableWithColumns(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lakeformation_permissions.test"
+	roleName := "aws_iam_role.test"
+	tableName := "aws_glue_catalog_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationPermissionsConfig_table(rName, dName, tName, "\"ALL\", \"SELECT\""),
+				Config: testAccAWSLakeFormationPermissionsConfig_tableWithColumns(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
-					resource.TestCheckResourceAttrPair(roleName, "arn", resourceName, "principal"),
-					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
-					resource.TestCheckResourceAttrPair(tableName, "database_name", resourceName, "table.0.database"),
-					resource.TestCheckResourceAttrPair(tableName, "name", resourceName, "table.0.name"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.1", "SELECT"),
-				),
-			},
-			{
-				Config: testAccAWSLakeFormationPermissionsConfig_tableWithColumns(rName, dName, tName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
-					resource.TestCheckResourceAttrPair(roleName, "arn", resourceName, "principal"),
-					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
-					resource.TestCheckResourceAttrPair(tableName, "database_name", resourceName, "table.0.database"),
-					resource.TestCheckResourceAttrPair(tableName, "name", resourceName, "table.0.name"),
-					resource.TestCheckResourceAttr(resourceName, "table.0.column_names.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "table.0.column_names.0", "event"),
-					resource.TestCheckResourceAttr(resourceName, "table.0.column_names.1", "timestamp"),
+					testAccCheckAWSLakeFormationPermissionsExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.database_name", tableName, "database_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.name", tableName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.0", "event"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.1", "timestamp"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", "SELECT"),
 				),
@@ -221,14 +196,14 @@ func testAccCheckAWSLakeFormationPermissionsExists(resourceName string) resource
 			},
 		}
 
-		if rs.Primary.Attributes["catalog_resource"] == "true" {
+		if v, ok := rs.Primary.Attributes["catalog_resource"]; ok && v != "" && v == "true" {
 			input.ResourceType = aws.String(lakeformation.DataLakeResourceTypeCatalog)
 			input.Resource = &lakeformation.Resource{
 				Catalog: &lakeformation.CatalogResource{},
 			}
 		}
 
-		if rs.Primary.Attributes["data_location.#"] != "0" {
+		if v, ok := rs.Primary.Attributes["data_location.#"]; ok && v != "" && v != "0" {
 			input.ResourceType = aws.String(lakeformation.DataLakeResourceTypeDataLocation)
 			res := &lakeformation.DataLocationResource{
 				ResourceArn: aws.String(rs.Primary.Attributes["data_location.0.resource_arn"]),
@@ -241,16 +216,54 @@ func testAccCheckAWSLakeFormationPermissionsExists(resourceName string) resource
 			}
 		}
 
-		if rs.Primary.Attributes["database.#"] != "0" {
+		if v, ok := rs.Primary.Attributes["database.#"]; ok && v != "" && v != "0" {
 			input.ResourceType = aws.String(lakeformation.DataLakeResourceTypeDatabase)
+			res := &lakeformation.DatabaseResource{
+				Name: aws.String(rs.Primary.Attributes["database.0.name"]),
+			}
+			if rs.Primary.Attributes["database.0.catalog_id"] != "" {
+				res.CatalogId = aws.String(rs.Primary.Attributes["database.0.catalog_id"])
+			}
+			input.Resource = &lakeformation.Resource{
+				Database: res,
+			}
 		}
 
-		if rs.Primary.Attributes["table.#"] != "0" {
+		if v, ok := rs.Primary.Attributes["table.#"]; ok && v != "" && v != "0" {
 			input.ResourceType = aws.String(lakeformation.DataLakeResourceTypeTable)
+			res := &lakeformation.TableResource{
+				DatabaseName: aws.String(rs.Primary.Attributes["table.0.database_name"]),
+			}
+			if rs.Primary.Attributes["table.0.catalog_id"] != "" {
+				res.CatalogId = aws.String(rs.Primary.Attributes["table.0.catalog_id"])
+			}
+			if rs.Primary.Attributes["table.0.name"] != "" {
+				res.Name = aws.String(rs.Primary.Attributes["table.0.name"])
+			}
+			if rs.Primary.Attributes["table.0.wildcard"] == "true" {
+				res.TableWildcard = &lakeformation.TableWildcard{}
+			}
+			input.Resource = &lakeformation.Resource{
+				Table: res,
+			}
 		}
 
-		if rs.Primary.Attributes["table_with_columns.#"] != "0" {
+		// ListPermissions does not support getting privileges on a table with columns.
+		// Instead, call this operation on the table, and the operation returns the
+		// table and the table w columns.
+		// https://docs.aws.amazon.com/sdk-for-go/api/service/lakeformation/#ListPermissionsInput
+		if v, ok := rs.Primary.Attributes["table_with_columns.#"]; ok && v != "" && v != "0" {
 			input.ResourceType = aws.String(lakeformation.DataLakeResourceTypeTable)
+			res := &lakeformation.TableResource{
+				DatabaseName: aws.String(rs.Primary.Attributes["table_with_columns.0.database_name"]),
+				Name:         aws.String(rs.Primary.Attributes["table_with_columns.0.name"]),
+			}
+			if rs.Primary.Attributes["table.0.catalog_id"] != "" {
+				res.CatalogId = aws.String(rs.Primary.Attributes["table.0.catalog_id"])
+			}
+			input.Resource = &lakeformation.Resource{
+				Table: res,
+			}
 		}
 
 		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
@@ -320,7 +333,7 @@ EOF
 data "aws_caller_identity" "current" {}
 
 resource "aws_lakeformation_data_lake_settings" "test" {
-  data_lake_admins = [data.aws_caller_identity.current.arn]
+  admins = [data.aws_caller_identity.current.arn]
 }
 
 resource "aws_lakeformation_permissions" "test" {
@@ -356,48 +369,6 @@ resource "aws_iam_role" "test" {
 EOF
 }
 
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "s3:PutObject",
-        "s3:GetObject",
-        "s3:DeleteObject"
-      ],
-      "Resource": [
-        "${aws_s3_bucket.test.arn}/*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "s3:ListBucket"
-      ],
-      "Resource": [
-        "${aws_s3_bucket.test.arn}"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "s3:ListAllMyBuckets"
-      ],
-      "Resource": [
-        "arn:${data.aws_partition.current.id}:s3:::*"
-      ]
-    }
-  ]
-}
-EOF
-}
-
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   acl           = "private"
@@ -411,7 +382,7 @@ resource "aws_lakeformation_resource" "test" {
 data "aws_caller_identity" "current" {}
 
 resource "aws_lakeformation_data_lake_settings" "test" {
-  data_lake_admins = [data.aws_caller_identity.current.arn]
+  admins = [data.aws_caller_identity.current.arn]
 }
 
 resource "aws_lakeformation_permissions" "test" {
@@ -425,159 +396,148 @@ resource "aws_lakeformation_permissions" "test" {
 `, rName)
 }
 
-func testAccAWSLakeFormationPermissionsConfig_catalog() string {
-	return `
-data "aws_caller_identity" "current" {}
+func testAccAWSLakeFormationPermissionsConfig_database(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
 
-data "aws_iam_role" "test" {
-  name = "AWSServiceRoleForLakeFormationDataAccess"
-}
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/"
 
-resource "aws_lakeformation_data_lake_settings" "test" {
-  data_lake_admins = [
-    data.aws_caller_identity.current.arn
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "glue.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
   ]
 }
-
-resource "aws_lakeformation_permissions" "test" {
-  permissions = ["CREATE_DATABASE"]
-  principal   = data.aws_iam_role.test.arn
-  catalog_resource = true
-
-  depends_on = ["aws_lakeformation_data_lake_settings.test"]
-}
-`
+EOF
 }
 
-func testAccAWSLakeFormationPermissionsConfig_location(rName string) string {
-	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
-
-data "aws_iam_role" "test" {
-  name = "AWSServiceRoleForLakeFormationDataAccess"
-}
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_lakeformation_data_lake_settings" "test" {
-  admins = [
-    data.aws_caller_identity.current.arn
-  ]
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
 }
 
-resource "aws_lakeformation_resource" "test" {
-  resource_arn            = aws_s3_bucket.test.arn
-  use_service_linked_role = true
-
-  depends_on = ["aws_lakeformation_data_lake_settings.test"]
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_caller_identity.current.arn]
 }
 
 resource "aws_lakeformation_permissions" "test" {
-  permissions = ["DATA_LOCATION_ACCESS"]
-  principal   = data.aws_iam_role.test.arn
-
-  location = aws_lakeformation_resource.test.resource_arn
+  permissions                   = ["ALTER", "CREATE_TABLE", "DROP"]
+  permissions_with_grant_option = ["CREATE_TABLE"]
+  principal                     = aws_iam_role.test.arn
+  
+  database {
+    name = aws_glue_catalog_database.test.name
+  }
 
   depends_on = ["aws_lakeformation_data_lake_settings.test"]
 }
 `, rName)
 }
 
-func testAccAWSLakeFormationPermissionsConfig_database(rName, dName string) string {
+func testAccAWSLakeFormationPermissionsConfig_table(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
-data "aws_iam_role" "test" {
-  name = "AWSServiceRoleForLakeFormationDataAccess"
-}
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/"
 
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_glue_catalog_database" "test" {
-  name = %[2]q
-}
-
-resource "aws_lakeformation_data_lake_settings" "test" {
-  admins = [
-    data.aws_caller_identity.current.arn
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "glue.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
   ]
 }
-
-resource "aws_lakeformation_permissions" "test" {
-  permissions = ["ALTER", "CREATE_TABLE", "DROP"]
-  permissions_with_grant_option = ["CREATE_TABLE"]
-  principal   = data.aws_iam_role.test.arn
-
-  database = aws_glue_catalog_database.test.name
-
-  depends_on = ["aws_lakeformation_data_lake_settings.test"]
-}
-`, rName, dName)
+EOF
 }
 
-func testAccAWSLakeFormationPermissionsConfig_table(rName, dName, tName, permissions string) string {
-	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
-
-data "aws_iam_role" "test" {
-  name = "AWSServiceRoleForLakeFormationDataAccess"
-}
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
 resource "aws_glue_catalog_database" "test" {
-  name = %[2]q
+  name = %[1]q
 }
 
 resource "aws_glue_catalog_table" "test" {
-  name          = %[3]q
+  name          = %[1]q
   database_name = aws_glue_catalog_database.test.name
 }
 
 resource "aws_lakeformation_data_lake_settings" "test" {
-  admins = [
-    data.aws_caller_identity.current.arn
-  ]
+  admins = [data.aws_caller_identity.current.arn]
 }
 
 resource "aws_lakeformation_permissions" "test" {
-  permissions = [%s]
-  principal   = data.aws_iam_role.test.arn
+  permissions = ["ALL"]
+  principal   = aws_iam_role.test.arn
 
   table {
-  	database = aws_glue_catalog_table.test.database_name
-  	name = aws_glue_catalog_table.test.name
+  	database_name = aws_glue_catalog_table.test.database_name
+  	name          = aws_glue_catalog_table.test.name
   }
-
-  depends_on = ["aws_lakeformation_data_lake_settings.test"]
 }
-`, rName, dName, tName, permissions)
+`, rName)
 }
 
-func testAccAWSLakeFormationPermissionsConfig_tableWithColumns(rName, dName, tName string) string {
+func testAccAWSLakeFormationPermissionsConfig_tableWithColumns(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "glue.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
 data "aws_caller_identity" "current" {}
 
-data "aws_iam_role" "test" {
-  name = "AWSServiceRoleForLakeFormationDataAccess"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
 resource "aws_glue_catalog_database" "test" {
-  name = %[2]q
+  name = %[1]q
 }
 
 resource "aws_glue_catalog_table" "test" {
-  name          = %[3]q
+  name          = %[1]q
   database_name = aws_glue_catalog_database.test.name
 
   storage_descriptor {
@@ -597,22 +557,20 @@ resource "aws_glue_catalog_table" "test" {
 }
 
 resource "aws_lakeformation_data_lake_settings" "test" {
-  admins = [
-    data.aws_caller_identity.current.arn
-  ]
+  admins = [data.aws_caller_identity.current.arn]
 }
 
 resource "aws_lakeformation_permissions" "test" {
   permissions = ["SELECT"]
-  principal   = data.aws_iam_role.test.arn
+  principal   = aws_iam_role.test.arn
 
-  table {
-  	database = aws_glue_catalog_table.test.database_name
-  	name = aws_glue_catalog_table.test.name
-  	column_names = ["event", "timestamp"]
+  table_with_columns {
+  	database_name = aws_glue_catalog_table.test.database_name
+  	name          = aws_glue_catalog_table.test.name
+  	column_names  = ["event", "timestamp"]
   }
 
   depends_on = ["aws_lakeformation_data_lake_settings.test"]
 }
-`, rName, dName, tName)
+`, rName)
 }
