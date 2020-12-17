@@ -73,7 +73,7 @@ func TestAccAWSLookoutForVisionProject_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLookoutForVisionProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lookoutforvision", fmt.Sprintf("project/%s", rName)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lookoutvision", fmt.Sprintf("project/%s", rName)),
 				),
 			},
 			{
