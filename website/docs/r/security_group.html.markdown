@@ -19,7 +19,7 @@ a conflict of rule settings and will overwrite rules.
 
 ~> **NOTE:** Referencing Security Groups across VPC peering has certain restrictions. More information is available in the [VPC Peering User Guide](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-security-groups.html).
 
-~> **NOTE:** Due to [AWS Lambda improved VPC networking changes that began deploying in September 2019](https://aws.amazon.com/blogs/compute/announcing-improved-vpc-networking-for-aws-lambda-functions/), security groups associated with Lambda Functions can take up to 45 minutes to successfully delete. Terraform AWS Provider version 2.31.0 and later automatically handles this increased timeout, however prior versions require setting the [customizable deletion timeout](#timeouts) to 45 minutes (`delete = "45m"`). AWS and HashiCorp are working together to reduce the amount of time required for resource deletion and updates can be tracked in this [GitHub issue](https://github.com/terraform-providers/terraform-provider-aws/issues/10329).
+~> **NOTE:** Due to [AWS Lambda improved VPC networking changes that began deploying in September 2019](https://aws.amazon.com/blogs/compute/announcing-improved-vpc-networking-for-aws-lambda-functions/), security groups associated with Lambda Functions can take up to 45 minutes to successfully delete. Terraform AWS Provider version 2.31.0 and later automatically handles this increased timeout, however prior versions require setting the [customizable deletion timeout](#timeouts) to 45 minutes (`delete = "45m"`). AWS and HashiCorp are working together to reduce the amount of time required for resource deletion and updates can be tracked in this [GitHub issue](https://github.com/hashicorp/terraform-provider-aws/issues/10329).
 
 ## Example Usage
 
@@ -29,48 +29,25 @@ Basic usage
 resource "aws_security_group" "allow_tls" {
   name        = "allow_tls"
   description = "Allow TLS inbound traffic"
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
-    # TLS (change to whatever ports you need)
+    description = "TLS from VPC"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    # Please restrict your ingress to only necessary IPs and ports.
-    # Opening to 0.0.0.0/0 can lead to security vulnerabilities.
-    cidr_blocks = # add a CIDR block here
+    cidr_blocks = [aws_vpc.main.cidr_block]
   }
 
   egress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    cidr_blocks     = ["0.0.0.0/0"]
-    prefix_list_ids = ["pl-12c4e678"]
-  }
-}
-```
-
-Basic usage with tags:
-
-```hcl
-resource "aws_security_group" "allow_tls" {
-  name        = "allow_tls"
-  description = "Allow TLS inbound traffic"
-  vpc_id      = "${aws_vpc.main.id}"
-
-  ingress {
-    # TLS (change to whatever ports you need)
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    # Please restrict your ingress to only necessary IPs and ports.
-    # Opening to 0.0.0.0/0 can lead to security vulnerabilities.
-    cidr_blocks = # add your IP address here
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
-    Name = "allow_all"
+    Name = "allow_tls"
   }
 }
 ```
@@ -101,13 +78,13 @@ with the service, and those rules may contain a cyclic dependency that prevent
 the security groups from being destroyed without removing the dependency first.
 Default `false`
 * `vpc_id` - (Optional, Forces new resource) The VPC ID.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 The `ingress` block supports:
 
 * `cidr_blocks` - (Optional) List of CIDR blocks.
 * `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks.
-* `prefix_list_ids` - (Optional) List of prefix list IDs.
+* `prefix_list_ids` - (Optional) List of Prefix List IDs.
 * `from_port` - (Required) The start port (or ICMP type number if protocol is "icmp" or "icmpv6")
 * `protocol` - (Required) The protocol. If you select a protocol of
 "-1" (semantically equivalent to `"all"`, which is not a valid value here), you must specify a "from_port" and "to_port" equal to 0. If not icmp, icmpv6, tcp, udp, or "-1" use the [protocol number](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
@@ -122,7 +99,7 @@ The `egress` block supports:
 
 * `cidr_blocks` - (Optional) List of CIDR blocks.
 * `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks.
-* `prefix_list_ids` - (Optional) List of prefix list IDs (for allowing access to VPC endpoints)
+* `prefix_list_ids` - (Optional) List of Prefix List IDs.
 * `from_port` - (Required) The start port (or ICMP type number if protocol is "icmp")
 * `protocol` - (Required) The protocol. If you select a protocol of
 "-1" (semantically equivalent to `"all"`, which is not a valid value here), you must specify a "from_port" and "to_port" equal to 0. If not icmp, tcp, udp, or "-1" use the [protocol number](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
@@ -141,34 +118,43 @@ surprises in terms of controlling your egress rules. If you desire this rule to
 be in place, you can use this `egress` block:
 
 ```hcl
-egress {
-  from_port   = 0
-  to_port     = 0
-  protocol    = "-1"
-  cidr_blocks = ["0.0.0.0/0"]
+resource "aws_security_group" "example" {
+  # ... other configuration ...
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 ```
 
 ## Usage with prefix list IDs
 
-Prefix list IDs are managed by AWS internally. Prefix list IDs
-are associated with a prefix list name, or service name, that is linked to a specific region.
+Prefix Lists are either managed by AWS internally, or created by the customer using a
+[Prefix List resource](ec2_managed_prefix_list.html). Prefix Lists provided by
+AWS are associated with a prefix list name, or service name, that is linked to a specific region.
 Prefix list IDs are exported on VPC Endpoints, so you can use this format:
 
 ```hcl
-# ...
-egress {
-  from_port       = 0
-  to_port         = 0
-  protocol        = "-1"
-  prefix_list_ids = ["${aws_vpc_endpoint.my_endpoint.prefix_list_id}"]
+resource "aws_security_group" "example" {
+  # ... other configuration ...
+
+  egress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    prefix_list_ids = [aws_vpc_endpoint.my_endpoint.prefix_list_id]
+  }
 }
 
-# ...
 resource "aws_vpc_endpoint" "my_endpoint" {
-  # ...
+  # ... other configuration ...
 }
 ```
+
+You can also find a specific Prefix List using the `aws_prefix_list` data source.
 
 ## Attributes Reference
 

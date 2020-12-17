@@ -3,7 +3,7 @@ subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_traffic_mirror_target"
 description: |-
-  Provides an Traffic mirror target
+  Provides a Traffic mirror target
 ---
 
 # Resource: aws_ec2_traffic_mirror_target
@@ -18,14 +18,13 @@ To create a basic traffic mirror session
 ```hcl
 resource "aws_ec2_traffic_mirror_target" "nlb" {
   description               = "NLB target"
-  network_load_balancer_arn = "${aws_lb.lb.arn}"
+  network_load_balancer_arn = aws_lb.lb.arn
 }
 
 resource "aws_ec2_traffic_mirror_target" "eni" {
   description          = "ENI target"
-  network_interface_id = "${aws_instance.test.primary_network_interface_id}"
+  network_interface_id = aws_instance.test.primary_network_interface_id
 }
-
 ```
 
 ## Argument Reference
@@ -35,6 +34,7 @@ The following arguments are supported:
 * `description` - (Optional, Forces new) A description of the traffic mirror session.
 * `network_interface_id` - (Optional, Forces new) The network interface ID that is associated with the target.
 * `network_load_balancer_arn` - (Optional, Forces new) The Amazon Resource Name (ARN) of the Network Load Balancer that is associated with the target.
+* `tags` - (Optional) Key-value map of resource tags.
 
 **NOTE:** Either `network_interface_id` or `network_load_balancer_arn` should be specified and both should not be specified together
 
@@ -42,7 +42,8 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The name of the traffic mirror target.
+* `id` - The ID of the Traffic Mirror target.
+* `arn` - The ARN of the traffic mirror target.
 
 ## Import
 

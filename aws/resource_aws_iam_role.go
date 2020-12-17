@@ -9,10 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -43,19 +42,10 @@ func resourceAwsIamRole() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					// https://github.com/boto/botocore/blob/2485f5c/botocore/data/iam/2010-05-08/service-2.json#L8329-L8334
-					value := v.(string)
-					if len(value) > 64 {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be longer than 64 characters", k))
-					}
-					if !regexp.MustCompile(`^[\w+=,.@-]*$`).MatchString(value) {
-						errors = append(errors, fmt.Errorf(
-							"%q must match [\\w+=,.@-]", k))
-					}
-					return
-				},
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
+				),
 			},
 
 			"name_prefix": {
@@ -63,19 +53,10 @@ func resourceAwsIamRole() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					// https://github.com/boto/botocore/blob/2485f5c/botocore/data/iam/2010-05-08/service-2.json#L8329-L8334
-					value := v.(string)
-					if len(value) > 32 {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be longer than 32 characters, name is limited to 64", k))
-					}
-					if !regexp.MustCompile(`^[\w+=,.@-]*$`).MatchString(value) {
-						errors = append(errors, fmt.Errorf(
-							"%q must match [\\w+=,.@-]", k))
-					}
-					return
-				},
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 32),
+					validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
+				),
 			},
 
 			"path": {
@@ -92,16 +73,20 @@ func resourceAwsIamRole() *schema.Resource {
 			},
 
 			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateIamRoleDescription,
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(0, 1000),
+					validation.StringDoesNotMatch(regexp.MustCompile("[“‘]"), "cannot contain specially formatted single or double quotes: [“‘]"),
+					validation.StringMatch(regexp.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`),
+				),
 			},
 
 			"assume_role_policy": {
 				Type:             schema.TypeString,
 				Required:         true,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 			},
 
 			"force_detach_policies": {
@@ -176,7 +161,10 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 		if isAWSErr(err, "MalformedPolicyDocument", "Invalid principal in policy") {
 			return resource.RetryableError(err)
 		}
-		return resource.NonRetryableError(err)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
 	if isResourceTimeoutError(err) {
 		createResp, err = iamconn.CreateRole(request)
@@ -184,12 +172,13 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error creating IAM Role %s: %s", name, err)
 	}
-	d.SetId(*createResp.Role.RoleName)
+	d.SetId(aws.StringValue(createResp.Role.RoleName))
 	return resourceAwsIamRoleRead(d, meta)
 }
 
 func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	request := &iam.GetRoleInput{
 		RoleName: aws.String(d.Id()),
@@ -226,7 +215,7 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("unique_id", role.RoleId)
 
-	if err := d.Set("tags", keyvaluetags.IamKeyValueTags(role.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.IamKeyValueTags(role.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

@@ -7,10 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 // Global Route53 Zone ID for Global Accelerators, exported as a
@@ -100,6 +100,7 @@ func resourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -111,6 +112,7 @@ func resourceAwsGlobalAcceleratorAcceleratorCreate(d *schema.ResourceData, meta 
 		Name:             aws.String(d.Get("name").(string)),
 		IdempotencyToken: aws.String(resource.UniqueId()),
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
+		Tags:             keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().GlobalacceleratorTags(),
 	}
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
@@ -124,7 +126,7 @@ func resourceAwsGlobalAcceleratorAcceleratorCreate(d *schema.ResourceData, meta 
 		return fmt.Errorf("Error creating Global Accelerator accelerator: %s", err)
 	}
 
-	d.SetId(*resp.Accelerator.AcceleratorArn)
+	d.SetId(aws.StringValue(resp.Accelerator.AcceleratorArn))
 
 	err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, d.Id())
 	if err != nil {
@@ -143,6 +145,7 @@ func resourceAwsGlobalAcceleratorAcceleratorCreate(d *schema.ResourceData, meta 
 
 func resourceAwsGlobalAcceleratorAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).globalacceleratorconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	accelerator, err := resourceAwsGlobalAcceleratorAcceleratorRetrieve(conn, d.Id())
 
@@ -175,6 +178,15 @@ func resourceAwsGlobalAcceleratorAcceleratorRead(d *schema.ResourceData, meta in
 
 	if err := d.Set("attributes", resourceAwsGlobalAcceleratorAcceleratorFlattenAttributes(resp.AcceleratorAttributes)); err != nil {
 		return fmt.Errorf("Error setting Global Accelerator accelerator attributes: %s", err)
+	}
+
+	tags, err := keyvaluetags.GlobalacceleratorListTags(conn, d.Id())
+	if err != nil {
+		return fmt.Errorf("error listing tags for Global Accelerator accelerator (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -249,9 +261,7 @@ func resourceAwsGlobalAcceleratorAcceleratorRetrieve(conn *globalaccelerator.Glo
 func resourceAwsGlobalAcceleratorAcceleratorUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).globalacceleratorconn
 
-	d.Partial(true)
-
-	if d.HasChange("name") || d.HasChange("ip_address_type") || d.HasChange("enabled") {
+	if d.HasChanges("name", "ip_address_type", "enabled") {
 		opts := &globalaccelerator.UpdateAcceleratorInput{
 			AcceleratorArn: aws.String(d.Id()),
 			Name:           aws.String(d.Get("name").(string)),
@@ -269,10 +279,6 @@ func resourceAwsGlobalAcceleratorAcceleratorUpdate(d *schema.ResourceData, meta 
 			return fmt.Errorf("Error updating Global Accelerator accelerator: %s", err)
 		}
 
-		d.SetPartial("name")
-		d.SetPartial("ip_address_type")
-		d.SetPartial("enabled")
-
 		err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, d.Id())
 		if err != nil {
 			return err
@@ -285,13 +291,16 @@ func resourceAwsGlobalAcceleratorAcceleratorUpdate(d *schema.ResourceData, meta 
 			if err != nil {
 				return err
 			}
-
 		}
-
-		d.SetPartial("attributes")
 	}
 
-	d.Partial(false)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.GlobalacceleratorUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating Global Accelerator accelerator (%s) tags: %s", d.Id(), err)
+		}
+	}
 
 	return resourceAwsGlobalAcceleratorAcceleratorRead(d, meta)
 }
@@ -301,7 +310,7 @@ func resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn *globalacc
 		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
 		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
 		Refresh: resourceAwsGlobalAcceleratorAcceleratorStateRefreshFunc(conn, acceleratorArn),
-		Timeout: 5 * time.Minute,
+		Timeout: 10 * time.Minute,
 	}
 
 	log.Printf("[DEBUG] Waiting for Global Accelerator accelerator (%s) availability", acceleratorArn)
