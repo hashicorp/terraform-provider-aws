@@ -27,12 +27,12 @@ resource "aws_ec2_managed_prefix_list" "example" {
   max_entries    = 5
 
   entry {
-    cidr_block  = aws_vpc.example.cidr_block
+    cidr        = aws_vpc.example.cidr_block
     description = "Primary"
   }
 
   entry {
-    cidr_block  = aws_vpc_ipv4_cidr_block_association.example.cidr_block
+    cidr        = aws_vpc_ipv4_cidr_block_association.example.cidr_block
     description = "Secondary"
   }
 
@@ -58,7 +58,7 @@ The following arguments are supported:
 
 The `entry` block supports:
 
-* `cidr_block` - (Required) The CIDR block of this entry.
+* `cidr` - (Required) The CIDR block of this entry.
 * `description` - (Optional) Description of this entry.
 
 ## Attributes Reference

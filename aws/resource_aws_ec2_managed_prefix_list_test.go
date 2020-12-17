@@ -109,11 +109,11 @@ func TestAccAwsEc2ManagedPrefixList_Entry(t *testing.T) {
 					testAccAwsEc2ManagedPrefixListExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "entry.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
-						"cidr_block":  "1.0.0.0/8",
+						"cidr":        "1.0.0.0/8",
 						"description": "Test1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
-						"cidr_block":  "2.0.0.0/8",
+						"cidr":        "2.0.0.0/8",
 						"description": "Test2",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -131,11 +131,11 @@ func TestAccAwsEc2ManagedPrefixList_Entry(t *testing.T) {
 					testAccAwsEc2ManagedPrefixListExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "entry.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
-						"cidr_block":  "1.0.0.0/8",
+						"cidr":        "1.0.0.0/8",
 						"description": "Test1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
-						"cidr_block":  "3.0.0.0/8",
+						"cidr":        "3.0.0.0/8",
 						"description": "Test3",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "version", "2"),
@@ -305,12 +305,12 @@ resource "aws_ec2_managed_prefix_list" "test" {
   name           = %[1]q
 
   entry {
-    cidr_block  = "1.0.0.0/8"
+    cidr        = "1.0.0.0/8"
     description = "Test1"
   }
 
   entry {
-    cidr_block  = "2.0.0.0/8"
+    cidr        = "2.0.0.0/8"
     description = "Test2"
   }
 }
@@ -325,12 +325,12 @@ resource "aws_ec2_managed_prefix_list" "test" {
   name           = %[1]q
 
   entry {
-    cidr_block  = "1.0.0.0/8"
+    cidr        = "1.0.0.0/8"
     description = "Test1"
   }
 
   entry {
-    cidr_block  = "3.0.0.0/8"
+    cidr        = "3.0.0.0/8"
     description = "Test3"
   }
 }

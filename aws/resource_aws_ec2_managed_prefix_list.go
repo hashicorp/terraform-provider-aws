@@ -52,7 +52,7 @@ func resourceAwsEc2ManagedPrefixList() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cidr_block": {
+						"cidr": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.IsCIDR,
@@ -276,7 +276,7 @@ func expandEc2AddPrefixListEntry(tfMap map[string]interface{}) *ec2.AddPrefixLis
 
 	apiObject := &ec2.AddPrefixListEntry{}
 
-	if v, ok := tfMap["cidr_block"].(string); ok && v != "" {
+	if v, ok := tfMap["cidr"].(string); ok && v != "" {
 		apiObject.Cidr = aws.String(v)
 	}
 
@@ -320,7 +320,7 @@ func expandEc2RemovePrefixListEntry(tfMap map[string]interface{}) *ec2.RemovePre
 
 	apiObject := &ec2.RemovePrefixListEntry{}
 
-	if v, ok := tfMap["cidr_block"].(string); ok && v != "" {
+	if v, ok := tfMap["cidr"].(string); ok && v != "" {
 		apiObject.Cidr = aws.String(v)
 	}
 
@@ -361,7 +361,7 @@ func flattenEc2PrefixListEntry(apiObject *ec2.PrefixListEntry) map[string]interf
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Cidr; v != nil {
-		tfMap["cidr_block"] = aws.StringValue(v)
+		tfMap["cidr"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Description; v != nil {
