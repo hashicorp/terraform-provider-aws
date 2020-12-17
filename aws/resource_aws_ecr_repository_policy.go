@@ -14,9 +14,9 @@ import (
 
 func resourceAwsEcrRepositoryPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEcrRepositoryPolicyCreate,
+		Create: resourceAwsEcrRepositoryPolicyPut,
 		Read:   resourceAwsEcrRepositoryPolicyRead,
-		Update: resourceAwsEcrRepositoryPolicyUpdate,
+		Update: resourceAwsEcrRepositoryPolicyPut,
 		Delete: resourceAwsEcrRepositoryPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -42,7 +42,7 @@ func resourceAwsEcrRepositoryPolicy() *schema.Resource {
 	}
 }
 
-func resourceAwsEcrRepositoryPolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEcrRepositoryPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecrconn
 
 	input := ecr.SetRepositoryPolicyInput{
@@ -104,40 +104,6 @@ func resourceAwsEcrRepositoryPolicyRead(d *schema.ResourceData, meta interface{}
 	d.Set("policy", out.PolicyText)
 
 	return nil
-}
-
-func resourceAwsEcrRepositoryPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrconn
-
-	input := ecr.SetRepositoryPolicyInput{
-		RepositoryName: aws.String(d.Id()),
-		RegistryId:     aws.String(d.Get("registry_id").(string)),
-		PolicyText:     aws.String(d.Get("policy").(string)),
-	}
-
-	log.Printf("[DEBUG] Updating ECR repository policy: %#v", input)
-
-	// Retry due to IAM eventual consistency
-	var err error
-	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
-		_, err = conn.SetRepositoryPolicy(&input)
-
-		if isAWSErr(err, ecr.ErrCodeInvalidParameterException, "Invalid repository policy provided") {
-			return resource.RetryableError(err)
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.SetRepositoryPolicy(&input)
-	}
-	if err != nil {
-		return fmt.Errorf("error updating ECR Repository Policy: %w", err)
-	}
-
-	return resourceAwsEcrRepositoryPolicyRead(d, meta)
 }
 
 func resourceAwsEcrRepositoryPolicyDelete(d *schema.ResourceData, meta interface{}) error {
