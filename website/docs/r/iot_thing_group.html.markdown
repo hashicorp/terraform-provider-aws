@@ -20,12 +20,12 @@ resource "aws_iot_thing_group" "parent" {
 resource "aws_iot_thing_group" "example" {
   name = "example"
 
-  parent_group_name = "${aws_iot_thing_group.parent.name}"
+  parent_group_name = aws_iot_thing_group.parent.name
 
   properties {
     attributes = {
-      One    = "11111"
-      Two    = "TwoTwo"
+      One = "11111"
+      Two = "TwoTwo"
     }
     description = "This is my thing group"
   }
