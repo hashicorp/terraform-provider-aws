@@ -19,7 +19,7 @@ resource "aws_lookoutforvision_project" "demo" {
   name = "demo"
 }
 
-// Creates a train dataset with samples
+# Creates a train dataset with samples
 resource "aws_lookoutforvision_dataset" "train" {
   project      = aws_lookout_for_vision_project.demo.name
   dataset_type = "train"
@@ -29,7 +29,7 @@ resource "aws_lookoutforvision_dataset" "train" {
   }
 }
 
-// Creates an empty test dataset
+# Creates an empty test dataset
 resource "aws_lookoutforvision_dataset" "test" {
   project      = aws_lookout_for_vision_project.demo.name
   dataset_type = "test"
