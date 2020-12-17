@@ -168,6 +168,6 @@ resource "aws_ecr_registry_policy" "test" {
     ]
 }
 EOF
-}	
+}
 `)
 }
