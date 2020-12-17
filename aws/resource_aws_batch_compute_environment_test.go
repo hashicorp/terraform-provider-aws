@@ -731,10 +731,10 @@ func testAccCheckBatchComputeEnvironmentDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error occurred when get compute environment information.")
+			return fmt.Errorf("error occurred when get compute environment information")
 		}
 		if len(result.ComputeEnvironments) == 1 {
-			return fmt.Errorf("Compute environment still exists.")
+			return fmt.Errorf("compute environment still exists")
 		}
 
 	}
@@ -758,12 +758,12 @@ func testAccCheckAwsBatchComputeEnvironmentExists() resource.TestCheckFunc {
 			})
 
 			if err != nil {
-				return fmt.Errorf("Error occurred when get compute environment information.")
+				return fmt.Errorf("error occurred when get compute environment information")
 			}
 			if len(result.ComputeEnvironments) == 0 {
-				return fmt.Errorf("Compute environment doesn't exists.")
+				return fmt.Errorf("compute environment doesn't exists")
 			} else if len(result.ComputeEnvironments) >= 2 {
-				return fmt.Errorf("Too many compute environments exist.")
+				return fmt.Errorf("too many compute environments exist")
 			}
 		}
 
