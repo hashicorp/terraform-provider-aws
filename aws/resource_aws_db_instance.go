@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -11,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -540,6 +542,18 @@ func resourceAwsDbInstance() *schema.Resource {
 
 			"tags": tagsSchema(),
 		},
+
+		CustomizeDiff: customdiff.All(
+			customdiff.ComputedIf("address", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("identifier")
+			}),
+			customdiff.ComputedIf("arn", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("identifier")
+			}),
+			customdiff.ComputedIf("endpoint", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("identifier")
+			}),
+		),
 	}
 }
 
@@ -1600,11 +1614,13 @@ func waitUntilAwsDbInstanceIsDeleted(id string, conn *rds.RDS, timeout time.Dura
 func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	oldIdentifier, newIdentifier := d.GetChange("identifier")
+	oldIdentifierPtr, newIdentifierPtr := d.GetChange("identifier")
+	oldIdentifier := oldIdentifierPtr.(string)
+	newIdentifier := newIdentifierPtr.(string)
 
 	req := &rds.ModifyDBInstanceInput{
 		ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
-		DBInstanceIdentifier: aws.String(oldIdentifier.(string)),
+		DBInstanceIdentifier: aws.String(oldIdentifier),
 	}
 
 	if !aws.BoolValue(req.ApplyImmediately) {
@@ -1613,7 +1629,7 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 
 	requestUpdate := false
 	if d.HasChanges("identifier") {
-		req.NewDBInstanceIdentifier = aws.String(newIdentifier.(string))
+		req.NewDBInstanceIdentifier = aws.String(newIdentifier)
 		requestUpdate = true
 	}
 	if d.HasChanges("allocated_storage", "iops") {
