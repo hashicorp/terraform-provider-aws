@@ -125,6 +125,36 @@ func TestAccAWSDBInstance_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_identifierUpdate(t *testing.T) {
+	var dbInstance1, dbInstance2 rds.DBInstance
+
+	rIdentifier1 := acctest.RandString(10)
+	rIdentifier2 := acctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_identifier(rIdentifier1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &dbInstance1),
+					resource.TestCheckResourceAttr("aws_db_instance.bar", "identifier", rIdentifier1),
+				),
+			},
+			{
+				Config: testAccAWSDBInstanceConfig_identifier(rIdentifier2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &dbInstance2),
+					testAccCheckAWSDBInstanceSameResourceId(&dbInstance1, &dbInstance2),
+					resource.TestCheckResourceAttr("aws_db_instance.bar", "identifier", rIdentifier2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_namePrefix(t *testing.T) {
 	var v rds.DBInstance
 
@@ -2716,8 +2746,14 @@ func testAccCheckAWSDBInstanceExists(n string, v *rds.DBInstance) resource.TestC
 
 		conn := testAccProvider.Meta().(*AWSClient).rdsconn
 
+		resourceIdFilterName := "dbi-resource-id"
 		opts := rds.DescribeDBInstancesInput{
-			DBInstanceIdentifier: aws.String(rs.Primary.ID),
+			Filters: []*rds.Filter{
+				{
+					Name:   &resourceIdFilterName,
+					Values: []*string{aws.String(rs.Primary.ID)},
+				},
+			},
 		}
 
 		resp, err := conn.DescribeDBInstances(&opts)
@@ -2727,11 +2763,21 @@ func testAccCheckAWSDBInstanceExists(n string, v *rds.DBInstance) resource.TestC
 		}
 
 		if len(resp.DBInstances) != 1 ||
-			*resp.DBInstances[0].DBInstanceIdentifier != rs.Primary.ID {
+			*resp.DBInstances[0].DbiResourceId != rs.Primary.ID {
 			return fmt.Errorf("DB Instance not found")
 		}
 
 		*v = *resp.DBInstances[0]
+
+		return nil
+	}
+}
+
+func testAccCheckAWSDBInstanceSameResourceId(v1, v2 *rds.DBInstance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *v1.DbiResourceId != *v2.DbiResourceId {
+			return fmt.Errorf("DB Instances has different Resource ID")
+		}
 
 		return nil
 	}
@@ -3098,6 +3144,25 @@ resource "aws_db_instance" "bar" {
   maintenance_window = "Fri:09:00-Fri:09:30"
 }
 `))
+}
+
+func testAccAWSDBInstanceConfig_identifier(rIdentifier string) string {
+	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMysql(), fmt.Sprintf(`
+resource "aws_db_instance" "bar" {
+  identifier              = %[1]q
+  allocated_storage       = 10
+  backup_retention_period = 0
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  parameter_group_name    = "default.mysql5.6"
+  password                = "barbarbarbar"
+  skip_final_snapshot     = true
+  username                = "foo"
+
+  apply_immediately = true
+}
+`, rIdentifier))
 }
 
 func testAccAWSDBInstanceConfig_namePrefix() string {
