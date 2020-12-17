@@ -86,7 +86,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 						},
 						"instance_type": {
 							Type:     schema.TypeSet,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
