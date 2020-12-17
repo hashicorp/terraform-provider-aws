@@ -157,7 +157,30 @@ func resourceAwsEipAssociationRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	response, err := conn.DescribeAddresses(request)
+	var response *ec2.DescribeAddressesOutput
+	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+		var err error
+		response, err = conn.DescribeAddresses(request)
+
+		if tfawserr.ErrCodeEquals(err, "InvalidAssociationID.NotFound") {
+			return resource.RetryableError(err)
+		}
+
+		if d.IsNewResource() && (response.Addresses == nil || len(response.Addresses) == 0) {
+			return resource.RetryableError(&resource.NotFoundError{})
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		response, err = conn.DescribeAddresses(request)
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error reading EC2 Elastic IP %s: %#v", d.Get("allocation_id").(string), err)
 	}
