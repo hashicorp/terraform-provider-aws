@@ -260,19 +260,19 @@ func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta inter
 			Type:             aws.String(computeResourceType),
 		}
 
-		if v, ok := computeResource["allocation_strategy"]; ok {
+		if v, ok := computeResource["allocation_strategy"]; ok && len(v.(string)) > 0 {
 			input.ComputeResources.AllocationStrategy = aws.String(v.(string))
 		}
-		if v, ok := computeResource["bid_percentage"]; ok {
+		if v, ok := computeResource["bid_percentage"]; ok && v.(int) > 0 {
 			input.ComputeResources.BidPercentage = aws.Int64(int64(v.(int)))
 		}
 		if v, ok := computeResource["desired_vcpus"]; ok && v.(int) > 0 {
 			input.ComputeResources.DesiredvCpus = aws.Int64(int64(v.(int)))
 		}
-		if v, ok := computeResource["ec2_key_pair"]; ok {
+		if v, ok := computeResource["ec2_key_pair"]; ok && len(v.(string)) > 0 {
 			input.ComputeResources.Ec2KeyPair = aws.String(v.(string))
 		}
-		if v, ok := computeResource["image_id"]; ok {
+		if v, ok := computeResource["image_id"]; ok && len(v.(string)) > 0 {
 			input.ComputeResources.ImageId = aws.String(v.(string))
 		}
 		if v, ok := computeResource["instance_role"]; ok && len(v.(string)) > 0 {
