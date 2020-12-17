@@ -378,7 +378,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithErrorOutputPrefix(t *tes
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithErrorOutputPrefix(rName, rInt, "test/", "error/test/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", "error/test/"),
 					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.prefix", "test/"),
 				),
@@ -387,7 +387,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithErrorOutputPrefix(t *tes
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithErrorOutputPrefix(rName, rInt, "test/", "error/test/changed/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", "error/test/changed/"),
 					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.prefix", "test/"),
 				),
@@ -396,7 +396,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithErrorOutputPrefix(t *tes
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
-					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
 					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.prefix", ""),
 				),
