@@ -196,6 +196,10 @@ resource "aws_ec2_transit_gateway_prefix_list_reference" "test" {
 
 func testAccAwsEc2TransitGatewayPrefixListReferenceConfig_TransitGatewayAttachmentId(rName string, index int) string {
 	return fmt.Sprintf(`
+variable "index" {
+  default = %[2]d
+}
+
 resource "aws_ec2_managed_prefix_list" "test" {
   address_family = "IPv4"
   max_entries    = 1
@@ -227,7 +231,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 
 resource "aws_ec2_transit_gateway_prefix_list_reference" "test" {
   prefix_list_id                 = aws_ec2_managed_prefix_list.test.id
-  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.test[%[2]d].id
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.test[var.index].id
   transit_gateway_route_table_id = aws_ec2_transit_gateway.test.association_default_route_table_id
 }
 `, rName, index)
