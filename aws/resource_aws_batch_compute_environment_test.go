@@ -298,6 +298,24 @@ func TestAccAWSBatchComputeEnvironment_createFargate(t *testing.T) {
 	})
 }
 
+func TestAccAWSBatchComputeEnvironment_createFargateSpot(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigFargateSpot(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSBatchComputeEnvironment_ComputeResources_DesiredVcpus_Computed(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_batch_compute_environment.ec2"
@@ -986,6 +1004,29 @@ resource "aws_batch_compute_environment" "fargate" {
       aws_subnet.test_acc.id
     ]
     type = "FARGATE"
+  }
+
+  service_role = aws_iam_role.aws_batch_service_role.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
+}
+`, rInt)
+}
+
+func testAccAWSBatchComputeEnvironmentConfigFargateSpot(rInt int) string {
+	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
+resource "aws_batch_compute_environment" "fargate" {
+  compute_environment_name = "tf_acc_test_%d"
+
+  compute_resources {
+    max_vcpus = 16
+    security_group_ids = [
+      aws_security_group.test_acc.id
+    ]
+    subnets = [
+      aws_subnet.test_acc.id
+    ]
+    type = "FARGATE_SPOT"
   }
 
   service_role = aws_iam_role.aws_batch_service_role.arn
