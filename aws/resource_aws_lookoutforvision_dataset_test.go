@@ -103,12 +103,12 @@ resource "aws_lookoutforvision_project" "demo" {
 }
 
 resource "aws_lookoutforvision_dataset" "train" {
-  project = aws_lookoutforvision_project.demo.name
+  project      = aws_lookoutforvision_project.demo.name
   dataset_type = "train"
 }
 
 resource "aws_lookoutforvision_dataset" "test" {
-  project = aws_lookoutforvision_project.demo.name
+  project      = aws_lookoutforvision_project.demo.name
   dataset_type = "test"
 }
 `, projectName)
