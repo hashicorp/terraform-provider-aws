@@ -126,7 +126,7 @@ func resourceAwsGlobalAcceleratorAcceleratorCreate(d *schema.ResourceData, meta 
 		return fmt.Errorf("Error creating Global Accelerator accelerator: %s", err)
 	}
 
-	d.SetId(*resp.Accelerator.AcceleratorArn)
+	d.SetId(aws.StringValue(resp.Accelerator.AcceleratorArn))
 
 	err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, d.Id())
 	if err != nil {

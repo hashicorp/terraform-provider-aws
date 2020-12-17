@@ -82,7 +82,7 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_rulesSourceList(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -119,7 +119,7 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_statefulRule(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -162,7 +162,7 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_statelessRule(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -204,7 +204,7 @@ func TestAccAwsNetworkFirewallRuleGroup_basic_rules(t *testing.T) {
 	rules := `alert http any any -> any any (http_response_line; content:"403 Forbidden"; sid:1;)`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -239,7 +239,7 @@ func TestAccAwsNetworkFirewallRuleGroup_statelessRuleWithCustomAction(t *testing
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -286,7 +286,7 @@ func TestAccAwsNetworkFirewallRuleGroup_updateRulesSourceList(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -330,7 +330,7 @@ func TestAccAwsNetworkFirewallRuleGroup_rulesSourceAndRuleVariables(t *testing.T
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -406,7 +406,7 @@ func TestAccAwsNetworkFirewallRuleGroup_updateStatefulRule(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -443,12 +443,72 @@ func TestAccAwsNetworkFirewallRuleGroup_updateStatefulRule(t *testing.T) {
 	})
 }
 
-func TestAccAwsNetworkFirewallRuleGroup_updateStatelessRule(t *testing.T) {
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16470
+func TestAccAwsNetworkFirewallRuleGroup_statefulRule_header(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetworkFirewallRuleGroup_statefulRule_header(rName, "1990", "1994"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsNetworkFirewallRuleGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateful_rule.*", map[string]string{
+						"action":                    networkfirewall.StatefulActionPass,
+						"header.#":                  "1",
+						"header.0.destination":      "ANY",
+						"header.0.destination_port": "1990",
+						"header.0.direction":        networkfirewall.StatefulRuleDirectionAny,
+						"header.0.protocol":         networkfirewall.StatefulRuleProtocolTcp,
+						"header.0.source":           "ANY",
+						"header.0.source_port":      "1994",
+						"rule_option.#":             "1",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccNetworkFirewallRuleGroup_statefulRule_header(rName, "ANY", "ANY"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsNetworkFirewallRuleGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateful_rule.*", map[string]string{
+						"action":                    networkfirewall.StatefulActionPass,
+						"header.#":                  "1",
+						"header.0.destination":      "ANY",
+						"header.0.destination_port": "ANY",
+						"header.0.direction":        networkfirewall.StatefulRuleDirectionAny,
+						"header.0.protocol":         networkfirewall.StatefulRuleProtocolTcp,
+						"header.0.source":           "ANY",
+						"header.0.source_port":      "ANY",
+						"rule_option.#":             "1",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsNetworkFirewallRuleGroup_updateStatelessRule(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_networkfirewall_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -496,7 +556,7 @@ func TestAccAwsNetworkFirewallRuleGroup_tags(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -538,7 +598,7 @@ func TestAccAwsNetworkFirewallRuleGroup_disappears(t *testing.T) {
 	resourceName := "aws_networkfirewall_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsNetworkFirewall(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsNetworkFirewallRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -732,6 +792,35 @@ resource "aws_networkfirewall_rule_group" "test" {
   }
 }
 `, rName)
+}
+
+func testAccNetworkFirewallRuleGroup_statefulRule_header(rName, dstPort, srcPort string) string {
+	return fmt.Sprintf(`
+resource "aws_networkfirewall_rule_group" "test" {
+  capacity    = 100
+  name        = %[1]q
+  description = %[1]q
+  type        = "STATEFUL"
+  rule_group {
+    rules_source {
+      stateful_rule {
+        action = "PASS"
+        header {
+          destination      = "ANY"
+          destination_port = %q
+          direction        = "ANY"
+          protocol         = "TCP"
+          source           = "ANY"
+          source_port      = %q
+        }
+        rule_option {
+          keyword = "sid:1"
+        }
+      }
+    }
+  }
+}
+`, rName, dstPort, srcPort)
 }
 
 func testAccNetworkFirewallRuleGroup_updateStatefulRule(rName string) string {

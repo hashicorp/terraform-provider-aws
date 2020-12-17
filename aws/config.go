@@ -59,6 +59,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/aws/aws-sdk-go/service/ecrpublic"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/aws/aws-sdk-go/service/eks"
@@ -108,6 +109,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mediastoredata"
 	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/aws/aws-sdk-go/service/mwaa"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
@@ -252,6 +254,7 @@ type AWSClient struct {
 	dynamodbconn                        *dynamodb.DynamoDB
 	ec2conn                             *ec2.EC2
 	ecrconn                             *ecr.ECR
+	ecrpublicconn                       *ecrpublic.ECRPublic
 	ecsconn                             *ecs.ECS
 	efsconn                             *efs.EFS
 	eksconn                             *eks.EKS
@@ -303,6 +306,7 @@ type AWSClient struct {
 	mediastoreconn                      *mediastore.MediaStore
 	mediastoredataconn                  *mediastoredata.MediaStoreData
 	mqconn                              *mq.MQ
+	mwaaconn                            *mwaa.MWAA
 	neptuneconn                         *neptune.Neptune
 	networkfirewallconn                 *networkfirewall.NetworkFirewall
 	networkmanagerconn                  *networkmanager.NetworkManager
@@ -489,6 +493,7 @@ func (c *Config) Client() (interface{}, error) {
 		dynamodbconn:                        dynamodb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dynamodb"])})),
 		ec2conn:                             ec2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ec2"])})),
 		ecrconn:                             ecr.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ecr"])})),
+		ecrpublicconn:                       ecrpublic.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ecrpublic"])})),
 		ecsconn:                             ecs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ecs"])})),
 		efsconn:                             efs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["efs"])})),
 		eksconn:                             eks.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["eks"])})),
@@ -538,6 +543,7 @@ func (c *Config) Client() (interface{}, error) {
 		mediastoreconn:                      mediastore.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediastore"])})),
 		mediastoredataconn:                  mediastoredata.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediastoredata"])})),
 		mqconn:                              mq.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mq"])})),
+		mwaaconn:                            mwaa.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mwaa"])})),
 		neptuneconn:                         neptune.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["neptune"])})),
 		networkfirewallconn:                 networkfirewall.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["networkfirewall"])})),
 		networkmanagerconn:                  networkmanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["networkmanager"])})),

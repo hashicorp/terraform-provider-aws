@@ -41,6 +41,7 @@ DynamoDB Accelerator (DAX)
 DynamoDB
 EC2
 ECR
+ECR Public
 ECS
 EFS
 EKS
@@ -81,6 +82,7 @@ Managed Streaming for Kafka (MSK)
 MediaConvert
 MediaPackage
 MediaStore
+Managed Workflows for Apache Airflow (MWAA)
 Neptune
 Network Firewall
 OpsWorks

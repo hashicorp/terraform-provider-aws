@@ -273,6 +273,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/ecr" = [
       "aws_ecr_",
     ],
+    "service/ecrpublic" = [
+      "aws_ecrpublic_",
+    ],
     "service/ecs" = [
       "aws_ecs_",
     ],
@@ -428,6 +431,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/mq" = [
       "aws_mq_",
+    ],
+    "service/mwaa" = [
+      "aws_mwaa_",
     ],
     "service/neptune" = [
       "aws_neptune_",
@@ -636,6 +642,7 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "documentation" = [
       "docs/**/*",
+      "website/**/*",
       "*.md",
     ]
     "examples" = [
@@ -988,6 +995,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_ecr_*",
       "**/ecr_*"
     ]
+    "service/ecrpublic" = [
+      "aws/internal/service/ecrpublic/**/*",
+      "**/*_ecrpublic_*",
+      "**/ecrpublic_*"
+    ]
     "service/ecs" = [
       "aws/internal/service/ecs/**/*",
       "**/*_ecs_*",
@@ -1245,6 +1257,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/mq/**/*",
       "**/*_mq_*",
       "**/mq_*"
+    ]
+    "service/mwaa" = [
+      "aws/internal/service/mwaa/**/*",
+      "**/*_mwaa_*",
+      "**/mwaa_*"
     ]
     "service/neptune" = [
       "aws/internal/service/neptune/**/*",

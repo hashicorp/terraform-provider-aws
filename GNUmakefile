@@ -94,7 +94,9 @@ awsproviderlint:
 		-R001=false \
 		-R010=false \
 		-R018=false \
+		-R019=false \
 		-V001=false \
+		-V009=false \
 		-XR001=false \
 		-XR002=false \
 		-XR003=false \

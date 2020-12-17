@@ -274,7 +274,7 @@ func resourceAwsFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error creating FSx filesystem: %s", err)
 	}
 
-	d.SetId(*result.FileSystem.FileSystemId)
+	d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 
 	log.Println("[DEBUG] Waiting for filesystem to become available")
 

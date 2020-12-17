@@ -258,7 +258,7 @@ func resourceAwsGameliftFleetCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error creating GameLift Fleet (%s): %w", d.Get("name").(string), err)
 	}
 
-	d.SetId(*out.FleetAttributes.FleetId)
+	d.SetId(aws.StringValue(out.FleetAttributes.FleetId))
 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{

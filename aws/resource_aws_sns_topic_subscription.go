@@ -111,7 +111,7 @@ func resourceAwsSnsTopicSubscriptionCreate(d *schema.ResourceData, meta interfac
 	}
 
 	log.Printf("New subscription ARN: %s", *output.SubscriptionArn)
-	d.SetId(*output.SubscriptionArn)
+	d.SetId(aws.StringValue(output.SubscriptionArn))
 
 	// Write the ARN to the 'arn' field for export
 	d.Set("arn", output.SubscriptionArn)

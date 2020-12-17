@@ -38,3 +38,9 @@ func CreateAwsGlueRegistryID(id string) *glue.RegistryId {
 		RegistryArn: aws.String(id),
 	}
 }
+
+func CreateAwsGlueSchemaID(id string) *glue.SchemaId {
+	return &glue.SchemaId{
+		SchemaArn: aws.String(id),
+	}
+}

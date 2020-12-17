@@ -82,7 +82,7 @@ func resourceAwsQLDBLedgerCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	// Set QLDB ledger name
-	d.SetId(*qldbResp.Name)
+	d.SetId(aws.StringValue(qldbResp.Name))
 
 	log.Printf("[INFO] QLDB Ledger name: %s", d.Id())
 

@@ -171,7 +171,7 @@ func resourceAwsWorkspacesWorkspaceCreate(d *schema.ResourceData, meta interface
 
 	wsFail := resp.FailedRequests
 	if len(wsFail) > 0 {
-		return fmt.Errorf("workspace creation failed: %s", *wsFail[0].ErrorMessage)
+		return fmt.Errorf("workspace creation failed: %s: %s", aws.StringValue(wsFail[0].ErrorCode), aws.StringValue(wsFail[0].ErrorMessage))
 	}
 
 	workspaceID := aws.StringValue(resp.PendingRequests[0].WorkspaceId)
@@ -288,7 +288,7 @@ func resourceAwsWorkspacesWorkspaceDelete(d *schema.ResourceData, meta interface
 
 func workspaceDelete(conn *workspaces.WorkSpaces, id string, timeout time.Duration) error {
 	log.Printf("[DEBUG] Terminating workspace %q", id)
-	_, err := conn.TerminateWorkspaces(&workspaces.TerminateWorkspacesInput{
+	resp, err := conn.TerminateWorkspaces(&workspaces.TerminateWorkspacesInput{
 		TerminateWorkspaceRequests: []*workspaces.TerminateRequest{
 			{
 				WorkspaceId: aws.String(id),
@@ -297,6 +297,11 @@ func workspaceDelete(conn *workspaces.WorkSpaces, id string, timeout time.Durati
 	})
 	if err != nil {
 		return err
+	}
+
+	wsFail := resp.FailedRequests
+	if len(wsFail) > 0 {
+		return fmt.Errorf("workspace termination failed: %s: %s", aws.StringValue(wsFail[0].ErrorCode), aws.StringValue(wsFail[0].ErrorMessage))
 	}
 
 	log.Printf("[DEBUG] Waiting for workspace %q to be terminated", id)

@@ -1540,7 +1540,7 @@ func TestAccAWSInstance_EbsRootDevice_ModifyType(t *testing.T) {
 	deleteOnTermination := "true"
 
 	originalType := "gp2"
-	updatedType := "io1"
+	updatedType := "standard"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

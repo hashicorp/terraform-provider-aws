@@ -61,7 +61,7 @@ func Provider() *schema.Provider {
 					"AWS_DEFAULT_REGION",
 				}, nil),
 				Description:  descriptions["region"],
-				InputDefault: "us-east-1",
+				InputDefault: "us-east-1", // lintignore:AWSAT003
 			},
 
 			"max_retries": {
@@ -594,6 +594,7 @@ func Provider() *schema.Provider {
 			"aws_ebs_volume":                                          resourceAwsEbsVolume(),
 			"aws_ec2_availability_zone_group":                         resourceAwsEc2AvailabilityZoneGroup(),
 			"aws_ec2_capacity_reservation":                            resourceAwsEc2CapacityReservation(),
+			"aws_ec2_carrier_gateway":                                 resourceAwsEc2CarrierGateway(),
 			"aws_ec2_client_vpn_authorization_rule":                   resourceAwsEc2ClientVpnAuthorizationRule(),
 			"aws_ec2_client_vpn_endpoint":                             resourceAwsEc2ClientVpnEndpoint(),
 			"aws_ec2_client_vpn_network_association":                  resourceAwsEc2ClientVpnNetworkAssociation(),
@@ -676,11 +677,12 @@ func Provider() *schema.Provider {
 			"aws_glue_ml_transform":                                   resourceAwsGlueMLTransform(),
 			"aws_glue_partition":                                      resourceAwsGluePartition(),
 			"aws_glue_registry":                                       resourceAwsGlueRegistry(),
+			"aws_glue_resource_policy":                                resourceAwsGlueResourcePolicy(),
+			"aws_glue_schema":                                         resourceAwsGlueSchema(),
 			"aws_glue_security_configuration":                         resourceAwsGlueSecurityConfiguration(),
 			"aws_glue_trigger":                                        resourceAwsGlueTrigger(),
 			"aws_glue_user_defined_function":                          resourceAwsGlueUserDefinedFunction(),
 			"aws_glue_workflow":                                       resourceAwsGlueWorkflow(),
-			"aws_glue_resource_policy":                                resourceAwsGlueResourcePolicy(),
 			"aws_guardduty_detector":                                  resourceAwsGuardDutyDetector(),
 			"aws_guardduty_filter":                                    resourceAwsGuardDutyFilter(),
 			"aws_guardduty_invite_accepter":                           resourceAwsGuardDutyInviteAccepter(),
@@ -1073,7 +1075,7 @@ var endpointServiceNames []string
 func init() {
 	descriptions = map[string]string{
 		"region": "The region where AWS operations will take place. Examples\n" +
-			"are us-east-1, us-west-2, etc.",
+			"are us-east-1, us-west-2, etc.", // lintignore:AWSAT003
 
 		"access_key": "The access key for API operations. You can retrieve this\n" +
 			"from the 'Security & Credentials' section of the AWS console.",
@@ -1169,6 +1171,7 @@ func init() {
 		"dynamodb",
 		"ec2",
 		"ecr",
+		"ecrpublic",
 		"ecs",
 		"efs",
 		"eks",
@@ -1217,6 +1220,7 @@ func init() {
 		"mediastore",
 		"mediastoredata",
 		"mq",
+		"mwaa",
 		"neptune",
 		"networkfirewall",
 		"networkmanager",

@@ -179,8 +179,9 @@ The `ebs` block supports the following:
 * `kms_key_id` - The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use when creating the encrypted volume.
  `encrypted` must be set to `true` when this is set.
 * `snapshot_id` - The Snapshot ID to mount.
+* `thoughput` - The throughput to provision for a `gp3` volume, with a maximum of 1,000 MiB/s.
 * `volume_size` - The size of the volume in gigabytes.
-* `volume_type` - The type of volume. Can be `"standard"`, `"gp2"`, `"io1"` or `"io2"`. (Default: `"standard"`).
+* `volume_type` - The volume type. Can be `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1` (Default: `gp2`).
 
 ### Capacity Reservation Specification
 
@@ -289,6 +290,7 @@ Check limitations for autoscaling group in [Creating an Auto Scaling Group Using
 
 Each `network_interfaces` block supports the following:
 
+* `associate_carrier_ip_address` - Associate a Carrier IP address with `eth0` for a new network interface. Use this option when you launch an instance in a Wavelength Zone and want to associate a Carrier IP address with the network interface. Boolean value.
 * `associate_public_ip_address` - Associate a public ip address with the network interface.  Boolean value.
 * `delete_on_termination` - Whether the network interface should be destroyed on instance termination. Defaults to `false` if not set.
 * `description` - Description of the network interface.

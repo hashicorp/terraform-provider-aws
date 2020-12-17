@@ -120,7 +120,7 @@ func resourceAwsImageBuilderImageRecipe() *schema.Resource {
 				},
 			},
 			"component": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
 				MinItems: 1,
@@ -185,8 +185,8 @@ func resourceAwsImageBuilderImageRecipeCreate(d *schema.ResourceData, meta inter
 		input.BlockDeviceMappings = expandImageBuilderInstanceBlockDeviceMappings(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("component"); ok && v.(*schema.Set).Len() > 0 {
-		input.Components = expandImageBuilderComponentConfigurations(v.(*schema.Set).List())
+	if v, ok := d.GetOk("component"); ok && len(v.([]interface{})) > 0 {
+		input.Components = expandImageBuilderComponentConfigurations(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {

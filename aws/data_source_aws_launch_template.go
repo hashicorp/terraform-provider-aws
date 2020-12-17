@@ -29,6 +29,11 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"default_version": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -77,6 +82,10 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 									},
 									"snapshot_id": {
 										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"throughput": {
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 									"volume_size": {
@@ -239,6 +248,10 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"associate_carrier_ip_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"associate_public_ip_address": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -383,12 +396,16 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	filters, filtersOk := d.GetOk("filter")
+	id, idOk := d.GetOk("id")
 	name, nameOk := d.GetOk("name")
 	tags, tagsOk := d.GetOk("tags")
 
 	params := &ec2.DescribeLaunchTemplatesInput{}
 	if filtersOk {
 		params.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+	}
+	if idOk {
+		params.LaunchTemplateIds = []*string{aws.String(id.(string))}
 	}
 	if nameOk {
 		params.LaunchTemplateNames = []*string{aws.String(name.(string))}

@@ -62,7 +62,7 @@ func dataSourceAwsPrefixListRead(d *schema.ResourceData, meta interface{}) error
 
 	pl := resp.PrefixLists[0]
 
-	d.SetId(*pl.PrefixListId)
+	d.SetId(aws.StringValue(pl.PrefixListId))
 	d.Set("name", pl.PrefixListName)
 
 	cidrs := make([]string, len(pl.Cidrs))

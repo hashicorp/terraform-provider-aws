@@ -50,8 +50,8 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 			"capacity_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ForceNew:     true,
-				Default:      eks.CapacityTypesOnDemand,
 				ValidateFunc: validation.StringInSlice(eks.CapacityTypes_Values(), false),
 			},
 			"cluster_name": {

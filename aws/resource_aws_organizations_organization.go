@@ -179,7 +179,7 @@ func resourceAwsOrganizationsOrganizationCreate(d *schema.ResourceData, meta int
 	}
 
 	org := resp.Organization
-	d.SetId(*org.Id)
+	d.SetId(aws.StringValue(org.Id))
 
 	awsServiceAccessPrincipals := d.Get("aws_service_access_principals").(*schema.Set).List()
 	for _, principalRaw := range awsServiceAccessPrincipals {

@@ -72,7 +72,7 @@ func resourceAwsWorkspacesIpGroupCreate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	d.SetId(*resp.GroupId)
+	d.SetId(aws.StringValue(resp.GroupId))
 
 	return resourceAwsWorkspacesIpGroupRead(d, meta)
 }

@@ -103,6 +103,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>dynamodb</code></li>
   <li><code>ec2</code></li>
   <li><code>ecr</code></li>
+  <li><code>ecrpublic</code></li>
   <li><code>ecs</code></li>
   <li><code>efs</code></li>
   <li><code>eks</code></li>
@@ -151,6 +152,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>mediastore</code></li>
   <li><code>mediastoredata</code></li>
   <li><code>mq</code></li>
+  <li><code>mwaa</code></li>
   <li><code>neptune</code></li>
   <li><code>networkfirewall</code></li>
   <li><code>networkmanager</code></li>

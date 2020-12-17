@@ -68,7 +68,7 @@ func TestAccAWSNetworkAclRule_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSNetworkAclRule_ingressEgressSameNumberDisappears(t *testing.T) {
+func TestAccAWSNetworkAclRule_disappears_IngressEgressSameNumber(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

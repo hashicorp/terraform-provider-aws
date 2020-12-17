@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -190,8 +191,8 @@ func testAccPreCheck(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderConfigure.Do(func() {
-		if os.Getenv("AWS_PROFILE") == "" && os.Getenv("AWS_ACCESS_KEY_ID") == "" {
-			t.Fatal("AWS_ACCESS_KEY_ID or AWS_PROFILE must be set for acceptance tests")
+		if os.Getenv("AWS_PROFILE") == "" && os.Getenv("AWS_ACCESS_KEY_ID") == "" && os.Getenv("AWS_CONTAINER_CREDENTIALS_FULL_URI") == "" {
+			t.Fatal("AWS_ACCESS_KEY_ID, AWS_PROFILE, or AWS_CONTAINER_CREDENTIALS_FULL_URI must be set for acceptance tests")
 		}
 
 		if os.Getenv("AWS_ACCESS_KEY_ID") != "" && os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
@@ -592,7 +593,7 @@ func testAccGetAccountID() string {
 func testAccGetRegion() string {
 	v := os.Getenv("AWS_DEFAULT_REGION")
 	if v == "" {
-		return "us-west-2"
+		return "us-west-2" // lintignore:AWSAT003
 	}
 	return v
 }
@@ -600,7 +601,7 @@ func testAccGetRegion() string {
 func testAccGetAlternateRegion() string {
 	v := os.Getenv("AWS_ALTERNATE_REGION")
 	if v == "" {
-		return "us-east-1"
+		return "us-east-1" // lintignore:AWSAT003
 	}
 	return v
 }
@@ -608,7 +609,7 @@ func testAccGetAlternateRegion() string {
 func testAccGetThirdRegion() string {
 	v := os.Getenv("AWS_THIRD_REGION")
 	if v == "" {
-		return "us-east-2"
+		return "us-east-2" // lintignore:AWSAT003
 	}
 	return v
 }
@@ -973,6 +974,23 @@ func testAccCheckWithProviders(f func(*terraform.State, *schema.Provider) error,
 	}
 }
 
+// testAccErrorCheckSkipMessagesContaining skips tests based on error messages that indicate unsupported features
+func testAccErrorCheckSkipMessagesContaining(t *testing.T, messages ...string) resource.ErrorCheckFunc {
+	return func(err error) error {
+		if err == nil {
+			return err
+		}
+
+		for _, message := range messages {
+			if strings.Contains(err.Error(), message) {
+				t.Skipf("skipping test for %s/%s: %s", testAccGetPartition(), testAccGetRegion(), err.Error())
+			}
+		}
+
+		return err
+	}
+}
+
 // Check service API call error for reasons to skip acceptance testing
 // These include missing API endpoints and unsupported API calls
 func testAccPreCheckSkipError(err error) bool {
@@ -1042,6 +1060,14 @@ func testSweepSkipSweepError(err error) bool {
 		return true
 	}
 	return false
+}
+
+// Check sweeper API call error for reasons to skip a specific resource
+// These include AccessDenied or AccessDeniedException for individual resources, e.g. managed by central IT
+func testSweepSkipResourceError(err error) bool {
+	// Since acceptance test sweepers are best effort, we allow bypassing this error globally
+	// instead of individual test sweeper fixes.
+	return tfawserr.ErrCodeContains(err, "AccessDenied")
 }
 
 func TestAccAWSProvider_Endpoints(t *testing.T) {
@@ -1204,7 +1230,7 @@ func TestAccAWSProvider_Region_AwsChina(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSProviderConfigRegion("cn-northwest-1"),
+				Config: testAccAWSProviderConfigRegion("cn-northwest-1"), // lintignore:AWSAT003
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com.cn"),
 					testAccCheckAWSProviderPartition(&providers, "aws-cn"),
@@ -1224,7 +1250,7 @@ func TestAccAWSProvider_Region_AwsCommercial(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSProviderConfigRegion("us-west-2"),
+				Config: testAccAWSProviderConfigRegion("us-west-2"), // lintignore:AWSAT003
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com"),
 					testAccCheckAWSProviderPartition(&providers, "aws"),
@@ -1244,7 +1270,7 @@ func TestAccAWSProvider_Region_AwsGovCloudUs(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSProviderConfigRegion("us-gov-west-1"),
+				Config: testAccAWSProviderConfigRegion("us-gov-west-1"), // lintignore:AWSAT003
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com"),
 					testAccCheckAWSProviderPartition(&providers, "aws-us-gov"),

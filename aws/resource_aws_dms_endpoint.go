@@ -690,7 +690,7 @@ func resourceAwsDmsEndpointDelete(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) error {
-	d.SetId(*endpoint.EndpointIdentifier)
+	d.SetId(aws.StringValue(endpoint.EndpointIdentifier))
 
 	d.Set("certificate_arn", endpoint.CertificateArn)
 	d.Set("endpoint_arn", endpoint.EndpointArn)
