@@ -123,7 +123,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 						},
 						"min_vcpus": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
 						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
@@ -235,7 +235,6 @@ func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta inter
 		computeResource := computeResources[0].(map[string]interface{})
 
 		maxvCpus := int64(computeResource["max_vcpus"].(int))
-		minvCpus := int64(computeResource["min_vcpus"].(int))
 		computeResourceType := computeResource["type"].(string)
 
 		var instanceTypes []*string
@@ -256,7 +255,6 @@ func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta inter
 		input.ComputeResources = &batch.ComputeResource{
 			InstanceTypes:    instanceTypes,
 			MaxvCpus:         aws.Int64(maxvCpus),
-			MinvCpus:         aws.Int64(minvCpus),
 			SecurityGroupIds: securityGroupIds,
 			Subnets:          subnets,
 			Type:             aws.String(computeResourceType),
@@ -279,6 +277,9 @@ func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta inter
 		}
 		if v, ok := computeResource["instance_role"]; ok && len(v.(string)) > 0 {
 			input.ComputeResources.InstanceRole = aws.String(v.(string))
+		}
+		if v, ok := computeResource["min_vcpus"]; ok && v.(int) > 0 {
+			input.ComputeResources.MinvCpus = aws.Int64(int64(v.(int)))
 		}
 		if v, ok := computeResource["spot_iam_fleet_role"]; ok && len(v.(string)) > 0 {
 			input.ComputeResources.SpotIamFleetRole = aws.String(v.(string))
