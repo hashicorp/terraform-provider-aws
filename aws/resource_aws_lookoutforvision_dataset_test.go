@@ -74,7 +74,7 @@ func testAccCheckAWSLookoutForVisionDatasetExists(n string, dataset *lookoutforv
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-		
+
 		projectName := rs.Primary.Attributes["project"]
 		datasetType := rs.Primary.Attributes["dataset_type"]
 
@@ -99,17 +99,17 @@ func testAccCheckAWSLookoutForVisionDatasetExists(n string, dataset *lookoutforv
 func testAccAWSLookoutForVisionDatasetBasicConfig(projectName string) string {
 	return fmt.Sprintf(`
 resource "aws_lookoutforvision_project" "demo" {
-	name = %[1]q
+  name = %[1]q
 }
 
 resource "aws_lookoutforvision_dataset" "train" {
-	project = aws_lookoutforvision_project.demo.name
-	dataset_type = "train"
+  project = aws_lookoutforvision_project.demo.name
+  dataset_type = "train"
 }
 
 resource "aws_lookoutforvision_dataset" "test" {
-	project = aws_lookoutforvision_project.demo.name
-	dataset_type = "test"
+  project = aws_lookoutforvision_project.demo.name
+  dataset_type = "test"
 }
 `, projectName)
 }
