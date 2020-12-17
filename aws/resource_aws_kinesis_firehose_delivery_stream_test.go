@@ -2211,17 +2211,17 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithErrorOutputPrefix(rName string, rInt int, prefix string, errorOutputPrefix string) string {
 	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) +
 		fmt.Sprintf(`
-	resource "aws_kinesis_firehose_delivery_stream" "test" {
-		depends_on = ["aws_iam_role_policy.firehose"]
-		name = "%s"
-		destination = "s3"
-		s3_configuration {
-			role_arn = "${aws_iam_role.firehose.arn}"
-			bucket_arn = "${aws_s3_bucket.bucket.arn}"
-			prefix = %q
-			error_output_prefix = %q
-		}
-	}
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = ["aws_iam_role_policy.firehose"]
+  name        = "%s"
+  destination = "s3"
+  s3_configuration {
+    role_arn            = "${aws_iam_role.firehose.arn}"
+    bucket_arn          = "${aws_s3_bucket.bucket.arn}"
+    prefix              = %q
+    error_output_prefix = %q
+  }
+}
 `, rName, prefix, errorOutputPrefix)
 }
 
@@ -2620,16 +2620,16 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     bucket_arn          = "${aws_s3_bucket.bucket.arn}"
     error_output_prefix = "/error/"
     role_arn            = "${aws_iam_role.firehose.arn}"
-	s3_backup_mode      = "Enabled"
-	s3_backup_configuration {
+    s3_backup_mode      = "Enabled"
+    s3_backup_configuration {
       role_arn            = "${aws_iam_role.firehose.arn}"
-	  bucket_arn          = "${aws_s3_bucket.bucket.arn}"
-	  buffer_size         = 10
-	  buffer_interval     = 300
-	  compression_format  = "GZIP"
+      bucket_arn          = "${aws_s3_bucket.bucket.arn}"
+      buffer_size         = 10
+      buffer_interval     = 300
+      compression_format  = "GZIP"
       prefix              = %q
       error_output_prefix = %q
-	}
+    }
   }
 
   depends_on = ["aws_iam_role_policy.firehose"]
