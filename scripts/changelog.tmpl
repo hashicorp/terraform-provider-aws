@@ -1,27 +1,32 @@
-{{- if index .NotesByType "breaking-change" -}}
+
+{{- if index .NotesByType "breaking-change" }}
 BREAKING CHANGES:
+
 {{range index .NotesByType "breaking-change" -}}
 {{ template "note" .}}
 {{ end -}}
 {{- end -}}
 
-{{- if .NotesByType.note -}}
+{{- if .NotesByType.note }}
 NOTES:
+
 {{range .NotesByType.note -}}
 {{ template "note" .}}
 {{ end -}}
 {{- end -}}
 
-{{- $features := combineTypes .NotesByType.feature (index .NotesByType "new-resource" ) (index .NotesByType "new-data-source") (index .NotesByType "new-guide") -}}
+{{- $features := combineTypes .NotesByType.feature (index .NotesByType "new-resource" ) (index .NotesByType "new-data-source") (index .NotesByType "new-guide") }}
 {{- if $features }}
 FEATURES:
+
 {{range $features | sort -}}
 {{ template "note" . }}
 {{ end -}}
 {{- end -}}
 
-{{- if .NotesByType.enhancement -}}
+{{- if .NotesByType.enhancement }}
 ENHANCEMENTS:
+
 {{range .NotesByType.enhancement | sort -}}
 {{ template "note" .}}
 {{ end -}}
@@ -29,6 +34,7 @@ ENHANCEMENTS:
 
 {{- if .NotesByType.bug }}
 BUG FIXES:
+
 {{range .NotesByType.bug | sort -}}
 {{ template "note" . }}
 {{ end -}}
