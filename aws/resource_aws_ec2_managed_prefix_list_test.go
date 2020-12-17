@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -18,7 +19,7 @@ func TestAccAwsEc2ManagedPrefixList_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
@@ -51,7 +52,7 @@ func TestAccAwsEc2ManagedPrefixList_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
@@ -72,7 +73,7 @@ func TestAccAwsEc2ManagedPrefixList_AddressFamily_IPv6(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
@@ -98,7 +99,7 @@ func TestAccAwsEc2ManagedPrefixList_Entry(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
@@ -156,7 +157,7 @@ func TestAccAwsEc2ManagedPrefixList_Name(t *testing.T) {
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
@@ -192,7 +193,7 @@ func TestAccAwsEc2ManagedPrefixList_Tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ManagedPrefixListDestroy,
 		Steps: []resource.TestStep{
@@ -284,6 +285,22 @@ func testAccAwsEc2ManagedPrefixListExists(resourceName string) resource.TestChec
 		}
 
 		return nil
+	}
+}
+
+func testAccPreCheckEc2ManagedPrefixList(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+	input := &ec2.DescribeManagedPrefixListsInput{}
+
+	_, err := conn.DescribeManagedPrefixLists(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
