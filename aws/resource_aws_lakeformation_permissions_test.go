@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
@@ -12,10 +13,9 @@ import (
 )
 
 func TestAccAWSLakeFormationPermissions_basic(t *testing.T) {
-	//rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceAddr := "aws_lakeformation_resource.test"
-	bucketAddr := "aws_s3_bucket.test"
-	roleAddr := "aws_iam_role.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lakeformation_permissions.test"
+	roleName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
@@ -23,11 +23,13 @@ func TestAccAWSLakeFormationPermissions_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationPermissionsConfig_catalog(),
+				Config: testAccAWSLakeFormationPermissionsConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLakeFormationPermissionsExists(resourceAddr),
-					resource.TestCheckResourceAttrPair(resourceAddr, "role_arn", roleAddr, "arn"),
-					resource.TestCheckResourceAttrPair(resourceAddr, "resource_arn", bucketAddr, "arn"),
+					testAccCheckAWSLakeFormationPermissionsExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", "CREATE_DATABASE"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "true"),
 				),
 			},
 		},
@@ -36,7 +38,7 @@ func TestAccAWSLakeFormationPermissions_basic(t *testing.T) {
 
 func TestAccAWSLakeFormationPermissions_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_lakeformation_resource.test"
+	resourceName := "aws_lakeformation_permissions.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
@@ -50,6 +52,33 @@ func TestAccAWSLakeFormationPermissions_disappears(t *testing.T) {
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsLakeFormationPermissions(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSLakeFormationPermissions_dataLocation(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lakeformation_permissions.test"
+	roleName := "aws_iam_role.test"
+	bucketName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLakeFormationPermissionsConfig_dataLocation(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLakeFormationPermissionsExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", "DATA_LOCATION_ACCESS"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "false"),
+					resource.TestCheckResourceAttr(resourceName, "data_location.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "data_location.0.resource_arn", bucketName, "arn"),
+				),
 			},
 		},
 	})
@@ -194,10 +223,22 @@ func testAccCheckAWSLakeFormationPermissionsExists(resourceName string) resource
 
 		if rs.Primary.Attributes["catalog_resource"] == "true" {
 			input.ResourceType = aws.String(lakeformation.DataLakeResourceTypeCatalog)
+			input.Resource = &lakeformation.Resource{
+				Catalog: &lakeformation.CatalogResource{},
+			}
 		}
 
 		if rs.Primary.Attributes["data_location.#"] != "0" {
 			input.ResourceType = aws.String(lakeformation.DataLakeResourceTypeDataLocation)
+			res := &lakeformation.DataLocationResource{
+				ResourceArn: aws.String(rs.Primary.Attributes["data_location.0.resource_arn"]),
+			}
+			if rs.Primary.Attributes["data_location.0.catalog_id"] != "" {
+				res.CatalogId = aws.String(rs.Primary.Attributes["data_location.0.catalog_id"])
+			}
+			input.Resource = &lakeformation.Resource{
+				DataLocation: res,
+			}
 		}
 
 		if rs.Primary.Attributes["database.#"] != "0" {
@@ -212,10 +253,40 @@ func testAccCheckAWSLakeFormationPermissionsExists(resourceName string) resource
 			input.ResourceType = aws.String(lakeformation.DataLakeResourceTypeTable)
 		}
 
-		_, err := conn.ListPermissions(input)
+		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+			var err error
+			_, err = conn.ListPermissions(input)
+			if err != nil {
+				if isAWSErr(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, lakeformation.ErrCodeInvalidInputException, "Grantee has no permissions") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, lakeformation.ErrCodeInvalidInputException, "register the S3 path") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, lakeformation.ErrCodeConcurrentModificationException, "") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, lakeformation.ErrCodeOperationTimeoutException, "") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, "AccessDeniedException", "is not authorized to access requested permissions") {
+					return resource.RetryableError(err)
+				}
+
+				return resource.NonRetryableError(fmt.Errorf("unable to get Lake Formation Permissions: %w", err))
+			}
+			return nil
+		})
+
+		if isResourceTimeoutError(err) {
+			_, err = conn.ListPermissions(input)
+		}
 
 		if err != nil {
-			return fmt.Errorf("error getting Lake Formation resource (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("unable to get Lake Formation permissions (%s): %w", rs.Primary.ID, err)
 		}
 
 		return nil
@@ -226,8 +297,47 @@ func testAccAWSLakeFormationPermissionsConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_iam_role" "workflow_role" {
+resource "aws_iam_role" "test" {
   name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lakeformation.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  data_lake_admins = [data.aws_caller_identity.current.arn]
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  principal        = aws_iam_role.test.arn
+  permissions      = ["CREATE_DATABASE"]
+  catalog_resource = true
+}
+`, rName)
+}
+
+func testAccAWSLakeFormationPermissionsConfig_dataLocation(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/"
 
   assume_role_policy = <<EOF
 {
@@ -246,32 +356,41 @@ resource "aws_iam_role" "workflow_role" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "managed" {
-  role       = aws_iam_role.workflow_role.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
-}
-
-resource "aws_iam_role_policy" "inline" {
+resource "aws_iam_role_policy" "test" {
   name = %[1]q
-  role = aws_iam_role.workflow_role.name
+  role = aws_iam_role.test.id
 
-  policy = <<-EOF
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
     {
       "Effect": "Allow",
       "Action": [
-        "lakeformation:GetDataAccess",
-        "lakeformation:GrantPermissions"
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:DeleteObject"
       ],
-      "Resource": "*"
+      "Resource": [
+        "${aws_s3_bucket.test.arn}/*"
+      ]
     },
     {
       "Effect": "Allow",
-      "Action": ["iam:PassRole"],
+      "Action": [
+        "s3:ListBucket"
+      ],
       "Resource": [
-        "${aws_iam_role.workflow_role.arn}"
+        "${aws_s3_bucket.test.arn}"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListAllMyBuckets"
+      ],
+      "Resource": [
+        "arn:${data.aws_partition.current.id}:s3:::*"
       ]
     }
   ]
@@ -283,13 +402,8 @@ resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   acl           = "private"
   force_destroy = true
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
-// register the s3 bucket as the data lake
 resource "aws_lakeformation_resource" "test" {
   resource_arn = aws_s3_bucket.test.arn
 }
@@ -300,17 +414,13 @@ resource "aws_lakeformation_data_lake_settings" "test" {
   data_lake_admins = [data.aws_caller_identity.current.arn]
 }
 
-// grants permissions to workflow role in catalog on bucket
-resource "aws_lakeformation_permissions" "grants" {
-  principal_arn = data.aws_caller_identity.current.arn
-  permissions   = ["CREATE_DATABASE"]
+resource "aws_lakeformation_permissions" "test" {
+  principal   = aws_iam_role.test.arn
+  permissions = ["DATA_LOCATION_ACCESS"]
   
-  //data_location {
-  //  resource_arn = aws_s3_bucket.test.arn
-  //}
-  catalog_resource = true
-
-  depends_on = ["aws_lakeformation_resource.test", "aws_iam_role.workflow_role", "aws_iam_role_policy_attachment.managed"]
+  data_location {
+    resource_arn = aws_s3_bucket.test.arn
+  }
 }
 `, rName)
 }
@@ -331,7 +441,7 @@ resource "aws_lakeformation_data_lake_settings" "test" {
 
 resource "aws_lakeformation_permissions" "test" {
   permissions = ["CREATE_DATABASE"]
-  principal_arn   = data.aws_iam_role.test.arn
+  principal   = data.aws_iam_role.test.arn
   catalog_resource = true
 
   depends_on = ["aws_lakeformation_data_lake_settings.test"]

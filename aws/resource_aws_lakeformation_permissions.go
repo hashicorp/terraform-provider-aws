@@ -3,9 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
@@ -15,7 +17,7 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLakeFormationPermissionsCreate,
 		Read:   resourceAwsLakeFormationPermissionsRead,
-		Update: resourceAwsLakeFormationPermissionsUpdate,
+		Update: resourceAwsLakeFormationPermissionsCreate,
 		Delete: resourceAwsLakeFormationPermissionsDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -188,7 +190,38 @@ func resourceAwsLakeFormationPermissionsCreate(d *schema.ResourceData, meta inte
 
 	input.Resource = expandLakeFormationResource(d, false)
 
-	output, err := conn.GrantPermissions(input)
+	var output *lakeformation.GrantPermissionsOutput
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		var err error
+		output, err = conn.GrantPermissions(input)
+		if err != nil {
+			if isAWSErr(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, lakeformation.ErrCodeInvalidInputException, "Grantee has no permissions") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, lakeformation.ErrCodeInvalidInputException, "register the S3 path") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, lakeformation.ErrCodeConcurrentModificationException, "") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, lakeformation.ErrCodeOperationTimeoutException, "") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, "AccessDeniedException", "is not authorized to access requested permissions") {
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(fmt.Errorf("error creating Lake Formation Permissions: %w", err))
+		}
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		output, err = conn.GrantPermissions(input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error creating Lake Formation Permissions (input: %v): %w", input, err)
@@ -206,7 +239,6 @@ func resourceAwsLakeFormationPermissionsCreate(d *schema.ResourceData, meta inte
 func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lakeformationconn
 
-	// filter results by principal and permissions
 	input := &lakeformation.ListPermissionsInput{
 		Principal: &lakeformation.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(d.Get("principal").(string)),
@@ -222,15 +254,25 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
 	var principalResourcePermissions []*lakeformation.PrincipalResourcePermissions
 
-	err := conn.ListPermissionsPages(input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
-		for _, permission := range resp.PrincipalResourcePermissions {
-			if permission == nil {
-				continue
-			}
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		var err error
+		err = conn.ListPermissionsPages(input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
+			for _, permission := range resp.PrincipalResourcePermissions {
+				if permission == nil {
+					continue
+				}
 
-			principalResourcePermissions = append(principalResourcePermissions, permission)
+				principalResourcePermissions = append(principalResourcePermissions, permission)
+			}
+			return !lastPage
+		})
+		if err != nil {
+			if isAWSErr(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(fmt.Errorf("error creating Lake Formation Permissions: %w", err))
 		}
-		return !lastPage
+		return nil
 	})
 
 	if err != nil {
@@ -276,10 +318,6 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsLakeFormationPermissionsUpdate(d *schema.ResourceData, meta interface{}) error {
-	return nil
-}
-
 func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lakeformationconn
 
@@ -290,8 +328,6 @@ func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta inte
 		},
 	}
 
-	input.Resource = expandLakeFormationResource(d, false)
-
 	if v, ok := d.GetOk("catalog_id"); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
@@ -300,9 +336,29 @@ func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta inte
 		input.PermissionsWithGrantOption = expandStringList(v.([]interface{}))
 	}
 
-	_, err := conn.RevokePermissions(input)
+	input.Resource = expandLakeFormationResource(d, false)
+
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		var err error
+		_, err = conn.RevokePermissions(input)
+		if err != nil {
+			if isAWSErr(err, lakeformation.ErrCodeInvalidInputException, "register the S3 path") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, lakeformation.ErrCodeConcurrentModificationException, "") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, lakeformation.ErrCodeOperationTimeoutException, "") {
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(fmt.Errorf("unable to revoke Lake Formation Permissions: %w", err))
+		}
+		return nil
+	})
+
 	if err != nil {
-		return fmt.Errorf("Error revoking LakeFormation Permissions: %s", err)
+		return fmt.Errorf("unable to revoke LakeFormation Permissions (input: %v): %w", input, err)
 	}
 
 	return nil
