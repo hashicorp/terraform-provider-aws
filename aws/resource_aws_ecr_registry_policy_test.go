@@ -10,10 +10,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSEcrRegistryPolicy_basic(t *testing.T) {
+func TestAccAWSEcrRegistryPolicy_serial(t *testing.T) {
+	testFuncs := map[string]func(t *testing.T){
+		"basic":      testAccAWSEcrRegistryPolicy_basic,
+		"disappears": testAccAWSEcrRegistryPolicy_disappears,
+	}
+
+	for name, testFunc := range testFuncs {
+		testFunc := testFunc
+
+		t.Run(name, func(t *testing.T) {
+			testFunc(t)
+		})
+	}
+}
+
+func testAccAWSEcrRegistryPolicy_basic(t *testing.T) {
 	resourceName := "aws_ecr_registry_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRegistryPolicyDestroy,
@@ -34,6 +49,26 @@ func TestAccAWSEcrRegistryPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrRegistryPolicyExists(resourceName),
 				),
+			},
+		},
+	})
+}
+
+func testAccAWSEcrRegistryPolicy_disappears(t *testing.T) {
+	resourceName := "aws_ecr_registry_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcrRegistryPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcrRegistryPolicy(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcrRegistryPolicyExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEcrRegistryPolicy(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
