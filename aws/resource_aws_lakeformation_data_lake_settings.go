@@ -48,7 +48,7 @@ func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validation.NoZeroValues, // can be non-ARN, e.g. "IAM_ALLOWED_PRINCIPALS"
+							ValidateFunc: validatePrincipal,
 						},
 					},
 				},
@@ -73,7 +73,7 @@ func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validation.NoZeroValues, // can be non-ARN, e.g. "IAM_ALLOWED_PRINCIPALS"
+							ValidateFunc: validatePrincipal,
 						},
 					},
 				},

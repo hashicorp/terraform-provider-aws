@@ -12,7 +12,7 @@ import (
 )
 
 func TestAccAWSLakeFormationPermissions_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	//rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceAddr := "aws_lakeformation_resource.test"
 	bucketAddr := "aws_s3_bucket.test"
 	roleAddr := "aws_iam_role.test"
@@ -23,7 +23,7 @@ func TestAccAWSLakeFormationPermissions_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationPermissionsConfig_basic(rName),
+				Config: testAccAWSLakeFormationPermissionsConfig_catalog(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLakeFormationPermissionsExists(resourceAddr),
 					resource.TestCheckResourceAttrPair(resourceAddr, "role_arn", roleAddr, "arn"),
@@ -294,16 +294,23 @@ resource "aws_lakeformation_resource" "test" {
   resource_arn = aws_s3_bucket.test.arn
 }
 
+data "aws_caller_identity" "current" {}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  data_lake_admins = [data.aws_caller_identity.current.arn]
+}
+
 // grants permissions to workflow role in catalog on bucket
 resource "aws_lakeformation_permissions" "grants" {
-  principal_arn = aws_iam_role.workflow_role.arn
+  principal_arn = data.aws_caller_identity.current.arn
   permissions   = ["CREATE_DATABASE"]
   
-  data_location {
-    resource_arn = aws_s3_bucket.test.arn
-  }
+  //data_location {
+  //  resource_arn = aws_s3_bucket.test.arn
+  //}
+  catalog_resource = true
 
-  depends_on = ["aws_lakeformation_resource.test"]
+  depends_on = ["aws_lakeformation_resource.test", "aws_iam_role.workflow_role", "aws_iam_role_policy_attachment.managed"]
 }
 `, rName)
 }
@@ -316,17 +323,18 @@ data "aws_iam_role" "test" {
   name = "AWSServiceRoleForLakeFormationDataAccess"
 }
 
-resource "aws_lakeformation_datalake_settings" "test" {
-  admins = [
+resource "aws_lakeformation_data_lake_settings" "test" {
+  data_lake_admins = [
     data.aws_caller_identity.current.arn
   ]
 }
 
 resource "aws_lakeformation_permissions" "test" {
   permissions = ["CREATE_DATABASE"]
-  principal   = data.aws_iam_role.test.arn
+  principal_arn   = data.aws_iam_role.test.arn
+  catalog_resource = true
 
-  depends_on = ["aws_lakeformation_datalake_settings.test"]
+  depends_on = ["aws_lakeformation_data_lake_settings.test"]
 }
 `
 }
@@ -343,7 +351,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_lakeformation_datalake_settings" "test" {
+resource "aws_lakeformation_data_lake_settings" "test" {
   admins = [
     data.aws_caller_identity.current.arn
   ]
@@ -353,7 +361,7 @@ resource "aws_lakeformation_resource" "test" {
   resource_arn            = aws_s3_bucket.test.arn
   use_service_linked_role = true
 
-  depends_on = ["aws_lakeformation_datalake_settings.test"]
+  depends_on = ["aws_lakeformation_data_lake_settings.test"]
 }
 
 resource "aws_lakeformation_permissions" "test" {
@@ -362,7 +370,7 @@ resource "aws_lakeformation_permissions" "test" {
 
   location = aws_lakeformation_resource.test.resource_arn
 
-  depends_on = ["aws_lakeformation_datalake_settings.test"]
+  depends_on = ["aws_lakeformation_data_lake_settings.test"]
 }
 `, rName)
 }
@@ -383,7 +391,7 @@ resource "aws_glue_catalog_database" "test" {
   name = %[2]q
 }
 
-resource "aws_lakeformation_datalake_settings" "test" {
+resource "aws_lakeformation_data_lake_settings" "test" {
   admins = [
     data.aws_caller_identity.current.arn
   ]
@@ -396,7 +404,7 @@ resource "aws_lakeformation_permissions" "test" {
 
   database = aws_glue_catalog_database.test.name
 
-  depends_on = ["aws_lakeformation_datalake_settings.test"]
+  depends_on = ["aws_lakeformation_data_lake_settings.test"]
 }
 `, rName, dName)
 }
@@ -422,7 +430,7 @@ resource "aws_glue_catalog_table" "test" {
   database_name = aws_glue_catalog_database.test.name
 }
 
-resource "aws_lakeformation_datalake_settings" "test" {
+resource "aws_lakeformation_data_lake_settings" "test" {
   admins = [
     data.aws_caller_identity.current.arn
   ]
@@ -437,7 +445,7 @@ resource "aws_lakeformation_permissions" "test" {
   	name = aws_glue_catalog_table.test.name
   }
 
-  depends_on = ["aws_lakeformation_datalake_settings.test"]
+  depends_on = ["aws_lakeformation_data_lake_settings.test"]
 }
 `, rName, dName, tName, permissions)
 }
@@ -478,7 +486,7 @@ resource "aws_glue_catalog_table" "test" {
   }
 }
 
-resource "aws_lakeformation_datalake_settings" "test" {
+resource "aws_lakeformation_data_lake_settings" "test" {
   admins = [
     data.aws_caller_identity.current.arn
   ]
@@ -494,7 +502,7 @@ resource "aws_lakeformation_permissions" "test" {
   	column_names = ["event", "timestamp"]
   }
 
-  depends_on = ["aws_lakeformation_datalake_settings.test"]
+  depends_on = ["aws_lakeformation_data_lake_settings.test"]
 }
 `, rName, dName, tName)
 }

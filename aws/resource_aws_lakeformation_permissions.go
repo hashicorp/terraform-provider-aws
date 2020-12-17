@@ -91,11 +91,11 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(lakeformation.Permission_Values(), false),
 				},
 			},
-			"principal_arn": {
+			"principal": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: validatePrincipal,
 			},
 			"table": {
 				Type:     schema.TypeList,
@@ -174,7 +174,7 @@ func resourceAwsLakeFormationPermissionsCreate(d *schema.ResourceData, meta inte
 	input := &lakeformation.GrantPermissionsInput{
 		Permissions: expandStringList(d.Get("permissions").([]interface{})),
 		Principal: &lakeformation.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(d.Get("principal_arn").(string)),
+			DataLakePrincipalIdentifier: aws.String(d.Get("principal").(string)),
 		},
 	}
 
@@ -209,7 +209,7 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 	// filter results by principal and permissions
 	input := &lakeformation.ListPermissionsInput{
 		Principal: &lakeformation.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(d.Get("principal_arn").(string)),
+			DataLakePrincipalIdentifier: aws.String(d.Get("principal").(string)),
 		},
 	}
 
@@ -286,7 +286,7 @@ func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta inte
 	input := &lakeformation.RevokePermissionsInput{
 		Permissions: expandStringList(d.Get("permissions").([]interface{})),
 		Principal: &lakeformation.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(d.Get("principal_arn").(string)),
+			DataLakePrincipalIdentifier: aws.String(d.Get("principal").(string)),
 		},
 	}
 
