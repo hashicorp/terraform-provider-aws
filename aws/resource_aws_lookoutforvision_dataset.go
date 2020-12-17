@@ -33,7 +33,7 @@ func resourceAwsLookoutForVisionDataset() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](_*-*[a-zA-Z0-9])*$`), "Valid characters are a-z, A-Z, 0-9, - (hyphen) and _ (underscore). Name must begin with an alphanumeric character."),
 				),
 			},
-			"type": {
+			"dataset_type": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -72,12 +72,12 @@ func resourceAwsLookoutForVisionDataset() *schema.Resource {
 func resourceAwsLookoutForVisionDatasetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lookoutforvisionconn
 
-	project_name := d.Get("project").(string)
-	dataset_type := d.Get("type").(string)
+	projectName := d.Get("project").(string)
+	datasetType := d.Get("dataset_type").(string)
 
 	input := &lookoutforvision.CreateDatasetInput{
-		ProjectName: aws.String(project_name),
-		DatasetType: aws.String(dataset_type),
+		ProjectName: aws.String(projectName),
+		DatasetType: aws.String(datasetType),
 		ClientToken: aws.String(resource.UniqueId()),
 	}
 
@@ -92,8 +92,8 @@ func resourceAwsLookoutForVisionDatasetCreate(d *schema.ResourceData, meta inter
 				Bucket: &bucket,
 				Key:    &key,
 			}
-			if version_id := bd["version_id"].(string); version_id != "" {
-				manifest.VersionId = &version_id
+			if versionId := bd["version_id"].(string); versionId != "" {
+				manifest.VersionId = &versionId
 			}
 			input.DatasetSource = &lookoutforvision.DatasetSource{
 				GroundTruthManifest: &lookoutforvision.DatasetGroundTruthManifest{
@@ -109,24 +109,24 @@ func resourceAwsLookoutForVisionDatasetCreate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("Error creating Amazon Lookout for Vision dataset: %w", err)
 	}
 
-	d.SetId(strings.Join([]string{project_name, dataset_type}, "/"))
+	d.SetId(strings.Join([]string{projectName, datasetType}, "/"))
 
 	return resourceAwsLookoutForVisionDatasetRead(d, meta)
 }
 
 func resourceAwsLookoutForVisionDatasetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lookoutforvisionconn
-	project_name := d.Get("project").(string)
-	dataset_type := d.Get("type").(string)
+	projectName := d.Get("project").(string)
+	datasetType := d.Get("dataset_type").(string)
 
-	_, err := finder.DatasetByProjectAndType(conn, project_name, dataset_type)
+	_, err := finder.DatasetByProjectAndType(conn, projectName, datasetType)
 	if err != nil {
 		if isAWSErr(err, "ValidationException", "Cannot find dataset") {
 			d.SetId("")
-			log.Printf("[WARN] Unable to find Amazon Lookout for Vision dataset (Project: %s, Type: %s); removing from state", project_name, dataset_type)
+			log.Printf("[WARN] Unable to find Amazon Lookout for Vision dataset (Project: %s, Type: %s); removing from state", projectName, datasetType)
 			return nil
 		}
-		return fmt.Errorf("error reading Amazon Lookout for Vision dataset (Project: %s, Type: %s): %w", project_name, dataset_type, d.Id(), err)
+		return fmt.Errorf("error reading Amazon Lookout for Vision dataset (Project: %s, Type: %s): %w", projectName, datasetType, err)
 
 	}
 
@@ -136,12 +136,12 @@ func resourceAwsLookoutForVisionDatasetRead(d *schema.ResourceData, meta interfa
 func resourceAwsLookoutForVisionDatasetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lookoutforvisionconn
 
-	project_name := d.Get("project").(string)
-	dataset_type := d.Get("type").(string)
+	projectName := d.Get("project").(string)
+	datasetType := d.Get("dataset_type").(string)
 
 	input := &lookoutforvision.DeleteDatasetInput{
-		ProjectName: aws.String(project_name),
-		DatasetType: aws.String(dataset_type),
+		ProjectName: aws.String(projectName),
+		DatasetType: aws.String(datasetType),
 	}
 
 	if _, err := conn.DeleteDataset(input); err != nil {
