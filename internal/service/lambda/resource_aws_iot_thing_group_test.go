@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSIotThingGroup_base(t *testing.T) {
@@ -473,8 +473,8 @@ resource "aws_iot_thing_group" "parent" {
 }
 
 resource "aws_iot_thing_group" "test" {
-  name = "%s"
-  parent_group_name = "${aws_iot_thing_group.parent.name}"
+  name              = "%s"
+  parent_group_name = aws_iot_thing_group.parent.name
 
   properties {
     attributes = {
@@ -559,8 +559,8 @@ resource "aws_iot_thing_group" "parent" {
 }
 
 resource "aws_iot_thing_group" "test" {
-  name = "%s"
-  parent_group_name = "${aws_iot_thing_group.parent.name}"
+  name              = "%s"
+  parent_group_name = aws_iot_thing_group.parent.name
 }
 `, parentThingGroupName, thingGroupName)
 }
