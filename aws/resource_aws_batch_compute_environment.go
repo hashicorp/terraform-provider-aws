@@ -148,7 +148,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice([]string{batch.CRTypeEc2, batch.CRTypeSpot}, true),
+							ValidateFunc: validation.StringInSlice([]string{batch.CRTypeEc2, batch.CRTypeSpot, batch.CRTypeFargate, batch.CRTypeFargateSpot}, true),
 						},
 					},
 				},
