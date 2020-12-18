@@ -388,7 +388,7 @@ resource "aws_lakeformation_data_lake_settings" "test" {
 resource "aws_lakeformation_permissions" "test" {
   principal   = aws_iam_role.test.arn
   permissions = ["DATA_LOCATION_ACCESS"]
-  
+
   data_location {
     resource_arn = aws_s3_bucket.test.arn
   }
@@ -439,7 +439,7 @@ resource "aws_lakeformation_permissions" "test" {
   permissions                   = ["ALTER", "CREATE_TABLE", "DROP"]
   permissions_with_grant_option = ["CREATE_TABLE"]
   principal                     = aws_iam_role.test.arn
-  
+
   database {
     name = aws_glue_catalog_database.test.name
   }
@@ -498,8 +498,8 @@ resource "aws_lakeformation_permissions" "test" {
   principal   = aws_iam_role.test.arn
 
   table {
-  	database_name = aws_glue_catalog_table.test.database_name
-  	name          = aws_glue_catalog_table.test.name
+    database_name = aws_glue_catalog_table.test.database_name
+    name          = aws_glue_catalog_table.test.name
   }
 }
 `, rName)
@@ -565,9 +565,9 @@ resource "aws_lakeformation_permissions" "test" {
   principal   = aws_iam_role.test.arn
 
   table_with_columns {
-  	database_name = aws_glue_catalog_table.test.database_name
-  	name          = aws_glue_catalog_table.test.name
-  	column_names  = ["event", "timestamp"]
+    database_name = aws_glue_catalog_table.test.database_name
+    name          = aws_glue_catalog_table.test.name
+    column_names  = ["event", "timestamp"]
   }
 
   depends_on = ["aws_lakeformation_data_lake_settings.test"]

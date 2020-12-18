@@ -46,8 +46,8 @@ const testAccAWSLakeFormationDataLakeSettingsDataSourceConfig_basic = `
 data "aws_caller_identity" "current" {}
 
 resource "aws_lakeformation_data_lake_settings" "test" {
-  catalog_id       = data.aws_caller_identity.current.account_id
-  admins = [data.aws_caller_identity.current.arn]
+  catalog_id = data.aws_caller_identity.current.account_id
+  admins     = [data.aws_caller_identity.current.arn]
 }
 
 data "aws_lakeformation_data_lake_settings" "test" {
