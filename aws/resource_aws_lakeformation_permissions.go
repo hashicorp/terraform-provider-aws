@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -269,6 +270,7 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 			}
 			return !lastPage
 		})
+
 		if err != nil {
 			if isAWSErr(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
 				return resource.RetryableError(err)
@@ -277,6 +279,12 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 		}
 		return nil
 	})
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
+		log.Printf("[WARN] Resource Lake Formation permissions (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error reading Lake Formation permissions: %w", err)

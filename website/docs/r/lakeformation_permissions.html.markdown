@@ -18,8 +18,8 @@ Grants permissions to the principal to access metadata in the Data Catalog and d
 
 ```hcl
 resource "aws_lakeformation_permissions" "test" {
-  principal_arn = aws_iam_role.workflow_role.arn
-  permissions   = ["ALL"]
+  principal   = aws_iam_role.workflow_role.arn
+  permissions = ["ALL"]
 
   data_location {
     arn = aws_lakeformation_resource.test.arn

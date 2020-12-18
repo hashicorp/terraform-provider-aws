@@ -18,7 +18,7 @@ Get permissions for a principal to access metadata in the Data Catalog and data 
 
 ```hcl
 data "aws_lakeformation_permissions" "test" {
-  principal_arn = aws_iam_role.workflow_role.arn
+  principal = aws_iam_role.workflow_role.arn
 
   data_location {
     arn = aws_lakeformation_resource.test.arn
@@ -30,7 +30,7 @@ data "aws_lakeformation_permissions" "test" {
 
 ```hcl
 data "aws_lakeformation_permissions" "test" {
-  role        = aws_iam_role.workflow_role.arn
+  principal = aws_iam_role.workflow_role.arn
 
   database {
     name       = aws_glue_catalog_database.test.name
