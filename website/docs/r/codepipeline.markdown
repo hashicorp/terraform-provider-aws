@@ -33,16 +33,15 @@ resource "aws_codepipeline" "codepipeline" {
     action {
       name             = "Source"
       category         = "Source"
-      owner            = "ThirdParty"
-      provider         = "GitHub"
+      owner            = "AWS"
+      provider         = "CodeStarSourceConnection"
       version          = "1"
       output_artifacts = ["source_output"]
 
       configuration = {
-        Owner      = "my-organization"
-        Repo       = "test"
-        Branch     = "master"
-        OAuthToken = var.github_token
+        ConnectionArn    = aws_codestarconnections_connection.example.arn
+        FullRepositoryId = "my-organization/example"
+        BranchName       = "main"
       }
     }
   }
@@ -85,6 +84,11 @@ resource "aws_codepipeline" "codepipeline" {
       }
     }
   }
+}
+
+resource "aws_codestarconnections_connection" "example" {
+  name          = "example-connection"
+  provider_type = "GitHub"
 }
 
 resource "aws_s3_bucket" "codepipeline_bucket" {

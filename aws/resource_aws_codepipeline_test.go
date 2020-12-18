@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
+	"github.com/aws/aws-sdk-go/service/codestarconnections"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -49,7 +50,7 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Owner", "lifesum-terraform"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Repo", "test"),
-					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Branch", "master"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.Branch", "main"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.OAuthToken", githubToken),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.run_order", "1"),
@@ -493,6 +494,48 @@ func TestAccAWSCodePipeline_WithNamespace(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodePipeline_WithCodeStarConnection(t *testing.T) {
+	var v codepipeline.PipelineDeclaration
+	name := acctest.RandString(10)
+	resourceName := "aws_codepipeline.test"
+	codestarConnectionResourceName := "aws_codestarconnections_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(codepipeline.EndpointsID, t)
+			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodePipelineConfigWithCodeStarConnection(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodePipelineExists(resourceName, &v),
+
+					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
+
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.name", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.category", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.owner", "AWS"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.provider", "CodeStarSourceConnection"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.FullRepositoryId", "lifesum-terraform/test"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.BranchName", "main"),
+					resource.TestCheckResourceAttrPair(resourceName, "stage.0.action.0.configuration.ConnectionArn", codestarConnectionResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSCodePipelineExists(n string, pipeline *codepipeline.PipelineDeclaration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -724,7 +767,7 @@ resource "aws_codepipeline" "test" {
       configuration = {
         Owner      = "lifesum-terraform"
         Repo       = "test"
-        Branch     = "master"
+        Branch     = "main"
         OAuthToken = %[2]q
       }
     }
@@ -838,7 +881,7 @@ resource "aws_codepipeline" "test" {
       configuration = {
         Owner      = "lifesum-terraform"
         Repo       = "test"
-        Branch     = "master"
+        Branch     = "main"
         OAuthToken = %[2]q
       }
     }
@@ -1031,7 +1074,7 @@ resource "aws_codepipeline" "test" {
       configuration = {
         Owner      = "lifesum-terraform"
         Repo       = "test"
-        Branch     = "master"
+        Branch     = "main"
         OAuthToken = %[4]q
       }
     }
@@ -1112,7 +1155,7 @@ resource "aws_codepipeline" "test" {
       configuration = {
         Owner      = "lifesum-terraform"
         Repo       = "test"
-        Branch     = "master"
+        Branch     = "main"
         OAuthToken = %[4]q
       }
     }
@@ -1202,7 +1245,7 @@ resource "aws_codepipeline" "test" {
       configuration = {
         Owner      = "lifesum-terraform"
         Repo       = "test"
-        Branch     = "master"
+        Branch     = "main"
         OAuthToken = %[4]q
       }
     }
@@ -1307,7 +1350,7 @@ resource "aws_codepipeline" "test" {
       configuration = {
         Owner      = "lifesum-terraform"
         Repo       = "test"
-        Branch     = "master"
+        Branch     = "main"
         OAuthToken = %[2]q
       }
     }
@@ -1336,6 +1379,69 @@ resource "aws_s3_bucket" "foo" {
   acl    = "private"
 }
 `, rName, githubToken))
+}
+
+func testAccAWSCodePipelineConfigWithCodeStarConnection(rName string) string {
+	return composeConfig(
+		testAccAWSCodePipelineS3DefaultBucket(rName),
+		testAccAWSCodePipelineServiceIAMRole(rName),
+		fmt.Sprintf(`
+resource "aws_codepipeline" "test" {
+  name     = "test-pipeline-%[1]s"
+  role_arn = aws_iam_role.codepipeline_role.arn
+
+  artifact_store {
+    location = aws_s3_bucket.test.bucket
+    type     = "S3"
+
+    encryption_key {
+      id   = "1234"
+      type = "KMS"
+    }
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "CodeStarSourceConnection"
+      version          = "1"
+      output_artifacts = ["test"]
+
+      configuration = {
+        ConnectionArn    = aws_codestarconnections_connection.test.arn
+        FullRepositoryId = "lifesum-terraform/test"
+        BranchName       = "main"
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name            = "Build"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["test"]
+      version         = "1"
+
+      configuration = {
+        ProjectName = "test"
+      }
+    }
+  }
+}
+
+resource "aws_codestarconnections_connection" "test" {
+  name          = %[1]q
+  provider_type = "GitHub"
+}
+`, rName))
 }
 
 func TestResourceAWSCodePipelineExpandArtifactStoresValidation(t *testing.T) {

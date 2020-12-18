@@ -614,7 +614,7 @@ func resourceAwsCodePipelineValidateActionProvider(i interface{}, path cty.Path)
 			diag.Diagnostic{
 				Severity: diag.Warning,
 				Summary:  "The CodePipeline GitHub version 1 action provider is deprecated.",
-				Detail:   "Use a CodeStarSourceConnection instead.",
+				Detail:   "Use a GitHub version 2 action (with a CodeStar Connection `aws_codestarconnections_connection`) instead. See https://docs.aws.amazon.com/codepipeline/latest/userguide/update-github-action-connections.html",
 			},
 		}
 	}
