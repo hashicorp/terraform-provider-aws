@@ -1,4 +1,4 @@
-## 3.22.0 (unreleased)
+## 3.22.0 (Unreleased)
 
 FEATURES
 
