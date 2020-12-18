@@ -11,21 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSLakeFormationDataLakeSettings_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":            testAccAWSLakeFormationDataLakeSettings_basic,
-		"disappears":       testAccAWSLakeFormationDataLakeSettings_disappears,
-		"withoutCatalogId": testAccAWSLakeFormationDataLakeSettings_withoutCatalogId,
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccAWSLakeFormationDataLakeSettings_basic(t *testing.T) {
 	callerIdentityName := "data.aws_caller_identity.current"
 	resourceName := "aws_lakeformation_data_lake_settings.test"

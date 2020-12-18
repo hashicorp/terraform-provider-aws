@@ -18,15 +18,15 @@ func resourceAwsLakeFormationResource() *schema.Resource {
 		Delete: resourceAwsLakeFormationResourceDelete,
 
 		Schema: map[string]*schema.Schema{
-			"last_modified": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"resource_arn": {
+			"arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateArn,
+			},
+			"last_modified": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"role_arn": {
 				Type:         schema.TypeString,
@@ -41,7 +41,7 @@ func resourceAwsLakeFormationResource() *schema.Resource {
 
 func resourceAwsLakeFormationResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lakeformationconn
-	resourceArn := d.Get("resource_arn").(string)
+	resourceArn := d.Get("arn").(string)
 
 	input := &lakeformation.RegisterResourceInput{
 		ResourceArn: aws.String(resourceArn),
@@ -67,7 +67,7 @@ func resourceAwsLakeFormationResourceCreate(d *schema.ResourceData, meta interfa
 
 func resourceAwsLakeFormationResourceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lakeformationconn
-	resourceArn := d.Get("resource_arn").(string)
+	resourceArn := d.Get("arn").(string)
 
 	input := &lakeformation.DescribeResourceInput{
 		ResourceArn: aws.String(resourceArn),
@@ -89,7 +89,7 @@ func resourceAwsLakeFormationResourceRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error reading resource Lake Formation Resource (%s): empty response", d.Id())
 	}
 
-	// d.Set("resource_arn", output.ResourceInfo.ResourceArn) // output not including resource arn currently
+	// d.Set("arn", output.ResourceInfo.ResourceArn) // output not including resource arn currently
 	d.Set("role_arn", output.ResourceInfo.RoleArn)
 	if output.ResourceInfo.LastModified != nil { // output not including last modified currently
 		d.Set("last_modified", output.ResourceInfo.LastModified.Format(time.RFC3339))
@@ -100,7 +100,7 @@ func resourceAwsLakeFormationResourceRead(d *schema.ResourceData, meta interface
 
 func resourceAwsLakeFormationResourceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lakeformationconn
-	resourceArn := d.Get("resource_arn").(string)
+	resourceArn := d.Get("arn").(string)
 
 	input := &lakeformation.DeregisterResourceInput{
 		ResourceArn: aws.String(resourceArn),

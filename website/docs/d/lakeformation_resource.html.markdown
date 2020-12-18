@@ -14,13 +14,13 @@ Provides details about a Lake Formation resource.
 
 ```hcl
 data "aws_lakeformation_resource" "example" {
-  resource_arn = "arn:aws:s3:::tf-acc-test-9151654063908211878"
+  arn = "arn:aws:s3:::tf-acc-test-9151654063908211878"
 }
 ```
 
 ## Argument Reference
 
-* `resource_arn` – (Required) Amazon Resource Name (ARN) of the resource, an S3 path.
+* `arn` – (Required) Amazon Resource Name (ARN) of the resource, an S3 path.
 
 ## Attributes Reference
 

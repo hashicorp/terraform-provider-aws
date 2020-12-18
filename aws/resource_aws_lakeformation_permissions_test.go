@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSLakeFormationPermissions_basic(t *testing.T) {
+func testAccAWSLakeFormationPermissions_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
@@ -36,13 +36,13 @@ func TestAccAWSLakeFormationPermissions_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLakeFormationPermissions_dataLocation(t *testing.T) {
+func testAccAWSLakeFormationPermissions_dataLocation(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 	bucketName := "aws_s3_bucket.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
@@ -56,20 +56,20 @@ func TestAccAWSLakeFormationPermissions_dataLocation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", "DATA_LOCATION_ACCESS"),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "false"),
 					resource.TestCheckResourceAttr(resourceName, "data_location.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "data_location.0.resource_arn", bucketName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "data_location.0.arn", bucketName, "arn"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSLakeFormationPermissions_database(t *testing.T) {
+func testAccAWSLakeFormationPermissions_database(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 	dbName := "aws_glue_catalog_database.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
@@ -95,13 +95,13 @@ func TestAccAWSLakeFormationPermissions_database(t *testing.T) {
 	})
 }
 
-func TestAccAWSLakeFormationPermissions_table(t *testing.T) {
+func testAccAWSLakeFormationPermissions_table(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 	tableName := "aws_glue_catalog_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
@@ -122,13 +122,13 @@ func TestAccAWSLakeFormationPermissions_table(t *testing.T) {
 	})
 }
 
-func TestAccAWSLakeFormationPermissions_tableWithColumns(t *testing.T) {
+func testAccAWSLakeFormationPermissions_tableWithColumns(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
 	tableName := "aws_glue_catalog_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
@@ -206,7 +206,7 @@ func testAccCheckAWSLakeFormationPermissionsExists(resourceName string) resource
 		if v, ok := rs.Primary.Attributes["data_location.#"]; ok && v != "" && v != "0" {
 			input.ResourceType = aws.String(lakeformation.DataLakeResourceTypeDataLocation)
 			res := &lakeformation.DataLocationResource{
-				ResourceArn: aws.String(rs.Primary.Attributes["data_location.0.resource_arn"]),
+				ResourceArn: aws.String(rs.Primary.Attributes["data_location.0.arn"]),
 			}
 			if rs.Primary.Attributes["data_location.0.catalog_id"] != "" {
 				res.CatalogId = aws.String(rs.Primary.Attributes["data_location.0.catalog_id"])
@@ -376,7 +376,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_lakeformation_resource" "test" {
-  resource_arn = aws_s3_bucket.test.arn
+  arn = aws_s3_bucket.test.arn
 }
 
 data "aws_caller_identity" "current" {}
@@ -390,7 +390,7 @@ resource "aws_lakeformation_permissions" "test" {
   permissions = ["DATA_LOCATION_ACCESS"]
 
   data_location {
-    resource_arn = aws_s3_bucket.test.arn
+    arn = aws_s3_bucket.test.arn
   }
 }
 `, rName)

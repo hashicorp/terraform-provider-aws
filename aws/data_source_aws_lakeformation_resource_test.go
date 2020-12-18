@@ -22,7 +22,7 @@ func TestAccAWSLakeFormationResourceDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAWSLakeFormationResourceDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "resource_arn", resourceName, "resource_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "role_arn", resourceName, "role_arn"),
 				),
 			},
@@ -90,12 +90,12 @@ EOF
 }
 
 resource "aws_lakeformation_resource" "test" {
-  resource_arn = aws_s3_bucket.test.arn
-  role_arn     = aws_iam_role.test.arn
+  arn      = aws_s3_bucket.test.arn
+  role_arn = aws_iam_role.test.arn
 }
 
 data "aws_lakeformation_resource" "test" {
-  resource_arn = aws_lakeformation_resource.test.resource_arn
+  arn = aws_lakeformation_resource.test.arn
 }
 `, rName)
 }

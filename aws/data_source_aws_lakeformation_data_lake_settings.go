@@ -16,6 +16,11 @@ func dataSourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 		Read: dataSourceAwsLakeFormationDataLakeSettingsRead,
 
 		Schema: map[string]*schema.Schema{
+			"admins": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"catalog_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -53,11 +58,6 @@ func dataSourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 						},
 					},
 				},
-			},
-			"admins": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"trusted_resource_owners": {
 				Type:     schema.TypeList,

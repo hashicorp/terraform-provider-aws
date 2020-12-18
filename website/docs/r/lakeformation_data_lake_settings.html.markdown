@@ -50,18 +50,20 @@ The following arguments are optional:
 * `create_table_default_permissions` - (Optional) Up to three configuration blocks of principal permissions for default create table permissions. Detailed below.
 * `trusted_resource_owners` – (Optional) List of the resource-owning account IDs that the caller's account can use to share their user access details (user ARNs).
 
+~> **NOTE:** Although optional, not including `admins`, `create_database_default_permissions`, `create_table_default_permissions`, and/or `trusted_resource_owners` results in the setting being cleared. 
+
 ### create_database_default_permissions
 
 The following arguments are optional:
 
-* `permissions` - (Optional) List of permissions that are granted to the principal. Valid values include `ALL`, `SELECT`, `ALTER`, `DROP`, `DELETE`, `INSERT`, `DESCRIBE`, `CREATE_DATABASE`, `CREATE_TABLE`, and `DATA_LOCATION_ACCESS`.
+* `permissions` - (Optional) List of permissions that are granted to the principal. Valid values may include `ALL`, `SELECT`, `ALTER`, `DROP`, `DELETE`, `INSERT`, `DESCRIBE`, and `CREATE_TABLE`. For more details, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
 * `principal` - (Optional) Principal who is granted permissions. To enforce metadata and underlying data access control only by IAM on new databases and tables set `principal` to `IAM_ALLOWED_PRINCIPALS` and `permissions` to `["ALL"]`.
 
 ### create_table_default_permissions
 
 The following arguments are optional:
 
-* `permissions` - (Optional) List of permissions that are granted to the principal. Valid values include `ALL`, `SELECT`, `ALTER`, `DROP`, `DELETE`, `INSERT`, `DESCRIBE`, `CREATE_DATABASE`, `CREATE_TABLE`, and `DATA_LOCATION_ACCESS`.
+* `permissions` - (Optional) List of permissions that are granted to the principal. Valid values may include `ALL`, `SELECT`, `ALTER`, `DROP`, `DELETE`, `INSERT`, and `DESCRIBE`. For more details, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
 * `principal` - (Optional) Principal who is granted permissions. To enforce metadata and underlying data access control only by IAM on new databases and tables set `principal` to `IAM_ALLOWED_PRINCIPALS` and `permissions` to `["ALL"]`.
 
 ## Attributes Reference

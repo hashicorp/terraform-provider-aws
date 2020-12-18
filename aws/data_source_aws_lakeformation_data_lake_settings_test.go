@@ -7,20 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccAWSLakeFormationDataLakeSettingsDataSource_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic": testAccAWSLakeFormationDataLakeSettingsDataSource_basic,
-		// if more tests are added, they should be serial (data catalog is account-shared resource)
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccAWSLakeFormationDataLakeSettingsDataSource_basic(t *testing.T) {
 	callerIdentityName := "data.aws_caller_identity.current"
 	resourceName := "data.aws_lakeformation_data_lake_settings.test"

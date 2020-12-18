@@ -14,14 +14,14 @@ func dataSourceAwsLakeFormationResource() *schema.Resource {
 		Read: dataSourceAwsLakeFormationResourceRead,
 
 		Schema: map[string]*schema.Schema{
-			"last_modified": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"resource_arn": {
+			"arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateArn,
+			},
+			"last_modified": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"role_arn": {
 				Type:     schema.TypeString,
@@ -36,14 +36,14 @@ func dataSourceAwsLakeFormationResourceRead(d *schema.ResourceData, meta interfa
 
 	input := &lakeformation.DescribeResourceInput{}
 
-	if v, ok := d.GetOk("resource_arn"); ok {
+	if v, ok := d.GetOk("arn"); ok {
 		input.ResourceArn = aws.String(v.(string))
 	}
 
 	output, err := conn.DescribeResource(input)
 
 	if err != nil {
-		return fmt.Errorf("error reading data source, Lake Formation Resource (resource_arn: %s): %w", aws.StringValue(input.ResourceArn), err)
+		return fmt.Errorf("error reading data source, Lake Formation Resource (arn: %s): %w", aws.StringValue(input.ResourceArn), err)
 	}
 
 	if output == nil || output.ResourceInfo == nil {
@@ -51,7 +51,7 @@ func dataSourceAwsLakeFormationResourceRead(d *schema.ResourceData, meta interfa
 	}
 
 	d.SetId(aws.StringValue(input.ResourceArn))
-	// d.Set("resource_arn", output.ResourceInfo.ResourceArn) // output not including resource arn currently
+	// d.Set("arn", output.ResourceInfo.ResourceArn) // output not including resource arn currently
 	d.Set("role_arn", output.ResourceInfo.RoleArn)
 	if output.ResourceInfo.LastModified != nil { // output not including last modified currently
 		d.Set("last_modified", output.ResourceInfo.LastModified.Format(time.RFC3339))

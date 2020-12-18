@@ -22,7 +22,7 @@ resource "aws_lakeformation_permissions" "test" {
   permissions   = ["ALL"]
 
   data_location {
-    resource_arn = aws_lakeformation_resource.test.resource_arn
+    arn = aws_lakeformation_resource.test.arn
   }
 }
 ```
@@ -45,12 +45,8 @@ resource "aws_lakeformation_permissions" "test" {
 
 The following arguments are required:
 
-* `permissions` – (Required) List of permissions granted to the principal. Valid values include `ALL`, `ALTER`, `CREATE_DATABASE`, `CREATE_TABLE`, `DATA_LOCATION_ACCESS`, `DELETE`, `DESCRIBE`, `DROP`, `INSERT`, and `SELECT`. For details on each permission, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
-* `principal_arn` – (Required) Principal to be granted the permissions on the resource. Supported principals are IAM users or IAM roles.
-
-The following arguments are optional:
-
-* `catalog_id` – (Optional) Identifier for the Data Catalog. By default, the account ID. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment.
+* `permissions` – (Required) List of permissions granted to the principal. Valid values may include `ALL`, `ALTER`, `CREATE_DATABASE`, `CREATE_TABLE`, `DATA_LOCATION_ACCESS`, `DELETE`, `DESCRIBE`, `DROP`, `INSERT`, and `SELECT`. For details on each permission, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
+* `principal` – (Required) Principal to be granted the permissions on the resource. Supported principals include IAM users and IAM roles.
 
 One of the following is required:
 
@@ -60,11 +56,16 @@ One of the following is required:
 * `table` - (Optional) Configuration block for a table resource. Detailed below.
 * `table_with_columns` - (Optional) Configuration block for a table with columns resource. Detailed below.
 
+The following arguments are optional:
+
+* `catalog_id` – (Optional) Identifier for the Data Catalog. By default, the account ID. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment.
+* `permissions_with_grant_option` - (Optional) Subset of `permissions` which the principal can pass.
+
 ### data_location
 
 The following argument is required:
 
-* `resource_arn` – (Required) Amazon Resource Name (ARN) that uniquely identifies the data location resource.
+* `arn` – (Required) Amazon Resource Name (ARN) that uniquely identifies the data location resource.
 
 The following argument is optional:
 
@@ -86,11 +87,14 @@ The following argument is required:
 
 * `database_name` – (Required) Name of the database for the table. Unique to a Data Catalog.
 
+At least one of the following is required:
+
+* `name` - (Optional) Name of the table.
+* `wildcard` - (Optional) Whether to use a wildcard representing every table under a database. Defaults to `false`.
+
 The following arguments are optional:
 
 * `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
-* `name` - (Optional) Name of the table. At least one of `name` or `wildcard` is required.
-* `wildcard` - (Optional) Whether to use a wildcard representing every table under a database. At least one of `name` or `wildcard` is required. Defaults to `false`.
 
 ### table_with_columns
 
@@ -99,11 +103,14 @@ The following arguments are required:
 * `database_name` – (Required) Name of the database for the table with columns resource. Unique to the Data Catalog.
 * `name` – (Required) Name of the table resource.
 
+At least one of the following is required:
+
+* `column_names` - (Optional) List of column names for the table.
+* `excluded_column_names` - (Optional) List of column names for the table to exclude.
+
 The following arguments are optional:
 
 * `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
-* `column_names` - (Optional) List of column names for the table. At least one of `column_names` or `excluded_column_names` is required.
-* `excluded_column_names` - (Optional) List of column names for the table to exclude. At least one of `column_names` or `excluded_column_names` is required.
 
 ## Attributes Reference
 

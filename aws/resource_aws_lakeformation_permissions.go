@@ -39,16 +39,16 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
+						},
 						"catalog_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validateAwsAccountId,
-						},
-						"resource_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -410,7 +410,7 @@ func expandLakeFormationDataLocationResource(tfMap map[string]interface{}) *lake
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["resource_arn"].(string); ok && v != "" {
+	if v, ok := tfMap["arn"].(string); ok && v != "" {
 		apiObject.ResourceArn = aws.String(v)
 	}
 
@@ -429,7 +429,7 @@ func flattenLakeFormationDataLocationResource(apiObject *lakeformation.DataLocat
 	}
 
 	if v := apiObject.ResourceArn; v != nil {
-		tfMap["resource_arn"] = aws.StringValue(v)
+		tfMap["arn"] = aws.StringValue(v)
 	}
 
 	return tfMap
