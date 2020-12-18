@@ -35,6 +35,7 @@ BUG FIXES
 * data-source/aws_ec2_local_gateway_virtual_interface_groups: Ensure all results from large environments are returned [GH-16669]
 * data-source/aws_prefix_list: Using `name` argument no longer overrides other arguments [GH-16739]
 * resource/aws_db_instance: Fix missing `db_subnet_group_name` in API request when using `restore_to_point_in_time` [GH-16830]
+* resource/aws_eip_association: Handle eventual consistency when creating resource [GH-16808]
 * resource/aws_main_route_table_association: Prevent crash on creation when VPC main route table association is not found [GH-16680]
 * resource/aws_workspaces_workspace: Prevent panic from terminated WorkSpace [GH-16692]
 
