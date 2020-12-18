@@ -84,6 +84,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediapackage"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/aws/aws-sdk-go/service/mwaa"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
@@ -283,6 +284,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(mediastore.New)
 	case "mq":
 		funcType = reflect.TypeOf(mq.New)
+	case "mwaa":
+		funcType = reflect.TypeOf(mwaa.New)
 	case "neptune":
 		funcType = reflect.TypeOf(neptune.New)
 	case "networkfirewall":
@@ -408,6 +411,8 @@ func ServiceListTagsFunction(serviceName string) string {
 	case "lambda":
 		return "ListTags"
 	case "mq":
+		return "ListTags"
+	case "mwaa":
 		return "ListTags"
 	case "opsworks":
 		return "ListTags"

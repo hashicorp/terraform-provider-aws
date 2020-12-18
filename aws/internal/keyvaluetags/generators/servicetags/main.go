@@ -132,6 +132,7 @@ var mapServiceNames = []string{
 	"medialive",
 	"mediapackage",
 	"mq",
+	"mwaa",
 	"opsworks",
 	"qldb",
 	"pinpoint",
