@@ -11,6 +11,9 @@ import (
 const (
 	// Maximum amount of time to wait for EC2 Instance attribute modifications to propagate
 	InstanceAttributePropagationTimeout = 2 * time.Minute
+
+	// General timeout for EC2 resource creations to propagate
+	PropagationTimeout = 2 * time.Minute
 )
 
 const (
