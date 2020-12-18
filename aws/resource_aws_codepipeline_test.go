@@ -23,7 +23,11 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 	resourceName := "aws_codepipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodePipeline(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccEnvironmentVariableSetPreCheck("GITHUB_TOKEN", t)
+			testAccPreCheckAWSCodePipelineSupported(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -131,7 +135,11 @@ func TestAccAWSCodePipeline_disappears(t *testing.T) {
 	resourceName := "aws_codepipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodePipeline(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccEnvironmentVariableSetPreCheck("GITHUB_TOKEN", t)
+			testAccPreCheckAWSCodePipelineSupported(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -155,7 +163,11 @@ func TestAccAWSCodePipeline_emptyStageArtifacts(t *testing.T) {
 	resourceName := "aws_codepipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodePipeline(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccEnvironmentVariableSetPreCheck("GITHUB_TOKEN", t)
+			testAccPreCheckAWSCodePipelineSupported(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -198,7 +210,11 @@ func TestAccAWSCodePipeline_deployWithServiceRole(t *testing.T) {
 	resourceName := "aws_codepipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodePipeline(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccEnvironmentVariableSetPreCheck("GITHUB_TOKEN", t)
+			testAccPreCheckAWSCodePipelineSupported(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -232,7 +248,11 @@ func TestAccAWSCodePipeline_tags(t *testing.T) {
 	resourceName := "aws_codepipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodePipeline(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccEnvironmentVariableSetPreCheck("GITHUB_TOKEN", t)
+			testAccPreCheckAWSCodePipelineSupported(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -298,7 +318,8 @@ func TestAccAWSCodePipeline_multiregion_basic(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
-			testAccPreCheckAWSCodePipeline(t, testAccGetAlternateRegion())
+			testAccEnvironmentVariableSetPreCheck("GITHUB_TOKEN", t)
+			testAccPreCheckAWSCodePipelineSupported(t, testAccGetAlternateRegion())
 		},
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSCodePipelineDestroy,
@@ -344,7 +365,8 @@ func TestAccAWSCodePipeline_multiregion_Update(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
-			testAccPreCheckAWSCodePipeline(t, testAccGetAlternateRegion())
+			testAccEnvironmentVariableSetPreCheck("GITHUB_TOKEN", t)
+			testAccPreCheckAWSCodePipelineSupported(t, testAccGetAlternateRegion())
 		},
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSCodePipelineDestroy,
@@ -404,7 +426,8 @@ func TestAccAWSCodePipeline_multiregion_ConvertSingleRegion(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
-			testAccPreCheckAWSCodePipeline(t, testAccGetAlternateRegion())
+			testAccEnvironmentVariableSetPreCheck("GITHUB_TOKEN", t)
+			testAccPreCheckAWSCodePipelineSupported(t, testAccGetAlternateRegion())
 		},
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSCodePipelineDestroy,
@@ -469,7 +492,11 @@ func TestAccAWSCodePipeline_WithNamespace(t *testing.T) {
 	resourceName := "aws_codepipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodePipeline(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccEnvironmentVariableSetPreCheck("GITHUB_TOKEN", t)
+			testAccPreCheckAWSCodePipelineSupported(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -503,7 +530,7 @@ func TestAccAWSCodePipeline_WithCodeStarConnection(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(codepipeline.EndpointsID, t)
+			testAccPreCheckAWSCodePipelineSupported(t)
 			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
 		},
 		Providers:    testAccProviders,
@@ -586,11 +613,7 @@ func testAccCheckAWSCodePipelineDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccPreCheckAWSCodePipeline(t *testing.T, regions ...string) {
-	if os.Getenv("GITHUB_TOKEN") == "" {
-		t.Skip("Environment variable GITHUB_TOKEN is not set")
-	}
-
+func testAccPreCheckAWSCodePipelineSupported(t *testing.T, regions ...string) {
 	regions = append(regions, testAccGetRegion())
 	for _, region := range regions {
 		conf := &Config{
