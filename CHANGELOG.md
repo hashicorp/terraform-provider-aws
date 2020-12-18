@@ -22,6 +22,7 @@ ENHANCEMENTS
 * resource/aws_eip: Add `carrier_ip` attribute [GH-16724]
 * resource/aws_instance: Add `enclave_options` configuration block (Nitro Enclaves) [GH-16361]
 * resource/aws_instance: Add `ebs_block_device` and `root_block_device` configuration block `throughput` attribute [GH-16620]
+* resource/aws_kinesis_firehose_delivery_stream: Mark `http_endpoint_configuration` `access_key` as sensitive [GH-16684]
 * resource/aws_launch_configuration: Add `metadata_options` configuration block [GH-14637]
 * resource/aws_launch_template: Add `enclave_options` configuration block (Nitro Enclaves) [GH-16361]
 * resource/aws_vpn_connection: Add support for VPN tunnel options and enable acceleration, DPDTimeoutAction, StartupAction, local/remote IPv4/IPv6 network CIDR and tunnel inside IP version. [GH-14740]
