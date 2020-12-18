@@ -389,6 +389,14 @@ func resourceAwsInstance() *schema.Resource {
 							ForceNew: true,
 						},
 
+						"throughput": {
+							Type:             schema.TypeInt,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							DiffSuppressFunc: throughputDiffSuppressFunc,
+						},
+
 						"volume_size": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -494,6 +502,13 @@ func resourceAwsInstance() *schema.Resource {
 							Optional:         true,
 							Computed:         true,
 							DiffSuppressFunc: iopsDiffSuppressFunc,
+						},
+
+						"throughput": {
+							Type:             schema.TypeInt,
+							Optional:         true,
+							Computed:         true,
+							DiffSuppressFunc: throughputDiffSuppressFunc,
 						},
 
 						"volume_size": {
@@ -602,11 +617,19 @@ func resourceAwsInstance() *schema.Resource {
 }
 
 func iopsDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
-	// Suppress diff if volume_type is not io1 or io2 and iops is unset or configured as 0
+	// Suppress diff if volume_type is not io1, io2, or gp3 and iops is unset or configured as 0
 	i := strings.LastIndexByte(k, '.')
 	vt := k[:i+1] + "volume_type"
 	v := d.Get(vt).(string)
-	return (strings.ToLower(v) != ec2.VolumeTypeIo1 || strings.ToLower(v) != ec2.VolumeTypeIo2) && new == "0"
+	return (strings.ToLower(v) != ec2.VolumeTypeIo1 && strings.ToLower(v) != ec2.VolumeTypeIo2 && strings.ToLower(v) != ec2.VolumeTypeGp3) && new == "0"
+}
+
+func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
+	// Suppress diff if volume_type is not gp3 and throughput is unset or configured as 0
+	i := strings.LastIndexByte(k, '.')
+	vt := k[:i+1] + "volume_type"
+	v := d.Get(vt).(string)
+	return strings.ToLower(v) != ec2.VolumeTypeGp3 && new == "0"
 }
 
 func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
@@ -1421,7 +1444,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			if v, ok := d.Get("root_block_device.0.iops").(int); ok && v != 0 {
 				// Enforce IOPs usage with a valid volume type
 				// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
-				if t, ok := d.Get("root_block_device.0.volume_type").(string); ok && t != ec2.VolumeTypeIo1 && t != ec2.VolumeTypeIo2 {
+				if t, ok := d.Get("root_block_device.0.volume_type").(string); ok && t != ec2.VolumeTypeIo1 && t != ec2.VolumeTypeIo2 && t != ec2.VolumeTypeGp3 {
 					if t == "" {
 						// Volume defaults to gp2
 						t = ec2.VolumeTypeGp2
@@ -1430,6 +1453,16 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				}
 				modifyVolume = true
 				input.Iops = aws.Int64(int64(v))
+			}
+		}
+		if d.HasChange("root_block_device.0.throughput") {
+			if v, ok := d.Get("root_block_device.0.throughput").(int); ok && v != 0 {
+				// Enforce throughput usage with a valid volume type
+				if t, ok := d.Get("root_block_device.0.volume_type").(string); ok && t != ec2.VolumeTypeGp3 {
+					return fmt.Errorf("error updating instance: throughput attribute not supported for type %s", t)
+				}
+				modifyVolume = true
+				input.Throughput = aws.Int64(int64(v))
 			}
 		}
 		if modifyVolume {
@@ -1765,6 +1798,9 @@ func readBlockDevicesFromInstance(instance *ec2.Instance, conn *ec2.EC2) (map[st
 		if vol.KmsKeyId != nil {
 			bd["kms_key_id"] = aws.StringValue(vol.KmsKeyId)
 		}
+		if vol.Throughput != nil {
+			bd["throughput"] = aws.Int64Value(vol.Throughput)
+		}
 		if instanceBd.DeviceName != nil {
 			bd["device_name"] = aws.StringValue(instanceBd.DeviceName)
 		}
@@ -1953,9 +1989,9 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 			if v, ok := bd["volume_type"].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
 				if iops, ok := bd["iops"].(int); ok && iops > 0 {
-					if ec2.VolumeTypeIo1 == strings.ToLower(v) || ec2.VolumeTypeIo2 == strings.ToLower(v) {
+					if ec2.VolumeTypeIo1 == strings.ToLower(v) || ec2.VolumeTypeIo2 == strings.ToLower(v) || ec2.VolumeTypeGp3 == strings.ToLower(v) {
 						// Condition: This parameter is required for requests to create io1 or io2
-						// volumes; it is not used in requests to create gp2, st1, sc1, or
+						// volumes and optional for gp3; it is not used in requests to create gp2, st1, sc1, or
 						// standard volumes.
 						// See: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_EbsBlockDevice.html
 						ebs.Iops = aws.Int64(int64(iops))
@@ -1963,6 +1999,13 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 						// Enforce IOPs usage with a valid volume type
 						// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
 						return nil, fmt.Errorf("error creating resource: iops attribute not supported for ebs_block_device with volume_type %s", v)
+					}
+				} else if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
+					// `throughput` is only valid for gp3
+					if ec2.VolumeTypeGp3 == strings.ToLower(v) {
+						ebs.Throughput = aws.Int64(int64(throughput))
+					} else {
+						return nil, fmt.Errorf("error creating resource: throughput attribute not supported for ebs_block_device with volume_type %s", v)
 					}
 				}
 			}
@@ -2019,8 +2062,8 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 			if v, ok := bd["volume_type"].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
 				if iops, ok := bd["iops"].(int); ok && iops > 0 {
-					if ec2.VolumeTypeIo1 == strings.ToLower(v) || ec2.VolumeTypeIo2 == strings.ToLower(v) {
-						// Only set the iops attribute if the volume type is io1 or io2. Setting otherwise
+					if ec2.VolumeTypeIo1 == strings.ToLower(v) || ec2.VolumeTypeIo2 == strings.ToLower(v) || ec2.VolumeTypeGp3 == strings.ToLower(v) {
+						// Only set the iops attribute if the volume type is io1, io2, or gp3. Setting otherwise
 						// can trigger a refresh/plan loop based on the computed value that is given
 						// from AWS, and prevent us from specifying 0 as a valid iops.
 						//   See https://github.com/hashicorp/terraform/pull/4146
@@ -2030,6 +2073,14 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 						// Enforce IOPs usage with a valid volume type
 						// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
 						return nil, fmt.Errorf("error creating resource: iops attribute not supported for root_block_device with volume_type %s", v)
+					}
+				} else if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
+					// throughput is only valid for gp3
+					if ec2.VolumeTypeGp3 == strings.ToLower(v) {
+						ebs.Throughput = aws.Int64(int64(throughput))
+					} else {
+						// Enforce throughput usage with a valid volume type
+						return nil, fmt.Errorf("error creating resource: throughput attribute not supported for root_block_device with volume_type %s", v)
 					}
 				}
 			}

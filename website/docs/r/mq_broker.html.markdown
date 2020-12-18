@@ -67,7 +67,7 @@ The following arguments are supported:
 * `subnet_ids` - (Optional) The list of subnet IDs in which to launch the broker. A `SINGLE_INSTANCE` deployment requires one subnet. An `ACTIVE_STANDBY_MULTI_AZ` deployment requires two subnets.
 * `maintenance_window_start_time` - (Optional) Maintenance window start time. See below.
 * `logs` - (Optional) Logging configuration of the broker. See below.
-* `user` - (Optional) The list of all ActiveMQ usernames for the specified broker. See below.
+* `user` - (Required) The list of all ActiveMQ usernames for the specified broker. See below.
 * `tags` - (Optional) A map of tags to assign to the resource.
 
 ### Nested Fields
