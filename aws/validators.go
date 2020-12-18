@@ -660,6 +660,25 @@ func validateAwsAccountId(v interface{}, k string) (ws []string, errors []error)
 	return
 }
 
+func validatePrincipal(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if value == "IAM_ALLOWED_PRINCIPALS" {
+		return ws, errors
+	}
+
+	wsARN, errorsARN := validateArn(v, k)
+	ws = append(ws, wsARN...)
+	errors = append(errors, errorsARN...)
+
+	pattern := `\d{12}:(role|user)/`
+	if !regexp.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q doesn't look like a user or role: %q", k, value))
+	}
+
+	return ws, errors
+}
+
 func validateArn(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
