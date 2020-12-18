@@ -280,6 +280,8 @@ func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta inter
 		}
 		if v, ok := computeResource["min_vcpus"]; ok && v.(int) > 0 {
 			input.ComputeResources.MinvCpus = aws.Int64(int64(v.(int)))
+		} else if computeResourceType == batch.CRTypeEc2 || computeResourceType == batch.CRTypeSpot {
+			input.ComputeResources.MinvCpus = aws.Int64(0)
 		}
 		if v, ok := computeResource["spot_iam_fleet_role"]; ok && len(v.(string)) > 0 {
 			input.ComputeResources.SpotIamFleetRole = aws.String(v.(string))
