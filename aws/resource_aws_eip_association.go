@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 )
 
 func resourceAwsEipAssociation() *schema.Resource {
@@ -94,7 +94,7 @@ func resourceAwsEipAssociationCreate(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] EIP association configuration: %#v", request)
 
 	var resp *ec2.AssociateAddressOutput
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.AssociateAddress(request)
 
@@ -158,11 +158,11 @@ func resourceAwsEipAssociationRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	var response *ec2.DescribeAddressesOutput
-	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		response, err = conn.DescribeAddresses(request)
 
-		if tfawserr.ErrCodeEquals(err, "InvalidAssociationID.NotFound") {
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidAssociationID.NotFound") {
 			return resource.RetryableError(err)
 		}
 
@@ -179,6 +179,12 @@ func resourceAwsEipAssociationRead(d *schema.ResourceData, meta interface{}) err
 
 	if isResourceTimeoutError(err) {
 		response, err = conn.DescribeAddresses(request)
+	}
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidAssociationID.NotFound") {
+		log.Printf("[WARN] EIP Association (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	if err != nil {
