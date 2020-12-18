@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -43,6 +44,13 @@ func resourceAwsCodeStarConnectionsConnection() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(codestarconnections.ProviderType_Values(), false),
 			},
+
+			"tags": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -53,6 +61,10 @@ func resourceAwsCodeStarConnectionsConnectionCreate(d *schema.ResourceData, meta
 	params := &codestarconnections.CreateConnectionInput{
 		ConnectionName: aws.String(d.Get("name").(string)),
 		ProviderType:   aws.String(d.Get("provider_type").(string)),
+	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		params.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CodestarconnectionsTags()
 	}
 
 	resp, err := conn.CreateConnection(params)
@@ -67,6 +79,7 @@ func resourceAwsCodeStarConnectionsConnectionCreate(d *schema.ResourceData, meta
 
 func resourceAwsCodeStarConnectionsConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codestarconnectionsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.GetConnection(&codestarconnections.GetConnectionInput{
 		ConnectionArn: aws.String(d.Id()),
@@ -84,11 +97,21 @@ func resourceAwsCodeStarConnectionsConnectionRead(d *schema.ResourceData, meta i
 		return fmt.Errorf("error reading CodeStar connection (%s): empty response", d.Id())
 	}
 
-	d.SetId(aws.StringValue(resp.Connection.ConnectionArn))
+	arn := aws.StringValue(resp.Connection.ConnectionArn)
+	d.SetId(arn)
 	d.Set("arn", resp.Connection.ConnectionArn)
 	d.Set("name", resp.Connection.ConnectionName)
 	d.Set("connection_status", resp.Connection.ConnectionStatus)
 	d.Set("provider_type", resp.Connection.ProviderType)
+
+	tags, err := keyvaluetags.CodestarconnectionsListTags(conn, arn)
+	if err != nil {
+		return fmt.Errorf("error listing tags for CodeStar connection (%s): %w", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags for CodeStar connection (%s): %w", arn, err)
+	}
 
 	return nil
 }
