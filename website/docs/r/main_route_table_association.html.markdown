@@ -45,4 +45,4 @@ this original table as the Main Route Table for the VPC. You'll see this
 additional Route Table in the AWS console; it must remain intact in order for
 the `main_route_table_association` delete to work properly.
 
-[tf-default-route-table]: /docs/r/default_route_table.html.markdown
+[tf-default-route-table]: /docs/providers/aws/r/default_route_table.html
