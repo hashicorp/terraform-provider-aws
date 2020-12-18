@@ -292,7 +292,7 @@ func resourceAwsMwaaEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	d.SetId(*input.Name)
+	d.SetId(aws.StringValue(input.Name))
 	d.Set("arn", out.Arn)
 
 	if err := waitForMwaaEnvironmentCreation(conn, d.Id()); err != nil {
