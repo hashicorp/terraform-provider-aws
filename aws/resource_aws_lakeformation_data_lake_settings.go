@@ -142,9 +142,6 @@ func resourceAwsLakeFormationDataLakeSettingsCreate(d *schema.ResourceData, meta
 			if isAWSErr(err, lakeformation.ErrCodeConcurrentModificationException, "") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, lakeformation.ErrCodeOperationTimeoutException, "") {
-				return resource.RetryableError(err)
-			}
 
 			return resource.NonRetryableError(fmt.Errorf("error creating Lake Formation data lake settings: %w", err))
 		}

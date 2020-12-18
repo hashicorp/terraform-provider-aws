@@ -211,9 +211,6 @@ func resourceAwsLakeFormationPermissionsCreate(d *schema.ResourceData, meta inte
 			if isAWSErr(err, lakeformation.ErrCodeConcurrentModificationException, "") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, lakeformation.ErrCodeOperationTimeoutException, "") {
-				return resource.RetryableError(err)
-			}
 			if isAWSErr(err, "AccessDeniedException", "is not authorized to access requested permissions") {
 				return resource.RetryableError(err)
 			}
@@ -259,8 +256,7 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 	var principalResourcePermissions []*lakeformation.PrincipalResourcePermissions
 
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		var err error
-		err = conn.ListPermissionsPages(input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
+		err := conn.ListPermissionsPages(input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
 			for _, permission := range resp.PrincipalResourcePermissions {
 				if permission == nil {
 					continue
@@ -279,6 +275,19 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		err = conn.ListPermissionsPages(input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
+			for _, permission := range resp.PrincipalResourcePermissions {
+				if permission == nil {
+					continue
+				}
+
+				principalResourcePermissions = append(principalResourcePermissions, permission)
+			}
+			return !lastPage
+		})
+	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
 		log.Printf("[WARN] Resource Lake Formation permissions (%s) not found, removing from state", d.Id())
@@ -359,14 +368,15 @@ func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta inte
 			if isAWSErr(err, lakeformation.ErrCodeConcurrentModificationException, "") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, lakeformation.ErrCodeOperationTimeoutException, "") {
-				return resource.RetryableError(err)
-			}
 
 			return resource.NonRetryableError(fmt.Errorf("unable to revoke Lake Formation Permissions: %w", err))
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.RevokePermissions(input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("unable to revoke LakeFormation Permissions (input: %v): %w", input, err)
@@ -378,8 +388,10 @@ func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta inte
 func expandLakeFormationResource(d *schema.ResourceData, squashTableWithColumns bool) *lakeformation.Resource {
 	res := &lakeformation.Resource{}
 
-	if v, ok := d.GetOk("catalog_resource"); ok && v.(bool) {
-		res.Catalog = &lakeformation.CatalogResource{}
+	if v, ok := d.GetOk("catalog_resource"); ok {
+		if v.(bool) {
+			res.Catalog = &lakeformation.CatalogResource{}
+		}
 	}
 
 	if v, ok := d.GetOk("data_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {

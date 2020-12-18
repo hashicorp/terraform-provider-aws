@@ -182,8 +182,7 @@ func dataSourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta inte
 	var principalResourcePermissions []*lakeformation.PrincipalResourcePermissions
 
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		var err error
-		err = conn.ListPermissionsPages(input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
+		err := conn.ListPermissionsPages(input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
 			for _, permission := range resp.PrincipalResourcePermissions {
 				if permission == nil {
 					continue
@@ -202,6 +201,19 @@ func dataSourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta inte
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		err = conn.ListPermissionsPages(input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
+			for _, permission := range resp.PrincipalResourcePermissions {
+				if permission == nil {
+					continue
+				}
+
+				principalResourcePermissions = append(principalResourcePermissions, permission)
+			}
+			return !lastPage
+		})
+	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
 		log.Printf("[WARN] Resource Lake Formation permissions (%s) not found, removing from state", d.Id())

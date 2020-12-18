@@ -282,9 +282,6 @@ func testAccCheckAWSLakeFormationPermissionsExists(resourceName string) resource
 				if isAWSErr(err, lakeformation.ErrCodeConcurrentModificationException, "") {
 					return resource.RetryableError(err)
 				}
-				if isAWSErr(err, lakeformation.ErrCodeOperationTimeoutException, "") {
-					return resource.RetryableError(err)
-				}
 				if isAWSErr(err, "AccessDeniedException", "is not authorized to access requested permissions") {
 					return resource.RetryableError(err)
 				}

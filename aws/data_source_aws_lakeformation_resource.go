@@ -2,10 +2,12 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -41,6 +43,12 @@ func dataSourceAwsLakeFormationResourceRead(d *schema.ResourceData, meta interfa
 	}
 
 	output, err := conn.DescribeResource(input)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
+		log.Printf("[WARN] Resource Lake Formation Resource (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error reading data source, Lake Formation Resource (arn: %s): %w", aws.StringValue(input.ResourceArn), err)
