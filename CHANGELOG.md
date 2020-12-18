@@ -22,6 +22,7 @@ ENHANCEMENTS
 * data-source/aws_launch_configuration: Add `metadata_options` attribute [GH-14637]
 * data-source/aws_launch_template: Add `enclave_options` attribute (Nitro Enclaves) [GH-16361]
 * data-source/aws_network_interface: Add `association` `carrier_ip` and `customer_owned_ip` attributes [GH-16723]
+* resource/aws_autoscaling_group: Adds support for Instance Refresh [GH-16678]
 * resource/aws_eip: Add `carrier_ip` attribute [GH-16724]
 * resource/aws_instance: Add `enclave_options` configuration block (Nitro Enclaves) [GH-16361]
 * resource/aws_instance: Add `ebs_block_device` and `root_block_device` configuration block `throughput` attribute [GH-16620]
