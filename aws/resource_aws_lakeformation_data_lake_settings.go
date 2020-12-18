@@ -3,10 +3,12 @@ package aws
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
@@ -23,6 +25,15 @@ func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"admins": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validateArn,
+				},
+			},
 			"catalog_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -78,15 +89,6 @@ func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 					},
 				},
 			},
-			"admins": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
-				},
-			},
 			"trusted_resource_owners": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -128,7 +130,30 @@ func resourceAwsLakeFormationDataLakeSettingsCreate(d *schema.ResourceData, meta
 	}
 
 	input.DataLakeSettings = settings
-	output, err := conn.PutDataLakeSettings(input)
+
+	var output *lakeformation.PutDataLakeSettingsOutput
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		var err error
+		output, err = conn.PutDataLakeSettings(input)
+		if err != nil {
+			if isAWSErr(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, lakeformation.ErrCodeConcurrentModificationException, "") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, lakeformation.ErrCodeOperationTimeoutException, "") {
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(fmt.Errorf("error creating Lake Formation data lake settings: %w", err))
+		}
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		output, err = conn.PutDataLakeSettings(input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error creating Lake Formation data lake settings: %w", err)
@@ -161,11 +186,11 @@ func resourceAwsLakeFormationDataLakeSettingsRead(d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Lake Formation data lake settings (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Lake Formation data lake settings (%s): %w", d.Id(), err)
 	}
 
 	if output == nil || output.DataLakeSettings == nil {
-		return fmt.Errorf("error reading Lake Formation data lake settings (%s): empty response", d.Id())
+		return fmt.Errorf("reading Lake Formation data lake settings (%s): empty response", d.Id())
 	}
 
 	settings := output.DataLakeSettings
@@ -202,7 +227,7 @@ func resourceAwsLakeFormationDataLakeSettingsDelete(d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Lake Formation data lake settings (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Lake Formation data lake settings (%s): %w", d.Id(), err)
 	}
 
 	return nil
