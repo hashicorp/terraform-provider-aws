@@ -56,6 +56,16 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"platform_capability": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{batch.PlatformCapabilityEc2, batch.PlatformCapabilityFargate}, true),
+				},
+			},
 			"retry_strategy": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -111,9 +121,15 @@ func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{
 	conn := meta.(*AWSClient).batchconn
 	name := d.Get("name").(string)
 
+	var platformCapabilities []*string
+	for _, v := range d.Get("platform_capability").(*schema.Set).List() {
+		platformCapabilities = append(platformCapabilities, aws.String(v.(string)))
+	}
+
 	input := &batch.RegisterJobDefinitionInput{
-		JobDefinitionName: aws.String(name),
-		Type:              aws.String(d.Get("type").(string)),
+		JobDefinitionName:    aws.String(name),
+		Type:                 aws.String(d.Get("type").(string)),
+		PlatformCapabilities: platformCapabilities,
 	}
 
 	if v, ok := d.GetOk("container_properties"); ok {
@@ -177,6 +193,10 @@ func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{})
 	d.Set("name", job.JobDefinitionName)
 
 	d.Set("parameters", aws.StringValueMap(job.Parameters))
+
+	if len(job.PlatformCapabilities) > 0 {
+		d.Set("platform_capability", flattenStringSet(job.PlatformCapabilities))
+	}
 
 	if err := d.Set("retry_strategy", flattenBatchRetryStrategy(job.RetryStrategy)); err != nil {
 		return fmt.Errorf("error setting retry_strategy: %s", err)
