@@ -124,6 +124,34 @@ func TestAccAWSBatchJobDefinition_PlatformCapabilities_EC2(t *testing.T) {
 	})
 }
 
+func TestAccAWSBatchJobDefinition_PlatformCapabilities_Fargate(t *testing.T) {
+	var jd batch.JobDefinition
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBatchJobDefinitionConfigCapabilitiesFargate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capability.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capability.0", "FARGATE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSBatchJobDefinition_ContainerProperties_Advanced(t *testing.T) {
 	var jd batch.JobDefinition
 	compare := batch.JobDefinition{
@@ -469,6 +497,35 @@ resource "aws_batch_job_definition" "test" {
     memory  = 128
     vcpus   = 1
   })
+}
+`, rName)
+}
+
+func testAccBatchJobDefinitionConfigCapabilitiesFargate(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "container"
+  platform_capability = [
+	"FARGATE",
+  ]
+
+  container_properties = <<CONTAINER_PROPERTIES
+{
+	"command": ["echo", "test"],
+	"image": "busybox",
+	"fargatePlatformConfiguration": {
+		"platformVersion": "LATEST"
+	},
+	"resourceRequirements": [
+		{"type": "VCPU", "value": "0.25"},
+        {"type": "MEMORY", "value": "512"}
+	],
+	"executionRoleArn": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ecsTaskExecutionRole"
+}
+CONTAINER_PROPERTIES
 }
 `, rName)
 }
