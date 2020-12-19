@@ -57,7 +57,7 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"platform_capability": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				MaxItems: 1,
@@ -122,8 +122,9 @@ func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{
 	name := d.Get("name").(string)
 
 	var platformCapabilities []*string
-	for _, v := range d.Get("platform_capability").(*schema.Set).List() {
-		platformCapabilities = append(platformCapabilities, aws.String(v.(string)))
+	if raw, ok := d.GetOk("platform_capability"); ok && len(raw.([]interface{})) > 0 {
+		platformCapability := raw.([]interface{})[0]
+		platformCapabilities = append(platformCapabilities, aws.String(platformCapability.(string)))
 	}
 
 	input := &batch.RegisterJobDefinitionInput{
@@ -195,7 +196,7 @@ func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{})
 	d.Set("parameters", aws.StringValueMap(job.Parameters))
 
 	if len(job.PlatformCapabilities) > 0 {
-		d.Set("platform_capability", flattenStringSet(job.PlatformCapabilities))
+		d.Set("platform_capability", flattenStringList(job.PlatformCapabilities))
 	}
 
 	if err := d.Set("retry_strategy", flattenBatchRetryStrategy(job.RetryStrategy)); err != nil {
