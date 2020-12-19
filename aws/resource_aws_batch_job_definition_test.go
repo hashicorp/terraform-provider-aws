@@ -96,6 +96,34 @@ func TestAccAWSBatchJobDefinition_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSBatchJobDefinition_PlatformCapabilities_EC2(t *testing.T) {
+	var jd batch.JobDefinition
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBatchJobDefinitionConfigCapabilitiesEC2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capability.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capability.0", "EC2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSBatchJobDefinition_ContainerProperties_Advanced(t *testing.T) {
 	var jd batch.JobDefinition
 	compare := batch.JobDefinition{
@@ -422,6 +450,25 @@ resource "aws_batch_job_definition" "test" {
   })
   name = %[1]q
   type = "container"
+}
+`, rName)
+}
+
+func testAccBatchJobDefinitionConfigCapabilitiesEC2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "container"
+  platform_capability = [
+	"EC2",
+  ]
+
+  container_properties = jsonencode({
+    command = ["echo", "test"]
+    image   = "busybox"
+    memory  = 128
+    vcpus   = 1
+  })
 }
 `, rName)
 }
