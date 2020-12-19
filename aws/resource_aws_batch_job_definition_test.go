@@ -84,6 +84,7 @@ func TestAccAWSBatchJobDefinition_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capability.#", "0"),
 				),
 			},
 			{
