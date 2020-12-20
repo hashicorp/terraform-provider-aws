@@ -199,6 +199,53 @@ func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
+func resourceAwsEcrPublicRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ecrpublicconn
+
+	_, err := conn.DeleteRepository(&ecrpublic.DeleteRepositoryInput{
+		RepositoryName: aws.String(d.Id()),
+		RegistryId:     aws.String(d.Get("registry_id").(string)),
+		Force:          aws.Bool(true),
+	})
+	if err != nil {
+		if isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+			return nil
+		}
+		return fmt.Errorf("error deleting ECR Public repository: %s", err)
+	}
+
+	log.Printf("[DEBUG] Waiting for ECR Public Repository %q to be deleted", d.Id())
+	input := &ecrpublic.DescribeRepositoriesInput{
+		RepositoryNames: aws.StringSlice([]string{d.Id()}),
+	}
+	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		_, err = conn.DescribeRepositories(input)
+		if err != nil {
+			if isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+				return nil
+			}
+			return resource.NonRetryableError(err)
+		}
+
+		return resource.RetryableError(fmt.Errorf("%q: Timeout while waiting for the ECR Public Repository to be deleted", d.Id()))
+	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DescribeRepositories(input)
+	}
+
+	if isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting ECR Public repository: %s", err)
+	}
+
+	log.Printf("[DEBUG] repository %q deleted.", d.Get("name").(string))
+
+	return nil
+}
+
 func flattenEcrPublicRepositoryCatalogData(apiObject *ecrpublic.GetRepositoryCatalogDataOutput) map[string]interface{} {
 	if apiObject == nil {
 		return nil
