@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"encoding/base64"
 	"fmt"
 	"log"
 	"regexp"
@@ -57,6 +56,10 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
+						"created_at": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"description": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -65,6 +68,10 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 						"logo_image_blob": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"logo_image_url": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"operating_systems": {
 							Type:     schema.TypeList,
@@ -78,6 +85,18 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 								"x86",
 								"x86-64",
 							}, false),
+						},
+						"registry_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"repository_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"repository_uri": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"usage_text": {
 							Type:         schema.TypeString,
@@ -157,17 +176,22 @@ func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}
 	repository := out.Repositories[0]
 
 	d.Set("repository_name", d.Id())
+	d.Set("created_at", aws.TimeValue(repository.CreatedAt).Format(time.RFC3339))
+	d.Set("registry_id", repository.RegistryId)
+	d.Set("repository_arn", repository.RepositoryArn)
+	d.Set("repository_uri", repository.RepositoryUri)
 
 	var catalogOut *ecrpublic.GetRepositoryCatalogDataOutput
 	catalogInput := &ecrpublic.GetRepositoryCatalogDataInput{
 		RepositoryName: aws.String(d.Id()),
-		RegistryId:     *"", // NOT SURE
+		RegistryId:     repository.RegistryId,
 	}
 
-	catalogOut, err = conn.GetRepositoryCatalogData(input)
+	// not sure about error handling for this second call
+	catalogOut, err = conn.GetRepositoryCatalogData(catalogInput)
 
 	if catalogOut != nil {
-		d.Set("catalog_data", []interface{}{flattenEcrPublicRepositoryCatalogData(catalogOutput)})
+		d.Set("catalog_data", []interface{}{flattenEcrPublicRepositoryCatalogData(catalogOut)})
 	} else {
 		d.Set("catalog_data", nil)
 	}
@@ -175,35 +199,36 @@ func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func flattenEcrPublicRepositoryCatalogData(apiObject *ecrpublic.RepositoryCatalogData) map[string]interface{} {
+func flattenEcrPublicRepositoryCatalogData(apiObject *ecrpublic.GetRepositoryCatalogDataOutput) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
+	catalogData := apiObject.CatalogData
+
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.AboutText; v != nil {
+	if v := catalogData.AboutText; v != nil {
 		tfMap["about_text"] = aws.StringValue(v)
 	}
 
-	if v := apiObject.Architectures; v != nil {
+	if v := catalogData.Architectures; v != nil {
 		tfMap["architectures"] = aws.StringValueSlice(v)
 	}
 
-	if v := apiObject.Description; v != nil {
+	if v := catalogData.Description; v != nil {
 		tfMap["description"] = aws.StringValue(v)
 	}
 
-	// Not sure what to do here, download the blob from the URL?
-	if v := apiObject.LogoUrl; v != nil {
-		tfMap["logo_image_blob"] = base64.StdEncoding.DecodeString(v)
+	if v := catalogData.LogoUrl; v != nil {
+		tfMap["logo_image_url"] = aws.StringValue(v)
 	}
 
-	if v := apiObject.OperatingSystems; v != nil {
+	if v := catalogData.OperatingSystems; v != nil {
 		tfMap["operating_systems"] = aws.StringValueSlice(v)
 	}
 
-	if v := apiObject.UsageText; v != nil {
+	if v := catalogData.UsageText; v != nil {
 		tfMap["usage_text"] = aws.StringValue(v)
 	}
 
@@ -225,11 +250,8 @@ func expandEcrPublicRepositoryCatalogData(tfMap map[string]interface{}) *ecrpubl
 		repositoryCatalogDataInput.Architectures = expandStringList(v)
 	}
 
-	if v, ok := tfMap["logo_image_blob"].(string); ok && v != "" {
-
-		blob, _ := base64.StdEncoding.DecodeString(v)
-		// not sure about error handling here, is this worth a mention in the data conversion guide?
-		repositoryCatalogDataInput.LogoImageBlob = blob
+	if v, ok := tfMap["logo_image_blob"].([]byte); ok && len(v) > 0 {
+		repositoryCatalogDataInput.LogoImageBlob = v
 	}
 
 	if v, ok := tfMap["operating_systems"].([]interface{}); ok && len(v) > 0 {
