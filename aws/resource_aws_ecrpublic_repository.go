@@ -17,8 +17,8 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsEcrPublicRepositoryCreate,
 		Read:   resourceAwsEcrPublicRepositoryRead,
-		Update: resourceAwsEcrPublicUpdate,
-		Delete: resourceAwsEcrPublicDelete,
+		Update: resourceAwsEcrPublicRepositoryUpdate,
+		Delete: resourceAwsEcrPublicRepositoryDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -246,6 +246,18 @@ func resourceAwsEcrPublicRepositoryDelete(d *schema.ResourceData, meta interface
 	return nil
 }
 
+func resourceAwsEcrPublicRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ecrpublicconn
+
+	if d.HasChange("catalog_data") {
+		if err := resourceAwsEcrPublicRepositoryUpdateCatalogData(conn, d); err != nil {
+			return err
+		}
+	}
+
+	return resourceAwsEcrPublicRepositoryRead(d, meta)
+}
+
 func flattenEcrPublicRepositoryCatalogData(apiObject *ecrpublic.GetRepositoryCatalogDataOutput) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -310,4 +322,26 @@ func expandEcrPublicRepositoryCatalogData(tfMap map[string]interface{}) *ecrpubl
 	}
 
 	return repositoryCatalogDataInput
+}
+
+func resourceAwsEcrPublicRepositoryUpdateCatalogData(conn *ecrpublic.ECRPublic, d *schema.ResourceData) error {
+
+	if d.HasChange("catalog_data") {
+
+		if v, ok := d.GetOk("catalog_data"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input := ecrpublic.PutRepositoryCatalogDataInput{
+				RepositoryName: aws.String(d.Id()),
+				RegistryId:     aws.String(d.Get("registry_id").(string)),
+				CatalogData:    expandEcrPublicRepositoryCatalogData(v.([]interface{})[0].(map[string]interface{})),
+			}
+
+			_, err := conn.PutRepositoryCatalogData(&input)
+
+			if err != nil {
+				return fmt.Errorf("error updating catalog data for repository(%s): %s", d.Id(), err)
+			}
+		}
+	}
+
+	return nil
 }
