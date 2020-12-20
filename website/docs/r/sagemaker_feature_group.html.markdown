@@ -25,7 +25,7 @@ resource "aws_sagemaker_feature_group" "example" {
     feature_name = "example"
     feature_type = "String"
   }
-  
+
   online_store_config {
     enable_online_store = true
   }
