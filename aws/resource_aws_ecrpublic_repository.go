@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecrpublic"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -115,7 +116,98 @@ func resourceAwsEcrPublicRepositoryCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(aws.StringValue(repository.RepositoryName))
 
-	return resourceAwsEcrRepositoryRead(d, meta)
+	return resourceAwsEcrPublicRepositoryRead(d, meta)
+}
+
+func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ecrpublicconn
+
+	log.Printf("[DEBUG] Reading ECR PUblic repository %s", d.Id())
+	var out *ecrpublic.DescribeRepositoriesOutput
+	input := &ecrpublic.DescribeRepositoriesInput{
+		RepositoryNames: aws.StringSlice([]string{d.Id()}),
+	}
+
+	var err error
+	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+		out, err = conn.DescribeRepositories(input)
+		if d.IsNewResource() && isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		out, err = conn.DescribeRepositories(input)
+	}
+
+	if isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+		log.Printf("[WARN] ECR Public Repository (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading ECR Public repository: %s", err)
+	}
+
+	repository := out.Repositories[0]
+
+	d.Set("repository_name", d.Id())
+
+	var catalogOut *ecrpublic.GetRepositoryCatalogDataOutput
+	catalogInput := &ecrpublic.GetRepositoryCatalogDataInput{
+		RepositoryName: aws.String(d.Id()),
+		RegistryId:     *"", // NOT SURE
+	}
+
+	catalogOut, err = conn.GetRepositoryCatalogData(input)
+
+	if catalogOut != nil {
+		d.Set("catalog_data", []interface{}{flattenEcrPublicRepositoryCatalogData(catalogOutput)})
+	} else {
+		d.Set("catalog_data", nil)
+	}
+
+	return nil
+}
+
+func flattenEcrPublicRepositoryCatalogData(apiObject *ecrpublic.RepositoryCatalogData) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AboutText; v != nil {
+		tfMap["about_text"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Architectures; v != nil {
+		tfMap["architectures"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.Description; v != nil {
+		tfMap["description"] = aws.StringValue(v)
+	}
+
+	// Not sure what to do here, download the blob from the URL?
+	if v := apiObject.LogoUrl; v != nil {
+		tfMap["logo_image_blob"] = base64.StdEncoding.DecodeString(v)
+	}
+
+	if v := apiObject.OperatingSystems; v != nil {
+		tfMap["operating_systems"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.UsageText; v != nil {
+		tfMap["usage_text"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func expandEcrPublicRepositoryCatalogData(tfMap map[string]interface{}) *ecrpublic.RepositoryCatalogDataInput {
