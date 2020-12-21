@@ -108,6 +108,7 @@ instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/Use
 * `credit_specification` - (Optional) Customize the credit specification of the instance. See [Credit Specification](#credit-specification) below for more details.
 * `hibernation` - (Optional) If true, the launched EC2 instance will support hibernation.
 * `metadata_options` - (Optional) Customize the metadata options of the instance. See [Metadata Options](#metadata-options) below for more details.
+* `enclave_options` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
 
 ### Timeouts
 
@@ -126,12 +127,11 @@ to understand the implications of using these attributes.
 
 The `root_block_device` mapping supports the following:
 
-* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`, `"io1"`, `"io2"`, `"sc1"`, or `"st1"`. (Default: `"gp2"`).
+* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`, `"gp3"`, `"io1"`, `"io2"`, `"sc1"`, or `"st1"`. (Default: `"gp2"`).
 * `volume_size` - (Optional) The size of the volume in gibibytes (GiB).
 * `iops` - (Optional) The amount of provisioned
-  [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
-  This is only valid for `volume_type` of `"io1/io2"`, and must be specified if
-  using that type
+  [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). Only valid for volume_type of `"io1"`, `"io2"` or `"gp3"`.
+* `throughput` - (Optional) The throughput to provision for a volume in mebibytes per second (MiB/s). This is only valid for `volume_type` of `"gp3"`.
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed
   on instance termination (Default: `true`).
 * `encrypted` - (Optional) Enable volume encryption. (Default: `false`). Must be configured to perform drift detection.
@@ -144,12 +144,12 @@ Each `ebs_block_device` supports the following:
 
 * `device_name` - (Required) The name of the device to mount.
 * `snapshot_id` - (Optional) The Snapshot ID to mount.
-* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`, `"io1"`
-  or `"io2"`. (Default: `"gp2"`).
+* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`, `"gp3"`, `"io1"`, `"io2"`, `"sc1"`, or `"st1"`. (Default: `"gp2"`).
 * `volume_size` - (Optional) The size of the volume in gibibytes (GiB).
 * `iops` - (Optional) The amount of provisioned
   [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
-  This must be set with a `volume_type` of `"io1/io2"`.
+  Only valid for volume_type of `"io1"`, `"io2"` or `"gp3"`.
+* `throughput` - (Optional) The throughput to provision for a volume in mebibytes per second (MiB/s). This is only valid for `volume_type` of `"gp3"`.
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed
   on instance termination (Default: `true`).
 * `encrypted` - (Optional) Enables [EBS
@@ -210,6 +210,18 @@ The `metadata_options` block supports the following:
 * `http_put_response_hop_limit` - (Optional) The desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Can be an integer from `1` to `64`. (Default: `1`).
 
 For more information, see the documentation on the [Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html).
+
+### Enclave Options
+
+-> **NOTE:** Changing `enabled` will cause the resource to be destroyed and re-created.
+
+Enclave options apply to the instance at boot time.
+
+The `enclave_options` block supports the following:
+
+* `enabled` - (Optional) Whether Nitro Enclaves will be enabled on the instance. (Default: `"false"`).
+
+For more information, see the documentation on [Nitro Enclaves](https://docs.aws.amazon.com/enclaves/latest/user/nitro-enclave.html).
 
 ### Example
 

@@ -149,6 +149,27 @@ func TestAccAWSLaunchTemplateDataSource_metadataOptions(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplateDataSource_enclaveOptions(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_launch_template.test"
+	resourceName := "aws_launch_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateDataSourceConfig_enclaveOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "enclave_options.#", resourceName, "enclave_options.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "enclave_options.0.enabled", resourceName, "enclave_options.0.enabled"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchTemplateDataSource_associatePublicIPAddress(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_launch_template.test"
@@ -336,6 +357,22 @@ resource "aws_launch_template" "test" {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
+  }
+}
+
+data "aws_launch_template" "test" {
+  name = aws_launch_template.test.name
+}
+`, rName)
+}
+
+func testAccAWSLaunchTemplateDataSourceConfig_enclaveOptions(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  enclave_options {
+    enabled = true
   }
 }
 

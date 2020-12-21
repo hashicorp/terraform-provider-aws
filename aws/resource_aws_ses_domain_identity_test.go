@@ -70,7 +70,7 @@ func testSweepSesIdentities(region, identityType string) error {
 func TestAccAWSSESDomainIdentity_basic(t *testing.T) {
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com",
-		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+		acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
@@ -91,7 +91,7 @@ func TestAccAWSSESDomainIdentity_basic(t *testing.T) {
 func TestAccAWSSESDomainIdentity_disappears(t *testing.T) {
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com",
-		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+		acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
@@ -115,7 +115,7 @@ func TestAccAWSSESDomainIdentity_disappears(t *testing.T) {
 func TestAccAWSSESDomainIdentity_trailingPeriod(t *testing.T) {
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com.",
-		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+		acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },

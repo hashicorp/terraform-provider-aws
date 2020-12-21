@@ -150,6 +150,7 @@ The following arguments are supported:
 * `tags` - (Optional) A map of tags to assign to the launch template.
 * `user_data` - The Base64-encoded user data to provide when launching the instance.
 * `hibernation_options` - The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
+* `enclave_options` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
 
 ### Block devices
 
@@ -179,7 +180,7 @@ The `ebs` block supports the following:
 * `kms_key_id` - The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use when creating the encrypted volume.
  `encrypted` must be set to `true` when this is set.
 * `snapshot_id` - The Snapshot ID to mount.
-* `thoughput` - The throughput to provision for a `gp3` volume, with a maximum of 1,000 MiB/s.
+* `throughput` - The throughput to provision for a `gp3` volume, with a maximum of 1,000 MiB/s.
 * `volume_size` - The size of the volume in gigabytes.
 * `volume_type` - The volume type. Can be `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1` (Default: `gp2`).
 
@@ -323,6 +324,14 @@ The `placement` block supports the following:
 The `hibernation_options` block supports the following:
 
 * `configured` - If set to `true`, the launched EC2 instance will hibernation enabled.
+
+### Enclave Options
+
+The `enclave_options` block supports the following:
+
+* `enabled` - If set to `true`, Nitro Enclaves will be enabled on the instance.
+
+For more information, see the documentation on [Nitro Enclaves](https://docs.aws.amazon.com/enclaves/latest/user/nitro-enclave.html).
 
 ### Tag Specifications
 

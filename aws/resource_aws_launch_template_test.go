@@ -1039,6 +1039,46 @@ func TestAccAWSLaunchTemplate_metadataOptions(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_enclaveOptions(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_enclaveOptions(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "enclave_options.0.enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_enclaveOptions(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "enclave_options.0.enabled", "false"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_enclaveOptions(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "enclave_options.0.enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchTemplate_hibernation(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
@@ -1954,6 +1994,18 @@ resource "aws_launch_template" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAWSLaunchTemplateConfig_enclaveOptions(rName string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  enclave_options {
+    enabled = %[2]t
+  }
+}
+`, rName, enabled)
 }
 
 func testAccAWSLaunchTemplateConfigHibernation(rName string, enabled bool) string {
