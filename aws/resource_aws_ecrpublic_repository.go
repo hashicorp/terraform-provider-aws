@@ -39,8 +39,8 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 			},
 			"catalog_data": {
 				Type:     schema.TypeList,
-				Optional: true,
 				MaxItems: 1,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"about_text": {
@@ -55,10 +55,6 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-						},
-						"created_at": {
-							Type:     schema.TypeString,
-							Computed: true,
 						},
 						"description": {
 							Type:         schema.TypeString,
@@ -78,25 +74,13 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
+								ValidateFunc: validation.StringInSlice([]string{
+									"ARM",
+									"ARM 64",
+									"x86",
+									"x86-64",
+								}, false),
 							},
-							ValidateFunc: validation.StringInSlice([]string{
-								"ARM",
-								"ARM 64",
-								"x86",
-								"x86-64",
-							}, false),
-						},
-						"registry_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"repository_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"repository_uri": {
-							Type:     schema.TypeString,
-							Computed: true,
 						},
 						"usage_text": {
 							Type:         schema.TypeString,
@@ -106,7 +90,22 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 					},
 				},
 				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
-				ForceNew:         true,
+			},
+			"created_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"registry_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"repository_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"repository_uri": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -116,7 +115,7 @@ func resourceAwsEcrPublicRepositoryCreate(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).ecrpublicconn
 
 	input := ecrpublic.CreateRepositoryInput{
-		RepositoryName: aws.String(d.Get("name").(string)),
+		RepositoryName: aws.String(d.Get("repository_name").(string)),
 	}
 
 	if v, ok := d.GetOk("catalog_data"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -141,7 +140,7 @@ func resourceAwsEcrPublicRepositoryCreate(d *schema.ResourceData, meta interface
 func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecrpublicconn
 
-	log.Printf("[DEBUG] Reading ECR PUblic repository %s", d.Id())
+	log.Printf("[DEBUG] Reading ECR Public repository %s", d.Id())
 	var out *ecrpublic.DescribeRepositoriesOutput
 	input := &ecrpublic.DescribeRepositoriesInput{
 		RepositoryNames: aws.StringSlice([]string{d.Id()}),
@@ -241,7 +240,7 @@ func resourceAwsEcrPublicRepositoryDelete(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error deleting ECR Public repository: %s", err)
 	}
 
-	log.Printf("[DEBUG] repository %q deleted.", d.Get("name").(string))
+	log.Printf("[DEBUG] repository %q deleted.", d.Get("repository_name").(string))
 
 	return nil
 }
