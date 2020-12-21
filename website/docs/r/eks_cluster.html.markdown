@@ -81,6 +81,8 @@ resource "aws_iam_role_policy_attachment" "example-AmazonEKSVPCResourceControlle
 
 -> The below configuration uses [`depends_on`](/docs/configuration/resources.html#depends_on-explicit-resource-dependencies) to prevent ordering issues with EKS automatically creating the log group first and a variable for naming consistency. Other ordering and naming methodologies may be more appropriate for your environment.
 
+-> Be carreful the logroup name's /aws/eks/${var.cluster_name}/cluster is mandatory until EKS API accept loggroup name's as parameter.
+
 ```hcl
 variable "cluster_name" {
   default = "example"
