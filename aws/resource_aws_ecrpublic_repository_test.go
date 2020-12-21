@@ -94,6 +94,28 @@ func TestAccAWSEcrPublicRepository_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcrPublicRepository_disappears(t *testing.T) {
+	var v ecrpublic.Repository
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecrpublic_repository.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcrPublicRepositoryConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEcrPublicRepository(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEcrPublicRepositoryExists(name string, res *ecrpublic.Repository) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -173,6 +195,18 @@ func testAccAWSEcrPublicRepositoryConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %q
+}
+`, rName)
+}
+
+func testAccAWSEcrPublicRepositoryCatalogDataConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecrpublic_repository" "test" {
+  repository_name = %q
+  catalog_data = {
+	  about_text = "About Text"
+	  architectures = ["ARM"]
+  }
 }
 `, rName)
 }
