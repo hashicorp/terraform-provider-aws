@@ -91,10 +91,6 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 				},
 				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 			},
-			"created_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"registry_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -175,7 +171,6 @@ func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}
 	repository := out.Repositories[0]
 
 	d.Set("repository_name", d.Id())
-	d.Set("created_at", aws.TimeValue(repository.CreatedAt).Format(time.RFC3339))
 	d.Set("registry_id", repository.RegistryId)
 	d.Set("repository_arn", repository.RepositoryArn)
 	d.Set("repository_uri", repository.RepositoryUri)

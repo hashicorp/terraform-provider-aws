@@ -80,10 +80,9 @@ func TestAccAWSEcrPublicRepository_basic(t *testing.T) {
 				Config: testAccAWSEcrPublicRepositoryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
-					// testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ecr", fmt.Sprintf("repository/%s", rName)),
-					// resource.TestCheckResourceAttr(resourceName, "name", rName),
-					// testAccCheckAWSEcrRepositoryRegistryID(resourceName),
-					// testAccCheckAWSEcrRepositoryRepositoryURL(resourceName, rName),
+					resource.TestCheckResourceAttr(resourceName, "repository_name", rName),
+					testAccCheckAWSEcrPublicRepositoryRegistryID(resourceName),
+					testAccCheckAWSEcrPublicRepositoryRepositoryARN(resourceName, rName),
 				),
 			},
 			{
@@ -154,6 +153,20 @@ func testAccCheckAWSEcrPublicRepositoryDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckAWSEcrPublicRepositoryRegistryID(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attributeValue := testAccGetAccountID()
+		return resource.TestCheckResourceAttr(resourceName, "registry_id", attributeValue)(s)
+	}
+}
+
+func testAccCheckAWSEcrPublicRepositoryRepositoryARN(resourceName string, rName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attributeValue := fmt.Sprintf("arn:aws:ecr-public::%s:repository/%s", testAccGetAccountID(), rName)
+		return resource.TestCheckResourceAttr(resourceName, "repository_arn", attributeValue)(s)
+	}
 }
 
 func testAccAWSEcrPublicRepositoryConfig(rName string) string {
