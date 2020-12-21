@@ -366,7 +366,7 @@ func testAccAWSEcrPublicRepositoryCatalogDataConfigAboutText(rName string) strin
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %q
   catalog_data {
-	  about_text = "About Text"
+    about_text = "About Text"
   }
 }
 `, rName)
@@ -377,7 +377,7 @@ func testAccAWSEcrPublicRepositoryCatalogDataConfigArchitectures(rName string) s
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %q
   catalog_data {
-	  architectures = ["Linux"]
+    architectures = ["Linux"]
   }
 }
 `, rName)
@@ -388,7 +388,7 @@ func testAccAWSEcrPublicRepositoryCatalogDataConfigDescription(rName string) str
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %q
   catalog_data {
-	  description = "Description"
+    description = "Description"
   }
 }
 `, rName)
@@ -399,7 +399,7 @@ func testAccAWSEcrPublicRepositoryCatalogDataConfigOperatingSystems(rName string
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %q
   catalog_data {
-	  operating_systems = ["ARM"]
+    operating_systems = ["ARM"]
   }
 }
 `, rName)
@@ -410,7 +410,7 @@ func testAccAWSEcrPublicRepositoryCatalogDataConfigUsageText(rName string) strin
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %q
   catalog_data {
-	  usage_text = "Usage Text"
+    usage_text = "Usage Text"
   }
 }
 `, rName)
@@ -421,7 +421,7 @@ func testAccAWSEcrPublicRepositoryCatalogDataConfigLogoImageBlob(rName string) s
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %q
   catalog_data {
-	  logo_image_blob = filebase64("test-fixtures/terraform_logo.png")
+    logo_image_blob = filebase64("test-fixtures/terraform_logo.png")
   }
 }
 `, rName)
