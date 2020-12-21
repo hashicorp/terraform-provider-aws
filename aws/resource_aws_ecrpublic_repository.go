@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log"
 	"regexp"
@@ -306,7 +307,8 @@ func expandEcrPublicRepositoryCatalogData(tfMap map[string]interface{}) *ecrpubl
 	}
 
 	if v, ok := tfMap["logo_image_blob"].(string); ok && len(v) > 0 {
-		repositoryCatalogDataInput.LogoImageBlob = []byte(v)
+		data, _ := base64.StdEncoding.DecodeString(v)
+		repositoryCatalogDataInput.LogoImageBlob = data
 	}
 
 	if v, ok := tfMap["operating_systems"].([]interface{}); ok && len(v) > 0 {
