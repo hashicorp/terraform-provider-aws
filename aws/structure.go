@@ -5547,69 +5547,74 @@ func expandAppmeshGrpcRoute(vGrpcRoute []interface{}) *appmesh.GrpcRoute {
 		}
 	}
 
-	if vGrpcRouteMatch, ok := mGrpcRoute["match"].([]interface{}); ok && len(vGrpcRouteMatch) > 0 && vGrpcRouteMatch[0] != nil {
+	if vGrpcRouteMatch, ok := mGrpcRoute["match"].([]interface{}); ok {
 		grpcRouteMatch := &appmesh.GrpcRouteMatch{}
 
-		mGrpcRouteMatch := vGrpcRouteMatch[0].(map[string]interface{})
+		// Empty match is allowed.
+		// https://github.com/hashicorp/terraform-provider-aws/issues/16816.
 
-		if vMethodName, ok := mGrpcRouteMatch["method_name"].(string); ok && vMethodName != "" {
-			grpcRouteMatch.MethodName = aws.String(vMethodName)
-		}
-		if vServiceName, ok := mGrpcRouteMatch["service_name"].(string); ok && vServiceName != "" {
-			grpcRouteMatch.ServiceName = aws.String(vServiceName)
-		}
+		if len(vGrpcRouteMatch) > 0 && vGrpcRouteMatch[0] != nil {
+			mGrpcRouteMatch := vGrpcRouteMatch[0].(map[string]interface{})
 
-		if vGrpcRouteMetadatas, ok := mGrpcRouteMatch["metadata"].(*schema.Set); ok && vGrpcRouteMetadatas.Len() > 0 {
-			grpcRouteMetadatas := []*appmesh.GrpcRouteMetadata{}
-
-			for _, vGrpcRouteMetadata := range vGrpcRouteMetadatas.List() {
-				grpcRouteMetadata := &appmesh.GrpcRouteMetadata{}
-
-				mGrpcRouteMetadata := vGrpcRouteMetadata.(map[string]interface{})
-
-				if vInvert, ok := mGrpcRouteMetadata["invert"].(bool); ok {
-					grpcRouteMetadata.Invert = aws.Bool(vInvert)
-				}
-				if vName, ok := mGrpcRouteMetadata["name"].(string); ok && vName != "" {
-					grpcRouteMetadata.Name = aws.String(vName)
-				}
-
-				if vMatch, ok := mGrpcRouteMetadata["match"].([]interface{}); ok && len(vMatch) > 0 && vMatch[0] != nil {
-					grpcRouteMetadata.Match = &appmesh.GrpcRouteMetadataMatchMethod{}
-
-					mMatch := vMatch[0].(map[string]interface{})
-
-					if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
-						grpcRouteMetadata.Match.Exact = aws.String(vExact)
-					}
-					if vPrefix, ok := mMatch["prefix"].(string); ok && vPrefix != "" {
-						grpcRouteMetadata.Match.Prefix = aws.String(vPrefix)
-					}
-					if vRegex, ok := mMatch["regex"].(string); ok && vRegex != "" {
-						grpcRouteMetadata.Match.Regex = aws.String(vRegex)
-					}
-					if vSuffix, ok := mMatch["suffix"].(string); ok && vSuffix != "" {
-						grpcRouteMetadata.Match.Suffix = aws.String(vSuffix)
-					}
-
-					if vRange, ok := mMatch["range"].([]interface{}); ok && len(vRange) > 0 && vRange[0] != nil {
-						grpcRouteMetadata.Match.Range = &appmesh.MatchRange{}
-
-						mRange := vRange[0].(map[string]interface{})
-
-						if vEnd, ok := mRange["end"].(int); ok && vEnd > 0 {
-							grpcRouteMetadata.Match.Range.End = aws.Int64(int64(vEnd))
-						}
-						if vStart, ok := mRange["start"].(int); ok && vStart > 0 {
-							grpcRouteMetadata.Match.Range.Start = aws.Int64(int64(vStart))
-						}
-					}
-				}
-
-				grpcRouteMetadatas = append(grpcRouteMetadatas, grpcRouteMetadata)
+			if vMethodName, ok := mGrpcRouteMatch["method_name"].(string); ok && vMethodName != "" {
+				grpcRouteMatch.MethodName = aws.String(vMethodName)
+			}
+			if vServiceName, ok := mGrpcRouteMatch["service_name"].(string); ok && vServiceName != "" {
+				grpcRouteMatch.ServiceName = aws.String(vServiceName)
 			}
 
-			grpcRouteMatch.Metadata = grpcRouteMetadatas
+			if vGrpcRouteMetadatas, ok := mGrpcRouteMatch["metadata"].(*schema.Set); ok && vGrpcRouteMetadatas.Len() > 0 {
+				grpcRouteMetadatas := []*appmesh.GrpcRouteMetadata{}
+
+				for _, vGrpcRouteMetadata := range vGrpcRouteMetadatas.List() {
+					grpcRouteMetadata := &appmesh.GrpcRouteMetadata{}
+
+					mGrpcRouteMetadata := vGrpcRouteMetadata.(map[string]interface{})
+
+					if vInvert, ok := mGrpcRouteMetadata["invert"].(bool); ok {
+						grpcRouteMetadata.Invert = aws.Bool(vInvert)
+					}
+					if vName, ok := mGrpcRouteMetadata["name"].(string); ok && vName != "" {
+						grpcRouteMetadata.Name = aws.String(vName)
+					}
+
+					if vMatch, ok := mGrpcRouteMetadata["match"].([]interface{}); ok && len(vMatch) > 0 && vMatch[0] != nil {
+						grpcRouteMetadata.Match = &appmesh.GrpcRouteMetadataMatchMethod{}
+
+						mMatch := vMatch[0].(map[string]interface{})
+
+						if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
+							grpcRouteMetadata.Match.Exact = aws.String(vExact)
+						}
+						if vPrefix, ok := mMatch["prefix"].(string); ok && vPrefix != "" {
+							grpcRouteMetadata.Match.Prefix = aws.String(vPrefix)
+						}
+						if vRegex, ok := mMatch["regex"].(string); ok && vRegex != "" {
+							grpcRouteMetadata.Match.Regex = aws.String(vRegex)
+						}
+						if vSuffix, ok := mMatch["suffix"].(string); ok && vSuffix != "" {
+							grpcRouteMetadata.Match.Suffix = aws.String(vSuffix)
+						}
+
+						if vRange, ok := mMatch["range"].([]interface{}); ok && len(vRange) > 0 && vRange[0] != nil {
+							grpcRouteMetadata.Match.Range = &appmesh.MatchRange{}
+
+							mRange := vRange[0].(map[string]interface{})
+
+							if vEnd, ok := mRange["end"].(int); ok && vEnd > 0 {
+								grpcRouteMetadata.Match.Range.End = aws.Int64(int64(vEnd))
+							}
+							if vStart, ok := mRange["start"].(int); ok && vStart > 0 {
+								grpcRouteMetadata.Match.Range.Start = aws.Int64(int64(vStart))
+							}
+						}
+					}
+
+					grpcRouteMetadatas = append(grpcRouteMetadatas, grpcRouteMetadata)
+				}
+
+				grpcRouteMatch.Metadata = grpcRouteMetadatas
+			}
 		}
 
 		grpcRoute.Match = grpcRouteMatch
