@@ -117,7 +117,7 @@ func resourceAwsIotThingGroupCreate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	d.SetId(*out.ThingGroupName)
+	d.SetId(aws.StringValue(out.ThingGroupName))
 	return resourceAwsIotThingGroupRead(d, meta)
 }
 
