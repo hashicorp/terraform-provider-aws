@@ -303,6 +303,10 @@ func expandEcrPublicRepositoryCatalogData(tfMap map[string]interface{}) *ecrpubl
 		repositoryCatalogDataInput.Architectures = expandStringList(v)
 	}
 
+	if v, ok := tfMap["description"].(string); ok && v != "" {
+		repositoryCatalogDataInput.Description = aws.String(v)
+	}
+
 	if v, ok := tfMap["logo_image_blob"].([]byte); ok && len(v) > 0 {
 		repositoryCatalogDataInput.LogoImageBlob = v
 	}
@@ -312,7 +316,7 @@ func expandEcrPublicRepositoryCatalogData(tfMap map[string]interface{}) *ecrpubl
 	}
 
 	if v, ok := tfMap["usage_text"].(string); ok && v != "" {
-		repositoryCatalogDataInput.AboutText = aws.String(v)
+		repositoryCatalogDataInput.UsageText = aws.String(v)
 	}
 
 	return repositoryCatalogDataInput
