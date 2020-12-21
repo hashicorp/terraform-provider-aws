@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -19,7 +20,10 @@ func resourceAwsCloudWatchEventBusPolicy() *schema.Resource {
 		Update: resourceAwsCloudWatchEventBusPolicyUpdate,
 		Delete: resourceAwsCloudWatchEventBusPolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("event_bus_name", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -70,12 +74,13 @@ func resourceAwsCloudWatchEventBusPolicyRead(d *schema.ResourceData, meta interf
 		Name: aws.String(eventBusName),
 	}
 	var output *events.DescribeEventBusOutput
+	var err error
 	var policy *string
 
 	// Especially with concurrent PutPermission calls there can be a slight delay
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		log.Printf("[DEBUG] Reading CloudWatch Events bus: %s", input)
-		output, err := conn.DescribeEventBus(&input)
+		output, err = conn.DescribeEventBus(&input)
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("reading CloudWatch Events permission (%s) failed: %w", d.Id(), err))
 		}
@@ -109,7 +114,16 @@ func resourceAwsCloudWatchEventBusPolicyRead(d *schema.ResourceData, meta interf
 	}
 	d.Set("event_bus_name", busName)
 
-	d.Set("policy", policy)
+	log.Printf("[WARN] about to unmarshal json")
+	policyBytes := []byte(*policy)
+	log.Printf("[WARN] converted policy into byte array")
+	var policyObject interface{}
+	if err := json.Unmarshal(policyBytes, &policyObject); err != nil {
+		return fmt.Errorf("error parsing json from policy for CloudWatch EventBus (%s): %w", d.Id(), err)
+	}
+	marshalled, _ := json.Marshal(policyObject)
+	log.Printf("[WARN] finished unmarshalling json")
+	d.Set("policy", string(marshalled))
 
 	return nil
 }

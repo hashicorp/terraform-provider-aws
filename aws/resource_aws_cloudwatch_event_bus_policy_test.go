@@ -58,7 +58,7 @@ func testAccCheckAWSCloudwatchEventBusPolicyExists(pr string) resource.TestCheck
 		if err != nil {
 			return fmt.Errorf("Reading CloudWatch Events bus policy for '%s' failed: %w", pr, err)
 		}
-		if describedEventBus.Policy == nil {
+		if describedEventBus.Policy == nil || len(*describedEventBus.Policy) == 0 {
 			return fmt.Errorf("Not found: %s", pr)
 		}
 
