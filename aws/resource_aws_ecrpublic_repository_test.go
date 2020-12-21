@@ -229,6 +229,34 @@ func TestAccAWSEcrPublicRepository_catalogdata_usagetext(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcrPublicRepository_catalogdata_logoimageblob(t *testing.T) {
+	var v ecrpublic.Repository
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecrpublic_repository.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcrPublicRepositoryCatalogDataConfigLogoImageBlob(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "catalog_data.0.logo_image_blob"),
+					resource.TestCheckResourceAttrSet(resourceName, "catalog_data.0.logo_image_url"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEcrPublicRepository_disappears(t *testing.T) {
 	var v ecrpublic.Repository
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -384,6 +412,17 @@ resource "aws_ecrpublic_repository" "test" {
   repository_name = %q
   catalog_data {
 	  usage_text = "Usage Text"
+  }
+}
+`, rName)
+}
+
+func testAccAWSEcrPublicRepositoryCatalogDataConfigLogoImageBlob(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecrpublic_repository" "test" {
+  repository_name = %q
+  catalog_data {
+	  logo_image_blob = filebase64("test-fixtures/terraform_logo.png")
   }
 }
 `, rName)

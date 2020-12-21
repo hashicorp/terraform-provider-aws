@@ -72,14 +72,9 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 						"operating_systems": {
 							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 50,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
-								ValidateFunc: validation.StringInSlice([]string{
-									"ARM",
-									"ARM 64",
-									"x86",
-									"x86-64",
-								}, false),
 							},
 						},
 						"usage_text": {
@@ -181,8 +176,11 @@ func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}
 		RegistryId:     repository.RegistryId,
 	}
 
-	// not sure about error handling for this second call
 	catalogOut, err = conn.GetRepositoryCatalogData(catalogInput)
+
+	if err != nil {
+		return fmt.Errorf("error reading catalog data for ECR Public repository: %s", err)
+	}
 
 	if catalogOut != nil {
 		d.Set("catalog_data", []interface{}{flattenEcrPublicRepositoryCatalogData(catalogOut)})
@@ -307,8 +305,8 @@ func expandEcrPublicRepositoryCatalogData(tfMap map[string]interface{}) *ecrpubl
 		repositoryCatalogDataInput.Description = aws.String(v)
 	}
 
-	if v, ok := tfMap["logo_image_blob"].([]byte); ok && len(v) > 0 {
-		repositoryCatalogDataInput.LogoImageBlob = v
+	if v, ok := tfMap["logo_image_blob"].(string); ok && len(v) > 0 {
+		repositoryCatalogDataInput.LogoImageBlob = []byte(v)
 	}
 
 	if v, ok := tfMap["operating_systems"].([]interface{}); ok && len(v) > 0 {
