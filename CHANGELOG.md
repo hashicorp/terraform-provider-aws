@@ -106,7 +106,7 @@ BUG FIXES
 
 FEATURES
 
-* **New Data Source:** `aws_glue_registry` ([#16418](https://github.com/hashicorp/terraform-provider-aws/issues/16418))
+* **New Resource:** `aws_glue_registry` ([#16418](https://github.com/hashicorp/terraform-provider-aws/issues/16418))
 
 ENHANCEMENTS
 
