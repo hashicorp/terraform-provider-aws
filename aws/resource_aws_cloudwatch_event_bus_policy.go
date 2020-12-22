@@ -114,16 +114,7 @@ func resourceAwsCloudWatchEventBusPolicyRead(d *schema.ResourceData, meta interf
 	}
 	d.Set("event_bus_name", busName)
 
-	log.Printf("[WARN] about to unmarshal json")
-	policyBytes := []byte(*policy)
-	log.Printf("[WARN] converted policy into byte array")
-	var policyObject interface{}
-	if err := json.Unmarshal(policyBytes, &policyObject); err != nil {
-		return fmt.Errorf("error parsing json from policy for CloudWatch EventBus (%s): %w", d.Id(), err)
-	}
-	marshalled, _ := json.Marshal(policyObject)
-	log.Printf("[WARN] finished unmarshalling json")
-	d.Set("policy", string(marshalled))
+	d.Set("policy", policy)
 
 	return nil
 }
