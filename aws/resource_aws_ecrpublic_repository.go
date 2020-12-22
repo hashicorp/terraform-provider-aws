@@ -3,9 +3,7 @@ package aws
 import (
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"regexp"
 	"time"
 
@@ -67,6 +65,7 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 						"logo_image_blob": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
 						"logo_image_url": {
 							Type:     schema.TypeString,
 							Computed: true,
