@@ -60,7 +60,7 @@ func resourceAwsKinesisStream() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      24,
-				ValidateFunc: validation.IntBetween(24, 168),
+				ValidateFunc: validation.IntBetween(24, 8760),
 			},
 
 			"shard_level_metrics": {
