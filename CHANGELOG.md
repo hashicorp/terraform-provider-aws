@@ -1,3 +1,9 @@
+## 3.23.0 (Unreleased)
+
+ENHANCEMENTS
+
+* resource/aws_kinesis_stream: Update `retention_period` argument plan-time validation to include up to 8760 hours [GH-16608]
+
 ## 3.22.0 (December 18, 2020)
 
 FEATURES
