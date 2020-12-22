@@ -74,7 +74,7 @@ resource "aws_cloudwatch_event_bus" "test" {
 
 data "aws_iam_policy_document" "access" {
   statement {
-    sid = "test-resource-policy"
+    sid    = "test-resource-policy"
     effect = "Allow"
     principals {
       identifiers = ["ecs.amazonaws.com"]
