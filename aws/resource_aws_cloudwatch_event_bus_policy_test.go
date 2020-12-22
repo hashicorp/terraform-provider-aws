@@ -74,20 +74,16 @@ resource "aws_cloudwatch_event_bus" "test" {
 
 data "aws_iam_policy_document" "access" {
   statement {
-	sid = "test-resource-policy"
-
+    sid = "test-resource-policy"
     effect = "Allow"
-
     principals {
       identifiers = ["ecs.amazonaws.com"]
       type        = "Service"
     }
-
     actions = [
       "events:PutEvents",
       "events:PutRule"
     ]
-
     resources = [
       aws_cloudwatch_event_bus.test.arn,
     ]
@@ -95,7 +91,7 @@ data "aws_iam_policy_document" "access" {
 }
 
 resource "aws_cloudwatch_event_bus_policy" "test" {
-  policy    = data.aws_iam_policy_document.access.json
+  policy         = data.aws_iam_policy_document.access.json
   event_bus_name = aws_cloudwatch_event_bus.test.name
 }
 `, name)
