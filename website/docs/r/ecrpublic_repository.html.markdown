@@ -65,5 +65,5 @@ configuration options:
 ECR Repositories can be imported using the `name`, e.g.
 
 ```
-$ terraform import aws_ecrpublic_repository.service test-service
+$ terraform import aws_ecrpublic_repository.example example
 ```
