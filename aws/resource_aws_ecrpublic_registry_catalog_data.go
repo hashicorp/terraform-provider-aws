@@ -25,7 +25,7 @@ func resourceAwsEcrPublicRegistryCatalogData() *schema.Resource {
 	}
 }
 
-func resourceAwsEcrRegistryCatalogDataRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEcrPublicRegistryCatalogDataRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecrpublicconn
 
 	var out *ecrpublic.GetRegistryCatalogDataOutput
@@ -34,7 +34,7 @@ func resourceAwsEcrRegistryCatalogDataRead(d *schema.ResourceData, meta interfac
 	out, err := conn.GetRegistryCatalogData(input)
 
 	if err != nil {
-		return fmt.Errorf("error reading ECR Public Registry catalog data", err)
+		return fmt.Errorf("error reading ECR Public Registry catalog data: %s", err)
 	}
 
 	registryCatalogData := out.RegistryCatalogData
@@ -44,7 +44,7 @@ func resourceAwsEcrRegistryCatalogDataRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsEcrRegistryCatalogDataUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEcrPublicRegistryCatalogDataUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecrpublicconn
 
 	if d.HasChange("display_name") {
@@ -55,7 +55,7 @@ func resourceAwsEcrRegistryCatalogDataUpdate(d *schema.ResourceData, meta interf
 		_, err := conn.PutRegistryCatalogData(input)
 
 		if err != nil {
-			return fmt.Errorf("error changing ECR Public Registry catalog data", err)
+			return fmt.Errorf("error changing ECR Public Registry catalog data: %s", err)
 		}
 	}
 

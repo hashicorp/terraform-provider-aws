@@ -620,6 +620,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_transit_gateway_route_table_propagation":         resourceAwsEc2TransitGatewayRouteTablePropagation(),
 			"aws_ec2_transit_gateway_vpc_attachment":                  resourceAwsEc2TransitGatewayVpcAttachment(),
 			"aws_ec2_transit_gateway_vpc_attachment_accepter":         resourceAwsEc2TransitGatewayVpcAttachmentAccepter(),
+			"aws_ecrpublic_registry_catalog_data":                     resourceAwsEcrPublicRegistryCatalogData(),
 			"aws_ecr_lifecycle_policy":                                resourceAwsEcrLifecyclePolicy(),
 			"aws_ecr_repository":                                      resourceAwsEcrRepository(),
 			"aws_ecr_repository_policy":                               resourceAwsEcrRepositoryPolicy(),
