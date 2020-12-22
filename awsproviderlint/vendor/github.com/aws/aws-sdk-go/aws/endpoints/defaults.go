@@ -8553,6 +8553,25 @@ var awsusgovPartition = partition{
 				"us-gov-west-1": endpoint{},
 			},
 		},
+		"fsx": service{
+
+			Endpoints: endpoints{
+				"fips-prod-us-gov-east-1": endpoint{
+					Hostname: "fsx-fips.us-gov-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-east-1",
+					},
+				},
+				"fips-prod-us-gov-west-1": endpoint{
+					Hostname: "fsx-fips.us-gov-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-west-1",
+					},
+				},
+				"us-gov-east-1": endpoint{},
+				"us-gov-west-1": endpoint{},
+			},
+		},
 		"glacier": service{
 
 			Endpoints: endpoints{
