@@ -1,19 +1,24 @@
 package aws
 
 import (
+	"context"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/prometheusservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/prometheusservice/waiter"
 )
 
 func resourceAwsPrometheusWorkspace() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsPrometheusWorkspaceCreate,
-		Read:   resourceAwsPrometheusWorkspaceRead,
-		Update: resourceAwsPrometheusWorkspaceUpdate,
-		Delete: resourceAwsPrometheusWorkspaceDelete,
+		CreateContext: resourceAwsPrometheusWorkspaceCreate,
+		ReadContext:   resourceAwsPrometheusWorkspaceRead,
+		UpdateContext: resourceAwsPrometheusWorkspaceUpdate,
+		DeleteContext: resourceAwsPrometheusWorkspaceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -22,10 +27,6 @@ func resourceAwsPrometheusWorkspace() *schema.Resource {
 			"alias": {
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"prometheus_endpoint": {
 				Type:     schema.TypeString,
@@ -39,73 +40,89 @@ func resourceAwsPrometheusWorkspace() *schema.Resource {
 	}
 }
 
-func resourceAwsPrometheusWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsPrometheusWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Reading AMP workspace %s", d.Id())
-	conn := meta.(*AWSClient).prometheusconn
+	conn := meta.(*AWSClient).prometheusserviceconn
 
-	details, err := conn.DescribeWorkspace(&prometheusservice.DescribeWorkspaceInput{
+	details, err := conn.DescribeWorkspaceWithContext(ctx, &prometheusservice.DescribeWorkspaceInput{
 		WorkspaceId: aws.String(d.Id()),
 	})
-	if err != nil {
-		return err
+	if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Prometheus Workspace (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	d.Set("arn", aws.StringValue(details.Workspace.Arn))
-	d.Set("prometheus_endpoint", aws.StringValue(details.Workspace.PrometheusEndpoint))
-	d.Set("status", aws.StringValue(details.Workspace.Status.StatusCode))
-	if details.Workspace.Alias != nil {
-		d.Set("alias", aws.StringValue(details.Workspace.Alias))
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error reading Prometheus Workspace (%s): %w", d.Id(), err))
+	}
+
+	if details.Workspace != nil {
+		ws := details.Workspace
+		if ws.Arn != nil {
+			d.Set("arn", ws.Arn)
+		}
+		if ws.PrometheusEndpoint != nil {
+			d.Set("prometheus_endpoint", ws.PrometheusEndpoint)
+		}
+		if ws.Alias != nil {
+			d.Set("alias", ws.Alias)
+		}
 	}
 
 	return nil
 }
 
-func resourceAwsPrometheusWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsPrometheusWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Updating AMP workspace %s", d.Id())
-
-	// today, AMP only supports updating the workspace alias
-	if !d.HasChange("alias") {
-		return nil
-	}
 
 	req := &prometheusservice.UpdateWorkspaceAliasInput{
 		WorkspaceId: aws.String(d.Id()),
 	}
 	if v, ok := d.GetOk("alias"); ok {
-		req.SetAlias(v.(string))
+		req.Alias = aws.String(v.(string))
 	}
-	conn := meta.(*AWSClient).prometheusconn
-	if _, err := conn.UpdateWorkspaceAlias(req); err != nil {
-		return err
+	conn := meta.(*AWSClient).prometheusserviceconn
+	if _, err := conn.UpdateWorkspaceAliasWithContext(ctx, req); err != nil {
+		return diag.FromErr(fmt.Errorf("error updating Prometheus WorkSpace (%s): %w", d.Id(), err))
 	}
 
-	return resourceAwsPrometheusWorkspaceRead(d, meta)
+	return resourceAwsPrometheusWorkspaceRead(ctx, d, meta)
 }
 
-func resourceAwsPrometheusWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsPrometheusWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Creating AMP workspace %s", d.Id())
-	conn := meta.(*AWSClient).prometheusconn
+	conn := meta.(*AWSClient).prometheusserviceconn
 
 	req := &prometheusservice.CreateWorkspaceInput{}
 	if v, ok := d.GetOk("alias"); ok {
-		req.SetAlias(v.(string))
+		req.Alias = aws.String(v.(string))
 	}
 
-	result, err := conn.CreateWorkspace(req)
+	result, err := conn.CreateWorkspaceWithContext(ctx, req)
 	if err != nil {
-		return err
+		return diag.FromErr(fmt.Errorf("error creating Prometheus WorkSpace (%s): %w", d.Id(), err))
 	}
 	d.SetId(aws.StringValue(result.WorkspaceId))
 
-	return resourceAwsPrometheusWorkspaceRead(d, meta)
+	if _, err := waiter.WorkspaceCreated(ctx, conn, d.Id()); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for Workspace (%s) to be created: %w", d.Id(), err))
+	}
+
+	return resourceAwsPrometheusWorkspaceRead(ctx, d, meta)
 }
 
-func resourceAwsPrometheusWorkspaceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsPrometheusWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting AMP workspace %s", d.Id())
-	conn := meta.(*AWSClient).prometheusconn
+	conn := meta.(*AWSClient).prometheusserviceconn
 
-	_, err := conn.DeleteWorkspace(&prometheusservice.DeleteWorkspaceInput{
+	_, err := conn.DeleteWorkspaceWithContext(ctx, &prometheusservice.DeleteWorkspaceInput{
 		WorkspaceId: aws.String(d.Id()),
 	})
-	return err
+
+	if _, err := waiter.WorkspaceDeleted(ctx, conn, d.Id()); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for Workspace (%s) to be deleted: %w", d.Id(), err))
+	}
+
+	return diag.FromErr(err)
 }

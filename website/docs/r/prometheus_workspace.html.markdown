@@ -1,16 +1,16 @@
 ---
-subcategory: "Prometheus Service (AMP)"
+subcategory: "Amazon Managed Service for Prometheus (AMP)"
 layout: "aws"
 page_title: "AWS: aws_prometheus_workspace"
 description: |-
-  Creates a prometheus workspace
+  Manages an Amazon Managed Service for Prometheus (AMP) Workspace
 ---
 
 # Resource: aws_prometheus_workspace
 
-Provides a managed prometheus workspace.
+Manages an Amazon Managed Service for Prometheus (AMP) Workspace.
 
--> **Note:** only workspace alias can be updated today
+~> **NOTE:** This AWS functionality is in Preview and may change before General Availability release. Backwards compatibility is not guaranteed between Terraform AWS Provider releases.
 
 ## Example Usage
 
@@ -30,15 +30,15 @@ The following argument is supported:
 
 The following attribute is exported:
 
-* `status` - The current status of the workspace. The possible values are CREATING, ACTIVE, UPDATING, DELETING, and CREATION_FAILED.
+* `arn` - The ARN of the workspace.
 * `alias` - An alias that you assign to this workspace to help you identify it. It does not need to be unique.
 * `prometheus_endpoint` - The Prometheus endpoint available for this workspace.
 
 
 ## Import
 
-AMP Workspaces can be imported using the `arn`, e.g.
+AMP Workspaces can be imported using the identifier, e.g.
 
 ```
-$ terraform import aws_prometheus_workspace.demo arn:aws:aps:us-west-2:123123123:workspace/ws-C6DCB907-F2D7-4D96-957B-66691F865D8B
+$ terraform import aws_prometheus_workspace.demo ws-C6DCB907-F2D7-4D96-957B-66691F865D8B
 ```
