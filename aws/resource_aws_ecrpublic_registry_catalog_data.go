@@ -10,8 +10,10 @@ import (
 
 func resourceAwsEcrPublicRegistryCatalogData() *schema.Resource {
 	return &schema.Resource{
+		Create: resourceAwsEcrPublicRegistryCatalogDataCreate,
 		Read:   resourceAwsEcrPublicRegistryCatalogDataRead,
 		Update: resourceAwsEcrPublicRegistryCatalogDataUpdate,
+		Delete: resourceAwsEcrPublicRegistryCatalogDataDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -23,6 +25,22 @@ func resourceAwsEcrPublicRegistryCatalogData() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceAwsEcrPublicRegistryCatalogDataCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ecrpublicconn
+
+	input := &ecrpublic.PutRegistryCatalogDataInput{
+		DisplayName: aws.String(d.Get("display_name").(string)),
+	}
+
+	_, err := conn.PutRegistryCatalogData(input)
+
+	if err != nil {
+		return fmt.Errorf("error changing ECR Public Registry catalog data: %s", err)
+	}
+
+	return resourceAwsEcrRepositoryRead(d, meta)
 }
 
 func resourceAwsEcrPublicRegistryCatalogDataRead(d *schema.ResourceData, meta interface{}) error {
@@ -60,4 +78,8 @@ func resourceAwsEcrPublicRegistryCatalogDataUpdate(d *schema.ResourceData, meta 
 	}
 
 	return resourceAwsEcrRepositoryRead(d, meta)
+}
+
+func resourceAwsEcrPublicRegistryCatalogDataDelete(d *schema.ResourceData, meta interface{}) error {
+	return nil
 }
