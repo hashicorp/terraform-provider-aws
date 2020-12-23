@@ -263,20 +263,12 @@ func resourceAwsDbInstance() *schema.Resource {
 			"final_snapshot_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-					value := v.(string)
-					if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
-						es = append(es, fmt.Errorf(
-							"only alphanumeric characters and hyphens allowed in %q", k))
-					}
-					if regexp.MustCompile(`--`).MatchString(value) {
-						es = append(es, fmt.Errorf("%q cannot contain two consecutive hyphens", k))
-					}
-					if regexp.MustCompile(`-$`).MatchString(value) {
-						es = append(es, fmt.Errorf("%q cannot end in a hyphen", k))
-					}
-					return
-				},
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+					validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z-]+$`), "must only contain alphanumeric characters and hyphens"),
+					validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end in a hyphen"),
+				),
 			},
 
 			"restore_to_point_in_time": {
