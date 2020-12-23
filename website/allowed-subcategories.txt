@@ -92,6 +92,7 @@ Organizations
 Outposts
 Pinpoint
 Pricing
+Prometheus Service (AMP)
 Quantum Ledger Database (QLDB)
 QuickSight
 RAM
