@@ -236,7 +236,7 @@ load-balanced across replicas
 * `port` - The database port
 * `master_username` - The master username for the database
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted
-* `replication_source_identifier` - ARN of the source DB cluster or DB instance if this DB cluster is created as a Read Replica.
+* `replication_source_identifier` - ARN of the source DB cluster or DB instance if this DB cluster is created as a Read Replica. Removing this value or setting it to `null` in a Terraform configuration will promote the DB cluster to a standalone DB cluster.
 * `hosted_zone_id` - The Route53 Hosted Zone ID of the endpoint
 
 [1]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Replication.html
