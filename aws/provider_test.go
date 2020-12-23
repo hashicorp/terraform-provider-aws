@@ -673,6 +673,7 @@ func testAccEC2VPCOnlyPreCheck(t *testing.T) {
 }
 
 func testAccPartitionHasServicePreCheck(serviceId string, t *testing.T) {
+	fmt.Println(testAccGetRegion())
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
 		if _, ok := partition.Services()[serviceId]; !ok {
 			t.Skip(fmt.Sprintf("skipping tests; partition %s does not support %s service", partition.ID(), serviceId))

@@ -348,7 +348,7 @@ func testAccCheckAWSEcrPublicRepositoryRegistryID(resourceName string) resource.
 
 func testAccCheckAWSEcrPublicRepositoryRepositoryARN(resourceName string, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		attributeValue := fmt.Sprintf("arn:aws:ecr-public::%s:repository/%s", testAccGetAccountID(), rName)
+		attributeValue := fmt.Sprintf("arn:%s:ecr-public::%s:repository/%s", testAccGetPartition(), testAccGetAccountID(), rName)
 		return resource.TestCheckResourceAttr(resourceName, "repository_arn", attributeValue)(s)
 	}
 }
