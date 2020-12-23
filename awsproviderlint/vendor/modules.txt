@@ -12,7 +12,7 @@ cloud.google.com/go/storage
 github.com/agext/levenshtein
 # github.com/apparentlymart/go-textseg v1.0.0
 github.com/apparentlymart/go-textseg/textseg
-# github.com/aws/aws-sdk-go v1.36.12
+# github.com/aws/aws-sdk-go v1.36.14
 ## explicit
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/arn
