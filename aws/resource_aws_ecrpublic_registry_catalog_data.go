@@ -40,7 +40,7 @@ func resourceAwsEcrPublicRegistryCatalogDataCreate(d *schema.ResourceData, meta 
 		return fmt.Errorf("error changing ECR Public Registry catalog data: %s", err)
 	}
 
-	return resourceAwsEcrRepositoryRead(d, meta)
+	return resourceAwsEcrPublicRegistryCatalogDataRead(d, meta)
 }
 
 func resourceAwsEcrPublicRegistryCatalogDataRead(d *schema.ResourceData, meta interface{}) error {
@@ -67,7 +67,7 @@ func resourceAwsEcrPublicRegistryCatalogDataUpdate(d *schema.ResourceData, meta 
 
 	if d.HasChange("display_name") {
 		input := &ecrpublic.PutRegistryCatalogDataInput{
-			DisplayName: aws.String(d.Get("setting").(string)),
+			DisplayName: aws.String(d.Get("display_name").(string)),
 		}
 
 		_, err := conn.PutRegistryCatalogData(input)
@@ -77,7 +77,7 @@ func resourceAwsEcrPublicRegistryCatalogDataUpdate(d *schema.ResourceData, meta 
 		}
 	}
 
-	return resourceAwsEcrRepositoryRead(d, meta)
+	return resourceAwsEcrPublicRegistryCatalogDataRead(d, meta)
 }
 
 func resourceAwsEcrPublicRegistryCatalogDataDelete(d *schema.ResourceData, meta interface{}) error {
