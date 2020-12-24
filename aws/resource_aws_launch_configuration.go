@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
@@ -524,14 +525,7 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 		createLaunchConfigurationOpts.BlockDeviceMappings = blockDevices
 	}
 
-	var lcName string
-	if v, ok := d.GetOk("name"); ok {
-		lcName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		lcName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		lcName = resource.UniqueId()
-	}
+	lcName := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
 	createLaunchConfigurationOpts.LaunchConfigurationName = aws.String(lcName)
 
 	log.Printf("[DEBUG] autoscaling create launch configuration: %s", createLaunchConfigurationOpts)
@@ -596,6 +590,7 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 	d.Set("image_id", lc.ImageId)
 	d.Set("instance_type", lc.InstanceType)
 	d.Set("name", lc.LaunchConfigurationName)
+	d.Set("name_prefix", aws.StringValue(naming.NamePrefixFromName(aws.StringValue(lc.LaunchConfigurationName))))
 	d.Set("arn", lc.LaunchConfigurationARN)
 
 	d.Set("iam_instance_profile", lc.IamInstanceProfile)
