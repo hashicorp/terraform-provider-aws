@@ -6,9 +6,9 @@ import (
 
 func resourceAwsSesIdentityFeedbackForwardingEnabled() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesIdentityFeedbackForwardingEnabledCreate,
-		Read:   resourceAwsSesIdentityFeedbackForwardingEnabledRead,
-		Delete: resourceAwsSesIdentityFeedbackForwardingEnabledDelete,
+		//Create: resourceAwsSesIdentityFeedbackForwardingEnabledCreate,
+		//Read:   resourceAwsSesIdentityFeedbackForwardingEnabledRead,
+		//Delete: resourceAwsSesIdentityFeedbackForwardingEnabledDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -26,12 +26,12 @@ func resourceAwsSesIdentityFeedbackForwardingEnabled() *schema.Resource {
 	}
 }
 
-func resourceAwsSesIdentityFeedbackForwardingEnabledCreate(d *schema.ResourceData, meta interface{}) error {
-}
-
-func resourceAwsSesIdentityFeedbackForwardingEnabledRead(d *schema.ResourceData, meta interface{}) error {
-}
-
-func resourceAwsSesIdentityFeedbackForwardingEnabledDelete(d *schema.ResourceData, meta interface{}) error {
-
-}
+//func resourceAwsSesIdentityFeedbackForwardingEnabledCreate(d *schema.ResourceData, meta interface{}) error {
+//}
+//
+//func resourceAwsSesIdentityFeedbackForwardingEnabledRead(d *schema.ResourceData, meta interface{}) error {
+//}
+//
+//func resourceAwsSesIdentityFeedbackForwardingEnabledDelete(d *schema.ResourceData, meta interface{}) error {
+//
+//}
