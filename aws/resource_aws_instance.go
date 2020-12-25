@@ -569,6 +569,10 @@ func resourceAwsInstance() *schema.Resource {
 						"capacity_reservation_preference": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ec2.CapacityReservationPreferenceOpen,
+								ec2.CapacityReservationPreferenceNone,
+							}, false),
 						},
 						"capacity_reservation_target": {
 							Type:     schema.TypeList,
