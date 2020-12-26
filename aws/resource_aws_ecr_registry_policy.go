@@ -50,7 +50,7 @@ func resourceAwsEcrRegistryPolicyPut(d *schema.ResourceData, meta interface{}) e
 	// Retry due to IAM eventual consistency
 	var err error
 	var out *ecr.PutRegistryPolicyOutput
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		out, err = conn.PutRegistryPolicy(&input)
 
 		if tfawserr.ErrMessageContains(err, ecr.ErrCodeInvalidParameterException, "Invalid registry policy provided") {
