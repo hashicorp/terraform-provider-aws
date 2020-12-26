@@ -174,7 +174,7 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] EIP ID: %s (domain: %v)", d.Id(), *allocResp.Domain)
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 1 {
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
 		if err := keyvaluetags.Ec2CreateTags(ec2conn, d.Id(), v); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
