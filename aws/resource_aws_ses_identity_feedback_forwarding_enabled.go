@@ -3,18 +3,16 @@ package aws
 import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"log"
-	"strings"
 )
 
 func resourceAwsSesIdentityFeedbackForwardingEnabled() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSesIdentityFeedbackForwardingEnabledCreate,
+		Create: resourceAwsSesIdentityFeedbackForwardingEnabledSet,
 		Read:   resourceAwsSesIdentityFeedbackForwardingEnabledRead,
-		//Delete: resourceAwsSesIdentityFeedbackForwardingEnabledDelete,
+		Update: resourceAwsSesIdentityFeedbackForwardingEnabledSet,
+		Delete: resourceAwsSesIdentityFeedbackForwardingEnabledDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -32,7 +30,7 @@ func resourceAwsSesIdentityFeedbackForwardingEnabled() *schema.Resource {
 	}
 }
 
-func resourceAwsSesIdentityFeedbackForwardingEnabledCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsSesIdentityFeedbackForwardingEnabledSet(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sesconn
 
 	domainName := d.Get("domain").(string)
@@ -54,10 +52,10 @@ func resourceAwsSesIdentityFeedbackForwardingEnabledCreate(d *schema.ResourceDat
 }
 
 func resourceAwsSesIdentityFeedbackForwardingEnabledRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
-
-	email := d.Id()
-	d.Set("identity", domain)
+	//conn := meta.(*AWSClient).sesconn
+	//
+	//email := d.Id()
+	//d.Set("identity", domain)
 
 	//readOpts := &ses.GetIdentityVerificationAttributesInput{
 	//	Identities: []*string{
@@ -86,11 +84,29 @@ func resourceAwsSesIdentityFeedbackForwardingEnabledRead(d *schema.ResourceData,
 	//	Service:   "ses",
 	//}.String()
 	//d.Set("arn", arn)
-	d.Set("")
+	//d.Set("")
+	return nil
+}
+
+func resourceAwsSesIdentityFeedbackForwardingEnabledDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
 //
-//func resourceAwsSesIdentityFeedbackForwardingEnabledDelete(d *schema.ResourceData, meta interface{}) error {
+//func resourceAwsSesDomainMailFromDelete(d *schema.ResourceData, meta interface{}) error {
+//	conn := meta.(*AWSClient).sesconn
 //
+//	domainName := d.Id()
+//
+//	deleteOpts := &ses.SetIdentityMailFromDomainInput{
+//		Identity:       aws.String(domainName),
+//		MailFromDomain: nil,
+//	}
+//
+//	_, err := conn.SetIdentityMailFromDomain(deleteOpts)
+//	if err != nil {
+//		return fmt.Errorf("Error deleting SES domain identity: %s", err)
+//	}
+//
+//	return nil
 //}
