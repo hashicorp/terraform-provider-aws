@@ -14,7 +14,7 @@ func resourceAwsSesIdentityFeedbackForwardingEnabled() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"identity": {
+			"domain": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
