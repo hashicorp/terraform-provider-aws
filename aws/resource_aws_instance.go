@@ -564,6 +564,7 @@ func resourceAwsInstance() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"capacity_reservation_preference": {
@@ -585,8 +586,9 @@ func resourceAwsInstance() *schema.Resource {
 										Optional: true,
 									},
 									"capacity_reservation_resource_group_arn": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateArn,
 									},
 								},
 							},
@@ -1071,6 +1073,10 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("get_password_data", false)
 		d.Set("password_data", nil)
+	}
+
+	if err := d.Set("capacity_reservation_specification", flattenCapacityReservationSpecification(instance.CapacityReservationSpecification)); err != nil {
+		return fmt.Errorf("error setting capacity reservation specification: %s", err)
 	}
 
 	return nil
@@ -1574,6 +1580,24 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			if err := keyvaluetags.Ec2UpdateTags(conn, volumeID, o, n); err != nil {
 				return fmt.Errorf("error updating tags for volume (%s): %s", volumeID, err)
+			}
+		}
+	}
+
+	// To modify capacity reservation attributes of an instance, instance state needs to be in ec2.InstanceStateNameStopped,
+	// otherwise the modification will return an IncorrectInstanceState error
+	if d.HasChange("capacity_reservation_specification") && !d.IsNewResource() {
+		if v, ok := d.GetOk("capacity_reservation_specification"); ok {
+			capacityReservationSpecification := expandCapacityReservationSpecification(v.([]interface{}))
+			if *capacityReservationSpecification != (ec2.CapacityReservationSpecification{}) && capacityReservationSpecification != nil {
+				_, err := conn.ModifyInstanceCapacityReservationAttributes(&ec2.ModifyInstanceCapacityReservationAttributesInput{
+					CapacityReservationSpecification: capacityReservationSpecification,
+					InstanceId:                       aws.String(d.Id()),
+				})
+
+				if err != nil {
+					return fmt.Errorf("Error updating instance capacity specification: %s", err)
+				}
 			}
 		}
 	}
@@ -2752,11 +2776,11 @@ func expandCapacityReservationSpecification(crs []interface{}) *ec2.CapacityRese
 
 	capacityReservationSpecification := &ec2.CapacityReservationSpecification{}
 
-	if v, ok := m["capacity_reservation_preference"]; ok && v != "" {
+	if v, ok := m["capacity_reservation_preference"]; ok && v != "" && v != nil {
 		capacityReservationSpecification.CapacityReservationPreference = aws.String(v.(string))
 	}
 
-	if v, ok := m["capacity_reservation_target"]; ok && v != "" {
+	if v, ok := m["capacity_reservation_target"]; ok && v != "" && (len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil) {
 		capacityReservationSpecification.CapacityReservationTarget = expandCapacityReservationTarget(v.([]interface{}))
 	}
 
@@ -2804,6 +2828,32 @@ func flattenEc2EnclaveOptions(opts *ec2.EnclaveOptions) []interface{} {
 
 	m := map[string]interface{}{
 		"enabled": aws.BoolValue(opts.Enabled),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCapacityReservationSpecification(crs *ec2.CapacityReservationSpecificationResponse) []interface{} {
+	if crs == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"capacity_reservation_preference": aws.StringValue(crs.CapacityReservationPreference),
+		"capacity_reservation_target":     flattenCapacityReservationTarget(crs.CapacityReservationTarget),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCapacityReservationTarget(crt *ec2.CapacityReservationTargetResponse) []interface{} {
+	if crt == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"capacity_reservation_id":                 aws.StringValue(crt.CapacityReservationId),
+		"capacity_reservation_resource_group_arn": aws.StringValue(crt.CapacityReservationResourceGroupArn),
 	}
 
 	return []interface{}{m}
