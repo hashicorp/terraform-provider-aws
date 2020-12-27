@@ -2,6 +2,8 @@ package aws
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/sesv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -13,7 +15,7 @@ func TestAccAWSSESIdentityFeedbackForwardingEnabled_basic(t *testing.T) {
 		"%s.terraformtesting.com",
 		acctest.RandString(10))
 	resourceName := "aws_ses_identity_feedback_forwarding_enabled.test"
-	forwardingEnabled := true
+	forwardingEnabled := false
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
@@ -58,22 +60,17 @@ func testAccCheckAwsSESIdentityFeedbackForwardingEnabledExists(n string) resourc
 			return fmt.Errorf("SES Identity Feedback Forwarding not set")
 		}
 
-		//
-		//identity := rs.Primary.ID
-		//conn := testAccProvider.Meta().(*AWSClient).sesconn
-		//params := &ses.GetIdentityVerificationAttributesInput{
-		//	Identities: []*string{
-		//		aws.String(identity),
-		//	},
-		//}
-		//response, err := conn.GetIdentityVerificationAttributes(params)
-		//if err != nil {
-		//	return err
-		//}
-		//
-		//if response.VerificationAttributes[email] == nil {
-		//	return fmt.Errorf("SES Email Identity %s not found in AWS", email)
-		//}
+		identity := rs.Primary.ID
+		conn := testAccProvider.Meta().(*AWSClient).sesv2conn
+		params := &sesv2.GetEmailIdentityInput{EmailIdentity: aws.String(identity)}
+
+		_, err := conn.GetEmailIdentity(params)
+		if err != nil {
+			return err
+		}
+
+		//fmt.Printf("res: %v", res)
+		// TODO check if valid identity with res.VerifiedForSendingStatus
 
 		return nil
 	}
