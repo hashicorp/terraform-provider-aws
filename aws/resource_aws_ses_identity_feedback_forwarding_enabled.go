@@ -18,7 +18,7 @@ func resourceAwsSesIdentityFeedbackForwardingEnabled() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"domain": {
+			"identity": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -33,20 +33,20 @@ func resourceAwsSesIdentityFeedbackForwardingEnabled() *schema.Resource {
 func resourceAwsSesIdentityFeedbackForwardingEnabledSet(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sesconn
 
-	domainName := d.Get("domain").(string)
+	identity := d.Get("identity").(string)
 	enabled := d.Get("enabled").(bool)
 
 	input := &ses.SetIdentityFeedbackForwardingEnabledInput{
-		Identity:          aws.String(domainName),
+		Identity:          aws.String(identity),
 		ForwardingEnabled: aws.Bool(enabled),
 	}
 
 	_, err := conn.SetIdentityFeedbackForwardingEnabled(input)
 	if err != nil {
-		return fmt.Errorf("Error setting Feedback Forwarding domain: %s", err)
+		return fmt.Errorf("Error setting Feedback Forwarding identity: %s", err)
 	}
 
-	d.SetId(domainName)
+	d.SetId(identity)
 
 	return resourceAwsSesIdentityFeedbackForwardingEnabledRead(d, meta)
 }

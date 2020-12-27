@@ -40,7 +40,7 @@ resource "aws_ses_domain_identity" "test" {
 }
 
 resource "aws_ses_identity_feedback_forwarding_enabled" "test" {
-  domain           = aws_ses_domain_identity.test.domain
+  identity           = aws_ses_domain_identity.test.domain
   enabled = %v
 }
 `, domain, fowardingEnabled)
@@ -49,21 +49,21 @@ resource "aws_ses_identity_feedback_forwarding_enabled" "test" {
 
 func testAccCheckAwsSESIdentityFeedbackForwardingEnabledExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[n]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("SES Identity Feedback Forwarding Enabled not found: %s", n)
 		}
 
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("SES Identity Feedback Forwarding not set")
+		}
+
 		//
-		//if rs.Primary.ID == "" {
-		//	return fmt.Errorf("SES Email Identity name not set")
-		//}
-		//
-		//email := rs.Primary.ID
+		//identity := rs.Primary.ID
 		//conn := testAccProvider.Meta().(*AWSClient).sesconn
 		//params := &ses.GetIdentityVerificationAttributesInput{
 		//	Identities: []*string{
-		//		aws.String(email),
+		//		aws.String(identity),
 		//	},
 		//}
 		//response, err := conn.GetIdentityVerificationAttributes(params)
