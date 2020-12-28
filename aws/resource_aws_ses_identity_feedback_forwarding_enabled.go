@@ -31,6 +31,7 @@ func resourceAwsSesIdentityFeedbackForwardingEnabled() *schema.Resource {
 }
 
 func resourceAwsSesIdentityFeedbackForwardingEnabledSet(d *schema.ResourceData, meta interface{}) error {
+	fmt.Println("resourceAwsSesIdentityFeedbackForwardingEnabledSet")
 	conn := meta.(*AWSClient).sesconn
 
 	identity := d.Get("identity").(string)
@@ -40,11 +41,14 @@ func resourceAwsSesIdentityFeedbackForwardingEnabledSet(d *schema.ResourceData, 
 		Identity:          aws.String(identity),
 		ForwardingEnabled: aws.Bool(enabled),
 	}
-
-	_, err := conn.SetIdentityFeedbackForwardingEnabled(input)
+	fmt.Printf("input: %v\n", input)
+	res, err := conn.SetIdentityFeedbackForwardingEnabled(input)
 	if err != nil {
 		return fmt.Errorf("Error setting Feedback Forwarding identity: %s", err)
 	}
+	fmt.Printf("res: %v\n", res)
+	fmt.Printf("res: %v\n", res.GoString())
+	fmt.Printf("res: %s\n", res.String())
 
 	d.SetId(identity)
 
@@ -52,6 +56,7 @@ func resourceAwsSesIdentityFeedbackForwardingEnabledSet(d *schema.ResourceData, 
 }
 
 func resourceAwsSesIdentityFeedbackForwardingEnabledRead(d *schema.ResourceData, meta interface{}) error {
+	fmt.Println("resourceAwsSesIdentityFeedbackForwardingEnabledRead")
 	//conn := meta.(*AWSClient).sesconn
 	//
 	//email := d.Id()
@@ -89,24 +94,19 @@ func resourceAwsSesIdentityFeedbackForwardingEnabledRead(d *schema.ResourceData,
 }
 
 func resourceAwsSesIdentityFeedbackForwardingEnabledDelete(d *schema.ResourceData, meta interface{}) error {
+	fmt.Println("resourceAwsSesIdentityFeedbackForwardingEnabledDelete")
+	conn := meta.(*AWSClient).sesconn
+	identity := d.Id()
+
+	input := &ses.SetIdentityFeedbackForwardingEnabledInput{
+		Identity:          aws.String(identity),
+		ForwardingEnabled: aws.Bool(true),
+	}
+	fmt.Printf("input: %v\n", input)
+	res, err := conn.SetIdentityFeedbackForwardingEnabled(input)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("res: %v\n", res.String())
 	return nil
 }
-
-//
-//func resourceAwsSesDomainMailFromDelete(d *schema.ResourceData, meta interface{}) error {
-//	conn := meta.(*AWSClient).sesconn
-//
-//	domainName := d.Id()
-//
-//	deleteOpts := &ses.SetIdentityMailFromDomainInput{
-//		Identity:       aws.String(domainName),
-//		MailFromDomain: nil,
-//	}
-//
-//	_, err := conn.SetIdentityMailFromDomain(deleteOpts)
-//	if err != nil {
-//		return fmt.Errorf("Error deleting SES domain identity: %s", err)
-//	}
-//
-//	return nil
-//}

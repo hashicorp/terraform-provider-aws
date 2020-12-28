@@ -18,9 +18,9 @@ func TestAccAWSSESIdentityFeedbackForwardingEnabled_basic(t *testing.T) {
 	forwardingEnabled := false
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
-		Providers: testAccProviders,
-		//CheckDestroy: testAccCheckSESDomainMailFromDestroy,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSESIdentityFeedbackForwardingEnabledDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsSESIdentityFeedbackForwardingEnabledConfig(domain, forwardingEnabled),
@@ -51,6 +51,7 @@ resource "aws_ses_identity_feedback_forwarding_enabled" "test" {
 
 func testAccCheckAwsSESIdentityFeedbackForwardingEnabledExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		fmt.Println("testAccCheckAwsSESIdentityFeedbackForwardingEnabledExists")
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("SES Identity Feedback Forwarding Enabled not found: %s", n)
@@ -64,14 +65,40 @@ func testAccCheckAwsSESIdentityFeedbackForwardingEnabledExists(n string) resourc
 		conn := testAccProvider.Meta().(*AWSClient).sesv2conn
 		params := &sesv2.GetEmailIdentityInput{EmailIdentity: aws.String(identity)}
 
-		_, err := conn.GetEmailIdentity(params)
+		res, err := conn.GetEmailIdentity(params)
 		if err != nil {
 			return err
 		}
-
-		//fmt.Printf("res: %v", res)
-		// TODO check if valid identity with res.VerifiedForSendingStatus
-
+		fmt.Printf("res: %v\n", res)
 		return nil
 	}
+}
+
+func testAccCheckAwsSESIdentityFeedbackForwardingEnabledDestroy(s *terraform.State) error {
+	fmt.Println("testAccCheckAwsSESIdentityFeedbackForwardingEnabledDestroy")
+	conn := testAccProvider.Meta().(*AWSClient).sesv2conn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_ses_identity_feedback_forwarding_enabled" {
+			continue
+		}
+
+		identity := rs.Primary.ID
+		params := &sesv2.GetEmailIdentityInput{
+			EmailIdentity: aws.String(identity),
+		}
+		fmt.Printf("params: %v", params)
+
+		res, err := conn.GetEmailIdentity(params)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("res: %v", res)
+
+		if !*res.FeedbackForwardingStatus {
+			return fmt.Errorf("SES Identity Feedback Forwarding is still false")
+		}
+	}
+
+	return nil
 }
