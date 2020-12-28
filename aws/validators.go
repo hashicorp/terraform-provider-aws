@@ -673,13 +673,19 @@ func validatePrincipal(v interface{}, k string) (ws []string, errors []error) {
 		return ws, errors
 	}
 
+	//match account id
+	pattern_ac := `^\d{12}$`
+	if regexp.MustCompile(pattern_ac).MatchString(value) {
+		return ws, errors
+	}
+
 	wsARN, errorsARN := validateArn(v, k)
 	ws = append(ws, wsARN...)
 	errors = append(errors, errorsARN...)
 
-	pattern := `\d{12}:(role|user)/`
+	pattern := `:(role|user|group|ou|organization)/`
 	if !regexp.MustCompile(pattern).MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q doesn't look like a user or role: %q", k, value))
+		errors = append(errors, fmt.Errorf("%q doesn't look like a user or role or group or ou or organization: %q", k, value))
 	}
 
 	return ws, errors
