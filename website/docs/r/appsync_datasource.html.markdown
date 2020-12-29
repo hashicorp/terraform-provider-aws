@@ -118,8 +118,8 @@ The following arguments are supported:
 
 * `endpoint` - (Required) HTTP URL.
 * `iamConfig` - (Optional) Configuration for signing requests to AWS services.
-  * `signingRegion` (Required) AWS region that requests will be sent to.
-  * `signingServiceName` (Required) AWS service that requests will be sent to.
+    * `signingRegion` (Required) AWS region that requests will be sent to.
+    * `signingServiceName` (Required) AWS service that requests will be sent to.
 
 ### lambda_config
 
