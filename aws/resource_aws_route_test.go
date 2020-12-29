@@ -1430,7 +1430,7 @@ resource "aws_route" "test" {
 
 func testAccAWSRouteConfigIpv6NetworkInterfaceUnattached(rName, destinationCidr string) string {
 	return composeConfig(
-		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
+		testAccAvailableAZsNoOptInConfig(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
@@ -1479,8 +1479,8 @@ resource "aws_route" "test" {
 func testAccAWSRouteConfigIpv6Instance(rName, destinationCidr string) string {
 	return composeConfig(
 		testAccLatestAmazonNatInstanceAmiConfig(),
-		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
-		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		testAccAvailableAZsNoOptInConfig(),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
@@ -1712,7 +1712,7 @@ resource "aws_route" "test" {
 
 func testAccAWSRouteConfigIpv6TransitGateway(rName, destinationCidr string) string {
 	return composeConfig(
-		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
+		testAccAvailableAZsNoOptInConfig(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
@@ -1811,8 +1811,8 @@ resource "aws_route" "test" {
 func testAccAWSRouteConfigIpv4Instance(rName, destinationCidr string) string {
 	return composeConfig(
 		testAccLatestAmazonNatInstanceAmiConfig(),
-		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
-		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		testAccAvailableAZsNoOptInConfig(),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1860,7 +1860,7 @@ resource "aws_route" "test" {
 
 func testAccAWSRouteConfigIpv4NetworkInterfaceUnattached(rName, destinationCidr string) string {
 	return composeConfig(
-		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
+		testAccAvailableAZsNoOptInConfig(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -2006,8 +2006,8 @@ resource "aws_route" "test" {
 func testAccAWSRouteConfigIpv4NetworkInterfaceAttached(rName, destinationCidr string) string {
 	return composeConfig(
 		testAccLatestAmazonNatInstanceAmiConfig(),
-		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
-		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		testAccAvailableAZsNoOptInConfig(),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -2071,8 +2071,8 @@ resource "aws_route" "test" {
 func testAccAWSRouteConfigIpv4NetworkInterfaceTwoAttachments(rName, destinationCidr, targetResourceName string) string {
 	return composeConfig(
 		testAccLatestAmazonNatInstanceAmiConfig(),
-		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
-		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		testAccAvailableAZsNoOptInConfig(),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -2397,7 +2397,7 @@ func testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, targetAttribut
 	return composeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
-		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -2446,7 +2446,6 @@ resource "aws_instance" "test" {
 }
 
 resource "aws_ec2_transit_gateway" "test" {
-
   tags = {
     Name = %[1]q
   }
@@ -2558,8 +2557,8 @@ resource "aws_route" "test" {
 func testAccAWSRouteConfigIpv6FlexiTarget(rName, destinationCidr, targetAttribute, targetValue string) string {
 	return composeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
-		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
-		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		testAccAvailableAZsNoOptInConfig(),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
