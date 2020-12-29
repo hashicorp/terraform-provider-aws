@@ -226,15 +226,15 @@ func TestAccAwsAppsyncDatasource_HTTPConfig_AuthorizationConfig(t *testing.T) {
 			{
 				Config: testAccAppsyncDatasourceConfig_HTTPConfig_Endpoint_Signing(rName, "http://example.com", "us-east-1", "cognito-idp"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "http_config.0.iamConfig.signingRegion", "us-east-1"),
-					resource.TestCheckResourceAttr(resourceName, "http_config.0.iamConfig.signingServiceName", "cognito-idp"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.iam_config.region", "us-east-1"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.iam_config.service_name", "cognito-idp"),
 				),
 			},
 			{
 				Config: testAccAppsyncDatasourceConfig_HTTPConfig_Endpoint_Signing(rName, "http://example.org", "us-east-2", "states"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "http_config.0.iamConfig.signingRegion", "us-east-2"),
-					resource.TestCheckResourceAttr(resourceName, "http_config.0.iamConfig.signingServiceName", "states"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.iam_config.region", "us-east-2"),
+					resource.TestCheckResourceAttr(resourceName, "http_config.0.iam_config.service_name", "states"),
 				),
 			},
 			{
@@ -770,9 +770,9 @@ resource "aws_appsync_datasource" "test" {
 
   http_config {
     endpoint = %q
-    iamConfig {
-      signingRegion      = %q
-      signingServiceName = %q
+    iam_config {
+      region      = %q
+      service_name = %q
     }
   }
 }

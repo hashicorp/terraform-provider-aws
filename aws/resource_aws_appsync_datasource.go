@@ -108,18 +108,18 @@ func resourceAwsAppsyncDatasource() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"iamConfig": {
-							Type: schema.TypeList,
+						"iam_config": {
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"signingRegion": {
-										Type: schema.TypeString,
+									"region": {
+										Type:     schema.TypeString,
 										Required: true,
 									},
-									"signingServiceName": {
-										Type: schema.TypeString,
+									"service_name": {
+										Type:     schema.TypeString,
 										Required: true,
 									},
 								},
@@ -413,14 +413,14 @@ func expandAppsyncHTTPDataSourceConfig(l []interface{}) *appsync.HttpDataSourceC
 		Endpoint: aws.String(configured["endpoint"].(string)),
 	}
 
-	if(configured["iamConfig"] != nil) {
+	if configured["iam_config"] != nil {
 		iamConfig := configured["iamConfig"].(map[string]interface{})
 
 		result.SetAuthorizationConfig(&appsync.AuthorizationConfig{
 			AuthorizationType: aws.String("AWS_IAM"),
 			AwsIamConfig: &appsync.AwsIamConfig{
-				SigningRegion: aws.String(iamConfig["signingRegion"].(string)),
-				SigningServiceName: aws.String(iamConfig["signingServiceName"].(string)),
+				SigningRegion:      aws.String(iamConfig["region"].(string)),
+				SigningServiceName: aws.String(iamConfig["service_name"].(string)),
 			},
 		})
 	}
