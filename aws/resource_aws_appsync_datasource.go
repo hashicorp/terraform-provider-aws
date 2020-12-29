@@ -108,6 +108,23 @@ func resourceAwsAppsyncDatasource() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"iamConfig": {
+							Type: schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"signingRegion": {
+										Type: schema.TypeString,
+										Required: true,
+									},
+									"signingServiceName": {
+										Type: schema.TypeString,
+										Required: true,
+									}
+								}
+							}
+						}
 					},
 				},
 				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "lambda_config"},
@@ -394,6 +411,18 @@ func expandAppsyncHTTPDataSourceConfig(l []interface{}) *appsync.HttpDataSourceC
 
 	result := &appsync.HttpDataSourceConfig{
 		Endpoint: aws.String(configured["endpoint"].(string)),
+	}
+
+	if(configured["iamConfig"] != nil) {
+		iamConfig := configured["iamConfig"].(map[string]interface{})
+
+		result.SetAuthorizationConfig(&appsync.AuthorizationConfig{
+			AuthorizationType: aws.String("AWS_IAM"),
+			AwsIamConfig: &appsync.AwsIamConfig{
+				SigningRegion: aws.String(iamConfig["signingRegion"].(string)),
+				SigningServiceName: aws.String(iamConfig["signingServiceName"].(string)),
+			}
+		})
 	}
 
 	return result
