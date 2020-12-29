@@ -978,6 +978,11 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := emrconn.DescribeCluster(req)
 	if err != nil {
+		if isAWSErr(err, emr.ErrCodeInvalidRequestException, "is not valid") {
+			log.Printf("[DEBUG] EMR Cluster (%s) not found", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("Error reading EMR cluster: %s", err)
 	}
 
