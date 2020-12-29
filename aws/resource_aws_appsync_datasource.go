@@ -414,7 +414,7 @@ func expandAppsyncHTTPDataSourceConfig(l []interface{}) *appsync.HttpDataSourceC
 	}
 
 	if configured["iam_config"] != nil {
-		iamConfig := configured["iamConfig"].(map[string]interface{})
+		iamConfig := configured["iam_config"].(map[string]interface{})
 
 		result.SetAuthorizationConfig(&appsync.AuthorizationConfig{
 			AuthorizationType: aws.String("AWS_IAM"),

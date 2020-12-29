@@ -771,7 +771,7 @@ resource "aws_appsync_datasource" "test" {
   http_config {
     endpoint = %q
     iam_config {
-      region      = %q
+      region       = %q
       service_name = %q
     }
   }
