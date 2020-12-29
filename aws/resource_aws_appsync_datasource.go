@@ -121,10 +121,10 @@ func resourceAwsAppsyncDatasource() *schema.Resource {
 									"signingServiceName": {
 										Type: schema.TypeString,
 										Required: true,
-									}
-								}
-							}
-						}
+									},
+								},
+							},
+						},
 					},
 				},
 				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "lambda_config"},
@@ -421,7 +421,7 @@ func expandAppsyncHTTPDataSourceConfig(l []interface{}) *appsync.HttpDataSourceC
 			AwsIamConfig: &appsync.AwsIamConfig{
 				SigningRegion: aws.String(iamConfig["signingRegion"].(string)),
 				SigningServiceName: aws.String(iamConfig["signingServiceName"].(string)),
-			}
+			},
 		})
 	}
 
