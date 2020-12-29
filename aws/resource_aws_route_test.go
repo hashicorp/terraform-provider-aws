@@ -2399,6 +2399,11 @@ func testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, targetAttribut
 		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
 		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
+locals {
+  target_attr  = %[3]q
+  target_value = %[4]s.id
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -2549,7 +2554,16 @@ resource "aws_route_table" "test" {
 resource "aws_route" "test" {
   route_table_id         = aws_route_table.test.id
   destination_cidr_block = %[2]q
-  %[3]s = %[4]s.id
+
+  egress_only_gateway_id    = (local.target_attr == "egress_only_gateway_id") ? local.target_value : null
+  gateway_id                = (local.target_attr == "gateway_id") ? local.target_value : null
+  instance_id               = (local.target_attr == "instance_id") ? local.target_value : null
+  local_gateway_id          = (local.target_attr == "local_gateway_id") ? local.target_value : null
+  nat_gateway_id            = (local.target_attr == "nat_gateway_id") ? local.target_value : null
+  network_interface_id      = (local.target_attr == "network_interface_id") ? local.target_value : null
+  transit_gateway_id        = (local.target_attr == "transit_gateway_id") ? local.target_value : null
+  vpc_endpoint_id           = (local.target_attr == "vpc_endpoint_id") ? local.target_value : null
+  vpc_peering_connection_id = (local.target_attr == "vpc_peering_connection_id") ? local.target_value : null
 }
 `, rName, destinationCidr, targetAttribute, targetValue))
 }
@@ -2560,6 +2574,11 @@ func testAccAWSRouteConfigIpv6FlexiTarget(rName, destinationCidr, targetAttribut
 		testAccAvailableAZsNoOptInConfig(),
 		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
+locals {
+  target_attr  = %[3]q
+  target_value = %[4]s.id
+}
+
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
@@ -2657,7 +2676,15 @@ resource "aws_route" "test" {
   route_table_id              = aws_route_table.test.id
   destination_ipv6_cidr_block = %[2]q
 
-  %[3]s = %[4]s.id
+  egress_only_gateway_id    = (local.target_attr == "egress_only_gateway_id") ? local.target_value : null
+  gateway_id                = (local.target_attr == "gateway_id") ? local.target_value : null
+  instance_id               = (local.target_attr == "instance_id") ? local.target_value : null
+  local_gateway_id          = (local.target_attr == "local_gateway_id") ? local.target_value : null
+  nat_gateway_id            = (local.target_attr == "nat_gateway_id") ? local.target_value : null
+  network_interface_id      = (local.target_attr == "network_interface_id") ? local.target_value : null
+  transit_gateway_id        = (local.target_attr == "transit_gateway_id") ? local.target_value : null
+  vpc_endpoint_id           = (local.target_attr == "vpc_endpoint_id") ? local.target_value : null
+  vpc_peering_connection_id = (local.target_attr == "vpc_peering_connection_id") ? local.target_value : null
 }
 `, rName, destinationCidr, targetAttribute, targetValue))
 }
