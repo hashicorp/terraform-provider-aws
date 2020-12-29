@@ -2,13 +2,13 @@ package aws
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -138,7 +138,7 @@ func resourceAwsCodeStarConnectionsHostRead(d *schema.ResourceData, meta interfa
 func resourceAwsCodeStarConnectionsHostUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codestarconnectionsconn
 
-	if d.HasChange("provider_endpoint") || d.HasChange("vpc_configuration") {
+	if d.HasChanges("provider_endpoint", "vpc_configuration") {
 		input := codestarconnections.UpdateHostInput{
 			HostArn:          aws.String(d.Get("name").(string)),
 			ProviderEndpoint: aws.String(d.Get("provider_endpoint").(string)),

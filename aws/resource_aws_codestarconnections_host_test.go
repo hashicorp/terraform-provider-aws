@@ -165,7 +165,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  count = 2
+  count             = 2
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index + 2)
   vpc_id            = aws_vpc.test.id
