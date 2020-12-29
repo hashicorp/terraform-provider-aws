@@ -769,11 +769,11 @@ resource "aws_appsync_datasource" "test" {
   type   = "HTTP"
 
   http_config {
-		endpoint = %q
-		iamConfig {
-			signingRegion      = %q
-			signingServiceName = %q
-		}
+    endpoint = %q
+    iamConfig {
+      signingRegion      = %q
+      signingServiceName = %q
+    }
   }
 }
 `, rName, rName, endpoint, region, service)
