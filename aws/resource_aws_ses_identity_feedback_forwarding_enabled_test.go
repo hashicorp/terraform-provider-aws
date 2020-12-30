@@ -38,7 +38,7 @@ func TestAccAWSSESIdentityFeedbackForwardingEnabled_basic(t *testing.T) {
 func testAccAwsSESIdentityFeedbackForwardingEnabledConfig(domain string, fowardingEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_ses_domain_identity" "test" {
-  domain = "%s"
+  domain = %q
 }
 
 resource "aws_ses_identity_feedback_forwarding_enabled" "test" {
