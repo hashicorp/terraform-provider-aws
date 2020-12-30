@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_main_route_table_association
 
-Provides a resource for managing the main routing table of a VPC. 
+Provides a resource for managing the main routing table of a VPC.
 It is recommended you **do not** use both `aws_default_route_table` to manage the default route table and use the `aws_main_route_table_association`, due to possible conflict in routes.
 For more context see [aws_default_route_table][tf-default-route-table].
 
