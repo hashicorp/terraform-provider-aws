@@ -75,7 +75,12 @@ func testAccCheckAwsSESIdentityFeedbackForwardingEnabledExists(n string) resourc
 
 func testAccCheckAwsSESIdentityFeedbackForwardingEnabledDestroy(s *terraform.State) error {
 	fmt.Println("testAccCheckAwsSESIdentityFeedbackForwardingEnabledDestroy")
+	fmt.Printf("s: %v", s)
 	conn := testAccProvider.Meta().(*AWSClient).sesv2conn
+	list, err := conn.ListEmailIdentities(&sesv2.ListEmailIdentitiesInput{})
+	if err != nil {
+		return err
+	}
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_identity_feedback_forwarding_enabled" {
@@ -83,19 +88,10 @@ func testAccCheckAwsSESIdentityFeedbackForwardingEnabledDestroy(s *terraform.Sta
 		}
 
 		identity := rs.Primary.ID
-		params := &sesv2.GetEmailIdentityInput{
-			EmailIdentity: aws.String(identity),
-		}
-		fmt.Printf("params: %v", params)
-
-		res, err := conn.GetEmailIdentity(params)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("res: %v", res)
-
-		if !*res.FeedbackForwardingStatus {
-			return fmt.Errorf("SES Identity Feedback Forwarding is still false")
+		for _, item := range list.EmailIdentities {
+			if identity == *item.IdentityName {
+				return fmt.Errorf("SES Email identity still exists")
+			}
 		}
 	}
 
