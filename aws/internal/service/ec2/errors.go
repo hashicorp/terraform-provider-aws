@@ -1,7 +1,8 @@
 package ec2
 
 const (
-	ErrCodeInvalidParameterValue = "InvalidParameterValue"
+	ErrCodeInvalidParameterException = "InvalidParameterException"
+	ErrCodeInvalidParameterValue     = "InvalidParameterValue"
 )
 
 const (
@@ -10,6 +11,15 @@ const (
 
 const (
 	ErrCodeInvalidPrefixListIDNotFound = "InvalidPrefixListID.NotFound"
+)
+
+const (
+	ErrCodeInvalidRouteNotFound        = "InvalidRoute.NotFound"
+	ErrCodeInvalidRouteTableIDNotFound = "InvalidRouteTableID.NotFound"
+)
+
+const (
+	ErrCodeInvalidTransitGatewayIDNotFound = "InvalidTransitGatewayID.NotFound"
 )
 
 const (
