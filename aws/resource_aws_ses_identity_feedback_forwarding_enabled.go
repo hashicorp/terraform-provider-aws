@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go/service/sesv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -42,13 +43,10 @@ func resourceAwsSesIdentityFeedbackForwardingEnabledSet(d *schema.ResourceData, 
 		ForwardingEnabled: aws.Bool(enabled),
 	}
 	fmt.Printf("input: %v\n", input)
-	res, err := conn.SetIdentityFeedbackForwardingEnabled(input)
+	_, err := conn.SetIdentityFeedbackForwardingEnabled(input)
 	if err != nil {
 		return fmt.Errorf("Error setting Feedback Forwarding identity: %s", err)
 	}
-	fmt.Printf("res: %v\n", res)
-	fmt.Printf("res: %v\n", res.GoString())
-	fmt.Printf("res: %s\n", res.String())
 
 	d.SetId(identity)
 
@@ -57,39 +55,21 @@ func resourceAwsSesIdentityFeedbackForwardingEnabledSet(d *schema.ResourceData, 
 
 func resourceAwsSesIdentityFeedbackForwardingEnabledRead(d *schema.ResourceData, meta interface{}) error {
 	fmt.Println("resourceAwsSesIdentityFeedbackForwardingEnabledRead")
-	//conn := meta.(*AWSClient).sesconn
-	//
-	//email := d.Id()
-	//d.Set("identity", domain)
+	conn := meta.(*AWSClient).sesv2conn
 
-	//readOpts := &ses.GetIdentityVerificationAttributesInput{
-	//	Identities: []*string{
-	//		aws.String(email),
-	//	},
-	//}
-	//
-	//response, err := conn.GetIdentityVerificationAttributes(readOpts)
-	//if err != nil {
-	//	log.Printf("[WARN] Error fetching identity verification attributes for %s: %s", d.Id(), err)
-	//	return err
-	//}
+	identity := d.Id()
+	d.Set("identity", identity)
 
-	//_, ok := response.VerificationAttributes[email]
-	//if !ok {
-	//	log.Printf("[WARN] Email not listed in response when fetching verification attributes for %s", d.Id())
-	//	d.SetId("")
-	//	return nil
-	//}
+	input := &sesv2.GetEmailIdentityInput{
+		EmailIdentity: aws.String(identity),
+	}
 
-	//arn := arn.ARN{
-	//	AccountID: meta.(*AWSClient).accountid,
-	//	Partition: meta.(*AWSClient).partition,
-	//	Region:    meta.(*AWSClient).region,
-	//	Resource:  fmt.Sprintf("identity/%s", d.Id()),
-	//	Service:   "ses",
-	//}.String()
-	//d.Set("arn", arn)
-	//d.Set("")
+	response, err := conn.GetEmailIdentity(input)
+	if err != nil {
+		return fmt.Errorf("[WARN] Error fetching email identity for %s: %s", d.Id(), err)
+	}
+
+	d.Set("enabled", response.FeedbackForwardingStatus)
 	return nil
 }
 
@@ -102,11 +82,9 @@ func resourceAwsSesIdentityFeedbackForwardingEnabledDelete(d *schema.ResourceDat
 		Identity:          aws.String(identity),
 		ForwardingEnabled: aws.Bool(true),
 	}
-	fmt.Printf("input: %v\n", input)
-	res, err := conn.SetIdentityFeedbackForwardingEnabled(input)
+	_, err := conn.SetIdentityFeedbackForwardingEnabled(input)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("res: %v\n", res.String())
 	return nil
 }

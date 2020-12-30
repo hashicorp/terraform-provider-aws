@@ -65,11 +65,10 @@ func testAccCheckAwsSESIdentityFeedbackForwardingEnabledExists(n string) resourc
 		conn := testAccProvider.Meta().(*AWSClient).sesv2conn
 		params := &sesv2.GetEmailIdentityInput{EmailIdentity: aws.String(identity)}
 
-		res, err := conn.GetEmailIdentity(params)
+		_, err := conn.GetEmailIdentity(params)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("res: %v\n", res)
 		return nil
 	}
 }
