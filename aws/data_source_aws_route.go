@@ -187,3 +187,16 @@ func dataSourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
+
+// Helper: Create an ID for a route
+func resourceAwsRouteID(d *schema.ResourceData, r *ec2.Route) string {
+	routeTableID := d.Get("route_table_id").(string)
+
+	if destination := aws.StringValue(r.DestinationCidrBlock); destination != "" {
+		return tfec2.RouteCreateID(routeTableID, destination)
+	} else if destination := aws.StringValue(r.DestinationIpv6CidrBlock); destination != "" {
+		return tfec2.RouteCreateID(routeTableID, destination)
+	}
+
+	return ""
+}
