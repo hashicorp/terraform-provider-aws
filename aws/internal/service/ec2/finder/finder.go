@@ -109,18 +109,20 @@ func RouteTableByID(conn *ec2.EC2, routeTableID string) (*ec2.RouteTable, error)
 		return nil, err
 	}
 
-	if output == nil || len(output.RouteTables) == 0 || output.RouteTables[0] == nil {
+	if output == nil || len(output.RouteTables) == 0 {
 		return nil, nil
 	}
 
 	return output.RouteTables[0], nil
 }
 
+// RouteFinder returns the route corresponding to the specified destination.
+// Returns nil if no route is found.
 type RouteFinder func(*ec2.EC2, string, string) (*ec2.Route, error)
 
-// RouteByIpv4Destination returns the route corresponding to the specified IPv4 destination.
+// RouteByIPv4Destination returns the route corresponding to the specified IPv4 destination.
 // Returns nil if no route is found.
-func RouteByIpv4Destination(conn *ec2.EC2, routeTableID, destinationCidr string) (*ec2.Route, error) {
+func RouteByIPv4Destination(conn *ec2.EC2, routeTableID, destinationCidr string) (*ec2.Route, error) {
 	routeTable, err := RouteTableByID(conn, routeTableID)
 	if err != nil {
 		return nil, err
@@ -135,9 +137,9 @@ func RouteByIpv4Destination(conn *ec2.EC2, routeTableID, destinationCidr string)
 	return nil, nil
 }
 
-// RouteByIpv6Destination returns the route corresponding to the specified IPv6 destination.
+// RouteByIPv6Destination returns the route corresponding to the specified IPv6 destination.
 // Returns nil if no route is found.
-func RouteByIpv6Destination(conn *ec2.EC2, routeTableID, destinationIpv6Cidr string) (*ec2.Route, error) {
+func RouteByIPv6Destination(conn *ec2.EC2, routeTableID, destinationIpv6Cidr string) (*ec2.Route, error) {
 	routeTable, err := RouteTableByID(conn, routeTableID)
 	if err != nil {
 		return nil, err
