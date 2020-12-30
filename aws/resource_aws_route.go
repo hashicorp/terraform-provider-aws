@@ -194,10 +194,10 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	switch destination := aws.String(destination); destinationAttributeKey {
 	case "destination_cidr_block":
 		input.DestinationCidrBlock = destination
-		routeFinder = finder.RouteByIpv4Destination
+		routeFinder = finder.RouteByIPv4Destination
 	case "destination_ipv6_cidr_block":
 		input.DestinationIpv6CidrBlock = destination
-		routeFinder = finder.RouteByIpv6Destination
+		routeFinder = finder.RouteByIPv6Destination
 	default:
 		return fmt.Errorf("error creating Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -298,9 +298,9 @@ func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 
 	switch destinationAttributeKey {
 	case "destination_cidr_block":
-		routeFinder = finder.RouteByIpv4Destination
+		routeFinder = finder.RouteByIPv4Destination
 	case "destination_ipv6_cidr_block":
-		routeFinder = finder.RouteByIpv6Destination
+		routeFinder = finder.RouteByIPv6Destination
 	default:
 		return fmt.Errorf("error reading Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
