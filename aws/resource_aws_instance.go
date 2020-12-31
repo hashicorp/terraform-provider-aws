@@ -585,11 +585,6 @@ func resourceAwsInstance() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"capacity_reservation_resource_group_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validateArn,
-									},
 								},
 							},
 						},
@@ -2800,10 +2795,6 @@ func expandCapacityReservationTarget(crt []interface{}) *ec2.CapacityReservation
 		capacityReservationTarget.CapacityReservationId = aws.String(v.(string))
 	}
 
-	if v, ok := m["capacity_reservation_resource_group_arn"]; ok && v != "" {
-		capacityReservationTarget.CapacityReservationResourceGroupArn = aws.String(v.(string))
-	}
-
 	return capacityReservationTarget
 }
 
@@ -2852,8 +2843,7 @@ func flattenCapacityReservationTarget(crt *ec2.CapacityReservationTargetResponse
 	}
 
 	m := map[string]interface{}{
-		"capacity_reservation_id":                 aws.StringValue(crt.CapacityReservationId),
-		"capacity_reservation_resource_group_arn": aws.StringValue(crt.CapacityReservationResourceGroupArn),
+		"capacity_reservation_id": aws.StringValue(crt.CapacityReservationId),
 	}
 
 	return []interface{}{m}

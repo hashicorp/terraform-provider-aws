@@ -3392,6 +3392,188 @@ func TestAccAWSInstance_enclaveOptions(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstance_CapacityReservation_unspecifiedDefaultsToOpen(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigCapacityReservationSpecification_unspecified(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "open"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Adding 'open' preference should show no difference
+			{
+				Config:             testAccInstanceConfigCapacityReservationSpecification_preference("open"),
+				ExpectNonEmptyPlan: false,
+				PlanOnly:           true,
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_CapacityReservation_Preference_open(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigCapacityReservationSpecification_preference("open"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "open"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_CapacityReservation_Preference_none(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigCapacityReservationSpecification_preference("none"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "none"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_CapacityReservation_TargetId(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigCapacityReservationSpecification_targetId(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_CapacityReservation_modifyPreference(t *testing.T) {
+	var original ec2.Instance
+	var updated ec2.Instance
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigCapacityReservationSpecification_preference("open"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &original),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "open"),
+				),
+			},
+			{Config: testAccInstanceConfigCapacityReservationSpecification_preference("open"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStopInstance(&original), // Stop instance to modify capacity reservation
+				),
+			},
+			{
+				Config: testAccInstanceConfigCapacityReservationSpecification_preference("none"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &updated),
+					testAccCheckInstanceNotRecreated(t, &original, &updated),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "none"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_CapacityReservation_modifyTarget(t *testing.T) {
+	var original ec2.Instance
+	var updated ec2.Instance
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigCapacityReservationSpecification_preference("none"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &original),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "none"),
+				),
+			},
+			{Config: testAccInstanceConfigCapacityReservationSpecification_preference("none"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStopInstance(&original), // Stop instance to modify capacity reservation
+				),
+			},
+			{
+				Config: testAccInstanceConfigCapacityReservationSpecification_targetId(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &updated),
+					testAccCheckInstanceNotRecreated(t, &original, &updated),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceNotRecreated(t *testing.T,
 	before, after *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -5984,4 +6166,66 @@ data "aws_ec2_instance_type_offering" "available" {
   preferred_instance_types = ["%[2]s"]
 }
 `, availabilityZoneName, strings.Join(preferredInstanceTypes, "\", \""))
+}
+
+func testAccInstanceConfigCapacityReservationSpecification_unspecified() string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t2.micro"),
+		`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+}
+`)
+}
+
+func testAccInstanceConfigCapacityReservationSpecification_preference(crPreference string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t2.micro"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+
+  capacity_reservation_specification {
+    capacity_reservation_preference = "%[1]s"
+  }
+}
+`, crPreference))
+}
+
+func testAccInstanceConfigCapacityReservationSpecification_targetId() string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t2.micro"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+
+  capacity_reservation_specification {
+    capacity_reservation_target {
+      capacity_reservation_id = aws_ec2_capacity_reservation.test.id
+    }
+  }
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_ec2_capacity_reservation" "test" {
+  instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
+  instance_platform = "%[1]s"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  instance_count    = 10
+}
+`, ec2.CapacityReservationInstancePlatformLinuxUnix))
 }
