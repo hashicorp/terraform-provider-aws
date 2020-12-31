@@ -1585,6 +1585,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		if v, ok := d.GetOk("capacity_reservation_specification"); ok {
 			capacityReservationSpecification := expandCapacityReservationSpecification(v.([]interface{}))
 			if *capacityReservationSpecification != (ec2.CapacityReservationSpecification{}) && capacityReservationSpecification != nil {
+				log.Printf("[DEBUG] Modifying capacity reservation for instance %s", d.Id())
 				_, err := conn.ModifyInstanceCapacityReservationAttributes(&ec2.ModifyInstanceCapacityReservationAttributesInput{
 					CapacityReservationSpecification: capacityReservationSpecification,
 					InstanceId:                       aws.String(d.Id()),
