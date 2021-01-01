@@ -53,7 +53,7 @@ func dataSourceAwsSsoInstanceRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	instance := instances[0]
-	log.Printf("[DEBUG] Received AWS SSO Instance: %s", instance)
+	log.Printf("[DEBUG] Received AWS SSO Instance: %s", aws.StringValue(instance.InstanceArn))
 
 	d.SetId(aws.StringValue(instance.InstanceArn))
 	d.Set("arn", instance.InstanceArn)
