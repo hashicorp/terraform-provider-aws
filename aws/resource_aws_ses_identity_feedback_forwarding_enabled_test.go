@@ -26,9 +26,9 @@ func TestAccAWSSESIdentityFeedbackForwardingEnabled_basic(t *testing.T) {
 				Config: testAccAwsSESIdentityFeedbackForwardingEnabledConfig(domain, forwardingEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESIdentityFeedbackForwardingEnabledExists(resourceName),
-				//resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", ses.BehaviorOnMXFailureUseDefaultValue),
-				//resource.TestCheckResourceAttr(resourceName, "domain", domain),
-				//resource.TestCheckResourceAttr(resourceName, "mail_from_domain", mailFromDomain1),
+					//resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", ses.BehaviorOnMXFailureUseDefaultValue),
+					//resource.TestCheckResourceAttr(resourceName, "domain", domain),
+					//resource.TestCheckResourceAttr(resourceName, "mail_from_domain", mailFromDomain1),
 				),
 			},
 		},
@@ -36,16 +36,28 @@ func TestAccAWSSESIdentityFeedbackForwardingEnabled_basic(t *testing.T) {
 }
 
 func testAccAwsSESIdentityFeedbackForwardingEnabledConfig(domain string, fowardingEnabled bool) string {
-	return fmt.Sprintf(`
-resource "aws_ses_domain_identity" "test" {
-  domain = %q
-}
-
-resource "aws_ses_identity_feedback_forwarding_enabled" "test" {
-  identity           = aws_ses_domain_identity.test.domain
-  enabled = %v
-}
-`, domain, fowardingEnabled)
+	//	config := fmt.Sprintf(`
+	//resource "aws_ses_domain_identity" "test" {
+	//  domain = %q
+	//}
+	//
+	//resource "aws_ses_identity_feedback_forwarding_enabled" "test" {
+	//  identity           = aws_ses_domain_identity.test.domain
+	//  enabled = %v
+	//}
+	//`, domain, fowardingEnabled)
+	config := `
+		resource "aws_ses_domain_identity" "test" {
+		 domain = "test.example.com"
+		}
+		
+		resource "aws_ses_identity_feedback_forwarding_enabled" "test" {
+		 identity           = aws_ses_domain_identity.test.domain
+		 enabled = false
+		}
+		`
+	fmt.Printf("config: %v", config)
+	return config
 
 }
 
