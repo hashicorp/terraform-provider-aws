@@ -31,4 +31,5 @@ There are no arguments available for this data source.
 ## Attributes Reference
 
 * `arn` - The AWS ARN associated with the AWS Single Sign-On Instance.
+* `id` - The AWS ARN associated with the AWS Single Sign-On Instance.
 * `identity_store_id` - The Identity Store ID associated with the AWS Single Sign-On Instance.
