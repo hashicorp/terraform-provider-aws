@@ -364,8 +364,7 @@ func resourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return err
 	}
-	err = d.Set("managed_policy_arns", managedPolicyArns)
-	if err != nil {
+	if err = d.Set("managed_policy_arns", managedPolicyArns); err != nil {
 		return err
 	}
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
