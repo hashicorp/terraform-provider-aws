@@ -299,14 +299,8 @@ func resourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{}) e
 	if permissionerr != nil {
 		return fmt.Errorf("Error getting AWS SSO Permission Set: %s", permissionerr)
 	}
-	if aws.StringValue(permissionSetResp.PermissionSet.Name) == name {
-		permissionSet = permissionSetResp.PermissionSet
-	}
-
-	if permissionSet == nil {
-		log.Printf("[WARN] AWS SSO Permission Set %s not found, removing from state", name)
-		d.SetId("")
-		return nil
+	if permissionSetResp == nil || permissionSetRep.permissionSet == nil {
+		return fmt.Errorf("error reading AWS SSO Permission Set (%s): empty output",  name)
 	}
 
 	log.Printf("[DEBUG] Found AWS SSO Permission Set: %s", permissionSet)
