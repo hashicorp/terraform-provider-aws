@@ -126,9 +126,7 @@ func dataSourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if permissionSet == nil {
-		log.Printf("[DEBUG] AWS SSO Permission Set %v not found", name)
-		d.SetId("")
-		return nil
+		return fmt.Errorf("AWS SSO Permission Set %s not found", name)
 	}
 
 	log.Printf("[DEBUG] Found AWS SSO Permission Set: %s", permissionSet)
