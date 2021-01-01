@@ -48,7 +48,6 @@ resource "aws_ses_identity_feedback_forwarding_enabled" "test" {
 }
 
 `, domain, fowardingEnabled)
-	fmt.Printf("config: %v", config)
 	return config
 
 }
@@ -79,18 +78,21 @@ func testAccCheckAwsSESIdentityFeedbackForwardingEnabledExists(n string) resourc
 
 func testAccCheckAwsSESIdentityFeedbackForwardingEnabledDestroy(s *terraform.State) error {
 	fmt.Println("testAccCheckAwsSESIdentityFeedbackForwardingEnabledDestroy")
-	fmt.Printf("s: %v", s)
+
+	// List registered E-mail identities
 	conn := testAccProvider.Meta().(*AWSClient).sesv2conn
 	list, err := conn.ListEmailIdentities(&sesv2.ListEmailIdentitiesInput{})
 	if err != nil {
 		return err
 	}
 
+	// Loop on resources in terraform
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_identity_feedback_forwarding_enabled" {
 			continue
 		}
 
+		// If resources in terraform still exists, it fails
 		identity := rs.Primary.ID
 		for _, item := range list.EmailIdentities {
 			if identity == *item.IdentityName {
