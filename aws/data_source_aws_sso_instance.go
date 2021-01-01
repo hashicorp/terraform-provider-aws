@@ -41,7 +41,7 @@ func dataSourceAwsSsoInstanceRead(d *schema.ResourceData, meta interface{}) erro
 		return !lastPage
 	})
 	if err != nil {
-		return fmt.Errorf("Error getting AWS SSO Instances: %s", err)
+		return fmt.Errorf("error getting AWS SSO Instances: %w", err)
 	}
 
 	if len(instances) == 0 {
