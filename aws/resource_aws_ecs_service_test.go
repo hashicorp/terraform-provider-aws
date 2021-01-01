@@ -556,6 +556,29 @@ func TestAccAWSEcsService_withDeploymentMinimumZeroMaximumOneHundred(t *testing.
 	})
 }
 
+func TestAccAWSEcsService_withDeploymentCircuitBreaker(t *testing.T) {
+	var service ecs.Service
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceConfigDeploymentCircuitBreaker(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.rollback", "true"),
+				),
+			},
+		},
+	})
+}
+
 // Regression for https://github.com/hashicorp/terraform/issues/3444
 func TestAccAWSEcsService_withLbChanges(t *testing.T) {
 	var service ecs.Service
@@ -3838,6 +3861,42 @@ resource "aws_ecs_service" "test" {
   task_definition                    = aws_ecs_task_definition.test.arn
 }
 `, rName, rName, deploymentMaximumPercent, deploymentMinimumHealthyPercent, rName)
+}
+
+func testAccAWSEcsServiceConfigDeploymentCircuitBreaker(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %q
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  cluster         = aws_ecs_cluster.test.id
+  desired_count   = 1
+  name            = %q
+  task_definition = aws_ecs_task_definition.test.arn
+
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
+}
+`, rName, rName, rName)
 }
 
 func testAccAWSEcsServiceConfigTags1(rName, tag1Key, tag1Value string) string {
