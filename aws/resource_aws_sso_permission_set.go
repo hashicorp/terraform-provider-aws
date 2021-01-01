@@ -334,34 +334,13 @@ func resourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("arn", permissionSetArn)
-	err = d.Set("created_date", permissionSet.CreatedDate.Format(time.RFC3339))
-	if err != nil {
-		return err
-	}
-	err = d.Set("instance_arn", instanceArn)
-	if err != nil {
-		return err
-	}
-	err = d.Set("name", permissionSet.Name)
-	if err != nil {
-		return err
-	}
-	err = d.Set("description", permissionSet.Description)
-	if err != nil {
-		return err
-	}
-	err = d.Set("session_duration", permissionSet.SessionDuration)
-	if err != nil {
-		return err
-	}
-	err = d.Set("relay_state", permissionSet.RelayState)
-	if err != nil {
-		return err
-	}
-	err = d.Set("inline_policy", inlinePolicyResp.InlinePolicy)
-	if err != nil {
-		return err
-	}
+	d.Set("created_date", permissionSet.CreatedDate.Format(time.RFC3339))
+	d.Set("instance_arn", instanceArn)
+	d.Set("name", permissionSet.Name)
+	d.Set("description", permissionSet.Description)
+	d.Set("session_duration", permissionSet.SessionDuration)
+	d.Set("relay_state", permissionSet.RelayState)
+	d.Set("inline_policy", inlinePolicyResp.InlinePolicy)
 	if err = d.Set("managed_policy_arns", managedPolicyArns); err != nil {
 		return err
 	}
@@ -413,33 +392,33 @@ func resourceAwsSsoPermissionSetUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if d.HasChange("inline_policy") {
-	        if v, ok := d.GetOk("inline_policy") {
-		    log.Printf("[DEBUG] AWS SSO Permission Set %s updating IAM inline policy", permissionSetArn)
+			if v, ok := d.GetOk("inline_policy") {
+			log.Printf("[DEBUG] AWS SSO Permission Set %s updating IAM inline policy", permissionSetArn)
 
-		    inlinePolicy := aws.String(v.(string))
+			inlinePolicy := aws.String(v.(string))
 
-		    updateInput := &ssoadmin.PutInlinePolicyToPermissionSetInput{
-			    InlinePolicy:     inlinePolicy,
-			    InstanceArn:      aws.String(instanceArn),
-			    PermissionSetArn: aws.String(permissionSetArn),
-		    }
+			updateInput := &ssoadmin.PutInlinePolicyToPermissionSetInput{
+				InlinePolicy:     inlinePolicy,
+				InstanceArn:      aws.String(instanceArn),
+				PermissionSetArn: aws.String(permissionSetArn),
+			}
 
-		    _, inlinePolicyErr := ssoadminconn.PutInlinePolicyToPermissionSet(updateInput)
-		    if inlinePolicyErr != nil {
-			    return fmt.Errorf("Error attaching IAM inline policy to AWS SSO Permission Set: %s", inlinePolicyErr)
-		    }
-	        } else {
-		    deleteInput := &ssoadmin.DeleteInlinePolicyFromPermissionSetInput{
-			    InstanceArn:      aws.String(instanceArn),
-			    PermissionSetArn: aws.String(permissionSetArn),
-		    }
+			_, inlinePolicyErr := ssoadminconn.PutInlinePolicyToPermissionSet(updateInput)
+			if inlinePolicyErr != nil {
+				return fmt.Errorf("Error attaching IAM inline policy to AWS SSO Permission Set: %s", inlinePolicyErr)
+			}
+			} else {
+			deleteInput := &ssoadmin.DeleteInlinePolicyFromPermissionSetInput{
+				InstanceArn:      aws.String(instanceArn),
+				PermissionSetArn: aws.String(permissionSetArn),
+			}
 
-		    _, inlinePolicyErr := ssoadminconn.DeleteInlinePolicyFromPermissionSet(deleteInput)
-		    if inlinePolicyErr != nil {
-		    	    return fmt.Errorf("Error deleting IAM inline policy from AWS SSO Permission Set: %s", inlinePolicyErr)
-		    }
-	    }
-    }
+			_, inlinePolicyErr := ssoadminconn.DeleteInlinePolicyFromPermissionSet(deleteInput)
+			if inlinePolicyErr != nil {
+					return fmt.Errorf("Error deleting IAM inline policy from AWS SSO Permission Set: %s", inlinePolicyErr)
+			}
+		}
+	}
 	if d.HasChange("managed_policy_arns") {
 		o, n := d.GetChange("managed_policy_arns")
 
