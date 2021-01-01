@@ -262,7 +262,7 @@ func resourceAwsSsoPermissionSetCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	permissionSetArn := createPermissionSetResp.PermissionSet.PermissionSetArn
-	d.SetId(*permissionSetArn)
+	d.SetId(aws.StringValue(permissionSetArn))
 
 	if attachPoliciesErr := attachPoliciesToPermissionSet(ssoadminconn, d, permissionSetArn, instanceArn); attachPoliciesErr != nil {
 		return attachPoliciesErr
