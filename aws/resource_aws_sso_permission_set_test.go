@@ -150,10 +150,10 @@ func testAccCheckAWSSSOPermissionSetExists(resourceName string, permissionSet *s
 			return permissionSetErr
 		}
 
-		if *permissionSetResp.PermissionSet.PermissionSetArn == rs.Primary.ID {
-			*permissionSet = *permissionSetResp.PermissionSet
+		if permissionSetResp != nil {
+		    if arn := aws.StringValue(permissionStRespPermissionSet.PermissionSetArn); arn == rs.Primary.ID {
 			return nil
-		}
+		    }
 
 		return fmt.Errorf("AWS SSO Permission Set (%s) not found", rs.Primary.ID)
 	}
