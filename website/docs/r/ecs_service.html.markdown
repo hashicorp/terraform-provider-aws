@@ -92,6 +92,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the service (up to 255 letters, numbers, hyphens, and underscores)
 * `capacity_provider_strategy` - (Optional) The capacity provider strategy to use for the service. Can be one or more.  Defined below.
 * `cluster` - (Optional) ARN of an ECS cluster
+* `deployment_circuit_breaker` - (Optional) Configuration block containing deployment circuit breaker. Defined below.
 * `deployment_controller` - (Optional) Configuration block containing deployment controller configuration. Defined below.
 * `deployment_maximum_percent` - (Optional) The upper limit (as a percentage of the service's desiredCount) of the number of running tasks that can be running in a service during a deployment. Not valid when using the `DAEMON` scheduling strategy.
 * `deployment_minimum_healthy_percent` - (Optional) The lower limit (as a percentage of the service's desiredCount) of the number of running tasks that must remain running and healthy in a service during a deployment.
@@ -121,6 +122,13 @@ The `capacity_provider_strategy` configuration block supports the following:
 * `capacity_provider` - (Required) The short name of the capacity provider.
 * `weight` - (Required) The relative percentage of the total number of launched tasks that should use the specified capacity provider.
 * `base` - (Optional) The number of tasks, at a minimum, to run on the specified capacity provider. Only one capacity provider in a capacity provider strategy can have a base defined.
+
+## deployment_circuit_breaker
+
+The `deployment_circuit_breaker` configuration block supports the following:
+
+* `enable` - (Required) Whether to enable the deployment circuit breaker logic for the service.
+* `rollback` - (Required) Whether to enable Amazon ECS to roll back the service if a service deployment fails. If rollback is enabled, when a service deployment fails, the service is rolled back to the last deployment that completed successfully.
 
 ## deployment_controller
 
