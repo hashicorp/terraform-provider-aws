@@ -145,6 +145,31 @@ func resourceAwsEcsService() *schema.Resource {
 				Computed: true,
 			},
 
+			"deployment_circuit_breaker": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				// Ignore missing configuration block
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enable": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"rollback": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+			},
+
 			"deployment_controller": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -420,7 +445,16 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 			MaximumPercent:        aws.Int64(int64(d.Get("deployment_maximum_percent").(int))),
 			MinimumHealthyPercent: aws.Int64(int64(deploymentMinimumHealthyPercent)),
 		}
+
 		input.DesiredCount = aws.Int64(int64(d.Get("desired_count").(int)))
+	}
+
+	if v, ok := d.GetOk("deployment_circuit_breaker"); ok {
+		if input.DeploymentConfiguration == nil {
+			input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
+		}
+
+		input.DeploymentConfiguration.DeploymentCircuitBreaker = expandEcsDeploymentCircuitBreaker(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("cluster"); ok {
@@ -672,6 +706,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	if service.DeploymentConfiguration != nil {
 		d.Set("deployment_maximum_percent", service.DeploymentConfiguration.MaximumPercent)
 		d.Set("deployment_minimum_healthy_percent", service.DeploymentConfiguration.MinimumHealthyPercent)
+		d.Set("deployment_circuit_breaker", flattenEcsDeploymentCircuitBreaker(service.DeploymentConfiguration.DeploymentCircuitBreaker))
 	}
 
 	if err := d.Set("deployment_controller", flattenEcsDeploymentController(service.DeploymentController)); err != nil {
@@ -735,6 +770,32 @@ func flattenEcsDeploymentController(deploymentController *ecs.DeploymentControll
 	m["type"] = aws.StringValue(deploymentController.Type)
 
 	return []interface{}{m}
+}
+
+func expandEcsDeploymentCircuitBreaker(l []interface{}) *ecs.DeploymentCircuitBreaker {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &ecs.DeploymentCircuitBreaker{
+		Enable:   aws.Bool(m["enable"].(bool)),
+		Rollback: aws.Bool(m["rollback"].(bool)),
+	}
+}
+
+func flattenEcsDeploymentCircuitBreaker(dc *ecs.DeploymentCircuitBreaker) []interface{} {
+	if dc == nil {
+		return nil
+	}
+
+	result := make(map[string]interface{})
+
+	result["enable"] = dc.Enable
+	result["rollback"] = dc.Rollback
+
+	return []interface{}{result}
 }
 
 func flattenEcsNetworkConfiguration(nc *ecs.NetworkConfiguration) []interface{} {
@@ -980,6 +1041,21 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 				MaximumPercent:        aws.Int64(int64(d.Get("deployment_maximum_percent").(int))),
 				MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
 			}
+		}
+	}
+
+	if d.HasChange("deployment_circuit_breaker") {
+		updateService = true
+
+		if input.DeploymentConfiguration == nil {
+			input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
+		}
+
+		// To remove an existing deployment circuit breaker, specify an empty object.
+		input.DeploymentConfiguration.DeploymentCircuitBreaker = &ecs.DeploymentCircuitBreaker{}
+
+		if v, ok := d.GetOk("deployment_circuit_breaker"); ok {
+			input.DeploymentConfiguration.DeploymentCircuitBreaker = expandEcsDeploymentCircuitBreaker(v.([]interface{}))
 		}
 	}
 
