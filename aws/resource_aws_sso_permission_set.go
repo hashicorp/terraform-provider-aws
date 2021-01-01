@@ -335,10 +335,7 @@ func resourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error listing tags for AWS SSO Permission Set (%s): %s", permissionSetArn, err)
 	}
 
-	err = d.Set("arn", permissionSetArn)
-	if err != nil {
-		return err
-	}
+	d.Set("arn", permissionSetArn)
 	err = d.Set("created_date", permissionSet.CreatedDate.Format(time.RFC3339))
 	if err != nil {
 		return err
