@@ -192,7 +192,7 @@ func testAccCheckAWSSSOPermissionSetDestroy(s *terraform.State) error {
 
 		output, err := ssoadminconn.DescribePermissionSet(input)
 
-		if isAWSErr(err, ssoadmin.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
 			continue
 		}
 
