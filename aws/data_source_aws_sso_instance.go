@@ -61,22 +61,3 @@ func dataSourceAwsSsoInstanceRead(d *schema.ResourceData, meta interface{}) erro
 
 	return nil
 }
-
-func dataSourceAwsSsoInstanceID(instanceArn string, identityStoreId string) (string, error) {
-	// arn:${Partition}:sso:::instance/${InstanceId}
-	iArn, err := arn.Parse(instanceArn)
-	if err != nil {
-		return "", err
-	}
-	iArnResourceParts := strings.Split(iArn.Resource, "/")
-	if len(iArnResourceParts) != 2 || iArnResourceParts[0] != "instance" || iArnResourceParts[1] == "" {
-		return "", fmt.Errorf("Unexpected format of ARN (%s), expected arn:${Partition}:sso:::instance/${InstanceId}", instanceArn)
-	}
-	instanceID := iArnResourceParts[1]
-
-	vars := []string{
-		instanceID,
-		identityStoreId,
-	}
-	return strings.Join(vars, "/"), nil
-}
