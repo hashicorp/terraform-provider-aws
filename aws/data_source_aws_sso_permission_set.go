@@ -118,7 +118,7 @@ func dataSourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{})
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error getting AWS SSO Permission Sets: %s", err)
+		return fmt.Errorf("Error getting AWS SSO Permission Sets: %w", err)
 	}
 
 	if permissionSetErr != nil {
