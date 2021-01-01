@@ -38,14 +38,15 @@ func TestAccAWSSESIdentityFeedbackForwardingEnabled_basic(t *testing.T) {
 func testAccAwsSESIdentityFeedbackForwardingEnabledConfig(domain string, fowardingEnabled bool) string {
 	config := fmt.Sprintf(`
 resource "aws_ses_domain_identity" "test" {
-  domain = %q
+  domain = "%v"
 }
 
 resource "aws_ses_identity_feedback_forwarding_enabled" "test" {
   identity = aws_ses_domain_identity.test.domain
-  enabled = %v
+  enabled  = "%v"
 }
-	`, domain, fowardingEnabled)
+
+`, domain, fowardingEnabled)
 	fmt.Printf("config: %v", config)
 	return config
 

@@ -19,7 +19,7 @@ resource "aws_ses_domain_identity" "example" {
 
 resource "aws_ses_identity_feedback_forwarding_enabled" "example" {
   identity = aws_ses_domain_identity.example.domain
-  enabled = false
+  enabled  = false
 }
 ```
 
