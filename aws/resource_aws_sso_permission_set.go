@@ -261,9 +261,10 @@ func resourceAwsSsoPermissionSetCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error creating AWS SSO Permission Set: %s", createPermissionerr)
 	}
 
-        if createPermissionSetResp == nil || createPermissionSetResp.PermissionSet == nil {
-            return fmt.Errorf("error creating AWS SSO Permission Set (%s): empty output, d.Get("name").(string))
-        }
+	if createPermissionSetResp == nil || createPermissionSetResp.PermissionSet == nil {
+		return fmt.Errorf("error creating AWS SSO Permission Set (%s): empty output", d.Get("name").(string))
+	}
+
 	permissionSetArn := createPermissionSetResp.PermissionSet.PermissionSetArn
 	d.SetId(aws.StringValue(permissionSetArn))
 
