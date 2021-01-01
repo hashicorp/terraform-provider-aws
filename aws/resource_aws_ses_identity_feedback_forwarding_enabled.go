@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sesv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -31,7 +32,7 @@ func resourceAwsSesIdentityFeedbackForwardingEnabled() *schema.Resource {
 }
 
 func resourceAwsSesIdentityFeedbackForwardingEnabledSet(d *schema.ResourceData, meta interface{}) error {
-	fmt.Println("resourceAwsSesIdentityFeedbackForwardingEnabledSet")
+	//fmt.Println("resourceAwsSesIdentityFeedbackForwardingEnabledSet")
 	conn := meta.(*AWSClient).sesv2conn
 
 	identity := d.Get("identity").(string)
@@ -41,7 +42,7 @@ func resourceAwsSesIdentityFeedbackForwardingEnabledSet(d *schema.ResourceData, 
 		EmailIdentity:          aws.String(identity),
 		EmailForwardingEnabled: aws.Bool(enabled),
 	}
-	fmt.Printf("input: %v\n", input)
+	//fmt.Printf("input: %v\n", input)
 	_, err := conn.PutEmailIdentityFeedbackAttributes(input)
 	if err != nil {
 		return fmt.Errorf("Error setting Feedback Forwarding identity: %s", err)
@@ -53,7 +54,7 @@ func resourceAwsSesIdentityFeedbackForwardingEnabledSet(d *schema.ResourceData, 
 }
 
 func resourceAwsSesIdentityFeedbackForwardingEnabledRead(d *schema.ResourceData, meta interface{}) error {
-	fmt.Println("resourceAwsSesIdentityFeedbackForwardingEnabledRead")
+	//fmt.Println("resourceAwsSesIdentityFeedbackForwardingEnabledRead")
 	conn := meta.(*AWSClient).sesv2conn
 
 	identity := d.Id()
@@ -73,7 +74,7 @@ func resourceAwsSesIdentityFeedbackForwardingEnabledRead(d *schema.ResourceData,
 }
 
 func resourceAwsSesIdentityFeedbackForwardingEnabledDelete(d *schema.ResourceData, meta interface{}) error {
-	fmt.Println("resourceAwsSesIdentityFeedbackForwardingEnabledDelete")
+	//fmt.Println("resourceAwsSesIdentityFeedbackForwardingEnabledDelete")
 	conn := meta.(*AWSClient).sesv2conn
 	identity := d.Id()
 
