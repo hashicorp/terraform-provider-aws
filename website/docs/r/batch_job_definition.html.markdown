@@ -123,11 +123,23 @@ The following arguments are supported:
 
 * `attempts` - (Optional) The number of times to move a job to the `RUNNABLE` status. You may specify between `1` and `10` attempts.
 
+* `evaluate_on_exit` - (Optional) The [evaluate on exit](#evaluate_on_exit) conditions under which the job should be retried or failed. If this parameter is specified, then the `attempts` parameter must also be specified. You may specify up to `5`.
+
 ## timeout
 
 `timeout` supports the following:
 
 * `attempt_duration_seconds` - (Optional) The time duration in seconds after which AWS Batch terminates your jobs if they have not finished. The minimum value for the timeout is `60` seconds.
+
+### evaluate_on_exit
+
+* `action` - (Required) Specifies the action to take if all of the specified conditions are met. The values are not case sensitive. Valid values: `RETRY`, `EXIT`.
+
+* `on_exit_code` - (Optional) A glob pattern to match against the decimal representation of the exit code returned for a job.
+
+* `on_reason` - (Optional) A glob pattern to match against the reason returned for a job.
+
+* `on_status_reason` - (Optional) A glob pattern to match against the status reason returned for a job.
 
 ## Attributes Reference
 

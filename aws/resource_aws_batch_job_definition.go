@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"regexp"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
@@ -76,6 +78,52 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 10),
+						},
+						"evaluate_on_exit": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MinItems: 0,
+							MaxItems: 5,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"action": {
+										Type:     schema.TypeString,
+										Required: true,
+										StateFunc: func(v interface{}) string {
+											return strings.ToLower(v.(string))
+										},
+										ValidateFunc: validation.StringInSlice([]string{
+											batch.RetryActionRetry,
+											batch.RetryActionExit,
+										}, true),
+									},
+									"on_exit_code": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 512),
+											validation.StringMatch(regexp.MustCompile(`^[0-9]*\*?$`), "must contain only numbers, and can optionally end with an asterisk"),
+										),
+									},
+									"on_reason": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 512),
+											validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
+										),
+									},
+									"on_status_reason": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 512),
+											validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
+										),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -298,17 +346,101 @@ func expandJobDefinitionRetryStrategy(item []interface{}) *batch.RetryStrategy {
 		retryStrategy.Attempts = aws.Int64(int64(v))
 	}
 
+	if v, ok := data["evaluate_on_exit"].([]interface{}); ok && len(v) > 0 && len(v) <= 5 {
+		retryStrategy.EvaluateOnExit = expandEvaluateOnExits(v)
+	}
+
 	return retryStrategy
+}
+
+func expandEvaluateOnExits(items []interface{}) []*batch.EvaluateOnExit {
+	if len(items) == 0 {
+		return nil
+	}
+
+	evalOnExitSlice := []*batch.EvaluateOnExit{}
+	for _, item := range items {
+		if item == nil {
+			continue
+		}
+
+		itemMap := item.(map[string]interface{})
+
+		if v, ok := itemMap["action"]; ok && v != "" {
+			evalOnExit := &batch.EvaluateOnExit{
+				Action: aws.String(v.(string)),
+			}
+
+			if v, ok := itemMap["on_exit_code"]; ok && v != "" {
+				evalOnExit.OnExitCode = aws.String(v.(string))
+			}
+
+			if v, ok := itemMap["on_reason"]; ok && v != "" {
+				evalOnExit.OnReason = aws.String(v.(string))
+			}
+
+			if v, ok := itemMap["on_status_reason"]; ok && v != "" {
+				evalOnExit.OnStatusReason = aws.String(v.(string))
+			}
+
+			evalOnExitSlice = append(evalOnExitSlice, evalOnExit)
+		}
+	}
+
+	return evalOnExitSlice
 }
 
 func flattenBatchRetryStrategy(item *batch.RetryStrategy) []map[string]interface{} {
 	data := []map[string]interface{}{}
-	if item != nil && item.Attempts != nil {
-		data = append(data, map[string]interface{}{
-			"attempts": int(aws.Int64Value(item.Attempts)),
-		})
+
+	if item == nil {
+		return data
 	}
+
+	retryStrategy := map[string]interface{}{}
+	if item.Attempts != nil {
+		retryStrategy["attempts"] = int(aws.Int64Value(item.Attempts))
+	}
+
+	if item.EvaluateOnExit != nil {
+		retryStrategy["evaluate_on_exit"] = flattenEvaluateOnExits(item.EvaluateOnExit)
+	}
+
+	data = append(data, retryStrategy)
+
 	return data
+}
+
+func flattenEvaluateOnExits(items []*batch.EvaluateOnExit) []map[string]interface{} {
+	evalOnExitSlice := []map[string]interface{}{}
+
+	if len(items) == 0 {
+		return evalOnExitSlice
+	}
+
+	for _, item := range items {
+		if v := aws.StringValue(item.Action); v != "" {
+			evalOnExit := map[string]interface{}{
+				"action": v,
+			}
+
+			if v := aws.StringValue(item.OnExitCode); v != "" {
+				evalOnExit["on_exit_code"] = v
+			}
+
+			if v := aws.StringValue(item.OnReason); v != "" {
+				evalOnExit["on_reason"] = v
+			}
+
+			if v := aws.StringValue(item.OnStatusReason); v != "" {
+				evalOnExit["on_status_reason"] = v
+			}
+
+			evalOnExitSlice = append(evalOnExitSlice, evalOnExit)
+		}
+	}
+
+	return evalOnExitSlice
 }
 
 func expandJobDefinitionTimeout(item []interface{}) *batch.JobTimeout {
