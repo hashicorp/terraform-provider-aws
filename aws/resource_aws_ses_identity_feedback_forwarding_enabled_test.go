@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sesv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -26,10 +25,8 @@ func TestAccAWSSESIdentityFeedbackForwardingEnabled_basic(t *testing.T) {
 			{
 				Config: testAccAwsSESIdentityFeedbackForwardingEnabledConfig(domain, forwardingEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESIdentityFeedbackForwardingEnabledExists(resourceName),
-					//resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", ses.BehaviorOnMXFailureUseDefaultValue),
-					//resource.TestCheckResourceAttr(resourceName, "domain", domain),
-					//resource.TestCheckResourceAttr(resourceName, "mail_from_domain", mailFromDomain1),
+					testAccCheckAwsSESEmailIdentityExists(resourceName),
+					testAccCheckAwsSESIdentityFeedbackForwardingEnabledEnabled(resourceName),
 				),
 			},
 		},
@@ -50,30 +47,6 @@ resource "aws_ses_identity_feedback_forwarding_enabled" "test" {
 `, domain, fowardingEnabled)
 	return config
 
-}
-
-func testAccCheckAwsSESIdentityFeedbackForwardingEnabledExists(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		fmt.Println("testAccCheckAwsSESIdentityFeedbackForwardingEnabledExists")
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("SES Identity Feedback Forwarding Enabled not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("SES Identity Feedback Forwarding not set")
-		}
-
-		identity := rs.Primary.ID
-		conn := testAccProvider.Meta().(*AWSClient).sesv2conn
-		params := &sesv2.GetEmailIdentityInput{EmailIdentity: aws.String(identity)}
-
-		_, err := conn.GetEmailIdentity(params)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
 }
 
 func testAccCheckAwsSESIdentityFeedbackForwardingEnabledDestroy(s *terraform.State) error {
@@ -102,4 +75,28 @@ func testAccCheckAwsSESIdentityFeedbackForwardingEnabledDestroy(s *terraform.Sta
 	}
 
 	return nil
+}
+
+func testAccCheckAwsSESIdentityFeedbackForwardingEnabledEnabled(n string) resource.TestCheckFunc {
+	fmt.Println("testAccCheckAwsSESIdentityFeedbackForwardingEnabledEnabled")
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		fmt.Println("rs:", rs)
+		//expectedNum := 3
+		//expectedFormat := regexp.MustCompile("[a-z0-9]{32}")
+
+		//tokenNum, _ := strconv.Atoi(rs.Primary.Attributes["dkim_tokens.#"])
+		//if expectedNum != tokenNum {
+		//	return fmt.Errorf("Incorrect number of DKIM tokens, expected: %d, got: %d", expectedNum, tokenNum)
+		//}
+		//for i := 0; i < expectedNum; i++ {
+		//	key := fmt.Sprintf("dkim_tokens.%d", i)
+		//	token := rs.Primary.Attributes[key]
+		//	if !expectedFormat.MatchString(token) {
+		//		return fmt.Errorf("Incorrect format of DKIM token: %v", token)
+		//	}
+		//}
+
+		return nil
+	}
 }
