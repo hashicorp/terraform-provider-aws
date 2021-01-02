@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSSSOPermissionSet_Basic(t *testing.T) {
@@ -29,7 +28,7 @@ func TestAccAWSSSOPermissionSet_Basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSOPermissionSetExists(resourceName, &permissionSet),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/ReadOnlyAccess"), // lintignore:AWSAT005
+					resource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/ReadOnlyAccess"), // lintignore:AWSAT005
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Just a test"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -45,8 +44,8 @@ func TestAccAWSSSOPermissionSet_Basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSOPermissionSetExists(resourceName, &updatedPermissionSet),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/ReadOnlyAccess"),              // lintignore:AWSAT005
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/job-function/ViewOnlyAccess"), // lintignore:AWSAT005
+					resource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/ReadOnlyAccess"),              // lintignore:AWSAT005
+					resource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/job-function/ViewOnlyAccess"), // lintignore:AWSAT005
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Just a test update"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
