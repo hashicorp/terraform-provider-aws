@@ -66,9 +66,9 @@ resource "aws_wafv2_web_acl" "test" {
 }
 
 data "aws_wafv2_web_acl" "test" {
-  name  = aws_wafv2_web_acl.test.name
-  scope = "REGIONAL"
-  depends_on  = [aws_wafv2_web_acl.test]
+  name       = aws_wafv2_web_acl.test.name
+  scope      = "REGIONAL"
+  depends_on = [aws_wafv2_web_acl.test]
 }
 `, name)
 }
@@ -91,9 +91,9 @@ resource "aws_wafv2_web_acl" "test" {
 }
 
 data "aws_wafv2_web_acl" "test" {
-  name_regex  = "^tf-acc-test-[0-9]+$"
-  scope       = "REGIONAL"
-  depends_on  = [aws_wafv2_web_acl.test]
+  name_regex = "^tf-acc-test-[0-9]+$"
+  scope      = "REGIONAL"
+  depends_on = [aws_wafv2_web_acl.test]
 }
 `, name)
 }
