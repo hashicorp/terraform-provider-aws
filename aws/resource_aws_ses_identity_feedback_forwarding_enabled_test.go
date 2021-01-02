@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/sesv2"
@@ -26,7 +27,8 @@ func TestAccAWSSESIdentityFeedbackForwardingEnabled_basic(t *testing.T) {
 				Config: testAccAwsSESIdentityFeedbackForwardingEnabledConfig(domain, forwardingEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESEmailIdentityExists(resourceName),
-					testAccCheckAwsSESIdentityFeedbackForwardingEnabledEnabled(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "identity", domain),
+					resource.TestCheckResourceAttr(resourceName, "enabled", strconv.FormatBool(forwardingEnabled)),
 				),
 			},
 		},
@@ -75,28 +77,4 @@ func testAccCheckAwsSESIdentityFeedbackForwardingEnabledDestroy(s *terraform.Sta
 	}
 
 	return nil
-}
-
-func testAccCheckAwsSESIdentityFeedbackForwardingEnabledEnabled(n string) resource.TestCheckFunc {
-	fmt.Println("testAccCheckAwsSESIdentityFeedbackForwardingEnabledEnabled")
-	return func(s *terraform.State) error {
-		rs := s.RootModule().Resources[n]
-		fmt.Println("rs:", rs)
-		//expectedNum := 3
-		//expectedFormat := regexp.MustCompile("[a-z0-9]{32}")
-
-		//tokenNum, _ := strconv.Atoi(rs.Primary.Attributes["dkim_tokens.#"])
-		//if expectedNum != tokenNum {
-		//	return fmt.Errorf("Incorrect number of DKIM tokens, expected: %d, got: %d", expectedNum, tokenNum)
-		//}
-		//for i := 0; i < expectedNum; i++ {
-		//	key := fmt.Sprintf("dkim_tokens.%d", i)
-		//	token := rs.Primary.Attributes[key]
-		//	if !expectedFormat.MatchString(token) {
-		//		return fmt.Errorf("Incorrect format of DKIM token: %v", token)
-		//	}
-		//}
-
-		return nil
-	}
 }
