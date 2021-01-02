@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
 	"strconv"
 	"testing"
 
@@ -26,13 +27,46 @@ func TestAccAWSSESIdentityFeedbackForwardingEnabled_basic(t *testing.T) {
 			{
 				Config: testAccAwsSESIdentityFeedbackForwardingEnabledConfig(domain, forwardingEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESEmailIdentityExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "identity", domain),
 					resource.TestCheckResourceAttr(resourceName, "enabled", strconv.FormatBool(forwardingEnabled)),
+					testAccCheckAwsSESIdentityFeedbackForwardingEnabledExists(resourceName),
 				),
 			},
 		},
 	})
+}
+
+func testAccCheckAwsSESIdentityFeedbackForwardingEnabledExists(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		// Take terraform state
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("SES Identity Feedback Forwarding Enabled not found: %s", n)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("SES Identity Feedback Forwarding not set")
+		}
+
+		// fetch E-mail identity with API
+		identity := rs.Primary.ID
+		conn := testAccProvider.Meta().(*AWSClient).sesv2conn
+		params := &sesv2.GetEmailIdentityInput{EmailIdentity: aws.String(identity)}
+		res, err := conn.GetEmailIdentity(params)
+		if err != nil {
+			return err
+		}
+
+		// Check if both statuses match
+		isEnabled, err := strconv.ParseBool(rs.Primary.Attributes["enabled"])
+		if err != nil {
+			return err
+		}
+		if *res.FeedbackForwardingStatus != isEnabled {
+			return fmt.Errorf("feedback forwarding status doesn't match")
+		}
+
+		return nil
+	}
 }
 
 func testAccAwsSESIdentityFeedbackForwardingEnabledConfig(domain string, fowardingEnabled bool) string {
@@ -52,8 +86,6 @@ resource "aws_ses_identity_feedback_forwarding_enabled" "test" {
 }
 
 func testAccCheckAwsSESIdentityFeedbackForwardingEnabledDestroy(s *terraform.State) error {
-	fmt.Println("testAccCheckAwsSESIdentityFeedbackForwardingEnabledDestroy")
-
 	// List registered E-mail identities
 	conn := testAccProvider.Meta().(*AWSClient).sesv2conn
 	list, err := conn.ListEmailIdentities(&sesv2.ListEmailIdentitiesInput{})
