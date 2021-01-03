@@ -342,7 +342,7 @@ resource "aws_db_cluster_snapshot" "test" {
 data "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier = aws_db_cluster_snapshot.test.db_cluster_identifier
   most_recent           = true
-  status				= "%[2]s"
+  status                = "%[2]s"
 }
 `, rName, status)
 }

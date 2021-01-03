@@ -128,8 +128,8 @@ resource "aws_db_snapshot" "incorrect" {
 }
 
 resource "aws_db_snapshot" "test" {
-	db_instance_identifier = aws_db_snapshot.incorrect.db_instance_identifier
-	db_snapshot_identifier = "testsnapshot%[1]d"
-  }
+  db_instance_identifier = aws_db_snapshot.incorrect.db_instance_identifier
+  db_snapshot_identifier = "testsnapshot%[1]d"
+}
 `, rInt, status)
 }
