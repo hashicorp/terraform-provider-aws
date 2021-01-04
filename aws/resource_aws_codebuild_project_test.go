@@ -3398,7 +3398,7 @@ resource "aws_codebuild_project" "test" {
 func testAccAWSCodeBuildProjectConfig_VpcConfig1(rName string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-  # InvalidInputException: CodeBuild currently doesn't support VPC in us-west-2d, please select subnets in other availability zones.
+  # InvalidInputException: CodeBuild currently doesn't support VPC in usw2-az4, please select subnets in other availability zones.
   exclude_zone_ids = ["usw2-az4"]
   state            = "available"
 
@@ -3459,7 +3459,7 @@ resource "aws_codebuild_project" "test" {
 func testAccAWSCodeBuildProjectConfig_VpcConfig2(rName string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-  # InvalidInputException: CodeBuild currently doesn't support VPC in us-west-2d, please select subnets in other availability zones.
+  # InvalidInputException: CodeBuild currently doesn't support VPC in usw2-az4, please select subnets in other availability zones.
   exclude_zone_ids = ["usw2-az4"]
   state            = "available"
 
