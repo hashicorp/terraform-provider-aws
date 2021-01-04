@@ -15,7 +15,6 @@ import (
 )
 
 func TestAccAWSSSOPermissionSet_Basic(t *testing.T) {
-	var permissionSet ssoadmin.PermissionSet
 	resourceName := "aws_sso_permission_set.example"
 	rName := acctest.RandomWithPrefix("tf-sso-test")
 
@@ -27,7 +26,7 @@ func TestAccAWSSSOPermissionSet_Basic(t *testing.T) {
 			{
 				Config: testAccSSOPermissionSetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSOPermissionSetExists(resourceName, &permissionSet),
+					testAccCheckAWSSSOPermissionSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -41,7 +40,6 @@ func TestAccAWSSSOPermissionSet_Basic(t *testing.T) {
 }
 
 func TestAccAWSSSOPermissionSet_ManagedPolicies(t *testing.T) {
-	var permissionSet, updatedPermissionSet ssoadmin.PermissionSet
 	resourceName := "aws_sso_permission_set.example"
 	rName := acctest.RandomWithPrefix("tf-sso-test")
 
@@ -53,7 +51,7 @@ func TestAccAWSSSOPermissionSet_ManagedPolicies(t *testing.T) {
 			{
 				Config: testAccSSOPermissionSetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSOPermissionSetExists(resourceName, &permissionSet),
+					testAccCheckAWSSSOPermissionSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/ReadOnlyAccess"), // lintignore:AWSAT005
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -69,7 +67,7 @@ func TestAccAWSSSOPermissionSet_ManagedPolicies(t *testing.T) {
 			{
 				Config: testAccSSOPermissionSetBasicConfigUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSOPermissionSetExists(resourceName, &updatedPermissionSet),
+					testAccCheckAWSSSOPermissionSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/ReadOnlyAccess"),              // lintignore:AWSAT005
 					resource.TestCheckTypeSetElemAttr(resourceName, "managed_policy_arns.*", "arn:aws:iam::aws:policy/job-function/ViewOnlyAccess"), // lintignore:AWSAT005
@@ -83,7 +81,6 @@ func TestAccAWSSSOPermissionSet_ManagedPolicies(t *testing.T) {
 }
 
 func TestAccAWSSSOPermissionSet_Disappears(t *testing.T) {
-	var permissionSet ssoadmin.PermissionSet
 	resourceName := "aws_sso_permission_set.example"
 	rName := acctest.RandomWithPrefix("tf-sso-test")
 
@@ -95,7 +92,7 @@ func TestAccAWSSSOPermissionSet_Disappears(t *testing.T) {
 			{
 				Config: testAccSSOPermissionSetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSOPermissionSetExists(resourceName, &permissionSet),
+					testAccCheckAWSSSOPermissionSetExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSsoPermissionSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -105,7 +102,6 @@ func TestAccAWSSSOPermissionSet_Disappears(t *testing.T) {
 }
 
 func TestAccAWSSSOPermissionSet_Tags(t *testing.T) {
-	var permissionSet ssoadmin.PermissionSet
 	resourceName := "aws_sso_permission_set.example"
 	rName := acctest.RandomWithPrefix("tf-sso-test")
 
@@ -117,7 +113,7 @@ func TestAccAWSSSOPermissionSet_Tags(t *testing.T) {
 			{
 				Config: testAccSSOPermissionSetConfigTagsSingle(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSOPermissionSetExists(resourceName, &permissionSet),
+					testAccCheckAWSSSOPermissionSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -130,7 +126,7 @@ func TestAccAWSSSOPermissionSet_Tags(t *testing.T) {
 			{
 				Config: testAccSSOPermissionSetConfigTagsMultiple(rName, "key1", "updatedvalue1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSOPermissionSetExists(resourceName, &permissionSet),
+					testAccCheckAWSSSOPermissionSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "updatedvalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -139,7 +135,7 @@ func TestAccAWSSSOPermissionSet_Tags(t *testing.T) {
 			{
 				Config: testAccSSOPermissionSetConfigTagsSingle(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSOPermissionSetExists(resourceName, &permissionSet),
+					testAccCheckAWSSSOPermissionSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -148,7 +144,7 @@ func TestAccAWSSSOPermissionSet_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSSSOPermissionSetExists(resourceName string, permissionSet *ssoadmin.PermissionSet) resource.TestCheckFunc {
+func testAccCheckAWSSSOPermissionSetExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
