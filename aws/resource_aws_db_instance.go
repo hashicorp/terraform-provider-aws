@@ -1149,7 +1149,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 				input.StorageType = aws.String(v.(string))
 			}
 
-			if v, ok := d.GetOk("subnet_group_name"); ok {
+			if v, ok := d.GetOk("db_subnet_group_name"); ok {
 				input.DBSubnetGroupName = aws.String(v.(string))
 			}
 
