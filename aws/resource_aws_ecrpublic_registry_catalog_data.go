@@ -10,10 +10,10 @@ import (
 
 func resourceAwsEcrPublicRegistryCatalogData() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsEcrPublicRegistryCatalogDataCreate,
+		Create: resourceAwsEcrPublicRegistryCatalogDataUpdate,
 		Read:   resourceAwsEcrPublicRegistryCatalogDataRead,
 		Update: resourceAwsEcrPublicRegistryCatalogDataUpdate,
-		Delete: resourceAwsEcrPublicRegistryCatalogDataDelete,
+		Delete: schema.Noop,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -27,7 +27,7 @@ func resourceAwsEcrPublicRegistryCatalogData() *schema.Resource {
 	}
 }
 
-func resourceAwsEcrPublicRegistryCatalogDataCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsEcrPublicRegistryCatalogDataUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecrpublicconn
 
 	input := &ecrpublic.PutRegistryCatalogDataInput{
@@ -39,6 +39,8 @@ func resourceAwsEcrPublicRegistryCatalogDataCreate(d *schema.ResourceData, meta 
 	if err != nil {
 		return fmt.Errorf("error changing ECR Public Registry catalog data: %s", err)
 	}
+
+	d.SetId(meta.(*AWSClient).accountid)
 
 	return resourceAwsEcrPublicRegistryCatalogDataRead(d, meta)
 }
@@ -59,27 +61,5 @@ func resourceAwsEcrPublicRegistryCatalogDataRead(d *schema.ResourceData, meta in
 
 	d.Set("display_name", registryCatalogData.DisplayName)
 
-	return nil
-}
-
-func resourceAwsEcrPublicRegistryCatalogDataUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrpublicconn
-
-	if d.HasChange("display_name") {
-		input := &ecrpublic.PutRegistryCatalogDataInput{
-			DisplayName: aws.String(d.Get("display_name").(string)),
-		}
-
-		_, err := conn.PutRegistryCatalogData(input)
-
-		if err != nil {
-			return fmt.Errorf("error changing ECR Public Registry catalog data: %s", err)
-		}
-	}
-
-	return resourceAwsEcrPublicRegistryCatalogDataRead(d, meta)
-}
-
-func resourceAwsEcrPublicRegistryCatalogDataDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
