@@ -46,11 +46,11 @@ func dataSourceAwsWafv2WebACL() *schema.Resource {
 
 func dataSourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
-	name := d.Get("name").(string)
-	name_regex := d.Get("name_regex").(string)
+	name, nameOk := d.GetOk("name")
+	nameRegex, nameRegexOk := d.GetOk("name_regex")
 
-	if name == "" && name_regex == "" {
-		return fmt.Errorf("Either name or name_regex must be configured")
+	if !nameOk && !nameRegexOk {
+		return fmt.Errorf("One of name or name_regex must be assigned")
 	}
 
 	var foundWebACL *wafv2.WebACLSummary
@@ -69,8 +69,8 @@ func dataSourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) erro
 			return fmt.Errorf("Error reading WAFv2 WebACLs")
 		}
 
-		if name_regex != "" {
-			r := regexp.MustCompile(name_regex)
+		if nameRegexOk {
+			r := regexp.MustCompile(nameRegex.(string))
 			for _, webACL := range resp.WebACLs {
 				if r.MatchString(aws.StringValue(webACL.Name)) {
 					foundWebACL = webACL
@@ -79,7 +79,7 @@ func dataSourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) erro
 			}
 		} else {
 			for _, webACL := range resp.WebACLs {
-				if aws.StringValue(webACL.Name) == name {
+				if aws.StringValue(webACL.Name) == name.(string) {
 					foundWebACL = webACL
 					break
 				}
