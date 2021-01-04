@@ -4,6 +4,10 @@ ENHANCEMENTS
 
 * resource/aws_kinesis_stream: Update `retention_period` argument plan-time validation to include up to 8760 hours [GH-16608]
 
+BUG FIXES
+
+* resource/aws_imagebuilder_distribution_configuration: Remove `user_ids` argument maximum limit [GH-16905]
+
 ## 3.22.0 (December 18, 2020)
 
 FEATURES
