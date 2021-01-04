@@ -64,6 +64,8 @@ Route whose data will be exported as attributes.
 
 * `network_interface_id` - (Optional) The Network Interface ID of the Route belonging to the Route Table.
 
+* `carrier_gateway_id` - (Optional) The EC2 Carrier Gateway ID of the Route belonging to the Route Table.
+
 ## Attributes Reference
 
 All of the argument attributes are also exported as
