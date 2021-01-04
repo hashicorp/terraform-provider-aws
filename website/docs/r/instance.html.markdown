@@ -9,7 +9,7 @@ description: |-
 # Resource: aws_instance
 
 Provides an EC2 instance resource. This allows instances to be created, updated,
-and deleted. Instances also support [provisioning](/docs/provisioners/index.html).
+and deleted. Instances also support [provisioning](https://www.terraform.io/docs/provisioners/index.html).
 
 ## Example Usage
 
