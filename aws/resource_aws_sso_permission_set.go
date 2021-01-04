@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -300,8 +301,9 @@ func resourceAwsSsoPermissionSetRead(d *schema.ResourceData, meta interface{}) e
 	if permissionerr != nil {
 		return fmt.Errorf("Error getting AWS SSO Permission Set: %s", permissionerr)
 	}
-	if permissionSetResp == nil || permissionSetRep.permissionSet == nil {
-		return fmt.Errorf("error reading AWS SSO Permission Set (%s): empty output",  name)
+
+	if permissionSetResp == nil || permissionSetResp.PermissionSet == nil {
+		return fmt.Errorf("error reading AWS SSO Permission Set (%s): empty output", name)
 	}
 
 	log.Printf("[DEBUG] Found AWS SSO Permission Set: %s", permissionSet)
@@ -392,7 +394,7 @@ func resourceAwsSsoPermissionSetUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if d.HasChange("inline_policy") {
-			if v, ok := d.GetOk("inline_policy") {
+		if v, ok := d.GetOk("inline_policy"); ok {
 			log.Printf("[DEBUG] AWS SSO Permission Set %s updating IAM inline policy", permissionSetArn)
 
 			inlinePolicy := aws.String(v.(string))
@@ -407,7 +409,7 @@ func resourceAwsSsoPermissionSetUpdate(d *schema.ResourceData, meta interface{})
 			if inlinePolicyErr != nil {
 				return fmt.Errorf("Error attaching IAM inline policy to AWS SSO Permission Set: %s", inlinePolicyErr)
 			}
-			} else {
+		} else {
 			deleteInput := &ssoadmin.DeleteInlinePolicyFromPermissionSetInput{
 				InstanceArn:      aws.String(instanceArn),
 				PermissionSetArn: aws.String(permissionSetArn),
@@ -415,7 +417,7 @@ func resourceAwsSsoPermissionSetUpdate(d *schema.ResourceData, meta interface{})
 
 			_, inlinePolicyErr := ssoadminconn.DeleteInlinePolicyFromPermissionSet(deleteInput)
 			if inlinePolicyErr != nil {
-					return fmt.Errorf("Error deleting IAM inline policy from AWS SSO Permission Set: %s", inlinePolicyErr)
+				return fmt.Errorf("Error deleting IAM inline policy from AWS SSO Permission Set: %s", inlinePolicyErr)
 			}
 		}
 	}

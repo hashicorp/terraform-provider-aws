@@ -8,12 +8,39 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSSSOPermissionSet_Basic(t *testing.T) {
+	var permissionSet ssoadmin.PermissionSet
+	resourceName := "aws_sso_permission_set.example"
+	rName := acctest.RandomWithPrefix("tf-sso-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSSOInstance(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSOPermissionSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSSOPermissionSetBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSOPermissionSetExists(resourceName, &permissionSet),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSSOPermissionSet_ManagedPolicies(t *testing.T) {
 	var permissionSet, updatedPermissionSet ssoadmin.PermissionSet
 	resourceName := "aws_sso_permission_set.example"
 	rName := acctest.RandomWithPrefix("tf-sso-test")
@@ -150,9 +177,10 @@ func testAccCheckAWSSSOPermissionSetExists(resourceName string, permissionSet *s
 		}
 
 		if permissionSetResp != nil {
-		    if arn := aws.StringValue(permissionStRespPermissionSet.PermissionSetArn); arn == rs.Primary.ID {
-			return nil
-		    }
+			if arn := aws.StringValue(permissionSetResp.PermissionSet.PermissionSetArn); arn == rs.Primary.ID {
+				return nil
+			}
+		}
 
 		return fmt.Errorf("AWS SSO Permission Set (%s) not found", rs.Primary.ID)
 	}
