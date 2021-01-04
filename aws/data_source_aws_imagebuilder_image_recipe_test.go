@@ -59,6 +59,7 @@ resource "aws_imagebuilder_component" "test" {
     }]
     schemaVersion = 1.0
   })
+  working_directory = "/tmp"
   name     = %[1]q
   platform = "Linux"
   version  = "1.0.0"
