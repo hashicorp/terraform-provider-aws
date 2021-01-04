@@ -140,6 +140,7 @@ type RouteFinder func(*ec2.EC2, string, string) (*ec2.Route, error)
 // Returns NotFoundError if no route is found.
 func RouteByIPv4Destination(conn *ec2.EC2, routeTableID, destinationCidr string) (*ec2.Route, error) {
 	routeTable, err := RouteTableByID(conn, routeTableID)
+
 	if err != nil {
 		return nil, err
 	}
@@ -157,6 +158,7 @@ func RouteByIPv4Destination(conn *ec2.EC2, routeTableID, destinationCidr string)
 // Returns NotFoundError if no route is found.
 func RouteByIPv6Destination(conn *ec2.EC2, routeTableID, destinationIpv6Cidr string) (*ec2.Route, error) {
 	routeTable, err := RouteTableByID(conn, routeTableID)
+
 	if err != nil {
 		return nil, err
 	}
