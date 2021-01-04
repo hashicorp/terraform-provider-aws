@@ -98,6 +98,11 @@ func resourceAwsEip() *schema.Resource {
 				Optional: true,
 			},
 
+			"carrier_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"customer_owned_ipv4_pool": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -167,9 +172,9 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 	// it defaults to using the public IP
 	log.Printf("[DEBUG] EIP Allocate: %#v", allocResp)
 	if d.Get("domain").(string) == ec2.DomainTypeVpc {
-		d.SetId(*allocResp.AllocationId)
+		d.SetId(aws.StringValue(allocResp.AllocationId))
 	} else {
-		d.SetId(*allocResp.PublicIp)
+		d.SetId(aws.StringValue(allocResp.PublicIp))
 	}
 
 	log.Printf("[INFO] EIP ID: %s (domain: %v)", d.Id(), *allocResp.Domain)
@@ -293,6 +298,7 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
+	d.Set("carrier_ip", address.CarrierIp)
 	d.Set("customer_owned_ipv4_pool", address.CustomerOwnedIpv4Pool)
 	d.Set("customer_owned_ip", address.CustomerOwnedIp)
 	d.Set("network_border_group", address.NetworkBorderGroup)
@@ -309,7 +315,7 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 	// This allows users to import the EIP based on the IP if they are in a VPC
 	if *address.Domain == ec2.DomainTypeVpc && net.ParseIP(id) != nil {
 		log.Printf("[DEBUG] Re-assigning EIP ID (%s) to it's Allocation ID (%s)", d.Id(), *address.AllocationId)
-		d.SetId(*address.AllocationId)
+		d.SetId(aws.StringValue(address.AllocationId))
 	}
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(address.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
@@ -441,7 +447,8 @@ func resourceAwsEipDelete(d *schema.ResourceData, meta interface{}) error {
 	case ec2.DomainTypeVpc:
 		log.Printf("[DEBUG] EIP release (destroy) address allocation: %v", d.Id())
 		input = &ec2.ReleaseAddressInput{
-			AllocationId: aws.String(d.Id()),
+			AllocationId:       aws.String(d.Id()),
+			NetworkBorderGroup: aws.String(d.Get("network_border_group").(string)),
 		}
 	case ec2.DomainTypeStandard:
 		log.Printf("[DEBUG] EIP release (destroy) address: %v", d.Id())

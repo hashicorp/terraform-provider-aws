@@ -54,7 +54,7 @@ func resourceAwsDevicefarmProjectCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	log.Printf("[DEBUG] Successsfully Created DeviceFarm Project: %s", *out.Project.Arn)
-	d.SetId(*out.Project.Arn)
+	d.SetId(aws.StringValue(out.Project.Arn))
 
 	return resourceAwsDevicefarmProjectRead(d, meta)
 }

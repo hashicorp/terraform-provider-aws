@@ -574,7 +574,7 @@ func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("Error creating CodeDeploy deployment group: %s", err)
 	}
 
-	d.SetId(*resp.DeploymentGroupId)
+	d.SetId(aws.StringValue(resp.DeploymentGroupId))
 
 	return resourceAwsCodeDeployDeploymentGroupRead(d, meta)
 }
@@ -1167,7 +1167,7 @@ func triggerConfigsToMap(list []*codedeploy.TriggerConfig) []map[string]interfac
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, tc := range list {
 		item := make(map[string]interface{})
-		item["trigger_events"] = schema.NewSet(schema.HashString, flattenStringList(tc.TriggerEvents))
+		item["trigger_events"] = flattenStringSet(tc.TriggerEvents)
 		item["trigger_name"] = *tc.TriggerName
 		item["trigger_target_arn"] = *tc.TriggerTargetArn
 		result = append(result, item)
@@ -1185,7 +1185,7 @@ func autoRollbackConfigToMap(config *codedeploy.AutoRollbackConfiguration) []map
 	if config != nil && (*config.Enabled || len(config.Events) > 0) {
 		item := make(map[string]interface{})
 		item["enabled"] = *config.Enabled
-		item["events"] = schema.NewSet(schema.HashString, flattenStringList(config.Events))
+		item["events"] = flattenStringSet(config.Events)
 		result = append(result, item)
 	}
 
@@ -1206,7 +1206,7 @@ func alarmConfigToMap(config *codedeploy.AlarmConfiguration) []map[string]interf
 		}
 
 		item := make(map[string]interface{})
-		item["alarms"] = schema.NewSet(schema.HashString, flattenStringList(names))
+		item["alarms"] = flattenStringSet(names)
 		item["enabled"] = *config.Enabled
 		item["ignore_poll_alarm_failure"] = *config.IgnorePollAlarmFailure
 
@@ -1297,7 +1297,7 @@ func flattenCodeDeployTrafficRoute(trafficRoute *codedeploy.TrafficRoute) []inte
 	}
 
 	m := map[string]interface{}{
-		"listener_arns": schema.NewSet(schema.HashString, flattenStringList(trafficRoute.ListenerArns)),
+		"listener_arns": flattenStringSet(trafficRoute.ListenerArns),
 	}
 
 	return []interface{}{m}

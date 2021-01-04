@@ -109,7 +109,7 @@ func TestAccAwsMskScramSecretAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsMskScramSecretAssociation_clusterDisappears(t *testing.T) {
+func TestAccAwsMskScramSecretAssociation_disappears_Cluster(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_msk_scram_secret_association.test"
 	clusterResourceName := "aws_msk_cluster.test"

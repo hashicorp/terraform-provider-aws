@@ -169,7 +169,7 @@ func resourceAwsDmsReplicationSubnetGroupDelete(d *schema.ResourceData, meta int
 }
 
 func resourceAwsDmsReplicationSubnetGroupSetState(d *schema.ResourceData, group *dms.ReplicationSubnetGroup) error {
-	d.SetId(*group.ReplicationSubnetGroupIdentifier)
+	d.SetId(aws.StringValue(group.ReplicationSubnetGroupIdentifier))
 
 	subnet_ids := []string{}
 	for _, subnet := range group.Subnets {

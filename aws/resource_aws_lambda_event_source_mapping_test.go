@@ -246,35 +246,7 @@ func TestAccAWSLambdaEventSourceMapping_SQSBatchWindow(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_kinesis_disappears(t *testing.T) {
-	var conf lambda.EventSourceMappingConfiguration
-
-	rString := acctest.RandString(8)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_esm_import_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_esm_import_%s", rString)
-	attName := fmt.Sprintf("tf_acc_att_lambda_esm_import_%s", rString)
-	streamName := fmt.Sprintf("tf_acc_stream_lambda_esm_import_%s", rString)
-	funcName := fmt.Sprintf("tf_acc_lambda_esm_import_%s", rString)
-	uFuncName := fmt.Sprintf("tf_acc_lambda_esm_import_updated_%s", rString)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSLambdaEventSourceMappingConfig_kinesis(roleName, policyName, attName, streamName, funcName, uFuncName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLambdaEventSourceMappingExists("aws_lambda_event_source_mapping.lambda_event_source_mapping_test", &conf),
-					testAccCheckAWSLambdaEventSourceMappingDisappears(&conf),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSLambdaEventSourceMapping_sqsDisappears(t *testing.T) {
+func TestAccAWSLambdaEventSourceMapping_disappears(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 
 	rString := acctest.RandString(8)

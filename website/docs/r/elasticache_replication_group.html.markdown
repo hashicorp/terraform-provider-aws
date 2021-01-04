@@ -42,7 +42,7 @@ resource "aws_elasticache_replication_group" "example" {
 You have two options for adjusting the number of replicas:
 
 * Adjusting `number_cache_clusters` directly. This will attempt to automatically add or remove replicas, but provides no granular control (e.g. preferred availability zone, cache cluster ID) for the added or removed replicas. This also currently expects cache cluster IDs in the form of `replication_group_id-00#`.
-* Otherwise for fine grained control of the underlying cache clusters, they can be added or removed with the [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html) and its `replication_group_id` attribute. In this situation, you will need to utilize the [lifecycle configuration block](/docs/configuration/resources.html) with `ignore_changes` to prevent perpetual differences during Terraform plan with the `number_cache_cluster` attribute.
+* Otherwise for fine grained control of the underlying cache clusters, they can be added or removed with the [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html) and its `replication_group_id` attribute. In this situation, you will need to utilize the [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` to prevent perpetual differences during Terraform plan with the `number_cache_cluster` attribute.
 
 ```hcl
 resource "aws_elasticache_replication_group" "example" {
@@ -103,7 +103,7 @@ The following arguments are supported:
 * `number_cache_clusters` - (Required for Cluster Mode Disabled) The number of cache clusters (primary and replicas) this replication group will have. If Multi-AZ is enabled, the value of this parameter must be at least 2. Updates will occur before other modifications.
 * `node_type` - (Required) The compute and memory capacity of the nodes in the node group.
 * `automatic_failover_enabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. If true, Multi-AZ is enabled for this replication group. If false, Multi-AZ is disabled for this replication group. Must be enabled for Redis (cluster mode enabled) replication groups. Defaults to `false`.
-* `auto_minor_version_upgrade` - (Optional) Specifies whether a minor engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window. Defaults to `true`.
+* `auto_minor_version_upgrade` - (Optional) Specifies whether a minor engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window. This parameter is currently not supported by the AWS API. Defaults to `true`.
 * `availability_zones` - (Optional) A list of EC2 availability zones in which the replication group's cache clusters will be created. The order of the availability zones in the list is not important.
 * `engine` - (Optional) The name of the cache engine to be used for the clusters in this replication group. e.g. `redis`
 * `at_rest_encryption_enabled` - (Optional) Whether to enable encryption at rest.
@@ -153,7 +153,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_elasticache_replication_group` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+`aws_elasticache_replication_group` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
 configuration options:
 
 * `create` - (Default `60m`) How long to wait for a replication group to be created.

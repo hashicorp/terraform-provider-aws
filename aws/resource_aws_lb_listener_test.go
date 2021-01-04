@@ -15,8 +15,8 @@ import (
 
 func TestAccAWSLBListener_basic(t *testing.T) {
 	var conf elbv2.Listener
-	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandString(13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -47,9 +47,9 @@ func TestAccAWSLBListener_basic(t *testing.T) {
 func TestAccAWSLBListener_forwardWeighted(t *testing.T) {
 	var conf elbv2.Listener
 	resourceName := "aws_lb_listener.weighted"
-	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	targetGroupName2 := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandString(13))
+	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
+	targetGroupName2 := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -119,8 +119,8 @@ func TestAccAWSLBListener_forwardWeighted(t *testing.T) {
 
 func TestAccAWSLBListener_basicUdp(t *testing.T) {
 	var conf elbv2.Listener
-	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandString(13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -150,8 +150,8 @@ func TestAccAWSLBListener_basicUdp(t *testing.T) {
 
 func TestAccAWSLBListener_BackwardsCompatibility(t *testing.T) {
 	var conf elbv2.Listener
-	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandString(13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -262,7 +262,7 @@ func TestAccAWSLBListener_Protocol_Tls(t *testing.T) {
 
 func TestAccAWSLBListener_redirect(t *testing.T) {
 	var conf elbv2.Listener
-	lbName := fmt.Sprintf("testlistener-redirect-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testlistener-redirect-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -298,7 +298,7 @@ func TestAccAWSLBListener_redirect(t *testing.T) {
 
 func TestAccAWSLBListener_fixedResponse(t *testing.T) {
 	var conf elbv2.Listener
-	lbName := fmt.Sprintf("testlistener-fixedresponse-%s", acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testlistener-fixedresponse-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
