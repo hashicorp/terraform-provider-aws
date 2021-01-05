@@ -4350,7 +4350,7 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func testAccAwsAutoScalingGroupConfig_InstanceRefresh_Basic() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.current.names[0]]
   max_size             = 2
@@ -4386,11 +4386,11 @@ resource "aws_launch_configuration" "test" {
   image_id      = data.aws_ami.test.id
   instance_type = "t3.nano"
 }
-`)
+`
 }
 
 func testAccAwsAutoScalingGroupConfig_InstanceRefresh_Full() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.current.names[0]]
   max_size             = 2
@@ -4430,11 +4430,11 @@ resource "aws_launch_configuration" "test" {
   image_id      = data.aws_ami.test.id
   instance_type = "t3.nano"
 }
-`)
+`
 }
 
 func testAccAwsAutoScalingGroupConfig_InstanceRefresh_Disabled() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.current.names[0]]
   max_size             = 2
@@ -4466,7 +4466,7 @@ resource "aws_launch_configuration" "test" {
   image_id      = data.aws_ami.test.id
   instance_type = "t3.nano"
 }
-`)
+`
 }
 
 func testAccAwsAutoScalingGroupConfig_InstanceRefresh_Start(launchConfigurationName string) string {
@@ -4515,7 +4515,7 @@ resource "aws_launch_configuration" "test" {
 }
 
 func testAccAwsAutoScalingGroupConfig_InstanceRefresh_Triggers() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.current.names[0]]
   max_size             = 2
@@ -4558,7 +4558,7 @@ resource "aws_launch_configuration" "test" {
   image_id      = data.aws_ami.test.id
   instance_type = "t3.nano"
 }
-`)
+`
 }
 
 func testAccCheckAutoScalingInstanceRefreshCount(group *autoscaling.Group, expected int) resource.TestCheckFunc {
