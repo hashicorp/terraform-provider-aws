@@ -3206,6 +3206,46 @@ func TestCloudWatchEventCustomEventBusName(t *testing.T) {
 	}
 }
 
+func TestCloudWatchEventCustomEventBusNameOrARN(t *testing.T) {
+	cases := []struct {
+		Value   string
+		IsValid bool
+	}{
+		{
+			Value:   "",
+			IsValid: false,
+		},
+		{
+			Value:   acctest.RandStringFromCharSet(1600, acctest.CharSetAlpha),
+			IsValid: true,
+		},
+		{
+			Value:   acctest.RandStringFromCharSet(1601, acctest.CharSetAlpha),
+			IsValid: false,
+		},
+		{
+			Value:   "test0._1-",
+			IsValid: true,
+		},
+		{
+			Value:   "arn:aws:events:us-east-1:123456789012:event-bus/default", //lintignore:AWSAT003,AWSAT005
+			IsValid: true,
+		},
+		{
+			Value:   "arn:aws:events:us-east-1:123456789012:eventbus/default", //lintignore:AWSAT003,AWSAT005
+			IsValid: false,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateCloudWatchEventBusNameOrARN(tc.Value, "aws_cloudwatch_event_bus")
+		isValid := len(errors) == 0
+		if tc.IsValid && !isValid {
+			t.Errorf("expected %q to return valid, but did not", tc.Value)
+		} else if !tc.IsValid && isValid {
+			t.Errorf("expected %q to not return valid, but did", tc.Value)
+		}
+	}
+}
 func TestValidateServiceDiscoveryNamespaceName(t *testing.T) {
 	validNames := []string{
 		"ValidName",

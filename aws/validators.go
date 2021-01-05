@@ -2482,6 +2482,11 @@ var validateCloudWatchEventBusName = validation.All(
 	validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._\-]+$`), ""),
 )
 
+var validateCloudWatchEventBusNameOrARN = validation.All(
+	validation.StringLenBetween(1, 1600),
+	validation.StringMatch(regexp.MustCompile(`^(arn:aws[\w-]*:events:[a-z]{2}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/)?[/\.\-_A-Za-z0-9]+$`), ""),
+)
+
 var validateServiceDiscoveryNamespaceName = validation.All(
 	validation.StringLenBetween(1, 1024),
 	validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z._-]+$`), ""),
