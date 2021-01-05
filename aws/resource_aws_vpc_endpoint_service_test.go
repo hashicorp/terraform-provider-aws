@@ -287,7 +287,7 @@ func TestAccAWSVpcEndpointService_private_dns_name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name", "changed.com"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", "TXT"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.0.type", "TXT"),
 				),
 			},
