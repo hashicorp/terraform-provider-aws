@@ -14,6 +14,7 @@ ENHANCEMENTS
 BUG FIXES
 
 * resource/aws_imagebuilder_distribution_configuration: Remove `user_ids` argument maximum limit [GH-16905]
+* resource/aws_transfer_user: Update `user_name` argument validation to support 100 characters [GH-16938]
 
 ## 3.22.0 (December 18, 2020)
 
