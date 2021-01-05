@@ -93,7 +93,7 @@ func resourceAwsEksAddonCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Tags = keyvaluetags.New(v).IgnoreAws().EksTags()
 	}
 
-	log.Printf("[DEBUG] Creating EKS Cluster Addon %s", addonName)
+	log.Printf("[DEBUG] Creating EKS Addon %s", addonName)
 
 	err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateAddonWithContext(ctx, input)
@@ -113,7 +113,7 @@ func resourceAwsEksAddonCreate(ctx context.Context, d *schema.ResourceData, meta
 		_, err = conn.CreateAddonWithContext(ctx, input)
 	}
 	if err != nil {
-		return diag.Errorf("error creating EKS Cluster Addon (%s): %s", addonName, err)
+		return diag.Errorf("error creating EKS Addon (%s): %s", addonName, err)
 	}
 
 	d.SetId(addonName)
@@ -148,31 +148,32 @@ func resourceAwsEksAddonRead(ctx context.Context, d *schema.ResourceData, meta i
 		ClusterName: aws.String(clusterName),
 	}
 
-	log.Printf("[DEBUG] Reading EKS Cluster Addon: %s", input)
+	log.Printf("[DEBUG] Reading EKS Addon: %s", input)
 	output, err := conn.DescribeAddonWithContext(ctx, input)
 	if err != nil {
 		if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] EKS Cluster Addon (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] EKS Addon (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("error reading EKS Cluster (%s): %s", d.Id(), err)
+		return diag.Errorf("error reading EKS Addon (%s): %s", d.Id(), err)
 	}
 
 	addon := output.Addon
 	if addon == nil {
-		log.Printf("[WARN] EKS Cluster (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] EKS Addon (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	d.SetId(addonName)
 	d.Set("arn", addon.AddonArn)
-	d.Set("status", addon.Status)
 	d.Set("addon_version", addon.AddonVersion)
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
-	d.Set("created_at", aws.TimeValue(addon.CreatedAt).String())
-	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).String())
+	// TODO: Are these needed?
+	//d.Set("status", addon.Status)
+	//d.Set("created_at", aws.TimeValue(addon.CreatedAt).String())
+	//d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).String())
 
 	if err := d.Set("tags", keyvaluetags.EksKeyValueTags(addon.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags attribute: %s", err)
@@ -202,44 +203,44 @@ func resourceAwsEksAddonUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("addon_version") {
 		input.AddonVersion = aws.String(d.Get("addon_version").(string))
 
-		log.Printf("[DEBUG] Updating EKS Cluster Addon (%s) version: %s", d.Id(), input)
+		log.Printf("[DEBUG] Updating EKS Addon (%s) version: %s", d.Id(), input)
 
 		output, err := conn.UpdateAddonWithContext(ctx, input)
 		if err != nil {
-			return diag.Errorf("error updating EKS Cluster Addon (%s) version: %s", d.Id(), err)
+			return diag.Errorf("error updating EKS Addon (%s) version: %s", d.Id(), err)
 		}
 
 		if output == nil || output.Update == nil || output.Update.Id == nil {
-			return diag.Errorf("error determining EKS Cluster Addon (%s) version update ID: empty response", d.Id())
+			return diag.Errorf("error determining EKS Addon (%s) version update ID: empty response", d.Id())
 		}
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		err = waitForUpdateEksAddonContext(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+		err = waitForUpdateEksAddonContext(ctx, conn, addonName, clusterName, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
-			return diag.Errorf("error waiting for EKS Cluster Addon (%s) version update (%s): %s", d.Id(), updateID, err)
+			return diag.Errorf("error waiting for EKS Addon (%s) version update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
 	if d.HasChange("service_account_role_arn") {
 		input.ServiceAccountRoleArn = aws.String(d.Get("service_account_role_arn").(string))
 
-		log.Printf("[DEBUG] Updating EKS Cluster Addon (%s) service account role: %s", d.Id(), input)
+		log.Printf("[DEBUG] Updating EKS Addon (%s) service account role: %s", d.Id(), input)
 
 		output, err := conn.UpdateAddonWithContext(ctx, input)
 		if err != nil {
-			return diag.Errorf("error updating EKS Cluster Addon (%s) version: %s", d.Id(), err)
+			return diag.Errorf("error updating EKS Addon (%s) version: %s", d.Id(), err)
 		}
 
 		if output == nil || output.Update == nil || output.Update.Id == nil {
-			return diag.Errorf("error determining EKS Cluster Addon (%s) version update ID: empty response", d.Id())
+			return diag.Errorf("error determining EKS Addon (%s) version update ID: empty response", d.Id())
 		}
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		err = waitForUpdateEksAddonContext(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+		err = waitForUpdateEksAddonContext(ctx, conn, addonName, clusterName, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
-			return diag.Errorf("error waiting for EKS Cluster Addon (%s) version update (%s): %s", d.Id(), updateID, err)
+			return diag.Errorf("error waiting for EKS Addon (%s) version update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
@@ -260,7 +261,7 @@ func resourceAwsEksAddonDelete(ctx context.Context, d *schema.ResourceData, meta
 	log.Printf("[DEBUG] Deleting EKS Cluster Addon: %s", d.Id())
 	_, err := conn.DeleteAddonWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("error deleting EKS Cluster Addon (%s): %s", d.Id(), err)
+		return diag.Errorf("error deleting EKS Addon (%s): %s", d.Id(), err)
 	}
 
 	stateConf := resource.StateChangeConf{
@@ -287,12 +288,12 @@ func resourceAwsEksAddonDelete(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func waitForUpdateEksAddonContext(ctx context.Context, conn *eks.EKS, clusterName, updateID string, timeout time.Duration) error {
+func waitForUpdateEksAddonContext(ctx context.Context, conn *eks.EKS, addonName, clusterName string, timeout time.Duration) error {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{eks.AddonStatusUpdating},
 		Target:  []string{eks.AddonStatusActive},
 		Timeout: timeout,
-		Refresh: refreshEksAddonStatusContext(ctx, conn, clusterName, updateID),
+		Refresh: refreshEksAddonStatusContext(ctx, conn, addonName, clusterName),
 	}
 	updateRaw, err := stateConf.WaitForStateContext(ctx)
 
@@ -311,7 +312,7 @@ func waitForUpdateEksAddonContext(ctx context.Context, conn *eks.EKS, clusterNam
 		detailedErrors = append(detailedErrors, fmt.Sprintf("Error %d: Code: %s / Message: %s", i+1, aws.StringValue(updateError.ErrorCode), aws.StringValue(updateError.ErrorMessage)))
 	}
 
-	return fmt.Errorf("EKS Cluster (%s) update (%s) status (%s) not successful: Errors:\n%s", clusterName, updateID, aws.StringValue(update.Status), strings.Join(detailedErrors, "\n"))
+	return fmt.Errorf("EKS Cluster (%s) Addon (%s) status (%s) not successful: Errors:\n%s", clusterName, addonName, aws.StringValue(update.Status), strings.Join(detailedErrors, "\n"))
 }
 
 func refreshEksAddonStatusContext(ctx context.Context, conn *eks.EKS, addonName, clusterName string) resource.StateRefreshFunc {
