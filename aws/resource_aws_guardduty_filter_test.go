@@ -40,7 +40,7 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						"field":    "region",
 						"equals.#": "1",
-						"equals.0": "eu-west-1",
+						"equals.0": testAccGetAlternateRegion(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						"field":        "service.additionalInfo.threatListName",
@@ -257,7 +257,7 @@ resource "aws_guardduty_filter" "test" {
   finding_criteria {
     criterion {
       field  = "region"
-      equals = ["eu-west-1"]
+      equals = [%[1]q]
     }
 
     criterion {
@@ -267,8 +267,8 @@ resource "aws_guardduty_filter" "test" {
 
     criterion {
       field                 = "updatedAt"
-      greater_than_or_equal = %[1]q
-      less_than             = %[2]q
+      greater_than_or_equal = %[2]q
+      less_than             = %[3]q
     }
   }
 }
@@ -276,7 +276,7 @@ resource "aws_guardduty_filter" "test" {
 resource "aws_guardduty_detector" "test" {
   enable = true
 }
-`, startDate, endDate)
+`, testAccGetAlternateRegion(), startDate, endDate)
 }
 
 func testAccGuardDutyFilterConfigNoop_full(startDate, endDate string) string {
@@ -291,7 +291,7 @@ resource "aws_guardduty_filter" "test" {
   finding_criteria {
     criterion {
       field  = "region"
-      equals = ["eu-west-1"]
+      equals = [%[1]q]
     }
 
     criterion {
@@ -301,8 +301,8 @@ resource "aws_guardduty_filter" "test" {
 
     criterion {
       field                 = "updatedAt"
-      greater_than_or_equal = %[1]q
-      less_than             = %[2]q
+      greater_than_or_equal = %[2]q
+      less_than             = %[3]q
     }
   }
 }
@@ -310,7 +310,7 @@ resource "aws_guardduty_filter" "test" {
 resource "aws_guardduty_detector" "test" {
   enable = true
 }
-`, startDate, endDate)
+`, testAccGetAlternateRegion(), startDate, endDate)
 }
 
 func testAccGuardDutyFilterConfig_multipleTags() string {
