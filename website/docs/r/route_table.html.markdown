@@ -69,11 +69,12 @@ One of the following destination arguments must be supplied:
 
 One of the following target arguments must be supplied:
 
+* `carrier_gateway_id` - (Optional) Identifier of a carrier gateway. This attribute can only be used when the VPC contains a subnet which is associated with a Wavelength Zone.
 * `egress_only_gateway_id` - (Optional) Identifier of a VPC Egress Only Internet Gateway.
 * `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway.
 * `instance_id` - (Optional) Identifier of an EC2 instance.
-* `nat_gateway_id` - (Optional) Identifier of a VPC NAT gateway.
 * `local_gateway_id` - (Optional) Identifier of a Outpost local gateway.
+* `nat_gateway_id` - (Optional) Identifier of a VPC NAT gateway.
 * `network_interface_id` - (Optional) Identifier of an EC2 network interface.
 * `transit_gateway_id` - (Optional) Identifier of an EC2 Transit Gateway.
 * `vpc_endpoint_id` - (Optional) Identifier of a VPC Endpoint.
@@ -89,6 +90,7 @@ In addition to all arguments above, the following attributes are exported:
 attribute once the route resource is created.
 
 * `id` - The ID of the routing table.
+* `arn` - The ARN of the route table.
 * `owner_id` - The ID of the AWS account that owns the route table.
 
 ## Import
