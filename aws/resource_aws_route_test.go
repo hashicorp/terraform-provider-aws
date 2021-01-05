@@ -2712,11 +2712,11 @@ resource "aws_route_table" "test" {
 func testAccAWSRouteConfigIpv4LocalRoute(rName string) string {
 	return composeConfig(
 		testAccAWSRouteConfigIpv4NoRoute(rName),
-		fmt.Sprintf(`
+		`
 resource "aws_route" "test" {
   route_table_id         = aws_route_table.test.id
   destination_cidr_block = aws_vpc.test.cidr_block
   gateway_id             = "local"
 }
-`))
+`)
 }
