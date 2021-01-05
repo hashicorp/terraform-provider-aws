@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -406,4 +407,56 @@ resource "aws_elasticache_parameter_group" "test" {
   }
 }
 `, family, rName, parameterName1, parameterValue1, parameterName2, parameterValue2)
+}
+
+func TestFlattenElasticacheParameters(t *testing.T) {
+	cases := []struct {
+		Input  []*elasticache.Parameter
+		Output []map[string]interface{}
+	}{
+		{
+			Input: []*elasticache.Parameter{
+				{
+					ParameterName:  aws.String("activerehashing"),
+					ParameterValue: aws.String("yes"),
+				},
+			},
+			Output: []map[string]interface{}{
+				{
+					"name":  "activerehashing",
+					"value": "yes",
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		output := flattenElastiCacheParameters(tc.Input)
+		if !reflect.DeepEqual(output, tc.Output) {
+			t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, tc.Output)
+		}
+	}
+}
+
+func TestExpandElasticacheParameters(t *testing.T) {
+	expanded := []interface{}{
+		map[string]interface{}{
+			"name":         "activerehashing",
+			"value":        "yes",
+			"apply_method": "immediate",
+		},
+	}
+	parameters := expandElastiCacheParameters(expanded)
+
+	expected := &elasticache.ParameterNameValue{
+		ParameterName:  aws.String("activerehashing"),
+		ParameterValue: aws.String("yes"),
+	}
+
+	if !reflect.DeepEqual(parameters[0], expected) {
+		t.Fatalf(
+			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
+			parameters[0],
+			expected)
+	}
 }

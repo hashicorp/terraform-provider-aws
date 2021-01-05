@@ -338,3 +338,38 @@ func resourceAwsElasticacheParameterHash(v interface{}) int {
 
 	return hashcode.String(buf.String())
 }
+
+// Flattens an array of Parameters into a []map[string]interface{}
+func flattenElastiCacheParameters(list []*elasticache.Parameter) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, len(list))
+	for _, i := range list {
+		if i.ParameterValue != nil {
+			result = append(result, map[string]interface{}{
+				"name":  strings.ToLower(aws.StringValue(i.ParameterName)),
+				"value": aws.StringValue(i.ParameterValue),
+			})
+		}
+	}
+	return result
+}
+
+// Takes the result of flatmap.Expand for an array of parameters and
+// returns Parameter API compatible objects
+func expandElastiCacheParameters(configured []interface{}) []*elasticache.ParameterNameValue {
+	parameters := make([]*elasticache.ParameterNameValue, len(configured))
+
+	// Loop over our configured parameters and create
+	// an array of aws-sdk-go compatible objects
+	for i, pRaw := range configured {
+		parameters[i] = expandElastiCacheParameter(pRaw.(map[string]interface{}))
+	}
+
+	return parameters
+}
+
+func expandElastiCacheParameter(param map[string]interface{}) *elasticache.ParameterNameValue {
+	return &elasticache.ParameterNameValue{
+		ParameterName:  aws.String(param["name"].(string)),
+		ParameterValue: aws.String(param["value"].(string)),
+	}
+}
