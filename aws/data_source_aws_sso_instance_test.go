@@ -1,14 +1,11 @@
 package aws
 
 import (
-	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func testAccPreCheckAWSSSOInstance(t *testing.T) {
@@ -48,7 +45,7 @@ func TestAccDataSourceAwsSsoInstance_Basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsSsoInstanceConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccMatchResourceAttrAwsSsoARN(datasourceName, "arn", regexp.MustCompile("instance/ssoins-[a-zA-Z0-9-.]{16}")),
+					testAccMatchResourceAttrGlobalARNNoAccount(datasourceName, "arn", "sso", regexp.MustCompile("instance/ssoins-[a-zA-Z0-9-.]{16}")),
 					resource.TestMatchResourceAttr(datasourceName, "identity_store_id", regexp.MustCompile("^[a-zA-Z0-9-]*")),
 				),
 			},
@@ -58,22 +55,4 @@ func TestAccDataSourceAwsSsoInstance_Basic(t *testing.T) {
 
 func testAccDataSourceAwsSsoInstanceConfigBasic() string {
 	return `data "aws_sso_instance" "selected" {}`
-}
-
-func testAccMatchResourceAttrAwsSsoARN(resourceName, attributeName string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		arnRegexp := arn.ARN{
-			Partition: testAccGetPartition(),
-			Resource:  arnResourceRegexp.String(),
-			Service:   "sso",
-		}.String()
-
-		attributeMatch, err := regexp.Compile(arnRegexp)
-
-		if err != nil {
-			return fmt.Errorf("Unable to compile ARN regexp (%s): %s", arnRegexp, err)
-		}
-
-		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
-	}
 }
