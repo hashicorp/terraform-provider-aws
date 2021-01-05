@@ -10,6 +10,7 @@ ENHANCEMENTS
 * resource/aws_imagebuilder_image_recipe: Add `working_directory` argument [GH-16947]
 * resource/aws_kinesis_stream: Update `retention_period` argument plan-time validation to include up to 8760 hours [GH-16608]
 * resource/aws_msk_cluster: Support `PER_TOPIC_PER_PARTITION` value for `enhanced_monitoring` argument plan-time validation [GH-16914]
+* resource/aws_vpc_endpoint_service: Make `private_dns_name` configurable and add `private_dns_name_configuration` attribute [GH-16495]
 
 BUG FIXES
 
