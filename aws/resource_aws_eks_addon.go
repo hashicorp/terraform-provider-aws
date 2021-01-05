@@ -3,15 +3,16 @@ package aws
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -60,6 +61,7 @@ func resourceAwsEksAddon() *schema.Resource {
 			"resolve_conflicts": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ValidateFunc: validation.StringInSlice(eks.ResolveConflicts_Values(), false),
 			},
 			"tags": tagsSchemaComputed(),
 		},
@@ -73,8 +75,9 @@ func resourceAwsEksAddonCreate(ctx context.Context, d *schema.ResourceData, meta
 	clusterName := d.Get("cluster_name").(string)
 
 	input := &eks.CreateAddonInput{
-		AddonName:   aws.String(addonName),
-		ClusterName: aws.String(clusterName),
+		AddonName:          aws.String(addonName),
+		ClusterName:        aws.String(clusterName),
+		ClientRequestToken: aws.String(resource.UniqueId()),
 	}
 
 	if v, ok := d.GetOk("resolve_conflicts"); ok {
@@ -189,8 +192,9 @@ func resourceAwsEksAddonUpdate(ctx context.Context, d *schema.ResourceData, meta
 	clusterName := d.Get("cluster_name").(string)
 
 	input := &eks.UpdateAddonInput{
-		AddonName:   aws.String(addonName),
-		ClusterName: aws.String(clusterName),
+		AddonName:          aws.String(addonName),
+		ClusterName:        aws.String(clusterName),
+		ClientRequestToken: aws.String(resource.UniqueId()),
 	}
 
 	if d.HasChange("tags") {
