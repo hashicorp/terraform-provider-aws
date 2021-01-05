@@ -1,5 +1,9 @@
 ## 3.23.0 (Unreleased)
 
+FEATURES
+
+* **New Resource:** `aws_sagemaker_image` [GH-16082]
+
 ENHANCEMENTS
 
 * data-source/aws_imagebuilder_image_recipe: Add `working_directory` attribute [GH-16947]
