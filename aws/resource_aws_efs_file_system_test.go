@@ -657,7 +657,7 @@ func testAccAWSEFSFileSystemConfigPagedTags(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   tags = {
-    Name           = "test-efs-%d"
+    Name           = "test-efs-%[1]d"
     Another        = "tag"
     Test           = "yes"
     User           = "root"
@@ -667,10 +667,10 @@ resource "aws_efs_file_system" "test" {
     AcceptanceTest = "PagedTags"
     CreationToken  = "radek"
     PerfMode       = "max"
-    Region         = "us-west-2"
+    Region         = %[2]q
   }
 }
-`, rInt)
+`, rInt, testAccGetRegion())
 }
 
 func testAccAWSEFSFileSystemConfigWithMaxTags(rName string) string {
