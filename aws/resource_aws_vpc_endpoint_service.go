@@ -258,19 +258,19 @@ func flattenPrivateDnsNameConfiguration(privateDnsNameConfiguration *ec2.Private
 
 	if v := privateDnsNameConfiguration.Name; v != nil {
 		tfMap["name"] = aws.StringValue(v)
-    	}
+	}
 
 	if v := privateDnsNameConfiguration.State; v != nil {
 		tfMap["state"] = aws.StringValue(v)
-    	}
+	}
 
 	if v := privateDnsNameConfiguration.Type; v != nil {
 		tfMap["type"] = aws.StringValue(v)
-    	}
+	}
 
 	if v := privateDnsNameConfiguration.Value; v != nil {
 		tfMap["value"] = aws.StringValue(v)
-    	}
+	}
 
 	// The EC2 API can return a XML structure with no elements
 	if len(tfMap) == 0 {
