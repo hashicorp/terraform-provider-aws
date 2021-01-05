@@ -60,14 +60,11 @@ In addition to all arguments above, the following attributes are exported:
 * `service_name` - The service name.
 * `service_type` - The service type, `Gateway` or `Interface`.
 * `state` - The state of the VPC endpoint service.
-* `private_dns_name_config` - The private dns name config when supplying a private dns name.
-
-The `private_dns_name_config` object exports the following attributes:
-
-* `name` - the name of the record subdomain the service provider needs to create
-* `state` - the verification state of the VPC endpoint service
-* `type` - the endpoint service verification type, for example TXT
-* `value` - the value the service provider adds to the private DNS name domain record before verification
+* `private_dns_name_configuration` - List of objects containing information about the endpoint service private DNS name configuration.
+    * `name` - Name of the record subdomain the service provider needs to create.
+    * `state` - Verification state of the VPC endpoint service. Consumers of the endpoint service can use the private name only when the state is `verified`.
+    * `type` - Endpoint service verification type, for example `TXT`.
+    * `value` - Value the service provider adds to the private DNS name domain record before verification.
 
 ## Import
 

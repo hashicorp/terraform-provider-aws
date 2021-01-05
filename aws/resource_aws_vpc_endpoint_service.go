@@ -81,7 +81,7 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 				Computed: true,
 				Optional: true,
 			},
-			"private_dns_name_config": {
+			"private_dns_name_configuration": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -242,9 +242,9 @@ func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting allowed_principals: %s", err)
 	}
 
-	err = d.Set("private_dns_name_config", flattenPrivateDnsNameConfiguration(svcCfg.PrivateDnsNameConfiguration))
+	err = d.Set("private_dns_name_configuration", flattenPrivateDnsNameConfiguration(svcCfg.PrivateDnsNameConfiguration))
 	if err != nil {
-		return fmt.Errorf("error setting private_dns_name_config: %w", err)
+		return fmt.Errorf("error setting private_dns_name_configuration: %w", err)
 	}
 
 	return nil
@@ -252,7 +252,7 @@ func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{})
 
 func flattenPrivateDnsNameConfiguration(privateDnsNameConfiguration *ec2.PrivateDnsNameConfiguration) []interface{} {
 	if privateDnsNameConfiguration == nil {
-		return []interface{}{}
+		return nil
 	}
 	m := map[string]interface{}{
 		"name":  aws.StringValue(privateDnsNameConfiguration.Name),

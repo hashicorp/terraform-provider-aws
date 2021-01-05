@@ -99,11 +99,7 @@ func TestAccAWSVpcEndpointService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "manages_vpc_endpoints", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_config.0.type", ""),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_config.0.name", ""),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_config.0.value", ""),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_config.0.state", ""),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", "0"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 				),
 			},
@@ -277,7 +273,8 @@ func TestAccAWSVpcEndpointService_private_dns_name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name", "example.com"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_config.0.type", "TXT"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.0.type", "TXT"),
 				),
 			},
 			{
@@ -290,7 +287,8 @@ func TestAccAWSVpcEndpointService_private_dns_name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name", "changed.com"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_config.0.type", "TXT"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", "TXT"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.0.type", "TXT"),
 				),
 			},
 		},
