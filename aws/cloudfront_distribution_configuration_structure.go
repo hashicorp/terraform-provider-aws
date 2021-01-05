@@ -266,8 +266,7 @@ func flattenCloudFrontDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior)
 		"field_level_encryption_id": aws.StringValue(dcb.FieldLevelEncryptionId),
 		"viewer_protocol_policy":    aws.StringValue(dcb.ViewerProtocolPolicy),
 		"target_origin_id":          aws.StringValue(dcb.TargetOriginId),
-		// "forwarded_values":          []interface{}{flattenForwardedValues(dcb.ForwardedValues)},
-		"min_ttl": aws.Int64Value(dcb.MinTTL),
+		"min_ttl":                   aws.Int64Value(dcb.MinTTL),
 	}
 
 	if dcb.ForwardedValues != nil {
