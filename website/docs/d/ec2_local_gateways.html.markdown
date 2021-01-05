@@ -22,7 +22,7 @@ data "aws_ec2_local_gateways" "foo" {
 }
 
 output "foo" {
-  value = "${data.aws_ec2_local_gateways.foo.ids}"
+  value = data.aws_ec2_local_gateways.foo.ids
 }
 ```
 
@@ -44,4 +44,5 @@ which take the following arguments:
 
 ## Attributes Reference
 
+* `id` - AWS Region.
 * `ids` - Set of all the Local Gateway identifiers

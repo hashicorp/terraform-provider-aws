@@ -9,13 +9,13 @@ description: |-
 # Resource: aws_instance
 
 Provides an EC2 instance resource. This allows instances to be created, updated,
-and deleted. Instances also support [provisioning](/docs/provisioners/index.html).
+and deleted. Instances also support [provisioning](https://www.terraform.io/docs/provisioners/index.html).
 
 ## Example Usage
 
 ```hcl
-# Create a new instance of the latest Ubuntu 14.04 on an
-# t2.micro node with an AWS Tag naming it "HelloWorld"
+# Create a new instance of the latest Ubuntu 20.04 on an
+# t3.micro node with an AWS Tag naming it "HelloWorld"
 provider "aws" {
   region = "us-west-2"
 }
@@ -25,7 +25,7 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
   }
 
   filter {
@@ -37,8 +37,8 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_instance" "web" {
-  ami           = "${data.aws_ami.ubuntu.id}"
-  instance_type = "t2.micro"
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = "t3.micro"
 
   tags = {
     Name = "HelloWorld"
@@ -87,6 +87,7 @@ instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/Use
 * `associate_public_ip_address` - (Optional) Associate a public ip address with an instance in a VPC.  Boolean value.
 * `private_ip` - (Optional) Private IP address to associate with the
      instance in a VPC.
+* `secondary_private_ips` - (Optional) A list of secondary private IPv4 addresses to assign to the instance's primary network interface (eth0) in a VPC. Can only be assigned to the primary network interface (eth0) attached at instance creation, not a pre-existing network interface i.e. referenced in a `network_interface` block. Refer to the [Elastic network interfaces documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#AvailableIpPerENI) to see the maximum number of private IP addresses allowed per instance type.
 * `source_dest_check` - (Optional) Controls if traffic is routed to the instance when
   the destination address does not match the instance. Used for NAT or VPNs. Defaults true.
 * `user_data` - (Optional) The user data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `user_data_base64` instead.
@@ -107,10 +108,11 @@ instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/Use
 * `credit_specification` - (Optional) Customize the credit specification of the instance. See [Credit Specification](#credit-specification) below for more details.
 * `hibernation` - (Optional) If true, the launched EC2 instance will support hibernation.
 * `metadata_options` - (Optional) Customize the metadata options of the instance. See [Metadata Options](#metadata-options) below for more details.
+* `enclave_options` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
 
 ### Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 10 mins) Used when launching the instance (until it reaches the initial `running` state)
 * `update` - (Defaults to 10 mins) Used when stopping and starting the instance when necessary during update - e.g. when changing instance type
@@ -125,12 +127,11 @@ to understand the implications of using these attributes.
 
 The `root_block_device` mapping supports the following:
 
-* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`, `"io1"`, `"sc1"`, or `"st1"`. (Default: `"standard"`).
+* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`, `"gp3"`, `"io1"`, `"io2"`, `"sc1"`, or `"st1"`. (Default: `"gp2"`).
 * `volume_size` - (Optional) The size of the volume in gibibytes (GiB).
 * `iops` - (Optional) The amount of provisioned
-  [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
-  This is only valid for `volume_type` of `"io1"`, and must be specified if
-  using that type
+  [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). Only valid for volume_type of `"io1"`, `"io2"` or `"gp3"`.
+* `throughput` - (Optional) The throughput to provision for a volume in mebibytes per second (MiB/s). This is only valid for `volume_type` of `"gp3"`.
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed
   on instance termination (Default: `true`).
 * `encrypted` - (Optional) Enable volume encryption. (Default: `false`). Must be configured to perform drift detection.
@@ -143,12 +144,12 @@ Each `ebs_block_device` supports the following:
 
 * `device_name` - (Required) The name of the device to mount.
 * `snapshot_id` - (Optional) The Snapshot ID to mount.
-* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`,
-  or `"io1"`. (Default: `"gp2"`).
+* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`, `"gp3"`, `"io1"`, `"io2"`, `"sc1"`, or `"st1"`. (Default: `"gp2"`).
 * `volume_size` - (Optional) The size of the volume in gibibytes (GiB).
 * `iops` - (Optional) The amount of provisioned
   [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
-  This must be set with a `volume_type` of `"io1"`.
+  Only valid for volume_type of `"io1"`, `"io2"` or `"gp3"`.
+* `throughput` - (Optional) The throughput to provision for a volume in mebibytes per second (MiB/s). This is only valid for `volume_type` of `"gp3"`.
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed
   on instance termination (Default: `true`).
 * `encrypted` - (Optional) Enables [EBS
@@ -205,10 +206,22 @@ Metadata options can be applied/modified to the EC2 Instance at any time.
 The `metadata_options` block supports the following:
 
 * `http_endpoint` - (Optional) Whether the metadata service is available. Can be `"enabled"` or `"disabled"`. (Default: `"enabled"`).
-* `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2_. Can be `"optional"` or `"required"`. (Default: `"optional"`).
+* `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Can be `"optional"` or `"required"`. (Default: `"optional"`).
 * `http_put_response_hop_limit` - (Optional) The desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Can be an integer from `1` to `64`. (Default: `1`).
 
 For more information, see the documentation on the [Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html).
+
+### Enclave Options
+
+-> **NOTE:** Changing `enabled` will cause the resource to be destroyed and re-created.
+
+Enclave options apply to the instance at boot time.
+
+The `enclave_options` block supports the following:
+
+* `enabled` - (Optional) Whether Nitro Enclaves will be enabled on the instance. (Default: `"false"`).
+
+For more information, see the documentation on [Nitro Enclaves](https://docs.aws.amazon.com/enclaves/latest/user/nitro-enclave.html).
 
 ### Example
 
@@ -222,7 +235,7 @@ resource "aws_vpc" "my_vpc" {
 }
 
 resource "aws_subnet" "my_subnet" {
-  vpc_id            = "${aws_vpc.my_vpc.id}"
+  vpc_id            = aws_vpc.my_vpc.id
   cidr_block        = "172.16.10.0/24"
   availability_zone = "us-west-2a"
 
@@ -232,7 +245,7 @@ resource "aws_subnet" "my_subnet" {
 }
 
 resource "aws_network_interface" "foo" {
-  subnet_id   = "${aws_subnet.my_subnet.id}"
+  subnet_id   = aws_subnet.my_subnet.id
   private_ips = ["172.16.10.100"]
 
   tags = {
@@ -241,11 +254,11 @@ resource "aws_network_interface" "foo" {
 }
 
 resource "aws_instance" "foo" {
-  ami           = "ami-22b9a343" # us-west-2
+  ami           = "ami-005e54dee72cc1d00" # us-west-2
   instance_type = "t2.micro"
 
   network_interface {
-    network_interface_id = "${aws_network_interface.foo.id}"
+    network_interface_id = aws_network_interface.foo.id
     device_index         = 0
   }
 

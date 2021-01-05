@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func dataSourceAwsIAMServerCertificate() *schema.Resource {
@@ -134,7 +134,7 @@ func dataSourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interfac
 	}
 
 	metadata := metadatas[0]
-	d.SetId(*metadata.ServerCertificateId)
+	d.SetId(aws.StringValue(metadata.ServerCertificateId))
 	d.Set("arn", metadata.Arn)
 	d.Set("path", metadata.Path)
 	d.Set("name", metadata.ServerCertificateName)

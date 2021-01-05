@@ -9,14 +9,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsSpotFleetRequest() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsSpotFleetRequestCreate,
 		Read:   resourceAwsSpotFleetRequestRead,
@@ -30,7 +32,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
 
 		SchemaVersion: 1,
@@ -116,6 +118,12 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
+									"throughput": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
+									},
 									"volume_size": {
 										Type:     schema.TypeInt,
 										Optional: true,
@@ -123,17 +131,11 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										ForceNew: true,
 									},
 									"volume_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											ec2.VolumeTypeStandard,
-											ec2.VolumeTypeIo1,
-											ec2.VolumeTypeGp2,
-											ec2.VolumeTypeSc1,
-											ec2.VolumeTypeSt1,
-										}, false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
 									},
 								},
 							},
@@ -195,6 +197,12 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
+									"throughput": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
+									},
 									"volume_size": {
 										Type:     schema.TypeInt,
 										Optional: true,
@@ -202,17 +210,11 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										ForceNew: true,
 									},
 									"volume_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ForceNew: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											ec2.VolumeTypeStandard,
-											ec2.VolumeTypeIo1,
-											ec2.VolumeTypeGp2,
-											ec2.VolumeTypeSc1,
-											ec2.VolumeTypeSt1,
-										}, false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
 									},
 								},
 							},
@@ -478,6 +480,44 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 					ec2.FleetTypeInstant,
 				}, false),
 			},
+			"spot_maintenance_strategies": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"capacity_rebalance": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if old == "1" && new == "0" {
+									return true
+								}
+								return false
+							},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"replacement_strategy": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											"launch",
+										}, false),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"spot_request_state": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -678,6 +718,10 @@ func readSpotFleetBlockDeviceMappingsFromConfig(
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
+			if v, ok := bd["throughput"].(int); ok && v > 0 {
+				ebs.Throughput = aws.Int64(int64(v))
+			}
+
 			blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
 				DeviceName: aws.String(bd["device_name"].(string)),
 				Ebs:        ebs,
@@ -727,6 +771,10 @@ func readSpotFleetBlockDeviceMappingsFromConfig(
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
+			if v, ok := bd["throughput"].(int); ok && v > 0 {
+				ebs.Throughput = aws.Int64(int64(v))
+			}
+
 			if dn, err := fetchRootDeviceName(d["ami"].(string), conn); err == nil {
 				if dn == nil {
 					return nil, fmt.Errorf(
@@ -765,7 +813,7 @@ func buildAwsSpotFleetLaunchSpecifications(
 	return specs, nil
 }
 
-func buildLaunchTemplateConfigs(d *schema.ResourceData) ([]*ec2.LaunchTemplateConfig, error) {
+func buildLaunchTemplateConfigs(d *schema.ResourceData) []*ec2.LaunchTemplateConfig {
 	launchTemplateConfigs := d.Get("launch_template_config").(*schema.Set)
 	configs := make([]*ec2.LaunchTemplateConfig, 0)
 
@@ -839,7 +887,37 @@ func buildLaunchTemplateConfigs(d *schema.ResourceData) ([]*ec2.LaunchTemplateCo
 		configs = append(configs, ltc)
 	}
 
-	return configs, nil
+	return configs
+}
+
+func expandSpotMaintenanceStrategies(l []interface{}) *ec2.SpotMaintenanceStrategies {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	fleetSpotMaintenanceStrategies := &ec2.SpotMaintenanceStrategies{
+		CapacityRebalance: expandSpotCapacityRebalance(m["capacity_rebalance"].([]interface{})),
+	}
+
+	return fleetSpotMaintenanceStrategies
+}
+
+func expandSpotCapacityRebalance(l []interface{}) *ec2.SpotCapacityRebalance {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	capacityRebalance := &ec2.SpotCapacityRebalance{}
+
+	if v, ok := m["replacement_strategy"]; ok && v.(string) != "" {
+		capacityRebalance.ReplacementStrategy = aws.String(v.(string))
+	}
+
+	return capacityRebalance
 }
 
 func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) error {
@@ -870,10 +948,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if launchTemplateConfigsOk {
-		launchTemplates, err := buildLaunchTemplateConfigs(d)
-		if err != nil {
-			return err
-		}
+		launchTemplates := buildLaunchTemplateConfigs(d)
 		spotFleetConfig.LaunchTemplateConfigs = launchTemplates
 	}
 
@@ -884,14 +959,27 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	if v, ok := d.GetOk("allocation_strategy"); ok {
 		spotFleetConfig.AllocationStrategy = aws.String(v.(string))
 	} else {
-		spotFleetConfig.AllocationStrategy = aws.String("lowestPrice")
+		spotFleetConfig.AllocationStrategy = aws.String(ec2.AllocationStrategyLowestPrice)
 	}
 
 	if v, ok := d.GetOk("instance_pools_to_use_count"); ok && v.(int) != 1 {
 		spotFleetConfig.InstancePoolsToUseCount = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("spot_price"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("spot_maintenance_strategies"); ok {
+		spotFleetConfig.SpotMaintenanceStrategies = expandSpotMaintenanceStrategies(v.([]interface{}))
+	}
+
+	// InvalidSpotFleetConfig: SpotMaintenanceStrategies option is only available with the spot fleet type maintain.
+	if d.Get("fleet_type").(string) != ec2.FleetTypeMaintain {
+		if spotFleetConfig.SpotMaintenanceStrategies != nil {
+			log.Printf("[WARN] Spot Fleet (%s) has an invalid configuration and can not be requested. Capacity Rebalance maintenance strategies can only be specified for spot fleets of type maintain.", spotFleetConfig)
+			d.SetId("")
+			return nil
+		}
+	}
+
+	if v, ok := d.GetOk("spot_price"); ok {
 		spotFleetConfig.SpotPrice = aws.String(v.(string))
 	}
 
@@ -908,9 +996,6 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			return err
 		}
-		spotFleetConfig.ValidUntil = aws.Time(validUntil)
-	} else {
-		validUntil := time.Now().Add(24 * time.Hour)
 		spotFleetConfig.ValidUntil = aws.Time(validUntil)
 	}
 
@@ -955,19 +1040,22 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	// Since IAM is eventually consistent, we retry creation as a newly created role may not
 	// take effect immediately, resulting in an InvalidSpotFleetRequestConfig error
 	var resp *ec2.RequestSpotFleetOutput
-	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.RequestSpotFleet(spotFleetOpts)
 
-		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "Duplicate: Parameter combination") {
-			return resource.NonRetryableError(fmt.Errorf("Error creating Spot fleet request: %s", err))
+		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "Parameter: SpotFleetRequestConfig.IamFleetRole is invalid") {
+			return resource.RetryableError(err)
 		}
-		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "") {
-			return resource.RetryableError(fmt.Errorf("Error creating Spot fleet request, retrying: %s", err))
+
+		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "The provided SpotFleetRequestConfig.IamFleetRole does not have permission to call") {
+			return resource.RetryableError(err)
 		}
+
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
 
@@ -979,7 +1067,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error requesting spot fleet: %s", err)
 	}
 
-	d.SetId(*resp.SpotFleetRequestId)
+	d.SetId(aws.StringValue(resp.SpotFleetRequestId))
 
 	log.Printf("[INFO] Spot Fleet Request ID: %s", d.Id())
 	log.Println("[INFO] Waiting for Spot Fleet Request to be active")
@@ -1141,7 +1229,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 		return nil
 	}
 
-	d.SetId(*sfr.SpotFleetRequestId)
+	d.SetId(aws.StringValue(sfr.SpotFleetRequestId))
 	d.Set("spot_request_state", aws.StringValue(sfr.SpotFleetRequestState))
 
 	config := sfr.SpotFleetRequestConfig
@@ -1166,6 +1254,8 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 	if config.IamFleetRole != nil {
 		d.Set("iam_fleet_role", aws.StringValue(config.IamFleetRole))
 	}
+
+	d.Set("spot_maintenance_strategies", flattenSpotMaintenanceStrategies(config.SpotMaintenanceStrategies))
 
 	if config.SpotPrice != nil {
 		d.Set("spot_price", aws.StringValue(config.SpotPrice))
@@ -1405,6 +1495,10 @@ func ebsBlockDevicesToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 				m["iops"] = aws.Int64Value(ebs.Iops)
 			}
 
+			if ebs.Throughput != nil {
+				m["throughput"] = aws.Int64Value(ebs.Throughput)
+			}
+
 			set.Add(m)
 		}
 	}
@@ -1465,6 +1559,10 @@ func rootBlockDeviceToSet(
 					m["iops"] = aws.Int64Value(val.Ebs.Iops)
 				}
 
+				if val.Ebs.Throughput != nil {
+					m["throughput"] = aws.Int64Value(val.Ebs.Throughput)
+				}
+
 				set.Add(m)
 			}
 		}
@@ -1484,11 +1582,10 @@ func resourceAwsSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{})
 	updateFlag := false
 
 	if d.HasChange("target_capacity") {
-		if val, ok := d.GetOk("target_capacity"); ok {
+		if val, ok := d.GetOkExists("target_capacity"); ok {
 			req.TargetCapacity = aws.Int64(int64(val.(int)))
+			updateFlag = true
 		}
-
-		updateFlag = true
 	}
 
 	if d.HasChange("excess_capacity_termination_policy") {
@@ -1500,8 +1597,24 @@ func resourceAwsSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if updateFlag {
+		log.Printf("[DEBUG] Modifying Spot Fleet Request: %#v", req)
 		if _, err := conn.ModifySpotFleetRequest(req); err != nil {
 			return fmt.Errorf("error updating spot request (%s): %s", d.Id(), err)
+		}
+
+		log.Println("[INFO] Waiting for Spot Fleet Request to be modified")
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{ec2.BatchStateModifying},
+			Target:     []string{ec2.BatchStateActive},
+			Refresh:    resourceAwsSpotFleetRequestStateRefreshFunc(d, meta),
+			Timeout:    10 * time.Minute,
+			MinTimeout: 10 * time.Second,
+			Delay:      30 * time.Second,
+		}
+
+		_, err := stateConf.WaitForState()
+		if err != nil {
+			return err
 		}
 	}
 
@@ -1606,11 +1719,11 @@ func hashLaunchSpecification(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["ami"].(string)))
-	if m["availability_zone"] != "" {
-		buf.WriteString(fmt.Sprintf("%s-", m["availability_zone"].(string)))
+	if v, ok := m["availability_zone"].(string); ok && v != "" {
+		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
-	if m["subnet_id"] != "" {
-		buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))
+	if v, ok := m["subnet_id"].(string); ok && v != "" {
+		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 	buf.WriteString(fmt.Sprintf("%s-", m["instance_type"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["spot_price"].(string)))
@@ -1705,4 +1818,28 @@ func flattenLaunchTemplateOverrides(overrides []*ec2.LaunchTemplateOverrides) *s
 		overrideSet.Add(flattenSpotFleetRequestLaunchTemplateOverrides(override))
 	}
 	return overrideSet
+}
+
+func flattenSpotMaintenanceStrategies(spotMaintenanceStrategies *ec2.SpotMaintenanceStrategies) []interface{} {
+	if spotMaintenanceStrategies == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"capacity_rebalance": flattenSpotCapacityRebalance(spotMaintenanceStrategies.CapacityRebalance),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenSpotCapacityRebalance(spotCapacityRebalance *ec2.SpotCapacityRebalance) []interface{} {
+	if spotCapacityRebalance == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"replacement_strategy": aws.StringValue(spotCapacityRebalance.ReplacementStrategy),
+	}
+
+	return []interface{}{m}
 }

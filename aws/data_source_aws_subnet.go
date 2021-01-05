@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -166,7 +166,7 @@ func dataSourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 
 	subnet := resp.Subnets[0]
 
-	d.SetId(*subnet.SubnetId)
+	d.SetId(aws.StringValue(subnet.SubnetId))
 	d.Set("vpc_id", subnet.VpcId)
 	d.Set("availability_zone", subnet.AvailabilityZone)
 	d.Set("availability_zone_id", subnet.AvailabilityZoneId)

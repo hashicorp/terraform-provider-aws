@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -169,7 +169,7 @@ func resourceAwsDmsReplicationSubnetGroupDelete(d *schema.ResourceData, meta int
 }
 
 func resourceAwsDmsReplicationSubnetGroupSetState(d *schema.ResourceData, group *dms.ReplicationSubnetGroup) error {
-	d.SetId(*group.ReplicationSubnetGroupIdentifier)
+	d.SetId(aws.StringValue(group.ReplicationSubnetGroupIdentifier))
 
 	subnet_ids := []string{}
 	for _, subnet := range group.Subnets {

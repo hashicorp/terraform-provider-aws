@@ -55,7 +55,7 @@ These inherit their settings from the replication group.
 ```hcl
 resource "aws_elasticache_cluster" "replica" {
   cluster_id           = "cluster-example"
-  replication_group_id = "${aws_elasticache_replication_group.example.id}"
+  replication_group_id = aws_elasticache_replication_group.example.id
 }
 ```
 
@@ -120,7 +120,7 @@ begin taking a daily snapshot of your cache cluster. Example: 05:00-09:00
 retain automatic cache cluster snapshots before deleting them. For example, if you set
 SnapshotRetentionLimit to 5, then a snapshot that was taken today will be retained for 5 days
 before being deleted. If the value of SnapshotRetentionLimit is set to zero (0), backups are turned off.
-Please note that setting a `snapshot_retention_limit` is not supported on cache.t1.micro or cache.t2.* cache nodes
+Please note that setting a `snapshot_retention_limit` is not supported on cache.t1.micro cache nodes
 
 * `notification_topic_arn` – (Optional) An Amazon Resource Name (ARN) of an
 SNS topic to send ElastiCache notifications to. Example:

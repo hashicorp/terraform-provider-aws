@@ -6,9 +6,10 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -86,6 +87,9 @@ func resourceAwsEc2CapacityReservation() *schema.Resource {
 					ec2.CapacityReservationInstancePlatformWindowswithSqlserverEnterprise,
 					ec2.CapacityReservationInstancePlatformWindowswithSqlserverStandard,
 					ec2.CapacityReservationInstancePlatformWindowswithSqlserverWeb,
+					ec2.CapacityReservationInstancePlatformLinuxwithSqlserverStandard,
+					ec2.CapacityReservationInstancePlatformLinuxwithSqlserverWeb,
+					ec2.CapacityReservationInstancePlatformLinuxwithSqlserverEnterprise,
 				}, false),
 			},
 			"instance_type": {
@@ -103,6 +107,10 @@ func resourceAwsEc2CapacityReservation() *schema.Resource {
 					ec2.CapacityReservationTenancyDefault,
 					ec2.CapacityReservationTenancyDedicated,
 				}, false),
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -150,7 +158,7 @@ func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interf
 	if err != nil {
 		return fmt.Errorf("Error creating EC2 Capacity Reservation: %s", err)
 	}
-	d.SetId(*out.CapacityReservation.CapacityReservationId)
+	d.SetId(aws.StringValue(out.CapacityReservation.CapacityReservationId))
 	return resourceAwsEc2CapacityReservationRead(d, meta)
 }
 
@@ -203,6 +211,16 @@ func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interfac
 	}
 
 	d.Set("tenancy", reservation.Tenancy)
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "ec2",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("capacity-reservation/%s", d.Id()),
+	}.String()
+
+	d.Set("arn", arn)
 
 	return nil
 }

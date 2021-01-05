@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -59,7 +59,7 @@ func resourceAwsEc2TrafficMirrorFilterCreate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("Error while creating traffic filter %s", err)
 	}
 
-	d.SetId(*out.TrafficMirrorFilter.TrafficMirrorFilterId)
+	d.SetId(aws.StringValue(out.TrafficMirrorFilter.TrafficMirrorFilterId))
 
 	if v, ok := d.GetOk("network_services"); ok {
 		input := &ec2.ModifyTrafficMirrorFilterNetworkServicesInput{

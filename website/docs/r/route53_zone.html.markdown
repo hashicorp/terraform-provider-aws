@@ -40,23 +40,17 @@ resource "aws_route53_zone" "dev" {
 }
 
 resource "aws_route53_record" "dev-ns" {
-  zone_id = "${aws_route53_zone.main.zone_id}"
+  zone_id = aws_route53_zone.main.zone_id
   name    = "dev.example.com"
   type    = "NS"
   ttl     = "30"
-
-  records = [
-    "${aws_route53_zone.dev.name_servers.0}",
-    "${aws_route53_zone.dev.name_servers.1}",
-    "${aws_route53_zone.dev.name_servers.2}",
-    "${aws_route53_zone.dev.name_servers.3}",
-  ]
+  records = aws_route53_zone.dev.name_servers
 }
 ```
 
 ### Private Zone
 
-~> **NOTE:** Terraform provides both exclusive VPC associations defined in-line in this resource via `vpc` configuration blocks and a separate [Zone VPC Association](/docs/providers/aws/r/route53_zone_association.html) resource. At this time, you cannot use in-line VPC associations in conjunction with any `aws_route53_zone_association` resources with the same zone ID otherwise it will cause a perpetual difference in plan output. You can optionally use the generic Terraform resource [lifecycle configuration block](/docs/configuration/resources.html#lifecycle) with `ignore_changes` to manage additional associations via the `aws_route53_zone_association` resource.
+~> **NOTE:** Terraform provides both exclusive VPC associations defined in-line in this resource via `vpc` configuration blocks and a separate [Zone VPC Association](/docs/providers/aws/r/route53_zone_association.html) resource. At this time, you cannot use in-line VPC associations in conjunction with any `aws_route53_zone_association` resources with the same zone ID otherwise it will cause a perpetual difference in plan output. You can optionally use the generic Terraform resource [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` to manage additional associations via the `aws_route53_zone_association` resource.
 
 ~> **NOTE:** Private zones require at least one VPC association at all times.
 
@@ -65,7 +59,7 @@ resource "aws_route53_zone" "private" {
   name = "example.com"
 
   vpc {
-    vpc_id = "${aws_vpc.example.id}"
+    vpc_id = aws_vpc.example.id
   }
 }
 ```

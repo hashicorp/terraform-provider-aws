@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsLbListener() *schema.Resource {
@@ -245,7 +245,7 @@ func dataSourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error
 	for _, listener := range resp.Listeners {
 		if *listener.Port == int64(port.(int)) {
 			//log.Printf("[DEBUG] get listener arn for %s:%s: %s", lbArn, port, *listener.Port)
-			d.SetId(*listener.ListenerArn)
+			d.SetId(aws.StringValue(listener.ListenerArn))
 			return resourceAwsLbListenerRead(d, meta)
 		}
 	}

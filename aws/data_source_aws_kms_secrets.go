@@ -4,11 +4,10 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsKmsSecrets() *schema.Resource {
@@ -43,12 +42,10 @@ func dataSourceAwsKmsSecrets() *schema.Resource {
 				},
 			},
 			"plaintext": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type:      schema.TypeString,
-					Sensitive: true,
-				},
+				Type:      schema.TypeMap,
+				Computed:  true,
+				Sensitive: true,
+				Elem:      &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -101,7 +98,7 @@ func dataSourceAwsKmsSecretsRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting plaintext: %s", err)
 	}
 
-	d.SetId(time.Now().UTC().String())
+	d.SetId(meta.(*AWSClient).region)
 
 	return nil
 }

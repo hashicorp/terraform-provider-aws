@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -174,7 +174,7 @@ func dataSourceAwsElastiCacheClusterRead(d *schema.ResourceData, meta interface{
 
 	cluster := resp.CacheClusters[0]
 
-	d.SetId(*cluster.CacheClusterId)
+	d.SetId(aws.StringValue(cluster.CacheClusterId))
 
 	d.Set("cluster_id", cluster.CacheClusterId)
 	d.Set("node_type", cluster.CacheNodeType)

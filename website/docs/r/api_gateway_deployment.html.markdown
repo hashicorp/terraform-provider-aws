@@ -10,7 +10,7 @@ description: |-
 
 Provides an API Gateway REST Deployment.
 
-~> **Note:** This resource depends on having at least one `aws_api_gateway_integration` created in the REST API, which itself has other dependencies. To avoid race conditions when all resources are being created together, you need to add implicit resource references via the `triggers` argument or explicit resource references using the [resource `depends_on` meta-argument](/docs/configuration/resources.html#depends_on-explicit-resource-dependencies).
+~> **Note:** This resource depends on having at least one `aws_api_gateway_integration` created in the REST API, which itself has other dependencies. To avoid race conditions when all resources are being created together, you need to add implicit resource references via the `triggers` argument or explicit resource references using the [resource `depends_on` meta-argument](https://www.terraform.io/docs/configuration/meta-arguments/depends_on.html).
 
 -> It is recommended to enable the [resource `lifecycle` configuration block `create_before_destroy` argument](https://www.terraform.io/docs/configuration/resources.html#create_before_destroy) in this resource configuration to properly order redeployments in Terraform.
 
@@ -23,29 +23,29 @@ resource "aws_api_gateway_rest_api" "MyDemoAPI" {
 }
 
 resource "aws_api_gateway_resource" "MyDemoResource" {
-  rest_api_id = "${aws_api_gateway_rest_api.MyDemoAPI.id}"
-  parent_id   = "${aws_api_gateway_rest_api.MyDemoAPI.root_resource_id}"
+  rest_api_id = aws_api_gateway_rest_api.MyDemoAPI.id
+  parent_id   = aws_api_gateway_rest_api.MyDemoAPI.root_resource_id
   path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "MyDemoMethod" {
-  rest_api_id   = "${aws_api_gateway_rest_api.MyDemoAPI.id}"
-  resource_id   = "${aws_api_gateway_resource.MyDemoResource.id}"
+  rest_api_id   = aws_api_gateway_rest_api.MyDemoAPI.id
+  resource_id   = aws_api_gateway_resource.MyDemoResource.id
   http_method   = "GET"
   authorization = "NONE"
 }
 
 resource "aws_api_gateway_integration" "MyDemoIntegration" {
-  rest_api_id = "${aws_api_gateway_rest_api.MyDemoAPI.id}"
-  resource_id = "${aws_api_gateway_resource.MyDemoResource.id}"
-  http_method = "${aws_api_gateway_method.MyDemoMethod.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.MyDemoAPI.id
+  resource_id = aws_api_gateway_resource.MyDemoResource.id
+  http_method = aws_api_gateway_method.MyDemoMethod.http_method
   type        = "MOCK"
 }
 
 resource "aws_api_gateway_deployment" "MyDemoDeployment" {
-  depends_on = ["${aws_api_gateway_integration.MyDemoIntegration}"]
+  depends_on = [aws_api_gateway_integration.MyDemoIntegration]
 
-  rest_api_id = "${aws_api_gateway_rest_api.MyDemoAPI.id}"
+  rest_api_id = aws_api_gateway_rest_api.MyDemoAPI.id
   stage_name  = "test"
 
   variables = {
@@ -87,10 +87,10 @@ The following arguments are supported:
 * `stage_name` - (Optional) The name of the stage. If the specified stage already exists, it will be updated to point to the new deployment. If the stage does not exist, a new one will be created and point to this deployment.
 * `description` - (Optional) The description of the deployment
 * `stage_description` - (Optional) The description of the stage
-* `triggers` - (Optional) A map of arbitrary keys and values that, when changed, will trigger a redeployment. To force a redeployment without changing these keys/values, use the [`terraform taint` command](/docs/commands/taint.html).
+* `triggers` - (Optional) A map of arbitrary keys and values that, when changed, will trigger a redeployment. To force a redeployment without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
 * `variables` - (Optional) A map that defines variables for the stage
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

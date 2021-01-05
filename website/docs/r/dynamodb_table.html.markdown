@@ -10,7 +10,7 @@ description: |-
 
 Provides a DynamoDB table resource
 
-~> **Note:** It is recommended to use `lifecycle` [`ignore_changes`](/docs/configuration/resources.html#ignore_changes) for `read_capacity` and/or `write_capacity` if there's [autoscaling policy](/docs/providers/aws/r/appautoscaling_policy.html) attached to the table.
+~> **Note:** It is recommended to use `lifecycle` [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) for `read_capacity` and/or `write_capacity` if there's [autoscaling policy](/docs/providers/aws/r/appautoscaling_policy.html) attached to the table.
 
 ## Example Usage
 
@@ -102,11 +102,11 @@ The following arguments are supported:
 * `write_capacity` - (Optional) The number of write units for this table. If the `billing_mode` is `PROVISIONED`, this field is required.
 * `read_capacity` - (Optional) The number of read units for this table. If the `billing_mode` is `PROVISIONED`, this field is required.
 * `attribute` - (Required) List of nested attribute definitions. Only required for `hash_key` and `range_key` attributes. Each attribute has two properties:
-  * `name` - (Required) The name of the attribute
-  * `type` - (Required) Attribute type, which must be a scalar type: `S`, `N`, or `B` for (S)tring, (N)umber or (B)inary data
+    * `name` - (Required) The name of the attribute
+    * `type` - (Required) Attribute type, which must be a scalar type: `S`, `N`, or `B` for (S)tring, (N)umber or (B)inary data
 * `ttl` - (Optional) Defines ttl, has two properties, and can only be specified once:
-  * `enabled` - (Required) Indicates whether ttl is enabled (true) or disabled (false).
-  * `attribute_name` - (Required) The name of the table attribute to store the TTL timestamp in.
+    * `enabled` - (Required) Indicates whether ttl is enabled (true) or disabled (false).
+    * `attribute_name` - (Required) The name of the table attribute to store the TTL timestamp in.
 * `local_secondary_index` - (Optional, Forces new resource) Describe an LSI on the table;
   these can only be allocated *at creation* so you cannot change this
 definition after you have created the resource.
@@ -122,7 +122,7 @@ attributes, etc.
 
 ### Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 10 mins) Used when creating the table
 * `update` - (Defaults to 60 mins) Used when updating the table configuration and reset for each individual Global Secondary Index and Replica update

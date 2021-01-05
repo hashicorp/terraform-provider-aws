@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,11 +10,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -211,6 +212,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								codebuild.EnvironmentTypeLinuxContainer,
 								codebuild.EnvironmentTypeLinuxGpuContainer,
 								codebuild.EnvironmentTypeWindowsContainer,
+								codebuild.EnvironmentTypeWindowsServer2019Container,
 								codebuild.EnvironmentTypeArmContainer,
 							}, false),
 						},
@@ -604,7 +606,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			func(diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				// Plan time validation for cache location
 				cacheType, cacheTypeOk := diff.GetOk("cache.0.type")
 				if !cacheTypeOk || cacheType.(string) == codebuild.CacheTypeNoCache || cacheType.(string) == codebuild.CacheTypeLocal {
@@ -1465,8 +1467,8 @@ func flattenAwsCodeBuildVpcConfig(vpcConfig *codebuild.VpcConfig) []interface{} 
 		values := map[string]interface{}{}
 
 		values["vpc_id"] = aws.StringValue(vpcConfig.VpcId)
-		values["subnets"] = schema.NewSet(schema.HashString, flattenStringList(vpcConfig.Subnets))
-		values["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SecurityGroupIds))
+		values["subnets"] = flattenStringSet(vpcConfig.Subnets)
+		values["security_group_ids"] = flattenStringSet(vpcConfig.SecurityGroupIds)
 
 		return []interface{}{values}
 	}

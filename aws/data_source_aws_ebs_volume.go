@@ -5,9 +5,10 @@ import (
 	"log"
 	"sort"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -129,7 +130,7 @@ func mostRecentVolume(volumes []*ec2.Volume) *ec2.Volume {
 }
 
 func volumeDescriptionAttributes(d *schema.ResourceData, client *AWSClient, volume *ec2.Volume) error {
-	d.SetId(*volume.VolumeId)
+	d.SetId(aws.StringValue(volume.VolumeId))
 	d.Set("volume_id", volume.VolumeId)
 
 	arn := arn.ARN{
