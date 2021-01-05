@@ -59,9 +59,21 @@ func resourceAwsEksAddon() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 			"resolve_conflicts": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
 				ValidateFunc: validation.StringInSlice(eks.ResolveConflicts_Values(), false),
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"modified_at": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"tags": tagsSchemaComputed(),
 		},
@@ -173,10 +185,9 @@ func resourceAwsEksAddonRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("arn", addon.AddonArn)
 	d.Set("addon_version", addon.AddonVersion)
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
-	// TODO: Are these needed?
-	//d.Set("status", addon.Status)
-	//d.Set("created_at", aws.TimeValue(addon.CreatedAt).String())
-	//d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).String())
+	d.Set("status", addon.Status)
+	d.Set("created_at", aws.TimeValue(addon.CreatedAt).String())
+	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).String())
 
 	if err := d.Set("tags", keyvaluetags.EksKeyValueTags(addon.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags attribute: %s", err)

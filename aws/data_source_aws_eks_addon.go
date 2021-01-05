@@ -35,6 +35,18 @@ func dataSourceAwsEksAddon() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"modified_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags": tagsSchemaComputed(),
 		},
 	}
@@ -66,6 +78,9 @@ func dataSourceAwsEksAddonRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("arn", addon.AddonArn)
 	d.Set("addon_version", addon.AddonVersion)
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
+	d.Set("status", addon.Status)
+	d.Set("created_at", aws.TimeValue(addon.CreatedAt).String())
+	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).String())
 
 	if err := d.Set("tags", keyvaluetags.EksKeyValueTags(addon.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags attribute: %s", err)
