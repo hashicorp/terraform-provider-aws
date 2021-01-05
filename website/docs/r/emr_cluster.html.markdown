@@ -334,7 +334,7 @@ The following arguments are supported:
 * `ebs_root_volume_size` - (Optional) Size in GiB of the EBS root device volume of the Linux AMI that is used for each EC2 instance. Available in Amazon EMR version 4.x and later.
 * `custom_ami_id` - (Optional) A custom Amazon Linux AMI for the cluster (instead of an EMR-owned AMI). Available in Amazon EMR version 5.7.0 and later.
 * `bootstrap_action` - (Optional) Ordered list of bootstrap actions that will be run before Hadoop is started on the cluster nodes. Defined below.
-* `configurations` - (Optional) List of configurations supplied for the EMR cluster you are creating
+* `configurations` - (Optional) List of configurations supplied for the EMR cluster you are creating. Supply a configuration object for applications to override their default configuration. See [AWS Documentation](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-configure-apps.html) for more information.
 * `configurations_json` - (Optional) A JSON string for supplying list of configurations for the EMR cluster.
 
 ~> **NOTE on configurations_json:** If the `Configurations` value is empty then you should skip
