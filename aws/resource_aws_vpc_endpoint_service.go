@@ -254,13 +254,30 @@ func flattenPrivateDnsNameConfiguration(privateDnsNameConfiguration *ec2.Private
 	if privateDnsNameConfiguration == nil {
 		return nil
 	}
-	m := map[string]interface{}{
-		"name":  aws.StringValue(privateDnsNameConfiguration.Name),
-		"state": aws.StringValue(privateDnsNameConfiguration.State),
-		"type":  aws.StringValue(privateDnsNameConfiguration.Type),
-		"value": aws.StringValue(privateDnsNameConfiguration.Value),
+	tfMap := map[string]interface{}{}
+
+	if v := privateDnsNameConfiguration.Name; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+    	}
+
+	if v := privateDnsNameConfiguration.State; v != nil {
+		tfMap["state"] = aws.StringValue(v)
+    	}
+
+	if v := privateDnsNameConfiguration.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+    	}
+
+	if v := privateDnsNameConfiguration.Value; v != nil {
+		tfMap["value"] = aws.StringValue(v)
+    	}
+
+	// The EC2 API can return a XML structure with no elements
+	if len(tfMap) == 0 {
+		return nil
 	}
-	return []interface{}{m}
+
+	return []interface{}{tfMap}
 }
 
 func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) error {
