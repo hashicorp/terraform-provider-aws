@@ -103,6 +103,14 @@ func TestAccAWSElasticacheParameterGroup_removeAllParameters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheParameterGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "appendonly",
+						"value": "yes",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "appendfsync",
+						"value": "always",
+					}),
 				),
 			},
 			{
@@ -133,6 +141,10 @@ func TestAccAWSElasticacheParameterGroup_removeReservedMemoryParameter(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheParameterGroupExists(resourceName, &cacheParameterGroup1),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "reserved-memory",
+						"value": "0",
+					}),
 				),
 			},
 			{
@@ -168,6 +180,10 @@ func TestAccAWSElasticacheParameterGroup_switchReservedMemoryParameter(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheParameterGroupExists(resourceName, &cacheParameterGroup1),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "reserved-memory",
+						"value": "0",
+					}),
 				),
 			},
 			{
@@ -175,6 +191,10 @@ func TestAccAWSElasticacheParameterGroup_switchReservedMemoryParameter(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheParameterGroupExists(resourceName, &cacheParameterGroup1),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "reserved-memory-percent",
+						"value": "25",
+					}),
 				),
 			},
 			{
@@ -203,6 +223,10 @@ func TestAccAWSElasticacheParameterGroup_updateReservedMemoryParameter(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheParameterGroupExists(resourceName, &cacheParameterGroup1),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "reserved-memory",
+						"value": "0",
+					}),
 				),
 			},
 			{
@@ -210,6 +234,10 @@ func TestAccAWSElasticacheParameterGroup_updateReservedMemoryParameter(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheParameterGroupExists(resourceName, &cacheParameterGroup1),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "reserved-memory",
+						"value": "1",
+					}),
 				),
 			},
 			{
