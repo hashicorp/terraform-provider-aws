@@ -75,7 +75,6 @@ One of the following destination arguments must be supplied:
 
 One of the following target arguments must be supplied:
 
-* `carrier_gateway_id` - (Optional) Identifier of a carrier gateway. This attribute can only be used when the VPC contains a subnet which is associated with a Wavelength Zone.
 * `egress_only_gateway_id` - (Optional) Identifier of a VPC Egress Only Internet Gateway.
 * `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway.
 * `instance_id` - (Optional) Identifier of an EC2 instance.
