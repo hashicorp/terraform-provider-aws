@@ -9,6 +9,7 @@ ENHANCEMENTS
 * data-source/aws_imagebuilder_image_recipe: Add `working_directory` attribute [GH-16947]
 * data-source/aws_elasticache_replication_group: Add reader_endpoint_address attribute [GH-9979]
 * resource/aws_elasticache_replication_group: Add reader_endpoint_address attribute [GH-9979]
+* resource/aws_elasticache_replication_group: Allows configuring `replicas_per_node_group` for "Redis (cluster mode disabled)" [GH-16829]
 * resource/aws_imagebuilder_image_recipe: Add `working_directory` argument [GH-16947]
 * resource/aws_glue_crawler: add support for `lineage_configuration` and `recrawl_policy` [GH-16714]
 * resource/aws_glue_crawler: add plan time validations to `name`, `description` and `table_prefix` [GH-16714]
